@@ -109,6 +109,9 @@ dependencies:
   ftpconnect: ^2.0.10
   # 同步锁——FTP 控制连接需要串行化命令
   synchronized: ^3.3.1
+  # SFTP 协议支持（基于 SSH）
+  # 锁在 2.14.x：>=2.15 依赖 pointycastle ^4，与项目其它依赖冲突
+  dartssh2: ^2.14.0
   url_launcher: ^6.3.1
   open_filex: ^4.5.0
 

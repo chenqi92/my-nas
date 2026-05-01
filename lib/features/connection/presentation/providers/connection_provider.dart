@@ -10,6 +10,7 @@ import 'package:my_nas/nas_adapters/fnos/fnos_adapter.dart';
 import 'package:my_nas/nas_adapters/ftp/ftp_adapter.dart';
 import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/nas_adapters/qnap/qnap_adapter.dart';
+import 'package:my_nas/nas_adapters/sftp/sftp_adapter.dart';
 import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
 import 'package:my_nas/nas_adapters/synology/synology_adapter.dart';
 import 'package:my_nas/nas_adapters/ugreen/ugreen_adapter.dart';
@@ -342,9 +343,8 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
         NasAdapterType.webdav => WebDavAdapter(),
         NasAdapterType.smb => SmbAdapter(),
         NasAdapterType.ftp => FtpAdapter(),
+        NasAdapterType.sftp => SftpAdapter(),
         NasAdapterType.local => LocalAdapter(),
-        NasAdapterType.sftp =>
-          throw UnsupportedError('SFTP 适配器尚未实现'),
       };
 }
 

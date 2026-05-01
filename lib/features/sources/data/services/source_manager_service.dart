@@ -17,6 +17,7 @@ import 'package:my_nas/nas_adapters/fnos/fnos_adapter.dart';
 import 'package:my_nas/nas_adapters/ftp/ftp_adapter.dart';
 import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/nas_adapters/qnap/qnap_adapter.dart';
+import 'package:my_nas/nas_adapters/sftp/sftp_adapter.dart';
 import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
 import 'package:my_nas/nas_adapters/synology/synology_adapter.dart';
 import 'package:my_nas/nas_adapters/ugreen/ugreen_adapter.dart';
@@ -940,9 +941,9 @@ class SourceManagerService {
       SourceType.webdav => WebDavAdapter(),
       SourceType.smb => SmbAdapter(),
       SourceType.ftp => FtpAdapter(),
+      SourceType.sftp => SftpAdapter(),
       SourceType.local => LocalAdapter(),
       // 尚未接入的通用协议
-      SourceType.sftp ||
       SourceType.nfs ||
       SourceType.upnp =>
         throw UnsupportedError('协议 ${type.displayName} 尚未实现'),
@@ -969,9 +970,9 @@ class SourceManagerService {
       SourceType.webdav => NasAdapterType.webdav,
       SourceType.smb => NasAdapterType.smb,
       SourceType.ftp => NasAdapterType.ftp,
+      SourceType.sftp => NasAdapterType.sftp,
       SourceType.local => NasAdapterType.local,
       // 尚未接入的通用协议
-      SourceType.sftp ||
       SourceType.nfs ||
       SourceType.upnp =>
         throw UnsupportedError('协议 ${type.displayName} 尚未实现'),
