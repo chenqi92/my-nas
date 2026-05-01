@@ -6,7 +6,13 @@ import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/connection/domain/entities/connection_entity.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
+import 'package:my_nas/nas_adapters/fnos/fnos_adapter.dart';
+import 'package:my_nas/nas_adapters/local/local_adapter.dart';
+import 'package:my_nas/nas_adapters/qnap/qnap_adapter.dart';
+import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
 import 'package:my_nas/nas_adapters/synology/synology_adapter.dart';
+import 'package:my_nas/nas_adapters/ugreen/ugreen_adapter.dart';
+import 'package:my_nas/nas_adapters/webdav/webdav_adapter.dart';
 
 /// 当前活跃的 NAS 适配器
 final activeAdapterProvider = StateProvider<NasAdapter?>((ref) => null);
@@ -324,10 +330,19 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
     logger.i('ConnectionStateNotifier: 已清除自动登录数据');
   }
 
+  /// 与 [SourceManagerService._createAdapter] 保持同步——任何新增的 NAS 协议
+  /// 适配器都需要在此处也加上，否则 ConnectionStateNotifier.connect 走到这里时
+  /// 会抛 UnsupportedError。
   NasAdapter _createAdapter(NasAdapterType type) => switch (type) {
         NasAdapterType.synology => SynologyAdapter(),
-        // TODO: 实现其他适配器
-        _ => throw UnimplementedError('适配器 $type 尚未实现'),
+        NasAdapterType.ugreen => UGreenAdapter(),
+        NasAdapterType.fnos => FnOSAdapter(),
+        NasAdapterType.qnap => QnapAdapter(),
+        NasAdapterType.webdav => WebDavAdapter(),
+        NasAdapterType.smb => SmbAdapter(),
+        NasAdapterType.local => LocalAdapter(),
+        NasAdapterType.sftp =>
+          throw UnsupportedError('SFTP 适配器尚未实现'),
       };
 }
 
