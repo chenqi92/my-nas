@@ -25,10 +25,12 @@ import 'package:my_nas/features/sources/presentation/pages/media_library_page.da
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/services/nas_file_share_service.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
+import 'package:my_nas/shared/widgets/media_info_sheet.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
@@ -1844,6 +1846,8 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
       showShare: true,
       showAddToFavorites: true,
       isFavorite: isFav,
+      showViewDetails: true,
+      showDownload: true,
     );
 
     if (action == null || !context.mounted) return;
@@ -1888,9 +1892,25 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
               displayName: displayName,
             );
       case MediaFileAction.viewDetails:
+        await MediaInfoSheet.show(
+          context: context,
+          title: displayName,
+          subtitle: '图书',
+          entries: [
+            MediaInfoEntry(label: '文件名', value: book.fileName),
+            MediaInfoEntry(label: '格式', value: book.format.name.toUpperCase()),
+            MediaInfoEntry(label: '作者', value: book.displayAuthor),
+            MediaInfoEntry(label: '文件大小', value: book.displaySize),
+            MediaInfoEntry(
+              label: '修改时间',
+              value: book.modifiedTime?.toLocal().toString() ?? '',
+            ),
+            MediaInfoEntry(label: '来源 ID', value: book.sourceId, copyable: true),
+            MediaInfoEntry(label: '路径', value: book.filePath, copyable: true),
+          ],
+        );
       case MediaFileAction.download:
-        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
-        debugPrint('[BookList] MediaFileAction.${action.name} 尚未实现');
+        await _downloadBook(context, ref, book);
     }
   }
 
@@ -1926,6 +1946,37 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
     if (result.isFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('分享失败：${result.error ?? "未知原因"}')),
+      );
+    }
+  }
+
+  /// 远程图书加入下载队列
+  Future<void> _downloadBook(
+    BuildContext context,
+    WidgetRef ref,
+    BookEntity book,
+  ) async {
+    final connections = ref.read(activeConnectionsProvider);
+    final connection = connections[book.sourceId];
+    if (connection == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+      );
+      return;
+    }
+    try {
+      final url = await connection.adapter.fileSystem.getFileUrl(book.filePath);
+      final service = ref.read(downloadServiceProvider);
+      final task = await service.addTask(url: url, fileName: book.fileName);
+      unawaited(service.startDownload(task.id));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已加入下载：${book.fileName}')),
+      );
+    } on Exception catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('加入下载失败：$e')),
       );
     }
   }

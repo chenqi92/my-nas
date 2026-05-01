@@ -12,6 +12,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/media_info_sheet.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
@@ -3606,6 +3607,9 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
       fileName: metadata.displayTitle,
       showAddToFavorites: true,
       isFavorite: isFav,
+      showViewDetails: true,
+      // 视频文件大，菜单中暂不提供下载入口（保留 false）；
+      // 用户若要离线观看，建议从详情页或专门的下载流程发起。
     );
 
     if (action == null || !context.mounted) return;
@@ -3661,10 +3665,26 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               path: metadata.filePath,
               displayName: metadata.displayTitle,
             );
-      case MediaFileAction.share:
       case MediaFileAction.viewDetails:
+        await MediaInfoSheet.show(
+          context: context,
+          title: metadata.displayTitle,
+          subtitle: '视频',
+          entries: [
+            MediaInfoEntry(label: '文件大小', value: metadata.fileSizeText),
+            MediaInfoEntry(label: '分辨率', value: metadata.resolution ?? ''),
+            MediaInfoEntry(label: '编码', value: metadata.videoCodec ?? ''),
+            MediaInfoEntry(
+              label: '修改时间',
+              value: metadata.fileModifiedTime?.toLocal().toString() ?? '',
+            ),
+            MediaInfoEntry(label: '来源 ID', value: metadata.sourceId, copyable: true),
+            MediaInfoEntry(label: '路径', value: metadata.filePath, copyable: true),
+          ],
+        );
+      case MediaFileAction.share:
       case MediaFileAction.download:
-        // 当前菜单未启用这三项；showXxx 默认 false 不会渲染。
+        // 视频不在菜单中提供分享/下载（文件过大）；showXxx 默认 false。
         debugPrint('[VideoList] MediaFileAction.${action.name} 尚未实现');
     }
   }

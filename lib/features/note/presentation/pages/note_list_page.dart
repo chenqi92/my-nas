@@ -21,12 +21,14 @@ import 'package:my_nas/features/sources/presentation/pages/media_library_page.da
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
+import 'package:my_nas/shared/widgets/media_info_sheet.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// 笔记页面状态
@@ -653,6 +655,8 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
       showShare: true,
       showAddToFavorites: true,
       isFavorite: isFav,
+      showViewDetails: true,
+      showDownload: true,
     );
 
     if (action == null || !context.mounted) return;
@@ -687,9 +691,57 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
               displayName: node.displayName,
             );
       case MediaFileAction.viewDetails:
+        await _showNoteInfo(node);
       case MediaFileAction.download:
-        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
-        debugPrint('[NoteList] MediaFileAction.${action.name} 尚未实现');
+        await _downloadNote(node);
+    }
+  }
+
+  Future<void> _showNoteInfo(NoteTreeNode node) async {
+    await MediaInfoSheet.show(
+      context: context,
+      title: node.displayName,
+      subtitle: '笔记',
+      entries: [
+        MediaInfoEntry(label: '文件名', value: node.name),
+        MediaInfoEntry(
+          label: '修改时间',
+          value: node.fileItem?.modifiedTime?.toLocal().toString() ?? '',
+        ),
+        MediaInfoEntry(
+          label: '文件大小',
+          value: node.fileItem?.displaySize ?? '',
+        ),
+        MediaInfoEntry(label: '来源 ID', value: node.sourceId, copyable: true),
+        MediaInfoEntry(label: '路径', value: node.path, copyable: true),
+      ],
+    );
+  }
+
+  Future<void> _downloadNote(NoteTreeNode node) async {
+    final connections = ref.read(activeConnectionsProvider);
+    final connection = connections[node.sourceId];
+    if (connection == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+      );
+      return;
+    }
+    try {
+      final url = node.url ??
+          await connection.adapter.fileSystem.getFileUrl(node.path);
+      final service = ref.read(downloadServiceProvider);
+      final task = await service.addTask(url: url, fileName: node.name);
+      unawaited(service.startDownload(task.id));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已加入下载：${node.name}')),
+      );
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('加入下载失败：$e')),
+      );
     }
   }
 
@@ -1878,6 +1930,8 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
       showShare: true,
       showAddToFavorites: true,
       isFavorite: isFav,
+      showViewDetails: true,
+      showDownload: true,
     );
 
     if (action == null || !context.mounted) return;
@@ -1912,9 +1966,57 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
               displayName: node.displayName,
             );
       case MediaFileAction.viewDetails:
+        await _showNoteInfo(node);
       case MediaFileAction.download:
-        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
-        debugPrint('[NoteListSecondary] MediaFileAction.${action.name} 尚未实现');
+        await _downloadNote(node);
+    }
+  }
+
+  Future<void> _showNoteInfo(NoteTreeNode node) async {
+    await MediaInfoSheet.show(
+      context: context,
+      title: node.displayName,
+      subtitle: '笔记',
+      entries: [
+        MediaInfoEntry(label: '文件名', value: node.name),
+        MediaInfoEntry(
+          label: '修改时间',
+          value: node.fileItem?.modifiedTime?.toLocal().toString() ?? '',
+        ),
+        MediaInfoEntry(
+          label: '文件大小',
+          value: node.fileItem?.displaySize ?? '',
+        ),
+        MediaInfoEntry(label: '来源 ID', value: node.sourceId, copyable: true),
+        MediaInfoEntry(label: '路径', value: node.path, copyable: true),
+      ],
+    );
+  }
+
+  Future<void> _downloadNote(NoteTreeNode node) async {
+    final connections = ref.read(activeConnectionsProvider);
+    final connection = connections[node.sourceId];
+    if (connection == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+      );
+      return;
+    }
+    try {
+      final url = node.url ??
+          await connection.adapter.fileSystem.getFileUrl(node.path);
+      final service = ref.read(downloadServiceProvider);
+      final task = await service.addTask(url: url, fileName: node.name);
+      unawaited(service.startDownload(task.id));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已加入下载：${node.name}')),
+      );
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('加入下载失败：$e')),
+      );
     }
   }
 

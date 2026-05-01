@@ -17,7 +17,9 @@ import 'package:my_nas/features/photo/data/services/photo_database_service.dart'
 import 'package:my_nas/features/photo/data/services/photo_library_cache_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_save_service.dart';
 import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
+import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
+import 'package:my_nas/shared/widgets/media_info_sheet.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_duplicates_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_viewer_page.dart';
 import 'package:my_nas/features/photo/presentation/widgets/photo_timeline_navigator.dart';
@@ -3079,6 +3081,8 @@ class _PhotoGridItem extends ConsumerWidget {
       showShare: true,
       showAddToFavorites: true,
       isFavorite: isFav,
+      showViewDetails: true,
+      showDownload: true,
     );
 
     if (action == null || !context.mounted) return;
@@ -3131,9 +3135,49 @@ class _PhotoGridItem extends ConsumerWidget {
               displayName: photo.name,
             );
       case MediaFileAction.viewDetails:
+        await MediaInfoSheet.show(
+          context: context,
+          title: photo.name,
+          subtitle: '照片',
+          entries: [
+            MediaInfoEntry(label: '文件大小', value: photo.file.displaySize),
+            MediaInfoEntry(
+              label: '修改时间',
+              value: photo.modifiedTime?.toLocal().toString() ?? '',
+            ),
+            MediaInfoEntry(label: '来源 ID', value: photo.sourceId, copyable: true),
+            MediaInfoEntry(label: '路径', value: photo.path, copyable: true),
+          ],
+        );
       case MediaFileAction.download:
-        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
-        debugPrint('[PhotoList] MediaFileAction.${action.name} 尚未实现');
+        await _downloadPhoto(context, ref);
+    }
+  }
+
+  /// 远程照片加入下载队列：通过 fileSystem.getFileUrl 拿到下载 URL
+  Future<void> _downloadPhoto(BuildContext context, WidgetRef ref) async {
+    final connections = ref.read(activeConnectionsProvider);
+    final connection = connections[photo.sourceId];
+    if (connection == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+      );
+      return;
+    }
+    try {
+      final url = await connection.adapter.fileSystem.getFileUrl(photo.path);
+      final service = ref.read(downloadServiceProvider);
+      final task = await service.addTask(url: url, fileName: photo.name);
+      unawaited(service.startDownload(task.id));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已加入下载：${photo.name}')),
+      );
+    } on Exception catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('加入下载失败：$e')),
+      );
     }
   }
 

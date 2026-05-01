@@ -19,10 +19,12 @@ import 'package:my_nas/features/sources/presentation/pages/media_library_page.da
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/services/nas_file_share_service.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
+import 'package:my_nas/shared/widgets/media_info_sheet.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 
@@ -1074,13 +1076,15 @@ class _ComicCard extends ConsumerWidget {
     );
 
     if (!context.mounted) return;
-    // 文件夹形式的漫画无单文件可分享，仅压缩包格式才显示 share
+    // 文件夹形式的漫画无单文件可分享 / 下载，仅压缩包格式才显示对应入口
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: comic.folderName,
       showShare: comic.isArchive,
       showAddToFavorites: true,
       isFavorite: isFav,
+      showViewDetails: true,
+      showDownload: comic.isArchive,
     );
 
     if (action == null || !context.mounted) return;
@@ -1125,9 +1129,26 @@ class _ComicCard extends ConsumerWidget {
               displayName: comic.folderName,
             );
       case MediaFileAction.viewDetails:
+        await MediaInfoSheet.show(
+          context: context,
+          title: comic.folderName,
+          subtitle: '漫画 · ${comic.type.name.toUpperCase()}',
+          entries: [
+            MediaInfoEntry(
+              label: '页数',
+              value: comic.pageCount > 0 ? '${comic.pageCount} 页' : '',
+            ),
+            MediaInfoEntry(label: '文件大小', value: comic.displaySize),
+            MediaInfoEntry(
+              label: '修改时间',
+              value: comic.modifiedTime?.toLocal().toString() ?? '',
+            ),
+            MediaInfoEntry(label: '来源 ID', value: comic.sourceId, copyable: true),
+            MediaInfoEntry(label: '路径', value: comic.folderPath, copyable: true),
+          ],
+        );
       case MediaFileAction.download:
-        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
-        debugPrint('[ComicList] MediaFileAction.${action.name} 尚未实现');
+        await _downloadComic(context, ref);
     }
   }
 
@@ -1156,6 +1177,37 @@ class _ComicCard extends ConsumerWidget {
     if (result.isFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('分享失败：${result.error ?? "未知原因"}')),
+      );
+    }
+  }
+
+  /// 漫画压缩包加入下载队列
+  Future<void> _downloadComic(BuildContext context, WidgetRef ref) async {
+    final connections = ref.read(activeConnectionsProvider);
+    final connection = connections[comic.sourceId];
+    if (connection == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+      );
+      return;
+    }
+    try {
+      final url =
+          await connection.adapter.fileSystem.getFileUrl(comic.folderPath);
+      final service = ref.read(downloadServiceProvider);
+      final task = await service.addTask(
+        url: url,
+        fileName: comic.folderName,
+      );
+      unawaited(service.startDownload(task.id));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已加入下载：${comic.folderName}')),
+      );
+    } on Exception catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('加入下载失败：$e')),
       );
     }
   }
