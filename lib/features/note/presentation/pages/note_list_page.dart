@@ -21,6 +21,7 @@ import 'package:my_nas/features/sources/presentation/pages/media_library_page.da
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
@@ -413,46 +414,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
 
     // 加载文件内容
     try {
-      // 获取文件URL（懒加载）
-      var url = node.url;
-      if (url == null) {
-        // URL未缓存，需要获取
-        final connections = _ref.read(activeConnectionsProvider);
-        final connection = connections[node.sourceId];
-        if (connection == null || connection.status != SourceStatus.connected) {
-          throw Exception('连接已断开');
-        }
-        url = await connection.adapter.fileSystem.getFileUrl(node.path);
-      }
-
-      String content;
-      final uri = Uri.parse(url);
-
-      // 检查是否为本地文件 (file:// 协议)
-      if (uri.scheme == 'file') {
-        // 本地文件直接读取
-        final file = File(uri.toFilePath());
-        if (!await file.exists()) {
-          throw Exception('文件不存在');
-        }
-        final bytes = await file.readAsBytes();
-        try {
-          content = utf8.decode(bytes);
-        } on FormatException {
-          content = String.fromCharCodes(bytes);
-        }
-      } else {
-        // 远程文件通过 HTTP 获取
-        final response = await InsecureHttpClient.get(uri);
-        if (response.statusCode != 200) {
-          throw Exception('加载失败: ${response.statusCode}');
-        }
-        try {
-          content = utf8.decode(response.bodyBytes);
-        } on FormatException {
-          content = String.fromCharCodes(response.bodyBytes);
-        }
-      }
+      final content = await readNodeText(node);
 
       // 只有任务文件才解析任务
       final tasks = node.isTaskFile
@@ -469,6 +431,50 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
         content: '加载失败: $e',
         isLoadingContent: false,
       );
+    }
+  }
+
+  /// 读取笔记节点的文本内容（不修改 state）
+  ///
+  /// 失败时抛出异常，由调用方处理。供 selectFile 与"分享笔记"等只读场景复用。
+  Future<String> readNodeText(NoteTreeNode node) async {
+    if (node.type != NoteTreeNodeType.file) {
+      throw Exception('只能读取文件节点');
+    }
+
+    var url = node.url;
+    if (url == null) {
+      final connections = _ref.read(activeConnectionsProvider);
+      final connection = connections[node.sourceId];
+      if (connection == null || connection.status != SourceStatus.connected) {
+        throw Exception('连接已断开');
+      }
+      url = await connection.adapter.fileSystem.getFileUrl(node.path);
+    }
+
+    final uri = Uri.parse(url);
+
+    if (uri.scheme == 'file') {
+      final file = File(uri.toFilePath());
+      if (!await file.exists()) {
+        throw Exception('文件不存在');
+      }
+      final bytes = await file.readAsBytes();
+      try {
+        return utf8.decode(bytes);
+      } on FormatException {
+        return String.fromCharCodes(bytes);
+      }
+    }
+
+    final response = await InsecureHttpClient.get(uri);
+    if (response.statusCode != 200) {
+      throw Exception('加载失败: ${response.statusCode}');
+    }
+    try {
+      return utf8.decode(response.bodyBytes);
+    } on FormatException {
+      return String.fromCharCodes(response.bodyBytes);
     }
   }
 
@@ -634,6 +640,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
       context: context,
       fileName: node.displayName,
       showRemoveFromLibrary: false, // 笔记没有本地缓存，不支持"从媒体库移除"
+      showShare: true,
     );
 
     if (action == null || !context.mounted) return;
@@ -657,14 +664,29 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
                 node.displayName,
               );
         }
+      case MediaFileAction.share:
+        await _shareNote(node);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
-      case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 这些菜单项默认 showXxx=false，当前调用点未启用；
-        // 进入此分支说明上层启用了 flag 却忘记实现。
+        // 当前菜单只启用了 share；其余默认 showXxx=false 不会渲染。
         debugPrint('[NoteList] MediaFileAction.${action.name} 尚未实现');
+    }
+  }
+
+  /// 分享笔记的文本内容（subject 用 markdown 文件名）
+  Future<void> _shareNote(NoteTreeNode node) async {
+    try {
+      final content = await ref
+          .read(notePageProvider.notifier)
+          .readNodeText(node);
+      await Share.share(content, subject: node.displayName);
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('分享失败：$e')),
+      );
     }
   }
 
@@ -1826,6 +1848,7 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
       context: context,
       fileName: node.displayName,
       showRemoveFromLibrary: false, // 笔记没有本地缓存，不支持"从媒体库移除"
+      showShare: true,
     );
 
     if (action == null || !context.mounted) return;
@@ -1849,14 +1872,29 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
                 node.displayName,
               );
         }
+      case MediaFileAction.share:
+        await _shareNote(node);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
-      case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 这些菜单项默认 showXxx=false，当前调用点未启用；
-        // 进入此分支说明上层启用了 flag 却忘记实现。
+        // 当前菜单只启用了 share；其余默认 showXxx=false 不会渲染。
         debugPrint('[NoteListSecondary] MediaFileAction.${action.name} 尚未实现');
+    }
+  }
+
+  /// 分享笔记的文本内容（subject 用 markdown 文件名）
+  Future<void> _shareNote(NoteTreeNode node) async {
+    try {
+      final content = await ref
+          .read(notePageProvider.notifier)
+          .readNodeText(node);
+      await Share.share(content, subject: node.displayName);
+    } on Exception catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('分享失败：$e')),
+      );
     }
   }
 
