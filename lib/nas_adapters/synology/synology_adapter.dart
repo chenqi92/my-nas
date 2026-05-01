@@ -9,6 +9,7 @@ import 'package:my_nas/nas_adapters/base/nas_connection.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/synology/api/synology_api.dart';
 import 'package:my_nas/nas_adapters/synology/synology_file_system.dart';
+import 'package:my_nas/nas_adapters/synology/synology_media_service.dart';
 
 /// 群晖 NAS 适配器
 class SynologyAdapter implements NasAdapter {
@@ -21,6 +22,7 @@ class SynologyAdapter implements NasAdapter {
   late final DioClient _dioClient;
   late final SynologyApi _api;
   late SynologyFileSystem _fileSystem;
+  SynologyMediaService? _mediaService;
 
   ConnectionConfig? _config;
   ServerInfo? _serverInfo;
@@ -224,6 +226,8 @@ class SynologyAdapter implements NasAdapter {
     _connected = false;
     _config = null;
     _serverInfo = null;
+    // 媒体服务依赖 _api 的会话；登出后丢弃缓存实例，下次 connect 后重建
+    _mediaService = null;
   }
 
   @override
@@ -259,7 +263,10 @@ class SynologyAdapter implements NasAdapter {
   }
 
   @override
-  MediaService? get mediaService => null; // TODO: 实现 Video Station / Audio Station
+  MediaService? get mediaService {
+    if (!_connected) return null;
+    return _mediaService ??= SynologyMediaService(_api);
+  }
 
   @override
   ToolsService? get toolsService => null;

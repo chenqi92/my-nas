@@ -750,6 +750,23 @@ class SynologyApi {
     }
   }
 
+  /// 对外暴露的扩展 API 调用入口
+  ///
+  /// 用于 Video Station / Audio Station 等不在本类直接封装的 DSM 扩展。
+  /// 复用 [_request] 的错误处理和会话刷新逻辑。
+  ///
+  /// 失败时抛 [ServerException]——成功的响应原样返回（含 success/data/error 字段）。
+  Future<Map<String, dynamic>> callExtensionApi(
+    String api,
+    String method, {
+    required int version,
+    Map<String, dynamic>? params,
+  }) =>
+      _request(api, method, version: version, params: params);
+
+  /// 当前请求的 baseUrl（用于构造直接命中 cgi 的转码流 URL 等）
+  String get baseUrl => _dio.options.baseUrl;
+
   /// 通用请求方法
   Future<Map<String, dynamic>> _request(
     String api,
