@@ -27,6 +27,19 @@ enum SourceFormMode {
   edit,
 }
 
+/// 服务类源连接验证未实现的异常
+///
+/// 用于区分"调用了 _validateConnection 但该源类型尚未实现验证逻辑"和
+/// "已实现但验证失败"两种情况。前者在 UI 上提示"暂不支持自动验证"，
+/// 后者提示"连接失败"。
+class _ConnectionValidationNotImplementedException implements Exception {
+  const _ConnectionValidationNotImplementedException(this.sourceTypeName);
+  final String sourceTypeName;
+
+  @override
+  String toString() => '$sourceTypeName 连接验证尚未实现';
+}
+
 /// 源表单页面
 ///
 /// 根据源类型动态生成表单，支持创建和编辑模式
@@ -1205,13 +1218,14 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         } finally {
           await embyAdapter.dispose();
         }
-      // TODO: 添加其他服务类源的验证逻辑
       case SourceType.trakt:
-        // 暂时返回 false，待各服务 API 实现后添加验证逻辑
-        // ignore: only_throw_errors
-        throw '${source.type.displayName} 连接验证尚未实现';
+        // Trakt OAuth 验证待实现；用类型化异常告知调用方区分"未实现" vs "失败"
+        throw _ConnectionValidationNotImplementedException(
+            source.type.displayName);
       default:
-        return false;
+        // 其它未列出的服务类型同样标记为"未实现自动验证"，让 UI 给出友好提示
+        throw _ConnectionValidationNotImplementedException(
+            source.type.displayName);
     }
   }
 
@@ -1415,10 +1429,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       } else {
         _showErrorSnackBar('连接失败，请检查认证信息');
       }
-    } on String catch (message) {
-      // 不支持的源类型
+    } on _ConnectionValidationNotImplementedException catch (e) {
+      // 该源类型尚未实现自动验证：友好提示"暂不支持"
       if (!mounted) return;
-      _showErrorSnackBar(message);
+      _showErrorSnackBar('${e.sourceTypeName}：暂不支持自动验证连接');
     } on Exception catch (e) {
       if (!mounted) return;
       _showErrorSnackBar('连接失败: $e');

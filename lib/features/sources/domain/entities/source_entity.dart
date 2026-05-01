@@ -85,6 +85,10 @@ enum SourceType {
       };
 
   /// 该源类型是否已实现
+  ///
+  /// 注：与 [SourceManagerService._createAdapter] 保持同步——只有这里返回
+  /// true 的类型才会出现在 UI 选择器中，否则用户选了之后会落入
+  /// UnsupportedError。
   bool get isSupported => switch (this) {
         // NAS 设备
         SourceType.synology => true,
@@ -94,10 +98,12 @@ enum SourceType {
         // 通用协议
         SourceType.webdav => true,
         SourceType.smb => true,
-        SourceType.ftp => true,
-        SourceType.sftp => true,
-        SourceType.nfs => true,
-        SourceType.upnp => true,
+        // ftp/sftp/nfs/upnp 在 SourceManagerService 中尚未接入对应 adapter，
+        // UI 暂屏蔽——避免用户选了之后连接报 UnsupportedError
+        SourceType.ftp => false,
+        SourceType.sftp => false,
+        SourceType.nfs => false,
+        SourceType.upnp => false,
         // 本地存储
         SourceType.local => true,
         // 下载工具

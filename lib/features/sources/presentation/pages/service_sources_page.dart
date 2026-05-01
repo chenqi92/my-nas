@@ -595,12 +595,15 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
           );
         }
       case SourceType.trakt:
-      case SourceType.moviepilot:
-        // 其他服务类源暂未实现，显示提示
         if (context.mounted) {
-          context.showInfoToast('${widget.source.type.displayName} 详情页暂未实现');
+          context.showInfoToast('Trakt 详情页将随 OAuth 集成上线，敬请期待');
+        }
+      case SourceType.moviepilot:
+        if (context.mounted) {
+          context.showInfoToast('MoviePilot 详情页开发中，可在下载工具内先使用其它能力');
         }
       default:
+        // 其它已注册但未列出的服务类源：保持沉默，不弹错误
         break;
     }
   }
