@@ -90,13 +90,11 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
   }
 
   Widget _buildScraperList(MusicScraperSourcesState state, bool isDark) {
-    // 构建排序后的类型列表
-    final sortedTypes = _getSortedTypes(state.sources);
-
     if (_isReorderMode) {
-      return _buildReorderableList(state.sources, sortedTypes, isDark);
+      // 排序模式只列出已配置的源——未配置的类型没有 priority 概念
+      return _buildReorderableList(state.sources, isDark);
     }
-
+    final sortedTypes = _getSortedTypes(state.sources);
     return _buildNormalList(state.sources, sortedTypes, isDark);
   }
 
@@ -128,83 +126,124 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
       );
 
   /// 构建可排序列表（排序模式）
+  ///
+  /// 仅列出已配置的源（即 [sources] 自身，已按 priority 排序）。
+  /// 未配置的类型没有 priority 概念，不参与拖动。
   Widget _buildReorderableList(
     List<MusicScraperSourceEntity> sources,
-    List<MusicScraperType> sortedTypes,
     bool isDark,
-  ) => ReorderableListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: sortedTypes.length,
-        onReorder: (oldIndex, newIndex) => _handleReorder(sources, sortedTypes, oldIndex, newIndex),
-        proxyDecorator: (child, index, animation) => AnimatedBuilder(
-          animation: animation,
-          builder: (context, child) {
-            final elevation = Tween<double>(begin: 0, end: 8).evaluate(animation);
-            return Material(
-              elevation: elevation,
-              borderRadius: BorderRadius.circular(16),
-              child: child,
-            );
-          },
-          child: child,
+  ) {
+    final hiddenTypes = _hiddenTypes;
+    final reorderable = sources
+        .where((s) => !hiddenTypes.contains(s.type))
+        .toList();
+
+    if (reorderable.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            '暂无已配置的刮削源可排序',
+            style: TextStyle(
+              color: isDark ? Colors.grey[500] : Colors.grey[600],
+            ),
+          ),
         ),
-        itemBuilder: (context, index) {
-          final type = sortedTypes[index];
-          final source = sources.where((s) => s.type == type).firstOrNull;
-
-          return _MusicScraperTypeCard(
-            key: ValueKey(type),
-            index: index,
-            type: type,
-            source: source,
-            isDark: isDark,
-            isTesting: source != null && _testingSourceId == source.id,
-            isReorderMode: true,
-            onTap: () => _handleTap(type, source),
-            onToggle: (enabled) => _handleToggle(type, source, enabled),
-            onTest: source != null ? () => _testConnection(source) : null,
-          );
-        },
       );
+    }
 
-  /// 获取排序后的类型列表
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Text(
+            '拖动调整刮削优先级（数值越靠前越先尝试）；未配置的源不参与排序',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.grey[500] : Colors.grey[600],
+            ),
+          ),
+        ),
+        Expanded(
+          child: ReorderableListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: reorderable.length,
+            onReorder: (oldIndex, newIndex) =>
+                _handleReorder(reorderable, oldIndex, newIndex),
+            proxyDecorator: (child, index, animation) => AnimatedBuilder(
+              animation: animation,
+              builder: (context, child) {
+                final elevation =
+                    Tween<double>(begin: 0, end: 8).evaluate(animation);
+                return Material(
+                  elevation: elevation,
+                  borderRadius: BorderRadius.circular(16),
+                  child: child,
+                );
+              },
+              child: child,
+            ),
+            itemBuilder: (context, index) {
+              final source = reorderable[index];
+              return _MusicScraperTypeCard(
+                key: ValueKey(source.id),
+                index: index,
+                type: source.type,
+                source: source,
+                isDark: isDark,
+                isTesting: _testingSourceId == source.id,
+                isReorderMode: true,
+                onTap: () => _handleTap(source.type, source),
+                onToggle: (enabled) => _handleToggle(source.type, source, enabled),
+                onTest: () => _testConnection(source),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 暂不对外开放的类型
+  static const Set<MusicScraperType> _hiddenTypes = {
+    MusicScraperType.musicTagWeb,
+  };
+
+  /// 获取排序后的类型列表（普通模式）
   List<MusicScraperType> _getSortedTypes(List<MusicScraperSourceEntity> sources) {
-    // 隐藏 MusicTagWeb（暂不对外开放）
-    final hiddenTypes = {MusicScraperType.musicTagWeb};
-
     final configuredTypes = sources
         .map((s) => s.type)
-        .where((t) => !hiddenTypes.contains(t))
+        .where((t) => !_hiddenTypes.contains(t))
         .toList();
     final unconfiguredTypes = MusicScraperType.values
-        .where((t) => !configuredTypes.contains(t) && !hiddenTypes.contains(t))
+        .where((t) => !configuredTypes.contains(t) && !_hiddenTypes.contains(t))
         .toList();
     return [...configuredTypes, ...unconfiguredTypes];
   }
 
   /// 处理重排序
+  ///
+  /// [reorderable] 是排序模式下展示的已配置源列表，因为 hiddenTypes 的存在，
+  /// 它的索引可能与 provider 中的 `state.sources` 索引不一致——必须用 id 回查。
   void _handleReorder(
-    List<MusicScraperSourceEntity> sources,
-    List<MusicScraperType> sortedTypes,
+    List<MusicScraperSourceEntity> reorderable,
     int oldIndex,
     int newIndex,
   ) {
-    // ReorderableListView 的 onReorder 回调中，如果 oldIndex < newIndex，newIndex 会比实际大 1
+    // ReorderableListView 约定：oldIndex < newIndex 时 newIndex 比实际大 1
     var adjustedNewIndex = newIndex;
     if (oldIndex < adjustedNewIndex) {
       adjustedNewIndex -= 1;
     }
+    if (oldIndex == adjustedNewIndex) return;
 
-    final type = sortedTypes[oldIndex];
-    final sourceIndex = sources.indexWhere((s) => s.type == type);
-    if (sourceIndex == -1) return;
+    final sources = ref.read(musicScraperSourcesProvider).sources;
+    final fromIndex = sources.indexWhere((s) => s.id == reorderable[oldIndex].id);
+    final toIndex =
+        sources.indexWhere((s) => s.id == reorderable[adjustedNewIndex].id);
+    if (fromIndex == -1 || toIndex == -1) return;
 
-    final targetType = sortedTypes[adjustedNewIndex];
-    final targetSourceIndex = sources.indexWhere((s) => s.type == targetType);
-    if (targetSourceIndex == -1) return;
-
-    // 直接传递源列表中的索引，不再二次调整
-    ref.read(musicScraperSourcesProvider.notifier).reorder(sourceIndex, targetSourceIndex);
+    ref.read(musicScraperSourcesProvider.notifier).reorder(fromIndex, toIndex);
   }
 
   /// 处理点击

@@ -62,9 +62,13 @@ class MusicScraperSourcesNotifier extends StateNotifier<MusicScraperSourcesState
   /// 添加刮削源
   Future<void> addSource(MusicScraperSourceEntity source) async {
     try {
-      await _manager.addSource(source);
-      await load();
+      final created = await _manager.addSource(source);
+      // 局部更新：把新 entity 追加到列表，按 priority 重排
+      final next = [...state.sources, created]
+        ..sort((a, b) => a.priority.compareTo(b.priority));
+      state = state.copyWith(sources: next);
     } on Exception catch (e) {
+      // 写盘失败：保持 state 不变并记录错误，让用户重试
       state = state.copyWith(error: e.toString());
     }
   }
@@ -73,8 +77,13 @@ class MusicScraperSourcesNotifier extends StateNotifier<MusicScraperSourcesState
   Future<void> updateSource(MusicScraperSourceEntity source) async {
     try {
       await _manager.updateSource(source);
-      await load();
+      final next = state.sources
+          .map((s) => s.id == source.id ? source : s)
+          .toList();
+      state = state.copyWith(sources: next);
     } on Exception catch (e) {
+      // 写盘失败时回退：从存储重新拉取一次，避免内存与磁盘漂移
+      await load();
       state = state.copyWith(error: e.toString());
     }
   }
@@ -83,7 +92,8 @@ class MusicScraperSourcesNotifier extends StateNotifier<MusicScraperSourcesState
   Future<void> removeSource(String id) async {
     try {
       await _manager.removeSource(id);
-      await load();
+      final next = state.sources.where((s) => s.id != id).toList();
+      state = state.copyWith(sources: next);
     } on Exception catch (e) {
       state = state.copyWith(error: e.toString());
     }
@@ -93,8 +103,13 @@ class MusicScraperSourcesNotifier extends StateNotifier<MusicScraperSourcesState
   Future<void> toggleSource(String id, {required bool isEnabled}) async {
     try {
       await _manager.toggleSource(id, isEnabled: isEnabled);
-      await load();
+      final next = state.sources
+          .map((s) => s.id == id ? s.copyWith(isEnabled: isEnabled) : s)
+          .toList();
+      state = state.copyWith(sources: next);
     } on Exception catch (e) {
+      // toggle 失败 → 重新加载以恢复真实状态
+      await load();
       state = state.copyWith(error: e.toString());
     }
   }
