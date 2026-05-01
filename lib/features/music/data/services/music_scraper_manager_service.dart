@@ -25,6 +25,13 @@ class MusicScraperManagerService {
   /// 旧版本默认启用了商业平台刮削源；该迁移会把高风险源置为禁用状态。
   static const String _migrationKeyComplianceV1 = '__migration_compliance_v1__';
 
+  /// V2 迁移标记：把 Music Tag Web 的 password 从 Hive 明文搬到 secure storage。
+  /// 旧版本通过 extraConfig 落盘时把密码也写进了 Hive。
+  static const String _migrationKeyComplianceV2 = '__migration_compliance_v2__';
+
+  /// extraConfig 中的密码字段名
+  static const String _passwordExtraKey = 'password';
+
   late final FlutterSecureStorage _secureStorage;
   Box<dynamic>? _box;
   final Map<String, MusicScraper> _scraperCache = {};
@@ -56,6 +63,8 @@ class MusicScraperManagerService {
       await _addMissingDefaultSources();
       // 一次性合规迁移：将高风险源（绕过加密的网易云）置为禁用
       await _runComplianceMigrationV1();
+      // 一次性安全迁移：把 extraConfig.password 搬到 secure storage
+      await _runComplianceMigrationV2();
     }
 
     final sources = <MusicScraperSourceEntity>[];
@@ -68,16 +77,9 @@ class MusicScraperManagerService {
           final source = MusicScraperSourceEntity.fromJson(
             Map<String, dynamic>.from(data),
           );
-          // 加载凭证
+          // 加载凭证（apiKey / cookie / password）
           final credential = await getCredential(source.id);
-          if (credential != null && !credential.isEmpty) {
-            sources.add(source.copyWith(
-              apiKey: credential.apiKey ?? source.apiKey,
-              cookie: credential.cookie ?? source.cookie,
-            ));
-          } else {
-            sources.add(source);
-          }
+          sources.add(_mergeCredentialIntoSource(source, credential));
         } on Exception catch (e, st) {
           AppError.ignore(e, st, '解析刮削源配置失败: $key');
         }
@@ -87,6 +89,28 @@ class MusicScraperManagerService {
     // 按优先级排序
     sources.sort((a, b) => a.priority.compareTo(b.priority));
     return sources;
+  }
+
+  /// 把 secure storage 中的凭证字段合并回 entity 内存表示。
+  ///
+  /// password 注入到 extraConfig 中，供 [MusicScraperFactory] 读取。
+  MusicScraperSourceEntity _mergeCredentialIntoSource(
+    MusicScraperSourceEntity source,
+    MusicScraperCredential? credential,
+  ) {
+    if (credential == null || credential.isEmpty) return source;
+    final hasPassword = credential.password?.isNotEmpty ?? false;
+    final mergedExtra = hasPassword
+        ? <String, dynamic>{
+            ...?source.extraConfig,
+            _passwordExtraKey: credential.password,
+          }
+        : source.extraConfig;
+    return source.copyWith(
+      apiKey: credential.apiKey ?? source.apiKey,
+      cookie: credential.cookie ?? source.cookie,
+      extraConfig: mergedExtra,
+    );
   }
 
   /// 初始化默认刮削源（不需要配置的源）
@@ -117,6 +141,7 @@ class MusicScraperManagerService {
 
     // 新装即视为已完成合规迁移，避免后续重复处理
     await _box!.put(_migrationKeyComplianceV1, true);
+    await _box!.put(_migrationKeyComplianceV2, true);
   }
 
   /// 为已有用户添加缺失的默认刮削源
@@ -209,6 +234,55 @@ class MusicScraperManagerService {
     await _box!.put(_migrationKeyComplianceV1, true);
   }
 
+  /// V2 迁移：把 extraConfig.password 从 Hive 明文转写到 secure storage。
+  ///
+  /// 旧实现把 password 一并放在 extraConfig 里，连同其它非敏感字段
+  /// （serverUrl/username/preferredSource）写入 Hive box。迁移后：
+  /// - secure storage 中的 [MusicScraperCredential] 增加 password 字段
+  /// - Hive 中 extraConfig.password 被清掉，其余字段保留
+  ///
+  /// 仅在已存在配置且尚未跑过该迁移时执行。
+  Future<void> _runComplianceMigrationV2() async {
+    final alreadyDone = _box!.get(_migrationKeyComplianceV2) == true;
+    if (alreadyDone) return;
+
+    for (final key in _box!.keys.toList()) {
+      if (key is String && key.startsWith('__')) continue;
+      final data = _box!.get(key);
+      if (data is! Map) continue;
+
+      try {
+        final raw = Map<String, dynamic>.from(data);
+        final extra = raw['extraConfig'];
+        if (extra is! Map) continue;
+
+        final extraMap = Map<String, dynamic>.from(extra);
+        final password = extraMap[_passwordExtraKey];
+        if (password is! String || password.isEmpty) continue;
+
+        // 1. 把 password 合并写入 secure storage（保留已有 apiKey / cookie）
+        final existing = await getCredential(raw['id'] as String);
+        await saveCredential(
+          raw['id'] as String,
+          MusicScraperCredential(
+            apiKey: existing?.apiKey,
+            cookie: existing?.cookie,
+            password: password,
+          ),
+        );
+
+        // 2. 从 Hive 中清掉 password 字段
+        extraMap.remove(_passwordExtraKey);
+        raw['extraConfig'] = extraMap.isEmpty ? null : extraMap;
+        await _box!.put(raw['id'] as String, raw);
+      } on Exception catch (e, st) {
+        AppError.ignore(e, st, 'password 安全迁移失败: $key');
+      }
+    }
+
+    await _box!.put(_migrationKeyComplianceV2, true);
+  }
+
   /// 获取单个刮削源
   Future<MusicScraperSourceEntity?> getSource(String id) async {
     await _ensureInit();
@@ -221,13 +295,7 @@ class MusicScraperManagerService {
         Map<String, dynamic>.from(data),
       );
       final credential = await getCredential(id);
-      if (credential != null && !credential.isEmpty) {
-        return source.copyWith(
-          apiKey: credential.apiKey ?? source.apiKey,
-          cookie: credential.cookie ?? source.cookie,
-        );
-      }
-      return source;
+      return _mergeCredentialIntoSource(source, credential);
     } on Exception catch (e, st) {
       AppError.ignore(e, st, '解析刮削源配置失败: $id');
       return null;
@@ -243,26 +311,17 @@ class MusicScraperManagerService {
     final newPriority = sources.isEmpty ? 0 : sources.last.priority + 1;
     final newSource = source.copyWith(priority: newPriority);
 
-    // 保存配置（不含敏感信息）
-    await _box!.put(newSource.id, newSource.toJson()
-      ..remove('apiKey')
-      ..remove('cookie'));
+    // 抠出敏感字段：apiKey、cookie 走 secure storage；
+    // extraConfig.password 也敏感，剥离后不写入 Hive
+    final password = _stripPasswordFromExtraConfig(source);
+    await _box!.put(newSource.id, _toBoxJson(newSource));
 
-    // 保存凭证
-    final hasApiKey = source.apiKey?.isNotEmpty ?? false;
-    final hasCookie = source.cookie?.isNotEmpty ?? false;
-    if (hasApiKey || hasCookie) {
-      await saveCredential(
-        newSource.id,
-        MusicScraperCredential(
-          apiKey: hasApiKey ? source.apiKey : null,
-          cookie: hasCookie ? source.cookie : null,
-        ),
-      );
-    } else {
-      // 没有凭证时显式清除，避免残留旧值
-      await removeCredential(newSource.id);
-    }
+    await _persistCredential(
+      newSource.id,
+      apiKey: source.apiKey,
+      cookie: source.cookie,
+      password: password,
+    );
 
     // 清除缓存
     _scraperCache.remove(newSource.id);
@@ -274,29 +333,70 @@ class MusicScraperManagerService {
   Future<void> updateSource(MusicScraperSourceEntity source) async {
     await _ensureInit();
 
-    // 保存配置（不含敏感信息）
-    await _box!.put(source.id, source.toJson()
-      ..remove('apiKey')
-      ..remove('cookie'));
+    final password = _stripPasswordFromExtraConfig(source);
+    await _box!.put(source.id, _toBoxJson(source));
 
-    // 更新凭证
-    final hasApiKey = source.apiKey?.isNotEmpty ?? false;
-    final hasCookie = source.cookie?.isNotEmpty ?? false;
-    if (hasApiKey || hasCookie) {
-      await saveCredential(
-        source.id,
-        MusicScraperCredential(
-          apiKey: hasApiKey ? source.apiKey : null,
-          cookie: hasCookie ? source.cookie : null,
-        ),
-      );
-    } else {
-      // 用户清空了凭证字段：从 secure storage 中移除
-      await removeCredential(source.id);
-    }
+    await _persistCredential(
+      source.id,
+      apiKey: source.apiKey,
+      cookie: source.cookie,
+      password: password,
+    );
 
     // 清除缓存（先释放旧实例，避免 HTTP 客户端等资源泄漏）
     _scraperCache.remove(source.id)?.dispose();
+  }
+
+  /// 序列化为可写入 Hive 的 JSON：剥离所有敏感字段。
+  ///
+  /// apiKey / cookie 顶层移除；extraConfig.password 因为是同样敏感的字段，
+  /// 也必须剥离。调用方应在调用本方法前先用 [_stripPasswordFromExtraConfig]
+  /// 拿到 password 并交给 secure storage。
+  Map<String, dynamic> _toBoxJson(MusicScraperSourceEntity source) {
+    final json = source.toJson()
+      ..remove('apiKey')
+      ..remove('cookie');
+    final extra = json['extraConfig'];
+    if (extra is Map) {
+      final clean = Map<String, dynamic>.from(extra)..remove(_passwordExtraKey);
+      json['extraConfig'] = clean.isEmpty ? null : clean;
+    }
+    return json;
+  }
+
+  /// 从 source.extraConfig 中取出 password 字段（如果有）。
+  ///
+  /// 不修改原 entity，仅读取；后续写盘走 [_toBoxJson]。
+  String? _stripPasswordFromExtraConfig(MusicScraperSourceEntity source) {
+    final extra = source.extraConfig;
+    if (extra == null) return null;
+    final pwd = extra[_passwordExtraKey];
+    return pwd is String && pwd.isNotEmpty ? pwd : null;
+  }
+
+  /// 统一的凭证写入入口：所有空值合并清除
+  Future<void> _persistCredential(
+    String sourceId, {
+    String? apiKey,
+    String? cookie,
+    String? password,
+  }) async {
+    final hasApiKey = apiKey?.isNotEmpty ?? false;
+    final hasCookie = cookie?.isNotEmpty ?? false;
+    final hasPassword = password?.isNotEmpty ?? false;
+    if (hasApiKey || hasCookie || hasPassword) {
+      await saveCredential(
+        sourceId,
+        MusicScraperCredential(
+          apiKey: hasApiKey ? apiKey : null,
+          cookie: hasCookie ? cookie : null,
+          password: hasPassword ? password : null,
+        ),
+      );
+    } else {
+      // 没有任何凭证：从 secure storage 中移除以避免残留旧值
+      await removeCredential(sourceId);
+    }
   }
 
   /// 删除刮削源

@@ -281,27 +281,38 @@ class MusicScraperSourceEntity {
 }
 
 /// 音乐刮削凭证
+///
+/// 所有敏感字段（apiKey / cookie / password）落地到 flutter_secure_storage，
+/// 不会进入 Hive 配置文件。其它字段（serverUrl / username / preferredSource 等）
+/// 仍保留在 [MusicScraperSourceEntity.extraConfig] 中。
 class MusicScraperCredential {
   const MusicScraperCredential({
     this.apiKey,
     this.cookie,
+    this.password,
   });
 
   factory MusicScraperCredential.fromJson(Map<String, dynamic> json) =>
       MusicScraperCredential(
         apiKey: json['apiKey'] as String?,
         cookie: json['cookie'] as String?,
+        password: json['password'] as String?,
       );
 
   final String? apiKey;
   final String? cookie;
 
+  /// Music Tag Web 等需要密码的源使用
+  final String? password;
+
   bool get isEmpty =>
       (apiKey == null || apiKey!.isEmpty) &&
-      (cookie == null || cookie!.isEmpty);
+      (cookie == null || cookie!.isEmpty) &&
+      (password == null || password!.isEmpty);
 
   Map<String, dynamic> toJson() => {
         'apiKey': apiKey,
         'cookie': cookie,
+        'password': password,
       };
 }
