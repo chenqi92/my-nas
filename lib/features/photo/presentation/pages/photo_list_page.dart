@@ -15,6 +15,7 @@ import 'package:my_nas/core/services/media_scan_progress_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_library_cache_service.dart';
+import 'package:my_nas/features/photo/data/services/photo_save_service.dart';
 import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_duplicates_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_viewer_page.dart';
@@ -3065,6 +3066,7 @@ class _PhotoGridItem extends ConsumerWidget {
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: photo.name,
+      showShare: true,
     );
 
     if (action == null || !context.mounted) return;
@@ -3106,14 +3108,48 @@ class _PhotoGridItem extends ConsumerWidget {
             );
           }
         }
+      case MediaFileAction.share:
+        await _sharePhoto(context, ref);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
-      case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 这些菜单项默认 showXxx=false，当前调用点未启用；
-        // 进入此分支说明上层启用了 flag 却忘记实现。
+        // 当前菜单只启用了 share；其余 action 的 showXxx 默认 false。
+        // 进入此分支说明上层启用了对应 flag 却忘记实现，给一条防御日志。
         debugPrint('[PhotoList] MediaFileAction.${action.name} 尚未实现');
+    }
+  }
+
+  /// 分享照片：把 NAS 上的原图流式下载到临时目录后调用系统分享面板
+  Future<void> _sharePhoto(BuildContext context, WidgetRef ref) async {
+    final connections = ref.read(activeConnectionsProvider);
+    final connection = connections[photo.sourceId];
+    if (connection == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+      );
+      return;
+    }
+
+    final saveService = PhotoSaveService();
+    if (!saveService.canShare) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('当前平台不支持系统分享')),
+      );
+      return;
+    }
+
+    final result = await saveService.sharePhotoFromStream(
+      fileSystem: connection.adapter.fileSystem,
+      path: photo.path,
+      fileName: photo.name,
+    );
+
+    if (!context.mounted) return;
+    if (result.isFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('分享失败：${result.error ?? "未知原因"}')),
+      );
     }
   }
 
