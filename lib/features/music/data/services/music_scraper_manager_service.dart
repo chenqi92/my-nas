@@ -420,13 +420,17 @@ class MusicScraperManagerService {
   }
 
   /// 调整优先级顺序
+  ///
+  /// 直接修改 Hive 中存储的 priority 字段，不动 secure storage 凭证、不重建
+  /// scraper 缓存。N 个源的 reorder 由原来的 2N 次 secure storage I/O 降至 0 次。
   Future<void> reorderSources(List<String> orderedIds) async {
     await _ensureInit();
 
     for (var i = 0; i < orderedIds.length; i++) {
-      final source = await getSource(orderedIds[i]);
-      if (source != null) {
-        await updateSource(source.copyWith(priority: i));
+      final raw = _box!.get(orderedIds[i]);
+      if (raw is Map) {
+        final json = Map<String, dynamic>.from(raw)..['priority'] = i;
+        await _box!.put(orderedIds[i], json);
       }
     }
   }
