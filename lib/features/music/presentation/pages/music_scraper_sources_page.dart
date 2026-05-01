@@ -133,12 +133,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
     List<MusicScraperSourceEntity> sources,
     bool isDark,
   ) {
-    final hiddenTypes = _hiddenTypes;
-    final reorderable = sources
-        .where((s) => !hiddenTypes.contains(s.type))
-        .toList();
-
-    if (reorderable.isEmpty) {
+    if (sources.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -167,9 +162,9 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
         Expanded(
           child: ReorderableListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: reorderable.length,
+            itemCount: sources.length,
             onReorder: (oldIndex, newIndex) =>
-                _handleReorder(reorderable, oldIndex, newIndex),
+                _handleReorder(sources, oldIndex, newIndex),
             proxyDecorator: (child, index, animation) => AnimatedBuilder(
               animation: animation,
               builder: (context, child) {
@@ -184,7 +179,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
               child: child,
             ),
             itemBuilder: (context, index) {
-              final source = reorderable[index];
+              final source = sources[index];
               return _MusicScraperTypeCard(
                 key: ValueKey(source.id),
                 index: index,
@@ -204,27 +199,20 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
     );
   }
 
-  /// 暂不对外开放的类型
-  static const Set<MusicScraperType> _hiddenTypes = {
-    MusicScraperType.musicTagWeb,
-  };
-
   /// 获取排序后的类型列表（普通模式）
   List<MusicScraperType> _getSortedTypes(List<MusicScraperSourceEntity> sources) {
-    final configuredTypes = sources
-        .map((s) => s.type)
-        .where((t) => !_hiddenTypes.contains(t))
-        .toList();
+    final configuredTypes = sources.map((s) => s.type).toList();
     final unconfiguredTypes = MusicScraperType.values
-        .where((t) => !configuredTypes.contains(t) && !_hiddenTypes.contains(t))
+        .where((t) => !configuredTypes.contains(t))
         .toList();
     return [...configuredTypes, ...unconfiguredTypes];
   }
 
   /// 处理重排序
   ///
-  /// [reorderable] 是排序模式下展示的已配置源列表，因为 hiddenTypes 的存在，
-  /// 它的索引可能与 provider 中的 `state.sources` 索引不一致——必须用 id 回查。
+  /// [reorderable] 直接来自 provider 的 `state.sources`，索引一致。
+  /// 仍按 id 回查 provider 当前 sources（防止 ref.watch 与 ReorderableListView
+  /// 的 onReorder 之间发生过状态更新导致索引漂移）。
   void _handleReorder(
     List<MusicScraperSourceEntity> reorderable,
     int oldIndex,
@@ -473,6 +461,15 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
               Text('1. MusicBrainz - 开放音乐数据库，CC0 元数据 + 封面（默认启用）'),
               Text('2. AcoustID - 声纹识别（需要 API Key，建议使用）'),
               SizedBox(height: 12),
+              Text('3. Music Tag Web - 自托管刮削网关（需要部署服务器，默认禁用）',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Text(
+                '把刮削请求转发到你自己部署的 Music Tag Web 服务（开源项目 xhongc/music_tag_web）， '
+                '由你的服务器决定具体走哪个上游音乐平台，本应用只对接服务器接口。',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              SizedBox(height: 12),
               Text('以下为商业平台刮削源（默认禁用）：',
                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
               SizedBox(height: 8),
@@ -492,9 +489,10 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
               Text('• 歌词：歌词文本（LRC 格式）'),
               Text('• 声纹：通过音频指纹识别歌曲'),
               SizedBox(height: 16),
-              Text('API Key 获取：', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('外部资源：', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
-              Text('• AcoustID: acoustid.org/api-key'),
+              Text('• AcoustID API Key: acoustid.org/api-key'),
+              Text('• Music Tag Web: github.com/xhongc/music_tag_web'),
             ],
           ),
         ),

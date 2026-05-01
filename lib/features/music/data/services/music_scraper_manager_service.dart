@@ -125,6 +125,7 @@ class MusicScraperManagerService {
       (MusicScraperType.miguMusic, false),
       (MusicScraperType.qqMusic, false),
       (MusicScraperType.neteaseMusic, false),  // 加密绕过风险最高，默认禁用
+      (MusicScraperType.musicTagWeb, false),   // 自托管，需用户填入服务器地址后启用
     ];
 
     for (var i = 0; i < defaultTypes.length; i++) {
@@ -146,7 +147,7 @@ class MusicScraperManagerService {
 
   /// 为已有用户添加缺失的默认刮削源
   Future<void> _addMissingDefaultSources() async {
-    // 新增源时遵循同样的安全默认：开放源默认启用，商业平台默认禁用。
+    // 新增源时遵循同样的安全默认：开放源默认启用，其它默认禁用。
     final defaultTypes = [
       (MusicScraperType.musicBrainz, true),
       (MusicScraperType.acoustId, false),
@@ -155,6 +156,7 @@ class MusicScraperManagerService {
       (MusicScraperType.miguMusic, false),
       (MusicScraperType.qqMusic, false),
       (MusicScraperType.neteaseMusic, false),
+      (MusicScraperType.musicTagWeb, false),
     ];
 
     // 获取当前已有的源类型
