@@ -25,6 +25,7 @@ import 'package:my_nas/features/sources/presentation/pages/media_library_page.da
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/services/nas_file_share_service.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
@@ -1830,6 +1831,7 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: displayName,
+      showShare: true,
     );
 
     if (action == null || !context.mounted) return;
@@ -1863,14 +1865,50 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
                 displayName,
               );
         }
+      case MediaFileAction.share:
+        await _shareBook(context, ref, book, displayName);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
-      case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 这些菜单项默认 showXxx=false，当前调用点未启用；
-        // 进入此分支说明上层启用了 flag 却忘记实现。
+        // 当前菜单只启用了 share；其余默认 showXxx=false 不会渲染。
         debugPrint('[BookList] MediaFileAction.${action.name} 尚未实现');
+    }
+  }
+
+  /// 分享图书文件（流式从 NAS 拉到临时目录后调系统分享）
+  Future<void> _shareBook(
+    BuildContext context,
+    WidgetRef ref,
+    BookEntity book,
+    String displayName,
+  ) async {
+    final connections = ref.read(activeConnectionsProvider);
+    final connection = connections[book.sourceId];
+    if (connection == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+      );
+      return;
+    }
+    if (!NasFileShareService.canShare) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('当前平台不支持系统分享')),
+      );
+      return;
+    }
+    // 用文件名（含扩展名）作为分享标题，方便接收方识别格式
+    final fileName = book.fileName.isNotEmpty ? book.fileName : displayName;
+    final result = await NasFileShareService.shareFromStream(
+      fileSystem: connection.adapter.fileSystem,
+      path: book.filePath,
+      fileName: fileName,
+    );
+    if (!context.mounted) return;
+    if (result.isFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('分享失败：${result.error ?? "未知原因"}')),
+      );
     }
   }
 }

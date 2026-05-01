@@ -19,6 +19,7 @@ import 'package:my_nas/features/sources/presentation/pages/media_library_page.da
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/services/nas_file_share_service.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
@@ -1063,9 +1064,11 @@ class _ComicCard extends ConsumerWidget {
   }
 
   Future<void> _showContextMenu(BuildContext context, WidgetRef ref) async {
+    // 文件夹形式的漫画无单文件可分享，仅压缩包格式才显示 share
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: comic.folderName,
+      showShare: comic.isArchive,
     );
 
     if (action == null || !context.mounted) return;
@@ -1099,14 +1102,43 @@ class _ComicCard extends ConsumerWidget {
                 comic.folderName,
               );
         }
+      case MediaFileAction.share:
+        await _shareComic(context, ref);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
-      case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 这些菜单项默认 showXxx=false，当前调用点未启用；
-        // 进入此分支说明上层启用了 flag 却忘记实现。
+        // 当前菜单只对压缩包格式启用了 share；其余 showXxx=false 不会渲染。
         debugPrint('[ComicList] MediaFileAction.${action.name} 尚未实现');
+    }
+  }
+
+  /// 分享漫画文件（仅 cbz / cbr / cb7 等压缩包格式）
+  Future<void> _shareComic(BuildContext context, WidgetRef ref) async {
+    final connections = ref.read(activeConnectionsProvider);
+    final connection = connections[comic.sourceId];
+    if (connection == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+      );
+      return;
+    }
+    if (!NasFileShareService.canShare) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('当前平台不支持系统分享')),
+      );
+      return;
+    }
+    final result = await NasFileShareService.shareFromStream(
+      fileSystem: connection.adapter.fileSystem,
+      path: comic.folderPath,
+      fileName: comic.folderName,
+    );
+    if (!context.mounted) return;
+    if (result.isFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('分享失败：${result.error ?? "未知原因"}')),
+      );
     }
   }
 }
