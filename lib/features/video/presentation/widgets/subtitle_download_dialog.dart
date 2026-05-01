@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/features/sources/domain/entities/source_category.dart';
+import 'package:my_nas/features/sources/presentation/pages/service_sources_page.dart';
 import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
-import 'package:my_nas/core/extensions/context_extensions.dart';
 
 /// 字幕下载对话框
 ///
@@ -235,7 +237,17 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
                   TextButton.icon(
                     onPressed: () {
                       Navigator.of(context).pop();
-                      // TODO: 导航到设置页面
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ServiceSourcesPage(
+                            title: '字幕站点',
+                            category: SourceCategory.subtitleSites,
+                            emptyIcon: Icons.subtitles_rounded,
+                            emptyTitle: '尚未配置字幕站点',
+                            emptySubtitle: '添加 OpenSubtitles 等字幕服务\n用于在线搜索和下载字幕',
+                          ),
+                        ),
+                      );
                     },
                     icon: const Icon(Icons.settings, size: 18),
                     label: const Text('配置'),

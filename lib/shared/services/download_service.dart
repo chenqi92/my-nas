@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -14,6 +15,20 @@ enum DownloadStatus {
   completed,
   failed,
   cancelled,
+}
+
+/// 打开文件 / 目录的操作结果
+///
+/// 由 [DownloadService.openFile] 和 [DownloadService.openDownloadDirectory] 返回，
+/// 让调用方决定是否给用户弹 toast。
+class DownloadOpenResult {
+  const DownloadOpenResult({
+    required this.success,
+    this.message,
+  });
+
+  final bool success;
+  final String? message;
 }
 
 /// 下载任务
@@ -276,16 +291,70 @@ class DownloadService {
   }
 
   /// 打开下载的文件
-  Future<void> openFile(String taskId) async {
+  ///
+  /// 桌面端：调用系统默认应用打开文件
+  /// iOS：尝试用 [OpenFilex] 唤起对应的查看器；某些类型可能受沙盒限制
+  /// Android：通过 FileProvider intent 打开（已在 manifest 中配置）
+  Future<DownloadOpenResult> openFile(String taskId) async {
     final task = _tasks[taskId];
-    if (task == null || task.status != DownloadStatus.completed) return;
+    if (task == null) {
+      return const DownloadOpenResult(success: false, message: '任务不存在');
+    }
+    if (task.status != DownloadStatus.completed) {
+      return const DownloadOpenResult(success: false, message: '文件尚未下载完成');
+    }
 
-    // TODO: 使用 open_file 包打开文件
+    final file = File(task.savePath);
+    if (!file.existsSync()) {
+      return const DownloadOpenResult(success: false, message: '文件已被移除或路径无效');
+    }
+
+    try {
+      final result = await OpenFilex.open(task.savePath);
+      return DownloadOpenResult(
+        success: result.type == ResultType.done,
+        message: result.message,
+      );
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, '打开下载文件失败');
+      return DownloadOpenResult(success: false, message: e.toString());
+    }
   }
 
   /// 打开下载目录
-  Future<void> openDownloadDirectory() async {
-    // TODO: 使用平台特定方法打开目录
+  ///
+  /// 桌面端：调用系统文件管理器（Finder / Explorer / xdg-open）
+  /// 移动端：返回失败 + 提示——iOS / Android 没有"打开任意目录"的语义
+  Future<DownloadOpenResult> openDownloadDirectory() async {
+    try {
+      final dir = await downloadDirectory;
+      final directory = Directory(dir);
+      if (!directory.existsSync()) {
+        return const DownloadOpenResult(success: false, message: '下载目录不存在');
+      }
+
+      if (Platform.isMacOS) {
+        await Process.run('open', [dir]);
+        return const DownloadOpenResult(success: true);
+      }
+      if (Platform.isWindows) {
+        await Process.run('explorer', [dir]);
+        return const DownloadOpenResult(success: true);
+      }
+      if (Platform.isLinux) {
+        await Process.run('xdg-open', [dir]);
+        return const DownloadOpenResult(success: true);
+      }
+      // 移动端：OpenFilex 在 iOS 不能打开目录，Android 通常需要 SAF；
+      // 提示用户从系统文件 App 自行进入即可。
+      return const DownloadOpenResult(
+        success: false,
+        message: '当前平台不支持直接打开目录，请通过系统文件 App 访问',
+      );
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, '打开下载目录失败');
+      return DownloadOpenResult(success: false, message: e.toString());
+    }
   }
 
   void _updateTask(

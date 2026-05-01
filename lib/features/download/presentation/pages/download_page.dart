@@ -445,7 +445,12 @@ class _DownloadTaskTile extends ConsumerWidget {
       DownloadStatus.completed => (
           Icons.folder_open_rounded,
           '打开',
-          () => service.openFile(task.id),
+          () async {
+            final result = await service.openFile(task.id);
+            if (!result.success && context.mounted && result.message != null) {
+              context.showWarningToast(result.message!);
+            }
+          },
         ),
       DownloadStatus.failed => (
           Icons.refresh_rounded,
