@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
+import 'package:my_nas/shared/pages/favorites_page.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/mine/presentation/pages/appearance_settings_page.dart';
@@ -80,6 +81,31 @@ class MinePage extends ConsumerWidget {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // 我的内容
+                _buildSectionHeader(context, '我的内容', Icons.bookmark_rounded, isDark),
+                const SizedBox(height: AppSpacing.sm),
+                _buildSettingsCard(
+                  context,
+                  isDark,
+                  uiStyle,
+                  children: [
+                    _buildSettingsTile(
+                      context,
+                      isDark,
+                      icon: Icons.favorite_rounded,
+                      iconColor: AppColors.error,
+                      title: '我的收藏',
+                      subtitle: '已收藏的视频、照片、笔记、图书、漫画',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(builder: (_) => const FavoritesPage()),
                       ),
                     ),
                   ],
