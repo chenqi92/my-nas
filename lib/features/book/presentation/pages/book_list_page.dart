@@ -1868,7 +1868,9 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
       case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        break;
+        // 这些菜单项默认 showXxx=false，当前调用点未启用；
+        // 进入此分支说明上层启用了 flag 却忘记实现。
+        debugPrint('[BookList] MediaFileAction.${action.name} 尚未实现');
     }
   }
 }

@@ -662,7 +662,9 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
       case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        break;
+        // 这些菜单项默认 showXxx=false，当前调用点未启用；
+        // 进入此分支说明上层启用了 flag 却忘记实现。
+        debugPrint('[NoteList] MediaFileAction.${action.name} 尚未实现');
     }
   }
 
@@ -1852,7 +1854,9 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
       case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        break;
+        // 这些菜单项默认 showXxx=false，当前调用点未启用；
+        // 进入此分支说明上层启用了 flag 却忘记实现。
+        debugPrint('[NoteListSecondary] MediaFileAction.${action.name} 尚未实现');
     }
   }
 

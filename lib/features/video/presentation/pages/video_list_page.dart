@@ -3646,8 +3646,9 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
       case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 暂未实现
-        break;
+        // 这些菜单项在 context_menu_region.dart 中默认 showXxx=false，
+        // 当前调用点没有启用，走到此处说明上层启用了 flag 却忘记实现。
+        debugPrint('[VideoList] MediaFileAction.${action.name} 尚未实现');
     }
   }
 }

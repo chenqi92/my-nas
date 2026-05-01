@@ -135,6 +135,7 @@ class MusicScraperManagerService {
     // 获取当前已有的源类型
     final existingTypes = <MusicScraperType>{};
     for (final key in _box!.keys) {
+      if (key is String && key.startsWith('__')) continue;
       final data = _box!.get(key);
       if (data != null && data is Map) {
         try {
@@ -157,6 +158,7 @@ class MusicScraperManagerService {
     // 获取当前最大优先级
     var maxPriority = 0;
     for (final key in _box!.keys) {
+      if (key is String && key.startsWith('__')) continue;
       final data = _box!.get(key);
       if (data != null && data is Map) {
         final priority = data['priority'] as int? ?? 0;
@@ -247,14 +249,19 @@ class MusicScraperManagerService {
       ..remove('cookie'));
 
     // 保存凭证
-    if (source.apiKey != null || source.cookie != null) {
+    final hasApiKey = source.apiKey?.isNotEmpty ?? false;
+    final hasCookie = source.cookie?.isNotEmpty ?? false;
+    if (hasApiKey || hasCookie) {
       await saveCredential(
         newSource.id,
         MusicScraperCredential(
-          apiKey: source.apiKey,
-          cookie: source.cookie,
+          apiKey: hasApiKey ? source.apiKey : null,
+          cookie: hasCookie ? source.cookie : null,
         ),
       );
+    } else {
+      // 没有凭证时显式清除，避免残留旧值
+      await removeCredential(newSource.id);
     }
 
     // 清除缓存
@@ -273,18 +280,23 @@ class MusicScraperManagerService {
       ..remove('cookie'));
 
     // 更新凭证
-    if (source.apiKey != null || source.cookie != null) {
+    final hasApiKey = source.apiKey?.isNotEmpty ?? false;
+    final hasCookie = source.cookie?.isNotEmpty ?? false;
+    if (hasApiKey || hasCookie) {
       await saveCredential(
         source.id,
         MusicScraperCredential(
-          apiKey: source.apiKey,
-          cookie: source.cookie,
+          apiKey: hasApiKey ? source.apiKey : null,
+          cookie: hasCookie ? source.cookie : null,
         ),
       );
+    } else {
+      // 用户清空了凭证字段：从 secure storage 中移除
+      await removeCredential(source.id);
     }
 
-    // 清除缓存
-    _scraperCache.remove(source.id);
+    // 清除缓存（先释放旧实例，避免 HTTP 客户端等资源泄漏）
+    _scraperCache.remove(source.id)?.dispose();
   }
 
   /// 删除刮削源
@@ -477,8 +489,11 @@ class MusicScraperManagerService {
     String externalId,
     MusicScraperType sourceType,
   ) async {
+    // getSources() 已按 priority 升序，firstOrNull 即拿到优先级最高的可用源
     final sources = await getSources();
-    final source = sources.where((s) => s.type == sourceType).firstOrNull;
+    final source = sources
+        .where((s) => s.type == sourceType && s.isEnabled && s.isConfigured)
+        .firstOrNull;
     if (source == null) return null;
 
     final scraper = await getScraper(source.id);

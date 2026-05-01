@@ -22,15 +22,20 @@ class MusicScraperSourcesState {
   final bool isLoading;
   final String? error;
 
+  /// 拷贝并更新字段。
+  ///
+  /// 注意：error 默认遵循"未传则保留原值"，与其它字段一致。
+  /// 若需要清空 error（例如开始一次新加载），传 [clearError]: true。
   MusicScraperSourcesState copyWith({
     List<MusicScraperSourceEntity>? sources,
     bool? isLoading,
     String? error,
+    bool clearError = false,
   }) =>
       MusicScraperSourcesState(
         sources: sources ?? this.sources,
         isLoading: isLoading ?? this.isLoading,
-        error: error,
+        error: clearError ? null : (error ?? this.error),
       );
 }
 
@@ -44,11 +49,11 @@ class MusicScraperSourcesNotifier extends StateNotifier<MusicScraperSourcesState
 
   /// 加载刮削源列表
   Future<void> load() async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _manager.init();
       final sources = await _manager.getSources();
-      state = state.copyWith(sources: sources, isLoading: false);
+      state = state.copyWith(sources: sources, isLoading: false, clearError: true);
     } on Exception catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
