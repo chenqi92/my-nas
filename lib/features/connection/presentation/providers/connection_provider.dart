@@ -7,6 +7,7 @@ import 'package:my_nas/features/connection/domain/entities/connection_entity.dar
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
 import 'package:my_nas/nas_adapters/fnos/fnos_adapter.dart';
+import 'package:my_nas/nas_adapters/ftp/ftp_adapter.dart';
 import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/nas_adapters/qnap/qnap_adapter.dart';
 import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
@@ -340,6 +341,7 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
         NasAdapterType.qnap => QnapAdapter(),
         NasAdapterType.webdav => WebDavAdapter(),
         NasAdapterType.smb => SmbAdapter(),
+        NasAdapterType.ftp => FtpAdapter(),
         NasAdapterType.local => LocalAdapter(),
         NasAdapterType.sftp =>
           throw UnsupportedError('SFTP 适配器尚未实现'),

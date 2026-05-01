@@ -14,6 +14,7 @@ import 'package:my_nas/media_server_adapters/plex/plex_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
 import 'package:my_nas/nas_adapters/fnos/fnos_adapter.dart';
+import 'package:my_nas/nas_adapters/ftp/ftp_adapter.dart';
 import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/nas_adapters/qnap/qnap_adapter.dart';
 import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
@@ -938,9 +939,9 @@ class SourceManagerService {
       SourceType.qnap => QnapAdapter(),
       SourceType.webdav => WebDavAdapter(),
       SourceType.smb => SmbAdapter(),
+      SourceType.ftp => FtpAdapter(),
       SourceType.local => LocalAdapter(),
-      // 新增的通用协议（待实现）
-      SourceType.ftp ||
+      // 尚未接入的通用协议
       SourceType.sftp ||
       SourceType.nfs ||
       SourceType.upnp =>
@@ -967,9 +968,9 @@ class SourceManagerService {
       SourceType.qnap => NasAdapterType.qnap,
       SourceType.webdav => NasAdapterType.webdav,
       SourceType.smb => NasAdapterType.smb,
+      SourceType.ftp => NasAdapterType.ftp,
       SourceType.local => NasAdapterType.local,
-      // 新增的通用协议（待实现）
-      SourceType.ftp ||
+      // 尚未接入的通用协议
       SourceType.sftp ||
       SourceType.nfs ||
       SourceType.upnp =>

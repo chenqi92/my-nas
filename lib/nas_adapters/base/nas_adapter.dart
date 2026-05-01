@@ -9,6 +9,7 @@ enum NasAdapterType {
   qnap,
   webdav,
   smb,
+  ftp,
   sftp,
   local,
 }

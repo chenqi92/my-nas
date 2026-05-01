@@ -98,9 +98,9 @@ enum SourceType {
         // 通用协议
         SourceType.webdav => true,
         SourceType.smb => true,
-        // ftp/sftp/nfs/upnp 在 SourceManagerService 中尚未接入对应 adapter，
-        // UI 暂屏蔽——避免用户选了之后连接报 UnsupportedError
-        SourceType.ftp => false,
+        // FTP 协议已接入（基于 ftpconnect 包）
+        SourceType.ftp => true,
+        // sftp/nfs/upnp 仍未接入对应 adapter，UI 暂屏蔽
         SourceType.sftp => false,
         SourceType.nfs => false,
         SourceType.upnp => false,
