@@ -14,6 +14,7 @@ import 'package:my_nas/nas_adapters/sftp/sftp_adapter.dart';
 import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
 import 'package:my_nas/nas_adapters/synology/synology_adapter.dart';
 import 'package:my_nas/nas_adapters/ugreen/ugreen_adapter.dart';
+import 'package:my_nas/nas_adapters/upnp/upnp_adapter.dart';
 import 'package:my_nas/nas_adapters/webdav/webdav_adapter.dart';
 
 /// 当前活跃的 NAS 适配器
@@ -344,6 +345,7 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
         NasAdapterType.smb => SmbAdapter(),
         NasAdapterType.ftp => FtpAdapter(),
         NasAdapterType.sftp => SftpAdapter(),
+        NasAdapterType.upnp => UpnpAdapter(),
         NasAdapterType.local => LocalAdapter(),
       };
 }

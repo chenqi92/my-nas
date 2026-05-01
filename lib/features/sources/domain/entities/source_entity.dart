@@ -98,12 +98,12 @@ enum SourceType {
         // 通用协议
         SourceType.webdav => true,
         SourceType.smb => true,
-        // FTP / SFTP 协议已接入（ftpconnect / dartssh2 包）
+        // FTP / SFTP / UPnP 协议已接入
         SourceType.ftp => true,
         SourceType.sftp => true,
-        // nfs / upnp 仍未接入对应 adapter，UI 暂屏蔽
+        SourceType.upnp => true,
+        // NFS 仍未接入（无成熟 Dart 客户端）
         SourceType.nfs => false,
-        SourceType.upnp => false,
         // 本地存储
         SourceType.local => true,
         // 下载工具

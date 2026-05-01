@@ -21,6 +21,7 @@ import 'package:my_nas/nas_adapters/sftp/sftp_adapter.dart';
 import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
 import 'package:my_nas/nas_adapters/synology/synology_adapter.dart';
 import 'package:my_nas/nas_adapters/ugreen/ugreen_adapter.dart';
+import 'package:my_nas/nas_adapters/upnp/upnp_adapter.dart';
 import 'package:my_nas/nas_adapters/webdav/webdav_adapter.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
@@ -942,10 +943,10 @@ class SourceManagerService {
       SourceType.smb => SmbAdapter(),
       SourceType.ftp => FtpAdapter(),
       SourceType.sftp => SftpAdapter(),
+      SourceType.upnp => UpnpAdapter(),
       SourceType.local => LocalAdapter(),
       // 尚未接入的通用协议
-      SourceType.nfs ||
-      SourceType.upnp =>
+      SourceType.nfs =>
         throw UnsupportedError('协议 ${type.displayName} 尚未实现'),
       // 服务类源不使用 NasAdapter，需要使用各自的 ServiceAdapter
       SourceType.qbittorrent ||
@@ -971,10 +972,10 @@ class SourceManagerService {
       SourceType.smb => NasAdapterType.smb,
       SourceType.ftp => NasAdapterType.ftp,
       SourceType.sftp => NasAdapterType.sftp,
+      SourceType.upnp => NasAdapterType.upnp,
       SourceType.local => NasAdapterType.local,
       // 尚未接入的通用协议
-      SourceType.nfs ||
-      SourceType.upnp =>
+      SourceType.nfs =>
         throw UnsupportedError('协议 ${type.displayName} 尚未实现'),
       // 服务类源不使用 NasAdapterType
       SourceType.qbittorrent ||
