@@ -21,8 +21,9 @@ import 'package:my_nas/features/sources/presentation/pages/media_library_page.da
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
@@ -636,11 +637,22 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
 
   /// 显示笔记上下文菜单
   Future<void> _showNoteContextMenu(NoteTreeNode node) async {
+    final favService = ref.read(mediaFavoritesServiceProvider);
+    await favService.init();
+    final isFav = favService.isFavoriteSync(
+      type: MediaType.note,
+      sourceId: node.sourceId,
+      path: node.path,
+    );
+
+    if (!mounted) return;
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: node.displayName,
       showRemoveFromLibrary: false, // 笔记没有本地缓存，不支持"从媒体库移除"
       showShare: true,
+      showAddToFavorites: true,
+      isFavorite: isFav,
     );
 
     if (action == null || !context.mounted) return;
@@ -668,9 +680,15 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
         await _shareNote(node);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
+        await ref.read(mediaFavoritesActionsProvider).toggle(
+              type: MediaType.note,
+              sourceId: node.sourceId,
+              path: node.path,
+              displayName: node.displayName,
+            );
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 当前菜单只启用了 share；其余默认 showXxx=false 不会渲染。
+        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
         debugPrint('[NoteList] MediaFileAction.${action.name} 尚未实现');
     }
   }
@@ -1844,11 +1862,22 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
 
   /// 显示笔记上下文菜单
   Future<void> _showNoteContextMenu(NoteTreeNode node) async {
+    final favService = ref.read(mediaFavoritesServiceProvider);
+    await favService.init();
+    final isFav = favService.isFavoriteSync(
+      type: MediaType.note,
+      sourceId: node.sourceId,
+      path: node.path,
+    );
+
+    if (!mounted) return;
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: node.displayName,
       showRemoveFromLibrary: false, // 笔记没有本地缓存，不支持"从媒体库移除"
       showShare: true,
+      showAddToFavorites: true,
+      isFavorite: isFav,
     );
 
     if (action == null || !context.mounted) return;
@@ -1876,9 +1905,15 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
         await _shareNote(node);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
+        await ref.read(mediaFavoritesActionsProvider).toggle(
+              type: MediaType.note,
+              sourceId: node.sourceId,
+              path: node.path,
+              displayName: node.displayName,
+            );
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 当前菜单只启用了 share；其余默认 showXxx=false 不会渲染。
+        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
         debugPrint('[NoteListSecondary] MediaFileAction.${action.name} 尚未实现');
     }
   }

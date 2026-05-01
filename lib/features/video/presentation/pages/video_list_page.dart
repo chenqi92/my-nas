@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
@@ -3591,9 +3592,20 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
     WidgetRef ref,
     VideoMetadata metadata,
   ) async {
+    final favService = ref.read(mediaFavoritesServiceProvider);
+    await favService.init();
+    final isFav = favService.isFavoriteSync(
+      type: MediaType.video,
+      sourceId: metadata.sourceId,
+      path: metadata.filePath,
+    );
+
+    if (!context.mounted) return;
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: metadata.displayTitle,
+      showAddToFavorites: true,
+      isFavorite: isFav,
     );
 
     if (action == null || !context.mounted) return;
@@ -3643,11 +3655,16 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         }
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
+        await ref.read(mediaFavoritesActionsProvider).toggle(
+              type: MediaType.video,
+              sourceId: metadata.sourceId,
+              path: metadata.filePath,
+              displayName: metadata.displayTitle,
+            );
       case MediaFileAction.share:
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 这些菜单项在 context_menu_region.dart 中默认 showXxx=false，
-        // 当前调用点没有启用，走到此处说明上层启用了 flag 却忘记实现。
+        // 当前菜单未启用这三项；showXxx 默认 false 不会渲染。
         debugPrint('[VideoList] MediaFileAction.${action.name} 尚未实现');
     }
   }

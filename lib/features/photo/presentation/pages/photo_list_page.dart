@@ -17,6 +17,7 @@ import 'package:my_nas/features/photo/data/services/photo_database_service.dart'
 import 'package:my_nas/features/photo/data/services/photo_library_cache_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_save_service.dart';
 import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
+import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_duplicates_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_viewer_page.dart';
 import 'package:my_nas/features/photo/presentation/widgets/photo_timeline_navigator.dart';
@@ -3063,10 +3064,21 @@ class _PhotoGridItem extends ConsumerWidget {
   Future<void> _showContextMenu(BuildContext context, WidgetRef ref) async {
     if (photoEntity == null) return;
 
+    final favService = ref.read(mediaFavoritesServiceProvider);
+    await favService.init();
+    final isFav = favService.isFavoriteSync(
+      type: MediaType.photo,
+      sourceId: photo.sourceId,
+      path: photo.path,
+    );
+
+    if (!context.mounted) return;
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: photo.name,
       showShare: true,
+      showAddToFavorites: true,
+      isFavorite: isFav,
     );
 
     if (action == null || !context.mounted) return;
@@ -3112,10 +3124,15 @@ class _PhotoGridItem extends ConsumerWidget {
         await _sharePhoto(context, ref);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
+        await ref.read(mediaFavoritesActionsProvider).toggle(
+              type: MediaType.photo,
+              sourceId: photo.sourceId,
+              path: photo.path,
+              displayName: photo.name,
+            );
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 当前菜单只启用了 share；其余 action 的 showXxx 默认 false。
-        // 进入此分支说明上层启用了对应 flag 却忘记实现，给一条防御日志。
+        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
         debugPrint('[PhotoList] MediaFileAction.${action.name} 尚未实现');
     }
   }

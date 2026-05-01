@@ -19,6 +19,7 @@ import 'package:my_nas/features/sources/presentation/pages/media_library_page.da
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/services/nas_file_share_service.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
@@ -1064,11 +1065,22 @@ class _ComicCard extends ConsumerWidget {
   }
 
   Future<void> _showContextMenu(BuildContext context, WidgetRef ref) async {
+    final favService = ref.read(mediaFavoritesServiceProvider);
+    await favService.init();
+    final isFav = favService.isFavoriteSync(
+      type: MediaType.comic,
+      sourceId: comic.sourceId,
+      path: comic.folderPath,
+    );
+
+    if (!context.mounted) return;
     // 文件夹形式的漫画无单文件可分享，仅压缩包格式才显示 share
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: comic.folderName,
       showShare: comic.isArchive,
+      showAddToFavorites: true,
+      isFavorite: isFav,
     );
 
     if (action == null || !context.mounted) return;
@@ -1106,9 +1118,15 @@ class _ComicCard extends ConsumerWidget {
         await _shareComic(context, ref);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
+        await ref.read(mediaFavoritesActionsProvider).toggle(
+              type: MediaType.comic,
+              sourceId: comic.sourceId,
+              path: comic.folderPath,
+              displayName: comic.folderName,
+            );
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 当前菜单只对压缩包格式启用了 share；其余 showXxx=false 不会渲染。
+        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
         debugPrint('[ComicList] MediaFileAction.${action.name} 尚未实现');
     }
   }

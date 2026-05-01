@@ -25,6 +25,7 @@ import 'package:my_nas/features/sources/presentation/pages/media_library_page.da
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/services/nas_file_share_service.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
@@ -1828,10 +1829,21 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
     final book = widget.bookEntity;
     final displayName = book.displayName;
 
+    final favService = ref.read(mediaFavoritesServiceProvider);
+    await favService.init();
+    final isFav = favService.isFavoriteSync(
+      type: MediaType.book,
+      sourceId: book.sourceId,
+      path: book.filePath,
+    );
+
+    if (!context.mounted) return;
     final action = await showMediaFileContextMenu(
       context: context,
       fileName: displayName,
       showShare: true,
+      showAddToFavorites: true,
+      isFavorite: isFav,
     );
 
     if (action == null || !context.mounted) return;
@@ -1869,9 +1881,15 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
         await _shareBook(context, ref, book, displayName);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
+        await ref.read(mediaFavoritesActionsProvider).toggle(
+              type: MediaType.book,
+              sourceId: book.sourceId,
+              path: book.filePath,
+              displayName: displayName,
+            );
       case MediaFileAction.viewDetails:
       case MediaFileAction.download:
-        // 当前菜单只启用了 share；其余默认 showXxx=false 不会渲染。
+        // 当前菜单未启用这两项；showXxx 默认 false 不会渲染。
         debugPrint('[BookList] MediaFileAction.${action.name} 尚未实现');
     }
   }
