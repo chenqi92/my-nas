@@ -67,7 +67,7 @@ class BookContentService {
       // 📋 记录原始响应数据结构（便于分析可用字段）
       logger.w('📋 [${source.displayName}] 书籍详情原始数据:');
       if (response is Map) {
-        for (final key in (response as Map).keys.take(15)) {
+        for (final key in response.keys.take(15)) {
           final value = response[key];
           final valueStr = value?.toString() ?? 'null';
           logger.w('   $key: ${valueStr.length > 100 ? '${valueStr.substring(0, 100)}...' : valueStr}');

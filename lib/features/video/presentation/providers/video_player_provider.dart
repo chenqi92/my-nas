@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
@@ -20,14 +19,12 @@ import 'package:my_nas/features/video/data/services/player/native_av_player_back
 import 'package:my_nas/features/video/data/services/player/video_player_backend.dart';
 import 'package:my_nas/features/video/data/services/subtitle_service.dart';
 import 'package:my_nas/features/video/data/services/media_server_playback_reporter.dart';
-import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/data/services/video_history_service.dart';
 import 'package:my_nas/features/video/data/services/video_thumbnail_service.dart';
 import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
 import 'package:my_nas/features/video/domain/entities/hdr_capability.dart';
 import 'package:my_nas/features/video/domain/entities/playback_configuration.dart';
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
-import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/data/services/trakt_scrobble_service.dart';
 import 'package:my_nas/features/media_tracking/presentation/providers/trakt_sync_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_provider.dart';
@@ -734,7 +731,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
       try {
         _nativeBackend = NativeAVPlayerBackend();
-        await _nativeBackend!.open(playUrl!);
+        await _nativeBackend!.open(playUrl);
         currentBackend = PlayerBackendType.nativeAVPlayer;
 
         // 订阅原生播放器事件

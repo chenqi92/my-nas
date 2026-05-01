@@ -52,7 +52,7 @@ class AndroidMediaCodecTranscoding {
         // 监听进度事件
         _progressSubscription = _eventChannel.receiveBroadcastStream().listen(
           _handleProgressEvent,
-          onError: (error) {
+          onError: (Object error) {
             logger.e('MediaCodecTranscoding: 进度事件错误: $error');
           },
         );

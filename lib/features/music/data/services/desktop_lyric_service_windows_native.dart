@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
@@ -13,6 +15,10 @@ import 'package:my_nas/features/music/domain/entities/desktop_lyric_settings.dar
 // Win32 常量定义
 const int _WM_MOUSELEAVE = 0x02A3;
 const int _TME_LEAVE = 0x00000002;
+
+/// 把 [Color] 的浮点分量（0.0–1.0）转回 0–255 字节值，
+/// 用于 Win32 RGB() 调用。Flutter 3.32+ 移除了 Color.red/green/blue。
+int _byteOf(double v) => (v * 255.0).round() & 0xff;
 const int _FW_NORMAL = 400;
 const int _FW_BOLD = 700;
 const int _DEFAULT_CHARSET = 1;
@@ -400,7 +406,7 @@ class DesktopLyricServiceWindowsNativeImpl implements DesktopLyricService {
   void _drawBackground(int hdc, int width, int height) {
     // 创建背景刷
     final bgColor = _settings.backgroundColor;
-    final colorRef = RGB(bgColor.red, bgColor.green, bgColor.blue);
+    final colorRef = RGB(_byteOf(bgColor.r), _byteOf(bgColor.g), _byteOf(bgColor.b));
 
     final brush = CreateSolidBrush(colorRef);
     final rect = calloc<RECT>();
@@ -480,13 +486,13 @@ class DesktopLyricServiceWindowsNativeImpl implements DesktopLyricService {
 
     // 绘制未唱部分（白色）
     final textColor = _settings.textColor;
-    SetTextColor(hdc, RGB(textColor.red, textColor.green, textColor.blue));
+    SetTextColor(hdc, RGB(_byteOf(textColor.r), _byteOf(textColor.g), _byteOf(textColor.b)));
     final textPtr = text.toNativeUtf16();
     TextOut(hdc, x, y, textPtr, text.length);
 
     // 绘制已唱部分（高亮色）- 使用裁剪区域
     final highlightColor = _settings.highlightColor;
-    SetTextColor(hdc, RGB(highlightColor.red, highlightColor.green, highlightColor.blue));
+    SetTextColor(hdc, RGB(_byteOf(highlightColor.r), _byteOf(highlightColor.g), _byteOf(highlightColor.b)));
 
     final clipRect = calloc<RECT>();
     clipRect.ref.left = x;
@@ -525,7 +531,7 @@ class DesktopLyricServiceWindowsNativeImpl implements DesktopLyricService {
     final oldFont = SelectObject(hdc, hFont);
 
     final textColor = _settings.textColor;
-    SetTextColor(hdc, RGB(textColor.red, textColor.green, textColor.blue));
+    SetTextColor(hdc, RGB(_byteOf(textColor.r), _byteOf(textColor.g), _byteOf(textColor.b)));
 
     final textPtr = text.toNativeUtf16();
     final textWidth = _measureText(hdc, text, fontSize);

@@ -251,7 +251,7 @@ class BookSearchService {
         if (books.isEmpty && bookList.indexOf(item) < 2) {
           logger.w('📋 [${source.displayName}] 原始数据项 #${bookList.indexOf(item)}:');
           if (item is Map) {
-            for (final key in (item as Map).keys.take(15)) {
+            for (final key in item.keys.take(15)) {
               final value = item[key];
               final valueStr = value?.toString() ?? 'null';
               logger.w('   $key: ${valueStr.length > 100 ? '${valueStr.substring(0, 100)}...' : valueStr}');

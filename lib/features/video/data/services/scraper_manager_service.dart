@@ -330,16 +330,11 @@ class ScraperManagerService {
     String? imageProxy,
   }) async {
     try {
-      final tmdbService = TmdbService()
-
-      // 同步 API Key
-      ..setApiKey(apiKey)
-
-      // 同步 API URL（支持自定义代理）
-      ..setApiUrl(apiUrl)
-
-      // 同步图片 URL（支持自定义代理）
-      ..setImageUrl(imageProxy);
+      // TmdbService 是单例——cascade 用来配置全局实例
+      TmdbService()
+        ..setApiKey(apiKey)
+        ..setApiUrl(apiUrl)
+        ..setImageUrl(imageProxy);
 
       // 同步到 Hive 存储（用于 app 重启后恢复）
       final box = await HiveUtils.getSettingsBox();

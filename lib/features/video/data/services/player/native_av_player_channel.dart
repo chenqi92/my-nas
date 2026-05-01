@@ -83,7 +83,7 @@ class NativeAVPlayerChannel {
           _eventController.add(playerEvent);
         }
       },
-      onError: (error) {
+      onError: (Object error) {
         logger.e('NativeAVPlayerChannel: Event stream error', error);
       },
     );

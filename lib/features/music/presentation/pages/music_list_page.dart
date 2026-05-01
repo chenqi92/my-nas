@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -6938,7 +6940,6 @@ class _YearCardFromDb extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final displayTitle = '$decadeLabel 年代';
     final displayYear = decadeLabel.replaceAll('s', '');
 
     return GestureDetector(

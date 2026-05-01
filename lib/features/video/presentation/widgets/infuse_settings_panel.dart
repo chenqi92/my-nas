@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
@@ -86,7 +88,6 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
     final currentSubtitle = ref.watch(currentSubtitleProvider);
     final currentEmbeddedId = ref.watch(currentEmbeddedSubtitleIdProvider);
     final hasSubtitleConfig = ref.watch(hasOpenSubtitlesConfigProvider);
-    final aspectRatio = ref.watch(aspectRatioModeProvider);
 
     final audioTracks = playerNotifier.audioTracks;
     final embeddedSubtitles = playerNotifier.embeddedSubtitles

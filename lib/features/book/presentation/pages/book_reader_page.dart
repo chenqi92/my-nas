@@ -35,7 +35,6 @@ import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
 import 'package:path/path.dart' as path;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:my_nas/core/extensions/context_extensions.dart';
 
 /// 阅读器状态
 final txtReaderProvider =
@@ -1332,8 +1331,6 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
     TxtReaderLoaded state,
     BookReaderSettings settings,
   ) {
-    final theme = settings.theme;
-
     // 如果分页尚未完成，显示加载中
     if (!_isPaginationReady || _pages.isEmpty) {
       return LottieLoading.book(

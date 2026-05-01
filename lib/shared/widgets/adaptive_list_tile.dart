@@ -458,13 +458,18 @@ class AdaptiveRadioListTile<T> extends StatelessWidget {
     final isDesktop = PlatformCapabilities.isDesktop;
     final effectiveDense = dense ?? isDesktop;
 
+    // RadioListTile 在 Flutter 3.32+ 标记 groupValue / onChanged 为 deprecated，
+    // 推荐迁移到 RadioGroup 包装。本文件保留旧 API 以避免 listtile 形态大改，
+    // 后续可专门迁移。
     // ignore: deprecated_member_use
     return RadioListTile<T>(
       title: title,
       subtitle: subtitle,
       secondary: leading,
       value: value,
+      // ignore: deprecated_member_use
       groupValue: groupValue,
+      // ignore: deprecated_member_use
       onChanged: enabled ? onChanged : null,
       dense: effectiveDense,
       contentPadding: EdgeInsets.symmetric(

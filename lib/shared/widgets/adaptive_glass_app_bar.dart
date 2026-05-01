@@ -819,7 +819,7 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
   }
 
   /// 从 GlassGroupPopupMenuButton 提取菜单项
-  List<Map<String, dynamic>> _extractMenuItems(GlassGroupPopupMenuButton button) {
+  List<Map<String, dynamic>> _extractMenuItems(GlassGroupPopupMenuButton<dynamic> button) {
     try {
       // 使用 dynamic 绕过泛型
       // ignore: avoid_dynamic_calls
@@ -833,7 +833,7 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
       for (final item in items) {
         if (item is PopupMenuItem) {
           // 提取 PopupMenuItem 的信息
-          final menuItem = item as PopupMenuItem<dynamic>;
+          final menuItem = item;
           String title = '';
           String? iconName;
           bool isDestructive = false;
@@ -979,7 +979,7 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
   }
 
   /// 为 PopupMenuButton 显示菜单 - 使用 dynamic 类型处理，避免泛型推断问题
-  Future<void> _showPopupMenuForButtonUntyped(GlassGroupPopupMenuButton button) async {
+  Future<void> _showPopupMenuForButtonUntyped(GlassGroupPopupMenuButton<dynamic> button) async {
     debugPrint('GlassButtonGroup._showPopupMenuForButtonUntyped: called');
     
     try {
@@ -3033,7 +3033,6 @@ class GlassListPageHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final safeTop = MediaQuery.of(context).padding.top;
 
     return Positioned(

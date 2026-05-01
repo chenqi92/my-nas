@@ -1,6 +1,8 @@
 /// 小组件数据模型
 library;
 
+// ignore_for_file: unused_field, unused_element
+
 import 'dart:typed_data';
 
 /// 存储小组件数据

@@ -68,7 +68,6 @@ class DeviceInfoHelper {
         ConnectivityResult.ethernet => 'ethernet',
         ConnectivityResult.vpn => 'vpn',
         ConnectivityResult.bluetooth => 'bluetooth',
-        ConnectivityResult.satellite => 'satellite',
         ConnectivityResult.other => 'other',
         ConnectivityResult.none => 'none',
       };

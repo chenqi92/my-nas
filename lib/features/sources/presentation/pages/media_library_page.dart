@@ -1,4 +1,4 @@
-import 'dart:async' show StreamSubscription, unawaited;
+import 'dart:async' show StreamSubscription;
 import 'dart:io';
 
 import 'package:collection/collection.dart';

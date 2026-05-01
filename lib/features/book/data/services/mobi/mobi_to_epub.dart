@@ -3,6 +3,8 @@
 // 将 MOBI/AZW3 转换为多章节 EPUB，保留目录结构
 // 用于漫画阅读器等需要 EPUB 格式的场景
 
+// ignore_for_file: unnecessary_null_comparison, dead_code
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
