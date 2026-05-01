@@ -1,7 +1,7 @@
 name: my_nas
 description: "跨平台 NAS 客户端 - 统一管理你的 NAS 资源"
 publish_to: "none"
-version: 1.0.1+6
+version: 1.1.0+7
 
 environment:
   sdk: ^3.10.1
