@@ -1,0 +1,7 @@
+include: package:flutter_lints/flutter.yaml
+
+# 本地 fork，封装 foliate-js 通过 flutter_inappwebview 渲染。
+# 不沿用主项目严格 lint，保持包内部独立维护。
+analyzer:
+  errors:
+    deprecated_member_use: ignore

@@ -1,4 +1,16 @@
 include: package:flutter_lints/flutter.yaml
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+# 本地 fork 自 audiotags（基于 flutter_rust_bridge）。
+# example/ 与 rust_builder/cargokit/ 是上游自带的脚手架与构建工具脚本，
+# 不参与主项目编译；让 analyze 跳过它们以便包内独立 maintain。
+analyzer:
+  exclude:
+    - "example/**"
+    - "rust_builder/**"
+    # frb_generated*.dart 与 freezed 生成文件未提交，由 build_runner 生成；
+    # 仓库中只保留生成入口源文件，独立 analyze 时跳过相关代码避免误报。
+    # 主项目侧 analyze 通过 analysis_options.yaml 顶层 exclude packages/** 处理。
+    - "lib/src/rust/**"
+    - "lib/src/audiotags.dart"
+  errors:
+    deprecated_member_use: ignore

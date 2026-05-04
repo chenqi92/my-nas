@@ -1,0 +1,7 @@
+include: package:flutter_lints/flutter.yaml
+
+# 本地 fork 自 ffmpeg_kit_flutter_new，仅做必要兼容性修复，
+# 不沿用主项目严格 lint，保持与上游接近以便后续合并。
+analyzer:
+  errors:
+    deprecated_member_use: ignore
