@@ -335,7 +335,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
             : context.colorScheme.outlineVariant);
 
     Widget navContent = Container(
-      width: isExtended ? 220 : 72,
+      // 桌面 Rail 比手机版本更窄一点：扩展 200（vs 220）、紧凑 64（vs 72）。
+      width: isExtended ? 200 : 64,
       decoration: BoxDecoration(
         color: bgColor,
         border: Border(
@@ -344,28 +345,33 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       ),
       child: Column(
         children: [
-          // Logo
+          // Logo / 应用名
           Padding(
-            padding: EdgeInsets.all(isExtended ? 20 : 16),
+            padding: EdgeInsets.fromLTRB(
+              isExtended ? 14 : 8,
+              14,
+              isExtended ? 14 : 8,
+              10,
+            ),
             child: Row(
               mainAxisAlignment:
                   isExtended ? MainAxisAlignment.start : MainAxisAlignment.center,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                   child: Image.asset(
                     'assets/logo.png',
-                    width: isExtended ? 40 : 36,
-                    height: isExtended ? 40 : 36,
+                    width: isExtended ? 28 : 28,
+                    height: isExtended ? 28 : 28,
                     fit: BoxFit.cover,
                   ),
                 ),
                 if (isExtended) ...[
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Text(
                     'MyNAS',
-                    style: context.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    style: context.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
                       color: isDark
                           ? AppColors.darkOnSurface
                           : context.colorScheme.onSurface,
@@ -375,7 +381,6 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
               ],
             ),
           ),
-          const SizedBox(height: 8),
 
           // 主导航 + 工具区（仅桌面 Rail 可见的快捷入口）
           Expanded(
@@ -643,23 +648,23 @@ class _RailEntry extends StatelessWidget {
     final color = isSelected ? activeColor : inactiveColor;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 150),
             padding: EdgeInsets.symmetric(
-              horizontal: isExtended ? 16 : 0,
-              vertical: 12,
+              horizontal: isExtended ? 12 : 0,
+              vertical: 8,
             ),
             decoration: BoxDecoration(
               color: isSelected
-                  ? activeColor.withValues(alpha: isDark ? 0.2 : 0.1)
+                  ? activeColor.withValues(alpha: isDark ? 0.18 : 0.1)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisAlignment: isExtended
@@ -669,16 +674,17 @@ class _RailEntry extends StatelessWidget {
                 Icon(
                   isSelected ? selectedIcon : icon,
                   color: color,
-                  size: 24,
+                  size: 18,
                 ),
                 if (isExtended) ...[
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Text(
                     label,
                     style: TextStyle(
+                      fontSize: 13,
                       color: color,
                       fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
                     ),
                   ),
                 ],
