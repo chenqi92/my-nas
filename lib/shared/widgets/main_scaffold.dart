@@ -210,12 +210,66 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     // 与 context.isDesktop（屏宽≥1200）解耦，避免桌面端缩窗口时退化为手机布局。
     final Widget scaffold;
     if (context.isDesktopLayout) {
+      // 桌面下统一覆盖各 page 的 AppBar 主题：高度 48（vs 56）、字号略减、
+      // 去掉默认 elevation，使用扁平边框分隔。各 page 自己用 AppBar()
+      // 都会自动应用，无需逐个改。自定义 Container 顶部条不受影响（需要
+      // 各 page 自行响应 isDesktopLayout）。
+      final desktopTheme = Theme.of(context).copyWith(
+        appBarTheme: Theme.of(context).appBarTheme.copyWith(
+              toolbarHeight: 48,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              titleTextStyle: context.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isDark
+                    ? AppColors.darkOnSurface
+                    : context.colorScheme.onSurface,
+              ),
+              shape: Border(
+                bottom: BorderSide(
+                  color: isDark
+                      ? AppColors.darkOutline.withValues(alpha: 0.3)
+                      : context.colorScheme.outlineVariant,
+                ),
+              ),
+            ),
+        // 桌面下 ListTile 默认 dense，整体信息密度提升一档。
+        listTileTheme: Theme.of(context).listTileTheme.copyWith(
+              dense: true,
+              minVerticalPadding: 6,
+              visualDensity: VisualDensity.compact,
+            ),
+        // 桌面下 IconButton 视觉密度紧凑。
+        iconButtonTheme: IconButtonThemeData(
+          style: IconButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+          ),
+        ),
+        // 桌面下 OutlinedButton / FilledButton 默认 padding 紧凑。
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          ),
+        ),
+      );
       scaffold = Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
         body: Row(
           children: [
             _buildDesktopNav(context, currentIndex, isDark, optimizedStyle, enableGlass),
-            Expanded(child: widget.navigationShell),
+            Expanded(
+              child: Theme(
+                data: desktopTheme,
+                child: widget.navigationShell,
+              ),
+            ),
           ],
         ),
       );
