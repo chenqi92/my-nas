@@ -147,14 +147,16 @@ class MinePage extends ConsumerWidget {
       children
         ..add(_buildSectionHeader(context, s.title, s.icon, isDark))
         ..add(const SizedBox(height: AppSpacing.sm))
-        ..add(s.useCardWrapper
-            ? _buildSettingsCard(
-                context,
-                isDark,
-                uiStyle,
-                children: s.tilesBuilder(),
-              )
-            : Column(children: s.tilesBuilder()));
+        ..add(Builder(
+          builder: (innerCtx) => s.useCardWrapper
+              ? _buildSettingsCard(
+                  innerCtx,
+                  isDark,
+                  uiStyle,
+                  children: s.tilesBuilder(innerCtx),
+                )
+              : Column(children: s.tilesBuilder(innerCtx)),
+        ));
     }
     children.add(SizedBox(height: context.scrollBottomPadding));
 
@@ -180,7 +182,7 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '连接',
         icon: Icons.lan_rounded,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _buildSourcesTile(context, ref, isDark),
           _buildDivider(isDark),
           _buildSettingsTile(
@@ -191,7 +193,7 @@ class MinePage extends ConsumerWidget {
             title: '媒体库',
             subtitle: '配置视频、音乐、漫画等目录',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
             ),
           ),
@@ -200,7 +202,7 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '我的内容',
         icon: Icons.bookmark_rounded,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _buildSettingsTile(
             context,
             isDark,
@@ -209,7 +211,7 @@ class MinePage extends ConsumerWidget {
             title: '我的收藏',
             subtitle: '已收藏的视频、照片、笔记、图书、漫画',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(builder: (_) => const FavoritesPage()),
             ),
           ),
@@ -218,7 +220,7 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '视频',
         icon: Icons.movie_rounded,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _buildSettingsTile(
             context,
             isDark,
@@ -227,7 +229,7 @@ class MinePage extends ConsumerWidget {
             title: '播放器设置',
             subtitle: '清晰度、投屏、转码等',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(
                 builder: (_) => const VideoPlayerSettingsPage(),
               ),
@@ -252,7 +254,7 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '音乐',
         icon: Icons.music_note_rounded,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _buildSettingsTile(
             context,
             isDark,
@@ -261,7 +263,7 @@ class MinePage extends ConsumerWidget {
             title: '播放器设置',
             subtitle: '播放引擎、音量、淡入淡出等',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(
                 builder: (_) => const MusicPlayerSettingsPage(),
               ),
@@ -276,7 +278,7 @@ class MinePage extends ConsumerWidget {
             title: '听歌统计',
             subtitle: '本周/本月/本年 Top 歌曲、艺术家、专辑',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(
                 builder: (_) => const ListeningStatsPage(),
               ),
@@ -291,7 +293,7 @@ class MinePage extends ConsumerWidget {
             title: '重复歌曲',
             subtitle: '检测同首歌的多个版本（mp3 + flac 等）',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(
                 builder: (_) => const DuplicateSongsPage(),
               ),
@@ -306,7 +308,7 @@ class MinePage extends ConsumerWidget {
             title: '回收站',
             subtitle: '已删除的播放列表保留 30 天，可恢复',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(
                 builder: (_) => const RecycleBinPage(),
               ),
@@ -321,7 +323,7 @@ class MinePage extends ConsumerWidget {
             title: 'Scrobble 上报',
             subtitle: 'Last.fm / ListenBrainz 听歌历史同步',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(
                 builder: (_) => const ScrobbleSettingsPage(),
               ),
@@ -334,7 +336,7 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '图书',
         icon: Icons.auto_stories_rounded,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _BookSourcesTile(isDark: isDark),
           _buildDivider(isDark),
           _BookSettingsTile(isDark: isDark),
@@ -343,7 +345,7 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '站点',
         icon: Icons.rss_feed_rounded,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _PTSitesTile(isDark: isDark),
         ],
       ),
@@ -351,14 +353,14 @@ class MinePage extends ConsumerWidget {
         title: '传输',
         icon: Icons.swap_vert_rounded,
         useCardWrapper: false,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _TransferCard(isDark: isDark),
         ],
       ),
       _MineSection(
         title: '外观',
         icon: Icons.palette_outlined,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _buildSettingsTile(
             context,
             isDark,
@@ -367,7 +369,7 @@ class MinePage extends ConsumerWidget {
             title: '外观设置',
             subtitle: '主题、配色、UI 风格',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(
                 builder: (_) => const AppearanceSettingsPage(),
               ),
@@ -378,7 +380,7 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '云同步',
         icon: Icons.cloud_sync_rounded,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _buildSettingsTile(
             context,
             isDark,
@@ -387,7 +389,7 @@ class MinePage extends ConsumerWidget {
             title: 'WebDAV 同步',
             subtitle: '跨设备同步歌单 / 阅读进度等',
             onTap: () => Navigator.push(
-              context,
+              ctx,
               MaterialPageRoute<void>(
                 builder: (_) => const CloudSyncSettingsPage(),
               ),
@@ -398,7 +400,7 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '关于',
         icon: Icons.info_outline_rounded,
-        tilesBuilder: () => [
+        tilesBuilder: (ctx) => [
           _VersionTile(isDark: isDark),
           _buildDivider(isDark),
           CheckUpdateTile(isDark: isDark),
@@ -2422,7 +2424,10 @@ class _MineSection {
 
   final String title;
   final IconData icon;
-  final List<Widget> Function() tilesBuilder;
+  /// 接收实际渲染 tiles 的 navigator 内 context，使内部 inline
+  /// `Navigator.push(context, ...)` 在桌面下进入嵌套 detail navigator，
+  /// 移动下进入 main shell navigator。
+  final List<Widget> Function(BuildContext context) tilesBuilder;
 
   /// 是否要用 [AdaptiveGlassContainer] 包裹 tiles。
   /// 部分 section（如 "传输"）的内容本身就是 card，不需要再包一层。
@@ -2508,7 +2513,15 @@ class _DesktopSectionList extends StatelessWidget {
 }
 
 /// 桌面 mine 页右侧详情面板：标题 + 当前选中 section 的 tiles。
-class _DesktopSectionDetail extends StatelessWidget {
+/// 桌面 mine 页右侧详情面板。
+///
+/// 内嵌一个 [Navigator]，section 内容是该 navigator 的 root route。
+/// 这样 settings tile 的 `Navigator.push(ctx, ...)` 会 push 到这个嵌套
+/// navigator——子页只覆盖右侧 panel，不会覆盖左侧 NavigationRail 与
+/// section 列表。
+///
+/// section 切换时清空栈，pushAndRemoveUntil 到新 section root route。
+class _DesktopSectionDetail extends StatefulWidget {
   const _DesktopSectionDetail({
     required this.section,
     required this.isDark,
@@ -2524,45 +2537,103 @@ class _DesktopSectionDetail extends StatelessWidget {
   final Widget Function({required List<Widget> children}) buildSettingsCard;
 
   @override
+  State<_DesktopSectionDetail> createState() => _DesktopSectionDetailState();
+}
+
+class _DesktopSectionDetailState extends State<_DesktopSectionDetail> {
+  final _navKey = GlobalKey<NavigatorState>();
+
+  @override
+  void didUpdateWidget(covariant _DesktopSectionDetail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.section.title != widget.section.title) {
+      // 切换到新 section：清栈、显示新 root 路由。
+      _navKey.currentState?.pushAndRemoveUntil(
+        _buildRootRoute(),
+        (_) => false,
+      );
+    }
+  }
+
+  MaterialPageRoute<void> _buildRootRoute() => MaterialPageRoute<void>(
+        builder: (_) => _DesktopSectionRootContent(
+          section: widget.section,
+          isDark: widget.isDark,
+          uiStyle: widget.uiStyle,
+          buildSettingsCard: widget.buildSettingsCard,
+        ),
+      );
+
+  @override
   Widget build(BuildContext context) {
-    final tiles = section.tilesBuilder();
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.md,
-      ),
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md, left: 4),
-          child: Row(
-            children: [
-              Icon(
-                section.icon,
-                size: 22,
-                color: isDark
-                    ? AppColors.darkOnSurface
-                    : context.colorScheme.onSurface,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                section.title,
-                style: context.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+    return Navigator(
+      key: _navKey,
+      onGenerateInitialRoutes: (_, __) => [_buildRootRoute()],
+    );
+  }
+}
+
+/// detail navigator 的根路由内容：section 标题 + tiles 卡片。
+class _DesktopSectionRootContent extends StatelessWidget {
+  const _DesktopSectionRootContent({
+    required this.section,
+    required this.isDark,
+    required this.uiStyle,
+    required this.buildSettingsCard,
+  });
+
+  final _MineSection section;
+  final bool isDark;
+  final UIStyle uiStyle;
+  final Widget Function({required List<Widget> children}) buildSettingsCard;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.md,
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md, left: 4),
+            child: Row(
+              children: [
+                Icon(
+                  section.icon,
+                  size: 22,
                   color: isDark
                       ? AppColors.darkOnSurface
                       : context.colorScheme.onSurface,
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Text(
+                  section.title,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? AppColors.darkOnSurface
+                        : context.colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        section.useCardWrapper
-            ? buildSettingsCard(children: tiles)
-            : Column(children: tiles),
-        SizedBox(height: context.scrollBottomPadding),
-      ],
+          // section.tilesBuilder 接收 root route 内 context；
+          // tile 内 Navigator.push(ctx, ...) 会进入嵌套 detail navigator。
+          Builder(builder: (innerCtx) {
+            final tiles = section.tilesBuilder(innerCtx);
+            return section.useCardWrapper
+                ? buildSettingsCard(children: tiles)
+                : Column(children: tiles);
+          }),
+          SizedBox(height: context.scrollBottomPadding),
+        ],
+      ),
     );
   }
 }
