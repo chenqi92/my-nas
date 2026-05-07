@@ -15,7 +15,15 @@ import 'package:my_nas/features/video/presentation/pages/video_list_page.dart';
 import 'package:my_nas/shared/widgets/main_scaffold.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
-final shellNavigatorKey = GlobalKey<NavigatorState>();
+
+/// 5 个主 tab 各自独立的 Navigator key，由 StatefulShellRoute 管理。
+/// 让每个 tab 维护自己的页面栈，切 tab 时不互相污染；同时为桌面端
+/// Master-Detail 在 branch navigator 内渲染 detail 铺路。
+final _videoNavigatorKey = GlobalKey<NavigatorState>();
+final _musicNavigatorKey = GlobalKey<NavigatorState>();
+final _photoNavigatorKey = GlobalKey<NavigatorState>();
+final _readingNavigatorKey = GlobalKey<NavigatorState>();
+final _mineNavigatorKey = GlobalKey<NavigatorState>();
 
 /// 待处理的 deep link 路径
 /// 当应用尚未完全初始化时，保存 deep link 路径稍后处理
@@ -119,35 +127,60 @@ final appRouter = GoRouter(
       builder: (context, state) => const MusicPlayerPage(),
     ),
 
-    // Main shell with bottom navigation (6 tabs)
-    ShellRoute(
-      navigatorKey: shellNavigatorKey,
-      builder: (context, state, child) => MainScaffold(child: child),
-      routes: [
-        GoRoute(
-          path: Routes.video,
-          name: 'video',
-          builder: (context, state) => const VideoListPage(),
+    // Main shell with 5 tabs, each with its own Navigator stack.
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) =>
+          MainScaffold(navigationShell: navigationShell),
+      branches: [
+        StatefulShellBranch(
+          navigatorKey: _videoNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.video,
+              name: 'video',
+              builder: (context, state) => const VideoListPage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: Routes.music,
-          name: 'music',
-          builder: (context, state) => const MusicListPage(),
+        StatefulShellBranch(
+          navigatorKey: _musicNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.music,
+              name: 'music',
+              builder: (context, state) => const MusicListPage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: Routes.photo,
-          name: 'photo',
-          builder: (context, state) => const PhotoListPage(),
+        StatefulShellBranch(
+          navigatorKey: _photoNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.photo,
+              name: 'photo',
+              builder: (context, state) => const PhotoListPage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: Routes.reading,
-          name: 'reading',
-          builder: (context, state) => const ReadingPage(),
+        StatefulShellBranch(
+          navigatorKey: _readingNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.reading,
+              name: 'reading',
+              builder: (context, state) => const ReadingPage(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: Routes.mine,
-          name: 'mine',
-          builder: (context, state) => const MinePage(),
+        StatefulShellBranch(
+          navigatorKey: _mineNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.mine,
+              name: 'mine',
+              builder: (context, state) => const MinePage(),
+            ),
+          ],
         ),
       ],
     ),

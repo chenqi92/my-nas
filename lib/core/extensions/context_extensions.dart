@@ -116,6 +116,23 @@ extension BuildContextExtensions on BuildContext {
   bool get isTablet => isMedium || isExpanded;
   bool get isDesktop => isLarge || isExtraLarge;
 
+  /// 是否使用桌面级 Shell 布局（NavigationRail / Master-Detail 等）。
+  ///
+  /// 与 [isDesktop] 的区别：
+  /// - [isDesktop] 只看屏幕宽度（≥1200），用于已有页面内的 grid/列表样式判断；
+  ///   保持原有语义，避免连带影响。
+  /// - [isDesktopLayout] 仅决定外层 Shell 形态：
+  ///   * macOS / Windows / Linux 桌面应用：始终为 true（不论窗口缩到多小都
+  ///     保持 Rail，不退化成底部栏）；
+  ///   * Web：按宽度，≥840 用 Rail；
+  ///   * iOS / Android：始终为 false（移动端体验完全不变）。
+  bool get isDesktopLayout {
+    if (kIsWeb) {
+      return screenWidth >= 840;
+    }
+    return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+  }
+
   // Navigation
   NavigatorState get navigator => Navigator.of(this);
   void pop<T>([T? result]) => navigator.pop(result);
