@@ -267,7 +267,13 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
             Expanded(
               child: Theme(
                 data: desktopTheme,
-                child: widget.navigationShell,
+                // 移除手机刘海预留的顶部 padding。各 page 内
+                // `MediaQuery.padding.top` 在桌面下会变 0，避免浪费空间。
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeTop: true,
+                  child: widget.navigationShell,
+                ),
               ),
             ),
           ],
