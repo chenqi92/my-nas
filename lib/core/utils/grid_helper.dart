@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
-import 'package:my_nas/core/utils/platform_capabilities.dart';
 
 /// 网格布局类型
 enum GridLayoutType {
@@ -128,7 +127,7 @@ abstract final class GridHelper {
   /// 桌面端：4-6 列卡片或更多
   static GridConfig getMusicGridConfig(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     if (isDesktop) {
       // 桌面端：更紧凑的布局
@@ -160,7 +159,7 @@ abstract final class GridHelper {
   /// 获取艺术家网格配置
   static GridConfig getMusicArtistGridConfig(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     if (isDesktop) {
       final crossAxisCount = calculateColumnCount(
@@ -190,7 +189,7 @@ abstract final class GridHelper {
   /// 获取专辑网格配置
   static GridConfig getMusicAlbumGridConfig(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     if (isDesktop) {
       final crossAxisCount = calculateColumnCount(
@@ -220,7 +219,7 @@ abstract final class GridHelper {
   /// 获取流派/年代分类网格配置
   static GridConfig getMusicCategoryGridConfig(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     if (isDesktop) {
       final crossAxisCount = calculateColumnCount(
@@ -250,7 +249,7 @@ abstract final class GridHelper {
   /// 获取视频列表的网格配置（海报竖向布局）
   static GridConfig getVideoGridConfig(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     if (isDesktop) {
       final crossAxisCount = calculateColumnCount(
@@ -287,7 +286,7 @@ abstract final class GridHelper {
   /// 获取视频缩略图网格配置（横向 16:9 布局）
   static GridConfig getVideoThumbnailGridConfig(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     if (isDesktop) {
       final crossAxisCount = calculateColumnCount(
@@ -323,7 +322,7 @@ abstract final class GridHelper {
   /// 获取相册列表的网格配置
   static GridConfig getPhotoGridConfig(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     if (isDesktop) {
       final crossAxisCount = calculateColumnCount(
@@ -353,7 +352,7 @@ abstract final class GridHelper {
   /// 获取文件列表的网格配置
   static GridConfig getFileGridConfig(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     if (isDesktop) {
       final crossAxisCount = calculateColumnCount(
@@ -383,7 +382,7 @@ abstract final class GridHelper {
   /// 获取海报墙的网格配置
   static GridConfig getPosterGridConfig(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     if (isDesktop) {
       final crossAxisCount = calculateColumnCount(
@@ -446,7 +445,7 @@ abstract final class GridHelper {
           maxColumns: customMaxColumns ?? 6,
           minColumns: customMinColumns ?? 2,
         );
-        final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+        final isDesktop = context.isDesktopLayout;
         final spacing = isDesktop ? 16.0 : 10.0;
         return GridConfig(
           crossAxisCount: crossAxisCount,
@@ -464,19 +463,19 @@ abstract final class GridHelper {
 
   /// 获取平台适配的网格间距
   static double getGridSpacing(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     return isDesktop ? 16.0 : 10.0;
   }
 
   /// 获取平台适配的列表项间距
   static double getListItemSpacing(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     return isDesktop ? 8.0 : 4.0;
   }
 
   /// 获取平台适配的页面内边距
   static EdgeInsets getPagePadding(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     return isDesktop
         ? const EdgeInsets.all(16)
         : const EdgeInsets.symmetric(horizontal: 12, vertical: 8);
@@ -491,19 +490,19 @@ abstract final class GridHelper {
   /// 移动端：72dp（触摸友好）
   /// 桌面端：48dp（紧凑）
   static double getListItemHeight(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     return isDesktop ? 48.0 : 72.0;
   }
 
   /// 获取紧凑列表项高度
   static double getCompactListItemHeight(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     return isDesktop ? 40.0 : 56.0;
   }
 
   /// 获取图标尺寸
   static double getIconSize(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     return isDesktop ? 20.0 : 24.0;
   }
 
@@ -512,7 +511,7 @@ abstract final class GridHelper {
   /// 移动端：48dp（Material Design 规范）
   /// 桌面端：32dp（鼠标点击精度更高）
   static double getTouchTargetSize(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     return isDesktop ? 32.0 : 48.0;
   }
 
