@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
-import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 
 /// 自适应玻璃顶栏 - 根据平台和 UI 风格自动选择最佳实现
@@ -408,20 +407,14 @@ class AdaptiveGlassHeader extends ConsumerWidget {
   /// 强制使用经典模式
   final bool forceClassic;
 
-  /// 桌面下统一收紧 header 高度。
-  ///
-  /// 各 page 传 72-88 是为手机大字号 header 留的空间，桌面下不需要。
-  static const double _desktopHeight = 52;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final uiStyle = ref.watch(uiStyleProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final safeTop = MediaQuery.of(context).padding.top;
-    // 桌面下钳到 52，让所有 main tab page 顶部条统一紧凑。
-    final effectiveHeight = context.isDesktopLayout
-        ? (height == null ? _desktopHeight : (height! < _desktopHeight ? height : _desktopHeight))
-        : height;
+    // 桌面下不再统一钳高度（之前钳到 52 会压缩 page 内的 avatar + 标题 +
+    // 按钮等内容）。各 page 自己根据 isDesktopLayout 选合适 height。
+    final effectiveHeight = height;
 
     // 确定是否使用玻璃模式
     final isGlassMode = !forceClassic && uiStyle.isGlass;
