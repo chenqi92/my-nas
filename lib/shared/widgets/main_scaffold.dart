@@ -258,6 +258,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           ),
         ),
+        // 整体页面默认走更高视觉密度（让 Material 自身的 ListTile /
+        // TextField / Switch / Checkbox 等都跟着变紧凑）。
+        visualDensity: VisualDensity.compact,
       );
       scaffold = Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
