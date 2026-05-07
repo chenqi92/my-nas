@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
-import 'package:my_nas/core/utils/platform_capabilities.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/widgets/hoverable_widget.dart';
 
 /// 列表项类型
@@ -123,7 +123,7 @@ class AdaptiveListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // 计算高度和间距
@@ -307,7 +307,7 @@ class AdaptiveListGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
@@ -367,7 +367,7 @@ class AdaptiveSwitchListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final effectiveDense = dense ?? isDesktop;
 
     return SwitchListTile(
@@ -410,7 +410,7 @@ class AdaptiveCheckboxListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final effectiveDense = dense ?? isDesktop;
 
     return CheckboxListTile(
@@ -455,7 +455,7 @@ class AdaptiveRadioListTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final effectiveDense = dense ?? isDesktop;
 
     return RadioGroup<T>(
