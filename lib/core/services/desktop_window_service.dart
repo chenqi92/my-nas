@@ -33,50 +33,68 @@ class DesktopWindowService with WindowListener {
   bool _initialized = false;
 
   /// 在 runApp 之前调用。仅桌面平台执行实际初始化。
+  ///
+  /// 整个流程包在 try-catch：任何步骤失败（windowManager 通信、Hive box
+  /// 被另一个进程锁定等）都不应阻塞 runApp，否则用户看到黑屏。失败时
+  /// 退化为窗口默认尺寸，不持久化几何。
   Future<void> initialize() async {
     if (_initialized) return;
     if (kIsWeb) return;
     if (!(Platform.isMacOS || Platform.isWindows || Platform.isLinux)) return;
 
-    await windowManager.ensureInitialized();
+    try {
+      await windowManager.ensureInitialized();
 
-    final box = await HiveUtils.getSettingsBox();
-    final savedWidth = (box.get(_hiveKeyWidth) as num?)?.toDouble();
-    final savedHeight = (box.get(_hiveKeyHeight) as num?)?.toDouble();
-    final savedOffsetX = (box.get(_hiveKeyOffsetX) as num?)?.toDouble();
-    final savedOffsetY = (box.get(_hiveKeyOffsetY) as num?)?.toDouble();
-    final wasMaximized = box.get(_hiveKeyMaximized) as bool? ?? false;
-
-    final initialSize = (savedWidth != null && savedHeight != null)
-        ? Size(savedWidth, savedHeight)
-        : _defaultSize;
-
-    final options = WindowOptions(
-      size: initialSize,
-      minimumSize: _minSize,
-      center: savedOffsetX == null,
-      // 保留 macOS 默认标题栏（灰条 + 交通灯）。之前试过 TitleBarStyle.hidden
-      // 让内容延伸到顶端，但各 page 的 AppBar 会直接顶到屏幕最上方，跟红黄绿
-      // 按钮挤在一起。沉浸式标题栏需要每个 page 配合 inset，工程量大，先保守。
-      titleBarStyle: TitleBarStyle.normal,
-      title: 'MyNAS',
-    );
-
-    await windowManager.waitUntilReadyToShow(options, () async {
-      if (savedOffsetX != null && savedOffsetY != null) {
-        await windowManager.setPosition(Offset(savedOffsetX, savedOffsetY));
+      // 读取上次窗口几何（Hive box 失败也不影响窗口显示）。
+      double? savedWidth;
+      double? savedHeight;
+      double? savedOffsetX;
+      double? savedOffsetY;
+      var wasMaximized = false;
+      try {
+        final box = await HiveUtils.getSettingsBox();
+        savedWidth = (box.get(_hiveKeyWidth) as num?)?.toDouble();
+        savedHeight = (box.get(_hiveKeyHeight) as num?)?.toDouble();
+        savedOffsetX = (box.get(_hiveKeyOffsetX) as num?)?.toDouble();
+        savedOffsetY = (box.get(_hiveKeyOffsetY) as num?)?.toDouble();
+        wasMaximized = box.get(_hiveKeyMaximized) as bool? ?? false;
+      } on Exception catch (e, st) {
+        logger.w('DesktopWindowService: 读取窗口偏好失败，使用默认尺寸', e, st);
       }
-      await windowManager.show();
-      await windowManager.focus();
-      if (wasMaximized) {
-        await windowManager.maximize();
-      }
-    });
 
-    windowManager.addListener(this);
-    _initialized = true;
-    logger.i('DesktopWindowService initialized '
-        '(size=$initialSize, maximized=$wasMaximized)');
+      final initialSize = (savedWidth != null && savedHeight != null)
+          ? Size(savedWidth, savedHeight)
+          : _defaultSize;
+
+      final options = WindowOptions(
+        size: initialSize,
+        minimumSize: _minSize,
+        center: savedOffsetX == null,
+        // 保留 macOS 默认标题栏（灰条 + 交通灯）。之前试过 TitleBarStyle.hidden
+        // 让内容延伸到顶端，但各 page 的 AppBar 会直接顶到屏幕最上方，跟红黄绿
+        // 按钮挤在一起。沉浸式标题栏需要每个 page 配合 inset，工程量大，先保守。
+        titleBarStyle: TitleBarStyle.normal,
+        title: 'MyNAS',
+      );
+
+      await windowManager.waitUntilReadyToShow(options, () async {
+        if (savedOffsetX != null && savedOffsetY != null) {
+          await windowManager.setPosition(Offset(savedOffsetX, savedOffsetY));
+        }
+        await windowManager.show();
+        await windowManager.focus();
+        if (wasMaximized) {
+          await windowManager.maximize();
+        }
+      });
+
+      windowManager.addListener(this);
+      _initialized = true;
+      logger.i('DesktopWindowService initialized '
+          '(size=$initialSize, maximized=$wasMaximized)');
+    } on Exception catch (e, st) {
+      logger.w('DesktopWindowService 初始化失败，应用继续启动', e, st);
+    }
   }
 
   /// 持久化当前窗口几何数据。

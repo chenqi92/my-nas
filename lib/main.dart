@@ -69,8 +69,14 @@ Future<void> main(List<String> args) async {
   // 设置全局错误处理
   _setupGlobalErrorHandling();
 
-  // Initialize dependencies
-  await _initApp();
+  // Initialize dependencies。任何子步骤抛异常都不应阻塞 runApp，否则用户
+  // 看到的是黑屏而非错误界面。每个步骤内部已经各自 try-catch，这里再加
+  // 一层 fallback 兜底。
+  try {
+    await _initApp();
+  } on Object catch (e, st) {
+    logger.f('App initialization failed, continuing to runApp', e, st);
+  }
 
   runApp(
     const ProviderScope(
