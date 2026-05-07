@@ -6,10 +6,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:my_nas/app/router/app_router.dart';
 import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
+import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
+import 'package:my_nas/features/transfer/presentation/pages/transfer_manager_page.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
@@ -371,71 +375,29 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           ),
           const SizedBox(height: 8),
 
-          // Navigation items
+          // 主导航 + 工具区（仅桌面 Rail 可见的快捷入口）
           Expanded(
-            child: ListView.builder(
+            child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: _destinations.length,
-              itemBuilder: (context, index) {
-                final dest = _destinations[index];
-                final isSelected = currentIndex == index;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => _onDestinationSelected(context, index),
-                      borderRadius: BorderRadius.circular(12),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isExtended ? 16 : 0,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: isExtended
-                              ? MainAxisAlignment.start
-                              : MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              isSelected ? dest.selectedIcon : dest.icon,
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : isDark
-                                      ? AppColors.darkOnSurfaceVariant
-                                      : context.colorScheme.onSurfaceVariant,
-                              size: 24,
-                            ),
-                            if (isExtended) ...[
-                              const SizedBox(width: 12),
-                              Text(
-                                dest.label,
-                                style: TextStyle(
-                                  color: isSelected
-                                      ? AppColors.primary
-                                      : isDark
-                                          ? AppColors.darkOnSurfaceVariant
-                                          : context.colorScheme.onSurfaceVariant,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+              children: [
+                ..._buildPrimaryRailEntries(
+                  context,
+                  currentIndex,
+                  isDark,
+                  isExtended,
+                ),
+                const SizedBox(height: 12),
+                Divider(
+                  height: 1,
+                  color: isDark
+                      ? AppColors.darkOutline.withValues(alpha: 0.3)
+                      : context.colorScheme.outlineVariant,
+                  indent: 8,
+                  endIndent: 8,
+                ),
+                const SizedBox(height: 12),
+                ..._buildToolRailEntries(context, isDark, isExtended),
+              ],
             ),
           ),
         ],
@@ -456,6 +418,72 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     }
 
     return navContent;
+  }
+
+  /// 主 tab 入口（5 个）。
+  List<Widget> _buildPrimaryRailEntries(
+    BuildContext context,
+    int currentIndex,
+    bool isDark,
+    bool isExtended,
+  ) =>
+      List.generate(_destinations.length, (index) {
+        final dest = _destinations[index];
+        final isSelected = currentIndex == index;
+        return _RailEntry(
+          icon: dest.icon,
+          selectedIcon: dest.selectedIcon,
+          label: dest.label,
+          isSelected: isSelected,
+          isDark: isDark,
+          isExtended: isExtended,
+          onTap: () => _onDestinationSelected(context, index),
+        );
+      });
+
+  /// 桌面端工具区入口：下载 / 任务 / 连接，点击全屏 push 对应页面。
+  /// 移动端不会渲染（mobile 走 _buildMobileNav 完全不调此方法）。
+  List<Widget> _buildToolRailEntries(
+    BuildContext context,
+    bool isDark,
+    bool isExtended,
+  ) {
+    void pushFullScreen(Widget page) {
+      final navigator = rootNavigatorKey.currentState;
+      if (navigator == null) return;
+      navigator.push<void>(MaterialPageRoute<void>(builder: (_) => page));
+    }
+
+    return [
+      _RailEntry(
+        icon: Icons.download_rounded,
+        selectedIcon: Icons.download_rounded,
+        label: '下载',
+        isSelected: false,
+        isDark: isDark,
+        isExtended: isExtended,
+        onTap: () => pushFullScreen(const DownloaderListPage()),
+      ),
+      _RailEntry(
+        icon: Icons.swap_horiz_rounded,
+        selectedIcon: Icons.swap_horiz_rounded,
+        label: '任务',
+        isSelected: false,
+        isDark: isDark,
+        isExtended: isExtended,
+        onTap: () =>
+            pushFullScreen(const TransferManagerPage()),
+      ),
+      _RailEntry(
+        icon: Icons.lan_rounded,
+        selectedIcon: Icons.lan_rounded,
+        label: '连接',
+        isSelected: false,
+        isDark: isDark,
+        isExtended: isExtended,
+        onTap: () => pushFullScreen(const SourcesPage()),
+      ),
+    ];
   }
 
   Widget _buildMobileNav(
@@ -581,6 +609,84 @@ class _Destination {
   final String label;
   final String route;
   final String? sfSymbol;
+}
+
+/// 桌面 NavigationRail 的单个入口。同时被主 tab 和工具区复用，
+/// 主 tab 通过 [isSelected] 高亮，工具区始终未选中。
+class _RailEntry extends StatelessWidget {
+  const _RailEntry({
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+    required this.isSelected,
+    required this.isDark,
+    required this.isExtended,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+  final bool isSelected;
+  final bool isDark;
+  final bool isExtended;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = AppColors.primary;
+    final inactiveColor = isDark
+        ? AppColors.darkOnSurfaceVariant
+        : context.colorScheme.onSurfaceVariant;
+    final color = isSelected ? activeColor : inactiveColor;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.symmetric(
+              horizontal: isExtended ? 16 : 0,
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? activeColor.withValues(alpha: isDark ? 0.2 : 0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: isExtended
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isSelected ? selectedIcon : icon,
+                  color: color,
+                  size: 24,
+                ),
+                if (isExtended) ...[
+                  const SizedBox(width: 12),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// 带动画的底部导航栏包装器
