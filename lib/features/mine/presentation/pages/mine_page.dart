@@ -628,13 +628,15 @@ class MinePage extends ConsumerWidget {
                   ],
                 ),
               ),
-              if (showChevron && onTap != null)
+              // 桌面下不显示 chevron：macOS 系统设置的 sidebar 子项均无
+              // chevron，靠 hover 高亮提示可点击。
+              if (showChevron && onTap != null && !isDesktop)
                 Icon(
                   Icons.chevron_right_rounded,
                   color: isDark
                       ? AppColors.darkOnSurfaceVariant
                       : AppColors.lightOnSurfaceVariant,
-                  size: isDesktop ? 18 : 22,
+                  size: 22,
                 ),
             ],
           ),
