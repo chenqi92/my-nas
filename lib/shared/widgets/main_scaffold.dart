@@ -14,6 +14,7 @@ import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
 import 'package:my_nas/shared/services/update_service.dart';
+import 'package:my_nas/shared/widgets/desktop_shortcuts.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
@@ -203,8 +204,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
 
     // Shell 布局判断：桌面平台始终走 Rail；移动平台始终走底栏；Web 按宽度。
     // 与 context.isDesktop（屏宽≥1200）解耦，避免桌面端缩窗口时退化为手机布局。
+    final Widget scaffold;
     if (context.isDesktopLayout) {
-      return Scaffold(
+      scaffold = Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
         body: Row(
           children: [
@@ -213,30 +215,46 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           ],
         ),
       );
-    }
-
-    // iOS 玻璃风格：使用原生 UITabBar
-    if (useNativeTabBar) {
-      return Scaffold(
+    } else if (useNativeTabBar) {
+      // iOS 玻璃风格：使用原生 UITabBar
+      scaffold = Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
         body: widget.navigationShell,
       );
+    } else {
+      // 其他情况: 使用 Flutter 底部导航栏
+      // 只有在主 Tab 路由且 provider 允许时才显示底栏
+      final showBottomNav = isMainTabRoute && bottomNavVisible;
+
+      scaffold = Scaffold(
+        backgroundColor: isDark ? AppColors.darkBackground : null,
+        // 始终让内容延伸到导航栏下方，确保动画平滑
+        extendBody: true,
+        body: widget.navigationShell,
+        // 始终渲染导航栏，使用 AnimatedSlide 实现平滑过渡
+        bottomNavigationBar: _AnimatedBottomNav(
+          visible: showBottomNav,
+          child: _buildMobileNav(
+            context,
+            currentIndex,
+            isDark,
+            optimizedStyle,
+            enableGlass,
+          ),
+        ),
+      );
     }
 
-    // 其他情况: 使用 Flutter 底部导航栏
-    // 只有在主 Tab 路由且 provider 允许时才显示底栏
-    final showBottomNav = isMainTabRoute && bottomNavVisible;
-
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : null,
-      // 始终让内容延伸到导航栏下方，确保动画平滑
-      extendBody: true,
-      body: widget.navigationShell,
-      // 始终渲染导航栏，使用 AnimatedSlide 实现平滑过渡
-      bottomNavigationBar: _AnimatedBottomNav(
-        visible: showBottomNav,
-        child: _buildMobileNav(context, currentIndex, isDark, optimizedStyle, enableGlass),
-      ),
+    // 桌面 / Web 注册全局快捷键（Cmd+1..5 切 tab、Esc pop）；
+    // iOS / Android 直接返回 scaffold，DesktopShortcuts 内部会判断并 no-op。
+    return DesktopShortcuts(
+      onSwitchTab: (index) {
+        widget.navigationShell.goBranch(
+          index,
+          initialLocation: index == widget.navigationShell.currentIndex,
+        );
+      },
+      child: scaffold,
     );
   }
 
