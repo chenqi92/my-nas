@@ -17,9 +17,11 @@ import 'package:my_nas/shared/services/update_service.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
-  const MainScaffold({required this.child, super.key});
+  const MainScaffold({required this.navigationShell, super.key});
 
-  final Widget child;
+  /// StatefulShellRoute 注入的 shell，提供 currentIndex / goBranch / 各
+  /// branch 的 Navigator。
+  final StatefulNavigationShell navigationShell;
 
   @override
   ConsumerState<MainScaffold> createState() => _MainScaffoldState();
@@ -151,16 +153,6 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     Routes.mine,
   };
 
-  int _getCurrentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.path;
-    for (var i = 0; i < _destinations.length; i++) {
-      if (location.startsWith(_destinations[i].route)) {
-        return i;
-      }
-    }
-    return 0;
-  }
-
   /// 判断当前 GoRouter 路由是否是主 Tab 页面
   bool _isMainTabRoute(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
@@ -171,12 +163,17 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     if (_isHandlingTabChange) return;
 
     _isHandlingTabChange = true;
-    
+
     // 切换到主 Tab 页面时，重置底部导航栏可见性
     // 这确保从详情页直接切换 Tab 时导航栏能正确显示
     ref.read(bottomNavVisibleProvider.notifier).reset();
-    
-    context.go(_destinations[index].route);
+
+    // 再次点击当前 tab 时回到该 branch 的初始路由（清空内部栈），
+    // 与一般 tab 应用的"双击 Tab 回顶"语义一致。
+    widget.navigationShell.goBranch(
+      index,
+      initialLocation: index == widget.navigationShell.currentIndex,
+    );
 
     // 延迟重置标志
     Future.delayed(const Duration(milliseconds: 100), () {
@@ -186,7 +183,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = _getCurrentIndex(context);
+    final currentIndex = widget.navigationShell.currentIndex;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final uiStyle = ref.watch(uiStyleProvider);
     final glassStyle = GlassTheme.getNavBarStyle(uiStyle, isDark: isDark);
@@ -204,14 +201,15 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     // 处理 UI 风格变化时的原生 Tab Bar 订阅
     _handleUiStyleChange(uiStyle, useNativeTabBar, currentIndex, bottomNavVisible);
 
-    // Use NavigationRail for desktop, NavigationBar for mobile
-    if (context.isDesktop) {
+    // Shell 布局判断：桌面平台始终走 Rail；移动平台始终走底栏；Web 按宽度。
+    // 与 context.isDesktop（屏宽≥1200）解耦，避免桌面端缩窗口时退化为手机布局。
+    if (context.isDesktopLayout) {
       return Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
         body: Row(
           children: [
             _buildDesktopNav(context, currentIndex, isDark, optimizedStyle, enableGlass),
-            Expanded(child: widget.child),
+            Expanded(child: widget.navigationShell),
           ],
         ),
       );
@@ -221,7 +219,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     if (useNativeTabBar) {
       return Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
-        body: widget.child,
+        body: widget.navigationShell,
       );
     }
 
@@ -233,7 +231,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       backgroundColor: isDark ? AppColors.darkBackground : null,
       // 始终让内容延伸到导航栏下方，确保动画平滑
       extendBody: true,
-      body: widget.child,
+      body: widget.navigationShell,
       // 始终渲染导航栏，使用 AnimatedSlide 实现平滑过渡
       bottomNavigationBar: _AnimatedBottomNav(
         visible: showBottomNav,
