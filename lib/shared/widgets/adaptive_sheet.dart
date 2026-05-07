@@ -223,8 +223,9 @@ class AdaptiveOptionItem<T> {
 AdaptiveSheetType _resolveSheetType(AdaptiveSheetType type, BuildContext context) {
   if (type != AdaptiveSheetType.auto) return type;
 
-  // 自动选择
-  if (PlatformCapabilities.isDesktop || context.isDesktop) {
+  // 与 MainScaffold 保持一致的 Shell 形态判断：桌面平台始终走 Dialog，
+  // Web ≥840 走 Dialog，移动端 / 小窗口 Web 仍用底部 Sheet。
+  if (context.isDesktopLayout) {
     return AdaptiveSheetType.dialog;
   }
   return AdaptiveSheetType.bottomSheet;
