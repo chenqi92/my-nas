@@ -50,6 +50,9 @@ app.*.map.json
 /android/local.properties
 /android/**/GeneratedPluginRegistrant.java
 /android/**/GeneratedPluginRegistrant.kt
+# vendored 包 example/ 下 flutter pub get 副产物
+packages/*/example/android/**/GeneratedPluginRegistrant.java
+packages/*/example/android/**/GeneratedPluginRegistrant.kt
 
 # iOS/XCode related
 **/ios/**/build/
