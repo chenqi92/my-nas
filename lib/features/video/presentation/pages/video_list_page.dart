@@ -2156,20 +2156,23 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
             : AppColors.primary.withValues(alpha: 0.08))
         : null;
 
+    final isDesktop = context.isDesktopLayout;
     return AdaptiveGlassHeader(
-      height: 72,
+      height: isDesktop ? 56 : 72,
       backgroundColor: uiStyle.isGlass
           ? tintColor
           : (isDark
               ? const Color(0xFF1A1A2E) // 深蓝紫色调
               : AppColors.primary.withValues(alpha: 0.08)),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.appBarHorizontalPadding,
-          AppSpacing.appBarVerticalPadding,
-          AppSpacing.appBarHorizontalPadding,
-          AppSpacing.lg,
-        ),
+        padding: isDesktop
+            ? const EdgeInsets.fromLTRB(16, 6, 16, 6)
+            : EdgeInsets.fromLTRB(
+                AppSpacing.appBarHorizontalPadding,
+                AppSpacing.appBarVerticalPadding,
+                AppSpacing.appBarHorizontalPadding,
+                AppSpacing.lg,
+              ),
         child: _showSearch
             ? _buildSearchBar(context, ref, isDark)
             : _buildGreetingHeader(context, ref, isDark, state),
@@ -2188,6 +2191,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
     final movieCount = state is VideoListLoaded ? state.movieCount : 0;
     final tvShowCount = state is VideoListLoaded ? state.tvShowGroupCount : 0;
     final otherCount = state is VideoListLoaded ? state.otherCount : 0;
+    final isDesktop = context.isDesktopLayout;
 
     // 判断是否正在刮削
     final isScraping =
@@ -2205,15 +2209,18 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
             children: [
               Text(
                 _getGreeting(),
-                style: context.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: (isDesktop
+                        ? context.textTheme.titleMedium
+                        : context.textTheme.headlineSmall)
+                    ?.copyWith(
+                  fontWeight: isDesktop ? FontWeight.w600 : FontWeight.bold,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
-              if (videoCount > 0 || isScraping)
+              if (!isDesktop) const SizedBox(height: 4),
+              if ((videoCount > 0 || isScraping) && !isDesktop)
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(

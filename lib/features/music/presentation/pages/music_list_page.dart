@@ -1949,20 +1949,23 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             : Colors.deepOrange.withValues(alpha: 0.08))
         : null;
 
+    final isDesktop = context.isDesktopLayout;
     return AdaptiveGlassHeader(
-      height: 72,
+      height: isDesktop ? 56 : 72,
       backgroundColor: uiStyle.isGlass
           ? tintColor
           : (isDark
               ? const Color(0xFF2E1A1A) // 深红棕色调
               : Colors.deepOrange.withValues(alpha: 0.08)),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.appBarHorizontalPadding,
-          AppSpacing.appBarVerticalPadding,
-          AppSpacing.appBarHorizontalPadding,
-          AppSpacing.lg, // 底部保持较大间距用于 header 效果
-        ),
+        padding: isDesktop
+            ? const EdgeInsets.fromLTRB(16, 6, 16, 6)
+            : EdgeInsets.fromLTRB(
+                AppSpacing.appBarHorizontalPadding,
+                AppSpacing.appBarVerticalPadding,
+                AppSpacing.appBarHorizontalPadding,
+                AppSpacing.lg, // 底部保持较大间距用于 header 效果
+              ),
         child: _showSearch
             ? _buildSearchBar(context, ref, isDark)
             : _buildGreetingHeader(context, ref, isDark, state),
@@ -1976,6 +1979,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     final isLoadingMetadata = state is MusicListLoaded && state.isLoadingMetadata;
     final metadataProcessed = state is MusicListLoaded ? state.metadataProcessed : 0;
     final metadataTotal = state is MusicListLoaded ? state.metadataTotal : 0;
+    final isDesktop = context.isDesktopLayout;
 
     return Row(
       children: [
@@ -1987,14 +1991,17 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             children: [
               Text(
                 _getGreeting(),
-                style: context.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: (isDesktop
+                        ? context.textTheme.titleMedium
+                        : context.textTheme.headlineSmall)
+                    ?.copyWith(
+                  fontWeight: isDesktop ? FontWeight.w600 : FontWeight.bold,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (trackCount > 0)
+              if (trackCount > 0 && !isDesktop)
                 Row(
                   children: [
                     Text(
