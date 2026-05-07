@@ -430,17 +430,32 @@ class MinePage extends ConsumerWidget {
     final verticalPadding = isDesktop ? 12.0 : 20.0;
     final topPadding = isDesktop ? 12.0 : context.padding.top + 20;
 
+    // 桌面下用纯净 surface 色 + 底部细分隔线（macOS sidebar 风），
+    // 移动端保留原渐变。
+    final headerDecoration = isDesktop
+        ? BoxDecoration(
+            color: isDark ? AppColors.darkSurface : context.colorScheme.surface,
+            border: Border(
+              bottom: BorderSide(
+                color: isDark
+                    ? AppColors.darkOutline.withValues(alpha: 0.3)
+                    : context.colorScheme.outlineVariant,
+              ),
+            ),
+          )
+        : BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [AppColors.darkSurface, AppColors.darkBackground]
+                  : [AppColors.primary.withValues(alpha: 0.1), Colors.white],
+            ),
+          );
+
     return Container(
       padding: EdgeInsets.fromLTRB(20, topPadding, 20, verticalPadding),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [AppColors.darkSurface, AppColors.darkBackground]
-              : [AppColors.primary.withValues(alpha: 0.1), Colors.white],
-        ),
-      ),
+      decoration: headerDecoration,
       child: Row(
         children: [
           Container(
