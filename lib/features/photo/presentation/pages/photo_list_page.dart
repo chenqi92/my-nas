@@ -1294,6 +1294,17 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
   }
 }
 
+/// 计算照片 grid 列数。
+///
+/// - 移动端：固定 3 列。
+/// - 桌面端：按窗宽动态，每约 220 宽一列，钳制在 5..10，
+///   避免大屏照片显得稀疏、小窗口又拥挤。
+int _photoGridCrossAxisCount(BuildContext context) {
+  if (!context.isDesktopLayout) return 3;
+  final raw = (context.screenWidth / 220).floor();
+  return raw.clamp(5, 10);
+}
+
 class PhotoListPage extends ConsumerStatefulWidget {
   const PhotoListPage({super.key});
 
@@ -2789,7 +2800,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     bool isDark,
   ) {
     final photos = state.filteredPhotos;
-    final crossAxisCount = context.isDesktop ? 6 : 3;
+    final crossAxisCount = _photoGridCrossAxisCount(context);
 
     return SliverPadding(
       padding: const EdgeInsets.all(4),
@@ -2835,7 +2846,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     PhotoListLoaded state,
     bool isDark,
   ) {
-    final crossAxisCount = context.isDesktop ? 6 : 3;
+    final crossAxisCount = _photoGridCrossAxisCount(context);
     final allPhotos = state.filteredPhotos;
     final timelineItems = state.computeTimelineItems(crossAxisCount);
     final screenWidth = MediaQuery.of(context).size.width;
