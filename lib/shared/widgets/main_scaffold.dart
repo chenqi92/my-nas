@@ -319,7 +319,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     GlassStyle glassStyle,
     bool enableGlass,
   ) {
-    final isExtended = context.screenWidth > 1400;
+    // ≥1100 显示带文字的 220px 展开 Rail；更小则用 72px 仅图标。
+    // 原 1400 偏高，1316 这种 Retina 半屏窗口会一直显示窄版。
+    final isExtended = context.screenWidth >= 1100;
 
     // 计算背景色
     final bgColor = enableGlass

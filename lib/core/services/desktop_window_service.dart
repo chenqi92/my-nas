@@ -55,10 +55,10 @@ class DesktopWindowService with WindowListener {
       size: initialSize,
       minimumSize: _minSize,
       center: savedOffsetX == null,
-      // macOS：交通灯按钮显示，标题栏隐藏，内容延伸到顶部（Liquid Glass 效果一致）。
-      titleBarStyle:
-          Platform.isMacOS ? TitleBarStyle.hidden : TitleBarStyle.normal,
-      windowButtonVisibility: true,
+      // 保留 macOS 默认标题栏（灰条 + 交通灯）。之前试过 TitleBarStyle.hidden
+      // 让内容延伸到顶端，但各 page 的 AppBar 会直接顶到屏幕最上方，跟红黄绿
+      // 按钮挤在一起。沉浸式标题栏需要每个 page 配合 inset，工程量大，先保守。
+      titleBarStyle: TitleBarStyle.normal,
       title: 'MyNAS',
     );
 
