@@ -55,6 +55,14 @@ class MinePage extends ConsumerWidget {
         .where((c) => c.status == SourceStatus.connected)
         .length;
 
+    // 桌面端给设置内容限宽居中，避免在大屏下设置卡片被拉得过宽。
+    // 通过加大水平 padding 实现，列表本身仍占满 Expanded 高度可滚动。
+    const desktopMaxContentWidth = 800.0;
+    final horizontalPadding = context.isDesktopLayout
+        ? ((context.screenWidth - desktopMaxContentWidth) / 2)
+            .clamp(AppSpacing.md, double.infinity)
+        : AppSpacing.md;
+
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
       body: Column(
@@ -64,7 +72,10 @@ class MinePage extends ConsumerWidget {
           // 可滚动的设置列表
           Expanded(
             child: ListView(
-              padding: AppSpacing.paddingMd,
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding,
+                vertical: AppSpacing.md,
+              ),
               children: [
                 // 连接设置
                 _buildSectionHeader(context, '连接', Icons.lan_rounded, isDark),
