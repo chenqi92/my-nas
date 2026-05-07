@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:my_nas/core/utils/platform_capabilities.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 
 /// 可拖放列表
 ///
@@ -85,7 +85,7 @@ class _DraggableListState<T> extends State<DraggableList<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final enableDrag = widget.enableDrag && isDesktop;
 
     if (!enableDrag) {
@@ -224,7 +224,7 @@ class DraggableGrid<T> extends StatefulWidget {
 class _DraggableGridState<T> extends State<DraggableGrid<T>> {
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final enableDrag = widget.enableDrag && isDesktop;
 
     if (!enableDrag) {

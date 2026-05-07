@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
-import 'package:my_nas/core/utils/platform_capabilities.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/widgets/hoverable_widget.dart';
 
 /// 表格列定义
@@ -254,7 +254,7 @@ class _AdaptiveTableViewState<T> extends State<AdaptiveTableView<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final rowHeight = widget.rowHeight ?? AppSpacing.listItemHeight;
@@ -301,7 +301,7 @@ class _AdaptiveTableViewState<T> extends State<AdaptiveTableView<T>> {
   }
 
   Widget _buildHeader(BuildContext context, double height, bool isDark) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     return Container(
       height: height,
@@ -386,7 +386,7 @@ class _AdaptiveTableViewState<T> extends State<AdaptiveTableView<T>> {
   Widget _buildRow(BuildContext context, int index, double rowHeight, bool isDark) {
     final item = widget.items[index];
     final isSelected = _selectedIndices.contains(index);
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
 
     // 交替行颜色
     Color? backgroundColor;
@@ -496,7 +496,7 @@ class TableRow<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final rowHeight = height ?? AppSpacing.listItemHeight;
 

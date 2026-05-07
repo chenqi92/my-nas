@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
-import 'package:my_nas/core/utils/platform_capabilities.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 
 /// 自适应按钮类型
 enum AdaptiveButtonType {
@@ -159,7 +159,7 @@ class AdaptiveButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final effectiveOnPressed = enabled && !isLoading ? onPressed : null;
 
     // 根据平台和尺寸计算按钮尺寸
@@ -491,7 +491,7 @@ class AdaptiveIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = PlatformCapabilities.isDesktop;
+    final isDesktop = context.isDesktopLayout;
     final colorScheme = Theme.of(context).colorScheme;
 
     // 计算尺寸
