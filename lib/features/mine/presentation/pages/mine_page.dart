@@ -419,8 +419,19 @@ class MinePage extends ConsumerWidget {
     ];
   }
 
-  Widget _buildHeader(BuildContext context, bool isDark, int connectedCount, int totalCount) => Container(
-      padding: EdgeInsets.fromLTRB(20, context.padding.top + 20, 20, 20),
+  Widget _buildHeader(BuildContext context, bool isDark, int connectedCount, int totalCount) {
+    // 桌面端 header 更紧凑：48 头像、titleMedium 标题、padding 12+12。
+    final isDesktop = context.isDesktopLayout;
+    final avatarSize = isDesktop ? 40.0 : 64.0;
+    final avatarRadius = isDesktop ? 10.0 : 20.0;
+    final titleStyle = isDesktop
+        ? context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)
+        : context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold);
+    final verticalPadding = isDesktop ? 12.0 : 20.0;
+    final topPadding = isDesktop ? 12.0 : context.padding.top + 20;
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, topPadding, 20, verticalPadding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -432,48 +443,48 @@ class MinePage extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          // 头像
           Container(
-            width: 64,
-            height: 64,
+            width: avatarSize,
+            height: avatarSize,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(avatarRadius),
+              boxShadow: isDesktop
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(avatarRadius),
               child: Image.asset(
                 'assets/logo.png',
-                width: 64,
-                height: 64,
+                width: avatarSize,
+                height: avatarSize,
                 fit: BoxFit.cover,
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: isDesktop ? 12 : 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'MyNAS',
-                  style: context.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  style: titleStyle?.copyWith(
                     color: isDark ? AppColors.darkOnSurface : null,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: isDesktop ? 2 : 4),
                 Row(
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
+                      width: 6,
+                      height: 6,
                       decoration: BoxDecoration(
                         color: connectedCount > 0 ? AppColors.success : Colors.grey,
                         shape: BoxShape.circle,
@@ -484,7 +495,10 @@ class MinePage extends ConsumerWidget {
                       connectedCount > 0
                           ? '$connectedCount / $totalCount 已连接'
                           : '未连接',
-                      style: context.textTheme.bodyMedium?.copyWith(
+                      style: (isDesktop
+                              ? context.textTheme.bodySmall
+                              : context.textTheme.bodyMedium)
+                          ?.copyWith(
                         color: isDark
                             ? AppColors.darkOnSurfaceVariant
                             : AppColors.lightOnSurfaceVariant,
@@ -498,6 +512,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
     );
+  }
 
   Widget _buildSectionHeader(BuildContext context, String title, IconData icon, bool isDark) => Row(
       children: [
@@ -550,28 +565,38 @@ class MinePage extends ConsumerWidget {
     Color? titleColor,
     bool showChevron = true,
     VoidCallback? onTap,
-  }) => Material(
+  }) {
+    // 桌面下用更紧凑的密度：图标 32、垂直 padding 8、标题 bodyMedium。
+    final isDesktop = context.isDesktopLayout;
+    final iconBox = isDesktop ? 32.0 : 40.0;
+    final iconSize = isDesktop ? 18.0 : 20.0;
+    final verticalPadding = isDesktop ? AppSpacing.sm : AppSpacing.md;
+    final titleStyle = isDesktop
+        ? context.textTheme.bodyMedium
+        : context.textTheme.bodyLarge;
+
+    return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
+            vertical: verticalPadding,
           ),
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: iconBox,
+                height: iconBox,
                 decoration: BoxDecoration(
                   color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(isDesktop ? 8 : 12),
                 ),
                 child: Icon(
                   icon,
                   color: iconColor,
-                  size: 20,
+                  size: iconSize,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -581,7 +606,7 @@ class MinePage extends ConsumerWidget {
                   children: [
                     Text(
                       title,
-                      style: context.textTheme.bodyLarge?.copyWith(
+                      style: titleStyle?.copyWith(
                         color: titleColor ??
                             (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface),
                         fontWeight: FontWeight.w500,
@@ -609,13 +634,14 @@ class MinePage extends ConsumerWidget {
                   color: isDark
                       ? AppColors.darkOnSurfaceVariant
                       : AppColors.lightOnSurfaceVariant,
-                  size: 22,
+                  size: isDesktop ? 18 : 22,
                 ),
             ],
           ),
         ),
       ),
     );
+  }
 
   Widget _buildDivider(bool isDark) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
