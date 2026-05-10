@@ -25,6 +25,17 @@ final _photoNavigatorKey = GlobalKey<NavigatorState>();
 final _readingNavigatorKey = GlobalKey<NavigatorState>();
 final _mineNavigatorKey = GlobalKey<NavigatorState>();
 
+/// 按 tab index 顺序排列的 branch navigator keys，供 main_scaffold
+/// 桌面端工具区按当前 currentIndex push 到对应 branch（覆盖右侧内容
+/// 但保留 NavigationRail 可见）。
+final branchNavigatorKeys = <GlobalKey<NavigatorState>>[
+  _videoNavigatorKey,
+  _musicNavigatorKey,
+  _photoNavigatorKey,
+  _readingNavigatorKey,
+  _mineNavigatorKey,
+];
+
 /// 待处理的 deep link 路径
 /// 当应用尚未完全初始化时，保存 deep link 路径稍后处理
 String? _pendingDeepLink;

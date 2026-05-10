@@ -511,17 +511,21 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         );
       });
 
-  /// 桌面端工具区入口：下载 / 任务 / 连接，点击全屏 push 对应页面。
+  /// 桌面端工具区入口：下载 / 任务 / 连接，点击 push 到当前 branch
+  /// navigator，覆盖右侧内容区但保留 NavigationRail 可见。
   /// 移动端不会渲染（mobile 走 _buildMobileNav 完全不调此方法）。
   List<Widget> _buildToolRailEntries(
     BuildContext context,
     bool isDark,
     bool isExtended,
   ) {
-    void pushFullScreen(Widget page) {
-      final navigator = rootNavigatorKey.currentState;
-      if (navigator == null) return;
-      navigator.push<void>(MaterialPageRoute<void>(builder: (_) => page));
+    void pushOnCurrentBranch(Widget page) {
+      final currentIndex = widget.navigationShell.currentIndex;
+      final key = currentIndex >= 0 && currentIndex < branchNavigatorKeys.length
+          ? branchNavigatorKeys[currentIndex]
+          : null;
+      final navigator = key?.currentState ?? rootNavigatorKey.currentState;
+      navigator?.push<void>(MaterialPageRoute<void>(builder: (_) => page));
     }
 
     return [
@@ -532,7 +536,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         isSelected: false,
         isDark: isDark,
         isExtended: isExtended,
-        onTap: () => pushFullScreen(const DownloaderListPage()),
+        onTap: () => pushOnCurrentBranch(const DownloaderListPage()),
       ),
       _RailEntry(
         icon: Icons.swap_horiz_rounded,
@@ -542,7 +546,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         isDark: isDark,
         isExtended: isExtended,
         onTap: () =>
-            pushFullScreen(const TransferManagerPage()),
+            pushOnCurrentBranch(const TransferManagerPage()),
       ),
       _RailEntry(
         icon: Icons.lan_rounded,
@@ -551,7 +555,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         isSelected: false,
         isDark: isDark,
         isExtended: isExtended,
-        onTap: () => pushFullScreen(const SourcesPage()),
+        onTap: () => pushOnCurrentBranch(const SourcesPage()),
       ),
     ];
   }
