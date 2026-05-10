@@ -2609,9 +2609,17 @@ class _DesktopSectionDetailState extends State<_DesktopSectionDetail> {
 
   @override
   Widget build(BuildContext context) {
-    return Navigator(
-      key: _navKey,
-      onGenerateInitialRoutes: (_, __) => [_buildRootRoute()],
+    // 限宽 800 + 居中：detail panel 内容（含 section root 与所有
+    // push 进来的 settings 子页）在大屏下不再被拉伸到全宽。
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 800),
+        child: Navigator(
+          key: _navKey,
+          onGenerateInitialRoutes: (_, __) => [_buildRootRoute()],
+        ),
+      ),
     );
   }
 }
