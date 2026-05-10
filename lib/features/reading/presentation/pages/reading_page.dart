@@ -1000,8 +1000,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
             : Colors.amber.withValues(alpha: 0.08))
         : null;
 
-    // 当搜索栏显示且是图书模式时，需要更高的高度来容纳模式切换
-    final headerHeight = (_showSearch && currentTab == 0) ? 110.0 : 84.0;
+    final isDesktop = context.isDesktopLayout;
+    // 桌面下整体压缩：搜索 + 模式切换时 80（vs 110），普通时 56（vs 84）。
+    final headerHeight = (_showSearch && currentTab == 0)
+        ? (isDesktop ? 80.0 : 110.0)
+        : (isDesktop ? 56.0 : 84.0);
 
     return AdaptiveGlassHeader(
       height: headerHeight,
@@ -1011,7 +1014,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
               ? const Color(0xFF2E2A1A) // 深琥珀棕色调
               : Colors.amber.withValues(alpha: 0.08)),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 16, 16),
+        padding: isDesktop
+            ? const EdgeInsets.fromLTRB(16, 6, 12, 6)
+            : const EdgeInsets.fromLTRB(20, 12, 16, 16),
         child: Row(
           children: [
             // 问候语和当前类型标题（搜索时隐藏）
@@ -1023,30 +1028,35 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                   children: [
                     Text(
                       _getGreeting(),
-                      style: context.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: (isDesktop
+                              ? context.textTheme.titleMedium
+                              : context.textTheme.headlineSmall)
+                          ?.copyWith(
+                        fontWeight:
+                            isDesktop ? FontWeight.w600 : FontWeight.bold,
                         color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          ReadingContentType.values[currentTab].icon,
-                          size: 14,
-                          color: Colors.amber[700],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          ReadingContentType.values[currentTab].label,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark
-                                ? AppColors.darkOnSurfaceVariant
-                                : AppColors.lightOnSurfaceVariant,
+                    if (!isDesktop) const SizedBox(height: 4),
+                    if (!isDesktop)
+                      Row(
+                        children: [
+                          Icon(
+                            ReadingContentType.values[currentTab].icon,
+                            size: 14,
+                            color: Colors.amber[700],
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            ReadingContentType.values[currentTab].label,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark
+                                  ? AppColors.darkOnSurfaceVariant
+                                  : AppColors.lightOnSurfaceVariant,
+                            ),
+                          ),
+                        ],
                     ),
                   ],
                 ),
