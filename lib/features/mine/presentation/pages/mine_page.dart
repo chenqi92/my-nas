@@ -2598,13 +2598,17 @@ class _DesktopSectionDetailState extends State<_DesktopSectionDetail> {
     }
   }
 
-  MaterialPageRoute<void> _buildRootRoute() => MaterialPageRoute<void>(
-        builder: (_) => _DesktopSectionRootContent(
+  /// section 切换时使用无过渡动画的 PageRoute，避免 slide-in 让用户感觉
+  /// "进入了新页面"。push 二级 settings 子页仍走默认 slide 动画。
+  PageRoute<void> _buildRootRoute() => PageRouteBuilder<void>(
+        pageBuilder: (_, __, ___) => _DesktopSectionRootContent(
           section: widget.section,
           isDark: widget.isDark,
           uiStyle: widget.uiStyle,
           buildSettingsCard: widget.buildSettingsCard,
         ),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       );
 
   @override
