@@ -540,7 +540,11 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           ? branchNavigatorKeys[currentIndex]
           : null;
       final navigator = key?.currentState ?? rootNavigatorKey.currentState;
-      navigator?.push<void>(MaterialPageRoute<void>(builder: (_) => page));
+      if (navigator == null) return;
+      // 工具页 push 前先清空当前 branch 已有的栈（如详情页、播放器等），
+      // 确保 pop 工具页直接回到 branch 主 tab，而不是冒出之前残留的旧详情页。
+      navigator.popUntil((route) => route.isFirst);
+      navigator.push<void>(MaterialPageRoute<void>(builder: (_) => page));
     }
 
     return [
