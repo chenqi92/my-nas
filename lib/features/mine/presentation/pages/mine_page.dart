@@ -618,10 +618,11 @@ class MinePage extends ConsumerWidget {
     required List<Widget> children,
   }) {
     // 使用自适应玻璃容器 - 自动根据平台选择原生/Flutter实现
+    // 桌面下圆角缩小到 10（macOS 风），手机保留 20（iOS 风）。
     return AdaptiveGlassContainer(
       uiStyle: uiStyle,
       isDark: isDark,
-      cornerRadius: 20,
+      cornerRadius: context.isDesktopLayout ? 10 : 20,
       child: Column(children: children),
     );
   }
