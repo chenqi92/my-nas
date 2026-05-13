@@ -261,6 +261,21 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         // 整体页面默认走更高视觉密度（让 Material 自身的 ListTile /
         // TextField / Switch / Checkbox 等都跟着变紧凑）。
         visualDensity: VisualDensity.compact,
+        // 桌面 SnackBar：floating + 圆角 + 限宽，避免在大屏全宽铺满。
+        snackBarTheme: Theme.of(context).snackBarTheme.copyWith(
+              behavior: SnackBarBehavior.floating,
+              width: 480,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+        // 桌面 Dialog：稍紧凑的圆角 + 默认 elevation 减小。
+        dialogTheme: Theme.of(context).dialogTheme.copyWith(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 12,
+            ),
       );
       scaffold = Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
