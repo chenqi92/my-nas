@@ -120,8 +120,14 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
     // ignore: unused_local_variable
     final theme = Theme.of(context);
 
+    // 桌面下限宽 720 居中（macOS 系统设置 detail 风格），手机全宽。
+    final isDesktop = context.isDesktopLayout;
+    final horizontal = isDesktop
+        ? ((context.screenWidth - 720) / 2).clamp(16.0, double.infinity)
+        : 16.0;
+
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 16),
       children: [
         // 发现的设备部分
         if (discoveryState.devices.isNotEmpty || discoveryState.isDiscovering) ...[
