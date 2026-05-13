@@ -453,6 +453,67 @@ class MinePage extends ConsumerWidget {
             ),
           );
 
+    // 桌面下精简：去掉 logo + "MyNAS"（NavigationRail 已显示），
+    // 只显示标题 "设置" + 连接状态 chip。
+    if (isDesktop) {
+      return Container(
+        padding: EdgeInsets.fromLTRB(20, topPadding, 16, verticalPadding),
+        decoration: headerDecoration,
+        child: Row(
+          children: [
+            Text(
+              '设置',
+              style: context.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isDark ? AppColors.darkOnSurface : null,
+              ),
+            ),
+            const Spacer(),
+            // 连接状态 chip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: (connectedCount > 0
+                        ? AppColors.success
+                        : Colors.grey)
+                    .withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color:
+                          connectedCount > 0 ? AppColors.success : Colors.grey,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    connectedCount > 0
+                        ? '$connectedCount / $totalCount 已连接'
+                        : '未连接',
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: connectedCount > 0
+                          ? AppColors.success
+                          : (isDark
+                              ? AppColors.darkOnSurfaceVariant
+                              : AppColors.lightOnSurfaceVariant),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 移动端保留原 header（含 logo + 头像 + 大标题 + 状态行）
     return Container(
       padding: EdgeInsets.fromLTRB(20, topPadding, 20, verticalPadding),
       decoration: headerDecoration,
@@ -463,15 +524,13 @@ class MinePage extends ConsumerWidget {
             height: avatarSize,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(avatarRadius),
-              boxShadow: isDesktop
-                  ? null
-                  : [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(avatarRadius),
@@ -483,7 +542,7 @@ class MinePage extends ConsumerWidget {
               ),
             ),
           ),
-          SizedBox(width: isDesktop ? 12 : 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,12 +553,12 @@ class MinePage extends ConsumerWidget {
                     color: isDark ? AppColors.darkOnSurface : null,
                   ),
                 ),
-                SizedBox(height: isDesktop ? 2 : 4),
+                const SizedBox(height: 4),
                 Row(
                   children: [
                     Container(
-                      width: 6,
-                      height: 6,
+                      width: 8,
+                      height: 8,
                       decoration: BoxDecoration(
                         color: connectedCount > 0 ? AppColors.success : Colors.grey,
                         shape: BoxShape.circle,
@@ -510,10 +569,7 @@ class MinePage extends ConsumerWidget {
                       connectedCount > 0
                           ? '$connectedCount / $totalCount 已连接'
                           : '未连接',
-                      style: (isDesktop
-                              ? context.textTheme.bodySmall
-                              : context.textTheme.bodyMedium)
-                          ?.copyWith(
+                      style: context.textTheme.bodyMedium?.copyWith(
                         color: isDark
                             ? AppColors.darkOnSurfaceVariant
                             : AppColors.lightOnSurfaceVariant,
