@@ -148,6 +148,7 @@ dependencies:
   html: ^0.15.4 # HTML parsing for web scraping
   xpath_selector_html_parser: ^3.0.1 # XPath parsing for Legado book sources
   json_path: ^0.7.4 # JSONPath parsing for Legado book sources
+  flutter_js: ^0.8.1 # JS runtime for community scrape source scripts
   flutter_foliate_viewer:
     path: packages/flutter_foliate_viewer
   device_info_plus: ^12.3.0

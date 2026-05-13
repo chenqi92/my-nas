@@ -1933,24 +1933,30 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
   /// 当前实现仅查 favorites + history 缓存（已经存了 musicUrl），命中即组队播放；
   /// 未命中的路径直接跳过。如果整批都未命中（用户访问了某个无缓存的歌单），
   /// 退化为不动作 —— 避免在车载场景里因为找不到 url 卡死或乱播。
-  Future<void> _playFromBrowserPaths(List<String> paths, int startIndex) async {
-    if (paths.isEmpty) return;
+  Future<void> _playFromBrowserPaths(
+    List<({String? sourceId, String path})> entries,
+    int startIndex,
+  ) async {
+    if (entries.isEmpty) return;
     final favSvc = MusicFavoritesService();
     await favSvc.init();
     final favs = await favSvc.getAllFavorites();
-    final history = await favSvc.getRecentHistory(limit: 200);
+    final history = await favSvc.getRecentHistory(limit: 500);
 
     final favByPath = {for (final f in favs) f.musicPath: f};
     final histByPath = {for (final h in history) h.musicPath: h};
 
+    final connections = _ref.read(activeConnectionsProvider);
+
     final items = <MusicItem>[];
-    for (final p in paths) {
-      final fav = favByPath[p];
+    for (final e in entries) {
+      // 先查 favorites / history 缓存（已带 musicUrl）
+      final fav = favByPath[e.path];
       if (fav != null) {
         items.add(MusicBrowserService.buildMusicItemFromFavorite(fav));
         continue;
       }
-      final h = histByPath[p];
+      final h = histByPath[e.path];
       if (h != null) {
         items.add(MusicItem(
           id: '${h.sourceId ?? ''}_${h.musicPath}',
@@ -1964,14 +1970,42 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
           coverUrl: h.coverUrl,
           duration: h.duration,
         ));
+        continue;
+      }
+
+      // 缓存未命中：用 sourceId 通过 NAS 适配器解析 URL
+      final sid = e.sourceId;
+      if (sid == null) continue;
+      final conn = connections[sid];
+      if (conn == null || conn.status != SourceStatus.connected) continue;
+      try {
+        final url = await conn.adapter.fileSystem.getFileUrl(e.path);
+        items.add(MusicItem(
+          id: '${sid}_${e.path}',
+          name: _basenameOf(e.path),
+          path: e.path,
+          url: url,
+          sourceId: sid,
+          title: _basenameOf(e.path),
+        ));
+      } on Exception catch (ex, st) {
+        AppError.handle(ex, st, 'browser.resolveUrl', {
+          'sourceId': sid,
+          'path': e.path,
+        });
       }
     }
     if (items.isEmpty) {
-      logger.w('MusicPlayer: browser play 全部路径未命中缓存 → 跳过');
+      logger.w('MusicPlayer: browser play 队列为空（缓存未命中且 sourceId 缺失/未连接）');
       return;
     }
     final start = startIndex.clamp(0, items.length - 1);
     await playQueue(items, startIndex: start);
+  }
+
+  String _basenameOf(String path) {
+    final i = path.lastIndexOf('/');
+    return i < 0 ? path : path.substring(i + 1);
   }
 
   /// 播放/暂停切换

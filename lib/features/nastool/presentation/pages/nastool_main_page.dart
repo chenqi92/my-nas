@@ -61,17 +61,51 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final connection = ref.watch(nastoolConnectionProvider(widget.source.id));
-    final isWide = MediaQuery.of(context).size.width > 800;
+    final width = MediaQuery.of(context).size.width;
+    final isCompact = width < 700;
+    final isWide = width >= 1100;
+    final selectedItem = _navItems[_selectedIndex];
 
+    if (isCompact) {
+      // 移动端：AppBar + Drawer + 全宽内容
+      return Scaffold(
+        backgroundColor:
+            isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        appBar: AppBar(
+          title: Text(selectedItem.label),
+          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          elevation: 0,
+          actions: [
+            if (connection?.status == NasToolConnectionStatus.connected)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                child: Center(child: _connectionPill(context, connection!)),
+              ),
+            IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: () => ref
+                  .read(nastoolActionsProvider(widget.source.id))
+                  .refreshAll(),
+              tooltip: '刷新',
+            ),
+          ],
+        ),
+        drawer: _buildDrawer(context, isDark),
+        body: _buildContent(context, isDark),
+      );
+    }
+
+    // 平板 / 桌面：保留 nav rail
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: Row(
         children: [
           _buildNavRail(context, isDark, isWide),
           Expanded(
             child: Column(
               children: [
-                _buildHeader(context, isDark, connection),
+                _buildDesktopHeader(context, isDark, connection),
                 Expanded(child: _buildContent(context, isDark)),
               ],
             ),
@@ -81,8 +115,93 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
     );
   }
 
-  Widget _buildNavRail(BuildContext context, bool isDark, bool isWide) => Container(
-        width: isWide ? 200 : 72,
+  Widget _buildDrawer(BuildContext context, bool isDark) => Drawer(
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
+                  children: [
+                    _brandLogo(),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.source.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? AppColors.darkOnSurface
+                                  : AppColors.lightOnSurface,
+                            ),
+                          ),
+                          Text(
+                            widget.source.host,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: isDark
+                                  ? AppColors.darkOnSurfaceVariant
+                                  : AppColors.lightOnSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.builder(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  itemCount: _navItems.length,
+                  itemBuilder: (context, index) {
+                    final item = _navItems[index];
+                    final isSelected = _selectedIndex == index;
+                    return _buildNavItem(
+                      context,
+                      item,
+                      isSelected,
+                      isDark,
+                      true, // drawer 永远展开
+                      () {
+                        setState(() => _selectedIndex = index);
+                        Navigator.of(context).maybePop();
+                      },
+                    );
+                  },
+                ),
+              ),
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                child: _buildNavItem(
+                  context,
+                  const _NavItem(
+                      icon: Icons.arrow_back_rounded, label: '返回'),
+                  false,
+                  isDark,
+                  true,
+                  () => Navigator.of(context).pop(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _buildNavRail(BuildContext context, bool isDark, bool isWide) =>
+      Container(
+        width: isWide ? 220 : 84,
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           border: Border(
@@ -95,46 +214,69 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
         ),
         child: Column(
           children: [
-            Container(
-              height: 64,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                mainAxisAlignment: isWide ? MainAxisAlignment.start : MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.primaryLight],
+            SizedBox(
+              height: 72,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                child: Row(
+                  mainAxisAlignment: isWide
+                      ? MainAxisAlignment.start
+                      : MainAxisAlignment.center,
+                  children: [
+                    _brandLogo(),
+                    if (isWide) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.source.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style:
+                                  context.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: isDark
+                                    ? AppColors.darkOnSurface
+                                    : AppColors.lightOnSurface,
+                              ),
+                            ),
+                            Text(
+                              widget.source.host,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.textTheme.bodySmall?.copyWith(
+                                color: isDark
+                                    ? AppColors.darkOnSurfaceVariant
+                                    : AppColors.lightOnSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.movie_filter_rounded, size: 20, color: Colors.white),
-                  ),
-                  if (isWide) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      'NASTool',
-                      style: context.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                      ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
             const Divider(height: 1),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                padding:
+                    const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 itemCount: _navItems.length,
                 itemBuilder: (context, index) {
                   final item = _navItems[index];
                   final isSelected = _selectedIndex == index;
                   return _buildNavItem(
-                    context, item, isSelected, isDark, isWide,
+                    context,
+                    item,
+                    isSelected,
+                    isDark,
+                    isWide,
                     () => setState(() => _selectedIndex = index),
                   );
                 },
@@ -145,8 +287,11 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
               padding: const EdgeInsets.all(AppSpacing.sm),
               child: _buildNavItem(
                 context,
-                const _NavItem(icon: Icons.arrow_back_rounded, label: '返回'),
-                false, isDark, isWide,
+                const _NavItem(
+                    icon: Icons.arrow_back_rounded, label: '返回'),
+                false,
+                isDark,
+                isWide,
                 () => Navigator.pop(context),
               ),
             ),
@@ -154,40 +299,65 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
         ),
       );
 
+  Widget _brandLogo() => Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.primary, AppColors.primaryLight],
+          ),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(Icons.movie_filter_rounded,
+            size: 20, color: Colors.white),
+      );
+
   Widget _buildNavItem(
     BuildContext context,
     _NavItem item,
     bool isSelected,
     bool isDark,
-    bool isWide,
+    bool isExpanded,
     VoidCallback onTap,
   ) {
     final color = isSelected
         ? AppColors.primary
-        : (isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant);
+        : (isDark
+            ? AppColors.darkOnSurfaceVariant
+            : AppColors.lightOnSurfaceVariant);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs, vertical: 2),
       child: Material(
-        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.12)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Container(
             height: 48,
-            padding: EdgeInsets.symmetric(horizontal: isWide ? AppSpacing.md : AppSpacing.sm),
+            padding: EdgeInsets.symmetric(
+                horizontal: isExpanded ? AppSpacing.md : AppSpacing.sm),
             child: Row(
-              mainAxisAlignment: isWide ? MainAxisAlignment.start : MainAxisAlignment.center,
+              mainAxisAlignment: isExpanded
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
               children: [
                 Icon(item.icon, color: color, size: 22),
-                if (isWide) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    item.label,
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: color,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                if (isExpanded) ...[
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      item.label,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: color,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                      ),
                     ),
                   ),
                 ],
@@ -199,9 +369,11 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isDark, NasToolConnection? connection) => Container(
-        height: 64,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+  Widget _buildDesktopHeader(
+          BuildContext context, bool isDark, NasToolConnection? connection) =>
+      Container(
+        height: 72,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           border: Border(
@@ -214,52 +386,85 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
         ),
         child: Row(
           children: [
+            Icon(_navItems[_selectedIndex].icon, color: AppColors.primary),
+            const SizedBox(width: AppSpacing.sm),
             Text(
               _navItems[_selectedIndex].label,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                color: isDark
+                    ? AppColors.darkOnSurface
+                    : AppColors.lightOnSurface,
               ),
             ),
             const Spacer(),
-            if (connection != null && connection.status == NasToolConnectionStatus.connected) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.success, shape: BoxShape.circle)),
-                    const SizedBox(width: 6),
-                    Text(connection.adapter.username ?? '已连接', style: context.textTheme.bodySmall?.copyWith(color: AppColors.success, fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
+            if (connection?.status == NasToolConnectionStatus.connected) ...[
+              _connectionPill(context, connection!),
               const SizedBox(width: AppSpacing.sm),
             ],
             IconButton(
               icon: const Icon(Icons.refresh_rounded),
-              onPressed: () => ref.read(nastoolActionsProvider(widget.source.id)).refreshAll(),
+              onPressed: () => ref
+                  .read(nastoolActionsProvider(widget.source.id))
+                  .refreshAll(),
               tooltip: '刷新',
             ),
           ],
         ),
       );
 
+  /// 通用「已连接」状态胶囊（手机 AppBar / 桌面 header 共用）
+  Widget _connectionPill(BuildContext context, NasToolConnection conn) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: AppColors.success,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            conn.adapter.username ?? '已连接',
+            style: context.textTheme.bodySmall?.copyWith(
+              color: AppColors.success,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildContent(BuildContext context, bool isDark) {
     switch (_selectedIndex) {
-      case 0: return _DashboardContent(sourceId: widget.source.id, isDark: isDark);
-      case 1: return _SubscribesContent(sourceId: widget.source.id, isDark: isDark);
-      case 2: return _DownloadsContent(sourceId: widget.source.id, isDark: isDark);
-      case 3: return _SearchContent(sourceId: widget.source.id, isDark: isDark);
-      case 4: return _MediaContent(sourceId: widget.source.id, isDark: isDark);
-      case 5: return _SitesContent(sourceId: widget.source.id, isDark: isDark);
-      case 6: return _AdvancedContent(sourceId: widget.source.id, isDark: isDark);
-      case 7: return _SettingsContent(sourceId: widget.source.id, isDark: isDark);
-      default: return const Center(child: Text('404'));
+      case 0:
+        return _DashboardContent(sourceId: widget.source.id, isDark: isDark);
+      case 1:
+        return _SubscribesContent(sourceId: widget.source.id, isDark: isDark);
+      case 2:
+        return _DownloadsContent(sourceId: widget.source.id, isDark: isDark);
+      case 3:
+        return _SearchContent(sourceId: widget.source.id, isDark: isDark);
+      case 4:
+        return _MediaContent(sourceId: widget.source.id, isDark: isDark);
+      case 5:
+        return _SitesContent(sourceId: widget.source.id, isDark: isDark);
+      case 6:
+        return _AdvancedContent(sourceId: widget.source.id, isDark: isDark);
+      case 7:
+        return _SettingsContent(sourceId: widget.source.id, isDark: isDark);
+      default:
+        return const Center(child: Text('404'));
     }
   }
 }
@@ -268,6 +473,15 @@ class _NavItem {
   const _NavItem({required this.icon, required this.label});
   final IconData icon;
   final String label;
+}
+
+/// 内容区在不同断点下的统一外边距：手机贴近边缘，桌面留出更多呼吸空间。
+EdgeInsets _pagePadding(BuildContext context) {
+  final w = MediaQuery.of(context).size.width;
+  if (w < 700) return const EdgeInsets.all(AppSpacing.md);
+  if (w < 1100) return const EdgeInsets.all(AppSpacing.lg);
+  return const EdgeInsets.symmetric(
+      horizontal: AppSpacing.xl, vertical: AppSpacing.lg);
 }
 
 // ============================================================
@@ -285,6 +499,7 @@ class _DashboardContent extends ConsumerWidget {
     final systemAsync = ref.watch(nastoolSystemInfoProvider(sourceId));
     final siteStatsAsync = ref.watch(nastoolSiteStatisticsProvider(sourceId));
     final transfersAsync = ref.watch(nastoolTransferHistoryProvider(sourceId));
+    final pad = _pagePadding(context);
 
     return statsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -296,38 +511,34 @@ class _DashboardContent extends ConsumerWidget {
           ref.invalidate(nastoolSiteStatisticsProvider(sourceId));
         },
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: pad,
           children: [
-            // System Info Section
             systemAsync.when(
               data: (sys) => _buildSystemInfo(context, sys),
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
             ),
             const SizedBox(height: AppSpacing.lg),
-
-            // Stats Cards
             _buildSectionTitle(context, '媒体库统计'),
             const SizedBox(height: AppSpacing.md),
             _buildStatsGrid(context, stats),
             const SizedBox(height: AppSpacing.xl),
-
-            // Site Statistics Summary
             _buildSectionTitle(context, '站点数据'),
             const SizedBox(height: AppSpacing.md),
             siteStatsAsync.when(
               data: (sites) => _buildSiteStats(context, sites),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
               error: (_, __) => _buildEmptyState('暂无站点数据'),
             ),
             const SizedBox(height: AppSpacing.xl),
-
-            // Recent Transfers
             _buildSectionTitle(context, '最近转移'),
             const SizedBox(height: AppSpacing.md),
             transfersAsync.when(
-              data: (transfers) => _buildTransferList(context, transfers.take(5).toList()),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              data: (transfers) => _buildTransferList(
+                  context, transfers.take(5).toList()),
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
               error: (_, __) => _buildEmptyState('暂无转移记录'),
             ),
           ],
@@ -344,56 +555,196 @@ class _DashboardContent extends ConsumerWidget {
         ),
       );
 
-  Widget _buildSystemInfo(BuildContext context, NtSystemInfo sys) => Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [AppColors.primary.withValues(alpha: 0.2), AppColors.primaryLight.withValues(alpha: 0.1)]
-                : [AppColors.primary.withValues(alpha: 0.1), AppColors.primaryLight.withValues(alpha: 0.05)],
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
-              child: Icon(Icons.dns_rounded, color: AppColors.primary, size: 28),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('NASTool ${sys.version ?? ""}', style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  if (sys.totalSpace != null)
-                    Text(
-                      '存储: ${_formatBytes(sys.freeSpace ?? 0)} / ${_formatBytes(sys.totalSpace!)}',
-                      style: context.textTheme.bodySmall?.copyWith(color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
-                    ),
+  Widget _buildSystemInfo(BuildContext context, NtSystemInfo sys) {
+    final used = (sys.totalSpace ?? 0) - (sys.freeSpace ?? 0);
+    final progress = (sys.totalSpace ?? 0) > 0
+        ? (used / sys.totalSpace!).clamp(0.0, 1.0)
+        : 0.0;
+    final hasUpdate =
+        sys.latestVersion != null && sys.version != sys.latestVersion;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [
+                  AppColors.primary.withValues(alpha: 0.22),
+                  AppColors.primaryLight.withValues(alpha: 0.10),
+                ]
+              : [
+                  AppColors.primary.withValues(alpha: 0.12),
+                  AppColors.primaryLight.withValues(alpha: 0.05),
                 ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.dns_rounded,
+                    color: AppColors.primary, size: 26),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sys.version != null ? '版本 ${sys.version}' : '系统信息',
+                      style: context.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? AppColors.darkOnSurface
+                            : AppColors.lightOnSurface,
+                      ),
+                    ),
+                    Text(
+                      hasUpdate ? '可更新到 ${sys.latestVersion}' : '已是最新版本',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: hasUpdate
+                            ? AppColors.warning
+                            : (isDark
+                                ? AppColors.darkOnSurfaceVariant
+                                : AppColors.lightOnSurfaceVariant),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (hasUpdate)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '有更新',
+                    style: context.textTheme.labelSmall?.copyWith(
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (sys.totalSpace != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '存储',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: isDark
+                        ? AppColors.darkOnSurfaceVariant
+                        : AppColors.lightOnSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  '${_formatBytes(used)} / ${_formatBytes(sys.totalSpace!)}',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkOnSurface
+                        : AppColors.lightOnSurface,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6,
+                backgroundColor:
+                    AppColors.primary.withValues(alpha: 0.15),
+                valueColor: AlwaysStoppedAnimation(
+                  progress > 0.85 ? AppColors.error : AppColors.primary,
+                ),
               ),
             ),
-            if (sys.latestVersion != null && sys.version != sys.latestVersion)
-              Chip(label: Text('有更新: ${sys.latestVersion}'), backgroundColor: AppColors.warning.withValues(alpha: 0.2)),
           ],
-        ),
-      );
+        ],
+      ),
+    );
+  }
 
-  Widget _buildStatsGrid(BuildContext context, NasToolOverviewStats? stats) => LayoutBuilder(
+  Widget _buildStatsGrid(
+          BuildContext context, NasToolOverviewStats? stats) =>
+      LayoutBuilder(
         builder: (context, constraints) {
-          final cardWidth = constraints.maxWidth > 600 ? 160.0 : (constraints.maxWidth - AppSpacing.md * 3) / 2;
+          // 自适应列数：宽度越宽列越多；最小目标卡片 ≥ 150px
+          final width = constraints.maxWidth;
+          int cols;
+          if (width >= 900) {
+            cols = 6;
+          } else if (width >= 600) {
+            cols = 3;
+          } else {
+            cols = 2;
+          }
+          const spacing = AppSpacing.md;
+          final cardWidth = (width - spacing * (cols - 1)) / cols;
           return Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.md,
+            spacing: spacing,
+            runSpacing: spacing,
             children: [
-              _StatCard(icon: Icons.movie_rounded, label: '电影', value: '${stats?.movieCount ?? 0}', color: AppColors.primary, isDark: isDark, width: cardWidth),
-              _StatCard(icon: Icons.tv_rounded, label: '剧集', value: '${stats?.tvCount ?? 0}', color: AppColors.success, isDark: isDark, width: cardWidth),
-              _StatCard(icon: Icons.animation_rounded, label: '动漫', value: '${stats?.animeCount ?? 0}', color: const Color(0xFF9C27B0), isDark: isDark, width: cardWidth),
-              _StatCard(icon: Icons.bookmark_rounded, label: '订阅', value: '${stats?.subscribeCount ?? 0}', color: const Color(0xFF009688), isDark: isDark, width: cardWidth),
-              _StatCard(icon: Icons.downloading_rounded, label: '下载中', value: '${stats?.activeDownloads ?? 0}', color: AppColors.warning, isDark: isDark, width: cardWidth),
-              _StatCard(icon: Icons.check_circle_rounded, label: '已完成', value: '${stats?.completedDownloads ?? 0}', color: AppColors.success, isDark: isDark, width: cardWidth),
+              _StatCard(
+                  icon: Icons.movie_rounded,
+                  label: '电影',
+                  value: '${stats?.movieCount ?? 0}',
+                  color: AppColors.primary,
+                  isDark: isDark,
+                  width: cardWidth),
+              _StatCard(
+                  icon: Icons.tv_rounded,
+                  label: '剧集',
+                  value: '${stats?.tvCount ?? 0}',
+                  color: AppColors.success,
+                  isDark: isDark,
+                  width: cardWidth),
+              _StatCard(
+                  icon: Icons.animation_rounded,
+                  label: '动漫',
+                  value: '${stats?.animeCount ?? 0}',
+                  color: const Color(0xFF9C27B0),
+                  isDark: isDark,
+                  width: cardWidth),
+              _StatCard(
+                  icon: Icons.bookmark_rounded,
+                  label: '订阅',
+                  value: '${stats?.subscribeCount ?? 0}',
+                  color: const Color(0xFF009688),
+                  isDark: isDark,
+                  width: cardWidth),
+              _StatCard(
+                  icon: Icons.downloading_rounded,
+                  label: '下载中',
+                  value: '${stats?.activeDownloads ?? 0}',
+                  color: AppColors.warning,
+                  isDark: isDark,
+                  width: cardWidth),
+              _StatCard(
+                  icon: Icons.check_circle_rounded,
+                  label: '已完成',
+                  value: '${stats?.completedDownloads ?? 0}',
+                  color: AppColors.success,
+                  isDark: isDark,
+                  width: cardWidth),
             ],
           );
         },
@@ -403,68 +754,133 @@ class _DashboardContent extends ConsumerWidget {
     if (sites.isEmpty) return _buildEmptyState('暂无站点');
     final totalUp = sites.fold<int>(0, (sum, s) => sum + (s.upload ?? 0));
     final totalDown = sites.fold<int>(0, (sum, s) => sum + (s.download ?? 0));
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? AppColors.darkOutline.withValues(alpha: 0.1) : AppColors.lightOutline.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: _buildDataItem(context, Icons.upload_rounded, '总上传', _formatBytes(totalUp), AppColors.success)),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(child: _buildDataItem(context, Icons.download_rounded, '总下载', _formatBytes(totalDown), AppColors.primary)),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(child: _buildDataItem(context, Icons.language_rounded, '站点数', '${sites.length}', Colors.purple)),
-            ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stack = constraints.maxWidth < 480;
+        final items = [
+          _buildDataItem(context, Icons.upload_rounded, '总上传',
+              _formatBytes(totalUp), AppColors.success),
+          _buildDataItem(context, Icons.download_rounded, '总下载',
+              _formatBytes(totalDown), AppColors.primary),
+          _buildDataItem(context, Icons.language_rounded, '站点数',
+              '${sites.length}', Colors.purple),
+        ];
+        return Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.darkSurfaceVariant
+                : AppColors.lightSurface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark
+                  ? AppColors.darkOutline.withValues(alpha: 0.1)
+                  : AppColors.lightOutline.withValues(alpha: 0.1),
+            ),
           ),
-        ],
-      ),
+          child: stack
+              ? Column(
+                  children: [
+                    for (var i = 0; i < items.length; i++) ...[
+                      if (i > 0) const SizedBox(height: AppSpacing.md),
+                      items[i],
+                    ],
+                  ],
+                )
+              : Row(
+                  children: [
+                    for (var i = 0; i < items.length; i++) ...[
+                      if (i > 0) const SizedBox(width: AppSpacing.md),
+                      Expanded(child: items[i]),
+                    ],
+                  ],
+                ),
+        );
+      },
     );
   }
 
-  Widget _buildDataItem(BuildContext context, IconData icon, String label, String value, Color color) => Column(
+  Widget _buildDataItem(BuildContext context, IconData icon, String label,
+          String value, Color color) =>
+      Column(
         children: [
-          Icon(icon, color: color, size: 28),
+          Icon(icon, color: color, size: 26),
           const SizedBox(height: AppSpacing.xs),
-          Text(value, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: isDark ? AppColors.darkOnSurface : color)),
-          Text(label, style: context.textTheme.bodySmall?.copyWith(color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)),
+          Text(
+            value,
+            style: context.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.darkOnSurface : color,
+            ),
+          ),
+          Text(
+            label,
+            style: context.textTheme.bodySmall?.copyWith(
+              color: isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant,
+            ),
+          ),
         ],
       );
 
-  Widget _buildTransferList(BuildContext context, List<NtTransferHistory> transfers) {
+  Widget _buildTransferList(
+      BuildContext context, List<NtTransferHistory> transfers) {
     if (transfers.isEmpty) return _buildEmptyState('暂无转移记录');
     return Column(
-      children: transfers.map((t) => Card(
-        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        child: ListTile(
-          leading: Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-            child: Icon(Icons.check_circle_rounded, color: AppColors.success),
-          ),
-          title: Text(t.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(t.date != null ? '${t.date!.year}-${t.date!.month.toString().padLeft(2, '0')}-${t.date!.day.toString().padLeft(2, '0')}' : '', style: context.textTheme.bodySmall),
-        ),
-      )).toList(),
+      children: transfers
+          .map((t) => Card(
+                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.check_circle_rounded,
+                        color: AppColors.success),
+                  ),
+                  title: Text(t.title,
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(
+                    t.date != null
+                        ? '${t.date!.year}-${t.date!.month.toString().padLeft(2, '0')}-${t.date!.day.toString().padLeft(2, '0')}'
+                        : '',
+                    style: context.textTheme.bodySmall,
+                  ),
+                ),
+              ))
+          .toList(),
     );
   }
 
   Widget _buildEmptyState(String message) => Container(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Center(
-          child: Text(message, style: TextStyle(color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)),
+          child: Text(
+            message,
+            style: TextStyle(
+              color: isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant,
+            ),
+          ),
         ),
       );
 
   String _formatBytes(int bytes) {
     if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
-    if (bytes < 1024 * 1024 * 1024 * 1024) return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    }
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
+    }
+    if (bytes < 1024 * 1024 * 1024 * 1024) {
+      return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)} GB';
+    }
     return '${(bytes / 1024 / 1024 / 1024 / 1024).toStringAsFixed(2)} TB';
   }
 }
@@ -484,21 +900,49 @@ class _StatCard extends StatelessWidget {
         width: width,
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurface,
+          color: isDark
+              ? AppColors.darkSurfaceVariant
+              : AppColors.lightSurface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isDark ? AppColors.darkOutline.withValues(alpha: 0.1) : color.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: isDark
+                ? AppColors.darkOutline.withValues(alpha: 0.1)
+                : color.withValues(alpha: 0.18),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: color, size: 24),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 22),
             ),
-            const SizedBox(height: AppSpacing.md),
-            Text(value, style: context.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: isDark ? AppColors.darkOnSurface : color)),
-            Text(label, style: context.textTheme.bodySmall?.copyWith(color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)),
+            const SizedBox(height: AppSpacing.sm),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: context.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.darkOnSurface : color,
+                ),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: isDark
+                    ? AppColors.darkOnSurfaceVariant
+                    : AppColors.lightOnSurfaceVariant,
+              ),
+            ),
           ],
         ),
       );
@@ -582,7 +1026,7 @@ class _SubscribesContentState extends ConsumerState<_SubscribesContent> with Sin
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(nastoolSubscribesProvider(widget.sourceId)),
       child: ListView.builder(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: _pagePadding(context),
         itemCount: items.length,
         itemBuilder: (context, index) {
           final sub = items[index];
@@ -705,7 +1149,7 @@ class _DownloadsContentState extends ConsumerState<_DownloadsContent> with Singl
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(nastoolDownloadsProvider(widget.sourceId)),
       child: ListView.builder(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: _pagePadding(context),
         itemCount: downloads.length,
         itemBuilder: (context, index) {
           final task = downloads[index];
@@ -759,7 +1203,7 @@ class _DownloadsContentState extends ConsumerState<_DownloadsContent> with Singl
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: _pagePadding(context),
       itemCount: history.length,
       itemBuilder: (context, index) {
         final item = history[index];
@@ -834,7 +1278,7 @@ class _SearchContentState extends ConsumerState<_SearchContent> {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: _pagePadding(context),
         child: Column(
           children: [
             TextField(
@@ -975,33 +1419,37 @@ class _TorrentDetailSheet extends ConsumerWidget {
                             child: ListTile(
                               dense: true,
                               title: Text(torrent.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall),
-                              subtitle: Row(
-                                children: [
-                                  Text(torrent.displaySite, style: context.textTheme.labelSmall?.copyWith(color: AppColors.primary)),
-                                  const SizedBox(width: 8),
-                                  Text(torrent.formattedSize, style: context.textTheme.labelSmall),
-                                  if (torrent.seeders != null) ...[
-                                    const SizedBox(width: 8),
-                                    Icon(Icons.arrow_upward_rounded, size: 12, color: AppColors.success),
-                                    Text('${torrent.seeders}', style: context.textTheme.labelSmall),
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Wrap(
+                                  spacing: 8,
+                                  runSpacing: 4,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  children: [
+                                    Text(torrent.displaySite, style: context.textTheme.labelSmall?.copyWith(color: AppColors.primary)),
+                                    Text(torrent.formattedSize, style: context.textTheme.labelSmall),
+                                    if (torrent.seeders != null)
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.arrow_upward_rounded, size: 12, color: AppColors.success),
+                                          Text('${torrent.seeders}', style: context.textTheme.labelSmall),
+                                        ],
+                                      ),
+                                    if (torrent.isFree)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                        decoration: BoxDecoration(color: AppColors.success, borderRadius: BorderRadius.circular(2)),
+                                        child: const Text('免费', style: TextStyle(color: Colors.white, fontSize: 10)),
+                                      ),
+                                    if (torrent.is2xUpload)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                        decoration: BoxDecoration(color: AppColors.warning, borderRadius: BorderRadius.circular(2)),
+                                        child: const Text('2x', style: TextStyle(color: Colors.white, fontSize: 10)),
+                                      ),
                                   ],
-                                  if (torrent.isFree) ...[
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                      decoration: BoxDecoration(color: AppColors.success, borderRadius: BorderRadius.circular(2)),
-                                      child: const Text('免费', style: TextStyle(color: Colors.white, fontSize: 10)),
-                                    ),
-                                  ],
-                                  if (torrent.is2xUpload) ...[
-                                    const SizedBox(width: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                      decoration: BoxDecoration(color: AppColors.warning, borderRadius: BorderRadius.circular(2)),
-                                      child: const Text('2x', style: TextStyle(color: Colors.white, fontSize: 10)),
-                                    ),
-                                  ],
-                                ],
+                                ),
                               ),
                               trailing: IconButton(
                                 icon: Icon(Icons.download_rounded, color: AppColors.primary),
@@ -1067,7 +1515,7 @@ class _MediaContentState extends ConsumerState<_MediaContent> {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: _pagePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1205,7 +1653,7 @@ class _SitesContent extends ConsumerWidget {
             ref.invalidate(nastoolSiteStatisticsProvider(sourceId));
           },
           child: ListView.builder(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: _pagePadding(context),
             itemCount: sites.length,
             itemBuilder: (context, index) {
               final site = sites[index];
@@ -1429,7 +1877,7 @@ class _SettingsContent extends ConsumerWidget {
     final actions = ref.read(nastoolActionsProvider(sourceId));
 
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: _pagePadding(context),
       children: [
         // System Info
         systemAsync.when(

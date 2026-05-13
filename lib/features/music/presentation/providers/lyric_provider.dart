@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/scraper/scrape_engine.dart';
+import 'package:my_nas/core/scraper/scrape_source.dart';
+import 'package:my_nas/core/scraper/scrape_source_manager.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/lyric_service.dart';
 import 'package:my_nas/features/music/data/services/lyrics_translation_service.dart';
@@ -113,6 +116,11 @@ class LyricNotifier extends StateNotifier<LyricState> {
         lyricData = await _extractEmbeddedLyrics(music, connection);
       }
 
+      // 第三档：用户导入的 scrape 源（仅 type=lyric）
+      if (lyricData.isEmpty) {
+        lyricData = await _fetchFromScrapeSources(music);
+      }
+
       state = state.copyWith(
         lyricData: lyricData,
         isLoading: false,
@@ -150,6 +158,57 @@ class LyricNotifier extends StateNotifier<LyricState> {
       logger.w('LyricNotifier: 从音频提取嵌入歌词失败', e);
     }
     return LyricData.empty;
+  }
+
+  /// 用户导入的歌词类 scrape 源逐个尝试，命中第一个非空结果即返回。
+  ///
+  /// 流程：先 search() 拿到候选 id，再 lyrics(id) 拿 lrc 文本。某些源没有 search
+  /// 时直接以 title/artist 调 lyrics()，看脚本能否凭参数自查。
+  Future<LyricData> _fetchFromScrapeSources(MusicItem music) async {
+    try {
+      await ScrapeSourceManager.instance.init();
+      final sources = await ScrapeSourceManager.instance
+          .getByCapability(ScraperCapability.lyrics);
+      if (sources.isEmpty) return LyricData.empty;
+
+      final title = music.title ?? music.name;
+      final artist = music.artist ?? '';
+      for (final s in sources) {
+        final lrc = await _tryFetchLyric(s, title: title, artist: artist);
+        if (lrc != null && lrc.trim().isNotEmpty) {
+          logger.i('LyricNotifier: 命中 scrape 源 ${s.displayName}');
+          return LyricService().parseLyrics(lrc);
+        }
+      }
+    } on Exception catch (e, st) {
+      AppError.handle(e, st, 'lyric.scrape', {'music': music.name});
+    }
+    return LyricData.empty;
+  }
+
+  Future<String?> _tryFetchLyric(
+    ScraperConfig source, {
+    required String title,
+    required String artist,
+  }) async {
+    // 1. 直接调 lyrics 端点（脚本可凭 title/artist 参数自查）
+    var data = await ScrapeEngine.instance
+        .lyrics(source, title: title, artist: artist);
+    var lrc = data?['lrcContent'] as String?;
+    if (lrc != null && lrc.isNotEmpty) return lrc;
+
+    // 2. 没结果时尝试先 search 取 id，再 lyrics
+    if (source.search != null) {
+      final hits = await ScrapeEngine.instance.search(source, query: title);
+      if (hits.isEmpty) return null;
+      final id = hits.first['id']?.toString();
+      if (id == null || id.isEmpty) return null;
+      data = await ScrapeEngine.instance
+          .lyrics(source, id: id, title: title, artist: artist);
+      lrc = data?['lrcContent'] as String?;
+      return lrc;
+    }
+    return null;
   }
 
   /// 清除歌词
