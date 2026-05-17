@@ -2671,17 +2671,23 @@ class _DesktopSectionDetailState extends State<_DesktopSectionDetail> {
 
   @override
   Widget build(BuildContext context) {
-    // 限宽 800 + 居中：detail panel 内容（含 section root 与所有
-    // push 进来的 settings 子页）在大屏下不再被拉伸到全宽。
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 800),
-        child: Navigator(
-          key: _navKey,
-          onGenerateInitialRoutes: (_, __) => [_buildRootRoute()],
-        ),
-      ),
+    // detail panel 限宽 + 居中：避免 settings 在大屏被拉到全宽。
+    // 1100 宽窗口下 detail 限 800（紧凑）；3000 宽屏幕下 detail 限 1100（不至于
+    // 留白过多）。下限保证 detail 至少 720 宽（够显示 settings card）。
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth.clamp(720.0, 1100.0);
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Navigator(
+              key: _navKey,
+              onGenerateInitialRoutes: (_, __) => [_buildRootRoute()],
+            ),
+          ),
+        );
+      },
     );
   }
 }
