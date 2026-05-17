@@ -498,7 +498,22 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
                   indent: 8,
                   endIndent: 8,
                 ),
-                const SizedBox(height: 12),
+                if (isExtended) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                    child: Text(
+                      '工具',
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: isDark
+                            ? AppColors.darkOnSurfaceVariant
+                            : context.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ] else
+                  const SizedBox(height: 12),
                 ..._buildToolRailEntries(context, isDark, isExtended),
               ],
             ),
