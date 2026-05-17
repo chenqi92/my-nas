@@ -8,10 +8,11 @@ import 'package:my_nas/features/music/data/services/music_audio_handler_interfac
 import 'package:my_nas/features/music/presentation/providers/desktop_lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_settings_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 显示音乐设置
 void showMusicSettingsSheet(BuildContext context) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

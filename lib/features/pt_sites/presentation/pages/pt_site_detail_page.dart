@@ -9,6 +9,7 @@ import 'package:my_nas/features/pt_sites/presentation/widgets/pt_torrent_card.da
 import 'package:my_nas/features/pt_sites/presentation/widgets/send_to_downloader_sheet.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// PT 站点详情页
 class PTSiteDetailPage extends ConsumerStatefulWidget {
@@ -364,7 +365,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
     final categories = ref.read(ptCategoriesProvider(widget.source.id));
     final currentState = ref.read(ptTorrentListProvider(widget.source.id));
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -537,7 +538,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
   void _showSortSheet(BuildContext context) {
     final currentState = ref.read(ptTorrentListProvider(widget.source.id));
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -687,7 +688,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
   void _showUserInfoSheet(BuildContext context, PTUserInfo? userInfo) {
     if (userInfo == null) return;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -1023,7 +1024,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
   void _showTorrentDetail(BuildContext context, PTTorrent torrent) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => DraggableScrollableSheet(
@@ -1287,7 +1288,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
   }
 
   void _showDownloadOptions(BuildContext context, PTTorrent torrent) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       builder: (context) => SendToDownloaderSheet(
         torrent: torrent,
@@ -1297,7 +1298,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
   }
 
   void _showStatsSheet(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

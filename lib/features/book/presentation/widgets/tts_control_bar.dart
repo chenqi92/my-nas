@@ -4,6 +4,7 @@ import 'package:my_nas/features/book/data/services/tts/tts_service.dart';
 import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
 import 'package:my_nas/features/book/presentation/widgets/tts_settings_sheet.dart';
 import 'package:my_nas/features/book/presentation/widgets/tts_voice_selector.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// TTS 控制栏
 ///
@@ -210,7 +211,7 @@ class TTSControlBar extends ConsumerWidget {
   }
 
   void _showVoiceSelector(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -219,7 +220,7 @@ class TTSControlBar extends ConsumerWidget {
   }
 
   void _showSettings(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

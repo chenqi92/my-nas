@@ -13,6 +13,7 @@ import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 书源管理页面
 class BookSourcesPage extends ConsumerStatefulWidget {
@@ -190,7 +191,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
   }
 
   void _showImportSheet() {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

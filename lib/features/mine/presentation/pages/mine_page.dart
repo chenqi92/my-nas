@@ -42,6 +42,7 @@ import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 桌面端 mine 页选中的 section 索引（在 [_buildSections] 列表中）。
 final _selectedDesktopSectionProvider = StateProvider.autoDispose<int>((_) => 0);
@@ -2115,7 +2116,7 @@ class _LanguagePreferenceTile extends ConsumerWidget {
   }
 
   void _showLanguageSettingsSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,

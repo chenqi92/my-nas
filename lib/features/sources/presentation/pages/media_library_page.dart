@@ -32,6 +32,7 @@ import 'package:my_nas/features/video/presentation/pages/video_list_page.dart';
 import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/nas_adapters/mobile/services/file_import_service.dart';
 import 'package:my_nas/nas_adapters/smb/smb_pool_config.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 class MediaLibraryPage extends ConsumerStatefulWidget {
   const MediaLibraryPage({super.key});
@@ -501,7 +502,7 @@ class _MediaTypeTab extends ConsumerWidget {
       (s) => s.type != SourceType.local,
     ).toList();
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(
@@ -708,7 +709,7 @@ class _MediaTypeTab extends ConsumerWidget {
       _ => '文档',
     };
 
-    await showModalBottomSheet<void>(
+    await showAdaptiveModalSheet<void>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(
@@ -920,7 +921,7 @@ class _MediaTypeTab extends ConsumerWidget {
     List<SourceEntity> sources,
     Map<String, SourceConnection> connections,
   ) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

@@ -11,6 +11,7 @@ import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 视频播放器设置页面
 class VideoPlayerSettingsPage extends ConsumerWidget {
@@ -608,7 +609,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
     VideoQuality currentQuality,
     bool isDark,
   ) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => ClipRRect(
@@ -780,7 +781,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
   ) {
     final thresholds = [1, 2, 3, 5, 8, 10];
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => ClipRRect(
@@ -1030,7 +1031,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
     required List<({T value, String label, String description, bool isSelected})> options,
     required void Function(T) onSelected,
   }) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => ClipRRect(

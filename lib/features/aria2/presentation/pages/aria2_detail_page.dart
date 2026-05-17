@@ -7,6 +7,7 @@ import 'package:my_nas/features/aria2/presentation/providers/aria2_provider.dart
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/aria2/api/aria2_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// Aria2 详情页面
 class Aria2DetailPage extends ConsumerStatefulWidget {
@@ -284,7 +285,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
   }
 
   void _showAddDownloadDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -300,7 +301,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
   }
 
   void _showFilterDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _FilterOptionsSheet(sourceId: widget.source.id),
@@ -308,7 +309,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
   }
 
   void _showSortDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _SortOptionsSheet(sourceId: widget.source.id),
@@ -806,7 +807,7 @@ class _DownloadTile extends ConsumerWidget {
   void _showDownloadDetails(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => DraggableScrollableSheet(

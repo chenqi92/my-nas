@@ -5,6 +5,7 @@ import 'package:my_nas/features/pt_sites/presentation/pages/pt_site_detail_page.
 import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 跳转到 PT 站搜索（带预填关键词）
 ///
@@ -40,7 +41,7 @@ Future<void> launchPtSearchForMedia(
   if (ptSites.length == 1) {
     target = ptSites.first;
   } else {
-    target = await showModalBottomSheet<SourceEntity>(
+    target = await showAdaptiveModalSheet<SourceEntity>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(

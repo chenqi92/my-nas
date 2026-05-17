@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 二次验证弹框结果类型
 enum TwoFAResultType {
@@ -35,7 +36,7 @@ Future<TwoFAResult?> showTwoFASheet(
   BuildContext context, {
   bool initialRememberDevice = true, // 默认记住设备
   String? sourceName,
-}) async => showModalBottomSheet<TwoFAResult>(
+}) async => showAdaptiveModalSheet<TwoFAResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -62,7 +63,7 @@ Future<TwoFAResult?> showTwoFASheetWithVerify(
   bool initialRememberDevice = true,
   String? sourceName,
   bool allowSkip = true,
-}) async => showModalBottomSheet<TwoFAResult>(
+}) async => showAdaptiveModalSheet<TwoFAResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

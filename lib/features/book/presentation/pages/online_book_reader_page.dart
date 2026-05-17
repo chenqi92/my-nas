@@ -18,6 +18,7 @@ import 'package:my_nas/features/reading/presentation/widgets/page_flip_effect.da
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 在线书籍阅读页面
 ///
@@ -240,7 +241,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
   }
 
   void _showChapterList() {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/scraper/scrape_source.dart';
 import 'package:my_nas/core/scraper/scrape_source_manager.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 刮削源管理页（用户导入的 JSON 模板）。
 ///
@@ -36,7 +37,7 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
   }
 
   Future<void> _showImportSheet() async {
-    final added = await showModalBottomSheet<int>(
+    final added = await showAdaptiveModalSheet<int>(
       context: context,
       isScrollControlled: true,
       builder: (_) => const _ImportSheet(),

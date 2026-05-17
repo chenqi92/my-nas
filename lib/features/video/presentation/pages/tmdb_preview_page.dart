@@ -15,6 +15,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// TMDB 预览页面 - 用于展示本地不存在的 TMDB 内容
 class TmdbPreviewPage extends ConsumerStatefulWidget {
@@ -626,7 +627,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
   void _showPtSiteSelectionSheet(List<SourceEntity> ptSites, String keyword) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -794,7 +795,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final title = _getTitle();
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(

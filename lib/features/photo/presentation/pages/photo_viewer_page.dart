@@ -21,6 +21,7 @@ import 'package:my_nas/shared/services/native_tab_bar_service.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 照片 URL 获取回调
 typedef PhotoUrlGetter = Future<String?> Function(String path, String sourceId);
@@ -882,7 +883,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
     );
 
   void _showPhotoInfo(BuildContext context, PhotoItem photo) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.grey[900],
       shape: const RoundedRectangleBorder(
@@ -1293,7 +1294,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       copyContent = photo.path;
     }
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.grey[900],
       shape: const RoundedRectangleBorder(

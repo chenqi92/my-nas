@@ -22,6 +22,7 @@ import 'package:my_nas/shared/widgets/download_manager_sheet.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
 import 'package:my_nas/shared/widgets/skeleton_loader.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 class FileBrowserPage extends ConsumerStatefulWidget {
   const FileBrowserPage({
@@ -1064,7 +1065,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     final sortMode = ref.read(sortModeProvider);
     final ascending = ref.read(sortAscendingProvider);
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -1124,7 +1125,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       };
 
   void _showMoreOptions(BuildContext context, bool isDark) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -1161,7 +1162,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showCreateOptions(BuildContext context, bool isDark) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -1279,7 +1280,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showFileOptions(BuildContext context, FileItem file, bool isDark) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -1702,7 +1703,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showBatchOperations(BuildContext context, Set<String> selectedFiles, bool isDark) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,

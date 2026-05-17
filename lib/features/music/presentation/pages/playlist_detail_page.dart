@@ -23,6 +23,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 歌单详情页面
 class PlaylistDetailPage extends ConsumerStatefulWidget {
@@ -763,7 +764,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage>
   }
 
   void _showTrackOptions(MusicItem track) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(

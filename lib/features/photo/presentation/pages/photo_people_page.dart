@@ -11,6 +11,7 @@ import 'package:my_nas/features/sources/data/services/source_manager_service.dar
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 人物分组页面
 class PhotoPeoplePage extends ConsumerStatefulWidget {
@@ -537,7 +538,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
   }
 
   void _showPersonOptions(PersonEntity person) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(

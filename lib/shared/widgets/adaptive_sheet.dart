@@ -10,6 +10,67 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 
+/// `showModalBottomSheet` 的桌面自适应替代。
+///
+/// 签名兼容 [showModalBottomSheet]，桌面下自动包装成居中 [Dialog]，
+/// 移动端走原 [showModalBottomSheet]。让全项目散落的 sheet 调用
+/// 一次性获得桌面 dialog 体验，避免在大屏从底部弹起占满屏幕。
+///
+/// - `isDismissible` / `barrierDismissible` 行为一致
+/// - 桌面下默认 maxWidth 560、maxHeight 720（可通过 `desktopConstraints` 覆盖）
+/// - 桌面下忽略 `isScrollControlled` / `enableDrag` / `useSafeArea`
+///   （这些是底部 sheet 特有行为）
+Future<T?> showAdaptiveModalSheet<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  bool isScrollControlled = false,
+  bool useSafeArea = false,
+  bool isDismissible = true,
+  bool enableDrag = true,
+  Color? backgroundColor,
+  double? elevation,
+  ShapeBorder? shape,
+  Clip? clipBehavior,
+  BoxConstraints? constraints,
+  BoxConstraints? desktopConstraints,
+  RouteSettings? routeSettings,
+}) {
+  if (context.isDesktopLayout) {
+    return showDialog<T>(
+      context: context,
+      barrierDismissible: isDismissible,
+      routeSettings: routeSettings,
+      builder: (ctx) => Dialog(
+        backgroundColor: backgroundColor,
+        elevation: elevation,
+        shape: shape ??
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        clipBehavior: clipBehavior ?? Clip.antiAlias,
+        child: ConstrainedBox(
+          constraints: desktopConstraints ??
+              const BoxConstraints(maxWidth: 560, maxHeight: 720),
+          child: builder(ctx),
+        ),
+      ),
+    );
+  }
+
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: isScrollControlled,
+    useSafeArea: useSafeArea,
+    isDismissible: isDismissible,
+    enableDrag: enableDrag,
+    backgroundColor: backgroundColor,
+    elevation: elevation,
+    shape: shape,
+    clipBehavior: clipBehavior,
+    constraints: constraints,
+    routeSettings: routeSettings,
+    builder: builder,
+  );
+}
+
 /// 自适应弹框类型
 enum AdaptiveSheetType {
   /// 自动选择：移动端底部弹框，桌面端居中对话框

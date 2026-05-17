@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/features/video/presentation/providers/subtitle_style_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 显示字幕样式设置（Infuse 暗色风格）
 void showSubtitleStyleSheet(BuildContext context) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

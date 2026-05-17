@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/features/music/presentation/providers/home_layout_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 显示首页布局设置弹框
 void showHomeLayoutSheet(BuildContext context) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

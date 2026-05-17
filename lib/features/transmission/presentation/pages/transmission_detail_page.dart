@@ -7,6 +7,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/transmission/presentation/providers/transmission_provider.dart';
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// Transmission 详情页面
 class TransmissionDetailPage extends ConsumerStatefulWidget {
@@ -272,7 +273,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
   }
 
   void _showAddTorrentDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -288,7 +289,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
   }
 
   void _showFilterDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _FilterOptionsSheet(sourceId: widget.source.id),
@@ -296,7 +297,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
   }
 
   void _showSortDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _SortOptionsSheet(sourceId: widget.source.id),
@@ -816,7 +817,7 @@ class _TorrentTile extends ConsumerWidget {
   void _showTorrentDetails(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => DraggableScrollableSheet(

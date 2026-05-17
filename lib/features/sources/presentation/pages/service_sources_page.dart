@@ -13,6 +13,7 @@ import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/transmission/presentation/pages/transmission_detail_page.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 通用服务源列表页面
 ///
@@ -223,7 +224,7 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
     }
 
     // 显示底部弹窗让用户选择类型
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       constraints: BoxConstraints(
@@ -447,7 +448,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
   void _showSourceOptions(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => Column(

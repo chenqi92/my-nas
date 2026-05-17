@@ -11,6 +11,7 @@ import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/sources/presentation/widgets/two_fa_sheet.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 class SourcesPage extends ConsumerStatefulWidget {
   const SourcesPage({super.key});
@@ -287,7 +288,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
     }
 
     // 显示底部弹窗让用户选择类型
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       constraints: BoxConstraints(
@@ -553,7 +554,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
   void _showSourceOptions(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => Column(

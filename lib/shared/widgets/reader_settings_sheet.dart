@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 内容构建器类型
 typedef ReaderSettingsContentBuilder = Widget Function(BuildContext context);
@@ -14,7 +15,7 @@ void showReaderSettingsSheet(
   required ReaderSettingsContentBuilder contentBuilder,
   Color? iconColor,
 }) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

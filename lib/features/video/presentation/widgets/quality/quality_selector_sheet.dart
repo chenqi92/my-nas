@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 显示清晰度选择器
 void showQualitySelectorSheet(BuildContext context) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     builder: (context) => const QualitySelectorSheet(),

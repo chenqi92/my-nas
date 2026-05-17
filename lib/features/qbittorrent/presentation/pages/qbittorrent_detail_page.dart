@@ -8,6 +8,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/qbittorrent/api/qbittorrent_api.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// qBittorrent 详情页面
 class QBittorrentDetailPage extends ConsumerStatefulWidget {
@@ -296,7 +297,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
   }
 
   void _showAddTorrentDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -312,7 +313,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
   }
 
   void _showSpeedLimitDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -328,7 +329,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
   }
 
   void _showFilterDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _FilterOptionsSheet(sourceId: widget.source.id),
@@ -336,7 +337,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
   }
 
   void _showSortDialog(BuildContext context) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _SortOptionsSheet(sourceId: widget.source.id),
@@ -943,7 +944,7 @@ class _TorrentTile extends ConsumerWidget {
   }
 
   void _showTorrentDetails(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => DraggableScrollableSheet(
@@ -1019,7 +1020,7 @@ class _TorrentTile extends ConsumerWidget {
   }
 
   void _showTorrentActions(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(
@@ -1172,7 +1173,7 @@ class _TorrentTile extends ConsumerWidget {
     final categoriesAsync = ref.read(qbCategoriesProvider(sourceId));
     final categories = categoriesAsync.valueOrNull?.keys.toList() ?? [];
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(
@@ -1261,7 +1262,7 @@ class _TorrentTile extends ConsumerWidget {
     final allTags = tagsAsync.valueOrNull ?? [];
     final currentTags = torrent.tags?.split(',').where((t) => t.isNotEmpty).toList() ?? [];
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => SafeArea(

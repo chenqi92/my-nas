@@ -7,6 +7,7 @@ import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 推荐内容区域组件
 class RecommendationsSection extends ConsumerWidget {
@@ -414,7 +415,7 @@ class _RecommendationCardState extends ConsumerState<_RecommendationCard> {
     final year = item.year;
     final queryWithYear = year != null ? '$title $year' : title;
 
-    final action = await showModalBottomSheet<String>(
+    final action = await showAdaptiveModalSheet<String>(
       context: context,
       builder: (sheetContext) => SafeArea(
         child: Column(

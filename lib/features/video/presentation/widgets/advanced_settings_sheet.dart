@@ -6,10 +6,11 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/presentation/providers/playback_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/aspect_ratio_selector.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_style_sheet.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 显示高级设置面板
 void showAdvancedSettingsSheet(BuildContext context) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

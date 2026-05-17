@@ -6,6 +6,7 @@ import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 上传目标选择结果
 class UploadTarget {
@@ -48,7 +49,7 @@ class TargetPickerSheet extends ConsumerStatefulWidget {
     BuildContext context, {
     required MediaType mediaType,
     String title = '选择上传目标',
-  }) => showModalBottomSheet<UploadTarget>(
+  }) => showAdaptiveModalSheet<UploadTarget>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
