@@ -13,6 +13,12 @@ class _SwitchTabIntent extends Intent {
   final int index;
 }
 
+/// 跳到「我的 / 设置」并强制清空该 branch 内部栈。
+/// 让 Cmd+, 总是看到设置主页，不会停留在残留的子页。
+class _GotoSettingsIntent extends Intent {
+  const _GotoSettingsIntent();
+}
+
 /// 对当前 branch navigator 执行 maybePop 的 Intent。
 ///
 /// 绑定到 Esc，方便桌面用户快速关闭详情 / 弹窗。
@@ -33,6 +39,7 @@ class DesktopShortcuts extends StatelessWidget {
     required this.child,
     required this.onSwitchTab,
     this.onEscape,
+    this.onGotoSettings,
     super.key,
   });
 
@@ -46,6 +53,10 @@ class DesktopShortcuts extends StatelessWidget {
   /// 内部 push 的页面。
   final VoidCallback? onEscape;
 
+  /// Cmd/Ctrl + , 跳到设置，强制清空 mine branch 内部栈，
+  /// 让用户看到设置主页而非残留的子页。
+  final VoidCallback? onGotoSettings;
+
   @override
   Widget build(BuildContext context) {
     if (!_isShortcutsTarget) {
@@ -57,12 +68,12 @@ class DesktopShortcuts extends StatelessWidget {
         SingleActivator(_digitKeys[i], meta: true): _SwitchTabIntent(i),
         SingleActivator(_digitKeys[i], control: true): _SwitchTabIntent(i),
       },
-      // Cmd/Ctrl + , → 跳到「我的 / 设置」tab（macOS 经典快捷键）。
-      // 「我的」是第 5 个 tab，索引 4。
+      // Cmd/Ctrl + , → 跳到「我的 / 设置」tab（macOS 经典快捷键），
+      // 同时清空该 branch 栈，确保看到设置主页。
       const SingleActivator(LogicalKeyboardKey.comma, meta: true):
-          _SwitchTabIntent(4),
+          _GotoSettingsIntent(),
       const SingleActivator(LogicalKeyboardKey.comma, control: true):
-          _SwitchTabIntent(4),
+          _GotoSettingsIntent(),
       const SingleActivator(LogicalKeyboardKey.escape): _PopRouteIntent(),
     };
 
@@ -73,6 +84,12 @@ class DesktopShortcuts extends StatelessWidget {
           _SwitchTabIntent: CallbackAction<_SwitchTabIntent>(
             onInvoke: (intent) {
               onSwitchTab(intent.index);
+              return null;
+            },
+          ),
+          _GotoSettingsIntent: CallbackAction<_GotoSettingsIntent>(
+            onInvoke: (_) {
+              onGotoSettings?.call();
               return null;
             },
           ),
