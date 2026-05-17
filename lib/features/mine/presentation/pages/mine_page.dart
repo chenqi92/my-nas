@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
@@ -2551,13 +2552,30 @@ class _DesktopSectionList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.md,
-      ),
-      itemCount: sections.length,
-      itemBuilder: (context, index) {
+    // Focus + Shortcuts：键盘 ↑↓ 切换 sections（macOS sidebar 习惯）。
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (event is! KeyDownEvent) return KeyEventResult.ignored;
+        if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+          final next = (selectedIndex + 1).clamp(0, sections.length - 1);
+          if (next != selectedIndex) onSelect(next);
+          return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+          final prev = (selectedIndex - 1).clamp(0, sections.length - 1);
+          if (prev != selectedIndex) onSelect(prev);
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.md,
+        ),
+        itemCount: sections.length,
+        itemBuilder: (context, index) {
         final section = sections[index];
         final isSelected = index == selectedIndex;
         final color = isSelected
@@ -2609,6 +2627,7 @@ class _DesktopSectionList extends StatelessWidget {
           ),
         );
       },
+      ),
     );
   }
 }
