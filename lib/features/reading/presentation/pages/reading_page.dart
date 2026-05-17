@@ -275,6 +275,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         }
       },
       onLongPress: () => _showDeleteConfirmation(item, isDark),
+      onSecondaryTap: () => _showDeleteConfirmation(item, isDark),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

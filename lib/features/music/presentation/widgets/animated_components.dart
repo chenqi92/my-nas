@@ -383,6 +383,7 @@ class _AnimatedPressableState extends State<AnimatedPressable>
       onTapUp: _handleTapUp,
       onTapCancel: _handleTapCancel,
       onLongPress: widget.onLongPress,
+      onSecondaryTap: widget.onLongPress,
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) => Transform.scale(

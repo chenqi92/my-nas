@@ -202,6 +202,7 @@ class _RecommendationCardState extends ConsumerState<_RecommendationCard> {
       child: GestureDetector(
         onTap: widget.onTap,
         onLongPress: () => _showQuickActions(context),
+        onSecondaryTap: () => _showQuickActions(context),
         child: AnimatedScale(
           scale: _isHovered ? 1.05 : 1.0,
           duration: const Duration(milliseconds: 150),
