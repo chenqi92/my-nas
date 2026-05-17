@@ -445,40 +445,47 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       ),
       child: Column(
         children: [
-          // Logo / 应用名
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              isExtended ? 14 : 8,
-              14,
-              isExtended ? 14 : 8,
-              10,
-            ),
-            child: Row(
-              mainAxisAlignment:
-                  isExtended ? MainAxisAlignment.start : MainAxisAlignment.center,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/logo.png',
-                    width: isExtended ? 28 : 28,
-                    height: isExtended ? 28 : 28,
-                    fit: BoxFit.cover,
-                  ),
+          // Logo / 应用名（点击切到首页 = 视频 tab，符合 macOS app 习惯）
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _onDestinationSelected(context, 0),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  isExtended ? 14 : 8,
+                  14,
+                  isExtended ? 14 : 8,
+                  10,
                 ),
-                if (isExtended) ...[
-                  const SizedBox(width: 10),
-                  Text(
-                    'MyNAS',
-                    style: context.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkOnSurface
-                          : context.colorScheme.onSurface,
+                child: Row(
+                  mainAxisAlignment: isExtended
+                      ? MainAxisAlignment.start
+                      : MainAxisAlignment.center,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        width: isExtended ? 28 : 28,
+                        height: isExtended ? 28 : 28,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
-                ],
-              ],
+                    if (isExtended) ...[
+                      const SizedBox(width: 10),
+                      Text(
+                        'MyNAS',
+                        style: context.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.darkOnSurface
+                              : context.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
 
