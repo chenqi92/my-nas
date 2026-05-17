@@ -336,6 +336,10 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           initialLocation: index == widget.navigationShell.currentIndex,
         );
       },
+      onGotoSettings: () {
+        // 跳到 mine tab 并强制清空该 branch 栈，让用户看到设置主页。
+        widget.navigationShell.goBranch(4, initialLocation: true);
+      },
       onEscape: () {
         // Esc 优先 pop 当前 branch navigator（覆盖 push 的详情/工具页），
         // 没有可 pop 的再尝试 root navigator（处理顶层模态）。
