@@ -997,13 +997,80 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
     NotePageLoaded state,
     bool isDark,
   ) {
-    // 如果已选中笔记，显示全屏阅读模式
+    // 桌面下：master-detail（左 NoteTreeWidget + 右 reader / 空状态），
+    // 列表始终可见，选笔记切换右侧内容。
+    if (context.isDesktopLayout) {
+      return _buildDesktopSplit(context, state, isDark);
+    }
+    // 移动下：选中笔记切到全屏 reader，否则显示目录树。
     if (state.selectedNode != null) {
       return _buildFullscreenReader(context, state, isDark);
     }
-    // 否则显示目录视图
     return _buildDirectoryView(context, state, isDark);
   }
+
+  /// 桌面 master-detail：左 280 笔记树 + 右侧 reader / 空状态。
+  Widget _buildDesktopSplit(
+    BuildContext context,
+    NotePageLoaded state,
+    bool isDark,
+  ) {
+    final dividerColor = isDark
+        ? AppColors.darkOutline.withValues(alpha: 0.3)
+        : Theme.of(context).colorScheme.outlineVariant;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: 280,
+          child: NoteTreeWidget(
+            nodes: state.treeNodes,
+            selectedPath: state.selectedNode?.path,
+            onNodeSelected: (node) =>
+                ref.read(notePageProvider.notifier).selectFile(node),
+            onFolderToggle: (node) =>
+                ref.read(notePageProvider.notifier).toggleFolder(node),
+            onFolderLoad: (node) =>
+                ref.read(notePageProvider.notifier).toggleFolder(node),
+            onContextMenu: _showNoteContextMenu,
+            isDark: isDark,
+          ),
+        ),
+        VerticalDivider(width: 1, thickness: 1, color: dividerColor),
+        Expanded(
+          child: state.selectedNode == null
+              ? _buildDesktopEmptyDetail(context, isDark)
+              : _buildFullscreenReader(context, state, isDark),
+        ),
+      ],
+    );
+  }
+
+  /// 桌面 detail 空状态：未选中笔记时显示。
+  Widget _buildDesktopEmptyDetail(BuildContext context, bool isDark) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.article_outlined,
+          size: 56,
+          color: (isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : Theme.of(context).colorScheme.onSurfaceVariant)
+              .withValues(alpha: 0.5),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '从左侧选择笔记查看 / 编辑',
+          style: context.textTheme.bodyMedium?.copyWith(
+            color: isDark
+                ? AppColors.darkOnSurfaceVariant
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    ),
+  );
 
   /// 目录视图（默认显示）
   Widget _buildDirectoryView(
@@ -2082,11 +2149,70 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
     NotePageLoaded state,
     bool isDark,
   ) {
-    // 如果已选中笔记，显示全屏阅读模式
+    // 桌面下：master-detail（左笔记树 + 右 reader / 空状态）
+    if (context.isDesktopLayout) {
+      final dividerColor = isDark
+          ? AppColors.darkOutline.withValues(alpha: 0.3)
+          : Theme.of(context).colorScheme.outlineVariant;
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 280,
+            child: NoteTreeWidget(
+              nodes: state.treeNodes,
+              selectedPath: state.selectedNode?.path,
+              onNodeSelected: (node) =>
+                  ref.read(notePageProvider.notifier).selectFile(node),
+              onFolderToggle: (node) =>
+                  ref.read(notePageProvider.notifier).toggleFolder(node),
+              onFolderLoad: (node) =>
+                  ref.read(notePageProvider.notifier).toggleFolder(node),
+              onContextMenu: _showNoteContextMenu,
+              isDark: isDark,
+            ),
+          ),
+          VerticalDivider(width: 1, thickness: 1, color: dividerColor),
+          Expanded(
+            child: state.selectedNode == null
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.article_outlined,
+                          size: 56,
+                          color: (isDark
+                                  ? AppColors.darkOnSurfaceVariant
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant)
+                              .withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '从左侧选择笔记查看 / 编辑',
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: isDark
+                                ? AppColors.darkOnSurfaceVariant
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : _buildFullscreenReader(context, state, isDark),
+          ),
+        ],
+      );
+    }
+
+    // 移动下：选中笔记 → 全屏 reader；否则 → 目录树
     if (state.selectedNode != null) {
       return _buildFullscreenReader(context, state, isDark);
     }
-    // 否则显示目录视图
     return _buildDirectoryView(context, state, isDark);
   }
 
