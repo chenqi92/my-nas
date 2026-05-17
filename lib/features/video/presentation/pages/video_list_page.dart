@@ -55,6 +55,7 @@ import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/app_bottom_sheet.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 视频文件及其来源
 class VideoFileWithSource {
@@ -6466,7 +6467,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -6642,7 +6643,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -7448,7 +7449,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -7779,7 +7780,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -8341,7 +8342,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -8394,7 +8395,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -8854,7 +8855,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -10378,7 +10379,7 @@ class _FilteredVideosPaginatedPageState
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(

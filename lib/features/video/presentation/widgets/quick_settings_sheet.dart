@@ -12,6 +12,7 @@ import 'package:my_nas/features/video/presentation/widgets/advanced_settings_she
 import 'package:my_nas/features/video/presentation/widgets/audio_track_selector.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_download_dialog.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_selector.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 显示快速设置面板
 void showQuickSettingsSheet(
@@ -23,7 +24,7 @@ void showQuickSettingsSheet(
   int? seasonNumber,
   int? episodeNumber,
 }) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

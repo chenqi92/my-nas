@@ -19,6 +19,7 @@ import 'package:path/path.dart' as path;
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 漫画页面项
 class ComicPage {
@@ -329,7 +330,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         settings.backgroundColor == ComicBackgroundColor.darkGray ||
         settings.backgroundColor == ComicBackgroundColor.gray;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDarkBg ? const Color(0xFF1A1A1A) : Colors.white,
       isScrollControlled: true,

@@ -5,6 +5,7 @@ import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
 import 'package:my_nas/features/video/presentation/providers/video_player_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_download_dialog.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_style_sheet.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 字幕选择器弹窗（Infuse 暗色风格）
 class SubtitleSelectorSheet extends ConsumerWidget {
@@ -483,7 +484,7 @@ void showSubtitleSelector(
   int? episodeNumber,
   bool isMovie = true,
 }) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

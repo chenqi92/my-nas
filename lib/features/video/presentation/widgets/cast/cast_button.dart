@@ -4,6 +4,7 @@ import 'package:my_nas/features/video/domain/entities/cast_device.dart';
 import 'package:my_nas/features/video/presentation/providers/cast_provider.dart';
 import 'package:my_nas/features/video/presentation/theme/video_player_colors.dart';
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 投屏按钮 - PopupMenu 风格
 class CastButton extends ConsumerStatefulWidget {
@@ -318,7 +319,7 @@ class CastButtonOutlined extends ConsumerWidget {
   }
 
   void _showDeviceSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: VideoPlayerColors.transparent,
@@ -332,7 +333,7 @@ class CastButtonOutlined extends ConsumerWidget {
   }
 
   void _showCastControlSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: VideoPlayerColors.transparent,
       builder: (context) => _CastControlSheet(

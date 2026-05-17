@@ -7,6 +7,7 @@ import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/presentation/pages/service_sources_page.dart';
 import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 字幕下载对话框
 ///
@@ -59,7 +60,7 @@ class SubtitleDownloadDialog extends ConsumerStatefulWidget {
     bool isMovie = true,
     required String savePath,
     void Function(String path)? onDownloaded,
-  }) async => showModalBottomSheet<void>(
+  }) async => showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

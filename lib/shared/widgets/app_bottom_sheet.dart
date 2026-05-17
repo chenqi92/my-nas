@@ -10,6 +10,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// iOS 原生底部弹框通道
 const _nativeBottomSheetChannel = MethodChannel('com.kkape.mynas/glass_bottom_sheet');
@@ -127,7 +128,7 @@ Future<T?> showAppBottomSheet<T>({
   bool useSafeArea = true,
   bool enableDrag = true,
   bool isDismissible = true,
-}) => showModalBottomSheet<T>(
+}) => showAdaptiveModalSheet<T>(
     context: context,
     isScrollControlled: true,
     useSafeArea: useSafeArea,
@@ -503,7 +504,7 @@ Future<T?> showNativeListSheet<T>({
   }
 
   // 其他平台使用 Flutter 暗色风格实现
-  return showModalBottomSheet<T>(
+  return showAdaptiveModalSheet<T>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
@@ -583,7 +584,7 @@ Future<T?> _showNativeListSheet<T>({
   } catch (e) {
     // 回退到 Flutter 实现
     debugPrint('Native list sheet failed: $e, falling back to Flutter implementation');
-    return showModalBottomSheet<T>(
+    return showAdaptiveModalSheet<T>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -671,7 +672,7 @@ Future<FilterResult?> showNativeFilterSheet({
   }
 
   // 其他平台使用 Flutter 实现
-  return showModalBottomSheet<FilterResult>(
+  return showAdaptiveModalSheet<FilterResult>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -733,7 +734,7 @@ Future<FilterResult?> _showNativeFilterSheetImpl({
   } catch (e) {
     debugPrint('Native filter sheet failed: $e, falling back to Flutter');
     // 回退到 Flutter 实现
-    return showModalBottomSheet<FilterResult>(
+    return showAdaptiveModalSheet<FilterResult>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -1172,7 +1173,7 @@ Future<SectionedSheetResult<T>?> showNativeSectionedSheet<T>({
   }
 
   // 其他平台使用 Flutter 实现
-  return showModalBottomSheet<SectionedSheetResult<T>>(
+  return showAdaptiveModalSheet<SectionedSheetResult<T>>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

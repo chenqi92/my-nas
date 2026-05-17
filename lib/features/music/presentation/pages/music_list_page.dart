@@ -51,6 +51,7 @@ import 'package:my_nas/shared/widgets/animated_list_item.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 音乐文件及其来源
 class MusicFileWithSource {
@@ -3536,7 +3537,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
   }
 
   void _showSortOptions(BuildContext context, MusicSortState currentSort, bool isDark) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -4031,7 +4032,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
     );
 
   void _showSortOptions(BuildContext context, WidgetRef ref, MusicSortState currentSort) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: widget.isDark ? AppColors.darkSurface : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -4774,7 +4775,7 @@ class _MusicListTile extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final playlistState = ref.read(playlistProvider);
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -5896,7 +5897,7 @@ class _AlbumCard extends ConsumerWidget {
 
   void _showAlbumTracks(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
@@ -6096,7 +6097,7 @@ class _AlbumCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
@@ -8521,7 +8522,7 @@ class _ModernMusicTile extends ConsumerWidget {
   }
 
   void _showMoreOptions(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -8691,7 +8692,7 @@ class _ModernMusicTile extends ConsumerWidget {
     // 保存根 Navigator context，用于后续对话框
     final rootContext = Navigator.of(context, rootNavigator: true).context;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -9297,7 +9298,7 @@ class _CompactMusicTile extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final playlistState = ref.read(playlistProvider);
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
       shape: const RoundedRectangleBorder(

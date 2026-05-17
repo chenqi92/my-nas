@@ -12,6 +12,7 @@ import 'package:my_nas/service_adapters/trakt/api/trakt_api.dart';
 import 'package:my_nas/service_adapters/trakt/trakt_config.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 
 /// Trakt 连接页面
@@ -636,7 +637,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

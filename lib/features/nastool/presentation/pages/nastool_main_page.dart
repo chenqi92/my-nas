@@ -10,6 +10,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/nastool/models/models.dart';
 import 'package:my_nas/service_adapters/nastool/nastool_adapter.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// NASTool 主页面
 class NasToolMainPage extends ConsumerStatefulWidget {
@@ -1259,7 +1260,7 @@ class _SearchContentState extends ConsumerState<_SearchContent> {
   }
 
   void _showTorrentDetail(NtMediaSearchResult media) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (context) => DraggableScrollableSheet(
@@ -1583,7 +1584,7 @@ class _MediaContentState extends ConsumerState<_MediaContent> {
       );
 
   void _showMediaActions(BuildContext context, NtMediaDetail media) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       builder: (context) => SafeArea(
         child: Column(

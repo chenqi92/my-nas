@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 媒体信息条目（一行 key-value）
 class MediaInfoEntry {
@@ -41,7 +42,7 @@ class MediaInfoSheet extends StatelessWidget {
     required List<MediaInfoEntry> entries,
     String? subtitle,
   }) =>
-      showModalBottomSheet<void>(
+      showAdaptiveModalSheet<void>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,

@@ -5,6 +5,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/data/services/video_favorites_service.dart';
 import 'package:my_nas/features/video/presentation/providers/video_favorites_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 显示书签列表
 void showBookmarkSheet(
@@ -14,7 +15,7 @@ void showBookmarkSheet(
   required Duration currentPosition,
   required void Function(Duration position) onSeek,
 }) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

@@ -9,6 +9,7 @@ import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/data/services/cache_config_service.dart';
 import 'package:my_nas/features/transfer/domain/entities/transfer_task.dart';
 import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 传输类型
 enum TransferSheetType {
@@ -33,7 +34,7 @@ void showTransferCache(BuildContext context) {
 }
 
 void _showTransferSheet(BuildContext context, TransferSheetType type) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

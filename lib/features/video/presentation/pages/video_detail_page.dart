@@ -35,6 +35,7 @@ import 'package:my_nas/features/video/presentation/widgets/unified_episode_selec
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 视频详情页面
 class VideoDetailPage extends ConsumerStatefulWidget {
@@ -2176,7 +2177,7 @@ class _CollectionMovieGridItem extends ConsumerWidget {
       return;
     }
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => _MissingMovieActionSheet(
@@ -2420,7 +2421,7 @@ class _MissingMovieActionSheet extends ConsumerWidget {
   void _showPtSiteSelection(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -2561,7 +2562,7 @@ class _MissingMovieActionSheet extends ConsumerWidget {
   void _showNastoolSelection(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(

@@ -15,6 +15,7 @@ import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/providers/video_category_settings_provider.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 视频分类设置弹窗
 ///
@@ -34,7 +35,7 @@ class VideoCategorySettingsSheet extends ConsumerStatefulWidget {
     if (uiStyle.isGlass && !kIsWeb && Platform.isIOS) {
       // 玻璃模式使用原生 sheet presentation 以获得 iOS 26 Liquid Glass 效果
       // 但内容仍使用 Flutter 渲染
-      await showModalBottomSheet<void>(
+      await showAdaptiveModalSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
@@ -43,7 +44,7 @@ class VideoCategorySettingsSheet extends ConsumerStatefulWidget {
       );
     } else {
       // 经典模式使用标准 Flutter 底部弹框
-      await showModalBottomSheet<void>(
+      await showAdaptiveModalSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,

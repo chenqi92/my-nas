@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 画面比例类型
 enum AspectRatioMode {
@@ -162,7 +163,7 @@ class _AspectRatioTile extends StatelessWidget {
 
 /// 显示画面比例选择器
 void showAspectRatioSelector(BuildContext context) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

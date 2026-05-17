@@ -7,6 +7,7 @@ import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 刮削源管理页面
 /// - 点击需要配置的卡片弹出配置弹框
@@ -216,7 +217,7 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
   }
 
   void _showConfigSheet(ScraperType type, ScraperSourceEntity? source) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

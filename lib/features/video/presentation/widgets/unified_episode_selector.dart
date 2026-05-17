@@ -12,6 +12,7 @@ import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 统一剧集选择器
 ///
@@ -421,7 +422,7 @@ class _UnifiedEpisodeSelectorState extends ConsumerState<UnifiedEpisodeSelector>
       return;
     }
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => _MissingEpisodeActionSheet(
@@ -931,7 +932,7 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
   void _showPtSiteSelection(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -1074,7 +1075,7 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
   void _showNastoolSelection(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(

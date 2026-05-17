@@ -7,10 +7,11 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/services/download_service.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 显示下载管理器
 void showDownloadManager(BuildContext context) {
-  showModalBottomSheet<void>(
+  showAdaptiveModalSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

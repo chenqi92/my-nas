@@ -39,6 +39,7 @@ import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 时间线项目类型 - 用于单一 SliverList 渲染
 sealed class TimelineItem {
@@ -2781,7 +2782,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     WidgetRef ref,
     PhotoListLoaded state,
   ) {
-    showModalBottomSheet<void>(
+    showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
