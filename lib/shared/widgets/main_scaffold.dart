@@ -336,6 +336,24 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           initialLocation: index == widget.navigationShell.currentIndex,
         );
       },
+      onEscape: () {
+        // Esc 优先 pop 当前 branch navigator（覆盖 push 的详情/工具页），
+        // 没有可 pop 的再尝试 root navigator（处理顶层模态）。
+        final idx = widget.navigationShell.currentIndex;
+        final branchKey =
+            idx >= 0 && idx < branchNavigatorKeys.length
+                ? branchNavigatorKeys[idx]
+                : null;
+        final branchNav = branchKey?.currentState;
+        if (branchNav != null && branchNav.canPop()) {
+          branchNav.maybePop();
+          return;
+        }
+        final rootNav = rootNavigatorKey.currentState;
+        if (rootNav != null && rootNav.canPop()) {
+          rootNav.maybePop();
+        }
+      },
       child: scaffold,
     );
   }

@@ -32,6 +32,7 @@ class DesktopShortcuts extends StatelessWidget {
   const DesktopShortcuts({
     required this.child,
     required this.onSwitchTab,
+    this.onEscape,
     super.key,
   });
 
@@ -39,6 +40,11 @@ class DesktopShortcuts extends StatelessWidget {
 
   /// 触发切 tab，由 MainScaffold 调用 navigationShell.goBranch。
   final ValueChanged<int> onSwitchTab;
+
+  /// Esc 自定义处理。由 MainScaffold 注入，可优先 pop 当前 branch
+  /// navigator、再 fallback 到 root navigator，避免 Esc 错过 branch
+  /// 内部 push 的页面。
+  final VoidCallback? onEscape;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +78,10 @@ class DesktopShortcuts extends StatelessWidget {
           ),
           _PopRouteIntent: CallbackAction<_PopRouteIntent>(
             onInvoke: (_) {
+              if (onEscape != null) {
+                onEscape!();
+                return null;
+              }
               final router = GoRouter.maybeOf(context);
               final navigator =
                   router?.routerDelegate.navigatorKey.currentState;
