@@ -379,6 +379,7 @@ class _BookSourceCard extends StatelessWidget {
         child: InkWell(
           onTap: isReorderMode ? null : onTap,
           onLongPress: isReorderMode ? null : onDelete,
+          onSecondaryTap: isReorderMode ? null : onDelete,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
