@@ -23,6 +23,7 @@ class _PopRouteIntent extends Intent {
 /// 包装 [child]，在桌面 / Web 平台上注册全局快捷键：
 ///
 /// - Cmd/Ctrl + 1..5 → 切到对应主 tab
+/// - Cmd/Ctrl + , → 跳到「我的 / 设置」tab（macOS 经典）
 /// - Esc → 当前 navigator pop
 ///
 /// 移动平台（iOS / Android）直接返回 [child]，不消费任何按键事件，
@@ -50,6 +51,12 @@ class DesktopShortcuts extends StatelessWidget {
         SingleActivator(_digitKeys[i], meta: true): _SwitchTabIntent(i),
         SingleActivator(_digitKeys[i], control: true): _SwitchTabIntent(i),
       },
+      // Cmd/Ctrl + , → 跳到「我的 / 设置」tab（macOS 经典快捷键）。
+      // 「我的」是第 5 个 tab，索引 4。
+      const SingleActivator(LogicalKeyboardKey.comma, meta: true):
+          _SwitchTabIntent(4),
+      const SingleActivator(LogicalKeyboardKey.comma, control: true):
+          _SwitchTabIntent(4),
       const SingleActivator(LogicalKeyboardKey.escape): _PopRouteIntent(),
     };
 
