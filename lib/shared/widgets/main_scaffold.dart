@@ -586,9 +586,20 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       final navigator = key?.currentState ?? rootNavigatorKey.currentState;
       if (navigator == null) return;
       // 工具页 push 前先清空当前 branch 已有的栈（如详情页、播放器等），
-      // 确保 pop 工具页直接回到 branch 主 tab，而不是冒出之前残留的旧详情页。
+      // 确保 pop 工具页直接回到 branch 主 tab。
       navigator.popUntil((route) => route.isFirst);
-      navigator.push<void>(MaterialPageRoute<void>(builder: (_) => page));
+      // 用 fade 短动画替代默认 slide，工具切换感觉更轻量。
+      navigator.push<void>(
+        PageRouteBuilder<void>(
+          pageBuilder: (_, __, ___) => page,
+          transitionDuration: const Duration(milliseconds: 180),
+          reverseTransitionDuration: const Duration(milliseconds: 120),
+          transitionsBuilder: (_, animation, __, child) => FadeTransition(
+            opacity: animation,
+            child: child,
+          ),
+        ),
+      );
     }
 
     return [
