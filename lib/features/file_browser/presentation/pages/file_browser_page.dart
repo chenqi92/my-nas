@@ -71,32 +71,179 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     final isMultiSelectMode = ref.watch(multiSelectModeProvider);
     final selectedFiles = ref.watch(selectedFilesProvider);
 
+    // 桌面下若有多个连接源，把 source 选择器从顶部水平条搬到左侧 sidebar。
+    final isDesktop = context.isDesktopLayout;
+    final showDesktopSourceSidebar =
+        isDesktop && browsableSources.length > 1 && !isMultiSelectMode;
+
+    final mainColumn = Column(
+      children: [
+        if (isMultiSelectMode)
+          _buildMultiSelectAppBar(context, selectedFiles, isDark)
+        else
+          _buildAppBar(context, currentPath, isGridView, isDark),
+        // 顶部源选择器：仅移动端 / 桌面但只有 1 个源时显示
+        if (!showDesktopSourceSidebar &&
+            browsableSources.length > 1 &&
+            !isMultiSelectMode)
+          _buildSourceSelector(browsableSources, selectedSourceId, isDark),
+        if (!isMultiSelectMode) _buildBreadcrumb(currentPath, isDark),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => ref.read(fileListProvider.notifier).refresh(),
+            color: AppColors.primary,
+            backgroundColor: isDark ? AppColors.darkSurface : null,
+            child: _buildContent(fileState, isGridView, isDark),
+          ),
+        ),
+      ],
+    );
+
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
-      body: Column(
+      body: showDesktopSourceSidebar
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  width: 200,
+                  child: _buildDesktopSourceSidebar(
+                    browsableSources,
+                    selectedSourceId,
+                    isDark,
+                  ),
+                ),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: isDark
+                      ? AppColors.darkOutline.withValues(alpha: 0.3)
+                      : context.colorScheme.outlineVariant,
+                ),
+                Expanded(child: mainColumn),
+              ],
+            )
+          : mainColumn,
+      floatingActionButton: isMultiSelectMode ? null : _buildFab(isDark),
+    );
+  }
+
+  /// 桌面端左侧 source sidebar：每个已连接源一个 entry，点击切换当前源。
+  Widget _buildDesktopSourceSidebar(
+    List<(SourceEntity, BrowsableConnection)> browsableSources,
+    String? selectedSourceId,
+    bool isDark,
+  ) {
+    return Container(
+      color: isDark ? AppColors.darkSurface : context.colorScheme.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 自定义 AppBar（多选模式下显示不同的工具栏）
-          if (isMultiSelectMode)
-            _buildMultiSelectAppBar(context, selectedFiles, isDark)
-          else
-            _buildAppBar(context, currentPath, isGridView, isDark),
-          // 源选择器（只有多个已连接源时显示，多选模式下隐藏）
-          if (browsableSources.length > 1 && !isMultiSelectMode)
-            _buildSourceSelector(browsableSources, selectedSourceId, isDark),
-          // 面包屑导航（多选模式下隐藏）
-          if (!isMultiSelectMode) _buildBreadcrumb(currentPath, isDark),
-          // 文件列表
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            child: Text(
+              '连接源',
+              style: context.textTheme.labelSmall?.copyWith(
+                color: isDark
+                    ? AppColors.darkOnSurfaceVariant
+                    : AppColors.lightOnSurfaceVariant,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: () => ref.read(fileListProvider.notifier).refresh(),
-              color: AppColors.primary,
-              backgroundColor: isDark ? AppColors.darkSurface : null,
-              child: _buildContent(fileState, isGridView, isDark),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              itemCount: browsableSources.length,
+              itemBuilder: (context, index) {
+                final (source, _) = browsableSources[index];
+                final isSelected = source.id == selectedSourceId;
+                final fg = isSelected
+                    ? AppColors.primary
+                    : (isDark
+                        ? AppColors.darkOnSurfaceVariant
+                        : context.colorScheme.onSurfaceVariant);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        ref.read(selectedSourceIdProvider.notifier).state =
+                            source.id;
+                        ref.read(currentPathProvider.notifier).state = '/';
+                        ref
+                            .read(fileListProvider.notifier)
+                            .loadDirectory('/');
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primary.withValues(
+                                  alpha: isDark ? 0.18 : 0.1)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _getSourceIcon(source.type),
+                              size: 16,
+                              color: fg,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    source.name,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w500,
+                                      color: fg,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  if (source.host.isNotEmpty)
+                                    Text(
+                                      source.host,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isDark
+                                            ? AppColors.darkOnSurfaceVariant
+                                                .withValues(alpha: 0.7)
+                                            : AppColors.lightOnSurfaceVariant
+                                                .withValues(alpha: 0.8),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
       ),
-      floatingActionButton: isMultiSelectMode ? null : _buildFab(isDark),
     );
   }
 
