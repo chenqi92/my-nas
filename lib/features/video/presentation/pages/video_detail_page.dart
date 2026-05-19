@@ -23,19 +23,26 @@ import 'package:my_nas/features/video/presentation/pages/tmdb_preview_page.dart'
 import 'package:my_nas/features/video/presentation/pages/video_player_page.dart';
 import 'package:my_nas/features/video/presentation/providers/playlist_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart'
-    show ScrapingTaskState, backgroundScrapingProvider, enabledScraperCountProvider;
+    show
+        ScrapingStatus,
+        ScrapingTaskState,
+        backgroundScrapingProvider,
+        enabledScraperCountProvider;
 import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_favorites_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_history_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/cast_section.dart';
 import 'package:my_nas/features/video/presentation/widgets/detail_hero_section.dart';
+import 'package:my_nas/features/video/presentation/widgets/detail_master_panel.dart';
 import 'package:my_nas/features/video/presentation/widgets/recommendations_section.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_download_dialog.dart';
 import 'package:my_nas/features/video/presentation/widgets/unified_episode_selector.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
+import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 视频详情页面
 class VideoDetailPage extends ConsumerStatefulWidget {
@@ -89,6 +96,16 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
     final isWatchedAsync = ref.watch(isWatchedProvider(_selectedMetadata.filePath));
     final isWatched = isWatchedAsync.valueOrNull ?? false;
 
+    if (context.isDesktopLayout) {
+      return _buildDesktopBody(
+        context,
+        isDark: isDark,
+        watchProgress: watchProgress,
+        isFavorite: isFavorite,
+        isWatched: isWatched,
+      );
+    }
+
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[100],
       body: Stack(
@@ -120,6 +137,363 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
       ),
     );
   }
+
+  // ===================== 桌面 master-detail 布局 =====================
+
+  /// 桌面端：左侧 Master 面板（poster + 标题 + 评分 + 操作）+ 右侧滚动详情
+  Widget _buildDesktopBody(
+    BuildContext context, {
+    required bool isDark,
+    required double? watchProgress,
+    required bool isFavorite,
+    required bool isWatched,
+  }) {
+    final hasEnabledScrapers = ref.watch(enabledScraperCountProvider) > 0;
+
+    // 解析 TMDB / 豆瓣 附加信息
+    final extras = _watchHeroExtras();
+
+    // 获取本地化标题
+    final titleGetter = ref.watch(videoTitleGetterProvider);
+    final localizedTitle = titleGetter(_selectedMetadata);
+
+    // 获取 showDirectory 的刮削状态
+    var showDirectory = _selectedMetadata.showDirectory;
+    if ((showDirectory == null || showDirectory.isEmpty) && _isTvShow) {
+      showDirectory = VideoDatabaseService.extractShowDirectory(_selectedMetadata.filePath);
+    }
+    final scrapingTask = showDirectory != null && showDirectory.isNotEmpty
+        ? ref.watch(backgroundScrapingProvider)[showDirectory]
+        : null;
+
+    final doubanRating = _hasDoubanId && !_hasTmdbId ? _selectedMetadata.rating : null;
+
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final masterPanel = DetailMasterPanel(
+      metadata: _selectedMetadata,
+      onPlay: _isPlaying ? () {} : _playVideo,
+      onFavorite: _toggleFavorite,
+      onToggleWatched: _toggleWatched,
+      onScrape: hasEnabledScrapers ? _openManualScraper : null,
+      isFavorite: isFavorite,
+      isWatched: isWatched,
+      watchProgress: watchProgress,
+      tagline: extras.tagline,
+      displayTitle: localizedTitle,
+      tmdbRating: extras.tmdbRating,
+      doubanRating: doubanRating,
+      imdbRating: _selectedMetadata.imdbRating,
+      traktRating: _selectedMetadata.traktRating,
+      voteCount: extras.voteCount,
+      sourceId: widget.sourceId,
+      hideEpisodeInfo: _isTvShow && (_hasMetadata || _selectedMetadata.showDirectory != null),
+      qualitySelector: _isTvShow ? null : _buildQualitySelector(isDark),
+    );
+
+    final backdropUrl = extras.backdropUrl ?? widget.metadata.backdropUrl;
+
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        leading: const RoundedBackButton(),
+        title: Text(
+          localizedTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        actions: [
+          _buildPtSearchAction(context),
+          if (scrapingTask != null) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: _buildDesktopScrapingIndicator(scrapingTask, showDirectory!),
+            ),
+          ],
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 左侧 Master Panel（固定宽度）
+          SizedBox(
+            width: 360,
+            child: ColoredBox(
+              color: colorScheme.surfaceContainerLow,
+              child: masterPanel,
+            ),
+          ),
+          VerticalDivider(
+            width: 1,
+            thickness: 1,
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          // 右侧详情滚动区
+          Expanded(
+            child: _buildDesktopDetail(
+              context,
+              isDark: isDark,
+              backdropUrl: backdropUrl,
+              overview: extras.overview ?? _selectedMetadata.overview,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 抽取自 _buildHeroSection 的 TMDB / 豆瓣 数据计算，供桌面与移动端复用
+  ({
+    String? backdropUrl,
+    String? tagline,
+    String? overview,
+    double? tmdbRating,
+    int? voteCount,
+  }) _watchHeroExtras() {
+    String? tagline;
+    String? overview;
+    double? tmdbRating;
+    int? voteCount;
+    var backdropUrl = widget.metadata.backdropUrl;
+
+    if (_hasTmdbId) {
+      if (_isTvShow) {
+        ref.watch(tvDetailProvider(widget.metadata.tmdbId!)).whenData((detail) {
+          if (detail != null) {
+            tagline = detail.tagline;
+            overview = detail.overview;
+            tmdbRating = detail.voteAverage;
+            voteCount = detail.voteCount;
+            backdropUrl ??= detail.backdropUrl;
+          }
+        });
+      } else {
+        ref.watch(movieDetailProvider(widget.metadata.tmdbId!)).whenData((detail) {
+          if (detail != null) {
+            tagline = detail.tagline;
+            overview = detail.overview;
+            tmdbRating = detail.voteAverage;
+            voteCount = detail.voteCount;
+            backdropUrl ??= detail.backdropUrl;
+          }
+        });
+      }
+    }
+
+    overview ??= widget.metadata.overview;
+    if (overview == null || overview!.isEmpty) {
+      final overviewGetter = ref.watch(videoOverviewGetterProvider);
+      overview = overviewGetter(_selectedMetadata);
+    }
+
+    return (
+      backdropUrl: backdropUrl,
+      tagline: tagline,
+      overview: overview,
+      tmdbRating: tmdbRating,
+      voteCount: voteCount,
+    );
+  }
+
+  /// 桌面端 AppBar 上的 PT 搜索 action
+  Widget _buildPtSearchAction(BuildContext context) {
+    final allSources = ref.watch(sourcesProvider).valueOrNull ?? const <SourceEntity>[];
+    final hasPtSite = allSources
+        .any((s) => s.type.category == SourceCategory.ptSites && s.type.isSupported);
+    if (!hasPtSite) return const SizedBox.shrink();
+
+    final titleGetter = ref.watch(videoTitleGetterProvider);
+    final localized = titleGetter(_selectedMetadata).trim();
+    final rawTitle = (_selectedMetadata.title ?? '').trim();
+    final rawOriginal = (_selectedMetadata.originalTitle ?? '').trim();
+    final searchTitle = localized.isNotEmpty
+        ? localized
+        : (rawTitle.isNotEmpty ? rawTitle : rawOriginal);
+    if (searchTitle.isEmpty) return const SizedBox.shrink();
+
+    final yearStr = _selectedMetadata.year?.toString();
+    final query = (yearStr != null && yearStr.isNotEmpty)
+        ? '$searchTitle $yearStr'
+        : searchTitle;
+
+    return IconButton(
+      icon: const Icon(Icons.cloud_download_outlined),
+      tooltip: '在 PT 站搜索本片',
+      onPressed: () => launchPtSearchForMedia(context, ref, query: query),
+    );
+  }
+
+  /// 桌面端紧凑的刮削进度指示器（AppBar 内）
+  Widget _buildDesktopScrapingIndicator(
+    ScrapingTaskState task,
+    String showDir,
+  ) {
+    final isCompleted = task.isCompleted;
+    final isScraping = task.isScraping;
+    final theme = Theme.of(context);
+
+    final color = isCompleted
+        ? (task.status == ScrapingStatus.completed
+            ? AppColors.success
+            : AppColors.error)
+        : theme.colorScheme.primary;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: isCompleted ? () => _onScrapingDismiss(showDir, task) : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isScraping)
+              SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  value: task.progressPercent,
+                  color: color,
+                ),
+              )
+            else if (task.status == ScrapingStatus.completed)
+              Icon(Icons.check_circle_rounded, size: 14, color: color)
+            else
+              Icon(Icons.error_rounded, size: 14, color: color),
+            const SizedBox(width: 6),
+            Text(
+              isScraping
+                  ? '${task.progress}/${task.total}'
+                  : (task.status == ScrapingStatus.completed
+                      ? '完成 ${task.successCount}集'
+                      : '失败'),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 桌面端右侧详情滚动区
+  Widget _buildDesktopDetail(
+    BuildContext context, {
+    required bool isDark,
+    required String? backdropUrl,
+    required String? overview,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final hasOverview = overview != null && overview.isNotEmpty;
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // backdrop 装饰条（可选）
+          if (backdropUrl != null && backdropUrl.isNotEmpty)
+            _buildDesktopBackdropStrip(backdropUrl, colorScheme),
+
+          // 简介
+          if (hasOverview)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
+              child: _DesktopSection(
+                title: '简介',
+                child: Text(
+                  overview,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    height: 1.6,
+                    color: colorScheme.onSurface.withValues(alpha: 0.85),
+                  ),
+                ),
+              ),
+            ),
+
+          // 剧集选择器
+          if (_isTvShow)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: _buildUnifiedEpisodeSection(),
+            ),
+
+          // 演员
+          if (_hasTmdbId)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: _buildCastSection(),
+            )
+          else if (_hasDoubanId && _selectedMetadata.cast != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: _buildSimpleCastSection(isDark),
+            ),
+
+          // 电影系列
+          if (!_isTvShow && _hasTmdbId) ...[
+            const SizedBox(height: 16),
+            _buildMovieCollectionSection(isDark),
+          ],
+
+          // 推荐
+          if (_hasTmdbId) ...[
+            const SizedBox(height: 16),
+            _buildRecommendationsSection(),
+          ],
+
+          // 文件信息
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: _buildFileInfoSection(isDark),
+          ),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopBackdropStrip(String url, ColorScheme cs) => SizedBox(
+        height: 220,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            AdaptiveImage(
+              imageUrl: url,
+              fit: BoxFit.cover,
+              placeholder: (_) => ColoredBox(color: cs.surfaceContainerHighest),
+              errorWidget: (_, _) => ColoredBox(color: cs.surfaceContainerHighest),
+            ),
+            // 底部渐变到 surface，实现与下方内容衔接
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    cs.surface.withValues(alpha: 0.4),
+                    cs.surface,
+                  ],
+                  stops: const [0.0, 0.7, 1.0],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
 
   /// 右上角悬浮的 "在 PT 站搜索本片" 按钮
   ///
@@ -2663,6 +3037,39 @@ class _MissingMovieActionSheet extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 桌面右侧详情区里的分节标题 + 内容包装
+class _DesktopSection extends StatelessWidget {
+  const _DesktopSection({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+        child,
+      ],
     );
   }
 }
