@@ -70,6 +70,10 @@ class DeviceInfoHelper {
         ConnectivityResult.bluetooth => 'bluetooth',
         ConnectivityResult.other => 'other',
         ConnectivityResult.none => 'none',
+        // 兜底：connectivity_plus 后续版本新增的枚举值（如 satellite）。
+        // 本地依赖版本旧时分析器会判定不可达，但 CI 上的新版本必需，故抑制。
+        // ignore: unreachable_switch_case
+        _ => 'other',
       };
 
   /// 加载屏幕分辨率
