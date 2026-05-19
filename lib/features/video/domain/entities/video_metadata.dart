@@ -939,6 +939,14 @@ class VideoFileNameParser {
       year = int.tryParse(yearMatch.group(1) ?? '');
     }
 
+    // 检测日期/时间戳样式（录屏工具常用），如：
+    //   bandicam 2025-04-29 11-20-31-308.mp4
+    //   2024_01_15_14-30-22.mp4
+    // 命中时跳过低优先级的紧凑/末尾数字 TV 模式，避免把毫秒/秒识别成 SxxEyy。
+    final looksLikeTimestamp = RegExp(
+      r'(?:19|20)\d{2}[\s._-]\d{1,2}[\s._-]\d{1,2}[\s._-]\d{1,2}',
+    ).hasMatch(name);
+
     // 提取剧集信息
     int? season;
     int? episode;
@@ -1011,7 +1019,7 @@ class VideoFileNameParser {
         season = 1;
       }
       // === 紧凑数字格式（仅限3位数）===
-      else if (tvMatch.group(19) != null) {
+      else if (tvMatch.group(19) != null && !looksLikeTimestamp) {
         // G19: 101=S1E01（仅3位数）
         final compact = tvMatch.group(19)!;
         final compactNum = int.tryParse(compact);
@@ -1027,7 +1035,7 @@ class VideoFileNameParser {
         }
       }
       // === 最低优先级：末尾数字 ===
-      else if (tvMatch.group(20) != null) {
+      else if (tvMatch.group(20) != null && !looksLikeTimestamp) {
         // G20: 末尾集号 .01, -01, _01
         episode = int.tryParse(tvMatch.group(20)!);
         season = 1;

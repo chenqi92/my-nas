@@ -1756,8 +1756,8 @@ VideoScannerService: 增量同步完成
       try {
         final dirInfo = await fileSystem.getFileInfo(dirPath);
         dirMtime = dirInfo.modifiedTime;
-      } on Exception {
-        // 忽略获取目录信息失败，不影响扫描流程
+      } catch (_) {
+        // 忽略获取目录信息失败（包括 Error 子类如 StateError），不影响扫描流程
       }
 
       // 收集该目录的视频和字幕

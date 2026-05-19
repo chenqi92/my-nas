@@ -7,6 +7,24 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/color_scheme_preset.dart';
 
 abstract final class AppTheme {
+  /// 按平台返回 CJK 字体回退链。
+  /// Flutter 默认走 Roboto，Roboto 不含 CJK 字形时由系统挑选 fallback，
+  /// 不同字符可能命中不同字重的字体（如 Windows 上"媒体"走雅黑、"库"走宋体），
+  /// 显式指定后所有中文字符强制走同一字体。
+  static List<String> get _cjkFontFallback {
+    if (kIsWeb) return const [];
+    if (Platform.isWindows) {
+      return const ['Microsoft YaHei UI', 'Microsoft YaHei', 'Segoe UI'];
+    }
+    if (Platform.isMacOS) {
+      return const ['PingFang SC', 'Hiragino Sans GB', '.SF NS Text'];
+    }
+    if (Platform.isLinux) {
+      return const ['Noto Sans CJK SC', 'WenQuanYi Micro Hei', 'Source Han Sans SC'];
+    }
+    return const [];
+  }
+
   /// 根据配色预设生成浅色主题
   static ThemeData lightFromPreset(ColorSchemePreset preset) {
     final colorScheme = ColorScheme.light(
@@ -31,6 +49,7 @@ abstract final class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: colorScheme,
+      fontFamilyFallback: _cjkFontFallback,
       scaffoldBackgroundColor: AppColors.lightBackground,
       appBarTheme: _lightAppBarTheme,
       cardTheme: _lightCardTheme,
@@ -85,6 +104,7 @@ abstract final class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: colorScheme,
+      fontFamilyFallback: _cjkFontFallback,
       scaffoldBackgroundColor: preset.darkBackground,
       appBarTheme: AppBarTheme(
         elevation: 0,

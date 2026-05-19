@@ -497,7 +497,7 @@ class SourceEntity {
   /// 根据源类型和配置返回初始浏览路径：
   /// - SMB: 如果配置了 shareName 返回 /{shareName}，否则返回 /（显示所有共享）
   /// - FTP/SFTP: 如果配置了 path 返回该路径，否则返回 /
-  /// - WebDAV: 如果配置了 basePath 返回该路径，否则返回 /
+  /// - WebDAV: 始终返回 /（basePath 已拼接到 ConnectionConfig.baseUrl，文件操作走相对路径）
   /// - 其他类型: 返回 /
   String get initialBrowsePath {
     switch (type) {
@@ -516,14 +516,6 @@ class SourceEntity {
         if (path != null && path.isNotEmpty) {
           // 确保路径以 / 开头
           return path.startsWith('/') ? path : '/$path';
-        }
-        return '/';
-
-      case SourceType.webdav:
-        final basePath = extraConfig?['basePath'] as String?;
-        if (basePath != null && basePath.isNotEmpty) {
-          // 确保路径以 / 开头
-          return basePath.startsWith('/') ? basePath : '/$basePath';
         }
         return '/';
 

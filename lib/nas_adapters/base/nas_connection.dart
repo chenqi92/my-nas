@@ -14,6 +14,7 @@ class ConnectionConfig {
     this.deviceId,
     this.deviceName,
     this.enableDeviceToken = false,
+    this.basePath,
   });
 
   factory ConnectionConfig.fromJson(
@@ -29,6 +30,7 @@ class ConnectionConfig {
         useSsl: json['useSsl'] as bool? ?? true,
         verifySSL: json['verifySSL'] as bool? ?? true,
         quickConnectId: json['quickConnectId'] as String?,
+        basePath: json['basePath'] as String?,
       );
 
   final NasAdapterType type;
@@ -49,9 +51,51 @@ class ConnectionConfig {
   /// 是否启用设备令牌
   final bool enableDeviceToken;
 
+  /// 基础路径（如 WebDAV 的 /dav、/webdav），拼接到 baseUrl 末尾
+  final String? basePath;
+
   String get baseUrl {
-    final protocol = useSsl ? 'https' : 'http';
-    return '$protocol://$host:$port';
+    // 容错：如果用户把完整 URL（含协议/端口/路径）填到了 host 字段，自动拆解。
+    var effectiveProtocol = useSsl ? 'https' : 'http';
+    var effectiveHost = host;
+    var effectivePort = port;
+    var pathFromHost = '';
+
+    final lowerHost = host.toLowerCase();
+    if (lowerHost.startsWith('http://') || lowerHost.startsWith('https://')) {
+      final parsed = Uri.tryParse(host);
+      if (parsed != null && parsed.host.isNotEmpty) {
+        effectiveProtocol = parsed.scheme;
+        effectiveHost = parsed.host;
+        if (parsed.hasPort) {
+          effectivePort = parsed.port;
+        }
+        pathFromHost = parsed.path;
+      }
+    } else if (host.contains('/')) {
+      // 不带协议但带路径，如 webdav.123pan.cn/webdav
+      final slashIdx = host.indexOf('/');
+      effectiveHost = host.substring(0, slashIdx);
+      pathFromHost = host.substring(slashIdx);
+    }
+
+    final root = '$effectiveProtocol://$effectiveHost:$effectivePort';
+
+    // 合并 host 中带的路径与显式 basePath，去重、规范化
+    final combined = StringBuffer();
+    void append(String? seg) {
+      if (seg == null || seg.isEmpty) return;
+      var s = seg.startsWith('/') ? seg : '/$seg';
+      if (s.endsWith('/') && s.length > 1) s = s.substring(0, s.length - 1);
+      // 避免重复拼接（如 host 已含 /webdav 且 basePath 也是 /webdav）
+      if (combined.toString().endsWith(s)) return;
+      combined.write(s);
+    }
+
+    append(pathFromHost);
+    append(basePath);
+
+    return '$root$combined';
   }
 
   ConnectionConfig copyWith({
@@ -66,6 +110,7 @@ class ConnectionConfig {
     String? deviceId,
     String? deviceName,
     bool? enableDeviceToken,
+    String? basePath,
   }) =>
       ConnectionConfig(
         type: type ?? this.type,
@@ -79,6 +124,7 @@ class ConnectionConfig {
         deviceId: deviceId ?? this.deviceId,
         deviceName: deviceName ?? this.deviceName,
         enableDeviceToken: enableDeviceToken ?? this.enableDeviceToken,
+        basePath: basePath ?? this.basePath,
       );
 
   Map<String, dynamic> toJson() => {
@@ -89,6 +135,7 @@ class ConnectionConfig {
         'useSsl': useSsl,
         'verifySSL': verifySSL,
         'quickConnectId': quickConnectId,
+        'basePath': basePath,
       };
 }
 

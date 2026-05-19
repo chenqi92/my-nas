@@ -115,20 +115,41 @@ class WebDavFileSystem implements NasFileSystem {
 
   @override
   Future<FileItem> getFileInfo(String path) async {
+    // 根目录没有"父目录"可遍历，直接返回合成的目录条目，避免 firstWhere 抛 StateError。
+    if (path.isEmpty || path == '/') {
+      return FileItem(
+        name: '',
+        path: '/',
+        isDirectory: true,
+        size: 0,
+      );
+    }
     return _withRetry(
       () async {
         final files = await _client.readDir(p.dirname(path));
         final fileName = p.basename(path);
-        final file = files.firstWhere((f) => f.name == fileName);
-
+        // 忽略 name 头尾斜杠差异
+        String norm(String? s) => (s ?? '').replaceAll('/', '').trim();
+        final target = norm(fileName);
+        webdav.File? match;
+        for (final f in files) {
+          if (norm(f.name) == target) {
+            match = f;
+            break;
+          }
+        }
+        if (match == null) {
+          // 抛 Exception 而非 StateError，让上层 try-on Exception 能捕获
+          throw _WebDavFileNotFound(path);
+        }
         return FileItem(
-          name: file.name ?? '',
-          path: file.path ?? '',
-          isDirectory: file.isDir ?? false,
-          size: file.size ?? 0,
-          modifiedTime: file.mTime,
-          createdTime: file.cTime,
-          extension: file.isDir ?? false ? null : p.extension(file.name ?? ''),
+          name: match.name ?? fileName,
+          path: match.path ?? path,
+          isDirectory: match.isDir ?? false,
+          size: match.size ?? 0,
+          modifiedTime: match.mTime,
+          createdTime: match.cTime,
+          extension: match.isDir ?? false ? null : p.extension(match.name ?? ''),
         );
       },
       action: 'getFileInfo',
@@ -270,4 +291,11 @@ class WebDavFileSystem implements NasFileSystem {
 
   @override
   Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
+}
+
+class _WebDavFileNotFound implements Exception {
+  const _WebDavFileNotFound(this.path);
+  final String path;
+  @override
+  String toString() => 'WebDAV file not found: $path';
 }

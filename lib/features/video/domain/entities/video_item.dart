@@ -44,8 +44,9 @@ class VideoItem {
   /// 是否来自媒体服务器
   bool get isFromMediaServer => serverItemId != null && serverType != null;
 
-  /// 检查是否需要代理（SMB 等不支持直接 URL 访问的协议）
-  bool get needsProxy => url.startsWith('smb://');
+  /// 检查是否需要代理（SMB / WebDAV 等不支持直接 URL 访问的协议）
+  bool get needsProxy =>
+      url.startsWith('smb://') || url.startsWith('webdav://');
   
   /// 检查是否需要解析 URL（URL 为空时需要）
   bool get needsUrlResolution => url.isEmpty;

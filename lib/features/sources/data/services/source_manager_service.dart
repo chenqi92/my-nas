@@ -416,6 +416,7 @@ class SourceManagerService {
       verifySSL: false,
       deviceId: deviceId,
       enableDeviceToken: source.rememberDevice,
+      basePath: source.extraConfig?['basePath'] as String?,
     );
 
     try {

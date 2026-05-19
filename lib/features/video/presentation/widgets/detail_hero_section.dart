@@ -471,10 +471,17 @@ class DetailHeroSection extends StatelessWidget {
     // 剧集信息（如果不是电视剧总览页）
     if (metadata.category == MediaCategory.tvShow && !hideEpisodeInfo) {
       if (metadata.seasonNumber != null && metadata.episodeNumber != null) {
-        items.add(_buildMetadataChip(
-          text: 'S${metadata.seasonNumber} E${metadata.episodeNumber}',
-          backgroundColor: AppColors.accent.withValues(alpha: 0.3),
-        ));
+        // 复核文件名是否真能解析出剧集信息：
+        // 早期版本可能把录屏文件名（如 bandicam 2025-04-29 11-20-31-308.mp4）
+        // 末尾的毫秒数误解析为 SxxEyy 并写入 DB。当前解析器对带时间戳的名字
+        // 会拒绝识别为剧集，若复核结果无 season/episode 则不显示该 chip。
+        final reparsed = VideoFileNameParser.parse(metadata.fileName);
+        if (reparsed.season != null || reparsed.episode != null) {
+          items.add(_buildMetadataChip(
+            text: 'S${metadata.seasonNumber} E${metadata.episodeNumber}',
+            backgroundColor: AppColors.accent.withValues(alpha: 0.3),
+          ));
+        }
       }
     }
 

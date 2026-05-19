@@ -639,85 +639,18 @@ class MinePage extends ConsumerWidget {
     Color? titleColor,
     bool showChevron = true,
     VoidCallback? onTap,
-  }) {
-    // 桌面下用更紧凑的密度：图标 32、垂直 padding 8、标题 bodyMedium。
-    final isDesktop = context.isDesktopLayout;
-    final iconBox = isDesktop ? 32.0 : 40.0;
-    final iconSize = isDesktop ? 18.0 : 20.0;
-    final verticalPadding = isDesktop ? AppSpacing.sm : AppSpacing.md;
-    final titleStyle = isDesktop
-        ? context.textTheme.bodyMedium
-        : context.textTheme.bodyLarge;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+  }) =>
+      _mineTileRow(
+        context,
+        isDark: isDark,
+        icon: icon,
+        iconColor: iconColor,
+        title: title,
+        subtitle: subtitle,
+        titleColor: titleColor,
+        showChevronWhenNoTrailing: showChevron,
         onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: verticalPadding,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: iconBox,
-                height: iconBox,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(isDesktop ? 8 : 12),
-                ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: iconSize,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: titleStyle?.copyWith(
-                        color: titleColor ??
-                            (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: context.textTheme.bodySmall?.copyWith(
-                          color: isDark
-                              ? AppColors.darkOnSurfaceVariant
-                              : AppColors.lightOnSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              // 桌面下不显示 chevron：macOS 系统设置的 sidebar 子项均无
-              // chevron，靠 hover 高亮提示可点击。
-              if (showChevron && onTap != null && !isDesktop)
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+      );
 
   Widget _buildDivider(bool isDark) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -748,101 +681,49 @@ class MinePage extends ConsumerWidget {
             ? AppColors.success
             : AppColors.accent;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.storage_rounded,
-                  color: AppColors.info,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '连接源',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '管理 NAS、WebDAV、SMB 等连接',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              // 连接状态徽章
-              if (totalCount > 0)
+    final trailing = totalCount > 0
+        ? Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  width: 6,
+                  height: 6,
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    color: statusColor,
+                    shape: BoxShape.circle,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: statusColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '$connectedCount/$totalCount',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: statusColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
                 ),
-            ],
-          ),
-        ),
+                const SizedBox(width: 4),
+                Text(
+                  '$connectedCount/$totalCount',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                  ),
+                ),
+              ],
+            ),
+          )
+        : null;
+
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.storage_rounded,
+      iconColor: AppColors.info,
+      title: '连接源',
+      subtitle: '管理 NAS、WebDAV、SMB 等连接',
+      trailing: trailing,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
       ),
     );
   }
@@ -955,145 +836,35 @@ class _VideoScraperSourcesTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sourcesAsync = ref.watch(scraperSourcesProvider);
 
-    return sourcesAsync.when(
+    final (subtitle, trailing) = sourcesAsync.when<(String, Widget?)>(
       data: (sources) {
         final enabledCount = sources.where((s) => s.isEnabled).length;
-        // 使用所有可用刮削源类型数量作为总数
         final totalCount = ScraperType.values.length;
-
-        return Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute<void>(builder: (_) => const ScraperSourcesPage()),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.md,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.fileVideo.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.video_library_rounded,
-                      color: AppColors.fileVideo,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '刮削源',
-                          style: context.textTheme.bodyLarge?.copyWith(
-                            color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '管理 TMDB、豆瓣等视频刮削源',
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: isDark
-                                ? AppColors.darkOnSurfaceVariant
-                                : AppColors.lightOnSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (enabledCount > 0)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$enabledCount/$totalCount',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.success,
-                        ),
-                      ),
-                    )
-                  else
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: isDark
-                          ? AppColors.darkOnSurfaceVariant
-                          : AppColors.lightOnSurfaceVariant,
-                      size: 22,
-                    ),
-                ],
-              ),
-            ),
-          ),
+        return (
+          '管理 TMDB、豆瓣等视频刮削源',
+          enabledCount > 0
+              ? _mineCountBadge('$enabledCount/$totalCount', AppColors.success)
+              : null,
         );
       },
-      loading: () => _buildLoadingTile(context),
-      error: (_, _) => _buildLoadingTile(context),
+      loading: () => ('加载中...', null),
+      error: (_, _) => ('加载中...', null),
+    );
+
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.video_library_rounded,
+      iconColor: AppColors.fileVideo,
+      title: '刮削源',
+      subtitle: subtitle,
+      trailing: trailing,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const ScraperSourcesPage()),
+      ),
     );
   }
-
-  Widget _buildLoadingTile(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.fileVideo.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.video_library_rounded,
-                color: AppColors.fileVideo,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '刮削源',
-                    style: context.textTheme.bodyLarge?.copyWith(
-                      color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '加载中...',
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? AppColors.darkOnSurfaceVariant
-                          : AppColors.lightOnSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
 }
 
 /// 字幕源入口组件
@@ -1107,90 +878,23 @@ class _SubtitleSourcesTile extends ConsumerWidget {
     final subtitleSources = ref.watch(subtitleSourcesProvider);
     final count = subtitleSources.length;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(
-            builder: (_) => const ServiceSourcesPage(
-              title: '字幕源',
-              category: SourceCategory.subtitleSites,
-              emptyIcon: Icons.subtitles_rounded,
-              emptyTitle: '暂无字幕源',
-              emptySubtitle: '添加 OpenSubtitles 等字幕源来下载字幕',
-            ),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.subtitles_rounded,
-                  color: AppColors.success,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '字幕源',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '管理 OpenSubtitles 等字幕下载源',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (count > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.success,
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
-                ),
-            ],
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.subtitles_rounded,
+      iconColor: AppColors.success,
+      title: '字幕源',
+      subtitle: '管理 OpenSubtitles 等字幕下载源',
+      trailing: count > 0 ? _mineCountBadge('$count', AppColors.success) : null,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => const ServiceSourcesPage(
+            title: '字幕源',
+            category: SourceCategory.subtitleSites,
+            emptyIcon: Icons.subtitles_rounded,
+            emptyTitle: '暂无字幕源',
+            emptySubtitle: '添加 OpenSubtitles 等字幕源来下载字幕',
           ),
         ),
       ),
@@ -1208,87 +912,21 @@ class _MusicScraperSourcesTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(musicScraperSourcesProvider);
     final enabledCount = state.sources.where((s) => s.isEnabled).length;
-    // 使用所有可用刮削源类型数量作为总数
     final totalCount = MusicScraperType.values.length;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => const MusicScraperSourcesPage()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.fileAudio.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.library_music_rounded,
-                  color: AppColors.fileAudio,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '刮削源',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '管理 MusicBrainz、网易云等音乐刮削源',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (enabledCount > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$enabledCount/$totalCount',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.success,
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
-                ),
-            ],
-          ),
-        ),
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.library_music_rounded,
+      iconColor: AppColors.fileAudio,
+      title: '刮削源',
+      subtitle: '管理 MusicBrainz、网易云等音乐刮削源',
+      trailing: enabledCount > 0
+          ? _mineCountBadge('$enabledCount/$totalCount', AppColors.success)
+          : null,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const MusicScraperSourcesPage()),
       ),
     );
   }
@@ -1548,86 +1186,17 @@ class _MediaTrackingTile extends ConsumerWidget {
     final trackingSources = ref.watch(mediaTrackingSourcesProvider);
     final count = trackingSources.length;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => const MediaTrackingListPage()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.track_changes_rounded,
-                  color: Colors.purple,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '媒体追踪',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '管理 Trakt 等媒体追踪工具',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (count > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.purple.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.purple,
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
-                ),
-            ],
-          ),
-        ),
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.track_changes_rounded,
+      iconColor: Colors.purple,
+      title: '媒体追踪',
+      subtitle: '管理 Trakt 等媒体追踪工具',
+      trailing: count > 0 ? _mineCountBadge('$count', Colors.purple) : null,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const MediaTrackingListPage()),
       ),
     );
   }
@@ -1644,86 +1213,17 @@ class _MediaManagementTile extends ConsumerWidget {
     final managementSources = ref.watch(mediaManagementSourcesProvider);
     final count = managementSources.length;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => const MediaManagementListPage()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.teal.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.construction_rounded,
-                  color: Colors.teal,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '媒体管理',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '管理 NASTool、MoviePilot 等工具',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (count > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.teal.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.teal,
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
-                ),
-            ],
-          ),
-        ),
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.construction_rounded,
+      iconColor: Colors.teal,
+      title: '媒体管理',
+      subtitle: '管理 NASTool、MoviePilot 等工具',
+      trailing: count > 0 ? _mineCountBadge('$count', Colors.teal) : null,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const MediaManagementListPage()),
       ),
     );
   }
@@ -1740,86 +1240,17 @@ class _DownloaderTile extends ConsumerWidget {
     final downloaderSources = ref.watch(downloadToolSourcesProvider);
     final count = downloaderSources.length;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => const DownloaderListPage()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.download_for_offline_rounded,
-                  color: AppColors.warning,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '远程任务',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '管理远程下载任务和服务',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (count > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.warning,
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
-                ),
-            ],
-          ),
-        ),
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.download_for_offline_rounded,
+      iconColor: AppColors.warning,
+      title: '远程任务',
+      subtitle: '管理远程下载任务和服务',
+      trailing: count > 0 ? _mineCountBadge('$count', AppColors.warning) : null,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const DownloaderListPage()),
       ),
     );
   }
@@ -1836,86 +1267,17 @@ class _LiveStreamingTile extends ConsumerWidget {
     final settings = ref.watch(liveStreamSettingsProvider);
     final count = settings.enabledSources.length;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => const LiveStreamSettingsPage()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.live_tv_rounded,
-                  color: Colors.red,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '直播源',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '管理 IPTV、M3U 播放列表等直播源',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (count > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.red,
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
-                ),
-            ],
-          ),
-        ),
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.live_tv_rounded,
+      iconColor: Colors.red,
+      title: '直播源',
+      subtitle: '管理 IPTV、M3U 播放列表等直播源',
+      trailing: count > 0 ? _mineCountBadge('$count', Colors.red) : null,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const LiveStreamSettingsPage()),
       ),
     );
   }
@@ -1932,86 +1294,17 @@ class _PTSitesTile extends ConsumerWidget {
     final ptSitesSources = ref.watch(ptSitesSourcesProvider);
     final count = ptSitesSources.length;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (_) => const PTSitesListPage()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.indigo.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.rss_feed_rounded,
-                  color: Colors.indigo,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '资源站点',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '管理资源站点连接',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              if (count > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.indigo.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.indigo,
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
-                ),
-            ],
-          ),
-        ),
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.rss_feed_rounded,
+      iconColor: Colors.indigo,
+      title: '资源站点',
+      subtitle: '管理资源站点连接',
+      trailing: count > 0 ? _mineCountBadge('$count', Colors.indigo) : null,
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const PTSitesListPage()),
       ),
     );
   }
@@ -2027,65 +1320,14 @@ class _LanguagePreferenceTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final preference = ref.watch(languagePreferenceProvider);
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _showLanguageSettingsSheet(context, ref),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.language_rounded,
-                  color: AppColors.info,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '语言偏好',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _getPreferenceSummary(preference),
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: isDark
-                    ? AppColors.darkOnSurfaceVariant
-                    : AppColors.lightOnSurfaceVariant,
-                size: 22,
-              ),
-            ],
-          ),
-        ),
-      ),
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.language_rounded,
+      iconColor: AppColors.info,
+      title: '语言偏好',
+      subtitle: _getPreferenceSummary(preference),
+      onTap: () => _showLanguageSettingsSheet(context, ref),
     );
   }
 
@@ -2775,3 +2017,119 @@ class _DesktopSectionRootContent extends StatelessWidget {
     );
   }
 }
+
+/// Mine 页所有 tile 共用的统一行布局：图标+标题+副标题+末尾控件。
+/// 桌面下统一切到紧凑模式（32 图标 / 18 字 / bodyMedium / sm padding / 8 圆角），
+/// 移动端保持 40 图标 / 20 字 / bodyLarge / md padding / 12 圆角。
+Widget _mineTileRow(
+  BuildContext context, {
+  required bool isDark,
+  required IconData icon,
+  required Color iconColor,
+  required String title,
+  String? subtitle,
+  Color? titleColor,
+  Widget? trailing,
+  bool showChevronWhenNoTrailing = true,
+  VoidCallback? onTap,
+}) {
+  final isDesktop = context.isDesktopLayout;
+  final iconBox = isDesktop ? 32.0 : 40.0;
+  final iconSize = isDesktop ? 18.0 : 20.0;
+  final verticalPadding = isDesktop ? AppSpacing.sm : AppSpacing.md;
+  final titleStyle = isDesktop
+      ? context.textTheme.bodyMedium
+      : context.textTheme.bodyLarge;
+
+  Widget? effectiveTrailing = trailing;
+  // 桌面下不显示 chevron：与 macOS 系统设置 sidebar 一致，靠 hover 高亮提示可点击。
+  if (effectiveTrailing == null &&
+      showChevronWhenNoTrailing &&
+      onTap != null &&
+      !isDesktop) {
+    effectiveTrailing = Icon(
+      Icons.chevron_right_rounded,
+      color: isDark
+          ? AppColors.darkOnSurfaceVariant
+          : AppColors.lightOnSurfaceVariant,
+      size: 22,
+    );
+  }
+
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: verticalPadding,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: iconBox,
+              height: iconBox,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(isDesktop ? 8 : 12),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: iconSize,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: titleStyle?.copyWith(
+                      color: titleColor ??
+                          (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: isDark
+                            ? AppColors.darkOnSurfaceVariant
+                            : AppColors.lightOnSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (effectiveTrailing != null) effectiveTrailing,
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// 计数徽章，配合 _mineTileRow 的 trailing 使用。
+Widget _mineCountBadge(String text, Color color) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
