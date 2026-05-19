@@ -62,7 +62,7 @@ class CastControlOverlay extends ConsumerWidget {
                 ref.read(castProvider.notifier).stop();
                 onStopCasting?.call();
               },
-              icon: const Icon(Icons.arrow_back, color: VideoPlayerColors.primary),
+              icon: const Icon(Icons.arrow_back_rounded, color: VideoPlayerColors.primary),
             ),
 
             // 投屏图标
@@ -129,7 +129,7 @@ class CastControlOverlay extends ConsumerWidget {
                   onPressed: () => ref.read(castProvider.notifier).togglePlayPause(),
                   iconSize: 64,
                   icon: Icon(
-                    session.isPlaying ? Icons.pause_circle : Icons.play_circle,
+                    session.isPlaying ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
                     color: VideoPlayerColors.primary,
                   ),
                 ),
@@ -182,10 +182,10 @@ class CastControlOverlay extends ConsumerWidget {
           children: [
             Icon(
               session.volume == 0
-                  ? Icons.volume_off
+                  ? Icons.volume_off_rounded
                   : session.volume < 0.5
-                      ? Icons.volume_down
-                      : Icons.volume_up,
+                      ? Icons.volume_down_rounded
+                      : Icons.volume_up_rounded,
               color: VideoPlayerColors.primary,
               size: 20,
             ),
@@ -310,7 +310,7 @@ class MiniCastControlBar extends ConsumerWidget {
             IconButton(
               onPressed: () => ref.read(castProvider.notifier).togglePlayPause(),
               icon: Icon(
-                session.isPlaying ? Icons.pause : Icons.play_arrow,
+                session.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                 color: VideoPlayerColors.primary,
               ),
               visualDensity: VisualDensity.compact,
@@ -319,7 +319,7 @@ class MiniCastControlBar extends ConsumerWidget {
             // 停止按钮
             IconButton(
               onPressed: () => ref.read(castProvider.notifier).stop(),
-              icon: const Icon(Icons.stop, color: VideoPlayerColors.primary),
+              icon: const Icon(Icons.stop_rounded, color: VideoPlayerColors.primary),
               visualDensity: VisualDensity.compact,
             ),
           ],

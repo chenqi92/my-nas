@@ -13,6 +13,7 @@ import 'package:my_nas/service_adapters/trakt/trakt_config.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 
 /// Trakt 连接页面
@@ -84,12 +85,13 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('Trakt'),
         centerTitle: true,
         actions: [
           if (traktState.isConnected)
             IconButton(
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               onPressed: () {
                 ref.read(traktConnectionProvider.notifier).refreshStats();
               },
@@ -132,7 +134,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                         ? NetworkImage(userSettings!.avatarUrl!)
                         : null,
                     child: userSettings?.avatarUrl == null
-                        ? Icon(Icons.person, size: 40, color: colorScheme.primary)
+                        ? Icon(Icons.person_rounded, size: 40, color: colorScheme.primary)
                         : null,
                   ),
                   const SizedBox(height: 16),
@@ -243,7 +245,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: _showLogoutConfirmation,
-              icon: const Icon(Icons.logout),
+              icon: const Icon(Icons.logout_rounded),
               label: const Text('注销'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: colorScheme.error,
@@ -365,7 +367,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                   )
                 else
                   IconButton(
-                    icon: const Icon(Icons.refresh, size: 20),
+                    icon: const Icon(Icons.refresh_rounded, size: 20),
                     onPressed: () {
                       ref
                         ..read(traktSyncProvider.notifier).refreshPlaybackProgress()
@@ -537,7 +539,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
             if (item.traktProgress != null)
               IconButton(
                 icon: Icon(
-                  Icons.close,
+                  Icons.close_rounded,
                   size: 18,
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -762,7 +764,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: colorScheme.error),
+                    Icon(Icons.error_outline_rounded, color: colorScheme.error),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -884,7 +886,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.link, color: colorScheme.primary),
+                    Icon(Icons.link_rounded, color: colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       deviceCode.verificationUrl,
@@ -894,7 +896,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Icon(Icons.open_in_new, size: 16, color: colorScheme.primary),
+                    Icon(Icons.open_in_new_rounded, size: 16, color: colorScheme.primary),
                   ],
                 ),
               ),
@@ -955,7 +957,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Icon(Icons.copy, color: colorScheme.primary),
+                    Icon(Icons.copy_rounded, color: colorScheme.primary),
                   ],
                 ),
               ),
@@ -1018,7 +1020,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.login),
+                : const Icon(Icons.login_rounded),
             label: const Text('连接 Trakt 账号'),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1076,7 +1078,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                   _showCustomCredentials = false;
                 });
               },
-              icon: const Icon(Icons.arrow_back, size: 18),
+              icon: const Icon(Icons.arrow_back_rounded, size: 18),
               label: const Text('返回'),
             ),
           ),
@@ -1095,7 +1097,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
             children: [
               Row(
                 children: [
-                  Icon(Icons.code, color: colorScheme.primary, size: 20),
+                  Icon(Icons.code_rounded, color: colorScheme.primary, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     '开发者选项',
@@ -1121,7 +1123,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
           controller: _clientIdController,
           decoration: InputDecoration(
             labelText: 'Client ID',
-            prefixIcon: const Icon(Icons.apps),
+            prefixIcon: const Icon(Icons.apps_rounded),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           validator: (value) {
@@ -1141,7 +1143,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
             prefixIcon: const Icon(Icons.vpn_key),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             suffixIcon: IconButton(
-              icon: Icon(_obscureSecret ? Icons.visibility : Icons.visibility_off),
+              icon: Icon(_obscureSecret ? Icons.visibility_rounded : Icons.visibility_off_rounded),
               onPressed: () {
                 setState(() {
                   _obscureSecret = !_obscureSecret;
@@ -1166,7 +1168,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.login),
+              : const Icon(Icons.login_rounded),
           label: const Text('连接'),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),

@@ -567,7 +567,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
         if (ptSites.isNotEmpty)
           FilledButton.icon(
             onPressed: () => _onPtSearchPressed(ptSites),
-            icon: const Icon(Icons.search, size: 18),
+            icon: const Icon(Icons.search_rounded, size: 18),
             label: const Text('PT 搜索'),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -662,7 +662,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
-                        Icons.search,
+                        Icons.search_rounded,
                         color: Theme.of(context).colorScheme.primary,
                         size: 18,
                       ),

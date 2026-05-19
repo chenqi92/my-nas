@@ -622,6 +622,14 @@ class _CheckUpdateTileState extends ConsumerState<CheckUpdateTile> {
   Widget build(BuildContext context) {
     final status = _service.status;
     final hasUpdate = _service.hasUpdate;
+    // 与 mine 页其他 tile 对齐：桌面 32×32 / icon 18 / sm padding / 8 圆角
+    final isDesktop = context.isDesktopLayout;
+    final iconBox = isDesktop ? 32.0 : 40.0;
+    final iconSize = isDesktop ? 18.0 : 20.0;
+    final verticalPadding = isDesktop ? AppSpacing.sm : AppSpacing.md;
+    final titleStyle = isDesktop
+        ? context.textTheme.bodyMedium
+        : context.textTheme.bodyLarge;
 
     return Material(
       color: Colors.transparent,
@@ -645,23 +653,23 @@ class _CheckUpdateTileState extends ConsumerState<CheckUpdateTile> {
                 }
               },
         child: Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
+            vertical: verticalPadding,
           ),
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: iconBox,
+                height: iconBox,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(isDesktop ? 8 : 12),
                 ),
                 child: Icon(
                   hasUpdate ? Icons.system_update_rounded : Icons.update_rounded,
                   color: AppColors.primary,
-                  size: 20,
+                  size: iconSize,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -671,7 +679,7 @@ class _CheckUpdateTileState extends ConsumerState<CheckUpdateTile> {
                   children: [
                     Text(
                       '检查更新',
-                      style: context.textTheme.bodyLarge?.copyWith(
+                      style: titleStyle?.copyWith(
                         color: widget.isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                         fontWeight: FontWeight.w500,
                       ),
@@ -712,7 +720,7 @@ class _CheckUpdateTileState extends ConsumerState<CheckUpdateTile> {
                     ),
                   ),
                 )
-              else
+              else if (!isDesktop)
                 Icon(
                   Icons.chevron_right_rounded,
                   color: widget.isDark

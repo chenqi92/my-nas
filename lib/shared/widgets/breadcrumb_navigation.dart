@@ -30,7 +30,7 @@ class BreadcrumbConfig {
     this.showHomeIcon = true,
     this.homeIcon = Icons.home_rounded,
     this.maxVisibleItems = 0,
-    this.collapsedIcon = Icons.more_horiz,
+    this.collapsedIcon = Icons.more_horiz_rounded,
   });
 
   /// 分隔符组件

@@ -152,7 +152,7 @@ class _CastButtonState extends ConsumerState<CastButton> {
                       Navigator.pop(context);
                       ref.read(castProvider.notifier).refreshDevices();
                     },
-                    child: const Icon(Icons.refresh, size: 18, color: Colors.white54),
+                    child: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white54),
                   ),
               ],
             ),
@@ -172,7 +172,7 @@ class _CastButtonState extends ConsumerState<CastButton> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      isDiscovering ? Icons.search : Icons.cast,
+                      isDiscovering ? Icons.search_rounded : Icons.cast,
                       size: 32,
                       color: Colors.white38,
                     ),
@@ -429,7 +429,7 @@ class _CastControlSheet extends ConsumerWidget {
                   onPressed: () => ref.read(castProvider.notifier).togglePlayPause(),
                   iconSize: 64,
                   icon: Icon(
-                    (session?.isPlaying ?? false) ? Icons.pause_circle : Icons.play_circle,
+                    (session?.isPlaying ?? false) ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
                     color: VideoPlayerColors.primary,
                   ),
                 ),
@@ -473,7 +473,7 @@ class _CastControlSheet extends ConsumerWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: onStop,
-                icon: const Icon(Icons.stop),
+                icon: const Icon(Icons.stop_rounded),
                 label: const Text('停止投屏'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: VideoPlayerColors.primary,

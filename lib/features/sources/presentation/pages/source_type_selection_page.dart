@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 源类型选择页面
 ///
@@ -48,6 +49,7 @@ class SourceTypeSelectionPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: Text(title),
         centerTitle: true,
       ),
@@ -246,17 +248,11 @@ class SourceTypeSelectionPage extends ConsumerWidget {
       ),
       enabled: isSupported,
       onTap: isSupported
-          ? () {
-              Navigator.push<void>(
+          ? () => SourceFormPage.openAdaptive<void>(
                 context,
-                MaterialPageRoute<void>(
-                  builder: (context) => SourceFormPage(
-                    sourceType: type,
-                    popTwice: true,
-                  ),
-                ),
-              );
-            }
+                sourceType: type,
+                popTwice: true,
+              )
           : null,
     );
   }

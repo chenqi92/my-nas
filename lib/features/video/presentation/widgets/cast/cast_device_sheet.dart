@@ -93,7 +93,7 @@ class _CastDeviceSheetState extends ConsumerState<CastDeviceSheet> {
                               color: VideoPlayerColors.primary,
                             ),
                           )
-                        : const Icon(Icons.refresh, color: VideoPlayerColors.primary),
+                        : const Icon(Icons.refresh_rounded, color: VideoPlayerColors.primary),
                     tooltip: '刷新',
                   ),
                 ],
@@ -115,7 +115,7 @@ class _CastDeviceSheetState extends ConsumerState<CastDeviceSheet> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline, color: VideoPlayerColors.error, size: 20),
+                      const Icon(Icons.error_outline_rounded, color: VideoPlayerColors.error, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -192,7 +192,7 @@ class _CastDeviceSheetState extends ConsumerState<CastDeviceSheet> {
             const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: () => ref.read(castProvider.notifier).refreshDevices(),
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               label: const Text('重新搜索'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: VideoPlayerColors.primary,

@@ -29,6 +29,7 @@ import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:path/path.dart' as p;
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 手动音乐刮削页面
 class ManualMusicScraperPage extends ConsumerStatefulWidget {
@@ -715,6 +716,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('手动刮削'),
         actions: [
           if (_totalResultCount > 0)
@@ -898,7 +900,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Icon(Icons.search, size: 20),
+                : const Icon(Icons.search_rounded, size: 20),
           ),
         ),
       ],
@@ -915,7 +917,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+            Icon(Icons.error_outline_rounded, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(_errorMessage!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
@@ -1343,7 +1345,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Icon(Icons.check, size: 18),
+                                : const Icon(Icons.check_rounded, size: 18),
                             label: const Text('确认刮削'),
                           ),
                         ),
@@ -1426,7 +1428,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              value ? Icons.check_box : Icons.check_box_outline_blank,
+              value ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
               size: 16,
               color: isEnabled
                   ? (value ? AppColors.primary : (isDark ? Colors.grey[500] : Colors.grey[600]))

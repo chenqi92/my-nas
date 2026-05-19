@@ -66,7 +66,7 @@ class AspectRatioSelector extends ConsumerWidget {
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close_rounded),
                 ),
               ],
             ),
@@ -112,7 +112,7 @@ class _AspectRatioTile extends StatelessWidget {
 
   IconData get _icon => switch (mode) {
       AspectRatioMode.auto => Icons.auto_fix_high,
-      AspectRatioMode.fill => Icons.fullscreen,
+      AspectRatioMode.fill => Icons.fullscreen_rounded,
       AspectRatioMode.contain => Icons.fit_screen,
       AspectRatioMode.cover => Icons.crop_free,
       AspectRatioMode.r16x9 => Icons.rectangle_outlined,

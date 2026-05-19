@@ -56,7 +56,7 @@ class TTSControlBar extends ConsumerWidget {
                 // 关闭按钮
                 _buildControlButton(
                   context,
-                  icon: Icons.close,
+                  icon: Icons.close_rounded,
                   label: '关闭',
                   onTap: () {
                     debugPrint('TTS Control: 关闭按钮点击');
@@ -101,7 +101,7 @@ class TTSControlBar extends ConsumerWidget {
                 // 设置
                 _buildControlButton(
                   context,
-                  icon: Icons.settings,
+                  icon: Icons.settings_rounded,
                   label: '设置',
                   onTap: () => _showSettings(context),
                 ),

@@ -10,6 +10,7 @@ import 'package:my_nas/features/pt_sites/presentation/widgets/send_to_downloader
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// PT 站点详情页
 class PTSiteDetailPage extends ConsumerStatefulWidget {
@@ -105,6 +106,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: _isSearching
             ? TextField(
                 controller: _searchController,
@@ -136,7 +138,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
         actions: [
           // 搜索按钮
           IconButton(
-            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            icon: Icon(_isSearching ? Icons.close_rounded : Icons.search_rounded),
             onPressed: () {
               setState(() {
                 _isSearching = !_isSearching;
@@ -154,7 +156,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
           ),
           // 筛选按钮
           IconButton(
-            icon: const Icon(Icons.tune),
+            icon: const Icon(Icons.tune_rounded),
             onPressed: () => _showFilterSheet(context),
           ),
           // 排序按钮
@@ -181,7 +183,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                 value: 'refresh',
                 child: Row(
                   children: [
-                    Icon(Icons.refresh),
+                    Icon(Icons.refresh_rounded),
                     SizedBox(width: 12),
                     Text('刷新'),
                   ],
@@ -192,7 +194,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                   value: 'user_info',
                   child: Row(
                     children: [
-                      Icon(Icons.person),
+                      Icon(Icons.person_rounded),
                       SizedBox(width: 12),
                       Text('个人信息'),
                     ],
@@ -243,7 +245,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.error_outline,
+              Icons.error_outline_rounded,
               size: 48,
               color: isDark ? AppColors.errorLight : AppColors.error,
             ),
@@ -271,7 +273,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                 _hasConnected = false;
                 _connect();
               },
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               label: const Text('重试'),
             ),
           ],
@@ -290,7 +292,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 48),
+            const Icon(Icons.error_outline_rounded, size: 48),
             const SizedBox(height: 16),
             Text(torrentListState.error!),
             const SizedBox(height: 16),
@@ -413,7 +415,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
-                              Icons.tune,
+                              Icons.tune_rounded,
                               color: AppColors.primary,
                               size: 18,
                             ),
@@ -460,7 +462,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                               ),
                             ),
                             trailing: currentState.category == null
-                                ? Icon(Icons.check, color: AppColors.primary, size: 20)
+                                ? Icon(Icons.check_rounded, color: AppColors.primary, size: 20)
                                 : null,
                             onTap: () {
                               ref
@@ -487,7 +489,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Icon(
-                                      Icons.folder,
+                                      Icons.folder_rounded,
                                       color: isSelected
                                           ? AppColors.primary
                                           : (isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
@@ -502,7 +504,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                     ),
                                   ),
                                   trailing: isSelected
-                                      ? Icon(Icons.check, color: AppColors.primary, size: 20)
+                                      ? Icon(Icons.check_rounded, color: AppColors.primary, size: 20)
                                       : null,
                                   onTap: () {
                                     ref
@@ -629,8 +631,8 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                         children: [
                           (PTTorrentSortBy.uploadTime, '上传时间', Icons.access_time),
                           (PTTorrentSortBy.size, '大小', Icons.storage),
-                          (PTTorrentSortBy.seeders, '做种人数', Icons.upload),
-                          (PTTorrentSortBy.leechers, '下载人数', Icons.download),
+                          (PTTorrentSortBy.seeders, '做种人数', Icons.upload_rounded),
+                          (PTTorrentSortBy.leechers, '下载人数', Icons.download_rounded),
                           (PTTorrentSortBy.snatched, '完成次数', Icons.check_circle),
                         ].map((item) {
                           final isSelected = currentState.sortBy == item.$1;
@@ -660,7 +662,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                               ),
                             ),
                             trailing: isSelected
-                                ? Icon(Icons.check, color: AppColors.primary, size: 20)
+                                ? Icon(Icons.check_rounded, color: AppColors.primary, size: 20)
                                 : null,
                             onTap: () {
                               ref
@@ -736,7 +738,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
-                              Icons.person,
+                              Icons.person_rounded,
                               color: AppColors.primary,
                               size: 18,
                             ),
@@ -831,7 +833,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                               children: [
                                 _buildUserInfoTile(
                                   context,
-                                  icon: Icons.upload,
+                                  icon: Icons.upload_rounded,
                                   iconColor: AppColors.success,
                                   label: '上传量',
                                   value: userInfo.formattedUploaded,
@@ -840,7 +842,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                 Divider(height: 1, indent: 56, color: isDark ? Colors.white10 : Colors.grey[200]),
                                 _buildUserInfoTile(
                                   context,
-                                  icon: Icons.download,
+                                  icon: Icons.download_rounded,
                                   iconColor: AppColors.primary,
                                   label: '下载量',
                                   value: userInfo.formattedDownloaded,
@@ -1089,8 +1091,8 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
 
                       // 基本信息
                       _buildDetailRow(Icons.storage, '大小', torrent.formattedSize),
-                      _buildDetailRow(Icons.upload, '做种', '${torrent.seeders}'),
-                      _buildDetailRow(Icons.download, '下载', '${torrent.leechers}'),
+                      _buildDetailRow(Icons.upload_rounded, '做种', '${torrent.seeders}'),
+                      _buildDetailRow(Icons.download_rounded, '下载', '${torrent.leechers}'),
                       _buildDetailRow(
                           Icons.check_circle, '完成', '${torrent.snatched}'),
                       _buildDetailRow(
@@ -1100,12 +1102,12 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                       ),
 
                       if (torrent.category != null)
-                        _buildDetailRow(Icons.folder, '分类', torrent.category!),
+                        _buildDetailRow(Icons.folder_rounded, '分类', torrent.category!),
 
                       if (torrent.subCategory != null &&
                           torrent.subCategory!.isNotEmpty)
                         _buildDetailRow(
-                            Icons.folder_open, '子分类', torrent.subCategory!),
+                            Icons.folder_open_rounded, '子分类', torrent.subCategory!),
 
                       // IMDB / 豆瓣 信息
                       if (torrent.imdbId != null &&
@@ -1116,7 +1118,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                       if (torrent.doubanId != null &&
                           torrent.doubanId!.isNotEmpty)
                         _buildDetailRow(
-                            Icons.star, '豆瓣', torrent.doubanId!),
+                            Icons.star_rounded, '豆瓣', torrent.doubanId!),
 
                       // 种子 ID
                       _buildDetailRow(Icons.tag, '种子ID', torrent.id),
@@ -1171,7 +1173,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () => _copyDownloadUrl(torrent),
-                              icon: const Icon(Icons.copy),
+                              icon: const Icon(Icons.copy_rounded),
                               label: const Text('复制链接'),
                             ),
                           ),
@@ -1182,7 +1184,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                 Navigator.pop(context);
                                 _showDownloadOptions(context, torrent);
                               },
-                              icon: const Icon(Icons.download),
+                              icon: const Icon(Icons.download_rounded),
                               label: const Text('下载'),
                             ),
                           ),
@@ -1470,7 +1472,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.error_outline,
+              Icons.error_outline_rounded,
               size: 48,
               color: isDark ? AppColors.errorLight : AppColors.error,
             ),
@@ -1479,7 +1481,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _loadStats,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               label: const Text('重试'),
             ),
           ],
@@ -1537,7 +1539,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
               children: [
                 Expanded(
                   child: _buildStatItem(
-                    icon: Icons.upload,
+                    icon: Icons.upload_rounded,
                     iconColor: AppColors.success,
                     label: '总上传',
                     value: stats.formattedTotalUploaded,
@@ -1546,7 +1548,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                 ),
                 Expanded(
                   child: _buildStatItem(
-                    icon: Icons.download,
+                    icon: Icons.download_rounded,
                     iconColor: AppColors.primary,
                     label: '总下载',
                     value: stats.formattedTotalDownloaded,

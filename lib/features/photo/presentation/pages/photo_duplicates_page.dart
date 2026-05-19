@@ -367,7 +367,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                     fileSystem: fileSystem,
                     placeholder: ColoredBox(
                       color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
-                      child: const Center(child: Icon(Icons.photo)),
+                      child: const Center(child: Icon(Icons.photo_rounded)),
                     ),
                     errorWidget: ColoredBox(
                       color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
@@ -408,7 +408,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                         color: AppColors.error,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.delete, color: Colors.white, size: 16),
+                      child: const Icon(Icons.delete_rounded, color: Colors.white, size: 16),
                     ),
                   ),
                 // 数据源标识（跨数据源时显示）
@@ -588,7 +588,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(_errorMessage!, style: TextStyle(color: AppColors.error)),
             const SizedBox(height: 16),
@@ -791,7 +791,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                   child: Row(
                     children: [
                       Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+                        isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off,
                         size: 16,
                         color: isSelected ? AppColors.error : AppColors.disabled,
                       ),
@@ -972,7 +972,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                         ? Icons.check_circle
                         : progress?.status == HashStatus.error
                             ? Icons.error
-                            : Icons.cancel,
+                            : Icons.cancel_rounded,
                     color: progress?.status == HashStatus.completed
                         ? AppColors.success
                         : progress?.status == HashStatus.error
@@ -1363,7 +1363,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _findSimilarPhotos,
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               label: const Text('重新分析'),
             ),
           ],
@@ -1439,7 +1439,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                   child: Row(
                     children: [
                       Icon(
-                        isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+                        isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off,
                         size: 16,
                         color: isSelected ? AppColors.error : Colors.grey,
                       ),

@@ -11,6 +11,7 @@ import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 在线书籍搜索页面
 class OnlineBookSearchPage extends ConsumerStatefulWidget {
@@ -51,6 +52,7 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: _buildSearchField(isDark),
         backgroundColor: Colors.transparent,
         elevation: 0,

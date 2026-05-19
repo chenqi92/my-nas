@@ -23,6 +23,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 class MusicPlayerPage extends ConsumerStatefulWidget {
   const MusicPlayerPage({super.key});
@@ -179,6 +180,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
       return Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
         appBar: AppBar(
+          leading: const RoundedBackButton(),
           backgroundColor: Colors.transparent,
           elevation: 0,
           title: const Text('正在播放'),

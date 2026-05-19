@@ -33,7 +33,7 @@ enum AdaptiveListTileType {
 /// AdaptiveListTile(
 ///   title: '文件名.txt',
 ///   subtitle: '1.2 MB',
-///   leading: Icon(Icons.file_copy),
+///   leading: Icon(Icons.file_copy_rounded),
 ///   onTap: () {},
 /// )
 /// ```

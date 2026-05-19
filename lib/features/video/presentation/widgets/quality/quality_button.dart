@@ -108,7 +108,7 @@ class QualityButton extends ConsumerWidget {
                     ),
                   ),
                   if (quality == qualityState.currentQuality)
-                    const Icon(Icons.check, size: 18, color: Colors.white),
+                    const Icon(Icons.check_rounded, size: 18, color: Colors.white),
                 ],
               ),
             ),

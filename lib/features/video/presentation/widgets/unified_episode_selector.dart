@@ -847,7 +847,7 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    Icons.search,
+                    Icons.search_rounded,
                     color: Theme.of(context).colorScheme.primary,
                     size: 20,
                   ),
@@ -965,7 +965,7 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
-                        Icons.search,
+                        Icons.search_rounded,
                         color: Theme.of(context).colorScheme.primary,
                         size: 18,
                       ),

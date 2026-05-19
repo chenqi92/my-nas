@@ -66,7 +66,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
           ? FloatingActionButton(
               onPressed: () => _showAddTorrentDialog(context),
               backgroundColor: AppColors.primary,
-              child: const Icon(Icons.add, color: Colors.white),
+              child: const Icon(Icons.add_rounded, color: Colors.white),
             )
           : null,
     );
@@ -101,7 +101,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back),
+                    icon: const Icon(Icons.arrow_back_rounded),
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
@@ -144,7 +144,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                   // 更多操作菜单
                   PopupMenuButton<String>(
                     icon: Icon(
-                      Icons.more_vert,
+                      Icons.more_vert_rounded,
                       color: isDark ? AppColors.darkOnSurface : null,
                     ),
                     onSelected: (value) => _handleMenuAction(value, context),
@@ -152,7 +152,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                       const PopupMenuItem(
                         value: 'pause_all',
                         child: ListTile(
-                          leading: Icon(Icons.pause),
+                          leading: Icon(Icons.pause_rounded),
                           title: Text('全部暂停'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -160,7 +160,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                       const PopupMenuItem(
                         value: 'resume_all',
                         child: ListTile(
-                          leading: Icon(Icons.play_arrow),
+                          leading: Icon(Icons.play_arrow_rounded),
                           title: Text('全部开始'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -169,7 +169,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                       const PopupMenuItem(
                         value: 'speed_limit',
                         child: ListTile(
-                          leading: Icon(Icons.tune),
+                          leading: Icon(Icons.tune_rounded),
                           title: Text('速度限制设置'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -178,7 +178,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                       const PopupMenuItem(
                         value: 'refresh',
                         child: ListTile(
-                          leading: Icon(Icons.refresh),
+                          leading: Icon(Icons.refresh_rounded),
                           title: Text('刷新'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -196,7 +196,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                     const SizedBox(width: 8),
                     Expanded(
                       child: _SpeedCard(
-                        icon: Icons.download,
+                        icon: Icons.download_rounded,
                         label: '下载',
                         speed: transferInfo.dlInfoSpeed,
                         total: transferInfo.dlInfoData,
@@ -208,7 +208,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                     const SizedBox(width: 12),
                     Expanded(
                       child: _SpeedCard(
-                        icon: Icons.upload,
+                        icon: Icons.upload_rounded,
                         label: '上传',
                         speed: transferInfo.upInfoSpeed,
                         total: transferInfo.upInfoData,
@@ -251,7 +251,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text('连接失败', style: context.textTheme.titleLarge),
             const SizedBox(height: 8),
@@ -269,7 +269,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                 _hasConnected = false;
                 _connect();
               },
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               label: const Text('重试'),
             ),
           ],
@@ -628,7 +628,7 @@ class _TorrentList extends ConsumerWidget {
               ref.read(qbSortSettingsProvider(sourceId).notifier).setFilterCategory(null);
               ref.read(qbSortSettingsProvider(sourceId).notifier).setFilterTag(null);
             },
-            child: Icon(Icons.close, size: 16, color: AppColors.primary),
+            child: Icon(Icons.close_rounded, size: 16, color: AppColors.primary),
           ),
         ],
       ),
@@ -848,7 +848,7 @@ class _TorrentTile extends ConsumerWidget {
                       ),
                       const SizedBox(width: 12),
                     ],
-                    const Icon(Icons.sync, size: 14),
+                    const Icon(Icons.sync_rounded, size: 14),
                     const SizedBox(width: 4),
                     Text(
                       '分享率: ${torrent.ratio?.toStringAsFixed(2) ?? '-'}',
@@ -879,11 +879,11 @@ class _TorrentTile extends ConsumerWidget {
 
   (Color, IconData) _getStatusInfo() {
     if (torrent.hasError) return (AppColors.error, Icons.error);
-    if (torrent.isPaused) return (AppColors.warning, Icons.pause_circle);
+    if (torrent.isPaused) return (AppColors.warning, Icons.pause_circle_rounded);
     if (torrent.isDownloading) return (AppColors.success, Icons.downloading);
-    if (torrent.isUploading) return (AppColors.primary, Icons.upload);
+    if (torrent.isUploading) return (AppColors.primary, Icons.upload_rounded);
     if (torrent.isCompleted) return (AppColors.success, Icons.check_circle);
-    return (Colors.grey, Icons.help_outline);
+    return (Colors.grey, Icons.help_outline_rounded);
   }
 
   /// 根据种子状态获取卡片背景色
@@ -923,7 +923,7 @@ class _TorrentTile extends ConsumerWidget {
 
     if (torrent.isPaused) {
       return IconButton(
-        icon: const Icon(Icons.play_arrow),
+        icon: const Icon(Icons.play_arrow_rounded),
         onPressed: () => actions.resume([torrent.hash]),
         tooltip: '继续',
       );
@@ -931,14 +931,14 @@ class _TorrentTile extends ConsumerWidget {
 
     if (torrent.isDownloading || torrent.isUploading) {
       return IconButton(
-        icon: const Icon(Icons.pause),
+        icon: const Icon(Icons.pause_rounded),
         onPressed: () => actions.pause([torrent.hash]),
         tooltip: '暂停',
       );
     }
 
     return IconButton(
-      icon: const Icon(Icons.more_vert),
+      icon: const Icon(Icons.more_vert_rounded),
       onPressed: () => _showTorrentActions(context, ref),
     );
   }
@@ -1007,7 +1007,7 @@ class _TorrentTile extends ConsumerWidget {
                       Clipboard.setData(ClipboardData(text: torrent.hash));
                       context.showSuccessToast('已复制 Hash');
                     },
-                    icon: const Icon(Icons.copy),
+                    icon: const Icon(Icons.copy_rounded),
                     label: const Text('复制 Hash'),
                   ),
                 ),
@@ -1036,7 +1036,7 @@ class _TorrentTile extends ConsumerWidget {
               ),
             ),
             ListTile(
-              leading: Icon(torrent.isPaused ? Icons.play_arrow : Icons.pause),
+              leading: Icon(torrent.isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
               title: Text(torrent.isPaused ? '继续' : '暂停'),
               onTap: () {
                 Navigator.pop(context);
@@ -1057,7 +1057,7 @@ class _TorrentTile extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.folder_open),
+              leading: const Icon(Icons.folder_open_rounded),
               title: const Text('更改保存位置'),
               onTap: () {
                 Navigator.pop(context);
@@ -1189,7 +1189,7 @@ class _TorrentTile extends ConsumerWidget {
             ...categories.map(
               (c) => ListTile(
                 title: Text(c),
-                trailing: torrent.category == c ? const Icon(Icons.check) : null,
+                trailing: torrent.category == c ? const Icon(Icons.check_rounded) : null,
                 onTap: () {
                   Navigator.pop(context);
                   ref.read(qbittorrentActionsProvider(sourceId)).setCategory([torrent.hash], c);
@@ -1197,7 +1197,7 @@ class _TorrentTile extends ConsumerWidget {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.add),
+              leading: const Icon(Icons.add_rounded),
               title: const Text('创建新分类'),
               onTap: () {
                 Navigator.pop(context);
@@ -1290,7 +1290,7 @@ class _TorrentTile extends ConsumerWidget {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.add),
+                leading: const Icon(Icons.add_rounded),
                 title: const Text('创建新标签'),
                 onTap: () {
                   Navigator.pop(context);
@@ -1731,7 +1731,7 @@ class _SortOptionsSheet extends ConsumerWidget {
                       ),
                     ),
                     trailing: settings.sortMode == mode
-                        ? Icon(Icons.check, color: AppColors.primary)
+                        ? Icon(Icons.check_rounded, color: AppColors.primary)
                         : null,
                     onTap: () {
                       ref.read(qbSortSettingsProvider(sourceId).notifier).setSortMode(mode);
@@ -1751,10 +1751,10 @@ class _SortOptionsSheet extends ConsumerWidget {
         QBSortMode.size => Icons.storage,
         QBSortMode.progress => Icons.percent,
         QBSortMode.state => Icons.circle,
-        QBSortMode.dlSpeed => Icons.download,
-        QBSortMode.upSpeed => Icons.upload,
-        QBSortMode.addedOn => Icons.schedule,
-        QBSortMode.ratio => Icons.sync,
+        QBSortMode.dlSpeed => Icons.download_rounded,
+        QBSortMode.upSpeed => Icons.upload_rounded,
+        QBSortMode.addedOn => Icons.schedule_rounded,
+        QBSortMode.ratio => Icons.sync_rounded,
         QBSortMode.eta => Icons.timer,
         QBSortMode.uploaded => Icons.cloud_upload,
       };
@@ -1883,7 +1883,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.check, size: 18),
+                        : const Icon(Icons.check_rounded, size: 18),
                     label: const Text('保存'),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1922,7 +1922,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                         child: _buildSpeedInput(
                           controller: _dlLimitController,
                           label: '下载',
-                          icon: Icons.download,
+                          icon: Icons.download_rounded,
                           color: AppColors.success,
                           isDark: isDark,
                         ),
@@ -1932,7 +1932,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                         child: _buildSpeedInput(
                           controller: _upLimitController,
                           label: '上传',
-                          icon: Icons.upload,
+                          icon: Icons.upload_rounded,
                           color: AppColors.primary,
                           isDark: isDark,
                         ),
@@ -1963,7 +1963,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                         child: _buildSpeedInput(
                           controller: _altDlLimitController,
                           label: '下载',
-                          icon: Icons.download,
+                          icon: Icons.download_rounded,
                           color: AppColors.warning,
                           isDark: isDark,
                         ),
@@ -1973,7 +1973,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                         child: _buildSpeedInput(
                           controller: _altUpLimitController,
                           label: '上传',
-                          icon: Icons.upload,
+                          icon: Icons.upload_rounded,
                           color: AppColors.warning,
                           isDark: isDark,
                         ),
@@ -2152,7 +2152,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(Icons.add, size: 18),
+                          : const Icon(Icons.add_rounded, size: 18),
                       label: const Text('添加'),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -2204,14 +2204,14 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                         contentPadding: const EdgeInsets.all(16),
                         suffixIcon: _controller.text.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
+                                icon: const Icon(Icons.clear_rounded, size: 18),
                                 onPressed: () {
                                   _controller.clear();
                                   setState(() {});
                                 },
                               )
                             : IconButton(
-                                icon: const Icon(Icons.content_paste, size: 18),
+                                icon: const Icon(Icons.content_paste_rounded, size: 18),
                                 tooltip: '粘贴',
                                 onPressed: () async {
                                   final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -2250,7 +2250,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -2312,7 +2312,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                             child: Row(
                               children: [
                                 Icon(
-                                  _paused ? Icons.pause_circle : Icons.play_circle,
+                                  _paused ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
                                   color: _paused ? AppColors.warning : AppColors.success,
                                   size: 24,
                                 ),

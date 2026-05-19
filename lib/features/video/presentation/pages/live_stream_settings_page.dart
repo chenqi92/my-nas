@@ -6,6 +6,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 直播源设置页面
 class LiveStreamSettingsPage extends ConsumerStatefulWidget {
@@ -35,12 +36,13 @@ class _LiveStreamSettingsPageState
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('直播源管理'),
         actions: [
           // 排序模式切换按钮
           if (sources.isNotEmpty)
             IconButton(
-              icon: Icon(_isReorderMode ? Icons.done : Icons.reorder),
+              icon: Icon(_isReorderMode ? Icons.done_rounded : Icons.reorder),
               onPressed: () {
                 setState(() {
                   _isReorderMode = !_isReorderMode;

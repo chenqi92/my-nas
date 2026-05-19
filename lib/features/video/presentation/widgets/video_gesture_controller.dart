@@ -303,12 +303,12 @@ class _VolumeOverlay extends StatelessWidget {
             children: [
               Icon(
                 volume == 0
-                    ? Icons.volume_off
+                    ? Icons.volume_off_rounded
                     : volume < 0.3
                         ? Icons.volume_mute
                         : volume < 0.7
-                            ? Icons.volume_down
-                            : Icons.volume_up,
+                            ? Icons.volume_down_rounded
+                            : Icons.volume_up_rounded,
                 color: Colors.white,
                 size: 36,
               ),

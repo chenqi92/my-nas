@@ -14,6 +14,8 @@ import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 书源管理页面
 class BookSourcesPage extends ConsumerStatefulWidget {
@@ -41,6 +43,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('书源管理'),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -509,9 +512,14 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final isDesktop = context.isDesktopLayout;
+    // 桌面下 Dialog 全圆角；移动端保留底部 sheet 风格（仅顶圆角）。
+    final containerRadius = isDesktop
+        ? BorderRadius.circular(AppRadius.sheet)
+        : const BorderRadius.vertical(top: Radius.circular(24));
 
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: containerRadius,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
@@ -519,25 +527,15 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
             color: isDark
                 ? AppColors.darkSurface.withValues(alpha: 0.95)
                 : AppColors.lightSurface.withValues(alpha: 0.98),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: containerRadius,
           ),
           padding: EdgeInsets.only(bottom: bottomPadding),
           child: SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 拖拽指示器
-                Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.3)
-                        : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                // 拖拽指示器（桌面 Dialog 下自动隐藏）
+                const SheetDragHandle(),
                 // 标题
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),

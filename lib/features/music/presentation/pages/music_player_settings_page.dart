@@ -10,6 +10,7 @@ import 'package:my_nas/features/music/presentation/pages/audio_effects_page.dart
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_settings_provider.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 音乐播放器设置页面
 ///
@@ -32,6 +33,7 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
         appBar: AppBar(
+          leading: const RoundedBackButton(),
           backgroundColor: isDark ? AppColors.darkSurface : null,
           title: Text(
             '音乐播放设置',

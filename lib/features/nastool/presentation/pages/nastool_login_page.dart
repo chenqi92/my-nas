@@ -111,7 +111,7 @@ class _NasToolLoginPageState extends ConsumerState<NasToolLoginPage>
         elevation: 0,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back,
+            Icons.arrow_back_rounded,
             color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
           ),
           onPressed: () => Navigator.pop(context),
@@ -280,7 +280,7 @@ class _NasToolLoginPageState extends ConsumerState<NasToolLoginPage>
                             child: Row(
                               children: [
                                 const Icon(
-                                  Icons.error_outline,
+                                  Icons.error_outline_rounded,
                                   color: AppColors.error,
                                   size: 20,
                                 ),

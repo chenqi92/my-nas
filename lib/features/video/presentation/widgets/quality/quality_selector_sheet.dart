@@ -83,7 +83,7 @@ class QualitySelectorSheet extends ConsumerWidget {
                   ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: Colors.white70),
+                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
                 ),
               ],
             ),

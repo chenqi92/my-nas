@@ -11,9 +11,6 @@ import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
-import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
-import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
-import 'package:my_nas/features/transfer/presentation/pages/transfer_manager_page.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
@@ -149,13 +146,43 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     ),
   ];
 
-  /// 5 个主页面的路由
+  /// 桌面端工具区 NavigationRail 入口。
+  /// 对应 StatefulShellRoute 中 index 5/6/7 的 branch；移动端不渲染
+  /// （仍可从「我的」页 tile 进入）。
+  static const _toolDestinations = [
+    _Destination(
+      icon: Icons.download_rounded,
+      selectedIcon: Icons.download_rounded,
+      label: '下载',
+      route: Routes.download,
+      sfSymbol: 'arrow.down.circle',
+    ),
+    _Destination(
+      icon: Icons.swap_horiz_rounded,
+      selectedIcon: Icons.swap_horiz_rounded,
+      label: '任务',
+      route: Routes.transfer,
+      sfSymbol: 'arrow.up.arrow.down',
+    ),
+    _Destination(
+      icon: Icons.lan_rounded,
+      selectedIcon: Icons.lan_rounded,
+      label: '连接',
+      route: Routes.sources,
+      sfSymbol: 'network',
+    ),
+  ];
+
+  /// 主 tab + 工具区所有页面的路由（用于"是否在 branch 首屏"判断）
   static const _mainTabRoutes = {
     Routes.video,
     Routes.music,
     Routes.photo,
     Routes.reading,
     Routes.mine,
+    Routes.download,
+    Routes.transfer,
+    Routes.sources,
   };
 
   /// 判断当前 GoRouter 路由是否是主 Tab 页面
@@ -525,7 +552,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
                   ),
                 ] else
                   const SizedBox(height: 12),
-                ..._buildToolRailEntries(context, isDark, isExtended),
+                ..._buildToolRailEntries(context, currentIndex, isDark, isExtended),
               ],
             ),
           ),
@@ -570,69 +597,29 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         );
       });
 
-  /// 桌面端工具区入口：下载 / 任务 / 连接，点击 push 到当前 branch
-  /// navigator，覆盖右侧内容区但保留 NavigationRail 可见。
-  /// 移动端不会渲染（mobile 走 _buildMobileNav 完全不调此方法）。
+  /// 桌面端工具区入口：下载 / 任务 / 连接。
+  /// 走 StatefulShellRoute 的独立 branch（index 5/6/7），与主 tab
+  /// 同等地位 —— 选中正确高亮、首屏无返回按钮。移动端不渲染。
   List<Widget> _buildToolRailEntries(
     BuildContext context,
+    int currentIndex,
     bool isDark,
     bool isExtended,
-  ) {
-    void pushOnCurrentBranch(Widget page) {
-      final currentIndex = widget.navigationShell.currentIndex;
-      final key = currentIndex >= 0 && currentIndex < branchNavigatorKeys.length
-          ? branchNavigatorKeys[currentIndex]
-          : null;
-      final navigator = key?.currentState ?? rootNavigatorKey.currentState;
-      if (navigator == null) return;
-      // 工具页 push 前先清空当前 branch 已有的栈（如详情页、播放器等），
-      // 确保 pop 工具页直接回到 branch 主 tab。
-      navigator.popUntil((route) => route.isFirst);
-      // 用 fade 短动画替代默认 slide，工具切换感觉更轻量。
-      navigator.push<void>(
-        PageRouteBuilder<void>(
-          pageBuilder: (_, __, ___) => page,
-          transitionDuration: const Duration(milliseconds: 180),
-          reverseTransitionDuration: const Duration(milliseconds: 120),
-          transitionsBuilder: (_, animation, __, child) => FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
-        ),
-      );
-    }
-
-    return [
-      _RailEntry(
-        icon: Icons.download_rounded,
-        selectedIcon: Icons.download_rounded,
-        label: '下载',
-        isSelected: false,
-        isDark: isDark,
-        isExtended: isExtended,
-        onTap: () => pushOnCurrentBranch(const DownloaderListPage()),
-      ),
-      _RailEntry(
-        icon: Icons.swap_horiz_rounded,
-        selectedIcon: Icons.swap_horiz_rounded,
-        label: '任务',
-        isSelected: false,
-        isDark: isDark,
-        isExtended: isExtended,
-        onTap: () =>
-            pushOnCurrentBranch(const TransferManagerPage()),
-      ),
-      _RailEntry(
-        icon: Icons.lan_rounded,
-        selectedIcon: Icons.lan_rounded,
-        label: '连接',
-        isSelected: false,
-        isDark: isDark,
-        isExtended: isExtended,
-        onTap: () => pushOnCurrentBranch(const SourcesPage()),
-      ),
-    ];
-  }
+  ) =>
+      List.generate(_toolDestinations.length, (i) {
+        final dest = _toolDestinations[i];
+        final branchIndex = _destinations.length + i; // 主 tab 之后接工具区
+        final isSelected = currentIndex == branchIndex;
+        return _RailEntry(
+          icon: dest.icon,
+          selectedIcon: dest.selectedIcon,
+          label: dest.label,
+          isSelected: isSelected,
+          isDark: isDark,
+          isExtended: isExtended,
+          onTap: () => _onDestinationSelected(context, branchIndex),
+        );
+      });
 
   Widget _buildMobileNav(
     BuildContext context,

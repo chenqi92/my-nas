@@ -113,14 +113,14 @@ class PTTorrentCard extends StatelessWidget {
                 children: [
                   // 做种人数
                   _buildStatChip(
-                    Icons.upload,
+                    Icons.upload_rounded,
                     '${torrent.seeders}',
                     torrent.seeders > 0 ? AppColors.success : AppColors.disabled,
                   ),
                   const SizedBox(width: 16),
                   // 下载人数
                   _buildStatChip(
-                    Icons.download,
+                    Icons.download_rounded,
                     '${torrent.leechers}',
                     torrent.leechers > 0 ? AppColors.warning : AppColors.disabled,
                   ),

@@ -288,7 +288,7 @@ class _EpubComicReaderPageState extends ConsumerState<EpubComicReaderPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               error,
@@ -367,7 +367,7 @@ class _EpubComicReaderPageState extends ConsumerState<EpubComicReaderPage> {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
                 Expanded(

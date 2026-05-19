@@ -9,6 +9,7 @@ import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/pages/live_player_page.dart';
 import 'package:my_nas/features/video/presentation/pages/live_stream_settings_page.dart';
 import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 直播频道列表页面
 class LiveChannelListPage extends ConsumerStatefulWidget {
@@ -100,6 +101,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
     // 经典模式：保留 AppBar
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('直播频道'),
         actions: [
           IconButton(

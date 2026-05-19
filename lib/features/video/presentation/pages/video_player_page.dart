@@ -884,7 +884,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
-                                Icons.error_outline,
+                                Icons.error_outline_rounded,
                                 color: AppColors.error,
                                 size: 48,
                               ),

@@ -13,6 +13,7 @@ import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 手动刮削页面
 class ManualScraperPage extends ConsumerStatefulWidget {
@@ -230,6 +231,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: Text(hasSelection ? '确认刮削' : '手动刮削'),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
@@ -322,7 +324,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: '输入搜索关键词',
-                      prefixIcon: const Icon(Icons.search),
+                      prefixIcon: const Icon(Icons.search_rounded),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -416,7 +418,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(_errorMessage!, style: TextStyle(color: AppColors.error)),
           ],
@@ -569,7 +571,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                             const SizedBox(width: 8),
                           ],
                           if (item.rating != null && item.rating! > 0) ...[
-                            const Icon(Icons.star, size: 14, color: Colors.amber),
+                            const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
                             const SizedBox(width: 2),
                             Text(
                               item.rating!.toStringAsFixed(1),
@@ -670,7 +672,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                           const SizedBox(width: 12),
                         ],
                         if (rating != null && rating > 0) ...[
-                          const Icon(Icons.star, size: 18, color: Colors.amber),
+                          const Icon(Icons.star_rounded, size: 18, color: Colors.amber),
                           const SizedBox(width: 4),
                           Text(
                             rating.toStringAsFixed(1),

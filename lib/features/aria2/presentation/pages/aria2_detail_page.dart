@@ -64,7 +64,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
           ? FloatingActionButton(
               onPressed: () => _showAddDownloadDialog(context),
               backgroundColor: AppColors.primary,
-              child: const Icon(Icons.add, color: Colors.white),
+              child: const Icon(Icons.add_rounded, color: Colors.white),
             )
           : null,
     );
@@ -98,7 +98,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back),
+                    icon: const Icon(Icons.arrow_back_rounded),
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
@@ -132,7 +132,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                   // 更多操作菜单
                   PopupMenuButton<String>(
                     icon: Icon(
-                      Icons.more_vert,
+                      Icons.more_vert_rounded,
                       color: isDark ? AppColors.darkOnSurface : null,
                     ),
                     onSelected: (value) => _handleMenuAction(value, context),
@@ -140,7 +140,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                       const PopupMenuItem(
                         value: 'pause_all',
                         child: ListTile(
-                          leading: Icon(Icons.pause),
+                          leading: Icon(Icons.pause_rounded),
                           title: Text('全部暂停'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -148,7 +148,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                       const PopupMenuItem(
                         value: 'resume_all',
                         child: ListTile(
-                          leading: Icon(Icons.play_arrow),
+                          leading: Icon(Icons.play_arrow_rounded),
                           title: Text('全部恢复'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -166,7 +166,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                       const PopupMenuItem(
                         value: 'refresh',
                         child: ListTile(
-                          leading: Icon(Icons.refresh),
+                          leading: Icon(Icons.refresh_rounded),
                           title: Text('刷新'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -184,7 +184,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                     const SizedBox(width: 8),
                     Expanded(
                       child: _SpeedCard(
-                        icon: Icons.download,
+                        icon: Icons.download_rounded,
                         label: '下载',
                         speed: stats.downloadSpeed,
                         count: stats.numActive,
@@ -196,7 +196,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                     const SizedBox(width: 12),
                     Expanded(
                       child: _SpeedCard(
-                        icon: Icons.upload,
+                        icon: Icons.upload_rounded,
                         label: '上传',
                         speed: stats.uploadSpeed,
                         count: stats.numWaiting,
@@ -239,7 +239,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text('连接失败', style: context.textTheme.titleLarge),
             const SizedBox(height: 8),
@@ -257,7 +257,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                 _hasConnected = false;
                 _connect();
               },
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               label: const Text('重试'),
             ),
           ],
@@ -733,13 +733,13 @@ class _DownloadTile extends ConsumerWidget {
       icon = Icons.downloading;
       color = AppColors.primary;
     } else if (download.isPaused) {
-      icon = Icons.pause_circle;
+      icon = Icons.pause_circle_rounded;
       color = AppColors.warning;
     } else if (download.isWaiting) {
       icon = Icons.hourglass_empty;
       color = AppColors.lightOnSurfaceVariant;
     } else {
-      icon = Icons.help_outline;
+      icon = Icons.help_outline_rounded;
       color = AppColors.lightOnSurfaceVariant;
     }
 
@@ -754,7 +754,7 @@ class _DownloadTile extends ConsumerWidget {
       children: [
         if (download.isPaused || download.isWaiting)
           IconButton(
-            icon: const Icon(Icons.play_arrow, size: 20),
+            icon: const Icon(Icons.play_arrow_rounded, size: 20),
             onPressed: () => actions.resume(download.gid),
             tooltip: '恢复',
             padding: EdgeInsets.zero,
@@ -762,7 +762,7 @@ class _DownloadTile extends ConsumerWidget {
           )
         else if (download.isActive)
           IconButton(
-            icon: const Icon(Icons.pause, size: 20),
+            icon: const Icon(Icons.pause_rounded, size: 20),
             onPressed: () => actions.pause(download.gid),
             tooltip: '暂停',
             padding: EdgeInsets.zero,
@@ -1059,7 +1059,7 @@ class _SortOptionsSheet extends ConsumerWidget {
                   return ListTile(
                     leading: Icon(_getSortIcon(mode), color: isSelected ? AppColors.primary : null),
                     title: Text(mode.label),
-                    trailing: isSelected ? Icon(Icons.check, color: AppColors.primary) : null,
+                    trailing: isSelected ? Icon(Icons.check_rounded, color: AppColors.primary) : null,
                     selected: isSelected,
                     onTap: () {
                       ref.read(aria2SortSettingsProvider(sourceId).notifier).setSortMode(mode);
@@ -1080,8 +1080,8 @@ class _SortOptionsSheet extends ConsumerWidget {
     Aria2SortMode.size => Icons.storage,
     Aria2SortMode.progress => Icons.trending_up,
     Aria2SortMode.status => Icons.info_outline,
-    Aria2SortMode.dlSpeed => Icons.download,
-    Aria2SortMode.upSpeed => Icons.upload,
+    Aria2SortMode.dlSpeed => Icons.download_rounded,
+    Aria2SortMode.upSpeed => Icons.upload_rounded,
   };
 }
 
@@ -1178,7 +1178,7 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(Icons.add, size: 18),
+                          : const Icon(Icons.add_rounded, size: 18),
                       label: const Text('添加'),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1219,14 +1219,14 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                         contentPadding: const EdgeInsets.all(16),
                         suffixIcon: _controller.text.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
+                                icon: const Icon(Icons.clear_rounded, size: 18),
                                 onPressed: () {
                                   _controller.clear();
                                   setState(() {});
                                 },
                               )
                             : IconButton(
-                                icon: const Icon(Icons.content_paste, size: 18),
+                                icon: const Icon(Icons.content_paste_rounded, size: 18),
                                 tooltip: '粘贴',
                                 onPressed: () async {
                                   final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -1262,7 +1262,7 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(_errorMessage!, style: context.textTheme.bodySmall?.copyWith(color: AppColors.error)),

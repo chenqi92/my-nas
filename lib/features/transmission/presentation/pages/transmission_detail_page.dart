@@ -65,7 +65,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
           ? FloatingActionButton(
               onPressed: () => _showAddTorrentDialog(context),
               backgroundColor: AppColors.primary,
-              child: const Icon(Icons.add, color: Colors.white),
+              child: const Icon(Icons.add_rounded, color: Colors.white),
             )
           : null,
     );
@@ -99,7 +99,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back),
+                    icon: const Icon(Icons.arrow_back_rounded),
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
@@ -133,7 +133,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                   // 更多操作菜单
                   PopupMenuButton<String>(
                     icon: Icon(
-                      Icons.more_vert,
+                      Icons.more_vert_rounded,
                       color: isDark ? AppColors.darkOnSurface : null,
                     ),
                     onSelected: (value) => _handleMenuAction(value, context),
@@ -141,7 +141,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                       const PopupMenuItem(
                         value: 'stop_all',
                         child: ListTile(
-                          leading: Icon(Icons.pause),
+                          leading: Icon(Icons.pause_rounded),
                           title: Text('全部停止'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -149,7 +149,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                       const PopupMenuItem(
                         value: 'start_all',
                         child: ListTile(
-                          leading: Icon(Icons.play_arrow),
+                          leading: Icon(Icons.play_arrow_rounded),
                           title: Text('全部开始'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -158,7 +158,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                       const PopupMenuItem(
                         value: 'refresh',
                         child: ListTile(
-                          leading: Icon(Icons.refresh),
+                          leading: Icon(Icons.refresh_rounded),
                           title: Text('刷新'),
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -176,7 +176,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                     const SizedBox(width: 8),
                     Expanded(
                       child: _SpeedCard(
-                        icon: Icons.download,
+                        icon: Icons.download_rounded,
                         label: '下载',
                         speed: stats.downloadSpeed,
                         total: stats.currentStats?.downloadedBytes ?? 0,
@@ -187,7 +187,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                     const SizedBox(width: 12),
                     Expanded(
                       child: _SpeedCard(
-                        icon: Icons.upload,
+                        icon: Icons.upload_rounded,
                         label: '上传',
                         speed: stats.uploadSpeed,
                         total: stats.currentStats?.uploadedBytes ?? 0,
@@ -229,7 +229,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text('连接失败', style: context.textTheme.titleLarge),
             const SizedBox(height: 8),
@@ -247,7 +247,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                 _hasConnected = false;
                 _connect();
               },
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(Icons.refresh_rounded),
               label: const Text('重试'),
             ),
           ],
@@ -730,7 +730,7 @@ class _TorrentTile extends ConsumerWidget {
       icon = Icons.downloading;
       color = AppColors.primary;
     } else if (torrent.isStopped) {
-      icon = Icons.pause_circle;
+      icon = Icons.pause_circle_rounded;
       color = AppColors.warning;
     } else if (torrent.isComplete) {
       icon = Icons.check_circle;
@@ -751,7 +751,7 @@ class _TorrentTile extends ConsumerWidget {
       children: [
         if (torrent.isStopped)
           IconButton(
-            icon: const Icon(Icons.play_arrow, size: 20),
+            icon: const Icon(Icons.play_arrow_rounded, size: 20),
             onPressed: () => actions.start([torrent.id]),
             tooltip: '开始',
             padding: EdgeInsets.zero,
@@ -759,7 +759,7 @@ class _TorrentTile extends ConsumerWidget {
           )
         else
           IconButton(
-            icon: const Icon(Icons.pause, size: 20),
+            icon: const Icon(Icons.pause_rounded, size: 20),
             onPressed: () => actions.stop([torrent.id]),
             tooltip: '停止',
             padding: EdgeInsets.zero,
@@ -1096,7 +1096,7 @@ class _SortOptionsSheet extends ConsumerWidget {
                   return ListTile(
                     leading: Icon(_getSortIcon(mode), color: isSelected ? AppColors.primary : null),
                     title: Text(mode.label),
-                    trailing: isSelected ? Icon(Icons.check, color: AppColors.primary) : null,
+                    trailing: isSelected ? Icon(Icons.check_rounded, color: AppColors.primary) : null,
                     selected: isSelected,
                     onTap: () {
                       ref.read(transmissionSortSettingsProvider(sourceId).notifier).setSortMode(mode);
@@ -1117,10 +1117,10 @@ class _SortOptionsSheet extends ConsumerWidget {
     TransmissionSortMode.size => Icons.storage,
     TransmissionSortMode.progress => Icons.trending_up,
     TransmissionSortMode.status => Icons.info_outline,
-    TransmissionSortMode.dlSpeed => Icons.download,
-    TransmissionSortMode.upSpeed => Icons.upload,
+    TransmissionSortMode.dlSpeed => Icons.download_rounded,
+    TransmissionSortMode.upSpeed => Icons.upload_rounded,
     TransmissionSortMode.addedOn => Icons.access_time,
-    TransmissionSortMode.ratio => Icons.sync,
+    TransmissionSortMode.ratio => Icons.sync_rounded,
     TransmissionSortMode.uploaded => Icons.cloud_upload,
   };
 }
@@ -1219,7 +1219,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(Icons.add, size: 18),
+                          : const Icon(Icons.add_rounded, size: 18),
                       label: const Text('添加'),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1260,14 +1260,14 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                         contentPadding: const EdgeInsets.all(16),
                         suffixIcon: _controller.text.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
+                                icon: const Icon(Icons.clear_rounded, size: 18),
                                 onPressed: () {
                                   _controller.clear();
                                   setState(() {});
                                 },
                               )
                             : IconButton(
-                                icon: const Icon(Icons.content_paste, size: 18),
+                                icon: const Icon(Icons.content_paste_rounded, size: 18),
                                 tooltip: '粘贴',
                                 onPressed: () async {
                                   final data = await Clipboard.getData(Clipboard.kTextPlain);
@@ -1302,7 +1302,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+                            const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 18),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(_errorMessage!, style: context.textTheme.bodySmall?.copyWith(color: AppColors.error)),
@@ -1329,7 +1329,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                             child: Row(
                               children: [
                                 Icon(
-                                  _paused ? Icons.pause_circle : Icons.play_circle,
+                                  _paused ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
                                   color: _paused ? AppColors.warning : AppColors.success,
                                   size: 24,
                                 ),

@@ -449,7 +449,7 @@ class TimelineNavigatorPanel extends ConsumerWidget {
                         duration: const Duration(milliseconds: 200),
                         turns: state.isExpanded ? 0.5 : 0,
                         child: Icon(
-                          Icons.keyboard_arrow_down,
+                          Icons.keyboard_arrow_down_rounded,
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                         ),
                       ),
@@ -586,7 +586,7 @@ class TimelineFilterBottomSheet extends ConsumerWidget {
                               Navigator.pop(context);
                             },
                             child: Icon(
-                              Icons.close,
+                              Icons.close_rounded,
                               size: 14,
                               color: AppColors.primary,
                             ),

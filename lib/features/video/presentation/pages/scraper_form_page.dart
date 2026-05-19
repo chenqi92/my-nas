@@ -6,6 +6,7 @@ import 'package:my_nas/features/video/domain/entities/scraper_form_config.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 刮削源表单页面
 class ScraperFormPage extends ConsumerStatefulWidget {
@@ -89,6 +90,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: Text(widget.isEditMode ? '编辑${widget.type.displayName}' : '添加${widget.type.displayName}'),
       ),
       body: Form(
@@ -234,7 +236,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
           helperMaxLines: 3,
           border: const OutlineInputBorder(),
           suffixIcon: IconButton(
-            icon: Icon(_obscurePasswords ? Icons.visibility : Icons.visibility_off),
+            icon: Icon(_obscurePasswords ? Icons.visibility_rounded : Icons.visibility_off_rounded),
             onPressed: () {
               setState(() {
                 _obscurePasswords = !_obscurePasswords;
@@ -420,7 +422,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.save),
+                    : const Icon(Icons.save_rounded),
                 label: Text(widget.isEditMode ? '保存' : '添加'),
               ),
             ),

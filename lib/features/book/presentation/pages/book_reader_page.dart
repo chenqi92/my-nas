@@ -909,7 +909,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                                 color: Colors.redAccent,
                                 alignment: Alignment.centerRight,
                                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                                child: const Icon(Icons.delete, color: Colors.white),
+                                child: const Icon(Icons.delete_rounded, color: Colors.white),
                               ),
                               onDismissed: (_) async {
                                 try {
@@ -1773,7 +1773,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                       const Spacer(),
                       IconButton(
                         icon: Icon(
-                          Icons.close,
+                          Icons.close_rounded,
                           color: isDark ? Colors.white70 : Colors.black54,
                         ),
                         onPressed: () => setState(() => _showToc = false),
@@ -2351,7 +2351,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
           children: [
             IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
               tooltip: '返回',
             ),
             Expanded(

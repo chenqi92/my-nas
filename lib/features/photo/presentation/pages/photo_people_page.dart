@@ -203,7 +203,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(_errorMessage!, style: TextStyle(color: AppColors.error)),
             const SizedBox(height: 16),
@@ -280,7 +280,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
                         ? Icons.check_circle
                         : progress?.status == FaceProcessStatus.error
                             ? Icons.error
-                            : Icons.cancel,
+                            : Icons.cancel_rounded,
                     color: progress?.status == FaceProcessStatus.completed
                         ? AppColors.success
                         : progress?.status == FaceProcessStatus.error
@@ -357,14 +357,14 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            _buildStatItem('人物', '${stats.totalPersons}', Icons.person, isDark),
+            _buildStatItem('人物', '${stats.totalPersons}', Icons.person_rounded, isDark),
             const SizedBox(width: 24),
             _buildStatItem('人脸', '${stats.totalFaces}', Icons.face, isDark),
             const SizedBox(width: 24),
             _buildStatItem(
               '待分组',
               '${stats.unassignedFaces}',
-              Icons.help_outline,
+              Icons.help_outline_rounded,
               isDark,
             ),
           ],
@@ -468,7 +468,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
                         color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
                         child: Center(
                           child: Icon(
-                            Icons.person,
+                            Icons.person_rounded,
                             size: 48,
                             color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                           ),
@@ -519,11 +519,11 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
       fileSystem: fileSystem,
       placeholder: Container(
         color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
-        child: const Icon(Icons.person),
+        child: const Icon(Icons.person_rounded),
       ),
       errorWidget: Container(
         color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
-        child: const Icon(Icons.person),
+        child: const Icon(Icons.person_rounded),
       ),
       cacheKey: '${face.photoPath}_face_${face.id}',
     );
@@ -545,7 +545,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit),
+              leading: const Icon(Icons.edit_rounded),
               title: const Text('重命名'),
               onTap: () {
                 Navigator.pop(context);
@@ -561,7 +561,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
               },
             ),
             ListTile(
-              leading: Icon(Icons.delete, color: AppColors.error),
+              leading: Icon(Icons.delete_rounded, color: AppColors.error),
               title: Text('删除人物', style: TextStyle(color: AppColors.error)),
               onTap: () {
                 Navigator.pop(context);
@@ -593,7 +593,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
             itemBuilder: (context, index) {
               final p = otherPersons[index];
               return ListTile(
-                leading: const CircleAvatar(child: Icon(Icons.person)),
+                leading: const CircleAvatar(child: Icon(Icons.person_rounded)),
                 title: Text(p.displayName),
                 subtitle: Text('${p.photoCount} 张照片'),
                 onTap: () => Navigator.pop(context, p),
@@ -726,7 +726,7 @@ class _PersonPhotosPageState extends ConsumerState<_PersonPhotosPage> {
                           color: isDark
                               ? AppColors.darkSurfaceVariant
                               : AppColors.lightSurfaceVariant,
-                          child: const Icon(Icons.image),
+                          child: const Icon(Icons.image_rounded),
                         ),
                         errorWidget: Container(
                           color: isDark

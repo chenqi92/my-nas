@@ -12,8 +12,10 @@ abstract final class Routes {
   static const String reading = '/reading';
   static const String mine = '/mine';
 
-  // Legacy routes (download moved to mine page)
+  // 桌面端工具区 branch（仅 NavigationRail 显示，移动端走 mine 页 tile 入口）
   static const String download = '/download';
+  static const String transfer = '/transfer';
+  static const String sources = '/sources';
 
   // Legacy routes (kept for compatibility)
   static const String files = '/files';

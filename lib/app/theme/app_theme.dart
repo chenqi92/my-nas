@@ -114,11 +114,11 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
+        elevation: AppElevation.card,
         color: preset.darkSurface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.borderRadiusMd,
+          borderRadius: BorderRadius.circular(AppRadius.card),
           side: BorderSide(color: preset.darkSurfaceElevated),
         ),
       ),
@@ -145,15 +145,18 @@ abstract final class AppTheme {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: preset.darkSurface,
         surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        elevation: AppElevation.sheet,
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
         ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: preset.darkSurface,
         surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.dialog,
         shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.borderRadiusLg,
+          borderRadius: BorderRadius.circular(AppRadius.sheet),
         ),
       ),
       snackBarTheme: _snackBarTheme,
@@ -163,64 +166,66 @@ abstract final class AppTheme {
   }
 
   /// 构建浅色输入框主题
-  static InputDecorationTheme _buildLightInputTheme(Color primary) => InputDecorationTheme(
-      filled: true,
-      fillColor: AppColors.lightSurfaceVariant,
-      border: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-        borderSide: BorderSide.none,
-      ),
+  static InputDecorationTheme _buildLightInputTheme(Color primary) {
+    final radius = BorderRadius.circular(AppRadius.control);
+    final filled = !_isDesktop;
+    final restingBorder = _isDesktop
+        ? OutlineInputBorder(
+            borderRadius: radius,
+            borderSide: const BorderSide(color: AppColors.lightOutlineVariant),
+          )
+        : OutlineInputBorder(borderRadius: radius, borderSide: BorderSide.none);
+    return InputDecorationTheme(
+      filled: filled,
+      fillColor: filled ? AppColors.lightSurfaceVariant : null,
+      border: restingBorder,
+      enabledBorder: restingBorder,
       focusedBorder: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-        borderSide: BorderSide(color: primary, width: 2),
+        borderRadius: radius,
+        borderSide: BorderSide(color: primary, width: _isDesktop ? 1.5 : 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
+        borderRadius: radius,
         borderSide: const BorderSide(color: AppColors.error),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-        borderSide: const BorderSide(color: AppColors.error, width: 2),
+        borderRadius: radius,
+        borderSide: BorderSide(color: AppColors.error, width: _isDesktop ? 1.5 : 2),
       ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
-      ),
+      contentPadding: _inputContentPadding,
     );
+  }
 
   /// 构建深色输入框主题
-  static InputDecorationTheme _buildDarkInputTheme(ColorSchemePreset preset) => InputDecorationTheme(
-      filled: true,
-      fillColor: preset.darkSurfaceVariant,
-      border: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-        borderSide: BorderSide.none,
-      ),
+  static InputDecorationTheme _buildDarkInputTheme(ColorSchemePreset preset) {
+    final radius = BorderRadius.circular(AppRadius.control);
+    final filled = !_isDesktop;
+    final restingBorder = _isDesktop
+        ? OutlineInputBorder(
+            borderRadius: radius,
+            borderSide: BorderSide(color: preset.darkSurfaceElevated),
+          )
+        : OutlineInputBorder(borderRadius: radius, borderSide: BorderSide.none);
+    return InputDecorationTheme(
+      filled: filled,
+      fillColor: filled ? preset.darkSurfaceVariant : null,
+      border: restingBorder,
+      enabledBorder: restingBorder,
       focusedBorder: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-        borderSide: BorderSide(color: preset.primaryLight, width: 2),
+        borderRadius: radius,
+        borderSide: BorderSide(color: preset.primaryLight, width: _isDesktop ? 1.5 : 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
+        borderRadius: radius,
         borderSide: const BorderSide(color: AppColors.errorLight),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-        borderSide: const BorderSide(color: AppColors.errorLight, width: 2),
+        borderRadius: radius,
+        borderSide: BorderSide(color: AppColors.errorLight, width: _isDesktop ? 1.5 : 2),
       ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
-      ),
+      contentPadding: _inputContentPadding,
     );
+  }
 
   static ThemeData get light => ThemeData(
         useMaterial3: true,
@@ -333,126 +338,131 @@ abstract final class AppTheme {
       );
 
   // Card
-  static final CardThemeData _lightCardTheme = CardThemeData(
-    elevation: 0,
-    color: AppColors.lightSurface,
-    surfaceTintColor: Colors.transparent,
-    shape: RoundedRectangleBorder(
-      borderRadius: AppRadius.borderRadiusMd,
-      side: const BorderSide(color: AppColors.lightOutlineVariant),
-    ),
-  );
+  static CardThemeData get _lightCardTheme => CardThemeData(
+        elevation: AppElevation.card,
+        color: AppColors.lightSurface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          side: const BorderSide(color: AppColors.lightOutlineVariant),
+        ),
+      );
 
   static CardThemeData get _darkCardTheme => CardThemeData(
-        elevation: 0,
+        elevation: AppElevation.card,
         color: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.borderRadiusMd,
+          borderRadius: BorderRadius.circular(AppRadius.card),
           side: BorderSide(color: AppColors.darkOutlineVariant),
         ),
       );
 
-  // Buttons
-  static final ElevatedButtonThemeData _elevatedButtonTheme =
+  // Buttons — 桌面下更紧凑的内边距 + 更小圆角
+  static EdgeInsets get _buttonPaddingFilled => _isDesktop
+      ? const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm)
+      : const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md);
+
+  static EdgeInsets get _buttonPaddingText => _isDesktop
+      ? const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs)
+      : const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm);
+
+  static ElevatedButtonThemeData get _elevatedButtonTheme =>
       ElevatedButtonThemeData(
-    style: ElevatedButton.styleFrom(
-      elevation: 0,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.md,
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-      ),
-    ),
-  );
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          padding: _buttonPaddingFilled,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.control),
+          ),
+        ),
+      );
 
-  static final OutlinedButtonThemeData _outlinedButtonTheme =
+  static OutlinedButtonThemeData get _outlinedButtonTheme =>
       OutlinedButtonThemeData(
-    style: OutlinedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xl,
-        vertical: AppSpacing.md,
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-      ),
-    ),
-  );
+        style: OutlinedButton.styleFrom(
+          padding: _buttonPaddingFilled,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.control),
+          ),
+        ),
+      );
 
-  static final TextButtonThemeData _textButtonTheme = TextButtonThemeData(
-    style: TextButton.styleFrom(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm,
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: AppRadius.borderRadiusSm,
-      ),
-    ),
-  );
+  static TextButtonThemeData get _textButtonTheme => TextButtonThemeData(
+        style: TextButton.styleFrom(
+          padding: _buttonPaddingText,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.control),
+          ),
+        ),
+      );
 
   // Input
-  static InputDecorationTheme get _lightInputDecorationTheme =>
-      InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.lightSurfaceVariant,
-        border: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: const BorderSide(color: AppColors.error, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-      );
+  // 桌面下：输入框走"hairline 描边 + 无 fill"风格（更像 macOS 系统输入框），
+  // 移动端保持原"无边框 + 填充背景"。
+  static EdgeInsets get _inputContentPadding => _isDesktop
+      ? const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm)
+      : const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md);
 
-  static InputDecorationTheme get _darkInputDecorationTheme =>
-      InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.darkSurfaceVariant,
-        border: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: BorderSide(color: AppColors.primaryLight, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: const BorderSide(color: AppColors.errorLight),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.borderRadiusSm,
-          borderSide: const BorderSide(color: AppColors.errorLight, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-      );
+  static InputDecorationTheme get _lightInputDecorationTheme {
+    final radius = BorderRadius.circular(AppRadius.control);
+    final filled = !_isDesktop;
+    final restingBorder = _isDesktop
+        ? OutlineInputBorder(
+            borderRadius: radius,
+            borderSide: const BorderSide(color: AppColors.lightOutlineVariant),
+          )
+        : OutlineInputBorder(borderRadius: radius, borderSide: BorderSide.none);
+    return InputDecorationTheme(
+      filled: filled,
+      fillColor: filled ? AppColors.lightSurfaceVariant : null,
+      border: restingBorder,
+      enabledBorder: restingBorder,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: AppColors.primary, width: _isDesktop ? 1.5 : 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: const BorderSide(color: AppColors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: AppColors.error, width: _isDesktop ? 1.5 : 2),
+      ),
+      contentPadding: _inputContentPadding,
+    );
+  }
+
+  static InputDecorationTheme get _darkInputDecorationTheme {
+    final radius = BorderRadius.circular(AppRadius.control);
+    final filled = !_isDesktop;
+    final restingBorder = _isDesktop
+        ? OutlineInputBorder(
+            borderRadius: radius,
+            borderSide: BorderSide(color: AppColors.darkOutlineVariant),
+          )
+        : OutlineInputBorder(borderRadius: radius, borderSide: BorderSide.none);
+    return InputDecorationTheme(
+      filled: filled,
+      fillColor: filled ? AppColors.darkSurfaceVariant : null,
+      border: restingBorder,
+      enabledBorder: restingBorder,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: AppColors.primaryLight, width: _isDesktop ? 1.5 : 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: const BorderSide(color: AppColors.errorLight),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: radius,
+        borderSide: BorderSide(color: AppColors.errorLight, width: _isDesktop ? 1.5 : 2),
+      ),
+      contentPadding: _inputContentPadding,
+    );
+  }
 
   // Divider
   static const DividerThemeData _lightDividerTheme = DividerThemeData(
@@ -500,38 +510,42 @@ abstract final class AppTheme {
       );
 
   // Bottom Sheet
-  static final BottomSheetThemeData _lightBottomSheetTheme =
-      BottomSheetThemeData(
-    backgroundColor: AppColors.lightSurface,
-    surfaceTintColor: Colors.transparent,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-    ),
-  );
+  static BottomSheetThemeData get _lightBottomSheetTheme => BottomSheetThemeData(
+        backgroundColor: AppColors.lightSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.sheet,
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+        ),
+      );
 
   static BottomSheetThemeData get _darkBottomSheetTheme => BottomSheetThemeData(
         backgroundColor: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
+        elevation: AppElevation.sheet,
+        shape: RoundedRectangleBorder(
           borderRadius:
-              BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+              BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
         ),
       );
 
   // Dialog
-  static final DialogThemeData _lightDialogTheme = DialogThemeData(
-    backgroundColor: AppColors.lightSurface,
-    surfaceTintColor: Colors.transparent,
-    shape: RoundedRectangleBorder(
-      borderRadius: AppRadius.borderRadiusLg,
-    ),
-  );
+  static DialogThemeData get _lightDialogTheme => DialogThemeData(
+        backgroundColor: AppColors.lightSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.dialog,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sheet),
+        ),
+      );
 
   static DialogThemeData get _darkDialogTheme => DialogThemeData(
         backgroundColor: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
+        elevation: AppElevation.dialog,
         shape: RoundedRectangleBorder(
-          borderRadius: AppRadius.borderRadiusLg,
+          borderRadius: BorderRadius.circular(AppRadius.sheet),
         ),
       );
 

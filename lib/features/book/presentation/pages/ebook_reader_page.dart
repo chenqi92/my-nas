@@ -399,7 +399,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
     showReaderSettingsSheet(
       context,
       title: '阅读设置',
-      icon: Icons.settings,
+      icon: Icons.settings_rounded,
       contentBuilder: (context) => Consumer(
           builder: (context, ref, _) {
             final settings = ref.watch(bookReaderSettingsProvider);
@@ -755,7 +755,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline, size: 64, color: AppColors.error),
+          Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
           const SizedBox(height: 16),
           Text(
             message,
@@ -1102,7 +1102,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
             children: [
               IconButton(
                 icon: Icon(
-                  Icons.arrow_back,
+                  Icons.arrow_back_rounded,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
                 onPressed: () => Navigator.pop(context),
@@ -1294,7 +1294,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                       },
                     ),
                     _BottomBarButton(
-                      icon: Icons.settings,
+                      icon: Icons.settings_rounded,
                       label: '设置',
                       isDark: isDark,
                       onPressed: _showSettingsSheet,
@@ -1347,7 +1347,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                       const Spacer(),
                       IconButton(
                         icon: Icon(
-                          Icons.close,
+                          Icons.close_rounded,
                           color: isDark ? Colors.white70 : Colors.black54,
                         ),
                         onPressed: () {

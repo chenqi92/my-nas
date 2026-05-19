@@ -4,6 +4,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/features/music/data/services/playlist_service.dart';
 import 'package:my_nas/features/music/presentation/providers/playlist_provider.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 回收站页：显示已软删除的播放列表，30 天后自动清理。支持恢复 / 永久删除。
 ///
@@ -81,6 +82,7 @@ class _RecycleBinPageState extends ConsumerState<RecycleBinPage> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
           '回收站',

@@ -111,13 +111,13 @@ class ToolbarItem {
 /// AdaptiveToolbar(
 ///   items: [
 ///     ToolbarItem.iconText(
-///       icon: Icons.add,
+///       icon: Icons.add_rounded,
 ///       label: '新建',
 ///       onPressed: () {},
 ///     ),
 ///     ToolbarItem.divider(),
 ///     ToolbarItem.icon(
-///       icon: Icons.delete,
+///       icon: Icons.delete_rounded,
 ///       tooltip: '删除',
 ///       onPressed: () {},
 ///       isDestructive: true,

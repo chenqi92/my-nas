@@ -12,6 +12,7 @@ import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 整剧刮削页面
 /// 批量刮削电视剧的所有季
@@ -332,6 +333,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: Text(hasSelection ? '整剧刮削' : '选择电视剧'),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
@@ -430,7 +432,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: '搜索电视剧',
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search_rounded),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -468,7 +470,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(_errorMessage!, style: TextStyle(color: AppColors.error)),
           ],
@@ -604,7 +606,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                             const SizedBox(width: 8),
                           ],
                           if (item.rating != null && item.rating! > 0) ...[
-                            const Icon(Icons.star, size: 14, color: Colors.amber),
+                            const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
                             const SizedBox(width: 2),
                             Text(
                               item.rating!.toStringAsFixed(1),
@@ -680,7 +682,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                           const SizedBox(width: 12),
                         ],
                         if (tvDetail.rating != null && tvDetail.rating! > 0) ...[
-                          const Icon(Icons.star, size: 18, color: Colors.amber),
+                          const Icon(Icons.star_rounded, size: 18, color: Colors.amber),
                           const SizedBox(width: 4),
                           Text(
                             tvDetail.rating!.toStringAsFixed(1),
@@ -868,7 +870,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                       child: Row(
                         children: [
                           Icon(
-                            hasMatch ? Icons.check_circle : Icons.help_outline,
+                            hasMatch ? Icons.check_circle : Icons.help_outline_rounded,
                             size: 16,
                             color: hasMatch ? AppColors.success : AppColors.warning,
                           ),

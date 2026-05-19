@@ -120,7 +120,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close_rounded),
                   ),
                 ],
               ),
@@ -163,7 +163,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
                 children: [
                   IconButton(
                     onPressed: _pathHistory.length > 1 ? _navigateBack : null,
-                    icon: const Icon(Icons.arrow_back),
+                    icon: const Icon(Icons.arrow_back_rounded),
                     tooltip: '返回上级',
                   ),
                   Expanded(
@@ -195,7 +195,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
                         _currentPath.split('/').last,
                       );
                     },
-                    icon: const Icon(Icons.check),
+                    icon: const Icon(Icons.check_rounded),
                     label: const Text('选择'),
                   ),
                 ],
@@ -227,7 +227,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text(_errorMessage!),
             const SizedBox(height: 16),
@@ -266,7 +266,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
       itemBuilder: (context, index) {
         final item = _items[index];
         return ListTile(
-          leading: const Icon(Icons.folder),
+          leading: const Icon(Icons.folder_rounded),
           title: Text(item.name),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => _navigateTo(item.path),

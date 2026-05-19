@@ -5,6 +5,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/features/music/data/services/duplicate_detector.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 重复歌曲检测页：扫描整个 library，按 (title, artist, duration±2s) 桶分组，
 /// 每组里按 lossless + size 评分排序。第一项推荐保留，其余推荐删除。
@@ -79,6 +80,7 @@ class _DuplicateSongsPageState extends ConsumerState<DuplicateSongsPage> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
           '重复歌曲',

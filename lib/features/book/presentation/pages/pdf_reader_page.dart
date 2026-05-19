@@ -545,7 +545,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               message,
@@ -555,7 +555,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back_rounded),
               label: const Text('返回'),
             ),
           ],
@@ -942,7 +942,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
                     const Spacer(),
                     IconButton(
                       onPressed: () => setState(() => _showThumbnails = false),
-                      icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                      icon: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
                     ),
                   ],
                 ),

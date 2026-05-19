@@ -134,14 +134,14 @@ class DesktopLyricContent extends StatelessWidget {
                 children: [
                   // 锁定按钮
                   _ControlButton(
-                    icon: settings.lockPosition ? Icons.lock : Icons.lock_open,
+                    icon: settings.lockPosition ? Icons.lock_rounded : Icons.lock_open,
                     tooltip: settings.lockPosition ? '解锁位置' : '锁定位置',
                     onTap: onLockToggle,
                   ),
                   const SizedBox(width: 4),
                   // 关闭按钮
                   _ControlButton(
-                    icon: Icons.close,
+                    icon: Icons.close_rounded,
                     tooltip: '关闭',
                     onTap: onClose,
                   ),

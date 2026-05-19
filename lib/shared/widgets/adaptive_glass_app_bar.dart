@@ -3067,7 +3067,7 @@ class GlassFloatingSearchBar extends StatelessWidget {
 ///   subtitle: '123 部',
 ///   onBack: () => Navigator.pop(context),
 ///   actions: [
-///     GlassGroupIconButton(icon: Icons.sort, onPressed: _showSort),
+///     GlassGroupIconButton(icon: Icons.sort_rounded, onPressed: _showSort),
 ///     GlassGroupIconButton(icon: Icons.filter_alt, onPressed: _showFilter),
 ///   ],
 ///   body: GridView.builder(...),

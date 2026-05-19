@@ -8,6 +8,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 外观设置页面
 class AppearanceSettingsPage extends ConsumerStatefulWidget {
@@ -35,6 +36,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
           '外观设置',
@@ -205,14 +207,14 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: context.isDesktopLayout ? 32 : 40,
+                height: context.isDesktopLayout ? 32 : 40,
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.primary.withValues(alpha: 0.15)
                       : (isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant)
                           .withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(context.isDesktopLayout ? 8 : 12),
                 ),
                 child: Icon(
                   _getThemeModeIcon(mode),
@@ -221,7 +223,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                       : (isDark
                           ? AppColors.darkOnSurfaceVariant
                           : AppColors.lightOnSurfaceVariant),
-                  size: 20,
+                  size: context.isDesktopLayout ? 18 : 20,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),

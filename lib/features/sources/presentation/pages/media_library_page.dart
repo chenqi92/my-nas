@@ -33,6 +33,7 @@ import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/nas_adapters/mobile/services/file_import_service.dart';
 import 'package:my_nas/nas_adapters/smb/smb_pool_config.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 class MediaLibraryPage extends ConsumerStatefulWidget {
   const MediaLibraryPage({super.key});
@@ -79,6 +80,7 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
       length: MediaType.values.length,
       child: Scaffold(
         appBar: AppBar(
+          leading: const RoundedBackButton(),
           title: const Text('媒体库'),
           actions: [
             // 性能模式开关
@@ -247,7 +249,7 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
         title: Row(
           children: [
             Icon(
-              _isPerformanceMode ? Icons.rocket_launch : Icons.settings,
+              _isPerformanceMode ? Icons.rocket_launch : Icons.settings_rounded,
               color: _isPerformanceMode ? AppColors.warning : null,
             ),
             const SizedBox(width: 8),
@@ -350,7 +352,7 @@ class _MediaTypeTab extends ConsumerWidget {
                     child: OutlinedButton.icon(
                       onPressed: () =>
                           _addPath(context, ref, sources, connections, paths),
-                      icon: const Icon(Icons.add),
+                      icon: const Icon(Icons.add_rounded),
                       label: const Text('添加目录'),
                     ),
                   ),
@@ -751,7 +753,7 @@ class _MediaTypeTab extends ConsumerWidget {
                   color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.refresh, color: AppColors.success),
+                child: Icon(Icons.refresh_rounded, color: AppColors.success),
               ),
               title: const Text('扫描已有文件'),
               subtitle: const Text('扫描之前导入到应用的文件'),
@@ -1902,7 +1904,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
           value: 'toggle',
           child: Row(
             children: [
-              Icon(widget.path.isEnabled ? Icons.visibility_off : Icons.visibility),
+              Icon(widget.path.isEnabled ? Icons.visibility_off_rounded : Icons.visibility_rounded),
               const SizedBox(width: 12),
               Text(widget.path.isEnabled ? '停用' : '启用'),
             ],
@@ -1912,7 +1914,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete, color: AppColors.error),
+              Icon(Icons.delete_rounded, color: AppColors.error),
               SizedBox(width: 12),
               Text('删除', style: TextStyle(color: AppColors.error)),
             ],

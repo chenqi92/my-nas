@@ -147,10 +147,10 @@ class PlaybackSettingsSheet extends ConsumerWidget {
                       children: [
                         Icon(
                           settings.volume == 0
-                              ? Icons.volume_off
+                              ? Icons.volume_off_rounded
                               : settings.volume < 0.5
-                                  ? Icons.volume_down
-                                  : Icons.volume_up,
+                                  ? Icons.volume_down_rounded
+                                  : Icons.volume_up_rounded,
                           color: isDark
                               ? AppColors.darkOnSurfaceVariant
                               : AppColors.lightOnSurfaceVariant,

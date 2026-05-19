@@ -88,7 +88,7 @@ class MusicPlayerControls extends StatelessWidget {
           IconButton(
             onPressed: onPrevious,
             iconSize: 40,
-            icon: const Icon(Icons.skip_previous),
+            icon: const Icon(Icons.skip_previous_rounded),
           ),
           const SizedBox(width: 24),
           // 播放/暂停
@@ -102,7 +102,7 @@ class MusicPlayerControls extends StatelessWidget {
               iconSize: 48,
               color: context.colorScheme.onPrimary,
               icon: Icon(
-                state.isPlaying ? Icons.pause : Icons.play_arrow,
+                state.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
               ),
             ),
           ),
@@ -111,7 +111,7 @@ class MusicPlayerControls extends StatelessWidget {
           IconButton(
             onPressed: onNext,
             iconSize: 40,
-            icon: const Icon(Icons.skip_next),
+            icon: const Icon(Icons.skip_next_rounded),
           ),
         ],
       );
@@ -176,10 +176,10 @@ class _VolumeControlState extends State<_VolumeControl> {
             onPressed: () => setState(() => _showSlider = !_showSlider),
             icon: Icon(
               widget.volume == 0
-                  ? Icons.volume_off
+                  ? Icons.volume_off_rounded
                   : widget.volume < 0.5
-                      ? Icons.volume_down
-                      : Icons.volume_up,
+                      ? Icons.volume_down_rounded
+                      : Icons.volume_up_rounded,
             ),
             tooltip: '音量',
           ),

@@ -86,27 +86,27 @@ class TransferTaskTile extends StatelessWidget {
                 // 暂停/继续按钮
                 if (task.canPause)
                   _buildActionButton(
-                    icon: Icons.pause,
+                    icon: Icons.pause_rounded,
                     label: '暂停',
                     onTap: onPause,
                   ),
                 if (task.canResume)
                   _buildActionButton(
-                    icon: Icons.play_arrow,
+                    icon: Icons.play_arrow_rounded,
                     label: '继续',
                     onTap: onResume,
                   ),
                 // 重试按钮
                 if (task.canRetry)
                   _buildActionButton(
-                    icon: Icons.refresh,
+                    icon: Icons.refresh_rounded,
                     label: '重试',
                     onTap: onRetry,
                   ),
                 // 取消按钮
                 if (task.canCancel)
                   _buildActionButton(
-                    icon: Icons.close,
+                    icon: Icons.close_rounded,
                     label: '取消',
                     onTap: onCancel,
                   ),
@@ -146,7 +146,7 @@ class TransferTaskTile extends StatelessWidget {
       'music' => (Icons.music_note, AppColors.musicColor),
       'video' => (Icons.movie, AppColors.videoColor),
       'book' => (Icons.book, AppColors.bookColor),
-      _ => (Icons.folder, colorScheme.primary),
+      _ => (Icons.folder_rounded, colorScheme.primary),
     };
 
     return Container(

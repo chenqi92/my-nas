@@ -305,7 +305,7 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  _rememberDevice ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+                                  _rememberDevice ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                                   size: 20,
                                   color: _rememberDevice
                                       ? AppColors.accent
@@ -333,7 +333,7 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.error_outline, color: AppColors.error, size: 16),
+                              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 '请输入完整的 6 位验证码',
@@ -809,7 +809,7 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
                                 Icon(
                                   _rememberDevice
                                       ? Icons.check_circle_rounded
-                                      : Icons.radio_button_unchecked,
+                                      : Icons.radio_button_unchecked_rounded,
                                   size: 20,
                                   color: _rememberDevice
                                       ? AppColors.accent
@@ -850,7 +850,7 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.error_outline,
+                              const Icon(Icons.error_outline_rounded,
                                   color: AppColors.error, size: 16),
                               const SizedBox(width: 4),
                               Flexible(

@@ -267,7 +267,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
     showReaderSettingsSheet(
       context,
       title: '阅读设置',
-      icon: Icons.settings,
+      icon: Icons.settings_rounded,
       contentBuilder: (context) => Consumer(
         builder: (context, ref, _) {
           final settings = ref.watch(bookReaderSettingsProvider);

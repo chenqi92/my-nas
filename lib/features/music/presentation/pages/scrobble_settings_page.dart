@@ -5,6 +5,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/features/music/data/services/scrobble/music_scrobble_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// Scrobble 设置页：开关 + ListenBrainz token / Last.fm 三件套。
 class ScrobbleSettingsPage extends ConsumerStatefulWidget {
@@ -93,6 +94,7 @@ class _ScrobbleSettingsPageState
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
           'Scrobble 上报',
@@ -252,7 +254,7 @@ class _ScrobbleSettingsPageState
               ),
             ),
             TextButton.icon(
-              icon: const Icon(Icons.open_in_new, size: 16),
+              icon: const Icon(Icons.open_in_new_rounded, size: 16),
               label: const Text('授权'),
               onPressed: () {
                 final key = _lfApiKey.text.trim();
@@ -268,7 +270,7 @@ class _ScrobbleSettingsPageState
               },
             ),
             IconButton(
-              icon: const Icon(Icons.paste, size: 18),
+              icon: const Icon(Icons.paste_rounded, size: 18),
               tooltip: '从剪贴板粘贴',
               onPressed: () async {
                 final data = await Clipboard.getData('text/plain');

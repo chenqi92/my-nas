@@ -4,6 +4,7 @@ import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/scraper/scrape_source.dart';
 import 'package:my_nas/core/scraper/scrape_source_manager.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 刮削源管理页（用户导入的 JSON 模板）。
 ///
@@ -91,6 +92,7 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('音乐元数据源'),
         actions: [
           IconButton(

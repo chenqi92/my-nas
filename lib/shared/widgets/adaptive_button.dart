@@ -50,7 +50,7 @@ enum AdaptiveButtonSize {
 ///   type: AdaptiveButtonType.filled,
 ///   onPressed: () {},
 ///   label: '保存',
-///   icon: Icons.save,
+///   icon: Icons.save_rounded,
 /// )
 /// ```
 class AdaptiveButton extends StatelessWidget {

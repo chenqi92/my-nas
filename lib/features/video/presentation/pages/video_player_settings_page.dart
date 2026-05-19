@@ -12,6 +12,7 @@ import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 视频播放器设置页面
 class VideoPlayerSettingsPage extends ConsumerWidget {
@@ -27,6 +28,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
         appBar: AppBar(
+          leading: const RoundedBackButton(),
           backgroundColor: isDark ? AppColors.darkSurface : null,
           title: Text(
             '播放器设置',

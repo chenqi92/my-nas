@@ -1047,7 +1047,7 @@ class _SubscribesContentState extends ConsumerState<_SubscribesContent> with Sin
               trailing: PopupMenuButton<String>(
                 onSelected: (action) => _handleAction(action, sub),
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'search', child: Row(children: [Icon(Icons.search, size: 20), SizedBox(width: 8), Text('搜索资源')])),
+                  const PopupMenuItem(value: 'search', child: Row(children: [Icon(Icons.search_rounded, size: 20), SizedBox(width: 8), Text('搜索资源')])),
                   const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline, color: AppColors.error, size: 20), SizedBox(width: 8), Text('删除', style: TextStyle(color: AppColors.error))])),
                 ],
               ),
@@ -1178,7 +1178,7 @@ class _DownloadsContentState extends ConsumerState<_DownloadsContent> with Singl
                       if (task.speed != null) Text('${task.speed}', style: context.textTheme.bodySmall),
                       const Spacer(),
                       IconButton(
-                        icon: Icon(task.isCompleted ? Icons.check_circle : Icons.pause, size: 20),
+                        icon: Icon(task.isCompleted ? Icons.check_circle : Icons.pause_rounded, size: 20),
                         onPressed: task.isCompleted ? null : () => ref.read(nastoolActionsProvider(widget.sourceId)).stopDownload(task.id),
                         tooltip: '暂停',
                       ),

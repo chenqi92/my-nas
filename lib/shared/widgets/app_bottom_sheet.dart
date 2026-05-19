@@ -1007,7 +1007,7 @@ class _FlutterListSheet<T> extends StatelessWidget {
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: Colors.white70),
+                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
                 ),
               ],
             ),
@@ -1333,7 +1333,7 @@ class _FlutterSectionedSheet<T> extends StatelessWidget {
                 children: [
                   Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600, decoration: TextDecoration.none)),
                   const Spacer(),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white70)),
+                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded, color: Colors.white70)),
                 ],
               ),
             ),
@@ -1521,7 +1521,7 @@ String? _iconDataToSFSymbol(IconData? icon) {
   final mapping = <int, String>{
     // 通用操作
     Icons.add_rounded.codePoint: 'plus',
-    Icons.add.codePoint: 'plus',
+    Icons.add_rounded.codePoint: 'plus',
     Icons.remove_rounded.codePoint: 'minus',
     Icons.delete_rounded.codePoint: 'trash',
     Icons.delete_outline_rounded.codePoint: 'trash',

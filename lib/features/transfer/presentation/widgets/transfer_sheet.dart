@@ -516,7 +516,7 @@ class _CachedItemTile extends ConsumerWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
         color: AppColors.error,
-        child: const Icon(Icons.delete, color: Colors.white),
+        child: const Icon(Icons.delete_rounded, color: Colors.white),
       ),
       onDismissed: (_) => notifier.deleteCache(item.sourceId, item.sourcePath),
       child: Container(
@@ -593,7 +593,7 @@ class _CachedItemTile extends ConsumerWidget {
       );
 
   IconData _getMediaTypeIcon(MediaType mediaType) => switch (mediaType) {
-        MediaType.photo => Icons.photo,
+        MediaType.photo => Icons.photo_rounded,
         MediaType.music => Icons.audiotrack,
         MediaType.video => Icons.videocam,
         MediaType.book => Icons.book,

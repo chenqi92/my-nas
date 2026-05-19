@@ -112,7 +112,7 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close_rounded),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -223,7 +223,7 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
               ),
             ),
             trailing: Icon(
-              isExpanded ? Icons.expand_less : Icons.expand_more,
+              isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
             ),
             onTap: () {
               setState(() {
@@ -252,7 +252,7 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
             ListTile(
               leading: const SizedBox(width: 24),
               title: const Text('选择其他目录...'),
-              trailing: const Icon(Icons.folder_open, size: 20),
+              trailing: const Icon(Icons.folder_open_rounded, size: 20),
               onTap: () => _showDirectoryPicker(context, connection),
             ),
           ],
@@ -455,7 +455,7 @@ class _DirectoryBrowserPageState extends State<_DirectoryBrowserPage> {
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Row(
               children: [
-                const Icon(Icons.folder_open, size: 16),
+                const Icon(Icons.folder_open_rounded, size: 16),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -483,7 +483,7 @@ class _DirectoryBrowserPageState extends State<_DirectoryBrowserPage> {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+                              const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
                               const SizedBox(height: 12),
                               Text('加载失败: $_error', textAlign: TextAlign.center),
                               const SizedBox(height: 12),
@@ -502,7 +502,7 @@ class _DirectoryBrowserPageState extends State<_DirectoryBrowserPage> {
                             itemBuilder: (_, index) {
                               final item = _entries[index];
                               return ListTile(
-                                leading: const Icon(Icons.folder),
+                                leading: const Icon(Icons.folder_rounded),
                                 title: Text(item.name),
                                 trailing: const Icon(Icons.chevron_right),
                                 onTap: () => _loadDirectory(

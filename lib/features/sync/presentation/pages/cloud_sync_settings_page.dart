@@ -4,6 +4,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/sync/cloud_sync_service.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 云同步设置页（WebDAV）：配置后端凭证 + 选择要同步的模块 + 手动触发同步。
 class CloudSyncSettingsPage extends ConsumerStatefulWidget {
@@ -120,6 +121,7 @@ class _CloudSyncSettingsPageState
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
           '云同步',

@@ -451,7 +451,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
                 ),
                 const SizedBox(width: 12),
                 Icon(
-                  Icons.copy,
+                  Icons.copy_rounded,
                   size: 20,
                   color: theme.colorScheme.onPrimaryContainer,
                 ),
@@ -533,7 +533,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         Row(
           children: [
             Icon(
-              _isOffline ? Icons.wifi_off : Icons.error_outline,
+              _isOffline ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
               color: _isOffline
                   ? theme.colorScheme.outline
                   : theme.colorScheme.error,
@@ -555,7 +555,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: _restart,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             label: const Text('重试'),
           ),
         ],

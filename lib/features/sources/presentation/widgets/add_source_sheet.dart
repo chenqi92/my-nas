@@ -108,7 +108,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close_rounded),
                 ),
               ],
             ),
@@ -317,7 +317,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline, color: AppColors.error),
+                            Icon(Icons.error_outline_rounded, color: AppColors.error),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(

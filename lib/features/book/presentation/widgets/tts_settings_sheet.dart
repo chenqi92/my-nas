@@ -44,7 +44,7 @@ class TTSSettingsSheet extends ConsumerWidget {
               Row(
                 children: [
                   Icon(
-                    Icons.settings,
+                    Icons.settings_rounded,
                     color: theme.colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
@@ -165,7 +165,7 @@ class TTSSettingsSheet extends ConsumerWidget {
 
               _buildSwitchSetting(
                 context,
-                icon: Icons.skip_next,
+                icon: Icons.skip_next_rounded,
                 label: '自动播放下一章',
                 subtitle: '当前章节结束后自动播放下一章',
                 value: settings.autoPlayNextChapter,

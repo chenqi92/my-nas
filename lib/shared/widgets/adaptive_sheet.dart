@@ -43,8 +43,11 @@ Future<T?> showAdaptiveModalSheet<T>({
       builder: (ctx) => Dialog(
         backgroundColor: backgroundColor,
         elevation: elevation,
-        shape: shape ??
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        // 调用方传入的 shape 通常是 sheet 专用的"顶部圆角"，桌面 Dialog
+        // 用了会显得割裂。这里强制走 Dialog 全圆角，让所有桌面弹层视觉统一。
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sheet),
+        ),
         clipBehavior: clipBehavior ?? Clip.antiAlias,
         child: ConstrainedBox(
           constraints: desktopConstraints ??

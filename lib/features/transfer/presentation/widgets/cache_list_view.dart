@@ -357,7 +357,7 @@ class CacheListView extends ConsumerWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
         color: colorScheme.error,
-        child: Icon(Icons.delete, color: colorScheme.onError),
+        child: Icon(Icons.delete_rounded, color: colorScheme.onError),
       ),
       onDismissed: (_) => onDeleteCache(item),
       child: ListTile(
@@ -380,7 +380,7 @@ class CacheListView extends ConsumerWidget {
   }
 
   IconData _getMediaTypeIcon(MediaType mediaType) => switch (mediaType) {
-        MediaType.photo => Icons.photo,
+        MediaType.photo => Icons.photo_rounded,
         MediaType.music => Icons.audiotrack,
         MediaType.video => Icons.videocam,
         MediaType.book => Icons.book,

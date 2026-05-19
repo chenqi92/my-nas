@@ -409,7 +409,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
             Text(
               message,
@@ -821,7 +821,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     showReaderSettingsSheet(
       context,
       title: '阅读设置',
-      icon: Icons.settings,
+      icon: Icons.settings_rounded,
       contentBuilder: (context) => Consumer(
         builder: (context, ref, _) {
           final settings = ref.watch(bookReaderSettingsProvider);

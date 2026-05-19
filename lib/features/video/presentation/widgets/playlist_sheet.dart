@@ -155,7 +155,7 @@ class _PlaylistPanelState extends ConsumerState<_PlaylistPanel>
                                 ),
                                 IconButton(
                                   onPressed: _close,
-                                  icon: const Icon(Icons.close, color: Colors.white70),
+                                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
                                 ),
                               ],
                             ),

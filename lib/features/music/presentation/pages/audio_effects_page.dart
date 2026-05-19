@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/features/music/data/services/audio_effects_service.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 均衡器与音效设置页
 ///
@@ -79,6 +80,7 @@ class _AudioEffectsPageState extends State<AudioEffectsPage> {
     }
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('均衡器'),
         actions: [
           IconButton(

@@ -8,6 +8,7 @@ import 'package:my_nas/features/reading/presentation/providers/reader_settings_p
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 图书设置页面
 ///
@@ -27,6 +28,7 @@ class BookSettingsPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
         appBar: AppBar(
+          leading: const RoundedBackButton(),
           title: const Text('图书设置'),
           backgroundColor: Colors.transparent,
           elevation: 0,

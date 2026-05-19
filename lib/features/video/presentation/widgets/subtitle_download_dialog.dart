@@ -250,7 +250,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
                         ),
                       );
                     },
-                    icon: const Icon(Icons.settings, size: 18),
+                    icon: const Icon(Icons.settings_rounded, size: 18),
                     label: const Text('配置'),
                   )
                 else if (_isLoading)
@@ -262,7 +262,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
                 else
                   IconButton(
                     onPressed: _search,
-                    icon: const Icon(Icons.refresh),
+                    icon: const Icon(Icons.refresh_rounded),
                     tooltip: '刷新',
                   ),
               ],
@@ -282,7 +282,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
     if (!ref.watch(hasOpenSubtitlesConfigProvider)) {
       return _buildEmptyState(
         theme,
-        icon: Icons.settings,
+        icon: Icons.settings_rounded,
         title: '未配置字幕站点',
         message: '请先在设置中添加 OpenSubtitles 配置',
       );
@@ -309,7 +309,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
         message: _error!,
         action: TextButton.icon(
           onPressed: _search,
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(Icons.refresh_rounded),
           label: const Text('重试'),
         ),
       );
@@ -356,7 +356,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
           subtitle: Row(
             children: [
               Icon(
-                Icons.download,
+                Icons.download_rounded,
                 size: 14,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -406,7 +406,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
                 )
               : IconButton(
                   onPressed: _isDownloading ? null : () => _download(subtitle),
-                  icon: const Icon(Icons.download),
+                  icon: const Icon(Icons.download_rounded),
                   tooltip: '下载',
                 ),
           onTap: _isDownloading ? null : () => _download(subtitle),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/features/file_browser/presentation/pages/file_browser_page.dart';
 import 'package:my_nas/features/sources/data/services/network_discovery_service.dart';
@@ -12,6 +13,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/sources/presentation/widgets/two_fa_sheet.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 class SourcesPage extends ConsumerStatefulWidget {
   const SourcesPage({super.key});
@@ -42,6 +44,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('连接源'),
         actions: [
           // 刷新发现按钮
@@ -60,7 +63,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
           ),
           // 排序模式切换按钮
           IconButton(
-            icon: Icon(_isReorderMode ? Icons.done : Icons.reorder),
+            icon: Icon(_isReorderMode ? Icons.done_rounded : Icons.reorder),
             onPressed: () {
               setState(() {
                 _isReorderMode = !_isReorderMode;
@@ -69,7 +72,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
             tooltip: _isReorderMode ? '完成排序' : '调整顺序',
           ),
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add_rounded),
             onPressed: () => _showAddSourceSheet(context),
             tooltip: '添加源',
           ),
@@ -81,7 +84,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
               const SizedBox(height: 16),
               Text('加载失败: $e'),
               const SizedBox(height: 16),
@@ -267,7 +270,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () => _showAddSourceSheet(context),
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add_rounded),
               label: const Text('添加源'),
             ),
           ],
@@ -575,7 +578,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
           // 存储类源显示"连接/断开"
           ListTile(
             leading: Icon(
-              _status == SourceStatus.connected ? Icons.link_off : Icons.link,
+              _status == SourceStatus.connected ? Icons.link_off : Icons.link_rounded,
             ),
             title: Text(
               _status == SourceStatus.connected ? '断开连接' : '连接',
@@ -590,7 +593,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.edit),
+            leading: const Icon(Icons.edit_rounded),
             title: const Text('编辑'),
             onTap: () {
               Navigator.pop(context);
@@ -598,7 +601,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.delete, color: AppColors.error),
+            leading: Icon(Icons.delete_rounded, color: AppColors.error),
             title: Text('删除', style: TextStyle(color: AppColors.error)),
             onTap: () {
               Navigator.pop(context);
@@ -731,15 +734,10 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
   }
 
   void _editSource() {
-    // 使用新的表单页面进行编辑
-    Navigator.push<void>(
+    SourceFormPage.openAdaptive<void>(
       context,
-      MaterialPageRoute<void>(
-        builder: (context) => SourceFormPage(
-          sourceType: widget.source.type,
-          existingSource: widget.source,
-        ),
-      ),
+      sourceType: widget.source.type,
+      existingSource: widget.source,
     );
   }
 
@@ -911,13 +909,9 @@ class _SourceTypeBottomSheet extends StatelessWidget {
         ),
         onTap: () {
           Navigator.pop(context);
-          Navigator.push<void>(
+          SourceFormPage.openAdaptive<void>(
             context,
-            MaterialPageRoute<void>(
-              builder: (context) => SourceFormPage(
-                sourceType: type,
-              ),
-            ),
+            sourceType: type,
           );
         },
       ),
@@ -936,9 +930,112 @@ class _DiscoveredDeviceCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    // 使用源类型的主题色，而不是统一的琥猥色
     final accentColor = device.type.themeColor;
 
+    // 桌面端紧凑变体：hairline 边框 + 24 图标 + 文字链式 "添加"，与
+    // macOS Finder 边栏 / Linear inbox 风格一致；移动端保留原"卡片 + 强调色"风格。
+    if (context.isDesktopLayout) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Material(
+          color: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            side: BorderSide(
+              color: isDark
+                  ? AppColors.darkOutlineVariant
+                  : AppColors.lightOutlineVariant,
+            ),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            onTap: () => _onDeviceTap(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(device.type.icon, color: accentColor, size: 16),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                device.name,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: accentColor.withValues(alpha: 0.14),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '发现',
+                                style: TextStyle(
+                                  color: accentColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          '${device.host}:${device.port} · ${device.type.displayName}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  TextButton.icon(
+                    onPressed: () => _onDeviceTap(context),
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: const Text('添加'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: accentColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 移动端保留原 "卡片 + 强调色填充 + 雷达徽章" 风格
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: 0,
@@ -955,7 +1052,6 @@ class _DiscoveredDeviceCard extends StatelessWidget {
         leading: Stack(
           clipBehavior: Clip.none,
           children: [
-            // 主图标容器
             Container(
               width: 44,
               height: 44,
@@ -969,7 +1065,6 @@ class _DiscoveredDeviceCard extends StatelessWidget {
                 size: 24,
               ),
             ),
-            // 发现徽章 - 雷达图标
             Positioned(
               right: -4,
               bottom: -4,
@@ -991,11 +1086,7 @@ class _DiscoveredDeviceCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.radar,
-                  size: 12,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.radar, size: 12, color: Colors.white),
               ),
             ),
           ],
@@ -1010,7 +1101,6 @@ class _DiscoveredDeviceCard extends StatelessWidget {
                 ),
               ),
             ),
-            // 新发现标签
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
@@ -1050,11 +1140,7 @@ class _DiscoveredDeviceCard extends StatelessWidget {
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.add,
-                size: 16,
-                color: Colors.white,
-              ),
+              Icon(Icons.add_rounded, size: 16, color: Colors.white),
               SizedBox(width: 4),
               Text(
                 '添加',
@@ -1073,19 +1159,14 @@ class _DiscoveredDeviceCard extends StatelessWidget {
   }
 
   void _onDeviceTap(BuildContext context) {
-    // 导航到表单页面，预填发现的设备信息
-    Navigator.push<void>(
+    SourceFormPage.openAdaptive<void>(
       context,
-      MaterialPageRoute<void>(
-        builder: (context) => SourceFormPage(
-          sourceType: device.type,
-          initialValues: {
-            'name': device.name,
-            'host': device.host,
-            'port': device.port.toString(),
-          },
-        ),
-      ),
+      sourceType: device.type,
+      initialValues: {
+        'name': device.name,
+        'host': device.host,
+        'port': device.port.toString(),
+      },
     );
   }
 }

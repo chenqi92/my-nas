@@ -620,11 +620,11 @@ class MinePage extends ConsumerWidget {
     required List<Widget> children,
   }) {
     // 使用自适应玻璃容器 - 自动根据平台选择原生/Flutter实现
-    // 桌面下圆角缩小到 10（macOS 风），手机保留 20（iOS 风）。
+    // 桌面下圆角与 AppRadius.card 对齐（macOS Settings 风），手机保留 20（iOS 风）。
     return AdaptiveGlassContainer(
       uiStyle: uiStyle,
       isDark: isDark,
-      cornerRadius: context.isDesktopLayout ? 10 : 20,
+      cornerRadius: context.isDesktopLayout ? AppRadius.card : 20,
       child: Column(children: children),
     );
   }
@@ -777,53 +777,15 @@ class _VersionTileState extends State<_VersionTile> {
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.secondary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.info_rounded,
-              color: AppColors.secondary,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '版本',
-                  style: context.textTheme.bodyLarge?.copyWith(
-                    color: widget.isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _buildNumber.isNotEmpty ? '$_version ($_buildNumber)' : _version,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: widget.isDark
-                        ? AppColors.darkOnSurfaceVariant
-                        : AppColors.lightOnSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  Widget build(BuildContext context) => _mineTileRow(
+        context,
+        isDark: widget.isDark,
+        icon: Icons.info_rounded,
+        iconColor: AppColors.secondary,
+        title: '版本',
+        subtitle: _buildNumber.isNotEmpty ? '$_version ($_buildNumber)' : _version,
+        showChevronWhenNoTrailing: false,
+      );
 }
 
 /// 视频刮削源入口组件
@@ -1046,15 +1008,22 @@ class _TransferCard extends ConsumerWidget {
     required Color color,
     required bool isActive,
     required VoidCallback onTap,
-  }) =>
-      Material(
+  }) {
+    final isDesktop = context.isDesktopLayout;
+    final iconBox = isDesktop ? 32.0 : 40.0;
+    final iconSize = isDesktop ? 18.0 : 20.0;
+    final verticalPadding = isDesktop ? AppSpacing.sm : AppSpacing.md;
+    final titleStyle = isDesktop
+        ? context.textTheme.bodyMedium
+        : context.textTheme.bodyLarge;
+    return Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
+              vertical: verticalPadding,
             ),
             child: Row(
               children: [
@@ -1063,16 +1032,16 @@ class _TransferCard extends ConsumerWidget {
                   clipBehavior: Clip.none,
                   children: [
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: iconBox,
+                      height: iconBox,
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: isActive ? 0.15 : 0.12),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(isDesktop ? 8 : 12),
                       ),
                       child: Icon(
                         icon,
                         color: color,
-                        size: 20,
+                        size: iconSize,
                       ),
                     ),
                     if (count != null && count > 0)
@@ -1112,7 +1081,7 @@ class _TransferCard extends ConsumerWidget {
                     children: [
                       Text(
                         label,
-                        style: context.textTheme.bodyLarge?.copyWith(
+                        style: titleStyle?.copyWith(
                           fontWeight: FontWeight.w500,
                           color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                         ),
@@ -1151,19 +1120,21 @@ class _TransferCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                // 右侧箭头
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  size: 22,
-                ),
+                // 右侧箭头（桌面 hover 提示即可，与其他 tile 一致）
+                if (!isDesktop)
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: isDark
+                        ? AppColors.darkOnSurfaceVariant
+                        : AppColors.lightOnSurfaceVariant,
+                    size: 22,
+                  ),
               ],
             ),
           ),
         ),
       );
+  }
 
   String _formatBytes(int bytes) {
     if (bytes < 1024) return '$bytes B';
@@ -1608,73 +1579,18 @@ class _BookSourcesTile extends StatelessWidget {
   final bool isDark;
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+  Widget build(BuildContext context) => _mineTileRow(
+        context,
+        isDark: isDark,
+        icon: Icons.library_books_rounded,
+        iconColor: AppColors.primary,
+        title: '书源管理',
+        subtitle: '导入和管理在线书源',
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute<void>(builder: (_) => const BookSourcesPage()),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.library_books_rounded,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '书源管理',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '导入和管理在线书源',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: isDark
-                    ? AppColors.darkOnSurfaceVariant
-                    : AppColors.lightOnSurfaceVariant,
-                size: 22,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+      );
 }
 
 /// 图书设置入口组件
@@ -1684,73 +1600,18 @@ class _BookSettingsTile extends StatelessWidget {
   final bool isDark;
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
+  Widget build(BuildContext context) => _mineTileRow(
+        context,
+        isDark: isDark,
+        icon: Icons.auto_stories_rounded,
+        iconColor: Colors.amber,
+        title: '阅读器设置',
+        subtitle: '选择阅读引擎、翻页方式等',
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute<void>(builder: (_) => const BookSettingsPage()),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.auto_stories_rounded,
-                  color: Colors.amber,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '阅读器设置',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '选择阅读引擎、翻页方式等',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkOnSurfaceVariant
-                            : AppColors.lightOnSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: isDark
-                    ? AppColors.darkOnSurfaceVariant
-                    : AppColors.lightOnSurfaceVariant,
-                size: 22,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+      );
 }
 
 // =============================================================================
@@ -1846,7 +1707,8 @@ class _DesktopSectionList extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(section.icon, size: 20, color: color),
+                    // 与 _mineTileRow 内 tile icon 对齐（桌面 18）
+                    Icon(section.icon, size: 18, color: color),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -1979,30 +1841,33 @@ class _DesktopSectionRootContent extends StatelessWidget {
           AppSpacing.md,
         ),
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.md, left: 4),
-            child: Row(
-              children: [
-                Icon(
-                  section.icon,
-                  size: 22,
-                  color: isDark
-                      ? AppColors.darkOnSurface
-                      : context.colorScheme.onSurface,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  section.title,
-                  style: context.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+          // 桌面下二级菜单已显示当前选中的 section，detail 顶部再重复"连接"
+          // 等标题属于冗余信息；只在移动端保留作为分组标题。
+          if (!context.isDesktopLayout)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md, left: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    section.icon,
+                    size: 20,
                     color: isDark
                         ? AppColors.darkOnSurface
                         : context.colorScheme.onSurface,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 10),
+                  Text(
+                    section.title,
+                    style: context.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppColors.darkOnSurface
+                          : context.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
           // section.tilesBuilder 接收 root route 内 context；
           // tile 内 Navigator.push(ctx, ...) 会进入嵌套 detail navigator。
           Builder(builder: (innerCtx) {

@@ -9,6 +9,7 @@ import 'package:my_nas/features/video/data/services/video_database_service.dart'
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 重复视频管理页面
 class VideoDuplicatesPage extends ConsumerStatefulWidget {
@@ -186,6 +187,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('重复视频'),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
@@ -227,7 +229,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error.withValues(alpha: 0.8)),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error.withValues(alpha: 0.8)),
             const SizedBox(height: 16),
             Text(_errorMessage!, style: TextStyle(color: AppColors.error.withValues(alpha: 0.8))),
             const SizedBox(height: 16),
@@ -780,7 +782,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
                           Icon(
                             isSelected
                                 ? Icons.check_circle
-                                : Icons.radio_button_unchecked,
+                                : Icons.radio_button_unchecked_rounded,
                             color: isSelected ? AppColors.error : Colors.grey,
                             size: 24,
                           ),

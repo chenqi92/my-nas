@@ -173,7 +173,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
+            Icon(Icons.error_outline_rounded, size: 48, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text('加载失败', style: TextStyle(color: Colors.grey[600])),
             const SizedBox(height: 8),
@@ -1078,7 +1078,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                             _closeSearch(currentTab);
                           },
                           icon: Icon(
-                            Icons.arrow_back,
+                            Icons.arrow_back_rounded,
                             color: isDark ? Colors.white : Colors.black87,
                           ),
                         ),
@@ -1121,7 +1121,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                               ref.read(bookSearchProvider.notifier).clear();
                             },
                             icon: Icon(
-                              Icons.close,
+                              Icons.close_rounded,
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                             ),
                           ),

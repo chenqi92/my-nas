@@ -244,7 +244,7 @@ class FileItemWidget extends StatelessWidget {
       ),
     ),
     child: isSelected
-        ? const Icon(Icons.check, size: 16, color: Colors.white)
+        ? const Icon(Icons.check_rounded, size: 16, color: Colors.white)
         : null,
   );
 

@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 enum SourceCategory {
   // === 存储类源 ===
   nasDevices('NAS 设备', 'nas_devices', Icons.storage),
-  genericProtocols('通用协议', 'generic_protocols', Icons.link),
+  genericProtocols('通用协议', 'generic_protocols', Icons.link_rounded),
   localStorage('本机', 'local_storage', Icons.smartphone),
   mediaServers('媒体服务器', 'media_servers', Icons.live_tv),
 
   // === 服务类源 ===
-  downloadTools('远程任务', 'download_tools', Icons.download),
+  downloadTools('远程任务', 'download_tools', Icons.download_rounded),
   mediaTracking('媒体追踪', 'media_tracking', Icons.track_changes),
   mediaManagement('媒体管理', 'media_management', Icons.construction),
   ptSites('资源站点', 'pt_sites', Icons.rss_feed),

@@ -467,7 +467,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
             onLoadUrl();
             setState(() {});
           },
-          icon: const Icon(Icons.refresh, color: Colors.white70),
+          icon: const Icon(Icons.refresh_rounded, color: Colors.white70),
           label: const Text('重试', style: TextStyle(color: Colors.white70)),
         ),
       ],
@@ -837,7 +837,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   ),
                   // 收藏
                   _ActionButton(
-                    icon: _isFavorite ? Icons.favorite : Icons.favorite_border,
+                    icon: _isFavorite ? Icons.favorite_rounded : Icons.favorite_border,
                     label: _isFavorite ? '已收藏' : '收藏',
                     onTap: _isTogglingFavorite
                         ? null
@@ -910,7 +910,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white70),
+                    icon: const Icon(Icons.close_rounded, color: Colors.white70),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -1321,7 +1321,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white70),
+                    icon: const Icon(Icons.close_rounded, color: Colors.white70),
                     onPressed: () => Navigator.pop(sheetContext),
                   ),
                 ],
@@ -1329,7 +1329,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
               const SizedBox(height: 20),
               // 复制链接/路径
               _ShareOptionTile(
-                icon: isHttpUrl ? Icons.link : Icons.folder_outlined,
+                icon: isHttpUrl ? Icons.link_rounded : Icons.folder_outlined,
                 title: copyTitle,
                 subtitle: copySubtitle,
                 onTap: () {
@@ -1377,7 +1377,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],

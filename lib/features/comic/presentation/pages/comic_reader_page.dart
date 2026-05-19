@@ -448,7 +448,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                                 child: const Icon(
-                                  Icons.check,
+                                  Icons.check_rounded,
                                   size: 10,
                                   color: Colors.white,
                                 ),
@@ -705,7 +705,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.white54),
+            const Icon(Icons.error_outline_rounded, size: 48, color: Colors.white54),
             const SizedBox(height: 16),
             Text(
               state.error!,
@@ -1177,7 +1177,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
                 Expanded(
@@ -1267,7 +1267,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                 children: [
                   IconButton(
                     icon: Icon(
-                      isRtl ? Icons.skip_next : Icons.skip_previous,
+                      isRtl ? Icons.skip_next_rounded : Icons.skip_previous_rounded,
                       color: Colors.white,
                     ),
                     onPressed: state.currentPage > 0
@@ -1310,7 +1310,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                   ),
                   IconButton(
                     icon: Icon(
-                      isRtl ? Icons.skip_previous : Icons.skip_next,
+                      isRtl ? Icons.skip_previous_rounded : Icons.skip_next_rounded,
                       color: Colors.white,
                     ),
                     onPressed: state.currentPage < state.pages.length - 1
@@ -1347,7 +1347,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
     // 阅读方向选项
     const readingDirections = [
       (icon: Icons.arrow_forward, label: '从左到右'),
-      (icon: Icons.arrow_back, label: '从右到左'),
+      (icon: Icons.arrow_back_rounded, label: '从右到左'),
     ];
 
     // 缩放模式选项

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/features/music/data/services/play_history_store.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 听歌统计页 — 周/月/年的听歌总览 + Top 歌曲/艺术家/专辑
 class ListeningStatsPage extends ConsumerStatefulWidget {
@@ -45,6 +46,7 @@ class _ListeningStatsPageState extends ConsumerState<ListeningStatsPage>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
           '听歌统计',

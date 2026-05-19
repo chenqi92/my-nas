@@ -5,35 +5,44 @@ import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/connection/presentation/pages/connection_page.dart';
+import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
 import 'package:my_nas/features/mine/presentation/pages/mine_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_player_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_list_page.dart';
 import 'package:my_nas/features/reading/presentation/pages/reading_page.dart';
+import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/startup/presentation/pages/startup_page.dart';
+import 'package:my_nas/features/transfer/presentation/pages/transfer_manager_page.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart';
 import 'package:my_nas/shared/widgets/main_scaffold.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-/// 5 个主 tab 各自独立的 Navigator key，由 StatefulShellRoute 管理。
-/// 让每个 tab 维护自己的页面栈，切 tab 时不互相污染；同时为桌面端
-/// Master-Detail 在 branch navigator 内渲染 detail 铺路。
+/// 主 tab + 桌面端工具区各自独立的 Navigator key，由 StatefulShellRoute 管理。
+/// 让每个 branch 维护自己的页面栈，切换时不互相污染。
 final _videoNavigatorKey = GlobalKey<NavigatorState>();
 final _musicNavigatorKey = GlobalKey<NavigatorState>();
 final _photoNavigatorKey = GlobalKey<NavigatorState>();
 final _readingNavigatorKey = GlobalKey<NavigatorState>();
 final _mineNavigatorKey = GlobalKey<NavigatorState>();
+// 桌面工具区 branch（index 5/6/7）。移动端 BottomNavigation 不会显示，
+// 但 branch 本身仍然存在（保证 NavigationRail 切换语义统一）。
+final _downloadNavigatorKey = GlobalKey<NavigatorState>();
+final _transferNavigatorKey = GlobalKey<NavigatorState>();
+final _sourcesNavigatorKey = GlobalKey<NavigatorState>();
 
-/// 按 tab index 顺序排列的 branch navigator keys，供 main_scaffold
-/// 桌面端工具区按当前 currentIndex push 到对应 branch（覆盖右侧内容
-/// 但保留 NavigationRail 可见）。
+/// 按 branch index 顺序排列的 navigator keys，供 main_scaffold 引用。
+/// 0..4 为主 tab，5..7 为桌面工具区。
 final branchNavigatorKeys = <GlobalKey<NavigatorState>>[
   _videoNavigatorKey,
   _musicNavigatorKey,
   _photoNavigatorKey,
   _readingNavigatorKey,
   _mineNavigatorKey,
+  _downloadNavigatorKey,
+  _transferNavigatorKey,
+  _sourcesNavigatorKey,
 ];
 
 /// 待处理的 deep link 路径
@@ -59,7 +68,7 @@ final appRouter = GoRouter(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text('导航错误: ${state.uri}'),
             const SizedBox(height: 16),
@@ -190,6 +199,37 @@ final appRouter = GoRouter(
               path: Routes.mine,
               name: 'mine',
               builder: (context, state) => const MinePage(),
+            ),
+          ],
+        ),
+        // 桌面端工具区：下载 / 任务 / 连接
+        StatefulShellBranch(
+          navigatorKey: _downloadNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.download,
+              name: 'download',
+              builder: (context, state) => const DownloaderListPage(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          navigatorKey: _transferNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.transfer,
+              name: 'transfer',
+              builder: (context, state) => const TransferManagerPage(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          navigatorKey: _sourcesNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.sources,
+              name: 'sources',
+              builder: (context, state) => const SourcesPage(),
             ),
           ],
         ),

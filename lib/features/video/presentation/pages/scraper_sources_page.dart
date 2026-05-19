@@ -8,6 +8,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 刮削源管理页面
 /// - 点击需要配置的卡片弹出配置弹框
@@ -38,13 +39,14 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('视频刮削源'),
         centerTitle: false,
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
           // 排序模式切换按钮
           IconButton(
-            icon: Icon(_isReorderMode ? Icons.done : Icons.reorder),
+            icon: Icon(_isReorderMode ? Icons.done_rounded : Icons.reorder),
             onPressed: () {
               setState(() {
                 _isReorderMode = !_isReorderMode;
@@ -60,7 +62,7 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
               const SizedBox(height: 16),
               Text('加载失败: $e'),
               const SizedBox(height: 16),

@@ -213,4 +213,44 @@ abstract final class AppRadius {
       BorderRadius.all(Radius.circular(xxl));
   static const BorderRadius borderRadiusFull =
       BorderRadius.all(Radius.circular(full));
+
+  // ============================================================================
+  // 平台自适应圆角
+  // 桌面（macOS/Windows/Linux）默认更小、更克制；移动端保持现状。
+  // ============================================================================
+
+  static bool get _isDesktop =>
+      !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+
+  /// 卡片/容器圆角。桌面 8，移动 12。
+  static double get card => _isDesktop ? sm : md;
+
+  /// 弹层/Dialog/BottomSheet 圆角。桌面 8，移动 16。
+  static double get sheet => _isDesktop ? sm : lg;
+
+  /// 按钮/输入框圆角。桌面 6，移动 12。
+  static double get control => _isDesktop ? 6.0 : md;
+
+  /// 小型 chip / badge 圆角。桌面 4，移动 8。
+  static double get chip => _isDesktop ? xs : sm;
+}
+
+/// 阴影/elevation 令牌。
+/// 桌面端使用扁平 + 1px hairline 风格（与 macOS Settings / Linear 一致），
+/// 移动端保持 Material 的层级阴影。
+abstract final class AppElevation {
+  static bool get _isDesktop =>
+      !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
+
+  /// 普通卡片：桌面 0（靠 hairline border 分层），移动 1
+  static double get card => _isDesktop ? 0.0 : 1.0;
+
+  /// hover 提升：桌面 1，移动 2
+  static double get hover => _isDesktop ? 1.0 : 2.0;
+
+  /// dialog/弹窗：桌面 2，移动 8
+  static double get dialog => _isDesktop ? 2.0 : 8.0;
+
+  /// BottomSheet/Drawer：桌面 2，移动 16
+  static double get sheet => _isDesktop ? 2.0 : 16.0;
 }

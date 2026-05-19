@@ -211,14 +211,14 @@ enum SourceType {
         SourceType.smb => Icons.lan,
         SourceType.ftp => Icons.upload_file,
         SourceType.sftp => Icons.security,
-        SourceType.nfs => Icons.share,
+        SourceType.nfs => Icons.share_rounded,
         SourceType.upnp => Icons.cast,
         // 本地存储
         SourceType.local => Icons.smartphone,
         // 下载工具
-        SourceType.qbittorrent => Icons.download,
-        SourceType.transmission => Icons.download,
-        SourceType.aria2 => Icons.download,
+        SourceType.qbittorrent => Icons.download_rounded,
+        SourceType.transmission => Icons.download_rounded,
+        SourceType.aria2 => Icons.download_rounded,
         // 媒体追踪
         SourceType.trakt => Icons.track_changes,
         // 媒体管理

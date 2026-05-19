@@ -8,6 +8,7 @@ import 'package:my_nas/features/transfer/presentation/providers/transfer_provide
 import 'package:my_nas/features/transfer/presentation/widgets/cache_list_view.dart';
 import 'package:my_nas/features/transfer/presentation/widgets/transfer_task_tile.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 传输管理页面
 class TransferManagerPage extends ConsumerStatefulWidget {
@@ -51,7 +52,7 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
 
     final actions = <Widget>[
       PopupMenuButton<String>(
-        icon: const Icon(Icons.more_vert),
+        icon: const Icon(Icons.more_vert_rounded),
         onSelected: _handleMenuAction,
         itemBuilder: (context) => [
           const PopupMenuItem(
@@ -76,6 +77,7 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
     if (isDesktop) {
       return Scaffold(
         appBar: AppBar(
+          leading: const RoundedBackButton(),
           title: const Text('传输管理'),
           actions: actions,
         ),
@@ -133,18 +135,19 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('传输管理'),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
           tabs: [
             _buildTab(
-              icon: Icons.download,
+              icon: Icons.download_rounded,
               label: '下载',
               count: downloadTasks.where(_isActive).length,
             ),
             _buildTab(
-              icon: Icons.upload,
+              icon: Icons.upload_rounded,
               label: '上传',
               count: uploadTasks.where(_isActive).length,
             ),

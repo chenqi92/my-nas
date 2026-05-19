@@ -14,6 +14,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/transmission/presentation/pages/transmission_detail_page.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 通用服务源列表页面
 ///
@@ -58,11 +59,12 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: Text(widget.title),
         actions: [
           // 排序模式切换按钮
           IconButton(
-            icon: Icon(_isReorderMode ? Icons.done : Icons.reorder),
+            icon: Icon(_isReorderMode ? Icons.done_rounded : Icons.reorder),
             onPressed: () {
               setState(() {
                 _isReorderMode = !_isReorderMode;
@@ -71,7 +73,7 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
             tooltip: _isReorderMode ? '完成排序' : '调整顺序',
           ),
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add_rounded),
             onPressed: () => _showAddSourceSheet(context),
             tooltip: '添加',
           ),
@@ -83,7 +85,7 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
               const SizedBox(height: 16),
               Text('加载失败: $e'),
               const SizedBox(height: 16),
@@ -204,7 +206,7 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: () => _showAddSourceSheet(context),
-                icon: const Icon(Icons.add),
+                icon: const Icon(Icons.add_rounded),
                 label: const Text('添加'),
               ),
             ],
@@ -467,7 +469,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.open_in_new),
+            leading: const Icon(Icons.open_in_new_rounded),
             title: const Text('打开'),
             onTap: () {
               Navigator.pop(context);
@@ -475,7 +477,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.edit),
+            leading: const Icon(Icons.edit_rounded),
             title: const Text('编辑'),
             onTap: () {
               Navigator.pop(context);
@@ -483,7 +485,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.delete, color: AppColors.error),
+            leading: Icon(Icons.delete_rounded, color: AppColors.error),
             title: Text('删除', style: TextStyle(color: AppColors.error)),
             onTap: () {
               Navigator.pop(context);
@@ -639,14 +641,10 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
   }
 
   void _editSource() {
-    Navigator.push<void>(
+    SourceFormPage.openAdaptive<void>(
       context,
-      MaterialPageRoute<void>(
-        builder: (context) => SourceFormPage(
-          sourceType: widget.source.type,
-          existingSource: widget.source,
-        ),
-      ),
+      sourceType: widget.source.type,
+      existingSource: widget.source,
     );
   }
 
@@ -703,33 +701,49 @@ class _SourceTypeBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDesktop = context.isDesktopLayout;
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        padding: EdgeInsets.fromLTRB(16, isDesktop ? 20 : 16, 16, isDesktop ? 20 : 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 拖动条
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+            // 拖动条：桌面 Dialog 不需要
+            if (!isDesktop) ...[
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
 
-            // 标题
-            Text(
-              '选择${category.displayName}类型',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            // 标题（桌面带右侧关闭按钮）
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '选择${category.displayName}类型',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (isDesktop)
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close_rounded),
+                    iconSize: 20,
+                    tooltip: '关闭',
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -796,13 +810,9 @@ class _SourceTypeBottomSheet extends StatelessWidget {
         ),
         onTap: () {
           Navigator.pop(context);
-          Navigator.push<void>(
+          SourceFormPage.openAdaptive<void>(
             context,
-            MaterialPageRoute<void>(
-              builder: (context) => SourceFormPage(
-                sourceType: type,
-              ),
-            ),
+            sourceType: type,
           );
         },
       ),

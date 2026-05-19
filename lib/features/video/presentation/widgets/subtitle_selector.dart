@@ -116,7 +116,7 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: Colors.white70),
+                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
                 ),
               ],
             ),
@@ -228,7 +228,7 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                               Navigator.pop(context);
                               _showSubtitleDownloadDialog(context, ref);
                             },
-                            icon: const Icon(Icons.download, color: Colors.white70),
+                            icon: const Icon(Icons.download_rounded, color: Colors.white70),
                             label: const Text(
                               '下载在线字幕',
                               style: TextStyle(color: Colors.white),

@@ -156,7 +156,7 @@ class QuickSettingsSheet extends ConsumerWidget {
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close_rounded),
                 ),
               ],
             ),

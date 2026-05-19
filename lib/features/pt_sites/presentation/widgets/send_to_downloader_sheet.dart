@@ -87,7 +87,7 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close_rounded),
                 ),
               ],
             ),
@@ -274,7 +274,7 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
                             );
                           }
                         : null,
-                    icon: const Icon(Icons.copy),
+                    icon: const Icon(Icons.copy_rounded),
                     label: const Text('复制链接'),
                   ),
                 ),

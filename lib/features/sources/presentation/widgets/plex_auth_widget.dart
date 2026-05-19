@@ -374,7 +374,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
           Row(
             children: [
               Icon(
-                Icons.link,
+                Icons.link_rounded,
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(width: 8),
@@ -473,7 +473,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
                 ),
                 const SizedBox(width: 12),
                 const Icon(
-                  Icons.copy,
+                  Icons.copy_rounded,
                   size: 20,
                   color: Color(0xFFE5A00D),
                 ),
@@ -487,7 +487,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: _openAuthUrl,
-            icon: const Icon(Icons.open_in_browser),
+            icon: const Icon(Icons.open_in_browser_rounded),
             label: const Text('打开 plex.tv/link'),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFE5A00D),
@@ -566,7 +566,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
         Row(
           children: [
             Icon(
-              _isOffline ? Icons.wifi_off : Icons.error_outline,
+              _isOffline ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
               color: theme.colorScheme.error,
             ),
             const SizedBox(width: 12),
@@ -584,7 +584,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: _restart,
-            icon: Icon(_isOffline ? Icons.wifi : Icons.refresh),
+            icon: Icon(_isOffline ? Icons.wifi_rounded : Icons.refresh_rounded),
             label: Text(_isOffline ? '重新检查网络' : '重试'),
           ),
         ],

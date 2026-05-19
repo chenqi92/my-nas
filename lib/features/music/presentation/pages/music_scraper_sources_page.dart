@@ -9,6 +9,7 @@ import 'package:my_nas/features/music/data/services/music_scraper_factory.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/presentation/providers/music_scraper_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 音乐刮削源管理页面
 /// - 点击需要配置的卡片弹出配置弹框
@@ -39,13 +40,14 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
+        leading: const RoundedBackButton(),
         title: const Text('音乐刮削源'),
         centerTitle: false,
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
           // 排序模式切换按钮
           IconButton(
-            icon: Icon(_isReorderMode ? Icons.done : Icons.reorder),
+            icon: Icon(_isReorderMode ? Icons.done_rounded : Icons.reorder),
             onPressed: () {
               setState(() {
                 _isReorderMode = !_isReorderMode;
@@ -54,7 +56,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
             tooltip: _isReorderMode ? '完成排序' : '调整顺序',
           ),
           IconButton(
-            icon: const Icon(Icons.help_outline),
+            icon: const Icon(Icons.help_outline_rounded),
             onPressed: () => _showHelpDialog(context),
             tooltip: '帮助',
           ),
@@ -74,7 +76,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
             Text('加载失败: ${state.error}'),
             const SizedBox(height: 16),

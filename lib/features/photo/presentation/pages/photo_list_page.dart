@@ -1508,7 +1508,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
         IconButton(
           onPressed: () => ref.read(photoListProvider.notifier).exitSelectMode(),
           icon: Icon(
-            Icons.close,
+            Icons.close_rounded,
             color: isDark ? Colors.white : Colors.black87,
           ),
           tooltip: '取消',
@@ -1658,7 +1658,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             _searchController.clear();
             ref.read(photoListProvider.notifier).setSearchQuery('');
           },
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black87),
+          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white : Colors.black87),
         ),
         Expanded(
           child: TextField(
@@ -1682,7 +1682,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
               _searchController.clear();
               ref.read(photoListProvider.notifier).setSearchQuery('');
             },
-            icon: Icon(Icons.close, color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
+            icon: Icon(Icons.close_rounded, color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
           ),
         if (_searchController.text.isNotEmpty)
           IconButton(
@@ -2755,7 +2755,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
-                  Icons.close,
+                  Icons.close_rounded,
                   size: 16,
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                 ),
@@ -3068,7 +3068,7 @@ class _PhotoGridItem extends ConsumerWidget {
                     ),
                     child: isSelected
                         ? const Icon(
-                            Icons.check,
+                            Icons.check_rounded,
                             size: 16,
                             color: Colors.white,
                           )

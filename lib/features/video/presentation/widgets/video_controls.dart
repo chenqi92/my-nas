@@ -124,7 +124,7 @@ class VideoControls extends ConsumerWidget {
           children: [
             IconButton(
               onPressed: onBack,
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             ),
             Expanded(
               child: Text(
@@ -178,7 +178,7 @@ class VideoControls extends ConsumerWidget {
             onPressed: onPlayPause,
             iconSize: 64,
             icon: Icon(
-              state.isPlaying ? Icons.pause_circle : Icons.play_circle,
+              state.isPlaying ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
               color: Colors.white,
             ),
           ),
@@ -306,8 +306,8 @@ class VideoControls extends ConsumerWidget {
                   onPressed: onToggleFullscreen,
                   icon: Icon(
                     state.isFullscreen
-                        ? Icons.fullscreen_exit
-                        : Icons.fullscreen,
+                        ? Icons.fullscreen_exit_rounded
+                        : Icons.fullscreen_rounded,
                     color: Colors.white,
                   ),
                   tooltip: state.isFullscreen ? '退出全屏' : '全屏',
@@ -343,10 +343,10 @@ class _VolumeButtonState extends State<_VolumeButton> {
             onPressed: () => setState(() => _showSlider = !_showSlider),
             icon: Icon(
               widget.volume == 0
-                  ? Icons.volume_off
+                  ? Icons.volume_off_rounded
                   : widget.volume < 0.5
-                      ? Icons.volume_down
-                      : Icons.volume_up,
+                      ? Icons.volume_down_rounded
+                      : Icons.volume_up_rounded,
               color: Colors.white,
             ),
           ),
@@ -394,7 +394,7 @@ class _SpeedButton extends StatelessWidget {
                 value: s,
                 child: Row(
                   children: [
-                    if (s == speed) const Icon(Icons.check, size: 18),
+                    if (s == speed) const Icon(Icons.check_rounded, size: 18),
                     if (s != speed) const SizedBox(width: 18),
                     const SizedBox(width: 8),
                     Text('${s}x'),
@@ -522,7 +522,7 @@ class _AspectRatioButton extends ConsumerWidget {
                     ),
                   ),
                   if (mode == aspectRatio)
-                    const Icon(Icons.check, size: 18, color: Colors.white),
+                    const Icon(Icons.check_rounded, size: 18, color: Colors.white),
                 ],
               ),
             ),
@@ -533,7 +533,7 @@ class _AspectRatioButton extends ConsumerWidget {
 
   IconData _getAspectRatioIcon(AspectRatioMode mode) => switch (mode) {
         AspectRatioMode.auto => Icons.auto_fix_high,
-        AspectRatioMode.fill => Icons.fullscreen,
+        AspectRatioMode.fill => Icons.fullscreen_rounded,
         AspectRatioMode.contain => Icons.fit_screen,
         AspectRatioMode.cover => Icons.crop_free,
         AspectRatioMode.r16x9 => Icons.rectangle_outlined,

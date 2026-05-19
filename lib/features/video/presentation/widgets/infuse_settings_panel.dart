@@ -159,7 +159,7 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
                                 const Spacer(),
                                 IconButton(
                                   onPressed: _close,
-                                  icon: const Icon(Icons.close, color: Colors.white70),
+                                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
                                 ),
                               ],
                             ),

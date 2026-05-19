@@ -52,6 +52,7 @@ import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 音乐文件及其来源
 class MusicFileWithSource {
@@ -2106,7 +2107,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             _searchController.clear();
             ref.read(musicListProvider.notifier).setSearchQuery('');
           },
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black87),
+          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white : Colors.black87),
         ),
         Expanded(
           child: TextField(
@@ -2132,7 +2133,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
               // 同时关闭搜索界面
               setState(() => _showSearch = false);
             },
-            icon: Icon(Icons.close, color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
+            icon: Icon(Icons.close_rounded, color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
           ),
       ],
     );
@@ -3147,6 +3148,7 @@ class _MusicCategoryPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
         appBar: AppBar(
+          leading: const RoundedBackButton(),
           title: Text(category.label),
           backgroundColor: isDark ? AppColors.darkSurface : null,
         ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/features/pt_sites/data/services/pt_site_api.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
@@ -62,6 +64,47 @@ class SourceFormPage extends ConsumerStatefulWidget {
 
   /// 保存后是否需要返回两次（从类型选择页进入时为 true）
   final bool popTwice;
+
+  /// 在桌面用 Dialog 弹出表单，移动端走整页 push。
+  ///
+  /// 与之前直接 `Navigator.push(MaterialPageRoute)` 相比，桌面端表单不再
+  /// 占据整个 detail 区域 —— 上级若是 Dialog（如选类型 sheet），关闭它后
+  /// 紧接着弹 form Dialog，体验连贯且都是弹窗形态。
+  static Future<T?> openAdaptive<T>(
+    BuildContext context, {
+    required SourceType sourceType,
+    SourceEntity? existingSource,
+    Map<String, String>? initialValues,
+    bool popTwice = false,
+  }) {
+    final page = SourceFormPage(
+      sourceType: sourceType,
+      existingSource: existingSource,
+      initialValues: initialValues,
+      popTwice: popTwice,
+    );
+
+    if (context.isDesktopLayout) {
+      return showDialog<T>(
+        context: context,
+        barrierDismissible: true,
+        builder: (ctx) => Dialog(
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.sheet),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720, maxHeight: 720),
+            child: page,
+          ),
+        ),
+      );
+    }
+    return Navigator.push<T>(
+      context,
+      MaterialPageRoute<T>(builder: (_) => page),
+    );
+  }
 
   SourceFormMode get mode =>
       existingSource != null ? SourceFormMode.edit : SourceFormMode.create;
@@ -207,6 +250,14 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
 
     return Scaffold(
       appBar: AppBar(
+        // 桌面端 Dialog 内用关闭图标更贴合弹窗语义；移动端保持默认返回箭头
+        leading: context.isDesktopLayout
+            ? IconButton(
+                icon: const Icon(Icons.close_rounded),
+                tooltip: '关闭',
+                onPressed: () => Navigator.of(context).maybePop(),
+              )
+            : null,
         title: Text(widget.sourceType.displayName),
         centerTitle: true,
         actions: [
@@ -570,7 +621,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                   _formValues[field.key] = items;
                 });
               },
-              icon: const Icon(Icons.add, size: 18),
+              icon: const Icon(Icons.add_rounded, size: 18),
               label: const Text('添加'),
             ),
           ],
@@ -900,7 +951,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       'username' => Icons.person_outline,
       'password' => Icons.lock_outline,
       'apiKey' || 'apiToken' => Icons.key,
-      'clientId' => Icons.apps,
+      'clientId' => Icons.apps_rounded,
       'clientSecret' => Icons.vpn_key,
       _ => null,
     };
@@ -1253,7 +1304,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.warning, color: Colors.white),
+            const Icon(Icons.warning_rounded, color: Colors.white),
             const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
