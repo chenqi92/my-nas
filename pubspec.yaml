@@ -180,6 +180,13 @@ dependencies:
   # Edge TTS (高品质在线语音合成)
   web_socket_channel: ^2.4.0  # WebSocket 通信
 
+# 锁定传递依赖版本，规避上游缺陷
+dependency_overrides:
+  # bonsoir_darwin 6.1.0 的 Swift 源码缺少 `import Foundation`，新版 Xcode 不再
+  # 隐式引入，导致 iOS/macOS 编译时报 "cannot find 'JSONSerialization' in scope"。
+  # 待上游修复后再放开。
+  bonsoir_darwin: 6.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

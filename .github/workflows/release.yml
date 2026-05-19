@@ -127,6 +127,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # 幂等：tag 已存在视为成功（用于补发构建失败的平台，复用同一 release）
+          if git ls-remote --tags origin | grep -q "refs/tags/${TAG_NAME}$"; then
+            echo "Tag $TAG_NAME already exists on remote, skip creating"
+            exit 0
+          fi
+
           git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
           git push origin "$TAG_NAME"
 
