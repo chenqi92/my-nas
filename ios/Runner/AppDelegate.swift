@@ -1,3 +1,4 @@
+import CarPlay
 import Flutter
 import UIKit
 
@@ -125,7 +126,37 @@ import UIKit
             GlassBottomSheetPlugin.register(with: registrar)
         }
 
+        // 注册 CarPlay 桥接通道
+        // Swift 侧的 CarPlaySceneDelegate 通过此 channel 调 Dart MusicBrowserService
+        // 拉浏览树和触发播放
+        if let registrar = flutterEngine.registrar(forPlugin: "CarPlayChannel") {
+            CarPlayChannel.register(with: registrar)
+        }
+
         NSLog("🔮 AppDelegate: Custom plugins registered")
+    }
+
+    // MARK: - UIScene Lifecycle (CarPlay only)
+
+    /// 仅为 CarPlay role 返回 scene 配置；主 App UI 仍走 AppDelegate.window 模式。
+    /// CarPlay framework 的 list/handler API 最早 iOS 14，老系统不会激活 scene。
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        if #available(iOS 14.0, *) {
+            if connectingSceneSession.role == UISceneSession.Role.carTemplateApplication {
+                let config = UISceneConfiguration(
+                    name: "CarPlay",
+                    sessionRole: connectingSceneSession.role
+                )
+                config.delegateClass = CarPlaySceneDelegate.self
+                NSLog("🚗 AppDelegate: CarPlay scene configuration provided")
+                return config
+            }
+        }
+        return UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
     }
 
     /// App 即将终止时清理 Live Activity

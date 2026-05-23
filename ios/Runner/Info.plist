@@ -111,5 +111,25 @@
 			<key>NSAllowsLocalNetworking</key>
 			<true/>
 		</dict>
+		<!-- CarPlay scene 配置：主 App 仍走 AppDelegate 模式，仅为 CarPlay role 单独声明 scene -->
+		<key>UIApplicationSceneManifest</key>
+		<dict>
+			<key>UIApplicationSupportsMultipleScenes</key>
+			<true/>
+			<key>UISceneConfigurations</key>
+			<dict>
+				<key>CPTemplateApplicationSceneSessionRoleApplication</key>
+				<array>
+					<dict>
+						<key>UISceneClassName</key>
+						<string>CPTemplateApplicationScene</string>
+						<key>UISceneConfigurationName</key>
+						<string>CarPlay</string>
+						<key>UISceneDelegateClassName</key>
+						<string>$(PRODUCT_MODULE_NAME).CarPlaySceneDelegate</string>
+					</dict>
+				</array>
+			</dict>
+		</dict>
 	</dict>
 </plist>

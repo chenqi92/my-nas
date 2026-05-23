@@ -38,6 +38,8 @@
 		A1B2C3D4E5F6A7B8C9D0E1F8 /* SharedLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F9 /* SharedLogger.swift */; };
 		A1B2C3D4E5F6A7B8C9D0E1FA /* ChromaprintChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1FB /* ChromaprintChannel.swift */; };
 		A1B2C3D4E5F6A7B8C9D0E1FC /* WidgetDataChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1FD /* WidgetDataChannel.swift */; };
+		CP01000000000000000000C2 /* CarPlayChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CP01000000000000000000C1 /* CarPlayChannel.swift */; };
+		CP01000000000000000000C4 /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CP01000000000000000000C3 /* CarPlaySceneDelegate.swift */; };
 		A7BCCB5CBB68596C14E98377 /* NativeAVPlayerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A850A4D59F7623FB5156377 /* NativeAVPlayerController.swift */; };
 		F7E997A344550D9C5EB228A9 /* NativeAVPlayerChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71136157915D2CE3416F1EF /* NativeAVPlayerChannel.swift */; };
 		FCC16F813101025CE77013B6 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 637C312A0DE8B426DF0EEB14 /* Pods_Runner.framework */; };
@@ -135,6 +137,8 @@
 		A1B2C3D4E5F6A7B8C9D0E1F9 /* SharedLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedLogger.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E1FB /* ChromaprintChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromaprintChannel.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6A7B8C9D0E1FD /* WidgetDataChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataChannel.swift; sourceTree = "<group>"; };
+		CP01000000000000000000C1 /* CarPlayChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayChannel.swift; sourceTree = "<group>"; };
+		CP01000000000000000000C3 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
 		B71136157915D2CE3416F1EF /* NativeAVPlayerChannel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NativeAVPlayerChannel.swift; sourceTree = "<group>"; };
 		B927AB7F3698D57CA0CFD80B /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		EBC6B44C3FFB46568FCA6801 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
@@ -293,6 +297,8 @@
 				A1B2C3D4E5F6A7B8C9D0E1F9 /* SharedLogger.swift */,
 				A1B2C3D4E5F6A7B8C9D0E1FB /* ChromaprintChannel.swift */,
 				A1B2C3D4E5F6A7B8C9D0E1FD /* WidgetDataChannel.swift */,
+				CP01000000000000000000C1 /* CarPlayChannel.swift */,
+				CP01000000000000000000C3 /* CarPlaySceneDelegate.swift */,
 				65IOSDSPC02E5F6A7B8C9D0E2 /* DisplayCapabilityChannel.swift */,
 				65IOSAUDC02E5F6A7B8C9D0E4 /* AudioCapabilityChannel.swift */,
 				65NBLUR01E5F6A7B8C9D0E10 /* NativeBlurView.swift */,
@@ -670,6 +676,8 @@
 				A1B2C3D4E5F6A7B8C9D0E1F8 /* SharedLogger.swift in Sources */,
 				A1B2C3D4E5F6A7B8C9D0E1FA /* ChromaprintChannel.swift in Sources */,
 				A1B2C3D4E5F6A7B8C9D0E1FC /* WidgetDataChannel.swift in Sources */,
+				CP01000000000000000000C2 /* CarPlayChannel.swift in Sources */,
+				CP01000000000000000000C4 /* CarPlaySceneDelegate.swift in Sources */,
 				65IOSDSPC01E5F6A7B8C9D0E1 /* DisplayCapabilityChannel.swift in Sources */,
 				65IOSAUDC01E5F6A7B8C9D0E3 /* AudioCapabilityChannel.swift in Sources */,
 				65NBLUR02E5F6A7B8C9D0E11 /* NativeBlurView.swift in Sources */,

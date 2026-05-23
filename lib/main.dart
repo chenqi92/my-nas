@@ -22,6 +22,7 @@ import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/sources/book_source_manager_service.dart';
 import 'package:my_nas/features/book/data/services/sync/book_sources_sync_module.dart';
+import 'package:my_nas/features/music/data/services/ios_carplay_bridge.dart';
 import 'package:my_nas/features/music/data/services/music_audio_handler.dart';
 import 'package:my_nas/features/music/data/services/music_audio_handler_interface.dart';
 import 'package:my_nas/features/music/data/services/music_media_kit_handler.dart';
@@ -190,6 +191,9 @@ Future<void> _initApp() async {
   // - 蓝牙耳机/AirPods 按钮控制
   // - 后台音频稳定播放
   audioHandler = await _initAudioHandler();
+
+  // iOS CarPlay 桥接：把 MusicBrowserService 的浏览树暴露给原生 CarPlay scene
+  IosCarPlayBridge.instance.init(audioHandler);
 
   // Configure dependency injection
   await configureDependencies();
