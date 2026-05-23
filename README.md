@@ -548,12 +548,12 @@ my-nas/
 - [x] iOS 26 Liquid Glass UI
 - [x] Mac App Store 上架适配
 - [x] Keychain 降级方案
+- [x] 应用锁（PIN / 生物识别 / 后台超时 / 切换器遮蔽）
 
 ### 进行中
 - [ ] 国际化覆盖率（中文已完成，英文部分完成）
 - [ ] 应用商店上架（macOS / iOS / Android / Microsoft Store）
 - [ ] 完整无障碍支持
-- [ ] 应用锁（PIN / 生物识别）
 
 ### Backlog
 - [ ] 更多 NAS（铁威马、海康等）
