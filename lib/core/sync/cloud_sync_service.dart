@@ -13,6 +13,7 @@ class CloudSyncSettings {
     this.password,
     this.rootPath = '/my-nas-sync',
     this.enabledModuleKeys = const {},
+    this.seenModuleKeys = const {},
     this.lastSyncedAt,
   });
 
@@ -25,6 +26,9 @@ class CloudSyncSettings {
         enabledModuleKeys: ((m['enabledModuleKeys'] as List?) ?? const [])
             .cast<String>()
             .toSet(),
+        seenModuleKeys: ((m['seenModuleKeys'] as List?) ?? const [])
+            .cast<String>()
+            .toSet(),
         lastSyncedAt: m['lastSyncedAt'] is int
             ? DateTime.fromMillisecondsSinceEpoch(m['lastSyncedAt'] as int)
             : null,
@@ -35,6 +39,10 @@ class CloudSyncSettings {
   final String? password;
   final String rootPath;
   final Set<String> enabledModuleKeys;
+
+  /// 历史上已注册过的模块 key 集合。用于在新版本注册新模块时，将其
+  /// 默认加入 enabledModuleKeys 一次（已被用户取消的不会被复活）。
+  final Set<String> seenModuleKeys;
   final DateTime? lastSyncedAt;
 
   bool get isConfigured =>
@@ -48,6 +56,7 @@ class CloudSyncSettings {
         if (password != null) 'password': password,
         'rootPath': rootPath,
         'enabledModuleKeys': enabledModuleKeys.toList(),
+        'seenModuleKeys': seenModuleKeys.toList(),
         if (lastSyncedAt != null)
           'lastSyncedAt': lastSyncedAt!.millisecondsSinceEpoch,
       };
@@ -58,6 +67,7 @@ class CloudSyncSettings {
     Object? password = const Object(),
     String? rootPath,
     Set<String>? enabledModuleKeys,
+    Set<String>? seenModuleKeys,
     Object? lastSyncedAt = const Object(),
   }) =>
       CloudSyncSettings(
@@ -72,6 +82,7 @@ class CloudSyncSettings {
             : password as String?,
         rootPath: rootPath ?? this.rootPath,
         enabledModuleKeys: enabledModuleKeys ?? this.enabledModuleKeys,
+        seenModuleKeys: seenModuleKeys ?? this.seenModuleKeys,
         lastSyncedAt: identical(lastSyncedAt, const Object())
             ? this.lastSyncedAt
             : lastSyncedAt as DateTime?,
@@ -115,6 +126,22 @@ class CloudSyncService {
   static const String _boxName = 'cloud_sync_settings';
   static const String _key = 'settings';
 
+  /// 1.1.1 之前已发布的模块 key。用于在升级时把 [CloudSyncSettings.seenModuleKeys]
+  /// 一次性补齐到这一基线，避免把用户之前明确不勾选的旧模块"复活"。
+  /// 新增模块的 key 不应该出现在这里。
+  static const Set<String> _legacyModuleKeys = {
+    'music_favorites',
+    'music_playlists',
+    'music_settings',
+    'video_favorites',
+    'reading_progress',
+    'book_sources',
+    'app_settings',
+  };
+
+  /// 单模块出错时的最大重试次数。
+  static const int _maxRetries = 3;
+
   Box<dynamic>? _box;
   CloudSyncSettings _settings = const CloudSyncSettings();
   bool _initialized = false;
@@ -124,10 +151,32 @@ class CloudSyncService {
     if (_initialized) return;
     _box = await Hive.openBox<dynamic>(_boxName);
     final raw = _box!.get(_key);
+    final hadSeenField = raw is Map && raw.containsKey('seenModuleKeys');
     if (raw is Map) {
       _settings = CloudSyncSettings.fromMap(raw);
     }
+    // 旧版本没有 seenModuleKeys 字段：升级时把基线 seed 进去，
+    // 这样只有真正新增的模块会被默认启用。
+    if (raw is Map && !hadSeenField) {
+      _settings = _settings.copyWith(seenModuleKeys: _legacyModuleKeys);
+    }
     _initialized = true;
+    await _autoEnableNewModules();
+  }
+
+  /// 把任何首次出现的已注册模块加入 enabledModuleKeys（默认开启），
+  /// 并刷新 seenModuleKeys。已被用户主动取消的不会被恢复。
+  Future<void> _autoEnableNewModules() async {
+    final registered =
+        CloudSyncRegistry.instance.modules.map((m) => m.key).toSet();
+    if (registered.isEmpty) return;
+    final unseen = registered.difference(_settings.seenModuleKeys);
+    if (unseen.isEmpty) return;
+    final next = _settings.copyWith(
+      enabledModuleKeys: {..._settings.enabledModuleKeys, ...unseen},
+      seenModuleKeys: {..._settings.seenModuleKeys, ...registered},
+    );
+    await applySettings(next);
   }
 
   CloudSyncSettings get settings => _settings;
@@ -200,71 +249,85 @@ class CloudSyncService {
     Map<String, dynamic> manifest,
     Map<String, dynamic> newManifest,
   ) async {
-    try {
-      final remoteEntry = manifest[module.key];
-      DateTime? remoteAt;
-      if (remoteEntry is Map && remoteEntry['updatedAt'] is int) {
-        remoteAt = DateTime.fromMillisecondsSinceEpoch(
-          remoteEntry['updatedAt'] as int,
-        );
-      }
-      final localAt = await module.getLocalUpdatedAt();
-
-      if (localAt == null && remoteAt == null) {
-        return CloudSyncReport(
-          moduleKey: module.key,
-          outcome: CloudSyncOutcome.skipped,
-        );
-      }
-
-      if (remoteAt != null &&
-          (localAt == null || remoteAt.isAfter(localAt))) {
-        // 远端更新 → 拉取
-        final data = await backend.readModule(module.key);
-        if (data != null) {
-          await module.importData(data);
-          newManifest[module.key] = {
-            'updatedAt': remoteAt.millisecondsSinceEpoch,
-          };
-          return CloudSyncReport(
-            moduleKey: module.key,
-            outcome: CloudSyncOutcome.pulled,
-          );
+    Object? lastError;
+    for (var attempt = 1; attempt <= _maxRetries; attempt++) {
+      try {
+        return await _syncModuleOnce(module, backend, manifest, newManifest);
+      } on Exception catch (e, st) {
+        lastError = e;
+        AppError.handle(e, st, 'cloudSync.${module.key}.attempt$attempt');
+        if (attempt < _maxRetries) {
+          await Future<void>.delayed(Duration(milliseconds: 200 * attempt));
         }
       }
+    }
+    return CloudSyncReport(
+      moduleKey: module.key,
+      outcome: CloudSyncOutcome.failed,
+      error: lastError?.toString(),
+    );
+  }
 
-      if (localAt != null &&
-          (remoteAt == null || localAt.isAfter(remoteAt))) {
-        // 本地更新 → 推送
-        final data = await module.exportData();
-        await backend.writeModule(module.key, data);
-        newManifest[module.key] = {
-          'updatedAt': localAt.millisecondsSinceEpoch,
-        };
-        return CloudSyncReport(
-          moduleKey: module.key,
-          outcome: CloudSyncOutcome.pushed,
-        );
-      }
+  Future<CloudSyncReport> _syncModuleOnce(
+    SyncableModule module,
+    CloudSyncBackend backend,
+    Map<String, dynamic> manifest,
+    Map<String, dynamic> newManifest,
+  ) async {
+    final remoteEntry = manifest[module.key];
+    DateTime? remoteAt;
+    if (remoteEntry is Map && remoteEntry['updatedAt'] is int) {
+      remoteAt = DateTime.fromMillisecondsSinceEpoch(
+        remoteEntry['updatedAt'] as int,
+      );
+    }
+    final localAt = await module.getLocalUpdatedAt();
 
-      // 一致 → 保留 manifest
-      if (remoteAt != null) {
-        newManifest[module.key] = {
-          'updatedAt': remoteAt.millisecondsSinceEpoch,
-        };
-      }
+    if (localAt == null && remoteAt == null) {
       return CloudSyncReport(
         moduleKey: module.key,
         outcome: CloudSyncOutcome.skipped,
       );
-    } on Exception catch (e, st) {
-      AppError.handle(e, st, 'cloudSync.${module.key}');
+    }
+
+    if (remoteAt != null && (localAt == null || remoteAt.isAfter(localAt))) {
+      // 远端更新 → 拉取
+      final data = await backend.readModule(module.key);
+      if (data != null) {
+        await module.importData(data);
+        newManifest[module.key] = {
+          'updatedAt': remoteAt.millisecondsSinceEpoch,
+        };
+        return CloudSyncReport(
+          moduleKey: module.key,
+          outcome: CloudSyncOutcome.pulled,
+        );
+      }
+    }
+
+    if (localAt != null && (remoteAt == null || localAt.isAfter(remoteAt))) {
+      // 本地更新 → 推送
+      final data = await module.exportData();
+      await backend.writeModule(module.key, data);
+      newManifest[module.key] = {
+        'updatedAt': localAt.millisecondsSinceEpoch,
+      };
       return CloudSyncReport(
         moduleKey: module.key,
-        outcome: CloudSyncOutcome.failed,
-        error: e.toString(),
+        outcome: CloudSyncOutcome.pushed,
       );
     }
+
+    // 一致 → 保留 manifest
+    if (remoteAt != null) {
+      newManifest[module.key] = {
+        'updatedAt': remoteAt.millisecondsSinceEpoch,
+      };
+    }
+    return CloudSyncReport(
+      moduleKey: module.key,
+      outcome: CloudSyncOutcome.skipped,
+    );
   }
 
   /// 健康检查：用户在设置页点「测试连接」时调

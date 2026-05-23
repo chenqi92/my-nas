@@ -30,10 +30,12 @@ import 'package:my_nas/features/music/data/services/sync/favorites_sync_module.d
 import 'package:my_nas/features/music/data/services/sync/music_settings_sync_module.dart';
 import 'package:my_nas/features/music/data/services/sync/playlist_sync_module.dart';
 import 'package:my_nas/features/music/presentation/pages/desktop_lyric_window.dart';
+import 'package:my_nas/features/note/data/services/sync/note_sync_module.dart';
 import 'package:my_nas/features/reading/data/services/sync/reading_progress_sync_module.dart';
 import 'package:my_nas/features/video/data/services/audio_track_service.dart';
 import 'package:my_nas/features/video/data/services/subtitle_service.dart';
 import 'package:my_nas/features/video/data/services/sync/video_favorites_sync_module.dart';
+import 'package:my_nas/features/video/data/services/sync/video_progress_sync_module.dart';
 import 'package:my_nas/features/video/data/services/tmdb_service.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
@@ -216,9 +218,11 @@ void _registerSyncModules() {
     ..register(PlaylistSyncModule())
     ..register(FavoritesSyncModule())
     ..register(VideoFavoritesSyncModule())
+    ..register(VideoProgressSyncModule())
     ..register(ReadingProgressSyncModule())
     ..register(BookSourcesSyncModule())
     ..register(MusicSettingsSyncModule())
+    ..register(NoteSyncModule())
     ..register(AppSettingsSyncModule());
 }
 

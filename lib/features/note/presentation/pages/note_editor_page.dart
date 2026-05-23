@@ -8,6 +8,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/features/note/data/services/markdown_parser.dart';
+import 'package:my_nas/features/note/data/services/note_state_service.dart';
 import 'package:my_nas/features/note/domain/entities/note_item.dart';
 import 'package:my_nas/features/note/presentation/widgets/task_list_widget.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
@@ -182,16 +183,41 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
     with SingleTickerProviderStateMixin, ConsumerTabBarVisibilityMixin {
   late TabController _tabController;
   final TextEditingController _editController = TextEditingController();
+  final ScrollController _previewScrollController = ScrollController();
+  final NoteStateService _noteStateService = NoteStateService();
 
   @override
   void initState() {
     super.initState();
     hideTabBar();
     _tabController = TabController(length: 3, vsync: this);
+    _restoreNoteState();
+  }
+
+  Future<void> _restoreNoteState() async {
+    await _noteStateService.init();
+    await _noteStateService.markOpened(
+      widget.note.path,
+      modifiedAt: widget.note.modifiedAt,
+    );
+    final state = _noteStateService.getState(widget.note.path);
+    final offset = state?.scrollOffset;
+    if (offset == null || offset <= 0) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_previewScrollController.hasClients) return;
+      final max = _previewScrollController.position.maxScrollExtent;
+      _previewScrollController.jumpTo(offset.clamp(0.0, max));
+    });
   }
 
   @override
   void dispose() {
+    if (_previewScrollController.hasClients) {
+      final offset = _previewScrollController.offset;
+      // ignore: discarded_futures
+      _noteStateService.setScrollOffset(widget.note.path, offset);
+    }
+    _previewScrollController.dispose();
     _tabController.dispose();
     _editController.dispose();
     super.dispose();
@@ -239,6 +265,7 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
   }
 
   Widget _buildPreviewTab(BuildContext context, NoteEditorLoaded state, bool isDark) => SingleChildScrollView(
+      controller: _previewScrollController,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: _MarkdownPreview(
         content: state.content,
