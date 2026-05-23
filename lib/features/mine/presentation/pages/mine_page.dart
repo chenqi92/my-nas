@@ -7,6 +7,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/app_lock/presentation/pages/privacy_security_page.dart';
 import 'package:my_nas/features/book/presentation/pages/book_settings_page.dart';
 import 'package:my_nas/features/book/presentation/pages/book_sources_page.dart';
 import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
@@ -374,6 +375,26 @@ class MinePage extends ConsumerWidget {
               ctx,
               MaterialPageRoute<void>(
                 builder: (_) => const AppearanceSettingsPage(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      _MineSection(
+        title: '隐私与安全',
+        icon: Icons.lock_outline_rounded,
+        tilesBuilder: (ctx) => [
+          _buildSettingsTile(
+            context,
+            isDark,
+            icon: Icons.lock_rounded,
+            iconColor: AppColors.primary,
+            title: '应用锁',
+            subtitle: '通过 PIN 或生物识别保护应用',
+            onTap: () => Navigator.push(
+              ctx,
+              MaterialPageRoute<void>(
+                builder: (_) => const PrivacySecurityPage(),
               ),
             ),
           ),

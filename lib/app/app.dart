@@ -14,6 +14,7 @@ import 'package:my_nas/core/services/background_task_service.dart';
 import 'package:my_nas/core/services/deep_link_service.dart';
 import 'package:my_nas/core/services/toast_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/features/app_lock/presentation/widgets/app_lock_gate.dart';
 import 'package:my_nas/features/book/data/services/book_database_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
 import 'package:my_nas/features/music/presentation/providers/desktop_lyric_provider.dart';
@@ -24,6 +25,7 @@ import 'package:my_nas/features/video/data/services/video_scanner_service.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/services/widget_data_service.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/toast_overlay.dart';
 
 class MyNasApp extends ConsumerStatefulWidget {
@@ -278,18 +280,21 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       theme: AppTheme.lightFromPreset(colorPreset),
       darkTheme: AppTheme.darkFromPreset(colorPreset),
       themeMode: themeMode,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: appRouter,
-      // 添加 builder 来处理全局错误边界
-      builder: (context, child) {
-        // 包装 ToastServiceProvider 和 ToastOverlay
-        return ToastServiceProvider(
-          service: _toastService,
-          child: ToastOverlay(
-            toastService: _toastService,
-            child: child ?? const SizedBox.shrink(),
+      // 包装 ToastServiceProvider、ToastOverlay 和 AppLockGate
+      builder: (context, child) => ToastServiceProvider(
+        service: _toastService,
+        child: ToastOverlay(
+          toastService: _toastService,
+          child: AppLockLifecycleListener(
+            child: AppLockGate(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
