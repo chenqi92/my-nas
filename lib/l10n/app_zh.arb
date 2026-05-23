@@ -1,0 +1,50 @@
+{
+  "@@locale": "zh",
+  "appLockSettingsTitle": "应用锁",
+  "appLockSettingsSubtitle": "通过 PIN 或生物识别保护应用",
+  "appLockEnable": "启用应用锁",
+  "appLockEnableDescription": "进入应用时需要解锁",
+  "appLockDisable": "关闭应用锁",
+  "appLockDisableConfirm": "确定关闭应用锁？",
+  "appLockDisableConfirmDescription": "需要输入当前 PIN 验证身份。",
+  "appLockChangePin": "修改 PIN",
+  "appLockBiometricToggle": "使用生物识别解锁",
+  "appLockBiometricUnavailable": "当前设备不支持生物识别",
+  "appLockTimeoutTitle": "自动锁定时机",
+  "appLockTimeoutImmediate": "立即",
+  "appLockTimeoutMinutes": "{count} 分钟后",
+  "@appLockTimeoutMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appLockTimeoutOnExit": "仅在应用关闭后",
+  "appLockSetupTitle": "设置 PIN",
+  "appLockSetupSubtitle": "请输入 4 到 6 位数字 PIN",
+  "appLockSetupConfirmTitle": "确认 PIN",
+  "appLockSetupConfirmSubtitle": "再次输入相同的 PIN",
+  "appLockSetupMismatch": "两次输入不一致，请重新输入",
+  "appLockSetupSuccess": "应用锁已启用",
+  "appLockSetupAskBiometric": "是否同时启用生物识别解锁？",
+  "appLockSetupBiometricEnable": "启用",
+  "appLockSetupBiometricSkip": "跳过",
+  "appLockUnlockTitle": "输入 PIN 解锁",
+  "appLockUnlockBiometricPrompt": "解锁 MyNAS",
+  "appLockUnlockBiometricButton": "使用生物识别",
+  "appLockUnlockWrongPin": "PIN 错误",
+  "appLockUnlockLockedOut": "尝试次数过多，请 {seconds} 秒后再试",
+  "@appLockUnlockLockedOut": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "appLockPinInputDelete": "删除",
+  "appLockPinInputSubmit": "确认",
+  "appLockCancel": "取消",
+  "appLockNext": "下一步",
+  "appLockDone": "完成"
+}

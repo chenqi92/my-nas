@@ -1,0 +1,50 @@
+{
+  "@@locale": "en",
+  "appLockSettingsTitle": "App Lock",
+  "appLockSettingsSubtitle": "Protect the app with a PIN or biometrics",
+  "appLockEnable": "Enable App Lock",
+  "appLockEnableDescription": "Require unlock when entering the app",
+  "appLockDisable": "Turn off App Lock",
+  "appLockDisableConfirm": "Turn off App Lock?",
+  "appLockDisableConfirmDescription": "You'll need to enter your current PIN to confirm.",
+  "appLockChangePin": "Change PIN",
+  "appLockBiometricToggle": "Unlock with biometrics",
+  "appLockBiometricUnavailable": "Biometrics unavailable on this device",
+  "appLockTimeoutTitle": "Auto-lock timeout",
+  "appLockTimeoutImmediate": "Immediately",
+  "appLockTimeoutMinutes": "{count, plural, =1 {After 1 minute} other {After {count} minutes}}",
+  "@appLockTimeoutMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appLockTimeoutOnExit": "Only when app is closed",
+  "appLockSetupTitle": "Set a PIN",
+  "appLockSetupSubtitle": "Enter a 4 to 6 digit PIN",
+  "appLockSetupConfirmTitle": "Confirm your PIN",
+  "appLockSetupConfirmSubtitle": "Enter the same PIN again",
+  "appLockSetupMismatch": "PINs don't match. Try again.",
+  "appLockSetupSuccess": "App Lock is now on",
+  "appLockSetupAskBiometric": "Also enable biometric unlock?",
+  "appLockSetupBiometricEnable": "Enable",
+  "appLockSetupBiometricSkip": "Skip",
+  "appLockUnlockTitle": "Enter PIN to unlock",
+  "appLockUnlockBiometricPrompt": "Unlock MyNAS",
+  "appLockUnlockBiometricButton": "Use biometrics",
+  "appLockUnlockWrongPin": "Wrong PIN",
+  "appLockUnlockLockedOut": "Too many attempts. Try again in {seconds}s",
+  "@appLockUnlockLockedOut": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "appLockPinInputDelete": "Delete",
+  "appLockPinInputSubmit": "OK",
+  "appLockCancel": "Cancel",
+  "appLockNext": "Next",
+  "appLockDone": "Done"
+}

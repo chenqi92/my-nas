@@ -124,6 +124,9 @@ coverage/
 *.g.dart
 *.gr.dart
 *.mocks.dart
+# flutter gen-l10n 输出
+lib/l10n/app_localizations.dart
+lib/l10n/app_localizations_*.dart
 
 # Environment files
 .env
