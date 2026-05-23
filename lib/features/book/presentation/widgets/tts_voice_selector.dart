@@ -39,7 +39,7 @@ class _TTSVoiceSelectorState extends ConsumerState<TTSVoiceSelector> {
     }
 
     // 过滤音色
-    List<TTSVoice> filteredVoices = allVoices;
+    var filteredVoices = allVoices;
     if (_filterGender != null) {
       filteredVoices = allVoices.where((v) => v.gender == _filterGender).toList();
     }

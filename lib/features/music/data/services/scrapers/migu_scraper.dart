@@ -303,7 +303,7 @@ class MiguScraper implements MusicScraper {
     final cover = data['cover'] as String? ?? data['albumPicM'] as String? ?? '';
 
     // 时长：咪咕返回秒数（兼容 int 和 String 类型）
-    int duration = 0;
+    var duration = 0;
     final durationValue = data['duration'] ?? data['length'];
     if (durationValue is int) {
       duration = durationValue;

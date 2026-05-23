@@ -104,7 +104,7 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
                   Expanded(
                     child: AnimatedBuilder(
                       animation: _tabController,
-                      builder: (_, __) => IndexedStack(
+                      builder: (_, _) => IndexedStack(
                         index: _tabController.index,
                         children: [
                           _buildTaskList(
@@ -190,10 +190,9 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
     required int downloadCount,
     required int uploadCount,
     required int cacheCount,
-  }) {
-    return AnimatedBuilder(
+  }) => AnimatedBuilder(
       animation: _tabController,
-      builder: (_, __) => ListView(
+      builder: (_, _) => ListView(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
         children: [
           _DesktopTransferEntry(
@@ -220,7 +219,6 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
         ],
       ),
     );
-  }
 
   bool _isActive(TransferTask task) =>
       task.status == TransferStatus.transferring ||

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_nas/core/errors/errors.dart';
-import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
-import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
+import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 直播源设置页面
@@ -236,7 +236,7 @@ class _LiveStreamSettingsPageState
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed ?? false) {
       await ref
           .read(liveStreamSettingsProvider.notifier)
           .removeSource(source.id);

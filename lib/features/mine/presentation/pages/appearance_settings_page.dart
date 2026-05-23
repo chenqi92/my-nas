@@ -335,8 +335,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
     BuildContext context,
     ColorSchemePreset currentPreset,
     bool isDark,
-  ) {
-    return GridView.builder(
+  ) => GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -352,7 +351,6 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
         return _buildColorSchemeCard(context, preset, isSelected, isDark);
       },
     );
-  }
 
   Widget _buildColorSchemeCard(
     BuildContext context,

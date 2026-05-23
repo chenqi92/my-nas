@@ -403,7 +403,7 @@ class MusicSettingsSheet extends ConsumerWidget {
               subtitle: '在菜单栏显示迷你播放器',
               value: menuBarState.isVisible,
               isDark: isDark,
-              onChanged: (value) => menuBarNotifier.setVisible(value),
+              onChanged: menuBarNotifier.setVisible,
             ),
           ],
           // 最小化时显示桌面歌词

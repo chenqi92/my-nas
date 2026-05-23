@@ -255,22 +255,16 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
   }
 
   @override
-  Future<bool> enterPictureInPicture() async {
-    return _channel.enterPiP(_playerId);
-  }
+  Future<bool> enterPictureInPicture() async => _channel.enterPiP(_playerId);
 
   @override
-  Future<bool> exitPictureInPicture() async {
-    return _channel.exitPiP(_playerId);
-  }
+  Future<bool> exitPictureInPicture() async => _channel.exitPiP(_playerId);
 
   @override
   bool get isPictureInPicture => _isPiPActive;
 
   @override
-  Future<List<int>?> screenshot() async {
-    return _channel.screenshot(_playerId);
-  }
+  Future<List<int>?> screenshot() async => _channel.screenshot(_playerId);
 
   // ==================== 状态流 ====================
 
@@ -348,10 +342,8 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
   // ==================== 视图 ====================
 
   @override
-  Widget buildVideoWidget({BoxFit fit = BoxFit.contain}) {
-    return NativeAVPlayerView(
+  Widget buildVideoWidget({BoxFit fit = BoxFit.contain}) => NativeAVPlayerView(
       playerId: _playerId,
       fit: fit,
     );
-  }
 }

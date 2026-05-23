@@ -441,8 +441,7 @@ class PlexAdapter extends MediaServerAdapter {
       if (media.parts != null && media.parts!.isNotEmpty) {
         final part = media.parts!.first;
         if (part.streams != null) {
-          streams = part.streams!.map((s) {
-            return MediaStream(
+          streams = part.streams!.map((s) => MediaStream(
               type: s.isVideo
                   ? MediaStreamType.video
                   : s.isAudio
@@ -459,8 +458,7 @@ class PlexAdapter extends MediaServerAdapter {
               bitRate: s.bitrate,
               channels: s.channels,
               sampleRate: s.samplingRate,
-            );
-          }).toList();
+            )).toList();
         }
       }
     }

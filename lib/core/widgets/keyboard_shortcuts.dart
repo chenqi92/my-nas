@@ -665,7 +665,7 @@ class CommonShortcutGroups {
           shortcuts: [
             (key: '[', description: '减慢播放速度'),
             (key: ']', description: '加快播放速度'),
-            (key: '\\', description: '恢复正常速度'),
+            (key: r'\', description: '恢复正常速度'),
           ],
         ),
         const ShortcutGroup(

@@ -155,14 +155,12 @@ class EmbyVirtualFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async {
-    return null;
-  }
+  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
 
   // === 私有方法 ===
 
   String _normalizePath(String path) {
-    var normalized = path.replaceAll('\\', '/');
+    var normalized = path.replaceAll(r'\', '/');
     if (!normalized.startsWith('/')) {
       normalized = '/$normalized';
     }

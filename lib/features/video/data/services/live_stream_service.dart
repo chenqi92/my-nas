@@ -214,9 +214,7 @@ class LiveStreamService {
   /// 预览 M3U URL（不保存）
   ///
   /// 用于添加源前的预览
-  Future<List<LiveChannel>> previewChannels(String url) async {
-    return fetchChannels(url);
-  }
+  Future<List<LiveChannel>> previewChannels(String url) async => fetchChannels(url);
 
   /// 获取指定源
   LiveStreamSource? getSource(String sourceId) {
@@ -240,18 +238,14 @@ class LiveStreamService {
   }
 
   /// 按分类获取频道
-  List<LiveChannel> getChannelsByCategory(String category) {
-    return allChannels.where((c) => c.category == category).toList();
-  }
+  List<LiveChannel> getChannelsByCategory(String category) => allChannels.where((c) => c.category == category).toList();
 
   /// 搜索频道
   List<LiveChannel> searchChannels(String query) {
     if (query.isEmpty) return allChannels;
     final lowerQuery = query.toLowerCase();
-    return allChannels.where((c) {
-      return c.name.toLowerCase().contains(lowerQuery) ||
-          (c.category?.toLowerCase().contains(lowerQuery) ?? false);
-    }).toList();
+    return allChannels.where((c) => c.name.toLowerCase().contains(lowerQuery) ||
+          (c.category?.toLowerCase().contains(lowerQuery) ?? false)).toList();
   }
 
   /// 关闭

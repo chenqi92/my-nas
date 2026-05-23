@@ -254,11 +254,10 @@ class EmbyApi {
   }) async {
     await _post('/Sessions/Playing', body: {
       'ItemId': itemId,
-      if (positionTicks != null) 'PositionTicks': positionTicks,
-      if (playSessionId != null) 'PlaySessionId': playSessionId,
-      if (audioStreamIndex != null) 'AudioStreamIndex': audioStreamIndex,
-      if (subtitleStreamIndex != null)
-        'SubtitleStreamIndex': subtitleStreamIndex,
+      'PositionTicks': ?positionTicks,
+      'PlaySessionId': ?playSessionId,
+      'AudioStreamIndex': ?audioStreamIndex,
+      'SubtitleStreamIndex': ?subtitleStreamIndex,
     });
   }
 
@@ -271,8 +270,8 @@ class EmbyApi {
   }) async {
     await _post('/Sessions/Playing/Progress', body: {
       'ItemId': itemId,
-      if (positionTicks != null) 'PositionTicks': positionTicks,
-      if (playSessionId != null) 'PlaySessionId': playSessionId,
+      'PositionTicks': ?positionTicks,
+      'PlaySessionId': ?playSessionId,
       'IsPaused': isPaused,
     });
   }
@@ -285,8 +284,8 @@ class EmbyApi {
   }) async {
     await _post('/Sessions/Playing/Stopped', body: {
       'ItemId': itemId,
-      if (positionTicks != null) 'PositionTicks': positionTicks,
-      if (playSessionId != null) 'PlaySessionId': playSessionId,
+      'PositionTicks': ?positionTicks,
+      'PlaySessionId': ?playSessionId,
     });
   }
 
@@ -395,8 +394,7 @@ class EmbyApi {
   }
 
   /// 获取设备配置（用于转码决策）
-  Map<String, dynamic> _getDeviceProfile() {
-    return {
+  Map<String, dynamic> _getDeviceProfile() => {
       'MaxStreamingBitrate': 120000000,
       'MaxStaticBitrate': 100000000,
       'MusicStreamingTranscodingBitrate': 384000,
@@ -418,7 +416,6 @@ class EmbyApi {
         },
       ],
     };
-  }
 
   void dispose() {
     _client.close();

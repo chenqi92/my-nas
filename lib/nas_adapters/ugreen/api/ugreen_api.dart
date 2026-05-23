@@ -149,7 +149,7 @@ class UGreenApi {
           'otp': otpCode != null,
           'username': username,
           'password': encryptedPassword,
-          if (otpCode != null) 'otp_code': otpCode,
+          'otp_code': ?otpCode,
         },
         options: Options(
           validateStatus: (status) => status != null && status < 500,
@@ -592,7 +592,7 @@ class UGreenApi {
       '/ugreen/v1/file/search',
       data: {
         'keyword': query,
-        if (path != null) 'path': path,
+        'path': ?path,
       },
     );
 

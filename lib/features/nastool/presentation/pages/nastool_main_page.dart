@@ -415,8 +415,7 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
       );
 
   /// 通用「已连接」状态胶囊（手机 AppBar / 桌面 header 共用）
-  Widget _connectionPill(BuildContext context, NasToolConnection conn) {
-    return Container(
+  Widget _connectionPill(BuildContext context, NasToolConnection conn) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: AppColors.success.withValues(alpha: 0.12),
@@ -444,7 +443,6 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
         ],
       ),
     );
-  }
 
   Widget _buildContent(BuildContext context, bool isDark) {
     switch (_selectedIndex) {
@@ -517,7 +515,7 @@ class _DashboardContent extends ConsumerWidget {
             systemAsync.when(
               data: (sys) => _buildSystemInfo(context, sys),
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
             const SizedBox(height: AppSpacing.lg),
             _buildSectionTitle(context, '媒体库统计'),
@@ -530,7 +528,7 @@ class _DashboardContent extends ConsumerWidget {
               data: (sites) => _buildSiteStats(context, sites),
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
-              error: (_, __) => _buildEmptyState('暂无站点数据'),
+              error: (_, _) => _buildEmptyState('暂无站点数据'),
             ),
             const SizedBox(height: AppSpacing.xl),
             _buildSectionTitle(context, '最近转移'),
@@ -540,7 +538,7 @@ class _DashboardContent extends ConsumerWidget {
                   context, transfers.take(5).toList()),
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
-              error: (_, __) => _buildEmptyState('暂无转移记录'),
+              error: (_, _) => _buildEmptyState('暂无转移记录'),
             ),
           ],
         ),
@@ -1063,10 +1061,8 @@ class _SubscribesContentState extends ConsumerState<_SubscribesContent> with Sin
     switch (action) {
       case 'search':
         actions.searchSubscribe(sub.id, sub.isMovie ? 'MOV' : 'TV');
-        break;
       case 'delete':
         actions.deleteSubscribe(sub.id, sub.isMovie ? 'MOV' : 'TV');
-        break;
     }
   }
 }
@@ -1314,7 +1310,7 @@ class _SearchContentState extends ConsumerState<_SearchContent> {
                                         ? ClipRRect(
                                             borderRadius: BorderRadius.circular(4),
                                             child: Image.network(r.coverImage!, width: 48, height: 64, fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => Container(width: 48, height: 64, color: AppColors.lightOnSurfaceVariant.withValues(alpha: 0.2), child: const Icon(Icons.movie_rounded))),
+                                              errorBuilder: (_, _, _) => Container(width: 48, height: 64, color: AppColors.lightOnSurfaceVariant.withValues(alpha: 0.2), child: const Icon(Icons.movie_rounded))),
                                           )
                                         : null,
                                     title: Text(r.title, maxLines: 2, overflow: TextOverflow.ellipsis),
@@ -1344,8 +1340,7 @@ class _TorrentDetailSheet extends ConsumerWidget {
   final ScrollController scrollController;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
+  Widget build(BuildContext context, WidgetRef ref) => DecoratedBox(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
@@ -1368,7 +1363,7 @@ class _TorrentDetailSheet extends ConsumerWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(media.coverImage!, width: 60, height: 80, fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(width: 60, height: 80, color: AppColors.lightOnSurfaceVariant.withValues(alpha: 0.2), child: const Icon(Icons.movie_rounded))),
+                      errorBuilder: (_, _, _) => Container(width: 60, height: 80, color: AppColors.lightOnSurfaceVariant.withValues(alpha: 0.2), child: const Icon(Icons.movie_rounded))),
                   ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -1472,7 +1467,6 @@ class _TorrentDetailSheet extends ConsumerWidget {
         ],
       ),
     );
-  }
 }
 
 // ============================================================
@@ -1559,7 +1553,7 @@ class _MediaContentState extends ConsumerState<_MediaContent> {
                                     Flexible(
                                       child: m.posterPath != null
                                           ? Image.network('https://image.tmdb.org/t/p/w500${m.posterPath}', fit: BoxFit.cover, errorBuilder: (_, _, _) => ColoredBox(color: AppColors.primary.withValues(alpha: 0.1), child: const Icon(Icons.movie_rounded, size: 48)))
-                                          : Container(color: AppColors.primary.withValues(alpha: 0.1), child: const Icon(Icons.movie_rounded, size: 48)),
+                                          : ColoredBox(color: AppColors.primary.withValues(alpha: 0.1), child: const Icon(Icons.movie_rounded, size: 48)),
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.all(8),
@@ -1899,7 +1893,7 @@ class _SettingsContent extends ConsumerWidget {
             ),
           ),
           loading: () => const Card(child: Padding(padding: EdgeInsets.all(AppSpacing.lg), child: Center(child: CircularProgressIndicator()))),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         ),
         const SizedBox(height: AppSpacing.md),
 
@@ -1946,7 +1940,7 @@ class _SettingsContent extends ConsumerWidget {
                         )).toList(),
                       ),
                 loading: () => const Padding(padding: EdgeInsets.all(AppSpacing.md), child: Center(child: CircularProgressIndicator())),
-                error: (_, __) => const Padding(padding: EdgeInsets.all(AppSpacing.md), child: Text('加载失败')),
+                error: (_, _) => const Padding(padding: EdgeInsets.all(AppSpacing.md), child: Text('加载失败')),
               ),
             ],
           ),

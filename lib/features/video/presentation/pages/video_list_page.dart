@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
@@ -11,15 +10,11 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
-import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
-import 'package:my_nas/shared/providers/media_favorites_provider.dart';
-import 'package:my_nas/shared/providers/ui_style_provider.dart';
-import 'package:my_nas/shared/widgets/media_info_sheet.dart';
-import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/grid_helper.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/features/media_tracking/presentation/providers/trakt_sync_provider.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -44,18 +39,22 @@ import 'package:my_nas/features/video/presentation/providers/playlist_provider.d
 import 'package:my_nas/features/video/presentation/providers/video_category_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_history_provider.dart';
-import 'package:my_nas/features/media_tracking/presentation/providers/trakt_sync_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/category_browse_cards.dart';
 import 'package:my_nas/features/video/presentation/widgets/hero_banner.dart';
 import 'package:my_nas/features/video/presentation/widgets/live_stream_section.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_category_settings_sheet.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/providers/media_favorites_provider.dart';
+import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/app_bottom_sheet.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
-import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/media_info_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 视频文件及其来源
@@ -1908,8 +1907,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
     WidgetRef ref,
     bool isDark,
     VideoListState state,
-  ) {
-    return GlassButtonGroup(
+  ) => GlassButtonGroup(
       children: [
         GlassGroupIconButton(
           icon: Icons.search_rounded,
@@ -1960,7 +1958,6 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         ),
       ],
     );
-  }
 
   /// 处理菜单选择
   void _handleMenuSelection(String value) {
@@ -4716,7 +4713,7 @@ class _PosterCardState extends ConsumerState<_PosterCard> {
     );
   }
 
-  Widget _buildPlaceholder() => Container(
+  Widget _buildPlaceholder() => ColoredBox(
     color: widget.isDark
         ? AppColors.darkSurfaceVariant
         : AppColors.lightSurfaceVariant,
@@ -5745,7 +5742,7 @@ class _VerticalPosterCardState extends ConsumerState<_VerticalPosterCard> {
     );
   }
 
-  Widget _buildPlaceholder() => Container(
+  Widget _buildPlaceholder() => ColoredBox(
     color: widget.isDark
         ? AppColors.darkSurfaceVariant
         : AppColors.lightSurfaceVariant,
@@ -6083,7 +6080,7 @@ class _HorizontalVideoCardState extends ConsumerState<_HorizontalVideoCard> {
     );
   }
 
-  Widget _buildPlaceholder() => Container(
+  Widget _buildPlaceholder() => ColoredBox(
     color: widget.isDark
         ? AppColors.darkSurfaceVariant
         : AppColors.lightSurfaceVariant,
@@ -6414,7 +6411,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
   );
 
   /// 显示排序选项
-  void _showSortOptions(BuildContext context, bool isDark) async {
+  Future<void> _showSortOptions(BuildContext context, bool isDark) async {
     // 检查是否为玻璃模式
     final container = ProviderScope.containerOf(context);
     final uiStyle = container.read(uiStyleProvider);
@@ -6597,7 +6594,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
   }
 
   /// 显示筛选选项
-  void _showFilterOptions(BuildContext context, bool isDark) async {
+  Future<void> _showFilterOptions(BuildContext context, bool isDark) async {
     // 检查是否为玻璃模式
     final container = ProviderScope.containerOf(context);
     final uiStyle = container.read(uiStyleProvider);
@@ -7181,7 +7178,7 @@ class _TvShowPosterCardState extends State<_TvShowPosterCard> {
     return parts.join(' · ');
   }
 
-  Widget _buildPlaceholder() => Container(
+  Widget _buildPlaceholder() => ColoredBox(
     color: widget.isDark
         ? AppColors.darkSurfaceVariant
         : AppColors.lightSurfaceVariant,
@@ -7400,7 +7397,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
     await _loadMore();
   }
 
-  void _showFilterSheet(BuildContext context, bool isDark) async {
+  Future<void> _showFilterSheet(BuildContext context, bool isDark) async {
     final uiStyle = ref.read(uiStyleProvider);
 
     // 玻璃模式使用原生筛选弹框
@@ -7753,19 +7750,17 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
     );
   }
 
-  void _showSortMenu(BuildContext context, bool isDark) async {
+  Future<void> _showSortMenu(BuildContext context, bool isDark) async {
     final uiStyle = ref.read(uiStyleProvider);
     
     // 玻璃模式使用原生 iOS sheet
     if (uiStyle.isGlass) {
-      final items = VideoSortOption.values.map((option) {
-        return ListSheetItem<VideoSortOption>(
+      final items = VideoSortOption.values.map((option) => ListSheetItem<VideoSortOption>(
           title: option.displayName,
           icon: option.icon,
           value: option,
           isSelected: option == _sortOption,
-        );
-      }).toList();
+        )).toList();
 
       final selected = await showNativeListSheet<VideoSortOption>(
         context: context,
@@ -8293,7 +8288,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
     await _loadMore();
   }
 
-  void _showFilterSheet(BuildContext context, bool isDark) async {
+  Future<void> _showFilterSheet(BuildContext context, bool isDark) async {
     final uiStyle = ref.read(uiStyleProvider);
 
     // 玻璃模式使用原生筛选弹框
@@ -8368,19 +8363,17 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
     );
   }
 
-  void _showSortMenu(BuildContext context, bool isDark) async {
+  Future<void> _showSortMenu(BuildContext context, bool isDark) async {
     final uiStyle = ref.read(uiStyleProvider);
     
     // 玻璃模式使用原生 iOS sheet
     if (uiStyle.isGlass) {
-      final items = VideoSortOption.values.map((option) {
-        return ListSheetItem<VideoSortOption>(
+      final items = VideoSortOption.values.map((option) => ListSheetItem<VideoSortOption>(
           title: option.displayName,
           icon: option.icon,
           value: option,
           isSelected: option == _sortOption,
-        );
-      }).toList();
+        )).toList();
 
       final selected = await showNativeListSheet<VideoSortOption>(
         context: context,
@@ -8829,19 +8822,17 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
     await _loadMore();
   }
 
-  void _showSortSheet(BuildContext context, bool isDark) async {
+  Future<void> _showSortSheet(BuildContext context, bool isDark) async {
     final uiStyle = ref.read(uiStyleProvider);
 
     // 玻璃模式使用原生 iOS sheet
     if (uiStyle.isGlass) {
-      final items = VideoSortOption.values.map((option) {
-        return ListSheetItem<VideoSortOption>(
+      final items = VideoSortOption.values.map((option) => ListSheetItem<VideoSortOption>(
           title: option.displayName,
           icon: option.icon,
           value: option,
           isSelected: option == _sortOption,
-        );
-      }).toList();
+        )).toList();
 
       final result = await showNativeListSheet<VideoSortOption>(
         context: context,
@@ -8950,14 +8941,12 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
         body: Stack(
           children: [
             // 主内容 - 使用 CustomScrollView 让内容滚动到按钮下方
-            _videos.isEmpty && _isLoading
-                ? Center(
+            if (_videos.isEmpty && _isLoading) Center(
                     child: Padding(
                       padding: EdgeInsets.only(top: safeTop + 60),
                       child: const CircularProgressIndicator(),
                     ),
-                  )
-                : _videos.isEmpty
+                  ) else _videos.isEmpty
                     ? Center(
                         child: Padding(
                           padding: EdgeInsets.only(top: safeTop + 60),
@@ -9402,7 +9391,7 @@ class _MovieCollectionCardState extends State<_MovieCollectionCard> {
     return '${years.first} - ${years.last}';
   }
 
-  Widget _buildPlaceholder() => Container(
+  Widget _buildPlaceholder() => ColoredBox(
     color: widget.isDark
         ? AppColors.darkSurfaceVariant
         : AppColors.lightSurfaceVariant,
@@ -9597,7 +9586,7 @@ class _MovieCollectionGridCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholder() => Container(
+  Widget _buildPlaceholder() => ColoredBox(
     color: isDark
         ? AppColors.darkSurfaceVariant
         : AppColors.lightSurfaceVariant,
@@ -10353,19 +10342,17 @@ class _FilteredVideosPaginatedPageState
     await _loadMore();
   }
 
-  void _showSortMenu(BuildContext context, bool isDark) async {
+  Future<void> _showSortMenu(BuildContext context, bool isDark) async {
     final uiStyle = ref.read(uiStyleProvider);
     
     // 玻璃模式使用原生 iOS sheet
     if (uiStyle.isGlass) {
-      final items = VideoSortOption.values.map((option) {
-        return ListSheetItem<VideoSortOption>(
+      final items = VideoSortOption.values.map((option) => ListSheetItem<VideoSortOption>(
           title: option.displayName,
           icon: option.icon,
           value: option,
           isSelected: option == _sortOption,
-        );
-      }).toList();
+        )).toList();
 
       final selected = await showNativeListSheet<VideoSortOption>(
         context: context,

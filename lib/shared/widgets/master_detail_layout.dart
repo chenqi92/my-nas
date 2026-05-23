@@ -170,8 +170,7 @@ class _MasterDetailLayoutState<T> extends State<MasterDetailLayout<T>> {
   }
 
   /// 构建主列表
-  Widget _buildMasterList(BuildContext context) {
-    return Column(
+  Widget _buildMasterList(BuildContext context) => Column(
       children: [
         if (widget.masterHeader != null) widget.masterHeader!,
         Expanded(
@@ -189,7 +188,6 @@ class _MasterDetailLayoutState<T> extends State<MasterDetailLayout<T>> {
         ),
       ],
     );
-  }
 
   /// 构建详情面板
   Widget _buildDetailPane(BuildContext context) {
@@ -308,15 +306,13 @@ class _MasterDetailScaffoldState<T> extends State<MasterDetailScaffold<T>> {
     }
   }
 
-  Widget _buildDetailPage(BuildContext context, T item) {
-    return Scaffold(
+  Widget _buildDetailPage(BuildContext context, T item) => Scaffold(
       appBar: AppBar(
         title: Text(widget.detailTitle?.call(item) ?? '详情'),
         actions: widget.detailActions?.call(item),
       ),
       body: widget.detailBuilder(context, item),
     );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -327,8 +323,7 @@ class _MasterDetailScaffoldState<T> extends State<MasterDetailScaffold<T>> {
     }
   }
 
-  Widget _buildMasterPage(BuildContext context) {
-    return Scaffold(
+  Widget _buildMasterPage(BuildContext context) => Scaffold(
       appBar: widget.masterTitle != null
           ? AppBar(
               title: Text(widget.masterTitle!),
@@ -347,7 +342,6 @@ class _MasterDetailScaffoldState<T> extends State<MasterDetailScaffold<T>> {
         },
       ),
     );
-  }
 
   Widget _buildSplitView(BuildContext context) {
     final config = widget.config;

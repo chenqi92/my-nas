@@ -16,9 +16,9 @@ import 'package:my_nas/features/reading/data/services/reader_settings_service.da
 import 'package:my_nas/features/reading/presentation/providers/reader_settings_provider.dart';
 import 'package:my_nas/features/reading/presentation/widgets/page_flip_effect.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 在线书籍阅读页面
 ///
@@ -474,8 +474,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
     );
   }
 
-  Widget _buildTopBar(BookReaderSettings settings, OnlineChapter chapter) {
-    return Container(
+  Widget _buildTopBar(BookReaderSettings settings, OnlineChapter chapter) => Container(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -509,7 +508,6 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
         ],
       ),
     );
-  }
 
   Widget _buildBottomBar(BookReaderSettings settings) {
     final isDark = settings.theme == BookReaderTheme.dark ||
@@ -728,8 +726,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
     required BookReaderTheme theme,
     required bool isSelected,
     required VoidCallback onTap,
-  }) {
-    return GestureDetector(
+  }) => GestureDetector(
       onTap: onTap,
       child: Container(
         width: 56,
@@ -754,7 +751,6 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
         ),
       ),
     );
-  }
 
   Widget _buildPageModeChip(
     String label,
@@ -827,7 +823,7 @@ class _ChapterListSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),

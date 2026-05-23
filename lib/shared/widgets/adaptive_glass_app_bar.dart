@@ -204,7 +204,7 @@ class AdaptiveGlassAppBar extends ConsumerWidget {
               child: Column(
                 children: [
                   _buildToolbar(context, isDark),
-                  if (bottom != null) bottom!,
+                  ?bottom,
                 ],
               ),
             ),
@@ -269,7 +269,7 @@ class AdaptiveGlassAppBar extends ConsumerWidget {
               sigmaX: optimizedStyle.blurIntensity,
               sigmaY: optimizedStyle.blurIntensity,
             ),
-            child: Container(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 color: bgColor,
                 border: Border(
@@ -286,7 +286,7 @@ class AdaptiveGlassAppBar extends ConsumerWidget {
                 child: Column(
                   children: [
                     _buildToolbar(context, isDark),
-                    if (bottom != null) bottom!,
+                    ?bottom,
                   ],
                 ),
               ),
@@ -298,8 +298,7 @@ class AdaptiveGlassAppBar extends ConsumerWidget {
     );
   }
 
-  Widget _buildToolbar(BuildContext context, bool isDark) {
-    return SizedBox(
+  Widget _buildToolbar(BuildContext context, bool isDark) => SizedBox(
       height: toolbarHeight ?? kToolbarHeight,
       child: NavigationToolbar(
         leading: leading ??
@@ -317,7 +316,6 @@ class AdaptiveGlassAppBar extends ConsumerWidget {
         middleSpacing: titleSpacing ?? NavigationToolbar.kMiddleSpacing,
       ),
     );
-  }
 }
 
 /// 玻璃顶栏委托
@@ -747,7 +745,7 @@ class GlassIconButton extends ConsumerWidget {
     );
 
     if (tooltip != null) {
-      button = Tooltip(message: tooltip!, child: button);
+      button = Tooltip(message: tooltip, child: button);
     }
 
     return button;
@@ -842,9 +840,9 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
         if (item is PopupMenuItem) {
           // 提取 PopupMenuItem 的信息
           final menuItem = item;
-          String title = '';
+          var title = '';
           String? iconName;
-          bool isDestructive = false;
+          var isDestructive = false;
           
           // 尝试从 child 提取文本
           final child = menuItem.child;
@@ -1042,21 +1040,18 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
         case 'onButtonTap':
           final index = call.arguments as int;
           _handleButtonTap(index);
-          break;
         case 'onMenuItemSelected':
           // iOS 14+ 原生菜单选中回调
           final args = call.arguments as Map<Object?, Object?>;
-          final buttonIndex = args['buttonIndex'] as int;
+          final buttonIndex = args['buttonIndex']! as int;
           final value = args['value'] as String?;
           if (value != null) {
             _handleMenuItemSelected(buttonIndex, value);
           }
-          break;
         case 'onMenuButtonTap':
           // iOS 13 回退: 需要 Flutter 显示菜单
           final index = call.arguments as int;
           _handleButtonTap(index);
-          break;
       }
     });
   }
@@ -1393,7 +1388,7 @@ class GlassGroupIconButton extends StatelessWidget {
     );
 
     if (tooltip != null) {
-      button = Tooltip(message: tooltip!, child: button);
+      button = Tooltip(message: tooltip, child: button);
     }
 
     return button;
@@ -1467,7 +1462,7 @@ class GlassGroupDynamicButton extends StatelessWidget {
     );
 
     if (tooltip != null) {
-      button = Tooltip(message: tooltip!, child: button);
+      button = Tooltip(message: tooltip, child: button);
     }
 
     return button;
@@ -1711,13 +1706,13 @@ Future<T?> _showNativeApplePopupMenu<T>({
       }
 
       // 尝试从 child 提取文本和图标
-      String title = '';
+      var title = '';
       String? icon;
 
       if (item.child is Text) {
-        title = (item.child as Text).data ?? '';
+        title = (item.child! as Text).data ?? '';
       } else if (item.child is Row) {
-        final row = item.child as Row;
+        final row = item.child! as Row;
         for (final child in row.children) {
           if (child is Text) {
             title = child.data ?? '';
@@ -1727,12 +1722,12 @@ Future<T?> _showNativeApplePopupMenu<T>({
         }
       } else if (item.child is ListTile) {
         // 处理 ListTile 类型的菜单项
-        final listTile = item.child as ListTile;
+        final listTile = item.child! as ListTile;
         if (listTile.title is Text) {
-          title = (listTile.title as Text).data ?? '';
+          title = (listTile.title! as Text).data ?? '';
         }
         if (listTile.leading is Icon) {
-          icon = _iconDataToSFSymbol((listTile.leading as Icon).icon);
+          icon = _iconDataToSFSymbol((listTile.leading! as Icon).icon);
         }
       } else {
         // 其他类型，尝试获取 Widget 的描述性文本
@@ -1790,7 +1785,7 @@ String _extractTextFromWidget(Widget? widget) {
   if (widget is Text) return widget.data ?? '';
   if (widget is ListTile) {
     if (widget.title is Text) {
-      return (widget.title as Text).data ?? '';
+      return (widget.title! as Text).data ?? '';
     }
   }
   if (widget is Row || widget is Column || widget is Flex) {
@@ -1863,29 +1858,25 @@ class _GlassPopupMenuRoute<T> extends PopupRoute<T> {
   Duration get transitionDuration => const Duration(milliseconds: 200);
 
   @override
-  Animation<double> createAnimation() {
-    return CurvedAnimation(
+  Animation<double> createAnimation() => CurvedAnimation(
       parent: super.createAnimation(),
       curve: Curves.easeOutCubic,
       reverseCurve: Curves.easeInCubic,
     );
-  }
 
   @override
   Widget buildPage(
     BuildContext context,
     Animation<double> animation,
     Animation<double> secondaryAnimation,
-  ) {
-    return MediaQuery.removePadding(
+  ) => MediaQuery.removePadding(
       context: context,
       removeTop: true,
       removeBottom: true,
       removeLeft: true,
       removeRight: true,
       child: Builder(
-        builder: (context) {
-          return CustomSingleChildLayout(
+        builder: (context) => CustomSingleChildLayout(
             delegate: _GlassPopupMenuRouteLayout(
               position,
               Directionality.of(context),
@@ -1894,11 +1885,9 @@ class _GlassPopupMenuRoute<T> extends PopupRoute<T> {
               route: this,
               animation: animation,
             ),
-          );
-        },
+          ),
       ),
     );
-  }
 }
 
 /// 玻璃风格弹出菜单布局
@@ -1909,17 +1898,15 @@ class _GlassPopupMenuRouteLayout extends SingleChildLayoutDelegate {
   final TextDirection textDirection;
 
   @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    return BoxConstraints.loose(
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) => BoxConstraints.loose(
       constraints.biggest - const Offset(16, 16) as Size,
     );
-  }
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
     // 默认在按钮下方右对齐
-    double x = size.width - position.right - childSize.width;
-    double y = size.height - position.bottom + 8;
+    var x = size.width - position.right - childSize.width;
+    var y = size.height - position.bottom + 8;
 
     // 确保不超出屏幕边界
     if (x < 8) x = 8;
@@ -1936,10 +1923,8 @@ class _GlassPopupMenuRouteLayout extends SingleChildLayoutDelegate {
   }
 
   @override
-  bool shouldRelayout(_GlassPopupMenuRouteLayout oldDelegate) {
-    return position != oldDelegate.position ||
+  bool shouldRelayout(_GlassPopupMenuRouteLayout oldDelegate) => position != oldDelegate.position ||
         textDirection != oldDelegate.textDirection;
-  }
 }
 
 /// 玻璃风格弹出菜单组件
@@ -2010,9 +1995,9 @@ class _GlassPopupMenu<T> extends StatelessWidget {
   }
 
   List<Widget> _buildMenuItems(BuildContext context) {
-    final List<Widget> children = [];
+    final children = <Widget>[];
 
-    for (int i = 0; i < route.items.length; i++) {
+    for (var i = 0; i < route.items.length; i++) {
       final item = route.items[i];
 
       if (item is PopupMenuDivider) {
@@ -2173,8 +2158,7 @@ class LiquidGlassPageLayout extends ConsumerWidget {
     return _buildLiquidGlassLayout(context, isDark, safeTop);
   }
 
-  Widget _buildClassicLayout(BuildContext context, bool isDark, double safeTop) {
-    return Stack(
+  Widget _buildClassicLayout(BuildContext context, bool isDark, double safeTop) => Stack(
       children: [
         // 主内容
         body,
@@ -2194,10 +2178,8 @@ class LiquidGlassPageLayout extends ConsumerWidget {
           ),
       ],
     );
-  }
 
-  Widget _buildLiquidGlassLayout(BuildContext context, bool isDark, double safeTop) {
-    return Stack(
+  Widget _buildLiquidGlassLayout(BuildContext context, bool isDark, double safeTop) => Stack(
       children: [
         // 主内容（无固定顶栏，大标题在内容区域内）
         body,
@@ -2217,7 +2199,6 @@ class LiquidGlassPageLayout extends ConsumerWidget {
           ),
       ],
     );
-  }
 
   /// 构建大标题区域（用于放在 Sliver 中）
   static Widget buildLargeTitleSliver({
@@ -2227,8 +2208,7 @@ class LiquidGlassPageLayout extends ConsumerWidget {
     required bool isDark,
     EdgeInsets padding = const EdgeInsets.fromLTRB(20, 8, 20, 16),
     double topPadding = 0,
-  }) {
-    return SliverToBoxAdapter(
+  }) => SliverToBoxAdapter(
       child: Padding(
         padding: padding.copyWith(top: padding.top + topPadding),
         child: Column(
@@ -2263,7 +2243,6 @@ class LiquidGlassPageLayout extends ConsumerWidget {
         ),
       ),
     );
-  }
 }
 
 /// iOS 26 风格玻璃搜索栏
@@ -2874,7 +2853,7 @@ class GlassNavigationBar extends ConsumerWidget {
           child: Row(
             children: [
               // 左侧
-              if (leading != null) leading!,
+              ?leading,
               // 中间标题
               if (titleWidget != null || title != null)
                 Expanded(
@@ -2893,7 +2872,7 @@ class GlassNavigationBar extends ConsumerWidget {
               else
                 const Spacer(),
               // 右侧
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
         ),
@@ -3136,7 +3115,7 @@ class AdaptiveListScaffold extends ConsumerWidget {
                   // 顶部留白（安全区 + 顶栏 + 间距）
                   SizedBox(height: safeTop + 56),
                   // 悬浮内容
-                  if (floatingContent != null) floatingContent!,
+                  ?floatingContent,
                   // 主内容
                   Expanded(child: body),
                 ],
@@ -3197,7 +3176,7 @@ class AdaptiveListScaffold extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          if (floatingContent != null) floatingContent!,
+          ?floatingContent,
           Expanded(child: body),
         ],
       ),

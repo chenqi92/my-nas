@@ -313,8 +313,7 @@ class GlassCard extends StatelessWidget {
   final NativeBlurStyle style;
 
   @override
-  Widget build(BuildContext context) {
-    return NativeBlurView(
+  Widget build(BuildContext context) => NativeBlurView(
       style: style,
       isDark: isDark,
       cornerRadius: cornerRadius,
@@ -325,5 +324,4 @@ class GlassCard extends StatelessWidget {
         child: child,
       ),
     );
-  }
 }

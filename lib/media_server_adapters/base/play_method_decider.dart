@@ -362,9 +362,7 @@ class TranscodingParams {
 
 /// 设备播放能力 Provider
 final devicePlaybackCapabilitiesProvider =
-    Provider<DevicePlaybackCapabilities>((ref) {
-  return DevicePlaybackCapabilities.defaults();
-});
+    Provider<DevicePlaybackCapabilities>((ref) => DevicePlaybackCapabilities.defaults());
 
 /// 播放方式决策器 Provider
 final playMethodDeciderProvider = Provider<PlayMethodDecider>((ref) {

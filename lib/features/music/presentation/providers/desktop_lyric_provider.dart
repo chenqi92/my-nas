@@ -5,8 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
-import 'package:window_manager/window_manager.dart';
-
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/features/music/data/services/desktop_lyric_service.dart';
@@ -16,6 +14,7 @@ import 'package:my_nas/features/music/domain/entities/desktop_lyric_settings.dar
 import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
+import 'package:window_manager/window_manager.dart';
 
 /// 桌面歌词状态
 class DesktopLyricState {
@@ -33,20 +32,16 @@ class DesktopLyricState {
     DesktopLyricSettings? settings,
     bool? isVisible,
     bool? isInitialized,
-  }) {
-    return DesktopLyricState(
+  }) => DesktopLyricState(
       settings: settings ?? this.settings,
       isVisible: isVisible ?? this.isVisible,
       isInitialized: isInitialized ?? this.isInitialized,
     );
-  }
 }
 
 /// 桌面歌词 Provider
 final desktopLyricProvider =
-    StateNotifierProvider<DesktopLyricNotifier, DesktopLyricState>((ref) {
-  return DesktopLyricNotifier(ref);
-});
+    StateNotifierProvider<DesktopLyricNotifier, DesktopLyricState>(DesktopLyricNotifier.new);
 
 /// 桌面歌词状态管理器
 class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
@@ -92,11 +87,11 @@ class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
 
           // 设置回调
           if (_service is DesktopLyricServiceMacOSImpl) {
-            final macService = _service as DesktopLyricServiceMacOSImpl;
+            final macService = _service! as DesktopLyricServiceMacOSImpl;
             macService.onPositionChanged = _onPositionChanged;
             macService.onControlAction = _onControlAction;
           } else if (_service is DesktopLyricServiceWindowsImpl) {
-            (_service as DesktopLyricServiceWindowsImpl).onPositionChanged =
+            (_service! as DesktopLyricServiceWindowsImpl).onPositionChanged =
                 _onPositionChanged;
           }
 
@@ -305,7 +300,7 @@ class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
     final currentLyricLine = lines[currentIndex];
 
     // 计算当前行的进度（用于卡拉OK效果）
-    double progress = 0.0;
+    var progress = 0.0;
     if (playerState.isPlaying) {
       final currentTimeMs = playerState.position.inMilliseconds;
       final lineStartMs = currentLyricLine.time.inMilliseconds;
@@ -486,9 +481,7 @@ class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
         _toggleHotKey = HotKey(
           key: PhysicalKeyboardKey.keyL,
           modifiers: [
-            Platform.isMacOS
-                ? HotKeyModifier.meta
-                : HotKeyModifier.control,
+            if (Platform.isMacOS) HotKeyModifier.meta else HotKeyModifier.control,
             HotKeyModifier.shift,
           ],
           scope: HotKeyScope.system,
@@ -549,9 +542,7 @@ class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
 
 /// macOS 状态栏 Provider
 final menuBarProvider =
-    StateNotifierProvider<MenuBarNotifier, MenuBarState>((ref) {
-  return MenuBarNotifier(ref);
-});
+    StateNotifierProvider<MenuBarNotifier, MenuBarState>(MenuBarNotifier.new);
 
 /// 状态栏状态
 class MenuBarState {
@@ -569,13 +560,11 @@ class MenuBarState {
     MenuBarSettings? settings,
     bool? isVisible,
     bool? isInitialized,
-  }) {
-    return MenuBarState(
+  }) => MenuBarState(
       settings: settings ?? this.settings,
       isVisible: isVisible ?? this.isVisible,
       isInitialized: isInitialized ?? this.isInitialized,
     );
-  }
 }
 
 /// 状态栏状态管理器
@@ -623,16 +612,12 @@ class MenuBarNotifier extends StateNotifier<MenuBarState> {
     switch (action) {
       case 'play':
         playerNotifier.playOrPause();
-        break;
       case 'pause':
         playerNotifier.playOrPause();
-        break;
       case 'previous':
         playerNotifier.playPrevious();
-        break;
       case 'next':
         playerNotifier.playNext();
-        break;
     }
   }
 

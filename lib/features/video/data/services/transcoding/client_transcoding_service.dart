@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_session.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
-import 'package:ffmpeg_kit_flutter_new/statistics.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/transcoding/android_mediacodec_transcoding.dart';
@@ -541,7 +540,7 @@ class ClientTranscodingService implements NasTranscodingService {
       final session = await FFmpegKit.executeAsync(
         command,
         // 完成回调
-        (FFmpegSession session) async {
+        (session) async {
           task.ffmpegSession = session;
           final returnCode = await session.getReturnCode();
 
@@ -593,7 +592,7 @@ class ClientTranscodingService implements NasTranscodingService {
           }
         },
         // 统计回调
-        (Statistics statistics) {
+        (statistics) {
           lastLogTime = DateTime.now();
           final timeInMs = statistics.getTime().toDouble();
           if (timeInMs > 0) {
@@ -607,7 +606,7 @@ class ClientTranscodingService implements NasTranscodingService {
               logger.d('ClientTranscoding: 进度 ${(timeInMs / 1000).toStringAsFixed(1)}s, 速度=${statistics.getSpeed().toStringAsFixed(1)}x');
             }
           }
-          task.speed = '${(statistics.getSpeed()).toStringAsFixed(1)}x';
+          task.speed = '${statistics.getSpeed().toStringAsFixed(1)}x';
         },
       );
 

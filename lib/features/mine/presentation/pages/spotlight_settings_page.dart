@@ -156,14 +156,12 @@ class _Card extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
+  Widget build(BuildContext context) => Material(
       color: isDark ? AppColors.darkSurface : context.colorScheme.surface,
       borderRadius: BorderRadius.circular(12),
       clipBehavior: Clip.antiAlias,
       child: Column(children: children),
     );
-  }
 }
 
 class _NotSupportedHint extends StatelessWidget {
@@ -172,8 +170,7 @@ class _NotSupportedHint extends StatelessWidget {
   final bool isDark;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
+  Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Text(
         'Spotlight 索引仅在 macOS 上可用。',
@@ -184,5 +181,4 @@ class _NotSupportedHint extends StatelessWidget {
         ),
       ),
     );
-  }
 }

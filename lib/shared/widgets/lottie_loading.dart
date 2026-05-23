@@ -34,18 +34,6 @@ class LottieLoading extends StatelessWidget {
     this.showMessage = true,
   });
 
-  /// 动画类型
-  final LottieAnimationType type;
-
-  /// 加载提示文本
-  final String? message;
-
-  /// 动画尺寸
-  final double size;
-
-  /// 是否显示消息文本
-  final bool showMessage;
-
   /// 便捷构造函数：书籍加载
   const LottieLoading.book({
     super.key,
@@ -77,6 +65,18 @@ class LottieLoading extends StatelessWidget {
     this.size = 80,
     this.showMessage = true,
   }) : type = LottieAnimationType.dots;
+
+  /// 动画类型
+  final LottieAnimationType type;
+
+  /// 加载提示文本
+  final String? message;
+
+  /// 动画尺寸
+  final double size;
+
+  /// 是否显示消息文本
+  final bool showMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -139,8 +139,7 @@ class MiniLottieLoading extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
+  Widget build(BuildContext context) => SizedBox(
       width: size,
       height: size,
       child: Lottie.asset(
@@ -154,7 +153,6 @@ class MiniLottieLoading extends StatelessWidget {
         ),
       ),
     );
-  }
 
   IconData _getIconForType(LottieAnimationType type) => switch (type) {
       LottieAnimationType.book => Icons.auto_stories_rounded,

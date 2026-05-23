@@ -1073,7 +1073,7 @@ class VideoFileNameParser {
 
     // 提取音频格式
     final audioMatch = _audioPattern.firstMatch(name);
-    String? audioFormat = audioMatch?.group(1);
+    var audioFormat = audioMatch?.group(1);
     // 规范化音频格式名称
     if (audioFormat != null) {
       final upper = audioFormat.toUpperCase().replaceAll(RegExp(r'[\s._-]+'), '');

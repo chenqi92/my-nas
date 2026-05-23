@@ -198,15 +198,13 @@ class JellyfinAdapter extends MediaServerAdapter {
     int? maxWidth,
     int? maxHeight,
     String? tag,
-  }) {
-    return _api.getImageUrl(
+  }) => _api.getImageUrl(
       itemId,
       imageType,
       maxWidth: maxWidth,
       maxHeight: maxHeight,
       tag: tag,
     );
-  }
 
   @override
   Future<MediaStreamInfo> getStreamInfo(

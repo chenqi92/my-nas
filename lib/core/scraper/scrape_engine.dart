@@ -80,9 +80,9 @@ class ScrapeEngine {
     if (endpoint == null) return null;
     final args = <String, dynamic>{
       'id': id,
-      if (title != null) 'title': title,
-      if (artist != null) 'artist': artist,
-      if (album != null) 'album': album,
+      'title': ?title,
+      'artist': ?artist,
+      'album': ?album,
     };
     final result = await _runEndpoint(config, endpoint, args, action: 'detail');
     if (result is Map) return Map<String, dynamic>.from(result);
@@ -121,10 +121,10 @@ class ScrapeEngine {
     final endpoint = config.lyrics;
     if (endpoint == null) return null;
     final args = <String, dynamic>{
-      if (id != null) 'id': id,
-      if (title != null) 'title': title,
-      if (artist != null) 'artist': artist,
-      if (album != null) 'album': album,
+      'id': ?id,
+      'title': ?title,
+      'artist': ?artist,
+      'album': ?album,
     };
     final result = await _runEndpoint(config, endpoint, args,
         action: 'lyrics');

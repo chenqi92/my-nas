@@ -18,10 +18,10 @@ import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/mobile/file_systems/mobile_gallery_file_system.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 照片 URL 获取回调
 typedef PhotoUrlGetter = Future<String?> Function(String path, String sourceId);
@@ -539,7 +539,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
             ? (_) => _stopLivePhotoPlayback()
             : null,
         onLongPressCancel: photo.isLivePhoto
-            ? () => _stopLivePhotoPlayback()
+            ? _stopLivePhotoPlayback
             : null,
         behavior: HitTestBehavior.opaque,
         child: Stack(
@@ -614,7 +614,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
             // Live Photo 准备中指示器
             if (_isPreparingLivePhoto)
               Positioned.fill(
-                child: Container(
+                child: ColoredBox(
                   color: Colors.black.withValues(alpha: 0.3),
                   child: const Center(
                     child: CircularProgressIndicator(

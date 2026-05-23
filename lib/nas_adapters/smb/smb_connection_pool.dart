@@ -572,12 +572,10 @@ class SmbConnectionPool {
   }
 
   /// 释放专用连接槽位
-  Future<void> _releaseDedicatedSlot() {
-    return _dedicatedLock.synchronized(() async {
+  Future<void> _releaseDedicatedSlot() => _dedicatedLock.synchronized(() async {
       _dedicatedConnectionCount--;
       logger.d('SMB Pool: 释放专用连接槽位 ($_dedicatedConnectionCount/$maxDedicatedConnections)');
     });
-  }
 
   /// 关闭连接池
   Future<void> dispose() async {

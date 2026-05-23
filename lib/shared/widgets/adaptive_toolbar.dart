@@ -338,7 +338,7 @@ class _ToolbarTextButtonState extends State<_ToolbarTextButton> {
 
     if (widget.tooltip != null) {
       button = Tooltip(
-        message: widget.tooltip!,
+        message: widget.tooltip,
         child: button,
       );
     }

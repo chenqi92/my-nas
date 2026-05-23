@@ -142,9 +142,7 @@ class GenreCountryMapping {
   }
 
   /// 判断字符串是否包含中文字符
-  static bool _isChinese(String text) {
-    return RegExp(r'[\u4e00-\u9fa5]').hasMatch(text);
-  }
+  static bool _isChinese(String text) => RegExp(r'[\u4e00-\u9fa5]').hasMatch(text);
 
   /// 兼容旧代码：英文 -> 中文映射
   static Map<String, String> get _genreEnToZh {

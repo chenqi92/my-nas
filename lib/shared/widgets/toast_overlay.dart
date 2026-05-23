@@ -151,12 +151,10 @@ class ToastOverlayWrapper extends StatelessWidget {
     // 这里暂时直接创建，后续改为依赖注入
     return ListenableBuilder(
       listenable: ToastServiceProvider.of(context),
-      builder: (context, _) {
-        return ToastOverlay(
+      builder: (context, _) => ToastOverlay(
           toastService: ToastServiceProvider.of(context),
           child: child ?? const SizedBox.shrink(),
-        );
-      },
+        ),
     );
   }
 }

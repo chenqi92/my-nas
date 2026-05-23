@@ -232,7 +232,8 @@ void _registerThirdPartyLicenses() {
   LicenseRegistry.addLicense(() async* {
     yield const LicenseEntryWithLineBreaks(
       ['FFmpeg'],
-      '''FFmpeg - A complete, cross-platform solution to record, convert and stream audio and video.
+      '''
+FFmpeg - A complete, cross-platform solution to record, convert and stream audio and video.
 
 Copyright (c) 2000-2025 the FFmpeg developers
 

@@ -343,8 +343,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
     );
   }
 
-  Widget _buildControlsOverlay(List<LiveChannel> allChannels, int currentIndex, bool isFavorite) {
-    return Container(
+  Widget _buildControlsOverlay(List<LiveChannel> allChannels, int currentIndex, bool isFavorite) => DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -412,7 +411,6 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
         ),
       ),
     );
-  }
 
   Widget _buildChannelDrawer(Map<String, List<LiveChannel>> channelsByCategory, Set<String> favorites) {
     final favoriteChannels = ref.watch(allLiveChannelsProvider).where((c) => favorites.contains(c.id)).toList();

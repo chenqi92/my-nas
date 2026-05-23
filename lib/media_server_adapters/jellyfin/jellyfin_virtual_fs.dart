@@ -202,7 +202,7 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
 
   /// 规范化路径
   String _normalizePath(String path) {
-    var normalized = path.replaceAll('\\', '/');
+    var normalized = path.replaceAll(r'\', '/');
     if (!normalized.startsWith('/')) {
       normalized = '/$normalized';
     }
@@ -408,10 +408,9 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
   }
 
   /// 清理名称（移除不安全字符）
-  String _sanitizeName(String name) {
-    return name
+  String _sanitizeName(String name) => name
         .replaceAll('/', '_')
-        .replaceAll('\\', '_')
+        .replaceAll(r'\', '_')
         .replaceAll(':', '_')
         .replaceAll('*', '_')
         .replaceAll('?', '_')
@@ -419,7 +418,6 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
         .replaceAll('<', '_')
         .replaceAll('>', '_')
         .replaceAll('|', '_');
-  }
 
   /// 将 JellyfinItem 转换为 FileItem
   FileItem _itemToFileItem(JellyfinItem item, String path) {

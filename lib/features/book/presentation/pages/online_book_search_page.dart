@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
 import 'package:my_nas/features/book/presentation/pages/online_book_detail_page.dart';
@@ -9,8 +11,6 @@ import 'package:my_nas/features/book/presentation/providers/book_search_provider
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
-import 'package:my_nas/app/theme/ui_style.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 在线书籍搜索页面
@@ -79,8 +79,7 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
     );
   }
 
-  Widget _buildSearchField(bool isDark) {
-    return TextField(
+  Widget _buildSearchField(bool isDark) => TextField(
       controller: _searchController,
       focusNode: _focusNode,
       decoration: InputDecoration(
@@ -97,7 +96,6 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
       textInputAction: TextInputAction.search,
       onSubmitted: _handleSearch,
     );
-  }
 
   Widget _buildBody(BookSearchState searchState, bool isDark, UIStyle uiStyle) {
     // 空状态 - 尚未搜索
@@ -124,8 +122,7 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
     return _buildResultsList(searchState.results, isDark, uiStyle, searchState);
   }
 
-  Widget _buildEmptyState(bool isDark) {
-    return Center(
+  Widget _buildEmptyState(bool isDark) => Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -151,10 +148,8 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
         ],
       ),
     );
-  }
 
-  Widget _buildNoResultsState(bool isDark) {
-    return Center(
+  Widget _buildNoResultsState(bool isDark) => Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -180,10 +175,8 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
         ],
       ),
     );
-  }
 
-  Widget _buildErrorState(String error, bool isDark) {
-    return Center(
+  Widget _buildErrorState(String error, bool isDark) => Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -198,7 +191,6 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
         ],
       ),
     );
-  }
 
   Widget _buildResultsList(
     List<OnlineBook> books,
@@ -299,8 +291,7 @@ class _BookCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return AdaptiveGlassContainer(
+  Widget build(BuildContext context) => AdaptiveGlassContainer(
       uiStyle: uiStyle,
       isDark: isDark,
       cornerRadius: 12,
@@ -324,8 +315,8 @@ class _BookCard extends StatelessWidget {
                         ? CachedNetworkImage(
                             imageUrl: book.coverUrl!,
                             fit: BoxFit.cover,
-                            placeholder: (_, __) => _buildPlaceholder(),
-                            errorWidget: (_, __, ___) => _buildPlaceholder(),
+                            placeholder: (_, _) => _buildPlaceholder(),
+                            errorWidget: (_, _, _) => _buildPlaceholder(),
                           )
                         : _buildPlaceholder(),
                   ),
@@ -420,10 +411,8 @@ class _BookCard extends StatelessWidget {
         ),
       ),
     );
-  }
 
-  Widget _buildPlaceholder() {
-    return Container(
+  Widget _buildPlaceholder() => ColoredBox(
       color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
       child: Icon(
         Icons.auto_stories_rounded,
@@ -431,5 +420,4 @@ class _BookCard extends StatelessWidget {
         size: 24,
       ),
     );
-  }
 }

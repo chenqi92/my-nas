@@ -14,9 +14,7 @@ import 'package:my_nas/features/transfer/data/services/uploaded_mark_service.dar
 import 'package:my_nas/features/transfer/domain/entities/transfer_task.dart';
 
 /// 缓存配置服务 Provider
-final cacheConfigServiceProvider = Provider<CacheConfigService>((ref) {
-  return CacheConfigService();
-});
+final cacheConfigServiceProvider = Provider<CacheConfigService>((ref) => CacheConfigService());
 
 /// 缓存配置 Provider（用于 UI 显示和设置）
 final cacheConfigProvider = FutureProvider<Map<MediaType, int>>((ref) async {

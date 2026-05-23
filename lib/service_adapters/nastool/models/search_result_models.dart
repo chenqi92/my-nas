@@ -201,10 +201,10 @@ class NtTorrentItem {
         var num = double.tryParse(match.group(1)!) ?? 0;
         final unit = match.group(2)?.toLowerCase();
         switch (unit) {
-          case 'k': num *= 1024; break;
-          case 'm': num *= 1024 * 1024; break;
-          case 'g': num *= 1024 * 1024 * 1024; break;
-          case 't': num *= 1024 * 1024 * 1024 * 1024; break;
+          case 'k': num *= 1024;
+          case 'm': num *= 1024 * 1024;
+          case 'g': num *= 1024 * 1024 * 1024;
+          case 't': num *= 1024 * 1024 * 1024 * 1024;
         }
         return num.toInt();
       }

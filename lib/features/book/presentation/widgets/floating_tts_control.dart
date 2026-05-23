@@ -254,7 +254,7 @@ class _FloatingTTSControlState extends ConsumerState<FloatingTTSControl>
 
   /// 显示音色选择弹框（视频播放器风格）
   void _showVoicePopup(BuildContext context) {
-    final RenderBox? renderBox =
+    final renderBox =
         _voiceButtonKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
@@ -272,7 +272,7 @@ class _FloatingTTSControlState extends ConsumerState<FloatingTTSControl>
 
   /// 显示设置弹框（视频播放器风格）
   void _showSettingsPopup(BuildContext context) {
-    final RenderBox? renderBox =
+    final renderBox =
         _settingsButtonKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
@@ -672,8 +672,7 @@ class _SettingsPopup extends ConsumerWidget {
     required String displayValue,
     required ValueChanged<double> onChanged,
     required bool isDark,
-  }) {
-    return Padding(
+  }) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -716,7 +715,6 @@ class _SettingsPopup extends ConsumerWidget {
         ],
       ),
     );
-  }
 
   Widget _buildSwitchItem({
     required String label,

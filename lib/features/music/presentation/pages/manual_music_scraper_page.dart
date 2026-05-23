@@ -16,20 +16,20 @@ import 'package:my_nas/features/music/data/services/music_tag_writer_service.dar
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
+import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
 import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_favorites_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
-import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
 import 'package:my_nas/features/music/presentation/providers/music_scraper_provider.dart';
-import 'package:my_nas/main.dart' show audioHandler;
 import 'package:my_nas/features/music/presentation/providers/music_tag_write_queue_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/main.dart' show audioHandler;
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
-import 'package:my_nas/shared/widgets/adaptive_image.dart';
-import 'package:path/path.dart' as p;
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:path/path.dart' as p;
 
 /// 手动音乐刮削页面
 class ManualMusicScraperPage extends ConsumerStatefulWidget {

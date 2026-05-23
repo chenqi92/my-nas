@@ -3,9 +3,7 @@ import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/online_book_shelf_service.dart';
 
 /// 在线书架状态 Provider
-final onlineBookShelfProvider = StateNotifierProvider<OnlineBookShelfNotifier, AsyncValue<List<OnlineBookShelfItem>>>((ref) {
-  return OnlineBookShelfNotifier();
-});
+final onlineBookShelfProvider = StateNotifierProvider<OnlineBookShelfNotifier, AsyncValue<List<OnlineBookShelfItem>>>((ref) => OnlineBookShelfNotifier());
 
 /// 在线书架状态管理器
 class OnlineBookShelfNotifier extends StateNotifier<AsyncValue<List<OnlineBookShelfItem>>> {

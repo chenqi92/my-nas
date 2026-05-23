@@ -28,7 +28,7 @@ class TTSVoice {
     final locale = voice['locale'] as String? ?? 'zh-CN';
 
     // 根据名称推断性别
-    VoiceGender gender = VoiceGender.neutral;
+    var gender = VoiceGender.neutral;
     final nameLower = name.toLowerCase();
     if (nameLower.contains('female') ||
         nameLower.contains('女') ||
@@ -44,7 +44,7 @@ class TTSVoice {
     }
 
     // 生成友好显示名称
-    String displayName = name;
+    var displayName = name;
     if (name.isEmpty) {
       displayName = locale.contains('zh') ? '默认中文' : '默认音色';
     } else {
@@ -97,7 +97,7 @@ class TTSVoice {
     if (name.contains('-')) {
       final parts = name.split('-');
       // 返回最后一个有意义的部分
-      for (int i = parts.length - 1; i >= 0; i--) {
+      for (var i = parts.length - 1; i >= 0; i--) {
         if (parts[i].length > 2 && !RegExp(r'^\d+$').hasMatch(parts[i])) {
           return parts[i];
         }

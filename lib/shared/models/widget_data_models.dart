@@ -16,6 +16,29 @@ class StorageWidgetData {
     this.isConnected = true,
   });
 
+  factory StorageWidgetData.fromJson(Map<String, dynamic> json) {
+    final lastUpdatedMs = json['lastUpdated'] as int?;
+    return StorageWidgetData(
+      totalBytes: json['totalBytes'] as int? ?? 0,
+      usedBytes: json['usedBytes'] as int? ?? 0,
+      nasName: json['nasName'] as String? ?? 'NAS',
+      adapterType: json['adapterType'] as String? ?? 'unknown',
+      lastUpdated: lastUpdatedMs != null
+          ? DateTime.fromMillisecondsSinceEpoch(lastUpdatedMs)
+          : null,
+      isConnected: json['isConnected'] as bool? ?? false,
+    );
+  }
+
+  const StorageWidgetData._internal({
+    required this.totalBytes,
+    required this.usedBytes,
+    required this.nasName,
+    required this.adapterType,
+    required DateTime? lastUpdated,
+    required this.isConnected,
+  }) : lastUpdated = lastUpdated ?? const _DefaultDateTime();
+
   final int totalBytes;
   final int usedBytes;
   final String nasName;
@@ -44,20 +67,6 @@ class StorageWidgetData {
         'isConnected': isConnected,
       };
 
-  factory StorageWidgetData.fromJson(Map<String, dynamic> json) {
-    final lastUpdatedMs = json['lastUpdated'] as int?;
-    return StorageWidgetData(
-      totalBytes: json['totalBytes'] as int? ?? 0,
-      usedBytes: json['usedBytes'] as int? ?? 0,
-      nasName: json['nasName'] as String? ?? 'NAS',
-      adapterType: json['adapterType'] as String? ?? 'unknown',
-      lastUpdated: lastUpdatedMs != null
-          ? DateTime.fromMillisecondsSinceEpoch(lastUpdatedMs)
-          : null,
-      isConnected: json['isConnected'] as bool? ?? false,
-    );
-  }
-
   /// 空数据（未连接状态）
   static const empty = StorageWidgetData(
     totalBytes: 0,
@@ -79,15 +88,6 @@ class StorageWidgetData {
 
   // ignore: prefer_constructors_over_static_methods
   static StorageWidgetData? _emptyInstance;
-
-  const StorageWidgetData._internal({
-    required this.totalBytes,
-    required this.usedBytes,
-    required this.nasName,
-    required this.adapterType,
-    required DateTime? lastUpdated,
-    required this.isConnected,
-  }) : lastUpdated = lastUpdated ?? const _DefaultDateTime();
 }
 
 /// 用于 const 构造函数的默认时间
@@ -177,6 +177,14 @@ class DownloadTaskSummary {
     required this.status,
   });
 
+  factory DownloadTaskSummary.fromJson(Map<String, dynamic> json) =>
+      DownloadTaskSummary(
+        id: json['id'] as String? ?? '',
+        fileName: json['fileName'] as String? ?? '',
+        progress: (json['progress'] as num?)?.toDouble() ?? 0,
+        status: json['status'] as String? ?? 'pending',
+      );
+
   final String id;
   final String fileName;
   final double progress;
@@ -188,14 +196,6 @@ class DownloadTaskSummary {
         'progress': progress,
         'status': status,
       };
-
-  factory DownloadTaskSummary.fromJson(Map<String, dynamic> json) =>
-      DownloadTaskSummary(
-        id: json['id'] as String? ?? '',
-        fileName: json['fileName'] as String? ?? '',
-        progress: (json['progress'] as num?)?.toDouble() ?? 0,
-        status: json['status'] as String? ?? 'pending',
-      );
 }
 
 /// 下载小组件数据
@@ -206,6 +206,22 @@ class DownloadWidgetData {
     required this.totalCount,
     required this.lastUpdated,
   });
+
+  factory DownloadWidgetData.fromJson(Map<String, dynamic> json) =>
+      DownloadWidgetData(
+        activeTasks: (json['activeTasks'] as List<dynamic>?)
+                ?.map(
+                  (e) =>
+                      DownloadTaskSummary.fromJson(e as Map<String, dynamic>),
+                )
+                .toList() ??
+            [],
+        completedCount: json['completedCount'] as int? ?? 0,
+        totalCount: json['totalCount'] as int? ?? 0,
+        lastUpdated: DateTime.fromMillisecondsSinceEpoch(
+          json['lastUpdated'] as int? ?? 0,
+        ),
+      );
 
   final List<DownloadTaskSummary> activeTasks;
   final int completedCount;
@@ -235,22 +251,6 @@ class DownloadWidgetData {
         'totalCount': totalCount,
         'lastUpdated': lastUpdated.millisecondsSinceEpoch,
       };
-
-  factory DownloadWidgetData.fromJson(Map<String, dynamic> json) =>
-      DownloadWidgetData(
-        activeTasks: (json['activeTasks'] as List<dynamic>?)
-                ?.map(
-                  (e) =>
-                      DownloadTaskSummary.fromJson(e as Map<String, dynamic>),
-                )
-                .toList() ??
-            [],
-        completedCount: json['completedCount'] as int? ?? 0,
-        totalCount: json['totalCount'] as int? ?? 0,
-        lastUpdated: DateTime.fromMillisecondsSinceEpoch(
-          json['lastUpdated'] as int? ?? 0,
-        ),
-      );
 
   /// 空数据
   static DownloadWidgetData get empty => DownloadWidgetData(
@@ -291,6 +291,19 @@ class MediaWidgetData {
     this.themeColor,
   });
 
+  factory MediaWidgetData.fromJson(Map<String, dynamic> json) =>
+      MediaWidgetData(
+        title: json['title'] as String?,
+        artist: json['artist'] as String?,
+        album: json['album'] as String?,
+        coverImagePath: json['coverImagePath'] as String?,
+        isPlaying: json['isPlaying'] as bool? ?? false,
+        progress: (json['progress'] as num?)?.toDouble() ?? 0,
+        currentTime: json['currentTime'] as int? ?? 0,
+        totalTime: json['totalTime'] as int? ?? 0,
+        themeColor: json['themeColor'] as int?,
+      );
+
   final String? title;
   final String? artist;
   final String? album;
@@ -322,19 +335,6 @@ class MediaWidgetData {
         'themeColor': themeColor,
         // coverImageData 不序列化到 JSON，单独处理
       };
-
-  factory MediaWidgetData.fromJson(Map<String, dynamic> json) =>
-      MediaWidgetData(
-        title: json['title'] as String?,
-        artist: json['artist'] as String?,
-        album: json['album'] as String?,
-        coverImagePath: json['coverImagePath'] as String?,
-        isPlaying: json['isPlaying'] as bool? ?? false,
-        progress: (json['progress'] as num?)?.toDouble() ?? 0,
-        currentTime: json['currentTime'] as int? ?? 0,
-        totalTime: json['totalTime'] as int? ?? 0,
-        themeColor: json['themeColor'] as int?,
-      );
 
   /// 空数据
   static const empty = MediaWidgetData(
@@ -412,16 +412,6 @@ class QuickAccessWidgetData {
     this.isConnected = false,
   });
 
-  final List<QuickAccessType> items;
-  final String? nasName;
-  final bool isConnected;
-
-  Map<String, dynamic> toJson() => {
-        'items': items.map((e) => e.id).toList(),
-        'nasName': nasName,
-        'isConnected': isConnected,
-      };
-
   factory QuickAccessWidgetData.fromJson(Map<String, dynamic> json) =>
       QuickAccessWidgetData(
         items: (json['items'] as List<dynamic>?)
@@ -436,6 +426,16 @@ class QuickAccessWidgetData {
         nasName: json['nasName'] as String?,
         isConnected: json['isConnected'] as bool? ?? false,
       );
+
+  final List<QuickAccessType> items;
+  final String? nasName;
+  final bool isConnected;
+
+  Map<String, dynamic> toJson() => {
+        'items': items.map((e) => e.id).toList(),
+        'nasName': nasName,
+        'isConnected': isConnected,
+      };
 
   /// 默认数据（显示所有快捷操作）
   static const defaultData = QuickAccessWidgetData(
@@ -469,6 +469,27 @@ class ThemeWidgetData {
     required this.warning,
     required this.error,
   });
+
+  factory ThemeWidgetData.fromJson(Map<String, dynamic> json) =>
+      ThemeWidgetData(
+        presetId: json['presetId'] as String? ?? 'teal',
+        primary: json['primary'] as int? ?? 0xFF14B8A6,
+        primaryLight: json['primaryLight'] as int? ?? 0xFF2DD4BF,
+        primaryDark: json['primaryDark'] as int? ?? 0xFF0D9488,
+        secondary: json['secondary'] as int? ?? 0xFF06B6D4,
+        accent: json['accent'] as int? ?? 0xFF06B6D4,
+        music: json['music'] as int? ?? 0xFF8B5CF6,
+        video: json['video'] as int? ?? 0xFFEC4899,
+        photo: json['photo'] as int? ?? 0xFF10B981,
+        book: json['book'] as int? ?? 0xFFF59E0B,
+        download: json['download'] as int? ?? 0xFF3B82F6,
+        darkBackground: json['darkBackground'] as int? ?? 0xFF0D0D0D,
+        darkSurface: json['darkSurface'] as int? ?? 0xFF1A1A1A,
+        darkSurfaceVariant: json['darkSurfaceVariant'] as int? ?? 0xFF242424,
+        success: json['success'] as int? ?? 0xFF22C55E,
+        warning: json['warning'] as int? ?? 0xFFF59E0B,
+        error: json['error'] as int? ?? 0xFFEF4444,
+      );
 
   /// 配色方案ID
   final String presetId;
@@ -520,27 +541,6 @@ class ThemeWidgetData {
         'warning': warning,
         'error': error,
       };
-
-  factory ThemeWidgetData.fromJson(Map<String, dynamic> json) =>
-      ThemeWidgetData(
-        presetId: json['presetId'] as String? ?? 'teal',
-        primary: json['primary'] as int? ?? 0xFF14B8A6,
-        primaryLight: json['primaryLight'] as int? ?? 0xFF2DD4BF,
-        primaryDark: json['primaryDark'] as int? ?? 0xFF0D9488,
-        secondary: json['secondary'] as int? ?? 0xFF06B6D4,
-        accent: json['accent'] as int? ?? 0xFF06B6D4,
-        music: json['music'] as int? ?? 0xFF8B5CF6,
-        video: json['video'] as int? ?? 0xFFEC4899,
-        photo: json['photo'] as int? ?? 0xFF10B981,
-        book: json['book'] as int? ?? 0xFFF59E0B,
-        download: json['download'] as int? ?? 0xFF3B82F6,
-        darkBackground: json['darkBackground'] as int? ?? 0xFF0D0D0D,
-        darkSurface: json['darkSurface'] as int? ?? 0xFF1A1A1A,
-        darkSurfaceVariant: json['darkSurfaceVariant'] as int? ?? 0xFF242424,
-        success: json['success'] as int? ?? 0xFF22C55E,
-        warning: json['warning'] as int? ?? 0xFFF59E0B,
-        error: json['error'] as int? ?? 0xFFEF4444,
-      );
 
   /// 默认主题 (Teal)
   static const defaultTheme = ThemeWidgetData(

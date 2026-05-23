@@ -20,8 +20,7 @@ class MediaServerCacheEntry {
     required this.lastUpdated,
   });
 
-  factory MediaServerCacheEntry.fromMap(Map<String, dynamic> map) {
-    return MediaServerCacheEntry(
+  factory MediaServerCacheEntry.fromMap(Map<String, dynamic> map) => MediaServerCacheEntry(
       id: map['id'] as String,
       sourceId: map['source_id'] as String,
       itemId: map['item_id'] as String,
@@ -32,7 +31,6 @@ class MediaServerCacheEntry {
       imageUrlsJson: map['image_urls_json'] as String?,
       lastUpdated: DateTime.fromMillisecondsSinceEpoch(map['last_updated'] as int),
     );
-  }
 
   final String id;
   final String sourceId;
@@ -263,12 +261,10 @@ class MediaServerCacheService {
 
     return {
       for (final row in results)
-        row['item_type'] as String: row['count'] as int,
+        row['item_type']! as String: row['count']! as int,
     };
   }
 }
 
 /// 媒体服务器缓存服务 Provider
-final mediaServerCacheServiceProvider = Provider<MediaServerCacheService>((ref) {
-  return MediaServerCacheService();
-});
+final mediaServerCacheServiceProvider = Provider<MediaServerCacheService>((ref) => MediaServerCacheService());

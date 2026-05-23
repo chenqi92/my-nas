@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/features/music/data/services/scrobble/music_scrobble_service.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Scrobble 设置页：开关 + ListenBrainz token / Last.fm 三件套。
 class ScrobbleSettingsPage extends ConsumerStatefulWidget {
@@ -173,8 +173,7 @@ class _ScrobbleSettingsPageState
         ),
       );
 
-  Widget _buildListenBrainzSection(bool isDark) {
-    return _Section(
+  Widget _buildListenBrainzSection(bool isDark) => _Section(
       title: 'ListenBrainz',
       isDark: isDark,
       children: [
@@ -203,10 +202,8 @@ class _ScrobbleSettingsPageState
         ),
       ],
     );
-  }
 
-  Widget _buildLastFmSection(bool isDark) {
-    return _Section(
+  Widget _buildLastFmSection(bool isDark) => _Section(
       title: 'Last.fm',
       isDark: isDark,
       children: [
@@ -291,7 +288,6 @@ class _ScrobbleSettingsPageState
         ),
       ],
     );
-  }
 }
 
 class _Section extends StatelessWidget {

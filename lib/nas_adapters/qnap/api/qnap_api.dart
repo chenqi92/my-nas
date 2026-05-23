@@ -37,7 +37,7 @@ class QnapApi {
         data: FormData.fromMap({
           'user': account,
           'pwd': _encodePassword(password),
-          if (otpCode != null) 'otp_code': otpCode,
+          'otp_code': ?otpCode,
           'remme': rememberMe ? '1' : '0',
         }),
         options: Options(
@@ -427,7 +427,7 @@ class QnapApi {
     Map<String, String>? params,
   }) async {
     final queryParams = <String, String>{
-      if (_sid != null) 'sid': _sid!,
+      'sid': ?_sid,
       ...?params,
     };
 

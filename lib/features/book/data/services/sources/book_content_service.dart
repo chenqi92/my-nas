@@ -139,7 +139,7 @@ class BookContentService {
       final url = tocUrl ?? bookUrl;
       
       // 获取所有页的目录
-      var allChapters = <OnlineChapter>[];
+      final allChapters = <OnlineChapter>[];
       var currentUrl = url;
       var pageCount = 0;
       const maxPages = 50; // 防止无限循环
@@ -248,7 +248,7 @@ class BookContentService {
     }
 
     logger.d('解析章节列表, 规则: $chapterListRule');
-    var chapterList = RuleParser.parseRuleList(chapterListRule, responseData, baseUrl: baseUrl);
+    final chapterList = RuleParser.parseRuleList(chapterListRule, responseData, baseUrl: baseUrl);
     
     // 如果主规则解析失败，尝试备用选择器
     if (chapterList.isEmpty) {
@@ -268,7 +268,7 @@ class BookContentService {
     TocRule? primaryRule,
   }) {
     // 跟踪最佳结果
-    List<OnlineChapter> bestChapters = [];
+    var bestChapters = <OnlineChapter>[];
     String? bestSelector;
     
     for (final selector in _fallbackChapterSelectors) {
@@ -284,8 +284,8 @@ class BookContentService {
         try {
           // 尝试从HTML元素中提取信息
           // 首先尝试直接获取（当 item 本身就是 <a> 元素时）
-          String? name = RuleParser.parseRule('text', item, baseUrl: baseUrl);
-          String? url = RuleParser.parseRule('href', item, baseUrl: baseUrl);
+          var name = RuleParser.parseRule('text', item, baseUrl: baseUrl);
+          var url = RuleParser.parseRule('href', item, baseUrl: baseUrl);
           
           // 如果直接获取失败，尝试获取嵌套的 <a> 元素
           if ((name == null || name.isEmpty) && (url == null || url.isEmpty)) {
@@ -357,7 +357,7 @@ class BookContentService {
         logger.w('所有选择器失败，HTML body 预览:\n$preview');
         
         // 额外分析：查找所有 <a> 标签
-        final linkPattern = RegExp(r'<a[^>]+href="([^"]+)"[^>]*>([^<]*)</a>', caseSensitive: false);
+        final linkPattern = RegExp('<a[^>]+href="([^"]+)"[^>]*>([^<]*)</a>', caseSensitive: false);
         final allLinks = linkPattern.allMatches(responseData).toList();
         if (allLinks.isNotEmpty) {
           logger.w('HTML中包含 ${allLinks.length} 个链接，示例:');
@@ -397,9 +397,9 @@ class BookContentService {
     final chapterPatterns = [
       r'\d+\.html?$',           // 以数字.html结尾
       r'/\d+/?$',               // 以数字结尾
-      r'chapter',               // 包含chapter
-      r'chap',
-      r'zhang',                 // 中文拼音
+      'chapter',               // 包含chapter
+      'chap',
+      'zhang',                 // 中文拼音
       r'/\d{1,6}/',             // URL路径中有数字
     ];
     
@@ -409,8 +409,8 @@ class BookContentService {
     
     // 章节名称通常包含这些特征
     final chapterNamePatterns = [
-      r'第.+章',                // 第X章
-      r'第.+节',                // 第X节
+      '第.+章',                // 第X章
+      '第.+节',                // 第X节
       r'chapter\s*\d',          // Chapter N
       r'^\d+[\.\s]',            // 以数字开头
       r'第\d+',                 // 第N
@@ -580,7 +580,7 @@ class BookContentService {
       }
     } catch (_) {
       // 降级到正则提取
-      final match = RegExp(r'>([^<]+)<').firstMatch(html);
+      final match = RegExp('>([^<]+)<').firstMatch(html);
       if (match != null) {
         final text = match.group(1)?.trim();
         if (text != null && text.isNotEmpty && !_isUrlLike(text)) {
@@ -600,13 +600,13 @@ class BookContentService {
         final decodedUrl = Uri.decodeComponent(url);
         // 如果解码后包含 HTML 标签，尝试提取 href
         if (decodedUrl.contains('<') && decodedUrl.contains('href=')) {
-          final hrefMatch = RegExp(r'''href=["']([^"']+)["']''').firstMatch(decodedUrl);
+          final hrefMatch = RegExp('''href=["']([^"']+)["']''').firstMatch(decodedUrl);
           if (hrefMatch != null) {
             var extractedUrl = hrefMatch.group(1)!;
             // 如果是相对路径，拼接 baseUrl
             if (!extractedUrl.startsWith('http')) {
               // 尝试从原 URL 提取域名
-              final urlMatch = RegExp(r'^(https?://[^/]+)').firstMatch(url);
+              final urlMatch = RegExp('^(https?://[^/]+)').firstMatch(url);
               if (urlMatch != null) {
                 extractedUrl = '${urlMatch.group(1)}$extractedUrl';
               } else if (baseUrl.isNotEmpty) {
@@ -630,7 +630,7 @@ class BookContentService {
     
     // 如果包含 HTML 标签（未编码），尝试提取 href
     if (url.contains('<') && url.contains('href=')) {
-      final hrefMatch = RegExp(r'''href=["']([^"']+)["']''').firstMatch(url);
+      final hrefMatch = RegExp('''href=["']([^"']+)["']''').firstMatch(url);
       if (hrefMatch != null) {
         var extractedUrl = hrefMatch.group(1)!;
         if (!extractedUrl.startsWith('http') && baseUrl.isNotEmpty) {
@@ -651,7 +651,7 @@ class BookContentService {
       return true;
     }
     // 检查是否包含 URL 编码字符占比过高
-    final encodedCount = RegExp(r'%[0-9A-Fa-f]{2}').allMatches(text).length;
+    final encodedCount = RegExp('%[0-9A-Fa-f]{2}').allMatches(text).length;
     if (encodedCount > 5 && encodedCount > text.length / 10) {
       return true;
     }
@@ -688,21 +688,21 @@ class BookContentService {
     } catch (_) {
       // 降级到正则提取
       // 匹配 <a> 标签内的文本
-      final aMatch = RegExp(r'<a[^>]*>([^<]+)</a>', caseSensitive: false).firstMatch(html);
+      final aMatch = RegExp('<a[^>]*>([^<]+)</a>', caseSensitive: false).firstMatch(html);
       if (aMatch != null) {
         final text = aMatch.group(1)?.trim();
         if (text != null && text.isNotEmpty) return text;
       }
       
       // 匹配 title 属性
-      final titleMatch = RegExp(r'title="([^"]+)"', caseSensitive: false).firstMatch(html);
+      final titleMatch = RegExp('title="([^"]+)"', caseSensitive: false).firstMatch(html);
       if (titleMatch != null) {
         final text = titleMatch.group(1)?.trim();
         if (text != null && text.isNotEmpty) return text;
       }
       
       // 去除所有 HTML 标签
-      final stripped = html.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+      final stripped = html.replaceAll(RegExp('<[^>]*>'), '').trim();
       if (stripped.isNotEmpty) return stripped;
     }
     
@@ -723,7 +723,7 @@ class BookContentService {
       
       // 如果只是数字，返回 "第X章"
       if (RegExp(r'^\d+$').hasMatch(path)) {
-        return '第${path}章';
+        return '第$path章';
       }
       
       // 如果包含中文，直接返回
@@ -796,14 +796,14 @@ class BookContentService {
       // 如果所有选择器都失败，尝试找最长的文本块
       final allDivs = document.querySelectorAll('div, p, article, section');
       String? bestContent;
-      int bestLength = 0;
+      var bestLength = 0;
       
       for (final div in allDivs) {
         final text = div.text.trim();
         if (text.length > bestLength && text.length >= 200) {
           // 排除明显的非正文区域
           final className = div.className.toLowerCase();
-          final id = (div.id).toLowerCase();
+          final id = div.id.toLowerCase();
           if (!className.contains('header') && 
               !className.contains('footer') &&
               !className.contains('nav') &&

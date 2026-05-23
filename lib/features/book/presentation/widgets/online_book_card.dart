@@ -22,12 +22,11 @@ class OnlineBookCard extends StatelessWidget {
   final VoidCallback? onLongPress;
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
+  Widget build(BuildContext context) => GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
       onSecondaryTap: onLongPress,
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           borderRadius: BorderRadius.circular(12),
@@ -55,8 +54,8 @@ class OnlineBookCard extends StatelessWidget {
                         ? CachedNetworkImage(
                             imageUrl: item.coverUrl!,
                             fit: BoxFit.cover,
-                            placeholder: (_, __) => _buildPlaceholder(),
-                            errorWidget: (_, __, ___) => _buildPlaceholder(),
+                            placeholder: (_, _) => _buildPlaceholder(),
+                            errorWidget: (_, _, _) => _buildPlaceholder(),
                           )
                         : _buildPlaceholder(),
                   ),
@@ -153,10 +152,8 @@ class OnlineBookCard extends StatelessWidget {
         ),
       ),
     );
-  }
 
-  Widget _buildPlaceholder() {
-    return Container(
+  Widget _buildPlaceholder() => ColoredBox(
       color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
       child: Center(
         child: Icon(
@@ -166,5 +163,4 @@ class OnlineBookCard extends StatelessWidget {
         ),
       ),
     );
-  }
 }

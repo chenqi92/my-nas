@@ -1,6 +1,7 @@
 /// 媒体服务器通用实体定义
 ///
 /// 定义媒体库、媒体项目等通用数据模型，供各媒体服务器适配器使用
+library;
 
 /// 媒体库信息
 class MediaLibrary {
@@ -136,7 +137,7 @@ class MediaItem {
   String? get formattedRuntime {
     if (runTimeTicks == null) return null;
     final minutes = runTimeTicks! ~/ (10000000 * 60);
-    if (minutes < 60) return '${minutes}分钟';
+    if (minutes < 60) return '$minutes分钟';
     final hours = minutes ~/ 60;
     final remainingMinutes = minutes % 60;
     return '$hours小时${remainingMinutes > 0 ? ' $remainingMinutes分钟' : ''}';

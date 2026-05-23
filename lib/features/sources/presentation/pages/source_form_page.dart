@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
-import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/features/pt_sites/data/services/pt_site_api.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -13,8 +12,8 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/sources/presentation/widgets/plex_auth_widget.dart';
 import 'package:my_nas/features/sources/presentation/widgets/quick_connect_widget.dart';
 import 'package:my_nas/features/sources/presentation/widgets/two_fa_sheet.dart';
-import 'package:my_nas/media_server_adapters/jellyfin/jellyfin_adapter.dart';
 import 'package:my_nas/media_server_adapters/emby/emby_adapter.dart';
+import 'package:my_nas/media_server_adapters/jellyfin/jellyfin_adapter.dart';
 import 'package:my_nas/media_server_adapters/plex/plex_adapter.dart';
 import 'package:my_nas/service_adapters/aria2/api/aria2_api.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
@@ -22,6 +21,7 @@ import 'package:my_nas/service_adapters/moviepilot/api/moviepilot_api.dart';
 import 'package:my_nas/service_adapters/nastool/api/nastool_api.dart';
 import 'package:my_nas/service_adapters/qbittorrent/api/qbittorrent_api.dart';
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
+import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 
 /// 表单模式
 enum SourceFormMode {
@@ -1655,7 +1655,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     }
 
     // 处理 Quick Connect 认证（Jellyfin）
-    String? accessToken = widget.existingSource?.accessToken;
+    var accessToken = widget.existingSource?.accessToken;
     if (_quickConnectAuthorized && _quickConnectAccessToken != null) {
       accessToken = _quickConnectAccessToken;
       // 将 userId 存入 extraConfig
@@ -1666,7 +1666,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
 
     // 处理 Plex PIN 认证
     // Plex 使用 apiKey 字段存储 auth token
-    String? plexApiKey = apiKey;
+    var plexApiKey = apiKey;
     if (_plexAuthAuthorized && _plexAuthToken != null) {
       plexApiKey = _plexAuthToken;
     } else if (widget.sourceType == SourceType.plex) {

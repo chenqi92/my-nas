@@ -22,6 +22,27 @@ class DesktopLyricSettings {
     this.windowHeight = 120.0,
   });
 
+  /// 从 JSON 反序列化
+  factory DesktopLyricSettings.fromJson(Map<String, dynamic> json) => DesktopLyricSettings(
+      enabled: json['enabled'] as bool? ?? false,
+      fontSize: (json['fontSize'] as num?)?.toDouble() ?? 28.0,
+      textColor: Color(json['textColor'] as int? ?? 0xFFFFFFFF),
+      highlightColor: Color(json['highlightColor'] as int? ?? 0xFF00BFFF),
+      backgroundColor: Color(json['backgroundColor'] as int? ?? 0xCC000000),
+      opacity: (json['opacity'] as num?)?.toDouble() ?? 0.9,
+      showTranslation: json['showTranslation'] as bool? ?? true,
+      showNextLine: json['showNextLine'] as bool? ?? true,
+      alwaysOnTop: json['alwaysOnTop'] as bool? ?? true,
+      lockPosition: json['lockPosition'] as bool? ?? false,
+      showOnMinimize: json['showOnMinimize'] as bool? ?? false,
+      hideOnRestore: json['hideOnRestore'] as bool? ?? true,
+      showWhenPlaying: json['showWhenPlaying'] as bool? ?? true,
+      windowX: (json['windowX'] as num?)?.toDouble(),
+      windowY: (json['windowY'] as num?)?.toDouble(),
+      windowWidth: (json['windowWidth'] as num?)?.toDouble() ?? 800.0,
+      windowHeight: (json['windowHeight'] as num?)?.toDouble() ?? 120.0,
+    );
+
   /// 是否启用桌面歌词
   final bool enabled;
 
@@ -94,8 +115,7 @@ class DesktopLyricSettings {
     double? windowY,
     double? windowWidth,
     double? windowHeight,
-  }) {
-    return DesktopLyricSettings(
+  }) => DesktopLyricSettings(
       enabled: enabled ?? this.enabled,
       fontSize: fontSize ?? this.fontSize,
       textColor: textColor ?? this.textColor,
@@ -114,34 +134,9 @@ class DesktopLyricSettings {
       windowWidth: windowWidth ?? this.windowWidth,
       windowHeight: windowHeight ?? this.windowHeight,
     );
-  }
-
-  /// 从 JSON 反序列化
-  factory DesktopLyricSettings.fromJson(Map<String, dynamic> json) {
-    return DesktopLyricSettings(
-      enabled: json['enabled'] as bool? ?? false,
-      fontSize: (json['fontSize'] as num?)?.toDouble() ?? 28.0,
-      textColor: Color(json['textColor'] as int? ?? 0xFFFFFFFF),
-      highlightColor: Color(json['highlightColor'] as int? ?? 0xFF00BFFF),
-      backgroundColor: Color(json['backgroundColor'] as int? ?? 0xCC000000),
-      opacity: (json['opacity'] as num?)?.toDouble() ?? 0.9,
-      showTranslation: json['showTranslation'] as bool? ?? true,
-      showNextLine: json['showNextLine'] as bool? ?? true,
-      alwaysOnTop: json['alwaysOnTop'] as bool? ?? true,
-      lockPosition: json['lockPosition'] as bool? ?? false,
-      showOnMinimize: json['showOnMinimize'] as bool? ?? false,
-      hideOnRestore: json['hideOnRestore'] as bool? ?? true,
-      showWhenPlaying: json['showWhenPlaying'] as bool? ?? true,
-      windowX: (json['windowX'] as num?)?.toDouble(),
-      windowY: (json['windowY'] as num?)?.toDouble(),
-      windowWidth: (json['windowWidth'] as num?)?.toDouble() ?? 800.0,
-      windowHeight: (json['windowHeight'] as num?)?.toDouble() ?? 120.0,
-    );
-  }
 
   /// 序列化为 JSON
-  Map<String, dynamic> toJson() {
-    return {
+  Map<String, dynamic> toJson() => {
       'enabled': enabled,
       'fontSize': fontSize,
       'textColor': textColor.toARGB32(),
@@ -160,7 +155,6 @@ class DesktopLyricSettings {
       'windowWidth': windowWidth,
       'windowHeight': windowHeight,
     };
-  }
 
   @override
   bool operator ==(Object other) {
@@ -186,8 +180,7 @@ class DesktopLyricSettings {
   }
 
   @override
-  int get hashCode {
-    return Object.hash(
+  int get hashCode => Object.hash(
       enabled,
       fontSize,
       textColor,
@@ -206,7 +199,6 @@ class DesktopLyricSettings {
       windowWidth,
       windowHeight,
     );
-  }
 }
 
 /// macOS 状态栏设置
@@ -216,6 +208,12 @@ class MenuBarSettings {
     this.showPlayingAnimation = true,
     this.showProgressBar = false,
   });
+
+  factory MenuBarSettings.fromJson(Map<String, dynamic> json) => MenuBarSettings(
+      enabled: json['enabled'] as bool? ?? true,
+      showPlayingAnimation: json['showPlayingAnimation'] as bool? ?? true,
+      showProgressBar: json['showProgressBar'] as bool? ?? false,
+    );
 
   /// 是否启用状态栏播放器（仅 macOS）
   final bool enabled;
@@ -230,29 +228,17 @@ class MenuBarSettings {
     bool? enabled,
     bool? showPlayingAnimation,
     bool? showProgressBar,
-  }) {
-    return MenuBarSettings(
+  }) => MenuBarSettings(
       enabled: enabled ?? this.enabled,
       showPlayingAnimation: showPlayingAnimation ?? this.showPlayingAnimation,
       showProgressBar: showProgressBar ?? this.showProgressBar,
     );
-  }
 
-  factory MenuBarSettings.fromJson(Map<String, dynamic> json) {
-    return MenuBarSettings(
-      enabled: json['enabled'] as bool? ?? true,
-      showPlayingAnimation: json['showPlayingAnimation'] as bool? ?? true,
-      showProgressBar: json['showProgressBar'] as bool? ?? false,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
+  Map<String, dynamic> toJson() => {
       'enabled': enabled,
       'showPlayingAnimation': showPlayingAnimation,
       'showProgressBar': showProgressBar,
     };
-  }
 
   @override
   bool operator ==(Object other) {

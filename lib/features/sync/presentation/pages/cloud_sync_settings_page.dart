@@ -260,8 +260,7 @@ class _CloudSyncSettingsPageState
         ),
       );
 
-  Widget _buildModulesSection(List<SyncableModule> modules, bool isDark) {
-    return Container(
+  Widget _buildModulesSection(List<SyncableModule> modules, bool isDark) => Container(
       padding: AppSpacing.paddingMd,
       decoration: BoxDecoration(
         color: isDark
@@ -317,7 +316,6 @@ class _CloudSyncSettingsPageState
         ],
       ),
     );
-  }
 
   Widget _buildActions() => Row(
         children: [

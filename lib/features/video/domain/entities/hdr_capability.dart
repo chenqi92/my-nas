@@ -78,6 +78,26 @@ class HdrCapability {
     this.colorGamut,
   });
 
+  /// 从 Map 创建
+  factory HdrCapability.fromMap(Map<dynamic, dynamic>? map) {
+    if (map == null) {
+      return const HdrCapability(isSupported: false);
+    }
+
+    final typesList = (map['supportedTypes'] as List<dynamic>?)
+            ?.map((e) => HdrType.fromId(e.toString()))
+            .where((e) => e != HdrType.none)
+            .toList() ??
+        [];
+
+    return HdrCapability(
+      isSupported: map['isSupported'] as bool? ?? false,
+      supportedTypes: typesList,
+      maxLuminance: (map['maxLuminance'] as num?)?.toDouble() ?? 0,
+      colorGamut: map['colorGamut'] as String?,
+    );
+  }
+
   /// 是否支持 HDR
   final bool isSupported;
 
@@ -101,26 +121,6 @@ class HdrCapability {
 
   /// 是否支持 HLG
   bool get supportsHlg => supportedTypes.contains(HdrType.hlg);
-
-  /// 从 Map 创建
-  factory HdrCapability.fromMap(Map<dynamic, dynamic>? map) {
-    if (map == null) {
-      return const HdrCapability(isSupported: false);
-    }
-
-    final typesList = (map['supportedTypes'] as List<dynamic>?)
-            ?.map((e) => HdrType.fromId(e.toString()))
-            .where((e) => e != HdrType.none)
-            .toList() ??
-        [];
-
-    return HdrCapability(
-      isSupported: map['isSupported'] as bool? ?? false,
-      supportedTypes: typesList,
-      maxLuminance: (map['maxLuminance'] as num?)?.toDouble() ?? 0,
-      colorGamut: map['colorGamut'] as String?,
-    );
-  }
 
   /// 转为 Map
   Map<String, dynamic> toMap() => {

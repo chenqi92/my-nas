@@ -4,7 +4,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart' as fp;
 import 'package:flutter/material.dart';
@@ -13,21 +12,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
-import 'package:my_nas/shared/providers/ui_style_provider.dart';
-import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
-import 'package:my_nas/core/utils/grid_helper.dart';
-import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/core/services/media_scan_progress_service.dart';
 import 'package:my_nas/core/utils/background_task_pool.dart';
+import 'package:my_nas/core/utils/grid_helper.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/features/music/data/services/music_audio_cache_service.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
-import 'package:my_nas/features/music/data/services/playlist_io_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
 import 'package:my_nas/features/music/data/services/music_library_cache_service.dart';
 import 'package:my_nas/features/music/data/services/music_metadata_service.dart';
+import 'package:my_nas/features/music/data/services/playlist_io_service.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/presentation/pages/manual_music_scraper_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_home_page.dart';
@@ -47,11 +44,13 @@ import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/animated_list_item.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
-import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 音乐文件及其来源
@@ -2144,8 +2143,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     WidgetRef ref,
     bool isDark,
     MusicListState state,
-  ) {
-    return GlassButtonGroup(
+  ) => GlassButtonGroup(
       children: [
         GlassGroupIconButton(
           icon: Icons.search_rounded,
@@ -2196,7 +2194,6 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
         ),
       ],
     );
-  }
 
   /// 音乐菜单选择处理
   void _handleMusicMenuSelection(String value) {
@@ -2295,7 +2292,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
         .where((h) => state.trackByFilePath.containsKey(h.musicPath))
         .map((h) {
           final m = state.trackByFilePath[h.musicPath]!;
-          String? effectiveCoverPath = m.coverPath;
+          var effectiveCoverPath = m.coverPath;
           String? effectiveCoverUrl;
 
           if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
@@ -2453,8 +2450,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     required String label,
     required bool isDark,
     bool isLoading = false,
-  }) {
-    return Container(
+  }) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: isDark
@@ -2491,7 +2487,6 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
         ],
       ),
     );
-  }
 
   /// 构建首页内容（现代化设计）
   Widget _buildHomeContent(BuildContext context, WidgetRef ref, MusicListLoaded state, bool isDark) {
@@ -2540,7 +2535,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
           final m = state.trackByFilePath[h.musicPath]!;
 
           // 优先使用数据库中的 coverPath，如果没有则尝试从历史的 coverUrl 获取
-          String? effectiveCoverPath = m.coverPath;
+          var effectiveCoverPath = m.coverPath;
           String? effectiveCoverUrl;
 
           if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
@@ -5066,7 +5061,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
           end: Alignment.bottomCenter,
           colors: [
             widget.color.withValues(alpha: isDark ? 0.3 : 0.15),
-            isDark ? AppColors.darkBackground : Colors.grey[50]!,
+            if (isDark) AppColors.darkBackground else Colors.grey[50]!,
           ],
         ),
       ),
@@ -5142,7 +5137,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
           end: Alignment.bottomCenter,
           colors: [
             widget.color.withValues(alpha: isDark ? 0.3 : 0.15),
-            isDark ? AppColors.darkBackground : Colors.grey[50]!,
+            if (isDark) AppColors.darkBackground else Colors.grey[50]!,
           ],
         ),
       ),
@@ -6561,7 +6556,7 @@ class _GenreCard extends StatelessWidget {
           ),
         ),
       ),
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
@@ -6640,7 +6635,7 @@ class _GenreCardFromDb extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
       onTap: () => _navigateToGenre(context),
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
@@ -6865,7 +6860,7 @@ class _YearCard extends StatelessWidget {
           ),
         ),
       ),
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
@@ -6956,7 +6951,7 @@ class _YearCardFromDb extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () => _navigateToDecade(context),
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],

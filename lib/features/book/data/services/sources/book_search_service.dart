@@ -371,7 +371,7 @@ class BookSearchService {
       
       // 移除常见的路径前缀和后缀
       var extractedName = path
-          .replaceAll(RegExp(r'^/+'), '')  // 移除开头的斜杠
+          .replaceAll(RegExp('^/+'), '')  // 移除开头的斜杠
           .replaceAll(RegExp(r'\.(html?|php|aspx?|jsp)$', caseSensitive: false), '')  // 移除文件扩展名
           .replaceAll(RegExp(r'/+$'), '');  // 移除结尾的斜杠
       
@@ -417,7 +417,7 @@ class BookSearchService {
     }
     
     // 清理HTML标签
-    result = result.replaceAll(RegExp(r'<[^>]*>'), '');
+    result = result.replaceAll(RegExp('<[^>]*>'), '');
     
     return result.trim();
   }
@@ -431,7 +431,7 @@ class BookSearchService {
   /// 4. 无效数据 - 尝试从原始item中查找
   String _smartExtractAuthor(String? rawAuthor, dynamic item) {
     // 1. 先尝试常规清理
-    var author = _sanitizeText(rawAuthor);
+    final author = _sanitizeText(rawAuthor);
     
     // 如果清理后有效，验证是否像作者名
     if (author.isNotEmpty && _isValidAuthorName(author)) {
@@ -473,7 +473,7 @@ class BookSearchService {
     // 查找常见的作者标记模式
     final patterns = <RegExp>[
       // class="authorNm" 或 class="author"
-      RegExp(r'''class=["'](?:authorNm|author|writer)["'][^>]*>(?:<[^>]*>)*([^<]+)''', caseSensitive: false),
+      RegExp('''class=["'](?:authorNm|author|writer)["'][^>]*>(?:<[^>]*>)*([^<]+)''', caseSensitive: false),
       // 作者: xxx 或 作者：xxx
       RegExp(r'作者[：:]\s*([^\s<,，]+)'),
       // by XXX
@@ -487,7 +487,7 @@ class BookSearchService {
       if (match != null && match.group(1) != null) {
         final extracted = match.group(1)!.trim();
         // 清理HTML标签
-        final cleaned = extracted.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+        final cleaned = extracted.replaceAll(RegExp('<[^>]*>'), '').trim();
         if (cleaned.isNotEmpty && cleaned.length <= 20) {
           return cleaned;
         }
@@ -599,12 +599,12 @@ class BookSearchService {
     // 优先查找带有cover相关class的img
     final patterns = <RegExp>[
       // class包含cover的img
-      RegExp(r'''<img[^>]*class=["'][^"']*cover[^"']*["'][^>]*src=["']([^"']+)["']''', caseSensitive: false),
-      RegExp(r'''<img[^>]*src=["']([^"']+)["'][^>]*class=["'][^"']*cover[^"']*["']''', caseSensitive: false),
+      RegExp('''<img[^>]*class=["'][^"']*cover[^"']*["'][^>]*src=["']([^"']+)["']''', caseSensitive: false),
+      RegExp('''<img[^>]*src=["']([^"']+)["'][^>]*class=["'][^"']*cover[^"']*["']''', caseSensitive: false),
       // class="bookImg" 或 class="book-cover-img"
-      RegExp(r'''<img[^>]*class=["'][^"']*(?:bookImg|book-cover|book-list-cover)[^"']*["'][^>]*src=["']([^"']+)["']''', caseSensitive: false),
+      RegExp('''<img[^>]*class=["'][^"']*(?:bookImg|book-cover|book-list-cover)[^"']*["'][^>]*src=["']([^"']+)["']''', caseSensitive: false),
       // data-src (懒加载图片)
-      RegExp(r'''<img[^>]*data-src=["']([^"']+)["']''', caseSensitive: false),
+      RegExp('''<img[^>]*data-src=["']([^"']+)["']''', caseSensitive: false),
       // 普通img src（作为最后备选）
       RegExp(r'''<img[^>]*src=["'](https?://[^"']+\.(?:jpg|jpeg|png|gif|webp)[^"']*)["']''', caseSensitive: false),
     ];

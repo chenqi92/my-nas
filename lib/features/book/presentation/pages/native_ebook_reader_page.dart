@@ -11,7 +11,10 @@ import 'package:my_nas/features/book/data/services/book_file_cache_service.dart'
 import 'package:my_nas/features/book/data/services/mobi_parser_service.dart';
 import 'package:my_nas/features/book/data/services/native_epub_paginator.dart';
 import 'package:my_nas/features/book/data/services/native_epub_parser.dart';
+import 'package:my_nas/features/book/data/services/tts/tts_service.dart';
 import 'package:my_nas/features/book/domain/entities/book_item.dart';
+import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
+import 'package:my_nas/features/book/presentation/widgets/floating_tts_control.dart';
 import 'package:my_nas/features/reading/data/services/reader_settings_service.dart';
 import 'package:my_nas/features/reading/data/services/reading_progress_service.dart';
 import 'package:my_nas/features/reading/presentation/providers/reader_settings_provider.dart';
@@ -23,9 +26,6 @@ import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
 import 'package:my_nas/shared/widgets/lottie_loading.dart';
 import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
-import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
-import 'package:my_nas/features/book/presentation/widgets/floating_tts_control.dart';
-import 'package:my_nas/features/book/data/services/tts/tts_service.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// 原生电子书阅读器状态
@@ -79,7 +79,7 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
       state = NativeEbookLoading(message: '获取文件...');
 
       // 获取或下载文件
-      File? epubFile = await _getOrDownloadFile();
+      var epubFile = await _getOrDownloadFile();
       if (epubFile == null) {
         state = NativeEbookError('无法获取文件');
         return;
@@ -391,8 +391,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     );
   }
 
-  Map<ShortcutKey, VoidCallback> _buildKeyboardShortcuts(BookReaderSettings settings) {
-    return {
+  Map<ShortcutKey, VoidCallback> _buildKeyboardShortcuts(BookReaderSettings settings) => {
       CommonShortcuts.previous: () => _goToPage(_currentPage - 1),
       CommonShortcuts.next: () => _goToPage(_currentPage + 1),
       CommonShortcuts.previousPage: () => _goToPage(_currentPage - 1),
@@ -403,7 +402,6 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
       CommonShortcuts.escape: () => Navigator.pop(context),
       CommonShortcuts.back: () => Navigator.pop(context),
     };
-  }
 
   Widget _buildError(String message) => Center(
         child: Column(
@@ -524,8 +522,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     );
   }
 
-  Widget _buildPageContent(EbookPage page, BookReaderSettings settings) {
-    return Padding(
+  Widget _buildPageContent(EbookPage page, BookReaderSettings settings) => Padding(
       padding: EdgeInsets.symmetric(horizontal: settings.horizontalPadding),
       child: HtmlContentWidget(
         html: page.htmlContent,
@@ -544,7 +541,6 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         },
       ),
     );
-  }
 
   Widget _buildFixedHeader(NativeEbookLoaded state, BookReaderSettings settings) {
     final isDark = settings.theme == BookReaderTheme.dark ||
@@ -603,8 +599,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     );
   }
 
-  Widget _buildTopBar(NativeEbookLoaded state, BookReaderSettings settings) {
-    return DecoratedBox(
+  Widget _buildTopBar(NativeEbookLoaded state, BookReaderSettings settings) => DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -643,7 +638,6 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         ),
       ),
     );
-  }
 
   Widget _buildBottomBar(NativeEbookLoaded state, BookReaderSettings settings) {
     final isDark = settings.theme == BookReaderTheme.dark ||
@@ -732,11 +726,10 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     );
   }
 
-  Widget _buildTocDrawer(NativeEbookLoaded state, BookReaderSettings settings) {
-    return Positioned.fill(
+  Widget _buildTocDrawer(NativeEbookLoaded state, BookReaderSettings settings) => Positioned.fill(
       child: GestureDetector(
         onTap: () => setState(() => _showToc = false),
-        child: Container(
+        child: ColoredBox(
           color: Colors.black54,
           child: Align(
             alignment: Alignment.centerLeft,
@@ -792,10 +785,8 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         ),
       ),
     );
-  }
 
-  Widget _buildTocItem(TocItem item, int index, BookReaderSettings settings) {
-    return InkWell(
+  Widget _buildTocItem(TocItem item, int index, BookReaderSettings settings) => InkWell(
       onTap: () => _goToChapter(index),
       child: Padding(
         padding: EdgeInsets.only(
@@ -815,7 +806,6 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         ),
       ),
     );
-  }
 
   void _showSettingsSheet() {
     showReaderSettingsSheet(

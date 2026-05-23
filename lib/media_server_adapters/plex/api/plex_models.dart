@@ -37,8 +37,7 @@ class PlexLibrary {
     this.uuid,
   });
 
-  factory PlexLibrary.fromJson(Map<String, dynamic> json) {
-    return PlexLibrary(
+  factory PlexLibrary.fromJson(Map<String, dynamic> json) => PlexLibrary(
       key: json['key'] as String? ?? '',
       title: json['title'] as String? ?? '',
       type: json['type'] as String? ?? '',
@@ -46,7 +45,6 @@ class PlexLibrary {
       scanner: json['scanner'] as String?,
       uuid: json['uuid'] as String?,
     );
-  }
 
   final String key;
   final String title;
@@ -357,8 +355,7 @@ class PlexStream {
     this.samplingRate,
   });
 
-  factory PlexStream.fromJson(Map<String, dynamic> json) {
-    return PlexStream(
+  factory PlexStream.fromJson(Map<String, dynamic> json) => PlexStream(
       id: json['id'] as int? ?? 0,
       streamType: json['streamType'] as int? ?? 0, // 1=video, 2=audio, 3=subtitle
       index: json['index'] as int?,
@@ -376,7 +373,6 @@ class PlexStream {
       channels: json['channels'] as int?,
       samplingRate: json['samplingRate'] as int?,
     );
-  }
 
   final int id;
   final int streamType; // 1=video, 2=audio, 3=subtitle
@@ -406,9 +402,7 @@ class PlexStream {
 class PlexGuid {
   const PlexGuid({required this.id});
 
-  factory PlexGuid.fromJson(Map<String, dynamic> json) {
-    return PlexGuid(id: json['id'] as String? ?? '');
-  }
+  factory PlexGuid.fromJson(Map<String, dynamic> json) => PlexGuid(id: json['id'] as String? ?? '');
 
   final String id; // 格式: provider://id, 如 tmdb://12345
 }
@@ -457,8 +451,7 @@ class PlexPinInfo {
     this.clientIdentifier,
   });
 
-  factory PlexPinInfo.fromJson(Map<String, dynamic> json) {
-    return PlexPinInfo(
+  factory PlexPinInfo.fromJson(Map<String, dynamic> json) => PlexPinInfo(
       id: json['id'] as int? ?? 0,
       code: json['code'] as String? ?? '',
       authToken: json['authToken'] as String?,
@@ -468,7 +461,6 @@ class PlexPinInfo {
       trusted: json['trusted'] as bool? ?? false,
       clientIdentifier: json['clientIdentifier'] as String?,
     );
-  }
 
   final int id;
   final String code;
@@ -513,8 +505,7 @@ class PlexUser {
     this.subscription,
   });
 
-  factory PlexUser.fromJson(Map<String, dynamic> json) {
-    return PlexUser(
+  factory PlexUser.fromJson(Map<String, dynamic> json) => PlexUser(
       id: json['id'] as int? ?? 0,
       uuid: json['uuid'] as String? ?? '',
       username: json['username'] as String?,
@@ -525,7 +516,6 @@ class PlexUser {
           ? PlexSubscription.fromJson(json['subscription'] as Map<String, dynamic>)
           : null,
     );
-  }
 
   final int id;
   final String uuid;
@@ -545,14 +535,12 @@ class PlexSubscription {
     this.features,
   });
 
-  factory PlexSubscription.fromJson(Map<String, dynamic> json) {
-    return PlexSubscription(
+  factory PlexSubscription.fromJson(Map<String, dynamic> json) => PlexSubscription(
       active: json['active'] as bool? ?? false,
       status: json['status'] as String?,
       plan: json['plan'] as String?,
       features: (json['features'] as List?)?.cast<String>(),
     );
-  }
 
   final bool? active;
   final String? status;
@@ -599,11 +587,11 @@ class PlexServerResource {
     if (connections == null || connections!.isEmpty) return null;
 
     // 优先选择本地连接
-    final local = connections!.where((c) => c.local == true).firstOrNull;
+    final local = connections!.where((c) => c.local ?? false).firstOrNull;
     if (local != null) return local.uri;
 
     // 其次选择 relay 连接
-    final relay = connections!.where((c) => c.relay == true).firstOrNull;
+    final relay = connections!.where((c) => c.relay ?? false).firstOrNull;
     if (relay != null) return relay.uri;
 
     // 最后返回第一个
@@ -622,8 +610,7 @@ class PlexConnection {
     this.relay,
   });
 
-  factory PlexConnection.fromJson(Map<String, dynamic> json) {
-    return PlexConnection(
+  factory PlexConnection.fromJson(Map<String, dynamic> json) => PlexConnection(
       protocol: json['protocol'] as String?,
       address: json['address'] as String?,
       port: json['port'] as int?,
@@ -631,7 +618,6 @@ class PlexConnection {
       local: json['local'] as bool? ?? false,
       relay: json['relay'] as bool? ?? false,
     );
-  }
 
   final String? protocol;
   final String? address;

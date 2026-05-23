@@ -155,8 +155,7 @@ class _LiveChannelCardState extends State<_LiveChannelCard> {
   bool _isHovered = false;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context) => Container(
       width: 142,
       margin: const EdgeInsets.only(right: 12),
       child: MouseRegion(
@@ -203,8 +202,8 @@ class _LiveChannelCardState extends State<_LiveChannelCard> {
                         ? CachedNetworkImage(
                             imageUrl: widget.channel.logoUrl!,
                             fit: BoxFit.contain,
-                            placeholder: (_, __) => _buildPlaceholder(),
-                            errorWidget: (_, __, ___) => _buildPlaceholder(),
+                            placeholder: (_, _) => _buildPlaceholder(),
+                            errorWidget: (_, _, _) => _buildPlaceholder(),
                           )
                         : _buildPlaceholder(),
                   ),
@@ -242,7 +241,6 @@ class _LiveChannelCardState extends State<_LiveChannelCard> {
         ),
       ),
     );
-  }
 
   Widget _buildPlaceholder() => Center(
         child: Icon(

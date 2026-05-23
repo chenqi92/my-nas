@@ -79,8 +79,7 @@ class MetadataPriorityService {
     VideoMetadata existing,
     VideoMetadata newData,
     MetadataSource source,
-  ) {
-    return existing.copyWith(
+  ) => existing.copyWith(
       // 基础信息
       title: newData.title ?? existing.title,
       originalTitle: newData.originalTitle ?? existing.originalTitle,
@@ -143,15 +142,13 @@ class MetadataPriorityService {
       scrapeStatus: ScrapeStatus.completed,
       lastUpdated: DateTime.now(),
     );
-  }
 
   /// 补充合并：只填充缺失字段
   VideoMetadata _mergeSupplemental(
     VideoMetadata existing,
     VideoMetadata newData,
     MetadataSource existingSource,
-  ) {
-    return existing.copyWith(
+  ) => existing.copyWith(
       // 只补充空缺字段
       title: existing.title ?? newData.title,
       originalTitle: existing.originalTitle ?? newData.originalTitle,
@@ -187,7 +184,6 @@ class MetadataPriorityService {
       scrapeSource: existingSource.id,
       lastUpdated: DateTime.now(),
     );
-  }
 
   /// 合并多语言 Map
   Map<String, String>? _mergeLocalizedMap(
@@ -210,8 +206,7 @@ class MetadataPriorityService {
     required String sourceId,
     required String fileName,
     String? serverType,
-  }) {
-    return VideoMetadata(
+  }) => VideoMetadata(
       filePath: filePath,
       sourceId: sourceId,
       fileName: fileName,
@@ -239,7 +234,6 @@ class MetadataPriorityService {
       playbackPositionTicks: item.userData?.playbackPositionTicks,
       lastPlayedAt: item.userData?.lastPlayedDate,
     );
-  }
 
   /// 从 MediaItem 更新现有元数据
   ///

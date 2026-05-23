@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -14,7 +15,6 @@ import 'package:my_nas/features/book/presentation/providers/online_book_shelf_pr
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
-import 'package:my_nas/app/theme/ui_style.dart';
 
 /// 在线书籍详情页面
 class OnlineBookDetailPage extends ConsumerStatefulWidget {
@@ -113,7 +113,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     result = result.replaceFirst(labelPattern, '');
     
     // 找到下一个元信息标签的位置，截取之前的内容
-    int cutIndex = result.length;
+    var cutIndex = result.length;
     for (final label in labels) {
       if (label == fieldLabel) continue; // 跳过当前字段标签
       
@@ -171,7 +171,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     if (text.startsWith('{') && text.endsWith('}')) return false;
     if (text.startsWith('[') && text.endsWith(']')) return false;
     // 检查是否包含大量URL编码
-    if (RegExp(r'%[0-9A-Fa-f]{2}').allMatches(text).length > text.length / 10) {
+    if (RegExp('%[0-9A-Fa-f]{2}').allMatches(text).length > text.length / 10) {
       return true; // 有编码但尝试解码
     }
     return true;
@@ -193,7 +193,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     try {
       final uri = Uri.parse(url);
       var path = uri.path
-          .replaceAll(RegExp(r'^/+'), '')
+          .replaceAll(RegExp('^/+'), '')
           .replaceAll(RegExp(r'\.(html?|php|aspx?)$', caseSensitive: false), '')
           .replaceAll(RegExp(r'/+$'), '');
       
@@ -244,8 +244,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     );
   }
 
-  Widget _buildHeader(bool isDark) {
-    return Stack(
+  Widget _buildHeader(bool isDark) => Stack(
       fit: StackFit.expand,
       children: [
         // 背景
@@ -292,7 +291,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
                           imageUrl: widget.book.coverUrl!,
                           fit: BoxFit.cover,
                         )
-                      : Container(
+                      : ColoredBox(
                           color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
                           child: const Icon(Icons.auto_stories_rounded, size: 32),
                         ),
@@ -322,11 +321,9 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
         ),
       ],
     );
-  }
 
   /// 构建浮动操作按钮
-  Widget _buildFloatingButtons(bool isDark) {
-    return Column(
+  Widget _buildFloatingButtons(bool isDark) => Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         // 书架按钮：已在书架显示删除，否则显示添加
@@ -354,7 +351,6 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
         ),
       ],
     );
-  }
 
   Future<void> _addToShelf() async {
     debugPrint('[在线书架] _addToShelf 被调用, 书名: ${widget.book.name}');
@@ -521,8 +517,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
   }
 
   /// 构建单个元信息项
-  Widget _buildMetaItem(IconData icon, String text, bool isDark) {
-    return Row(
+  Widget _buildMetaItem(IconData icon, String text, bool isDark) => Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
@@ -540,10 +535,8 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
         ),
       ],
     );
-  }
 
-  Widget _buildChapterHeader(bool isDark) {
-    return Padding(
+  Widget _buildChapterHeader(bool isDark) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Row(
         children: [
@@ -580,7 +573,6 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
         ],
       ),
     );
-  }
 
   Widget _buildChapterList(bool isDark, UIStyle uiStyle) {
     if (_isLoadingChapters) {

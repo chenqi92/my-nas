@@ -237,7 +237,7 @@ class JellyfinApi {
       );
       // Jellyfin 10.8+ 返回布尔值，旧版本返回状态对象
       if (response.data is bool) {
-        return response.data as bool;
+        return response.data! as bool;
       }
       return response.data?['Enabled'] == true;
     } on Exception catch (e) {

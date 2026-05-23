@@ -142,7 +142,7 @@ class BreadcrumbNavigation extends StatelessWidget {
   List<_DisplayItem> _buildDisplayItems() {
     if (config.maxVisibleItems <= 0 || items.length <= config.maxVisibleItems) {
       // 不需要折叠
-      return items.map((item) => _DisplayItem.item(item)).toList();
+      return items.map(_DisplayItem.item).toList();
     }
 
     // 需要折叠：保留首尾，中间用折叠项代替
@@ -384,8 +384,7 @@ class _CollapsedBreadcrumbState extends State<_CollapsedBreadcrumb> {
         position.dx + size.width,
         position.dy + size.height,
       ),
-      items: widget.items.map((item) {
-        return PopupMenuItem<BreadcrumbItem>(
+      items: widget.items.map((item) => PopupMenuItem<BreadcrumbItem>(
           value: item,
           child: Row(
             children: [
@@ -396,8 +395,7 @@ class _CollapsedBreadcrumbState extends State<_CollapsedBreadcrumb> {
               Text(item.label),
             ],
           ),
-        );
-      }).toList(),
+        )).toList(),
     ).then((selectedItem) {
       if (selectedItem != null) {
         widget.onItemTap(selectedItem);

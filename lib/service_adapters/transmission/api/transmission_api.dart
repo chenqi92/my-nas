@@ -70,7 +70,7 @@ class TransmissionApi {
 
     final body = jsonEncode({
       'method': method,
-      if (arguments != null) 'arguments': arguments,
+      'arguments': ?arguments,
     });
 
     try {

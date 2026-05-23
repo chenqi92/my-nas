@@ -26,8 +26,8 @@ class AppSettingsSyncModule implements SyncableModule {
     final theme = box.get(_kThemeMode) as String?;
     final color = box.get(_kColorScheme) as String?;
     return {
-      if (theme != null) _kThemeMode: theme,
-      if (color != null) _kColorScheme: color,
+      _kThemeMode: ?theme,
+      _kColorScheme: ?color,
     };
   }
 

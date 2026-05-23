@@ -29,14 +29,12 @@ extension NavigationExtensions on NavigatorState {
   Future<T?> pushPageAndHideBottomNav<T extends Object?>({
     required Widget page,
     bool fullscreenDialog = false,
-  }) {
-    return pushAndHideBottomNav<T>(
+  }) => pushAndHideBottomNav<T>(
       MaterialPageRoute<T>(
         builder: (context) => page,
         fullscreenDialog: fullscreenDialog,
       ),
     );
-  }
 }
 
 /// BuildContext 导航扩展
@@ -45,12 +43,10 @@ extension ContextNavigationExtensions on BuildContext {
   Future<T?> pushPageAndHideBottomNav<T extends Object?>({
     required Widget page,
     bool fullscreenDialog = false,
-  }) {
-    return Navigator.of(this).pushPageAndHideBottomNav<T>(
+  }) => Navigator.of(this).pushPageAndHideBottomNav<T>(
       page: page,
       fullscreenDialog: fullscreenDialog,
     );
-  }
 }
 
 /// 隐藏底部导航栏

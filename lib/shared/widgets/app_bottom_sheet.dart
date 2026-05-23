@@ -240,7 +240,7 @@ class _ScrollableBottomSheet extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter!,
+          filter: glassStyle.blurFilter,
           child: content,
         ),
       );
@@ -414,7 +414,7 @@ class _FixedBottomSheet extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter!,
+          filter: glassStyle.blurFilter,
           child: content,
         ),
       );
@@ -836,8 +836,7 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: widget.sections.map((section) {
-                  return Column(
+                children: widget.sections.map((section) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -901,8 +900,7 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                  );
-                }).toList(),
+                  )).toList(),
               ),
             ),
           ),
@@ -964,8 +962,7 @@ class _FlutterListSheet<T> extends StatelessWidget {
   final IconData? emptyIcon;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context) => Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.6,
       ),
@@ -1052,7 +1049,6 @@ class _FlutterListSheet<T> extends StatelessWidget {
         ],
       ),
     );
-  }
 }
 
 /// 列表选项项

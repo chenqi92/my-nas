@@ -71,36 +71,6 @@ class AdaptiveButton extends StatelessWidget {
           'Either label or icon must be provided',
         );
 
-  /// 点击回调
-  final VoidCallback? onPressed;
-
-  /// 按钮类型
-  final AdaptiveButtonType type;
-
-  /// 按钮尺寸
-  final AdaptiveButtonSize size;
-
-  /// 文字标签
-  final String? label;
-
-  /// 图标
-  final IconData? icon;
-
-  /// 工具提示
-  final String? tooltip;
-
-  /// 是否为危险操作
-  final bool isDestructive;
-
-  /// 是否正在加载
-  final bool isLoading;
-
-  /// 是否启用
-  final bool enabled;
-
-  /// 是否撑满宽度
-  final bool expanded;
-
   /// 快捷构造函数：图标按钮
   const AdaptiveButton.icon({
     super.key,
@@ -156,6 +126,36 @@ class AdaptiveButton extends StatelessWidget {
     this.enabled = true,
     this.expanded = false,
   }) : type = icon != null ? AdaptiveButtonType.textIcon : AdaptiveButtonType.text;
+
+  /// 点击回调
+  final VoidCallback? onPressed;
+
+  /// 按钮类型
+  final AdaptiveButtonType type;
+
+  /// 按钮尺寸
+  final AdaptiveButtonSize size;
+
+  /// 文字标签
+  final String? label;
+
+  /// 图标
+  final IconData? icon;
+
+  /// 工具提示
+  final String? tooltip;
+
+  /// 是否为危险操作
+  final bool isDestructive;
+
+  /// 是否正在加载
+  final bool isLoading;
+
+  /// 是否启用
+  final bool enabled;
+
+  /// 是否撑满宽度
+  final bool expanded;
 
   @override
   Widget build(BuildContext context) {
@@ -232,7 +232,7 @@ class AdaptiveButton extends StatelessWidget {
     // 添加工具提示
     if (tooltip != null) {
       button = Tooltip(
-        message: tooltip!,
+        message: tooltip,
         child: button,
       );
     }
@@ -535,7 +535,7 @@ class AdaptiveIconButton extends StatelessWidget {
 
     if (tooltip != null) {
       button = Tooltip(
-        message: tooltip!,
+        message: tooltip,
         child: button,
       );
     }

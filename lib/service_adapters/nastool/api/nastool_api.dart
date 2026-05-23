@@ -112,13 +112,13 @@ class NasToolApi {
   }) async {
     await _post('/site/update', {
       'site_name': siteName,
-      if (siteId != null) 'site_id': siteId,
-      if (sitePri != null) 'site_pri': sitePri,
-      if (siteRssUrl != null) 'site_rssurl': siteRssUrl,
-      if (siteSignUrl != null) 'site_signurl': siteSignUrl,
-      if (siteCookie != null) 'site_cookie': siteCookie,
-      if (siteNote != null) 'site_note': siteNote,
-      if (siteInclude != null) 'site_include': siteInclude,
+      'site_id': ?siteId,
+      'site_pri': ?sitePri,
+      'site_rssurl': ?siteRssUrl,
+      'site_signurl': ?siteSignUrl,
+      'site_cookie': ?siteCookie,
+      'site_note': ?siteNote,
+      'site_include': ?siteInclude,
     });
   }
 
@@ -138,7 +138,7 @@ class NasToolApi {
     final response = await _get('/site/statistics');
     if (response == null) return [];
     // API 返回格式: {"data": {"user_statistics": [...]}}
-    final List<dynamic> items = response is Map<String, dynamic>
+    final items = response is Map<String, dynamic>
         ? (response['user_statistics'] as List? ?? response['result'] as List? ?? <dynamic>[])
         : (response is List ? response : <dynamic>[]);
     return items.map((e) => NtSiteStatistics.fromJson(e as Map<String, dynamic>)).toList();
@@ -220,22 +220,22 @@ class NasToolApi {
     await _post('/subscribe/add', {
       'name': name,
       'type': type,
-      if (year != null) 'year': year,
-      if (keyword != null) 'keyword': keyword,
-      if (season != null) 'season': season,
-      if (mediaId != null) 'mediaid': mediaId,
-      if (fuzzyMatch != null) 'fuzzy_match': fuzzyMatch,
-      if (rssSites != null) 'rss_sites': rssSites,
-      if (searchSites != null) 'search_sites': searchSites,
-      if (overEdition != null) 'over_edition': overEdition,
-      if (filterRestype != null) 'filter_restype': filterRestype,
-      if (filterPix != null) 'filter_pix': filterPix,
-      if (filterTeam != null) 'filter_team': filterTeam,
-      if (filterRule != null) 'filter_rule': filterRule,
-      if (downloadSetting != null) 'download_setting': downloadSetting,
-      if (savePath != null) 'save_path': savePath,
-      if (totalEp != null) 'total_ep': totalEp,
-      if (currentEp != null) 'current_ep': currentEp,
+      'year': ?year,
+      'keyword': ?keyword,
+      'season': ?season,
+      'mediaid': ?mediaId,
+      'fuzzy_match': ?fuzzyMatch,
+      'rss_sites': ?rssSites,
+      'search_sites': ?searchSites,
+      'over_edition': ?overEdition,
+      'filter_restype': ?filterRestype,
+      'filter_pix': ?filterPix,
+      'filter_team': ?filterTeam,
+      'filter_rule': ?filterRule,
+      'download_setting': ?downloadSetting,
+      'save_path': ?savePath,
+      'total_ep': ?totalEp,
+      'current_ep': ?currentEp,
     });
   }
 
@@ -249,12 +249,12 @@ class NasToolApi {
     String? tmdbId,
   }) async {
     await _post('/subscribe/delete', {
-      if (name != null) 'name': name,
-      if (type != null) 'type': type,
-      if (year != null) 'year': year,
-      if (season != null) 'season': season,
-      if (rssId != null) 'rssid': rssId,
-      if (tmdbId != null) 'tmdbid': tmdbId,
+      'name': ?name,
+      'type': ?type,
+      'year': ?year,
+      'season': ?season,
+      'rssid': ?rssId,
+      'tmdbid': ?tmdbId,
     });
   }
 
@@ -291,10 +291,10 @@ class NasToolApi {
   }) async {
     await _post('/search/keyword', {
       'search_word': searchWord,
-      if (unident != null) 'unident': unident,
-      if (filters != null) 'filters': filters,
-      if (tmdbId != null) 'tmdbid': tmdbId,
-      if (mediaType != null) 'media_type': mediaType,
+      'unident': ?unident,
+      'filters': ?filters,
+      'tmdbid': ?tmdbId,
+      'media_type': ?mediaType,
     });
   }
 
@@ -354,14 +354,14 @@ class NasToolApi {
     await _post('/download/item', {
       'enclosure': enclosure,
       'title': title,
-      if (site != null) 'site': site,
-      if (description != null) 'description': description,
-      if (pageUrl != null) 'page_url': pageUrl,
-      if (size != null) 'size': size,
-      if (seeders != null) 'seeders': seeders,
-      if (uploadFactor != null) 'uploadvolumefactor': uploadFactor,
-      if (downloadFactor != null) 'downloadvolumefactor': downloadFactor,
-      if (dlDir != null) 'dl_dir': dlDir,
+      'site': ?site,
+      'description': ?description,
+      'page_url': ?pageUrl,
+      'size': ?size,
+      'seeders': ?seeders,
+      'uploadvolumefactor': ?uploadFactor,
+      'downloadvolumefactor': ?downloadFactor,
+      'dl_dir': ?dlDir,
     });
   }
 
@@ -402,14 +402,14 @@ class NasToolApi {
   Future<void> downloadSearchResult(String id, {String? dir, String? setting}) async {
     await _post('/download/search', {
       'id': id,
-      if (dir != null) 'dir': dir,
-      if (setting != null) 'setting': setting,
+      'dir': ?dir,
+      'setting': ?setting,
     });
   }
 
   /// 获取下载器列表
   Future<List<NtDownloadClient>> listDownloadClients({String? did}) async {
-    final data = await _post('/download/client/list', {if (did != null) 'did': did});
+    final data = await _post('/download/client/list', {'did': ?did});
     final items = data['result'] as List? ?? [];
     return items.map((e) => NtDownloadClient.fromJson(e as Map<String, dynamic>)).toList();
   }
@@ -460,7 +460,7 @@ class NasToolApi {
   Future<NtMediaDetail?> getMediaDetail(String type, {String? tmdbId}) async {
     final data = await _post('/media/detail', {
       'type': type,
-      if (tmdbId != null) 'tmdbid': tmdbId,
+      'tmdbid': ?tmdbId,
     });
     if (data['data'] == null && data['title'] == null) return null;
     return NtMediaDetail.fromJson(data['data'] as Map<String, dynamic>? ?? data);
@@ -478,7 +478,7 @@ class NasToolApi {
     final data = await _post('/media/similar', {
       'type': type,
       'tmdbid': tmdbId,
-      if (page != null) 'page': page,
+      'page': ?page,
     });
     final items = data['result'] as List? ?? [];
     return items.map((e) => NtMediaDetail.fromJson(e as Map<String, dynamic>)).toList();
@@ -489,7 +489,7 @@ class NasToolApi {
     final data = await _post('/media/recommendations', {
       'type': type,
       'tmdbid': tmdbId,
-      if (page != null) 'page': page,
+      'page': ?page,
     });
     final items = data['result'] as List? ?? [];
     return items.map((e) => NtMediaDetail.fromJson(e as Map<String, dynamic>)).toList();
@@ -508,7 +508,7 @@ class NasToolApi {
     final data = await _post('/organization/history/list', {
       'page': page,
       'pagenum': pageNum,
-      if (keyword != null) 'keyword': keyword,
+      'keyword': ?keyword,
     });
     final items = data['result'] as List? ?? [];
     return items.map((e) => NtTransferHistory.fromJson(e as Map<String, dynamic>)).toList();
@@ -578,7 +578,7 @@ class NasToolApi {
     await _post('/user/manage', {
       'oper': oper,
       'name': name,
-      if (pris != null) 'pris': pris,
+      'pris': ?pris,
     });
   }
 
@@ -633,35 +633,35 @@ class NasToolApi {
     int? downSpeed,
   }) async {
     await _post('/brushtask/update', {
-      if (id != null) 'brushtask_id': id,
+      'brushtask_id': ?id,
       'brushtask_name': name,
       'brushtask_site': site,
       'brushtask_interval': interval,
       'brushtask_downloader': downloader,
       'brushtask_totalsize': totalSize,
       'brushtask_state': state,
-      if (savePath != null) 'brushtask_savepath': savePath,
-      if (label != null) 'brushtask_label': label,
-      if (rssUrl != null) 'brushtask_rssurl': rssUrl,
-      if (transfer != null) 'brushtask_transfer': transfer,
-      if (sendMessage != null) 'brushtask_sendmessage': sendMessage,
-      if (free != null) 'brushtask_free': free,
-      if (hr != null) 'brushtask_hr': hr,
-      if (torrentSize != null) 'brushtask_torrent_size': torrentSize,
-      if (include != null) 'brushtask_include': include,
-      if (exclude != null) 'brushtask_exclude': exclude,
-      if (dlCount != null) 'brushtask_dlcount': dlCount,
-      if (peerCount != null) 'brushtask_peercount': peerCount,
-      if (seedTime != null) 'brushtask_seedtime': seedTime,
-      if (hrSeedTime != null) 'brushtask_hr_seedtime': hrSeedTime,
-      if (seedRatio != null) 'brushtask_seedratio': seedRatio,
-      if (seedSize != null) 'brushtask_seedsize': seedSize,
-      if (dlTime != null) 'brushtask_dltime': dlTime,
-      if (avgUpSpeed != null) 'brushtask_avg_upspeed': avgUpSpeed,
-      if (iaTime != null) 'brushtask_iatime': iaTime,
-      if (pubDate != null) 'brushtask_pubdate': pubDate,
-      if (upSpeed != null) 'brushtask_upspeed': upSpeed,
-      if (downSpeed != null) 'brushtask_downspeed': downSpeed,
+      'brushtask_savepath': ?savePath,
+      'brushtask_label': ?label,
+      'brushtask_rssurl': ?rssUrl,
+      'brushtask_transfer': ?transfer,
+      'brushtask_sendmessage': ?sendMessage,
+      'brushtask_free': ?free,
+      'brushtask_hr': ?hr,
+      'brushtask_torrent_size': ?torrentSize,
+      'brushtask_include': ?include,
+      'brushtask_exclude': ?exclude,
+      'brushtask_dlcount': ?dlCount,
+      'brushtask_peercount': ?peerCount,
+      'brushtask_seedtime': ?seedTime,
+      'brushtask_hr_seedtime': ?hrSeedTime,
+      'brushtask_seedratio': ?seedRatio,
+      'brushtask_seedsize': ?seedSize,
+      'brushtask_dltime': ?dlTime,
+      'brushtask_avg_upspeed': ?avgUpSpeed,
+      'brushtask_iatime': ?iaTime,
+      'brushtask_pubdate': ?pubDate,
+      'brushtask_upspeed': ?upSpeed,
+      'brushtask_downspeed': ?downSpeed,
     });
   }
 
@@ -791,14 +791,14 @@ class NasToolApi {
     String? free,
   }) async {
     await _post('/filterrule/rule/update', {
-      if (ruleId != null) 'rule_id': ruleId,
+      'rule_id': ?ruleId,
       'group_id': groupId,
       'rule_name': name,
       'rule_pri': priority,
-      if (include != null) 'rule_include': include,
-      if (exclude != null) 'rule_exclude': exclude,
-      if (sizeLimit != null) 'rule_sizelimit': sizeLimit,
-      if (free != null) 'rule_free': free,
+      'rule_include': ?include,
+      'rule_exclude': ?exclude,
+      'rule_sizelimit': ?sizeLimit,
+      'rule_free': ?free,
     });
   }
 
@@ -840,7 +840,7 @@ class NasToolApi {
     required int enabled,
   }) async {
     await _post('/message/client/update', {
-      if (cid != null) 'cid': cid,
+      'cid': ?cid,
       'name': name,
       'type': type,
       'config': config,
@@ -944,17 +944,17 @@ class NasToolApi {
     String? note,
   }) async {
     await _post('/rss/update', {
-      if (id != null) 'id': id,
+      'id': ?id,
       'name': name,
       'address': address,
       'parser': parser,
       'interval': interval,
       'uses': uses,
       'state': state,
-      if (include != null) 'include': include,
-      if (exclude != null) 'exclude': exclude,
-      if (filterRule != null) 'filterrule': filterRule,
-      if (note != null) 'note': note,
+      'include': ?include,
+      'exclude': ?exclude,
+      'filterrule': ?filterRule,
+      'note': ?note,
     });
   }
 
@@ -997,7 +997,7 @@ class NasToolApi {
       'name': name,
       'type': type,
       'format': format,
-      if (params != null) 'params': params,
+      'params': ?params,
     });
   }
 
@@ -1074,8 +1074,8 @@ class NasToolApi {
   }) async {
     final data = await _post('/service/rule/test', {
       'title': title,
-      if (subtitle != null) 'subtitle': subtitle,
-      if (size != null) 'size': size,
+      'subtitle': ?subtitle,
+      'size': ?size,
     });
     if (data['result'] == null) return null;
     return NtRuleTestResult.fromJson(data['result'] as Map<String, dynamic>);
@@ -1122,14 +1122,14 @@ class NasToolApi {
     String? enabled,
   }) async {
     await _post('/sync/directory/update', {
-      if (sid != null) 'sid': sid,
+      'sid': ?sid,
       'from': from,
-      if (to != null) 'to': to,
-      if (unknown != null) 'unknown': unknown,
-      if (syncMode != null) 'syncmod': syncMode,
-      if (compatibility != null) 'compatibility': compatibility,
-      if (rename != null) 'rename': rename,
-      if (enabled != null) 'enabled': enabled,
+      'to': ?to,
+      'unknown': ?unknown,
+      'syncmod': ?syncMode,
+      'compatibility': ?compatibility,
+      'rename': ?rename,
+      'enabled': ?enabled,
     });
   }
 
@@ -1191,24 +1191,24 @@ class NasToolApi {
     String? trErrorKey,
   }) async {
     await _post('/torrentremover/task/update', {
-      if (tid != null) 'tid': tid,
+      'tid': ?tid,
       'name': name,
       'action': action,
       'interval': interval,
       'enabled': enabled,
       'samedata': sameData,
       'onlynastool': onlyNasTool,
-      if (ratio != null) 'ratio': ratio,
-      if (seedingTime != null) 'seeding_time': seedingTime,
-      if (uploadAvs != null) 'upload_avs': uploadAvs,
-      if (size != null) 'size': size,
-      if (savePathKey != null) 'savepath_key': savePathKey,
-      if (trackerKey != null) 'tracker_key': trackerKey,
-      if (downloader != null) 'downloader': downloader,
-      if (qbState != null) 'qb_state': qbState,
-      if (qbCategory != null) 'qb_category': qbCategory,
-      if (trState != null) 'tr_state': trState,
-      if (trErrorKey != null) 'tr_error_key': trErrorKey,
+      'ratio': ?ratio,
+      'seeding_time': ?seedingTime,
+      'upload_avs': ?uploadAvs,
+      'size': ?size,
+      'savepath_key': ?savePathKey,
+      'tracker_key': ?trackerKey,
+      'downloader': ?downloader,
+      'qb_state': ?qbState,
+      'qb_category': ?qbCategory,
+      'tr_state': ?trState,
+      'tr_error_key': ?trErrorKey,
     });
   }
 
@@ -1296,8 +1296,8 @@ class NasToolApi {
   }) async {
     final data = await _post('/site/resources', {
       'id': id,
-      if (page != null) 'page': page,
-      if (keyword != null) 'keyword': keyword,
+      'page': ?page,
+      'keyword': ?keyword,
     });
     final items = data['result'] as List? ?? [];
     return items.map((e) => NtSearchResult.fromJson(e as Map<String, dynamic>)).toList();
@@ -1370,7 +1370,7 @@ class NasToolApi {
     final data = await _post('/subscribe/tv/date', {
       'id': id,
       'season': season,
-      if (name != null) 'name': name,
+      'name': ?name,
     });
     return data['result'] as String?;
   }
@@ -1416,16 +1416,16 @@ class NasToolApi {
     int? minFileSize,
   }) async {
     await _post('/organization/unknown/rename', {
-      if (logId != null) 'logid': logId,
-      if (unknownId != null) 'unknown_id': unknownId,
+      'logid': ?logId,
+      'unknown_id': ?unknownId,
       'syncmod': syncMode,
-      if (tmdb != null) 'tmdb': tmdb,
-      if (title != null) 'title': title,
-      if (year != null) 'year': year,
-      if (type != null) 'type': type,
-      if (season != null) 'season': season,
-      if (episodeFormat != null) 'episode_format': episodeFormat,
-      if (minFileSize != null) 'min_filesize': minFileSize,
+      'tmdb': ?tmdb,
+      'title': ?title,
+      'year': ?year,
+      'type': ?type,
+      'season': ?season,
+      'episode_format': ?episodeFormat,
+      'min_filesize': ?minFileSize,
     });
   }
 
@@ -1448,15 +1448,15 @@ class NasToolApi {
       'inpath': inPath,
       'outpath': outPath,
       'syncmod': syncMode,
-      if (tmdb != null) 'tmdb': tmdb,
-      if (title != null) 'title': title,
-      if (year != null) 'year': year,
-      if (type != null) 'type': type,
-      if (season != null) 'season': season,
-      if (episodeFormat != null) 'episode_format': episodeFormat,
-      if (episodeDetails != null) 'episode_details': episodeDetails,
-      if (episodeOffset != null) 'episode_offset': episodeOffset,
-      if (minFileSize != null) 'min_filesize': minFileSize,
+      'tmdb': ?tmdb,
+      'title': ?title,
+      'year': ?year,
+      'type': ?type,
+      'season': ?season,
+      'episode_format': ?episodeFormat,
+      'episode_details': ?episodeDetails,
+      'episode_offset': ?episodeOffset,
+      'min_filesize': ?minFileSize,
     });
   }
 
@@ -1476,7 +1476,7 @@ class NasToolApi {
     required String config,
   }) async {
     await _post('/download/client/add', {
-      if (did != null) 'did': did,
+      'did': ?did,
       'name': name,
       'type': type,
       'enabled': enabled,
@@ -1520,7 +1520,7 @@ class NasToolApi {
   /// 获取下载设置列表
   Future<List<Map<String, dynamic>>> listDownloadConfigs({String? sid}) async {
     final data = await _post('/download/config/list', {
-      if (sid != null) 'sid': sid,
+      'sid': ?sid,
     });
     final items = data['result'] as List? ?? [];
     return items.cast<Map<String, dynamic>>();
@@ -1548,14 +1548,14 @@ class NasToolApi {
     await _post('/download/config/update', {
       'sid': sid,
       'name': name,
-      if (category != null) 'category': category,
-      if (tags != null) 'tags': tags,
-      if (isPaused != null) 'is_paused': isPaused,
-      if (uploadLimit != null) 'upload_limit': uploadLimit,
-      if (downloadLimit != null) 'download_limit': downloadLimit,
-      if (ratioLimit != null) 'ratio_limit': ratioLimit,
-      if (seedingTimeLimit != null) 'seeding_time_limit': seedingTimeLimit,
-      if (downloader != null) 'downloader': downloader,
+      'category': ?category,
+      'tags': ?tags,
+      'is_paused': ?isPaused,
+      'upload_limit': ?uploadLimit,
+      'download_limit': ?downloadLimit,
+      'ratio_limit': ?ratioLimit,
+      'seeding_time_limit': ?seedingTimeLimit,
+      'downloader': ?downloader,
     });
   }
 
@@ -1567,7 +1567,7 @@ class NasToolApi {
   /// 获取下载保存目录
   Future<List<String>> getDownloadConfigDirectories({String? sid}) async {
     final data = await _post('/download/config/directory', {
-      if (sid != null) 'sid': sid,
+      'sid': ?sid,
     });
     return (data['result'] as List?)?.cast<String>() ?? [];
   }
@@ -1608,8 +1608,8 @@ class NasToolApi {
   }) async {
     final data = await _post('/media/person', {
       'type': type,
-      if (personId != null) 'personid': personId,
-      if (page != null) 'page': page,
+      'personid': ?personId,
+      'page': ?page,
     });
     final items = data['result'] as List? ?? [];
     return items.map((e) => NtMediaDetail.fromJson(e as Map<String, dynamic>)).toList();

@@ -26,19 +26,17 @@ class EbookPage {
   final double progress;
 
   /// 纯文本内容 (用于 TTS 朗读)
-  String get textContent {
-    return htmlContent
+  String get textContent => htmlContent
         .replaceAll(RegExp(r'<br\s*/?>'), '\n')
-        .replaceAll(RegExp(r'</p>|</div>|</h[1-6]>'), '\n\n')
-        .replaceAll(RegExp(r'<[^>]+>'), '')
-        .replaceAll(RegExp(r'&nbsp;'), ' ')
-        .replaceAll(RegExp(r'&lt;'), '<')
-        .replaceAll(RegExp(r'&gt;'), '>')
-        .replaceAll(RegExp(r'&amp;'), '&')
-        .replaceAll(RegExp(r'&quot;'), '"')
+        .replaceAll(RegExp('</p>|</div>|</h[1-6]>'), '\n\n')
+        .replaceAll(RegExp('<[^>]+>'), '')
+        .replaceAll(RegExp('&nbsp;'), ' ')
+        .replaceAll(RegExp('&lt;'), '<')
+        .replaceAll(RegExp('&gt;'), '>')
+        .replaceAll(RegExp('&amp;'), '&')
+        .replaceAll(RegExp('&quot;'), '"')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
-  }
 }
 
 /// 分页信息
@@ -232,7 +230,7 @@ class NativeEpubPaginator {
   }) {
     // 移除 HTML 标签，获取纯文本
     final plainText = paragraph
-        .replaceAll(RegExp(r'<[^>]+>'), ' ')
+        .replaceAll(RegExp('<[^>]+>'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
 
@@ -296,8 +294,7 @@ class HtmlContentWidget extends StatelessWidget {
   final ImageProvider? Function(String url)? imageProvider;
 
   @override
-  Widget build(BuildContext context) {
-    return HtmlWidget(
+  Widget build(BuildContext context) => HtmlWidget(
       html,
       textStyle: textStyle,
       onTapUrl: onTapUrl != null
@@ -308,7 +305,6 @@ class HtmlContentWidget extends StatelessWidget {
           : null,
       factoryBuilder: () => _CustomWidgetFactory(imageProvider: imageProvider),
     );
-  }
 }
 
 /// 自定义 Widget 工厂，用于处理图片等资源
@@ -325,9 +321,7 @@ class _CustomWidgetFactory extends WidgetFactory {
         return Image(
           image: provider,
           fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return const SizedBox.shrink();
-          },
+          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
         );
       }
     }

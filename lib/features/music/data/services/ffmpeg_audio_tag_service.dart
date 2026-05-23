@@ -14,11 +14,11 @@ import 'package:path_provider/path_provider.dart';
 /// 相比 audio_metadata_reader 库，FFmpeg 写入的文件保持更好的兼容性，
 /// 特别是在 iOS AVFoundation 上不会出现 -11800 解码错误。
 class FfmpegAudioTagService {
+
+  factory FfmpegAudioTagService() => _instance ??= FfmpegAudioTagService._();
   FfmpegAudioTagService._();
 
   static FfmpegAudioTagService? _instance;
-
-  factory FfmpegAudioTagService() => _instance ??= FfmpegAudioTagService._();
 
   Directory? _tempDir;
   bool _initialized = false;

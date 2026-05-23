@@ -178,8 +178,7 @@ class MediaKitBackend implements VideoPlayerBackend {
       _player.setVolume(volume * 100);
 
   @override
-  Future<List<AudioTrackInfo>> getAudioTracks() async {
-    return _player.state.tracks.audio
+  Future<List<AudioTrackInfo>> getAudioTracks() async => _player.state.tracks.audio
         .asMap()
         .entries
         .map((e) => AudioTrackInfo(
@@ -189,7 +188,6 @@ class MediaKitBackend implements VideoPlayerBackend {
               language: e.value.language,
             ))
         .toList();
-  }
 
   @override
   Future<void> setAudioTrack(int index) async {
@@ -210,8 +208,7 @@ class MediaKitBackend implements VideoPlayerBackend {
   }
 
   @override
-  Future<List<SubtitleTrackInfo>> getSubtitleTracks() async {
-    return _player.state.tracks.subtitle
+  Future<List<SubtitleTrackInfo>> getSubtitleTracks() async => _player.state.tracks.subtitle
         .asMap()
         .entries
         .map((e) => SubtitleTrackInfo(
@@ -221,7 +218,6 @@ class MediaKitBackend implements VideoPlayerBackend {
               language: e.value.language,
             ))
         .toList();
-  }
 
   @override
   Future<void> setSubtitleTrack(int index) async {
@@ -257,22 +253,16 @@ class MediaKitBackend implements VideoPlayerBackend {
   Future<bool> get isPipSupported => _pipService.isSupported;
 
   @override
-  Future<bool> enterPictureInPicture() async {
-    return _pipService.enterPipMode(aspectRatio: aspectRatio);
-  }
+  Future<bool> enterPictureInPicture() async => _pipService.enterPipMode(aspectRatio: aspectRatio);
 
   @override
-  Future<bool> exitPictureInPicture() async {
-    return _pipService.exitPipMode();
-  }
+  Future<bool> exitPictureInPicture() async => _pipService.exitPipMode();
 
   @override
   bool get isPictureInPicture => _pipService.isPipMode;
 
   @override
-  Future<List<int>?> screenshot() async {
-    return _player.screenshot();
-  }
+  Future<List<int>?> screenshot() async => _player.screenshot();
 
   // ==================== 状态流 ====================
 
@@ -347,12 +337,10 @@ class MediaKitBackend implements VideoPlayerBackend {
   // ==================== 视图 ====================
 
   @override
-  Widget buildVideoWidget({BoxFit fit = BoxFit.contain}) {
-    return Video(
+  Widget buildVideoWidget({BoxFit fit = BoxFit.contain}) => Video(
       controller: _videoController,
       fit: fit,
       // 禁用内置字幕渲染，使用自定义字幕覆盖层
       subtitleViewConfiguration: const SubtitleViewConfiguration(visible: false),
     );
-  }
 }

@@ -75,9 +75,7 @@ class TTSState {
 }
 
 /// TTS Provider
-final ttsProvider = StateNotifierProvider<TTSNotifier, TTSState>((ref) {
-  return TTSNotifier();
-});
+final ttsProvider = StateNotifierProvider<TTSNotifier, TTSState>((ref) => TTSNotifier());
 
 /// TTS 状态管理器
 class TTSNotifier extends StateNotifier<TTSState> {

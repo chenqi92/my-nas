@@ -10,15 +10,11 @@ part 'book_search_provider.g.dart';
 
 /// 书籍搜索服务 Provider
 @riverpod
-BookSearchService bookSearchService(Ref ref) {
-  return BookSearchService.instance;
-}
+BookSearchService bookSearchService(Ref ref) => BookSearchService.instance;
 
 /// 书籍内容服务 Provider
 @riverpod
-BookContentService bookContentService(Ref ref) {
-  return BookContentService.instance;
-}
+BookContentService bookContentService(Ref ref) => BookContentService.instance;
 
 /// 搜索状态
 class BookSearchState {

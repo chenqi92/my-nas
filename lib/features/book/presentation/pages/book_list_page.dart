@@ -1566,7 +1566,7 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
               flex: 4,
               child: Stack(
                 children: [
-                  Container(
+                  DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
@@ -1628,7 +1628,7 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    author?.isNotEmpty == true ? author! : '佚名',
+                    author?.isNotEmpty ?? false ? author! : '佚名',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

@@ -103,7 +103,7 @@ class TTSSettingsSheet extends ConsumerWidget {
                 max: 2.0,
                 divisions: 15,
                 valueLabel: '${settings.speechRate.toStringAsFixed(1)}x',
-                onChanged: (value) => ttsNotifier.setSpeechRate(value),
+                onChanged: ttsNotifier.setSpeechRate,
               ),
 
               const SizedBox(height: 16),
@@ -117,7 +117,7 @@ class TTSSettingsSheet extends ConsumerWidget {
                 max: 2.0,
                 divisions: 15,
                 valueLabel: settings.pitch.toStringAsFixed(1),
-                onChanged: (value) => ttsNotifier.setPitch(value),
+                onChanged: ttsNotifier.setPitch,
               ),
 
               const SizedBox(height: 16),
@@ -131,7 +131,7 @@ class TTSSettingsSheet extends ConsumerWidget {
                 max: 1.0,
                 divisions: 10,
                 valueLabel: '${(settings.volume * 100).toInt()}%',
-                onChanged: (value) => ttsNotifier.setVolume(value),
+                onChanged: ttsNotifier.setVolume,
               ),
 
               const SizedBox(height: 24),

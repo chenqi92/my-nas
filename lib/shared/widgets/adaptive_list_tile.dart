@@ -56,6 +56,29 @@ class AdaptiveListTile extends StatelessWidget {
     this.showDivider = false,
   });
 
+  /// 从数据快速创建
+  factory AdaptiveListTile.simple({
+    Key? key,
+    required String title,
+    String? subtitle,
+    IconData? leadingIcon,
+    IconData? trailingIcon,
+    VoidCallback? onTap,
+    VoidCallback? onLongPress,
+    bool selected = false,
+    bool enabled = true,
+  }) => AdaptiveListTile(
+      key: key,
+      title: Text(title),
+      subtitle: subtitle != null ? Text(subtitle) : null,
+      leading: leadingIcon != null ? Icon(leadingIcon) : null,
+      trailing: trailingIcon != null ? Icon(trailingIcon) : null,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      selected: selected,
+      enabled: enabled,
+    );
+
   /// 标题
   final Widget title;
 
@@ -97,29 +120,6 @@ class AdaptiveListTile extends StatelessWidget {
 
   /// 是否显示分隔线
   final bool showDivider;
-
-  /// 从数据快速创建
-  factory AdaptiveListTile.simple({
-    Key? key,
-    required String title,
-    String? subtitle,
-    IconData? leadingIcon,
-    IconData? trailingIcon,
-    VoidCallback? onTap,
-    VoidCallback? onLongPress,
-    bool selected = false,
-    bool enabled = true,
-  }) => AdaptiveListTile(
-      key: key,
-      title: Text(title),
-      subtitle: subtitle != null ? Text(subtitle) : null,
-      leading: leadingIcon != null ? Icon(leadingIcon) : null,
-      trailing: trailingIcon != null ? Icon(trailingIcon) : null,
-      onTap: onTap,
-      onLongPress: onLongPress,
-      selected: selected,
-      enabled: enabled,
-    );
 
   @override
   Widget build(BuildContext context) {
@@ -334,7 +334,7 @@ class AdaptiveListGroup extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (trailing != null) trailing!,
+                ?trailing,
               ],
             ),
           ),

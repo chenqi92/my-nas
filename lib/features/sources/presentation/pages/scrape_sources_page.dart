@@ -89,8 +89,7 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
       };
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
         title: const Text('音乐元数据源'),
@@ -164,10 +163,8 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
                   },
                 ),
     );
-  }
 
-  Widget _buildEmpty() {
-    return Center(
+  Widget _buildEmpty() => Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
@@ -189,7 +186,6 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
           ),
         ),
       );
-  }
 }
 
 class _ImportSheet extends StatefulWidget {

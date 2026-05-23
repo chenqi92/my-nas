@@ -173,7 +173,7 @@ class TTSService {
                 locale.contains('TW') ||
                 locale.contains('HK');
           })
-          .map((v) => TTSVoice.fromSystemVoice(v))
+          .map(TTSVoice.fromSystemVoice)
           .toList();
 
       // 去重：按 ID 去重（同一音色可能被系统重复返回）
@@ -276,8 +276,8 @@ class TTSService {
       }
 
       // 设置语速/音调/音量 (转换为 Edge TTS 范围)
-      _edgeTts.setRate((_settings.speechRate - 1.0)); // 0.5-2.0 -> -0.5-1.0
-      _edgeTts.setPitch((_settings.pitch - 1.0)); // 0.5-2.0 -> -0.5-1.0
+      _edgeTts.setRate(_settings.speechRate - 1.0); // 0.5-2.0 -> -0.5-1.0
+      _edgeTts.setPitch(_settings.pitch - 1.0); // 0.5-2.0 -> -0.5-1.0
       _edgeTts.setVolume(_settings.volume);
 
       // 设置回调

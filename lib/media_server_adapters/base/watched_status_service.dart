@@ -204,9 +204,7 @@ class WatchedStatusService {
 }
 
 /// 观看状态同步服务 Provider
-final watchedStatusServiceProvider = Provider<WatchedStatusService>((ref) {
-  return WatchedStatusService(ref);
-});
+final watchedStatusServiceProvider = Provider<WatchedStatusService>(WatchedStatusService.new);
 
 /// 带媒体服务器同步的观看状态切换
 ///

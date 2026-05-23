@@ -308,7 +308,7 @@ class MiniTTSControlBar extends ConsumerWidget {
 
           // 停止按钮
           InkWell(
-            onTap: () => ttsNotifier.stop(),
+            onTap: ttsNotifier.stop,
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(4),

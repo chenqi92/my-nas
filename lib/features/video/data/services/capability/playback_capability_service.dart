@@ -16,18 +16,6 @@ class HdrAudioSettings {
     this.enabledPassthroughCodecs,
   });
 
-  /// HDR 模式
-  final HdrMode hdrMode;
-
-  /// 色调映射算法
-  final ToneMappingMode toneMappingMode;
-
-  /// 音频直通模式
-  final AudioPassthroughMode audioPassthroughMode;
-
-  /// 用户启用的直通编码（null 表示使用设备支持的全部）
-  final List<AudioCodec>? enabledPassthroughCodecs;
-
   /// 从 Map 创建
   factory HdrAudioSettings.fromMap(Map<dynamic, dynamic>? map) {
     if (map == null) return const HdrAudioSettings();
@@ -42,6 +30,18 @@ class HdrAudioSettings {
           .toList(),
     );
   }
+
+  /// HDR 模式
+  final HdrMode hdrMode;
+
+  /// 色调映射算法
+  final ToneMappingMode toneMappingMode;
+
+  /// 音频直通模式
+  final AudioPassthroughMode audioPassthroughMode;
+
+  /// 用户启用的直通编码（null 表示使用设备支持的全部）
+  final List<AudioCodec>? enabledPassthroughCodecs;
 
   /// 转为 Map
   Map<String, dynamic> toMap() => {
@@ -117,7 +117,7 @@ class PlaybackCapabilityService {
     required HdrAudioSettings userSettings,
   }) {
     // 确定 HDR 模式
-    HdrMode effectiveHdrMode = userSettings.hdrMode;
+    var effectiveHdrMode = userSettings.hdrMode;
 
     if (userSettings.hdrMode == HdrMode.auto) {
       if (videoInfo.isHdr) {
@@ -138,8 +138,8 @@ class PlaybackCapabilityService {
     }
 
     // 确定音频直通模式
-    AudioPassthroughMode effectiveAudioMode = userSettings.audioPassthroughMode;
-    List<AudioCodec> passthroughCodecs = [];
+    var effectiveAudioMode = userSettings.audioPassthroughMode;
+    var passthroughCodecs = <AudioCodec>[];
 
     if (userSettings.audioPassthroughMode == AudioPassthroughMode.auto) {
       if (videoInfo.needsAudioPassthrough &&
@@ -183,7 +183,7 @@ class PlaybackCapabilityService {
     PlaybackConfiguration config,
   ) async {
     try {
-      final nativePlayer = player.platform as NativePlayer;
+      final nativePlayer = player.platform! as NativePlayer;
       final properties = config.toMpvProperties();
 
       for (final entry in properties.entries) {

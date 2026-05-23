@@ -459,7 +459,7 @@ class BookSource {
     if (header == null || header!.isEmpty) return null;
     try {
       // ignore: avoid_dynamic_calls
-      final Map<String, dynamic> parsed =
+      final parsed =
           Map<String, dynamic>.from(Uri.splitQueryString(header!));
       return parsed.map((k, v) => MapEntry(k, v.toString()));
     } catch (_) {

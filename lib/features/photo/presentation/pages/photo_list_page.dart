@@ -7,8 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/router/app_router.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
-import 'package:my_nas/shared/providers/ui_style_provider.dart';
-import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/services/media_scan_progress_service.dart';
@@ -17,9 +15,6 @@ import 'package:my_nas/features/photo/data/services/photo_database_service.dart'
 import 'package:my_nas/features/photo/data/services/photo_library_cache_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_save_service.dart';
 import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
-import 'package:my_nas/shared/providers/download_provider.dart';
-import 'package:my_nas/shared/providers/media_favorites_provider.dart';
-import 'package:my_nas/shared/widgets/media_info_sheet.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_duplicates_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_viewer_page.dart';
 import 'package:my_nas/features/photo/presentation/widgets/photo_timeline_navigator.dart';
@@ -34,12 +29,17 @@ import 'package:my_nas/features/transfer/presentation/widgets/target_picker_shee
 import 'package:my_nas/features/transfer/presentation/widgets/transfer_sheet.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/local/local_adapter.dart';
+import 'package:my_nas/shared/providers/download_provider.dart';
+import 'package:my_nas/shared/providers/media_favorites_provider.dart';
+import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/animated_list_item.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
+import 'package:my_nas/shared/widgets/media_info_sheet.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 时间线项目类型 - 用于单一 SliverList 渲染
 sealed class TimelineItem {
@@ -1489,7 +1489,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
           state,
         )) {
           (true, _, _) => _buildSearchBar(context, ref, isDark),
-          (_, true, PhotoListLoaded loadedState) =>
+          (_, true, final PhotoListLoaded loadedState) =>
             _buildSelectModeHeader(context, ref, isDark, loadedState),
           _ => _buildGreetingHeader(context, ref, isDark, state),
         },
@@ -1830,8 +1830,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     WidgetRef ref,
     bool isDark,
     PhotoListLoaded state,
-  ) {
-    return ClipRRect(
+  ) => ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -1898,7 +1897,6 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
         ),
       ),
     );
-  }
 
   /// iOS 26 带大标题的照片内容
   Widget _buildPhotoContentWithLargeTitle(
@@ -1907,8 +1905,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     PhotoListLoaded state,
     bool isDark,
     double safeTop,
-  ) {
-    return Column(
+  ) => Column(
       children: [
         // 时间筛选栏（有筛选时显示，或在时间线模式下显示）- 需要在大标题下方
         Expanded(
@@ -1942,7 +1939,6 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
           _buildSelectionActionBar(context, ref, state, isDark),
       ],
     );
-  }
 
   /// iOS 26 大标题 Sliver
   Widget _buildLargeTitleSliver(
@@ -2014,8 +2010,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     required String label,
     required Color color,
     required bool isDark,
-  }) {
-    return Container(
+  }) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: isDark ? 0.2 : 0.12),
@@ -2037,7 +2032,6 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
         ],
       ),
     );
-  }
 
   Widget _buildLoadingState(
     BuildContext context,
@@ -2138,14 +2132,14 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                       url: photo.thumbnailUrl,
                       path: photo.path,
                       fileSystem: fileSystem,
-                      placeholder: Container(
+                      placeholder: ColoredBox(
                         color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
                         child: Icon(
                           Icons.photo_rounded,
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                         ),
                       ),
-                      errorWidget: Container(
+                      errorWidget: ColoredBox(
                         color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
                         child: Icon(
                           Icons.photo_rounded,

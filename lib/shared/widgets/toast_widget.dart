@@ -63,9 +63,7 @@ class ToastWidget extends StatelessWidget {
   }
 
   /// 获取边框颜色
-  Color _getBorderColor(BuildContext context) {
-    return _getColor(context).withValues(alpha: 0.3);
-  }
+  Color _getBorderColor(BuildContext context) => _getColor(context).withValues(alpha: 0.3);
 
   @override
   Widget build(BuildContext context) {

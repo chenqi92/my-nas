@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 import 'package:my_nas/features/music/data/services/live_activity_service.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
@@ -25,7 +26,6 @@ import 'package:my_nas/features/music/presentation/providers/music_scraper_provi
 import 'package:my_nas/main.dart' show audioHandler;
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
-import 'package:my_nas/core/extensions/context_extensions.dart';
 
 /// 自动刮削对话框
 ///
@@ -1131,7 +1131,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
               ],
             ),
           ),
-          if (trailing != null) trailing,
+          ?trailing,
         ],
       ),
     );

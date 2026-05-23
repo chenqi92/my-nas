@@ -8,25 +8,25 @@ import 'package:media_kit_video/media_kit_video.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/services/media_proxy_server.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/features/media_tracking/presentation/providers/trakt_sync_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
 import 'package:my_nas/features/video/data/services/audio_track_service.dart';
 import 'package:my_nas/features/video/data/services/capability/playback_capability_service.dart';
+import 'package:my_nas/features/video/data/services/media_server_playback_reporter.dart';
 import 'package:my_nas/features/video/data/services/pip_service.dart';
 import 'package:my_nas/features/video/data/services/player/dolby_vision_detector.dart';
 import 'package:my_nas/features/video/data/services/player/native_av_player_backend.dart';
 import 'package:my_nas/features/video/data/services/player/video_player_backend.dart';
 import 'package:my_nas/features/video/data/services/subtitle_service.dart';
-import 'package:my_nas/features/video/data/services/media_server_playback_reporter.dart';
+import 'package:my_nas/features/video/data/services/trakt_scrobble_service.dart';
 import 'package:my_nas/features/video/data/services/video_history_service.dart';
 import 'package:my_nas/features/video/data/services/video_thumbnail_service.dart';
 import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
 import 'package:my_nas/features/video/domain/entities/hdr_capability.dart';
 import 'package:my_nas/features/video/domain/entities/playback_configuration.dart';
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
-import 'package:my_nas/features/video/data/services/trakt_scrobble_service.dart';
-import 'package:my_nas/features/media_tracking/presentation/providers/trakt_sync_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/playback_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/playlist_provider.dart';
@@ -712,9 +712,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     var resumePosition = startPosition;
 
     // 如果没有指定起始位置，尝试从多个来源恢复进度
-    if (resumePosition == null) {
-      resumePosition = await _getResumePosition(video);
-    }
+    resumePosition ??= await _getResumePosition(video);
 
     // 检测是否需要使用原生播放器（杜比视界）
     final shouldUseNative = DolbyVisionDetector.shouldUseNativePlayer(
@@ -998,7 +996,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     }
 
     // 获取源类型
-    SourceType sourceType = SourceType.local;
+    var sourceType = SourceType.local;
     if (video.sourceId != null) {
       final connections = _ref.read(activeConnectionsProvider);
       final connection = connections[video.sourceId];

@@ -282,7 +282,7 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
     // 分批加载资源，每批 100 个，避免一次性加载导致内存问题
     const batchSize = 100;
-    for (int start = 0; start < count; start += batchSize) {
+    for (var start = 0; start < count; start += batchSize) {
       final end = (start + batchSize > count) ? count : start + batchSize;
       final assets = await album.getAssetListRange(start: start, end: end);
 
@@ -291,7 +291,7 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
         // 从 asset.type 推断 mimeType（photo_manager 的 mimeType 属性经常为 null）
         // AssetType: image=1, video=2, audio=3, other=0
-        String? mimeType = asset.mimeType;
+        var mimeType = asset.mimeType;
         String? extension;
 
         // 优先从文件名获取扩展名
@@ -597,7 +597,7 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
     // 分批加载资源
     const batchSize = 100;
-    for (int start = 0; start < count; start += batchSize) {
+    for (var start = 0; start < count; start += batchSize) {
       final end = (start + batchSize > count) ? count : start + batchSize;
       final assets = await allAlbum.getAssetListRange(start: start, end: end);
 

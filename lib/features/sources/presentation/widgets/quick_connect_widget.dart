@@ -397,8 +397,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
     }
   }
 
-  Widget _buildLoadingState(ThemeData theme, String message) {
-    return Row(
+  Widget _buildLoadingState(ThemeData theme, String message) => Row(
       children: [
         const SizedBox(
           width: 20,
@@ -412,7 +411,6 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         ),
       ],
     );
-  }
 
   Widget _buildCodeState(ThemeData theme) {
     final minutes = _remainingSeconds ~/ 60;
@@ -505,8 +503,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
     );
   }
 
-  Widget _buildSuccessState(ThemeData theme) {
-    return Row(
+  Widget _buildSuccessState(ThemeData theme) => Row(
       children: [
         Icon(
           Icons.check_circle,
@@ -524,10 +521,8 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         ),
       ],
     );
-  }
 
-  Widget _buildErrorState(ThemeData theme, String message, {required bool canRetry}) {
-    return Column(
+  Widget _buildErrorState(ThemeData theme, String message, {required bool canRetry}) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -561,5 +556,4 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         ],
       ],
     );
-  }
 }

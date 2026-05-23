@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
@@ -12,10 +13,9 @@ import 'package:my_nas/features/book/presentation/providers/book_source_provider
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
-import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
-import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 书源管理页面
 class BookSourcesPage extends ConsumerStatefulWidget {
@@ -98,8 +98,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
     return _buildNormalList(sources, isDark);
   }
 
-  Widget _buildEmptyState(bool isDark) {
-    return Center(
+  Widget _buildEmptyState(bool isDark) => Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -131,7 +130,6 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
         ],
       ),
     );
-  }
 
   Widget _buildNormalList(List<BookSource> sources, bool isDark) {
     final uiStyle = ref.watch(uiStyleProvider);
@@ -163,8 +161,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
       padding: AppSpacing.paddingMd,
       itemCount: sources.length,
       onReorder: _handleReorder,
-      proxyDecorator: (child, index, animation) {
-        return AnimatedBuilder(
+      proxyDecorator: (child, index, animation) => AnimatedBuilder(
           animation: animation,
           builder: (context, child) => Material(
             elevation: 8 * animation.value,
@@ -172,8 +169,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
             child: child,
           ),
           child: child,
-        );
-      },
+        ),
       itemBuilder: (context, index) {
         final source = sources[index];
         return Padding(
@@ -339,7 +335,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed ?? false) {
       await ref.read(bookSourcesProvider.notifier).removeSource(source.id);
       if (mounted) {
         context.showToast('已删除');
@@ -373,8 +369,7 @@ class _BookSourceCard extends StatelessWidget {
   final bool isReorderMode;
 
   @override
-  Widget build(BuildContext context) {
-    return AdaptiveGlassContainer(
+  Widget build(BuildContext context) => AdaptiveGlassContainer(
       uiStyle: uiStyle,
       isDark: isDark,
       cornerRadius: 16,
@@ -478,13 +473,10 @@ class _BookSourceCard extends StatelessWidget {
         ),
       ),
     );
-  }
 
-  Color _getTypeColor() {
-    return source.bookSourceType == BookSourceType.audio
+  Color _getTypeColor() => source.bookSourceType == BookSourceType.audio
         ? AppColors.accent
         : Colors.amber;
-  }
 }
 
 /// 书源导入弹框
@@ -673,8 +665,7 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
     bool isSelected,
     VoidCallback onTap,
     bool isDark,
-  ) {
-    return GestureDetector(
+  ) => GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -714,7 +705,6 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
         ),
       ),
     );
-  }
 
   Future<void> _handleImport() async {
     final content = _controller.text.trim();

@@ -25,7 +25,7 @@ class FavoritesSyncModule implements SyncableModule {
     await _service.init();
     final list = await _service.getAllFavorites();
     if (list.isEmpty) return null;
-    DateTime maxAt = list.first.addedAt;
+    var maxAt = list.first.addedAt;
     for (final f in list) {
       if (f.addedAt.isAfter(maxAt)) maxAt = f.addedAt;
     }

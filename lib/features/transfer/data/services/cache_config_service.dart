@@ -28,12 +28,10 @@ class CacheSizeOption {
   ];
 
   /// 从 MB 值获取选项
-  static CacheSizeOption fromMB(int sizeMB) {
-    return options.firstWhere(
+  static CacheSizeOption fromMB(int sizeMB) => options.firstWhere(
       (o) => o.sizeMB == sizeMB,
       orElse: () => CacheSizeOption(sizeMB, '$sizeMB MB'),
     );
-  }
 }
 
 /// 缓存配置服务 - 管理各类型缓存的大小限制

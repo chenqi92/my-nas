@@ -91,8 +91,8 @@ class MoviePilotApi {
       body: {
         'name': name,
         'type': mediaType,
-        if (tmdbId != null) 'tmdbid': tmdbId,
-        if (season != null) 'season': season,
+        'tmdbid': ?tmdbId,
+        'season': ?season,
       },
     );
     return response.statusCode == 200;
@@ -115,7 +115,7 @@ class MoviePilotApi {
   }) async {
     final queryParams = <String, String>{
       'keyword': keyword,
-      if (mediaType != null) 'mtype': mediaType,
+      'mtype': ?mediaType,
       'page': page.toString(),
     };
 

@@ -2,9 +2,6 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:file_picker/file_picker.dart' as fp;
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
@@ -16,13 +13,16 @@ import 'package:my_nas/features/file_browser/presentation/widgets/file_item_widg
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/animated_list_item.dart';
 import 'package:my_nas/shared/widgets/download_manager_sheet.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
 import 'package:my_nas/shared/widgets/skeleton_loader.dart';
-import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
-import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class FileBrowserPage extends ConsumerStatefulWidget {
   const FileBrowserPage({
@@ -134,8 +134,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     List<(SourceEntity, BrowsableConnection)> browsableSources,
     String? selectedSourceId,
     bool isDark,
-  ) {
-    return Container(
+  ) => ColoredBox(
       color: isDark ? AppColors.darkSurface : context.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -246,7 +245,6 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         ],
       ),
     );
-  }
 
   Widget _buildAppBar(BuildContext context, String currentPath, bool isGridView, bool isDark) {
     // 确定标题文本

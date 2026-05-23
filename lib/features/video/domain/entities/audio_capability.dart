@@ -118,6 +118,29 @@ class AudioPassthroughCapability {
     this.deviceName,
   });
 
+  /// 从 Map 创建
+  factory AudioPassthroughCapability.fromMap(Map<dynamic, dynamic>? map) {
+    if (map == null) {
+      return const AudioPassthroughCapability(isSupported: false);
+    }
+
+    final codecsList = (map['supportedCodecs'] as List<dynamic>?)
+            ?.map((e) => AudioCodec.fromMpvName(e.toString()))
+            .whereType<AudioCodec>()
+            .toList() ??
+        [];
+
+    return AudioPassthroughCapability(
+      isSupported: map['isSupported'] as bool? ?? false,
+      supportedCodecs: codecsList,
+      outputDevice: AudioOutputDevice.fromId(
+        map['outputDevice'] as String? ?? 'unknown',
+      ),
+      maxChannels: map['maxChannels'] as int? ?? 2,
+      deviceName: map['deviceName'] as String?,
+    );
+  }
+
   /// 是否支持直通
   final bool isSupported;
 
@@ -148,29 +171,6 @@ class AudioPassthroughCapability {
   bool get supportsLossless =>
       supportedCodecs.contains(AudioCodec.truehd) ||
       supportedCodecs.contains(AudioCodec.dtsHd);
-
-  /// 从 Map 创建
-  factory AudioPassthroughCapability.fromMap(Map<dynamic, dynamic>? map) {
-    if (map == null) {
-      return const AudioPassthroughCapability(isSupported: false);
-    }
-
-    final codecsList = (map['supportedCodecs'] as List<dynamic>?)
-            ?.map((e) => AudioCodec.fromMpvName(e.toString()))
-            .whereType<AudioCodec>()
-            .toList() ??
-        [];
-
-    return AudioPassthroughCapability(
-      isSupported: map['isSupported'] as bool? ?? false,
-      supportedCodecs: codecsList,
-      outputDevice: AudioOutputDevice.fromId(
-        map['outputDevice'] as String? ?? 'unknown',
-      ),
-      maxChannels: map['maxChannels'] as int? ?? 2,
-      deviceName: map['deviceName'] as String?,
-    );
-  }
 
   /// 转为 Map
   Map<String, dynamic> toMap() => {

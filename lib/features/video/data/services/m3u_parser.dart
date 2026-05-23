@@ -90,7 +90,7 @@ class M3UParser {
     var match = regex.firstMatch(line);
     if (match != null) {
       final value = match.group(1);
-      return value?.isNotEmpty == true ? value : null;
+      return value?.isNotEmpty ?? false ? value : null;
     }
 
     // 尝试单引号格式
@@ -98,7 +98,7 @@ class M3UParser {
     match = regex.firstMatch(line);
     if (match != null) {
       final value = match.group(1);
-      return value?.isNotEmpty == true ? value : null;
+      return value?.isNotEmpty ?? false ? value : null;
     }
 
     return null;
@@ -115,24 +115,20 @@ class M3UParser {
   }
 
   /// 检查是否为有效 URL
-  static bool _isValidUrl(String line) {
-    return line.startsWith('http://') ||
+  static bool _isValidUrl(String line) => line.startsWith('http://') ||
         line.startsWith('https://') ||
         line.startsWith('rtmp://') ||
         line.startsWith('rtsp://') ||
         line.startsWith('mms://') ||
         line.startsWith('udp://') ||
         line.startsWith('rtp://');
-  }
 
   /// 获取所有分类
-  static Set<String> getCategories(List<LiveChannel> channels) {
-    return channels
+  static Set<String> getCategories(List<LiveChannel> channels) => channels
         .map((c) => c.category)
         .where((c) => c != null && c.isNotEmpty)
         .cast<String>()
         .toSet();
-  }
 
   /// 按分类分组频道
   static Map<String, List<LiveChannel>> groupByCategory(

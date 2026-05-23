@@ -281,7 +281,7 @@ class _HoverableWidgetState extends State<HoverableWidget>
       return _wrapWithOverlay(child);
     }
 
-    Widget result = child;
+    var result = child;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     switch (widget.effect) {

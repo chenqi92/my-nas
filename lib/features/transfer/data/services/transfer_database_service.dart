@@ -259,7 +259,7 @@ class TransferDatabaseService {
       whereArgs: [targetSourceId],
     );
 
-    return maps.map((m) => m['local_path'] as String).toList();
+    return maps.map((m) => m['local_path']! as String).toList();
   }
 
   /// 获取所有已上传标记

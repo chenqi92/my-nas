@@ -6,11 +6,10 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:ffi/ffi.dart';
-import 'package:win32/win32.dart';
-
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/features/music/data/services/desktop_lyric_service.dart';
 import 'package:my_nas/features/music/domain/entities/desktop_lyric_settings.dart';
+import 'package:win32/win32.dart';
 
 // Win32 常量定义
 const int _WM_MOUSELEAVE = 0x02A3;
@@ -675,9 +674,7 @@ class DesktopLyricServiceWindowsNativeImpl implements DesktopLyricService {
   }
 
   @override
-  Future<ui.Offset?> getPosition() async {
-    return ui.Offset(_windowX.toDouble(), _windowY.toDouble());
-  }
+  Future<ui.Offset?> getPosition() async => ui.Offset(_windowX.toDouble(), _windowY.toDouble());
 
   @override
   Future<void> updateSettings(DesktopLyricSettings settings) async {

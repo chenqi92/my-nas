@@ -341,7 +341,7 @@ class MusicTagWriterService {
       File? coverFile;
       final coverData = tagData.coverData;
       if (coverData != null && coverData.isNotEmpty) {
-        final coverExt = tagData.coverMimeType?.contains('png') == true ? 'png' : 'jpg';
+        final coverExt = tagData.coverMimeType?.contains('png') ?? false ? 'png' : 'jpg';
         coverFile = File(p.join(_tempDir.path, 'cover_${DateTime.now().millisecondsSinceEpoch}.$coverExt'));
         await coverFile.writeAsBytes(coverData);
       }

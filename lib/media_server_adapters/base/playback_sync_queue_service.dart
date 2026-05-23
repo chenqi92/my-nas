@@ -41,8 +41,7 @@ class PlaybackSyncEntry {
     this.errorMessage,
   });
 
-  factory PlaybackSyncEntry.fromMap(Map<String, dynamic> map) {
-    return PlaybackSyncEntry(
+  factory PlaybackSyncEntry.fromMap(Map<String, dynamic> map) => PlaybackSyncEntry(
       id: map['id'] as int?,
       sourceId: map['source_id'] as String,
       itemId: map['item_id'] as String,
@@ -63,7 +62,6 @@ class PlaybackSyncEntry {
           : null,
       errorMessage: map['error_message'] as String?,
     );
-  }
 
   final int? id;
   final String sourceId;
@@ -103,8 +101,7 @@ class PlaybackSyncEntry {
     DateTime? createdAt,
     DateTime? syncedAt,
     String? errorMessage,
-  }) {
-    return PlaybackSyncEntry(
+  }) => PlaybackSyncEntry(
       id: id ?? this.id,
       sourceId: sourceId ?? this.sourceId,
       itemId: itemId ?? this.itemId,
@@ -117,7 +114,6 @@ class PlaybackSyncEntry {
       syncedAt: syncedAt ?? this.syncedAt,
       errorMessage: errorMessage ?? this.errorMessage,
     );
-  }
 }
 
 /// 播放同步队列服务
@@ -249,13 +245,11 @@ class PlaybackSyncQueueService {
     }
   }
 
-  PlaybackReportType _getReportType(SyncEventType eventType) {
-    return switch (eventType) {
+  PlaybackReportType _getReportType(SyncEventType eventType) => switch (eventType) {
       SyncEventType.playbackStart => PlaybackReportType.start,
       SyncEventType.playbackStop => PlaybackReportType.stop,
       _ => PlaybackReportType.progress,
     };
-  }
 
   Future<void> _updateStatus(
     int id,
@@ -326,7 +320,7 @@ class PlaybackSyncQueueService {
         SyncStatus.values.firstWhere(
           (s) => s.name == row['sync_status'],
           orElse: () => SyncStatus.pending,
-        ): row['count'] as int,
+        ): row['count']! as int,
     };
   }
 

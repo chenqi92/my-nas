@@ -117,7 +117,7 @@ class _DraggableListState<T> extends State<DraggableList<T>> {
         final item = widget.items[index];
         final isDragging = _draggingIndex == index;
 
-        Widget child = widget.itemBuilder(context, item, index, isDragging);
+        var child = widget.itemBuilder(context, item, index, isDragging);
 
         // 如果提供了拖动手柄，添加手柄
         if (widget.dragHandleBuilder != null) {
@@ -337,11 +337,11 @@ class _DraggableGridViewState<T> extends State<_DraggableGridView<T>> {
             });
           },
           builder: (context, candidateData, rejectedData) {
-            Widget child = widget.itemBuilder(context, item, index, isDragging);
+            var child = widget.itemBuilder(context, item, index, isDragging);
 
             // 目标位置高亮
             if (isTarget && candidateData.isNotEmpty) {
-              child = Container(
+              child = DecoratedBox(
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Theme.of(context).colorScheme.primary,

@@ -34,11 +34,9 @@ class MusicAudioPassthroughService {
   /// [forceRefresh] 是否强制刷新（忽略缓存）
   Future<AudioPassthroughCapability> detectCapability({
     bool forceRefresh = false,
-  }) async {
-    return _audioCapabilityService.detectPassthroughCapability(
+  }) async => _audioCapabilityService.detectPassthroughCapability(
       forceRefresh: forceRefresh,
     );
-  }
 
   /// 获取当前输出设备类型
   Future<AudioOutputDevice> getCurrentOutputDevice() async {
@@ -129,9 +127,7 @@ class MusicAudioPassthroughService {
   /// 生成 MPV audio-spdif 属性值
   ///
   /// [codecs] 要直通的编码列表
-  String getMpvSpdifProperty(List<AudioCodec> codecs) {
-    return codecs.map((c) => c.mpvName).join(',');
-  }
+  String getMpvSpdifProperty(List<AudioCodec> codecs) => codecs.map((c) => c.mpvName).join(',');
 
   /// 获取最优音频设备名称
   ///
@@ -235,15 +231,6 @@ class AudioPassthroughConfig {
     this.exclusiveMode = false,
   });
 
-  /// 直通模式
-  final AudioPassthroughMode mode;
-
-  /// 用户启用的直通编码（null 表示使用设备支持的全部）
-  final List<AudioCodec>? enabledCodecs;
-
-  /// 是否使用独占模式（WASAPI Exclusive / CoreAudio Exclusive）
-  final bool exclusiveMode;
-
   /// 从 Map 创建
   factory AudioPassthroughConfig.fromMap(Map<dynamic, dynamic>? map) {
     if (map == null) return const AudioPassthroughConfig();
@@ -256,6 +243,15 @@ class AudioPassthroughConfig {
       exclusiveMode: map['exclusiveMode'] as bool? ?? false,
     );
   }
+
+  /// 直通模式
+  final AudioPassthroughMode mode;
+
+  /// 用户启用的直通编码（null 表示使用设备支持的全部）
+  final List<AudioCodec>? enabledCodecs;
+
+  /// 是否使用独占模式（WASAPI Exclusive / CoreAudio Exclusive）
+  final bool exclusiveMode;
 
   /// 转为 Map
   Map<String, dynamic> toMap() => {

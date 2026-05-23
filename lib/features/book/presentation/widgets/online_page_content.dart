@@ -22,8 +22,7 @@ class OnlinePageContent extends StatelessWidget {
   final String? chapterTitle;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context) => Container(
       color: settings.theme.backgroundColor,
       padding: EdgeInsets.symmetric(
         horizontal: settings.horizontalPadding,
@@ -64,7 +63,6 @@ class OnlinePageContent extends StatelessWidget {
         ],
       ),
     );
-  }
 }
 
 /// 简化版页面内容（不带章节标题，纯内容渲染）
@@ -79,8 +77,7 @@ class SimplePageContent extends StatelessWidget {
   final BookReaderSettings settings;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
+  Widget build(BuildContext context) => Padding(
       padding: EdgeInsets.symmetric(
         horizontal: settings.horizontalPadding,
         vertical: settings.verticalPadding,
@@ -96,5 +93,4 @@ class SimplePageContent extends StatelessWidget {
         textAlign: TextAlign.justify,
       ),
     );
-  }
 }

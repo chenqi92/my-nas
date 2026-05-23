@@ -84,12 +84,10 @@ class EmbyWebSocketEvent {
     this.data,
   });
 
-  factory EmbyWebSocketEvent.fromJson(Map<String, dynamic> json) {
-    return EmbyWebSocketEvent(
+  factory EmbyWebSocketEvent.fromJson(Map<String, dynamic> json) => EmbyWebSocketEvent(
       type: EmbyMessageType.fromString(json['MessageType'] as String?),
       data: json['Data'],
     );
-  }
 
   final EmbyMessageType type;
   final dynamic data;
@@ -105,8 +103,7 @@ class EmbyLibraryChangedData {
     this.foldersRemovedFrom = const [],
   });
 
-  factory EmbyLibraryChangedData.fromJson(Map<String, dynamic> json) {
-    return EmbyLibraryChangedData(
+  factory EmbyLibraryChangedData.fromJson(Map<String, dynamic> json) => EmbyLibraryChangedData(
       itemsAdded: (json['ItemsAdded'] as List?)?.cast<String>() ?? [],
       itemsRemoved: (json['ItemsRemoved'] as List?)?.cast<String>() ?? [],
       itemsUpdated: (json['ItemsUpdated'] as List?)?.cast<String>() ?? [],
@@ -114,7 +111,6 @@ class EmbyLibraryChangedData {
       foldersRemovedFrom:
           (json['FoldersRemovedFrom'] as List?)?.cast<String>() ?? [],
     );
-  }
 
   final List<String> itemsAdded;
   final List<String> itemsRemoved;
@@ -135,15 +131,13 @@ class EmbyUserDataChangedData {
     this.userDataList = const [],
   });
 
-  factory EmbyUserDataChangedData.fromJson(Map<String, dynamic> json) {
-    return EmbyUserDataChangedData(
+  factory EmbyUserDataChangedData.fromJson(Map<String, dynamic> json) => EmbyUserDataChangedData(
       userId: json['UserId'] as String? ?? '',
       userDataList: (json['UserDataList'] as List?)
               ?.map((e) => EmbyUserDataItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
-  }
 
   final String userId;
   final List<EmbyUserDataItem> userDataList;
@@ -160,8 +154,7 @@ class EmbyUserDataItem {
     this.lastPlayedDate,
   });
 
-  factory EmbyUserDataItem.fromJson(Map<String, dynamic> json) {
-    return EmbyUserDataItem(
+  factory EmbyUserDataItem.fromJson(Map<String, dynamic> json) => EmbyUserDataItem(
       itemId: json['ItemId'] as String? ?? '',
       played: json['Played'] as bool? ?? false,
       playbackPositionTicks: json['PlaybackPositionTicks'] as int?,
@@ -169,7 +162,6 @@ class EmbyUserDataItem {
       playCount: json['PlayCount'] as int?,
       lastPlayedDate: json['LastPlayedDate'] as String?,
     );
-  }
 
   final String itemId;
   final bool played;
@@ -192,8 +184,7 @@ class EmbyActivityLogEntry {
     this.severity,
   });
 
-  factory EmbyActivityLogEntry.fromJson(Map<String, dynamic> json) {
-    return EmbyActivityLogEntry(
+  factory EmbyActivityLogEntry.fromJson(Map<String, dynamic> json) => EmbyActivityLogEntry(
       id: json['Id'] as int? ?? 0,
       name: json['Name'] as String? ?? '',
       type: json['Type'] as String? ?? '',
@@ -203,7 +194,6 @@ class EmbyActivityLogEntry {
       date: json['Date'] as String?,
       severity: json['Severity'] as String?,
     );
-  }
 
   final int id;
   final String name;
@@ -311,7 +301,7 @@ class EmbyWebSocketService {
 
     final message = {
       'MessageType': messageType,
-      if (data != null) 'Data': data,
+      'Data': ?data,
     };
 
     _channel!.sink.add(jsonEncode(message));
@@ -442,9 +432,7 @@ class EmbyWebSocketService {
 
 /// Emby WebSocket 服务工厂 Provider
 final embyWebSocketServiceFactoryProvider =
-    Provider<EmbyWebSocketServiceFactory>((ref) {
-  return EmbyWebSocketServiceFactory();
-});
+    Provider<EmbyWebSocketServiceFactory>((ref) => EmbyWebSocketServiceFactory());
 
 /// WebSocket 服务工厂
 class EmbyWebSocketServiceFactory {

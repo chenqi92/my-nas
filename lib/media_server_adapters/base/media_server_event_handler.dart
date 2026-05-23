@@ -362,9 +362,7 @@ class MediaServerEventHandler {
 
 /// 媒体服务器事件处理器工厂 Provider
 final mediaServerEventHandlerFactoryProvider =
-    Provider<MediaServerEventHandlerFactory>((ref) {
-  return MediaServerEventHandlerFactory();
-});
+    Provider<MediaServerEventHandlerFactory>((ref) => MediaServerEventHandlerFactory());
 
 /// 媒体服务器事件处理器工厂
 class MediaServerEventHandlerFactory {

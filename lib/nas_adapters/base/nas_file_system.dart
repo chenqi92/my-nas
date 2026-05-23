@@ -74,9 +74,7 @@ abstract class NasFileSystem {
   ///
   /// [path] 文件路径
   /// [size] 缩略图尺寸（可选，默认 medium）
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) {
-    return Future.value();
-  }
+  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) => Future.value();
 }
 
 /// 文件项

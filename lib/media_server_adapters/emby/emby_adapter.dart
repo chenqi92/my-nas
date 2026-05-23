@@ -195,15 +195,13 @@ class EmbyAdapter extends MediaServerAdapter {
     int? maxWidth,
     int? maxHeight,
     String? tag,
-  }) {
-    return _api.getImageUrl(
+  }) => _api.getImageUrl(
       itemId,
       imageType.toJellyfinType(),
       maxWidth: maxWidth,
       maxHeight: maxHeight,
       tag: tag,
     );
-  }
 
   @override
   Future<MediaStreamInfo> getStreamInfo(
@@ -339,9 +337,7 @@ class EmbyAdapter extends MediaServerAdapter {
   }
 
   @override
-  Future<bool> toggleFavorite(String itemId) async {
-    return _api.toggleFavorite(itemId);
-  }
+  Future<bool> toggleFavorite(String itemId) async => _api.toggleFavorite(itemId);
 
   @override
   Future<MediaItemsResult> getRecentlyAdded({int limit = 100}) async {

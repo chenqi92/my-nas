@@ -74,8 +74,7 @@ class AdaptiveGlassContainer extends StatelessWidget {
   }
 
   /// 经典模式 - 不透明背景
-  Widget _buildClassicContainer() {
-    return DecoratedBox(
+  Widget _buildClassicContainer() => DecoratedBox(
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3) : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(cornerRadius),
@@ -104,7 +103,6 @@ class AdaptiveGlassContainer extends StatelessWidget {
         ),
       ),
     );
-  }
 
   /// Apple 平台 - 原生模糊实现
   /// iOS 26+/macOS 26+: 使用 Liquid Glass (UIGlassEffect/NSGlassEffectView)
@@ -255,8 +253,7 @@ class AdaptiveGlassNavBar extends StatelessWidget {
     return _buildFlutterNavBar(context);
   }
 
-  Widget _buildClassicNavBar(BuildContext context) {
-    return Container(
+  Widget _buildClassicNavBar(BuildContext context) => Container(
       height: height,
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -270,7 +267,6 @@ class AdaptiveGlassNavBar extends StatelessWidget {
       ),
       child: child,
     );
-  }
 
   Widget _buildNativeNavBar(BuildContext context) {
     // 玻璃模式使用 systemChromeMaterial

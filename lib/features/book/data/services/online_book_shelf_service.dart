@@ -31,6 +31,47 @@ class OnlineBookShelfItem {
     this.cachedChapterCount = 0,
   }) : id = id ?? const Uuid().v4();
 
+  /// 从 OnlineBook 创建
+  factory OnlineBookShelfItem.fromOnlineBook(OnlineBook book) => OnlineBookShelfItem(
+      name: book.name,
+      author: book.author,
+      bookUrl: book.bookUrl,
+      sourceId: book.source.id,
+      sourceName: book.source.displayName,
+      sourceUrl: book.source.bookSourceUrl,
+      coverUrl: book.coverUrl,
+      intro: book.intro,
+      kind: book.kind,
+      lastChapter: book.lastChapter,
+      wordCount: book.wordCount,
+      addedAt: DateTime.now(),
+    );
+
+  factory OnlineBookShelfItem.fromJson(Map<String, dynamic> json) => OnlineBookShelfItem(
+      id: json['id'] as String?,
+      name: json['name'] as String? ?? '',
+      author: json['author'] as String? ?? '',
+      bookUrl: json['bookUrl'] as String? ?? '',
+      sourceId: json['sourceId'] as String? ?? '',
+      sourceName: json['sourceName'] as String? ?? '',
+      sourceUrl: json['sourceUrl'] as String? ?? '',
+      coverUrl: json['coverUrl'] as String?,
+      intro: json['intro'] as String?,
+      kind: json['kind'] as String?,
+      lastChapter: json['lastChapter'] as String?,
+      wordCount: json['wordCount'] as String?,
+      addedAt: json['addedAt'] != null
+          ? DateTime.tryParse(json['addedAt'] as String)
+          : null,
+      lastReadAt: json['lastReadAt'] != null
+          ? DateTime.tryParse(json['lastReadAt'] as String)
+          : null,
+      lastReadChapterIndex: json['lastReadChapterIndex'] as int? ?? 0,
+      lastReadChapterName: json['lastReadChapterName'] as String?,
+      lastReadProgress: (json['lastReadProgress'] as num?)?.toDouble() ?? 0,
+      cachedChapterCount: json['cachedChapterCount'] as int? ?? 0,
+    );
+
   /// 唯一ID
   final String id;
 
@@ -84,51 +125,6 @@ class OnlineBookShelfItem {
 
   /// 已缓存章节数
   final int cachedChapterCount;
-
-  /// 从 OnlineBook 创建
-  factory OnlineBookShelfItem.fromOnlineBook(OnlineBook book) {
-    return OnlineBookShelfItem(
-      name: book.name,
-      author: book.author,
-      bookUrl: book.bookUrl,
-      sourceId: book.source.id,
-      sourceName: book.source.displayName,
-      sourceUrl: book.source.bookSourceUrl,
-      coverUrl: book.coverUrl,
-      intro: book.intro,
-      kind: book.kind,
-      lastChapter: book.lastChapter,
-      wordCount: book.wordCount,
-      addedAt: DateTime.now(),
-    );
-  }
-
-  factory OnlineBookShelfItem.fromJson(Map<String, dynamic> json) {
-    return OnlineBookShelfItem(
-      id: json['id'] as String?,
-      name: json['name'] as String? ?? '',
-      author: json['author'] as String? ?? '',
-      bookUrl: json['bookUrl'] as String? ?? '',
-      sourceId: json['sourceId'] as String? ?? '',
-      sourceName: json['sourceName'] as String? ?? '',
-      sourceUrl: json['sourceUrl'] as String? ?? '',
-      coverUrl: json['coverUrl'] as String?,
-      intro: json['intro'] as String?,
-      kind: json['kind'] as String?,
-      lastChapter: json['lastChapter'] as String?,
-      wordCount: json['wordCount'] as String?,
-      addedAt: json['addedAt'] != null
-          ? DateTime.tryParse(json['addedAt'] as String)
-          : null,
-      lastReadAt: json['lastReadAt'] != null
-          ? DateTime.tryParse(json['lastReadAt'] as String)
-          : null,
-      lastReadChapterIndex: json['lastReadChapterIndex'] as int? ?? 0,
-      lastReadChapterName: json['lastReadChapterName'] as String?,
-      lastReadProgress: (json['lastReadProgress'] as num?)?.toDouble() ?? 0,
-      cachedChapterCount: json['cachedChapterCount'] as int? ?? 0,
-    );
-  }
 
   Map<String, dynamic> toJson() => {
         'id': id,

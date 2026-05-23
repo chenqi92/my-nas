@@ -369,9 +369,7 @@ class MusicAudioCacheService {
       }
 
       // 按访问时间排序（最新的在前）
-      fileInfos.sort((a, b) {
-        return b.stat.accessed.compareTo(a.stat.accessed);
-      });
+      fileInfos.sort((a, b) => b.stat.accessed.compareTo(a.stat.accessed));
 
       // 排序后再编号
       for (var i = 0; i < fileInfos.length; i++) {

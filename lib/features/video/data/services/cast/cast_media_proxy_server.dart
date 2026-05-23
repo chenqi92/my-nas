@@ -87,13 +87,10 @@ class CastMediaProxyServer {
     router.head('/subtitle/<token>', _handleSubtitleHeadRequest);
 
     // 健康检查
-    router.get('/health', (shelf.Request request) {
-      return shelf.Response.ok('OK');
-    });
+    router.get('/health', (shelf.Request request) => shelf.Response.ok('OK'));
 
     // CORS 中间件
-    shelf.Handler corsHandler(shelf.Handler innerHandler) {
-      return (shelf.Request request) async {
+    shelf.Handler corsHandler(shelf.Handler innerHandler) => (request) async {
         // 处理 OPTIONS 预检请求
         if (request.method == 'OPTIONS') {
           return shelf.Response.ok(
@@ -105,7 +102,6 @@ class CastMediaProxyServer {
         final response = await innerHandler(request);
         return response.change(headers: _corsHeaders);
       };
-    }
 
     final handler = const shelf.Pipeline()
         .addMiddleware(shelf.logRequests())

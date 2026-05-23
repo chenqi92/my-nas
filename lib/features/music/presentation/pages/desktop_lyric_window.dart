@@ -43,8 +43,7 @@ class DesktopLyricApp extends StatelessWidget {
   final DesktopLyricSettings initialSettings;
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context) => MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.transparent,
@@ -54,7 +53,6 @@ class DesktopLyricApp extends StatelessWidget {
         initialSettings: initialSettings,
       ),
     );
-  }
 }
 
 /// 桌面歌词窗口

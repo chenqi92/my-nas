@@ -248,15 +248,13 @@ class SmbFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<FileItem> getFileInfo(String path) async {
-    return _connectionPool.withConnection(
+  Future<FileItem> getFileInfo(String path) async => _connectionPool.withConnection(
       (client) async {
         final file = await client.file(path);
         return _toFileItem(file);
       },
       type: SmbConnectionType.general,
     );
-  }
 
   @override
   Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {

@@ -75,12 +75,10 @@ class JellyfinWebSocketEvent {
     this.data,
   });
 
-  factory JellyfinWebSocketEvent.fromJson(Map<String, dynamic> json) {
-    return JellyfinWebSocketEvent(
+  factory JellyfinWebSocketEvent.fromJson(Map<String, dynamic> json) => JellyfinWebSocketEvent(
       type: JellyfinMessageType.fromString(json['MessageType'] as String?),
       data: json['Data'],
     );
-  }
 
   final JellyfinMessageType type;
   final dynamic data;
@@ -95,15 +93,13 @@ class LibraryChangedData {
     this.collectionFolders = const [],
   });
 
-  factory LibraryChangedData.fromJson(Map<String, dynamic> json) {
-    return LibraryChangedData(
+  factory LibraryChangedData.fromJson(Map<String, dynamic> json) => LibraryChangedData(
       itemsAdded: (json['ItemsAdded'] as List?)?.cast<String>() ?? [],
       itemsRemoved: (json['ItemsRemoved'] as List?)?.cast<String>() ?? [],
       itemsUpdated: (json['ItemsUpdated'] as List?)?.cast<String>() ?? [],
       collectionFolders:
           (json['CollectionFolders'] as List?)?.cast<String>() ?? [],
     );
-  }
 
   final List<String> itemsAdded;
   final List<String> itemsRemoved;
@@ -123,15 +119,13 @@ class UserDataChangedData {
     this.userDataList = const [],
   });
 
-  factory UserDataChangedData.fromJson(Map<String, dynamic> json) {
-    return UserDataChangedData(
+  factory UserDataChangedData.fromJson(Map<String, dynamic> json) => UserDataChangedData(
       userId: json['UserId'] as String? ?? '',
       userDataList: (json['UserDataList'] as List?)
               ?.map((e) => UserDataItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
-  }
 
   final String userId;
   final List<UserDataItem> userDataList;
@@ -146,14 +140,12 @@ class UserDataItem {
     this.isFavorite = false,
   });
 
-  factory UserDataItem.fromJson(Map<String, dynamic> json) {
-    return UserDataItem(
+  factory UserDataItem.fromJson(Map<String, dynamic> json) => UserDataItem(
       itemId: json['ItemId'] as String? ?? '',
       played: json['Played'] as bool? ?? false,
       playbackPositionTicks: json['PlaybackPositionTicks'] as int?,
       isFavorite: json['IsFavorite'] as bool? ?? false,
     );
-  }
 
   final String itemId;
   final bool played;
@@ -240,7 +232,7 @@ class JellyfinWebSocketService {
 
     final message = {
       'MessageType': messageType,
-      if (data != null) 'Data': data,
+      'Data': ?data,
     };
 
     _channel!.sink.add(jsonEncode(message));
@@ -355,9 +347,7 @@ class JellyfinWebSocketService {
 
 /// Jellyfin WebSocket 服务工厂 Provider
 final jellyfinWebSocketServiceFactoryProvider =
-    Provider<JellyfinWebSocketServiceFactory>((ref) {
-  return JellyfinWebSocketServiceFactory();
-});
+    Provider<JellyfinWebSocketServiceFactory>((ref) => JellyfinWebSocketServiceFactory());
 
 /// WebSocket 服务工厂
 class JellyfinWebSocketServiceFactory {

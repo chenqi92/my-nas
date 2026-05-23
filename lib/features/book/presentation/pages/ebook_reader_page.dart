@@ -363,7 +363,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
       ),
     );
 
-    if (useNative == true && mounted) {
+    if ((useNative ?? false) && mounted) {
       // 返回并提示用户在设置中切换阅读器
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

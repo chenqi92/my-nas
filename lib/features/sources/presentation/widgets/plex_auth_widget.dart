@@ -415,8 +415,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
     }
   }
 
-  Widget _buildLoadingState(ThemeData theme, String message) {
-    return Row(
+  Widget _buildLoadingState(ThemeData theme, String message) => Row(
       children: [
         const SizedBox(
           width: 20,
@@ -430,7 +429,6 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
         ),
       ],
     );
-  }
 
   Widget _buildPinState(ThemeData theme) {
     final minutes = _remainingSeconds ~/ 60;
@@ -559,8 +557,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
       );
 
   Widget _buildErrorState(
-      ThemeData theme, String message, {required bool canRetry}) {
-    return Column(
+      ThemeData theme, String message, {required bool canRetry}) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -590,5 +587,4 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
         ],
       ],
     );
-  }
 }

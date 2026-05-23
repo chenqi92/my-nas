@@ -37,8 +37,7 @@ class QuickConnectResult {
     this.dateAdded,
   });
 
-  factory QuickConnectResult.fromJson(Map<String, dynamic> json) {
-    return QuickConnectResult(
+  factory QuickConnectResult.fromJson(Map<String, dynamic> json) => QuickConnectResult(
       code: json['Code'] as String? ?? '',
       secret: json['Secret'] as String? ?? '',
       isAuthenticated: json['Authenticated'] as bool? ?? false,
@@ -46,7 +45,6 @@ class QuickConnectResult {
           ? DateTime.tryParse(json['DateAdded'] as String)
           : null,
     );
-  }
 
   /// 用户需要输入的验证码（显示给用户）
   final String code;

@@ -11,9 +11,9 @@ import 'package:my_nas/features/video/presentation/pages/video_player_page.dart'
 import 'package:my_nas/service_adapters/trakt/api/trakt_api.dart';
 import 'package:my_nas/service_adapters/trakt/trakt_config.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 /// Trakt 连接页面

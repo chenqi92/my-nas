@@ -6,8 +6,8 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/reading/data/services/reader_settings_service.dart';
 import 'package:my_nas/features/reading/presentation/providers/reader_settings_provider.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
-import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 图书设置页面
@@ -199,7 +199,7 @@ class BookSettingsPage extends ConsumerWidget {
   ) {
     final isNative = settings.epubEngine == EpubReaderEngine.native;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: isDark
             ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
@@ -239,8 +239,7 @@ class BookSettingsPage extends ConsumerWidget {
     required bool isSelected,
     required bool isDark,
     required VoidCallback onTap,
-  }) {
-    return GestureDetector(
+  }) => GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -263,7 +262,6 @@ class BookSettingsPage extends ConsumerWidget {
         ),
       ),
     );
-  }
 
   Widget _buildEngineInfo(
     BuildContext context,
@@ -271,8 +269,7 @@ class BookSettingsPage extends ConsumerWidget {
     required String title,
     required String description,
     required IconData icon,
-  }) {
-    return Row(
+  }) => Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(
@@ -305,5 +302,4 @@ class BookSettingsPage extends ConsumerWidget {
         ),
       ],
     );
-  }
 }

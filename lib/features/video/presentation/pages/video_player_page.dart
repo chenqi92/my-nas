@@ -29,9 +29,9 @@ import 'package:my_nas/features/video/presentation/widgets/bookmark_sheet.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_controls.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_gesture_controller.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
-import 'package:screen_brightness/screen_brightness.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
+import 'package:screen_brightness/screen_brightness.dart';
 
 class VideoPlayerPage extends ConsumerStatefulWidget {
   const VideoPlayerPage({required this.video, super.key});

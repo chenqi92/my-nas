@@ -67,8 +67,7 @@ class LastFmProvider implements ScrobbleProvider {
     return 'https://www.last.fm/api/auth/?api_key=$apiKey';
   }
 
-  Map<String, String> _buildParams(String method, ScrobbleTrack track) {
-    return <String, String>{
+  Map<String, String> _buildParams(String method, ScrobbleTrack track) => <String, String>{
       'method': method,
       'api_key': apiKey ?? '',
       'sk': sessionKey ?? '',
@@ -82,7 +81,6 @@ class LastFmProvider implements ScrobbleProvider {
         'trackNumber': track.trackNumber.toString(),
       if (track.mbid != null) 'mbid': track.mbid!,
     };
-  }
 
   /// Last.fm 签名：把所有非 format/api_sig 的参数按 key 升序拼接 + secret，md5 hex。
   String _signature(Map<String, String> params) {
@@ -91,7 +89,7 @@ class LastFmProvider implements ScrobbleProvider {
     for (final k in keys) {
       buf
         ..write(k)
-        ..write(params[k]!);
+        ..write(params[k]);
     }
     buf.write(apiSecret ?? '');
     return md5.convert(utf8.encode(buf.toString())).toString();

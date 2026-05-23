@@ -57,7 +57,7 @@ class DesktopLyricContent extends StatelessWidget {
         nextLyric != null &&
         nextLyric!.isNotEmpty;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: settings.backgroundColor,
         borderRadius: BorderRadius.circular(12),
@@ -187,8 +187,7 @@ class _LyricLine extends StatelessWidget {
   final bool isPlaying;
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedDefaultTextStyle(
+  Widget build(BuildContext context) => AnimatedDefaultTextStyle(
       duration: const Duration(milliseconds: 200),
       style: TextStyle(
         fontSize: fontSize,
@@ -209,7 +208,6 @@ class _LyricLine extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       ),
     );
-  }
 }
 
 /// 控制按钮组件
@@ -225,8 +223,7 @@ class _ControlButton extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return Tooltip(
+  Widget build(BuildContext context) => Tooltip(
       message: tooltip,
       child: Material(
         color: Colors.black.withValues(alpha: 0.3),
@@ -245,7 +242,6 @@ class _ControlButton extends StatelessWidget {
         ),
       ),
     );
-  }
 }
 
 /// 卡拉OK效果歌词行组件
@@ -276,8 +272,7 @@ class _KaraokeLyricLine extends StatelessWidget {
 
     // 使用 ShaderMask 实现渐变高亮效果
     return ShaderMask(
-      shaderCallback: (Rect bounds) {
-        return LinearGradient(
+      shaderCallback: (bounds) => LinearGradient(
           colors: [
             highlightColor,
             highlightColor,
@@ -290,15 +285,13 @@ class _KaraokeLyricLine extends StatelessWidget {
             progress.clamp(0.0, 1.0),
             1.0,
           ],
-        ).createShader(bounds);
-      },
+        ).createShader(bounds),
       blendMode: BlendMode.srcIn,
       child: _buildText(Colors.white),
     );
   }
 
-  Widget _buildText(Color color) {
-    return Text(
+  Widget _buildText(Color color) => Text(
       text,
       textAlign: TextAlign.center,
       maxLines: 1,
@@ -316,5 +309,4 @@ class _KaraokeLyricLine extends StatelessWidget {
         ],
       ),
     );
-  }
 }

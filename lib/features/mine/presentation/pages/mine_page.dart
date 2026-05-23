@@ -6,32 +6,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
-import 'package:my_nas/shared/pages/favorites_page.dart';
-import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
-import 'package:my_nas/features/mine/presentation/pages/appearance_settings_page.dart';
-import 'package:my_nas/features/mine/presentation/pages/spotlight_settings_page.dart';
+import 'package:my_nas/features/book/presentation/pages/book_settings_page.dart';
+import 'package:my_nas/features/book/presentation/pages/book_sources_page.dart';
 import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
 import 'package:my_nas/features/media_management/presentation/pages/media_management_list_page.dart';
 import 'package:my_nas/features/media_tracking/presentation/pages/media_tracking_list_page.dart';
+import 'package:my_nas/features/mine/presentation/pages/appearance_settings_page.dart';
+import 'package:my_nas/features/mine/presentation/pages/spotlight_settings_page.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/presentation/pages/duplicate_songs_page.dart';
 import 'package:my_nas/features/music/presentation/pages/listening_stats_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_player_settings_page.dart';
+import 'package:my_nas/features/music/presentation/pages/music_scraper_sources_page.dart';
 import 'package:my_nas/features/music/presentation/pages/recycle_bin_page.dart';
 import 'package:my_nas/features/music/presentation/pages/scrobble_settings_page.dart';
-import 'package:my_nas/features/sync/presentation/pages/cloud_sync_settings_page.dart';
-import 'package:my_nas/features/music/presentation/pages/music_scraper_sources_page.dart';
 import 'package:my_nas/features/music/presentation/providers/music_scraper_provider.dart';
 import 'package:my_nas/features/pt_sites/presentation/pages/pt_sites_list_page.dart';
 import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
-import 'package:my_nas/features/book/presentation/pages/book_settings_page.dart';
-import 'package:my_nas/features/book/presentation/pages/book_sources_page.dart';
 import 'package:my_nas/features/sources/presentation/pages/service_sources_page.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/features/sync/presentation/pages/cloud_sync_settings_page.dart';
 import 'package:my_nas/features/transfer/presentation/pages/transfer_manager_page.dart';
 import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
@@ -40,11 +38,13 @@ import 'package:my_nas/features/video/presentation/pages/scraper_sources_page.da
 import 'package:my_nas/features/video/presentation/pages/video_player_settings_page.dart';
 import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
+import 'package:my_nas/shared/pages/favorites_page.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// 桌面端 mine 页选中的 section 索引（在 [_buildSections] 列表中）。
 final _selectedDesktopSectionProvider = StateProvider.autoDispose<int>((_) => 0);
@@ -180,8 +180,7 @@ class MinePage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     bool isDark,
-  ) {
-    return [
+  ) => [
       _MineSection(
         title: '连接',
         icon: Icons.lan_rounded,
@@ -441,7 +440,6 @@ class MinePage extends ConsumerWidget {
         ],
       ),
     ];
-  }
 
   Widget _buildHeader(BuildContext context, bool isDark, int connectedCount, int totalCount) {
     // 桌面端 header 更紧凑：48 头像、titleMedium 标题、padding 12+12。
@@ -1804,7 +1802,7 @@ class _DesktopSectionDetailState extends State<_DesktopSectionDetail> {
   /// section 切换时使用无过渡动画的 PageRoute，避免 slide-in 让用户感觉
   /// "进入了新页面"。push 二级 settings 子页仍走默认 slide 动画。
   PageRoute<void> _buildRootRoute() => PageRouteBuilder<void>(
-        pageBuilder: (_, __, ___) => _DesktopSectionRootContent(
+        pageBuilder: (_, _, _) => _DesktopSectionRootContent(
           section: widget.section,
           isDark: widget.isDark,
           uiStyle: widget.uiStyle,
@@ -1828,7 +1826,7 @@ class _DesktopSectionDetailState extends State<_DesktopSectionDetail> {
             constraints: BoxConstraints(maxWidth: maxWidth),
             child: Navigator(
               key: _navKey,
-              onGenerateInitialRoutes: (_, __) => [_buildRootRoute()],
+              onGenerateInitialRoutes: (_, _) => [_buildRootRoute()],
             ),
           ),
         );
@@ -1852,8 +1850,7 @@ class _DesktopSectionRootContent extends StatelessWidget {
   final Widget Function({required List<Widget> children}) buildSettingsCard;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget build(BuildContext context) => Scaffold(
       backgroundColor: Colors.transparent,
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -1902,7 +1899,6 @@ class _DesktopSectionRootContent extends StatelessWidget {
         ],
       ),
     );
-  }
 }
 
 /// Mine 页所有 tile 共用的统一行布局：图标+标题+副标题+末尾控件。
@@ -1928,7 +1924,7 @@ Widget _mineTileRow(
       ? context.textTheme.bodyMedium
       : context.textTheme.bodyLarge;
 
-  Widget? effectiveTrailing = trailing;
+  var effectiveTrailing = trailing;
   // 桌面下不显示 chevron：与 macOS 系统设置 sidebar 一致，靠 hover 高亮提示可点击。
   if (effectiveTrailing == null &&
       showChevronWhenNoTrailing &&
@@ -1996,7 +1992,7 @@ Widget _mineTileRow(
                 ],
               ),
             ),
-            if (effectiveTrailing != null) effectiveTrailing,
+            ?effectiveTrailing,
           ],
         ),
       ),

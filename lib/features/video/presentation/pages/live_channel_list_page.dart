@@ -2,13 +2,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
-import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
-import 'package:my_nas/shared/providers/ui_style_provider.dart';
-import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/pages/live_player_page.dart';
 import 'package:my_nas/features/video/presentation/pages/live_stream_settings_page.dart';
 import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
+import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 直播频道列表页面
@@ -54,9 +54,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
         body: Stack(
           children: [
             // 主内容 - 直接使用带滚动边距的视图，无需固定顶栏
-            !hasLiveSources
-                ? _buildEmptyState(context)
-                : channels.isEmpty
+            if (!hasLiveSources) _buildEmptyState(context) else channels.isEmpty
                     ? _buildNoResultsState()
                     : _isGridView
                         ? _buildGlassGridView(channels, isDark, safeTop + 60)
@@ -149,8 +147,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
   }
 
   /// 构建搜索框
-  Widget _buildSearchField(bool isDark) {
-    return TextField(
+  Widget _buildSearchField(bool isDark) => TextField(
       controller: _searchController,
       autofocus: true,
       decoration: InputDecoration(
@@ -178,7 +175,6 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
         ref.read(liveChannelSearchQueryProvider.notifier).state = value;
       },
     );
-  }
 
   /// iOS 26 玻璃风格搜索栏
   Widget _buildGlassSearchBar(BuildContext context, bool isDark) {
@@ -305,7 +301,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
       ListView.separated(
         padding: EdgeInsets.fromLTRB(16, topPadding + 16, 16, 16),
         itemCount: channels.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) => _ChannelListItem(
           channel: channels[index],
           isDark: isDark,
@@ -317,7 +313,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
       ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: channels.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) => _ChannelListItem(
           channel: channels[index],
           isDark: isDark,
@@ -360,7 +356,7 @@ class _ChannelGridItem extends StatelessWidget {
   Widget build(BuildContext context) => InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
+        child: DecoratedBox(
           decoration: BoxDecoration(
             color: isDark
                 ? AppColors.darkSurfaceVariant
@@ -384,8 +380,8 @@ class _ChannelGridItem extends StatelessWidget {
                       ? CachedNetworkImage(
                           imageUrl: channel.logoUrl!,
                           fit: BoxFit.contain,
-                          placeholder: (_, __) => _buildPlaceholder(),
-                          errorWidget: (_, __, ___) => _buildPlaceholder(),
+                          placeholder: (_, _) => _buildPlaceholder(),
+                          errorWidget: (_, _, _) => _buildPlaceholder(),
                         )
                       : _buildPlaceholder(),
                 ),
@@ -465,8 +461,8 @@ class _ChannelListItem extends StatelessWidget {
                 ? CachedNetworkImage(
                     imageUrl: channel.logoUrl!,
                     fit: BoxFit.contain,
-                    placeholder: (_, __) => _buildPlaceholder(),
-                    errorWidget: (_, __, ___) => _buildPlaceholder(),
+                    placeholder: (_, _) => _buildPlaceholder(),
+                    errorWidget: (_, _, _) => _buildPlaceholder(),
                   )
                 : _buildPlaceholder(),
           ),

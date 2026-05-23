@@ -157,11 +157,9 @@ class MusicScrapeService {
   Stream<MusicScrapeStats> get statsStream => _statsController.stream;
 
   /// 检查指定目录是否正在刮削
-  bool isScrapingPath(String sourceId, String pathPrefix) {
-    return _isScraping &&
+  bool isScrapingPath(String sourceId, String pathPrefix) => _isScraping &&
         _currentSourceId == sourceId &&
         _currentPathPrefix == pathPrefix;
-  }
 
   /// 开始批量刮削
   ///

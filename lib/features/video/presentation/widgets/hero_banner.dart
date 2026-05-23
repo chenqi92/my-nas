@@ -452,7 +452,7 @@ class _HeroBannerItem extends StatelessWidget {
     return _buildPlaceholder();
   }
 
-  Widget _buildPlaceholder() => Container(
+  Widget _buildPlaceholder() => ColoredBox(
       color: isDark ? AppColors.darkBackground : AppColors.lightOutline,
       child: Center(
         child: Icon(
@@ -730,7 +730,7 @@ class _CompactBannerCard extends StatelessWidget {
     return _buildPlaceholder();
   }
 
-  Widget _buildPlaceholder() => Container(
+  Widget _buildPlaceholder() => ColoredBox(
       color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
       child: Icon(
         Icons.movie_rounded,

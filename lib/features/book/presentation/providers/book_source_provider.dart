@@ -7,9 +7,7 @@ part 'book_source_provider.g.dart';
 
 /// 书源管理服务 Provider
 @riverpod
-BookSourceManagerService bookSourceManager(Ref ref) {
-  return BookSourceManagerService.instance;
-}
+BookSourceManagerService bookSourceManager(Ref ref) => BookSourceManagerService.instance;
 
 /// 书源列表 Provider
 @riverpod

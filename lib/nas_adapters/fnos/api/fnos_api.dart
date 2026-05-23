@@ -108,7 +108,7 @@ class FnOSApi {
         'data': {
           'username': username,
           'password': password,
-          if (otpCode != null) 'otp_code': otpCode,
+          'otp_code': ?otpCode,
         },
       },
       // 尝试 2: 简单 API 登录
@@ -117,7 +117,7 @@ class FnOSApi {
         'data': {
           'username': username,
           'password': password,
-          if (otpCode != null) 'otp': otpCode,
+          'otp': ?otpCode,
         },
       },
       // 尝试 3: 用户登录
@@ -126,7 +126,7 @@ class FnOSApi {
         'data': {
           'user': username,
           'passwd': password,
-          if (otpCode != null) 'otp': otpCode,
+          'otp': ?otpCode,
         },
       },
       // 尝试 4: JSON-RPC 风格
@@ -137,7 +137,7 @@ class FnOSApi {
           'params': {
             'username': username,
             'password': password,
-            if (otpCode != null) 'otp': otpCode,
+            'otp': ?otpCode,
           },
         },
       },
@@ -560,7 +560,7 @@ class FnOSApi {
       '/api/v1/file/search',
       data: {
         'keyword': query,
-        if (path != null) 'path': path,
+        'path': ?path,
       },
     );
 

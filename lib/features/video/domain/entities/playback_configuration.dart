@@ -41,7 +41,6 @@ class PlaybackConfiguration {
       case HdrMode.passthrough:
         // 启用 HDR 直通，通知显示器切换色彩空间
         props['target-colorspace-hint'] = 'yes';
-        break;
 
       case HdrMode.tonemapping:
         // 禁用直通，进行色调映射
@@ -61,12 +60,10 @@ class PlaybackConfiguration {
         if (targetPeak > 0) {
           props['target-peak'] = targetPeak.toString();
         }
-        break;
 
       case HdrMode.disabled:
         // 禁用所有 HDR 处理
         props['target-colorspace-hint'] = 'no';
-        break;
 
       case HdrMode.auto:
         // 自动模式不设置任何属性，使用 MPV 默认行为
@@ -80,12 +77,10 @@ class PlaybackConfiguration {
           final codecs = passthroughCodecs.map((c) => c.mpvName).join(',');
           props['audio-spdif'] = codecs;
         }
-        break;
 
       case AudioPassthroughMode.disabled:
         // 禁用直通，清空 audio-spdif
         props['audio-spdif'] = '';
-        break;
 
       case AudioPassthroughMode.auto:
         // 自动模式不设置任何属性

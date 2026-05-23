@@ -21,7 +21,7 @@ class PlaylistSyncModule implements SyncableModule {
   Future<DateTime?> getLocalUpdatedAt() async {
     final all = await _service.getAllPlaylists(includeDeleted: true);
     if (all.isEmpty) return null;
-    DateTime maxAt = all.first.updatedAt;
+    var maxAt = all.first.updatedAt;
     for (final p in all) {
       if (p.updatedAt.isAfter(maxAt)) maxAt = p.updatedAt;
       if (p.deletedAt != null && p.deletedAt!.isAfter(maxAt)) {

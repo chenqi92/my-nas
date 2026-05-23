@@ -6,15 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
-import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/book/data/services/online_book_shelf_service.dart';
+import 'package:my_nas/features/book/data/services/sources/book_source_manager_service.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
 import 'package:my_nas/features/book/presentation/pages/book_list_page.dart';
 import 'package:my_nas/features/book/presentation/pages/online_book_detail_page.dart';
 import 'package:my_nas/features/book/presentation/providers/book_search_provider.dart';
 import 'package:my_nas/features/book/presentation/providers/online_book_shelf_provider.dart';
-import 'package:my_nas/features/book/data/services/online_book_shelf_service.dart';
-import 'package:my_nas/features/book/data/services/sources/book_source_manager_service.dart';
 import 'package:my_nas/features/comic/presentation/pages/comic_list_page.dart';
 import 'package:my_nas/features/note/presentation/pages/note_list_page.dart';
 import 'package:my_nas/features/note/presentation/widgets/note_tree_widget.dart';
@@ -245,8 +245,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
   }
 
   /// 构建在线书架卡片
-  Widget _buildOnlineShelfCard(OnlineBookShelfItem item, bool isDark) {
-    return GestureDetector(
+  Widget _buildOnlineShelfCard(OnlineBookShelfItem item, bool isDark) => GestureDetector(
       onTap: () async {
         // 从书源管理器加载完整的书源规则
         final fullSource = await BookSourceManagerService.instance.getSourceById(item.sourceId);
@@ -281,7 +280,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         children: [
           // 封面
           Expanded(
-            child: Container(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 color: isDark ? Colors.grey[800] : Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
@@ -301,7 +300,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
-                        errorBuilder: (_, __, ___) => _buildShelfPlaceholder(item, isDark),
+                        errorBuilder: (_, _, _) => _buildShelfPlaceholder(item, isDark),
                       )
                     : _buildShelfPlaceholder(item, isDark),
               ),
@@ -332,11 +331,9 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         ],
       ),
     );
-  }
 
   /// 书架占位符
-  Widget _buildShelfPlaceholder(OnlineBookShelfItem item, bool isDark) {
-    return Container(
+  Widget _buildShelfPlaceholder(OnlineBookShelfItem item, bool isDark) => Container(
       color: isDark ? Colors.grey[850] : Colors.grey[100],
       child: Center(
         child: Icon(
@@ -346,7 +343,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         ),
       ),
     );
-  }
 
   /// 显示删除确认对话框
   void _showDeleteConfirmation(OnlineBookShelfItem item, bool isDark) {
@@ -529,8 +525,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
   }
 
   /// 构建在线书籍卡片
-  Widget _buildOnlineBookCard(OnlineBook book, bool isDark) {
-    return GestureDetector(
+  Widget _buildOnlineBookCard(OnlineBook book, bool isDark) => GestureDetector(
       onTap: () {
         // 打开书籍详情页
         Navigator.of(context).push(
@@ -544,7 +539,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         children: [
           // 封面
           Expanded(
-            child: Container(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 color: isDark ? Colors.grey[800] : Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
@@ -564,7 +559,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
-                        errorBuilder: (_, __, ___) => _buildBookPlaceholder(book, isDark),
+                        errorBuilder: (_, _, _) => _buildBookPlaceholder(book, isDark),
                       )
                     : _buildBookPlaceholder(book, isDark),
               ),
@@ -608,7 +603,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         ],
       ),
     );
-  }
   
   /// 过滤显示名称 - 移除纯日期格式的无效名称
   String _filterDisplayName(String name) {
@@ -626,8 +620,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
   }
 
   /// 书籍封面占位符
-  Widget _buildBookPlaceholder(OnlineBook book, bool isDark) {
-    return Container(
+  Widget _buildBookPlaceholder(OnlineBook book, bool isDark) => Container(
       color: isDark ? Colors.grey[850] : Colors.grey[100],
       child: Center(
         child: Column(
@@ -656,7 +649,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         ),
       ),
     );
-  }
 
   /// iOS 26 悬浮搜索栏（玻璃模式）
   Widget _buildFloatingSearchBar(BuildContext context, bool isDark, int currentTab) {
@@ -862,8 +854,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
     int currentTab,
     double safeTop, {
     required Widget child,
-  }) {
-    return CustomScrollView(
+  }) => CustomScrollView(
       slivers: [
         // 顶部安全区留白
         SliverPadding(
@@ -881,7 +872,6 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         ),
       ],
     );
-  }
 
   /// iOS 26 大标题区域（非 Sliver 版本）
   Widget _buildLargeTitle(
@@ -1310,7 +1300,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
 
   /// 显示类型切换菜单
   void _showTypeSwitcherMenu(BuildContext context, bool isDark, int currentTab) {
-    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
 
     final offset = renderBox.localToGlobal(Offset.zero);

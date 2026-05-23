@@ -219,7 +219,7 @@ class RuleParser {
     if (pattern.contains('.*') || 
         pattern.contains('.+') ||
         pattern.contains('.?') ||
-        pattern.contains('\\') ||  // 转义字符
+        pattern.contains(r'\') ||  // 转义字符
         pattern.contains('^') ||   // 行首
         pattern.contains(r'$') ||  // 行尾
         pattern.contains('|') ||   // 或
@@ -261,7 +261,7 @@ class RuleParser {
   /// 解析 JSONPath
   static String? _parseJsonPath(String path, dynamic json) {
     try {
-      dynamic data = json;
+      final dynamic data = json;
       if (json is String) {
         // 如果是字符串，尝试解析为JSON
         // 注意：这里不做JSON解析，假设调用者已经提供了正确的数据类型
@@ -653,7 +653,7 @@ class RuleParser {
     // 对于简化格式 tagName.index，index 在 segments[1]
     // 对于标准格式 type.name.index，index 在 segments[2]
     
-    List<html_dom.Element> elements = [];
+    var elements = <html_dom.Element>[];
     int? index;
     
     // 检查是否是简化的 tagName.index 格式 (如 a.0, li.1)
@@ -725,7 +725,7 @@ class RuleParser {
     final type = segments[0].toLowerCase();
     final name = segments[1];
 
-    List<html_dom.Element> elements = [];
+    var elements = <html_dom.Element>[];
     
     if (parent is html_dom.Document) {
       switch (type) {
@@ -780,7 +780,7 @@ class RuleParser {
   static String? _extractAttr(String htmlOrText, String attrName) {
     if (attrName == 'text') {
       // 去除HTML标签
-      return htmlOrText.replaceAll(RegExp(r'<[^>]*>'), '').trim();
+      return htmlOrText.replaceAll(RegExp('<[^>]*>'), '').trim();
     }
     
     // 尝试解析为HTML并提取属性

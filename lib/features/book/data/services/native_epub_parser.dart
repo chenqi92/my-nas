@@ -1,7 +1,6 @@
 // ignore_for_file: unused_field
 
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:epub_plus/epub_plus.dart';
 import 'package:flutter/foundation.dart';

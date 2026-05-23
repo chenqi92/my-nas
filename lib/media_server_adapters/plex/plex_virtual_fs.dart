@@ -194,14 +194,12 @@ class PlexVirtualFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async {
-    return null;
-  }
+  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
 
   // === 私有方法 ===
 
   String _normalizePath(String path) {
-    var normalized = path.replaceAll('\\', '/');
+    var normalized = path.replaceAll(r'\', '/');
     if (!normalized.startsWith('/')) {
       normalized = '/$normalized';
     }
@@ -314,8 +312,7 @@ class PlexVirtualFileSystem implements NasFileSystem {
     return item;
   }
 
-  FileItem _itemToFileItem(PlexMediaItem item, String path) {
-    return FileItem(
+  FileItem _itemToFileItem(PlexMediaItem item, String path) => FileItem(
       name: item.isPlayable ? '${item.title}.mp4' : item.title,
       path: path,
       isDirectory: !item.isPlayable,
@@ -324,7 +321,6 @@ class PlexVirtualFileSystem implements NasFileSystem {
           ? DateTime.tryParse(item.originallyAvailableAt!)
           : null,
     );
-  }
 
   String _stripExtension(String name) {
     final dotIndex = name.lastIndexOf('.');

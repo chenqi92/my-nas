@@ -33,10 +33,6 @@ class NativeAVPlayerEvent {
     this.data = const {},
   });
 
-  final int playerId;
-  final NativeAVPlayerEventType type;
-  final Map<String, dynamic> data;
-
   factory NativeAVPlayerEvent.fromMap(Map<dynamic, dynamic> map) {
     final eventName = map['event'] as String?;
     final type = NativeAVPlayerEventType.values.firstWhere(
@@ -50,6 +46,10 @@ class NativeAVPlayerEvent {
       data: Map<String, dynamic>.from(map)..remove('playerId')..remove('event'),
     );
   }
+
+  final int playerId;
+  final NativeAVPlayerEventType type;
+  final Map<String, dynamic> data;
 }
 
 /// 原生 AVPlayer 平台通道

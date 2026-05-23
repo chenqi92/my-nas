@@ -264,7 +264,7 @@ class QBittorrentApi {
     final url = Uri.parse('$baseUrl$apiPrefix/torrents/createCategory');
     await _makeRequest('POST', url, body: {
       'category': category,
-      if (savePath != null) 'savePath': savePath,
+      'savePath': ?savePath,
     });
   }
 

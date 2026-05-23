@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
-import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.dart';
 import 'package:my_nas/features/pt_sites/presentation/pages/pt_site_detail_page.dart';
 import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
@@ -10,11 +11,10 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/video/data/services/tmdb_service.dart';
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/presentation/pages/video_detail_page.dart';
-import 'package:my_nas/shared/widgets/adaptive_image.dart';
-import 'package:my_nas/core/extensions/context_extensions.dart';
-import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
+import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// TMDB 预览页面 - 用于展示本地不存在的 TMDB 内容
@@ -947,7 +947,7 @@ class _TmdbMediaCard extends StatelessWidget {
                           imageUrl: item.posterUrl,
                           fit: BoxFit.cover,
                         )
-                      : Container(
+                      : ColoredBox(
                           color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
                           child: Icon(
                             isMovie ? Icons.movie : Icons.tv,

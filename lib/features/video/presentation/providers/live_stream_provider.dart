@@ -78,13 +78,11 @@ class LiveStreamSettingsNotifier extends StateNotifier<LiveStreamSettings> {
     required String name,
     required String playlistUrl,
     bool autoRefresh = true,
-  }) async {
-    return _service.addSource(
+  }) async => _service.addSource(
       name: name,
       playlistUrl: playlistUrl,
       autoRefresh: autoRefresh,
     );
-  }
 
   /// 更新直播源
   Future<void> updateSource(LiveStreamSource source) async {
@@ -107,29 +105,19 @@ class LiveStreamSettingsNotifier extends StateNotifier<LiveStreamSettings> {
   }
 
   /// 刷新源的频道列表
-  Future<LiveStreamSource> refreshSource(String sourceId) async {
-    return _service.refreshSource(sourceId);
-  }
+  Future<LiveStreamSource> refreshSource(String sourceId) async => _service.refreshSource(sourceId);
 
   /// 预览 M3U URL（不保存）
-  Future<List<LiveChannel>> previewChannels(String url) async {
-    return _service.previewChannels(url);
-  }
+  Future<List<LiveChannel>> previewChannels(String url) async => _service.previewChannels(url);
 
   /// 搜索频道
-  List<LiveChannel> searchChannels(String query) {
-    return _service.searchChannels(query);
-  }
+  List<LiveChannel> searchChannels(String query) => _service.searchChannels(query);
 
   /// 按分类获取频道
-  List<LiveChannel> getChannelsByCategory(String category) {
-    return _service.getChannelsByCategory(category);
-  }
+  List<LiveChannel> getChannelsByCategory(String category) => _service.getChannelsByCategory(category);
 
   /// 获取指定频道
-  LiveChannel? getChannel(String channelId) {
-    return _service.getChannel(channelId);
-  }
+  LiveChannel? getChannel(String channelId) => _service.getChannel(channelId);
 }
 
 /// 当前选中的直播分类 Provider
@@ -160,8 +148,6 @@ final searchedLiveChannelsProvider = Provider<List<LiveChannel>>((ref) {
   }
 
   final lowerQuery = query.toLowerCase();
-  return channels.where((c) {
-    return c.name.toLowerCase().contains(lowerQuery) ||
-        (c.category?.toLowerCase().contains(lowerQuery) ?? false);
-  }).toList();
+  return channels.where((c) => c.name.toLowerCase().contains(lowerQuery) ||
+        (c.category?.toLowerCase().contains(lowerQuery) ?? false)).toList();
 });

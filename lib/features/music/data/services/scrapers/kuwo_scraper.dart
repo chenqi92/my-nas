@@ -349,7 +349,7 @@ class KuwoScraper implements MusicScraper {
   MusicScraperItem _parseSong(Map<String, dynamic> data) {
     // 兼容两种 API 格式（web API 和移动端 API）
     // 移动端 API 使用大写字段名，如 MUSICRID, NAME, ARTIST 等
-    String rid = data['rid']?.toString() ?? '';
+    var rid = data['rid']?.toString() ?? '';
     if (rid.isEmpty) {
       // 移动端 API 格式: MUSICRID 或 DC_TARGETID 包含 "MUSIC_" 前缀
       rid = (data['MUSICRID'] as String? ?? data['DC_TARGETID'] as String? ?? '')
@@ -371,7 +371,7 @@ class KuwoScraper implements MusicScraper {
         '0';
 
     // 时长：返回秒数（兼容 int 和 String 类型）
-    int duration = 0;
+    var duration = 0;
     final durationValue = data['duration'] ?? data['DURATION'];
     if (durationValue is int) {
       duration = durationValue;

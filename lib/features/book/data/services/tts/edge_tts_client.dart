@@ -249,7 +249,8 @@ $ssml''';
 
   /// 发送配置
   Future<void> _sendConfig() async {
-    const config = '''Content-Type:application/json; charset=utf-8\r
+    const config = '''
+Content-Type:application/json; charset=utf-8\r
 Path:speech.config\r
 \r
 {"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"false"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}''';
