@@ -56,6 +56,9 @@
 		<string>需要访问麦克风以支持语音搜索功能</string>
 		<key>NSCameraUsageDescription</key>
 		<string>需要访问相机以扫描二维码添加设备</string>
+		<!-- Face ID（应用锁生物识别） -->
+		<key>NSFaceIDUsageDescription</key>
+		<string>使用 Face ID 解锁应用</string>
 		<!-- 出口合规：App 仅使用标准系统加密 (HTTPS/TLS) -->
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
