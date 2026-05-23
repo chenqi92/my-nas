@@ -1,4 +1,6 @@
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/platform/spotlight/spotlight_hook.dart';
+import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/domain/entities/book_item.dart';
 import 'package:path/path.dart';
@@ -397,6 +399,8 @@ class BookDatabaseService {
       where: '$_colSourceId = ? AND $_colFilePath = ?',
       whereArgs: [sourceId, filePath],
     );
+
+    SpotlightHook.afterDelete(SpotlightItemKind.book, ['$sourceId|$filePath']);
   }
 
   /// 清空所有数据

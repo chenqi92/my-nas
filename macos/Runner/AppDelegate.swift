@@ -1,14 +1,29 @@
 import Cocoa
+import CoreSpotlight
 import FlutterMacOS
 
 @main
 class AppDelegate: FlutterAppDelegate {
+  private var spotlightChannel: SpotlightChannel?
+
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
     return true
   }
 
   override func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
     return true
+  }
+
+  /// Spotlight 搜索结果被点击 → CSSearchableItemActionType
+  /// 把 unique id（mynas://kind/id 形式）转给 Dart 由 GoRouter 接管。
+  override func application(_ application: NSApplication, continue userActivity: NSUserActivity,
+                            restorationHandler: @escaping ([NSUserActivityRestoring]) -> Void) -> Bool {
+    if userActivity.activityType == CSSearchableItemActionType,
+       let channel = spotlightChannel,
+       channel.handleSpotlightActivity(userActivity) {
+      return true
+    }
+    return false
   }
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
@@ -22,6 +37,9 @@ class AppDelegate: FlutterAppDelegate {
 
     // 注册 Widget 数据通道
     _ = WidgetDataChannel(messenger: controller.engine.binaryMessenger)
+
+    // 注册 Core Spotlight 索引通道
+    spotlightChannel = SpotlightChannel(messenger: controller.engine.binaryMessenger)
 
     // 注册显示能力检测通道 (HDR)
     DisplayCapabilityChannel.register(

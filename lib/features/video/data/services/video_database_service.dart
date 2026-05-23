@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/platform/spotlight/spotlight_hook.dart';
+import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/domain/utils/genre_country_mapping.dart';
@@ -4475,6 +4477,12 @@ class VideoDatabaseService {
       );
       totalDeleted += deleted;
     }
+
+    // 同步移除 Spotlight 索引（macOS 启用时）
+    SpotlightHook.afterDelete(
+      SpotlightItemKind.video,
+      filePaths.map((p) => '$sourceId|$p'),
+    );
 
     return totalDeleted;
   }

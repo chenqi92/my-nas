@@ -1,5 +1,7 @@
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/platform/spotlight/spotlight_hook.dart';
+import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 
 /// 通用媒体收藏服务（适用于 video / photo / note / comic / book）
@@ -70,6 +72,14 @@ class MediaFavoritesService {
       'displayName': displayName,
       'addedAt': DateTime.now().millisecondsSinceEpoch,
     });
+
+    // 笔记没有中央 DB，收藏即写入 Spotlight 索引
+    if (type == MediaType.note) {
+      SpotlightHook.afterUpsertNote(
+        rawId: '$sourceId|$path',
+        title: displayName,
+      );
+    }
   }
 
   /// 移除收藏
@@ -80,6 +90,14 @@ class MediaFavoritesService {
   }) async {
     await _ensureInit();
     await _box!.delete(_keyOf(type, sourceId, path));
+
+    // 笔记的 Spotlight 索引来源是收藏列表，取消收藏即从索引移除
+    if (type == MediaType.note) {
+      SpotlightHook.afterDelete(
+        SpotlightItemKind.note,
+        ['$sourceId|$path'],
+      );
+    }
   }
 
   /// 切换收藏状态，返回切换后是否为已收藏

@@ -8,6 +8,8 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_theme.dart';
 import 'package:my_nas/app/theme/color_scheme_preset.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/platform/jump_list_controller.dart';
+import 'package:my_nas/core/platform/spotlight/spotlight_deep_link_handler.dart';
 import 'package:my_nas/core/services/background_task_service.dart';
 import 'package:my_nas/core/services/deep_link_service.dart';
 import 'package:my_nas/core/services/toast_service.dart';
@@ -34,6 +36,8 @@ class MyNasApp extends ConsumerStatefulWidget {
 class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver {
   bool _deepLinkInitialized = false;
   bool _desktopLyricInitialized = false;
+  bool _jumpListInitialized = false;
+  bool _spotlightHandlerInitialized = false;
 
   /// 全局 Toast 服务实例
   final ToastService _toastService = ToastService();
@@ -99,6 +103,16 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
     }
   }
 
+  /// 初始化 Windows 任务栏 Jump List
+  void _initJumpList() {
+    if (_jumpListInitialized || !Platform.isWindows) return;
+    _jumpListInitialized = true;
+    AppError.guardSync(
+      () => JumpListController().init(ref),
+      action: 'initJumpList',
+    );
+  }
+
   /// 初始化桌面歌词服务（macOS/Windows）
   void _initDesktopLyricService() {
     if (_desktopLyricInitialized) return;
@@ -109,6 +123,16 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
     // provider 内部会检查设置并自动显示桌面歌词（如果已启用）
     ref.read(desktopLyricProvider);
     logger.i('MyNasApp: DesktopLyricProvider 已初始化');
+  }
+
+  /// 初始化 Spotlight 深链 handler（仅 macOS）
+  void _initSpotlightHandler() {
+    if (_spotlightHandlerInitialized) return;
+    if (!Platform.isMacOS) return;
+    _spotlightHandlerInitialized = true;
+
+    SpotlightDeepLinkHandler.ensureStarted(ref);
+    logger.i('MyNasApp: SpotlightDeepLinkHandler 已初始化');
   }
 
   @override
@@ -228,6 +252,12 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
 
     // 初始化桌面歌词服务（macOS/Windows）
     _initDesktopLyricService();
+
+    // 初始化 Spotlight 深链 handler（仅 macOS）
+    _initSpotlightHandler();
+
+    // 初始化 Windows JumpList（任务栏图标右键的快捷操作 / 最近播放）
+    _initJumpList();
 
     final themeMode = ref.watch(themeModeProvider);
     final colorPreset = ref.watch(colorSchemePresetProvider);

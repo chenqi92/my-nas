@@ -144,7 +144,7 @@ MyNAS 是一款跨平台的家用 NAS 媒体管理工具，把你常用的多种
 |---|---|---|
 | macOS | 11.0+ | ✅ 含 Mac App Store 上架适配（沙盒 / entitlements） |
 | Windows | 10+ | ✅ |
-| iOS | 12.0+ | ✅ 含麦克风 / 相机权限、应用签名 |
+| iOS | 12.0+ | ✅ 含麦克风 / 相机权限、应用签名、**CarPlay 音乐浏览** |
 | Android | 6.0+ | ✅ 含媒体通知、应用 ID 规范 |
 | Linux | - | 🚧 编译通过，部分依赖支持有限（如 share_plus） |
 
@@ -542,6 +542,8 @@ my-nas/
 - [x] 在线字幕搜索（OpenSubtitles）
 - [x] 桌面歌词（多平台原生窗口）
 - [x] iOS 灵动岛 + macOS / Windows 媒体小组件
+- [x] Windows 任务栏跳转列表（Tasks 快捷入口 + Recent 最近播放）
+- [x] macOS Spotlight 索引（视频 / 音乐 / 书籍 / 漫画 / 笔记标题级元数据，⌘+Space 直达）
 - [x] 人脸识别 + 人物聚合
 - [x] iOS 26 Liquid Glass UI
 - [x] Mac App Store 上架适配

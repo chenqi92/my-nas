@@ -42,6 +42,7 @@
 		65NBLUR012F00F300003CEDC6 /* NativeBlurView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65NBLUR022F00F300003CEDC6 /* NativeBlurView.swift */; };
 		65SBAR112F02A000003CEDC6 /* StatusBarChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65SBAR012F02A000003CEDC6 /* StatusBarChannel.swift */; };
 		65SBAR122F02A000003CEDC6 /* StatusBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65SBAR022F02A000003CEDC6 /* StatusBarController.swift */; };
+		65SPLT002F11A000003CEDC6 /* SpotlightChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65SPLT012F11A000003CEDC6 /* SpotlightChannel.swift */; };
 		65WDCH002F00F000003CEDC6 /* WidgetDataChannel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65WDCH012F00F000003CEDC6 /* WidgetDataChannel.swift */; };
 		C093C5EE1B47A2490E176362 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 32F2B5C609D8B7CF01CB11F7 /* Pods_Runner.framework */; };
 		DF6813DEE7D4A68BCD50156D /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB81D8BC225602FFFA43FA14 /* Pods_RunnerTests.framework */; };
@@ -131,6 +132,7 @@
 		65NBLUR022F00F300003CEDC6 /* NativeBlurView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeBlurView.swift; sourceTree = "<group>"; };
 		65SBAR012F02A000003CEDC6 /* StatusBarChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarChannel.swift; sourceTree = "<group>"; };
 		65SBAR022F02A000003CEDC6 /* StatusBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBarController.swift; sourceTree = "<group>"; };
+		65SPLT012F11A000003CEDC6 /* SpotlightChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightChannel.swift; sourceTree = "<group>"; };
 		65WDCH012F00F000003CEDC6 /* WidgetDataChannel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataChannel.swift; sourceTree = "<group>"; };
 		764CB87409CFC371D8279B02 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
@@ -278,6 +280,7 @@
 				653E4EF82EDF158F0080E2C6 /* RunnerDebug.entitlements */,
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
+				65SPLT012F11A000003CEDC6 /* SpotlightChannel.swift */,
 				65WDCH012F00F000003CEDC6 /* WidgetDataChannel.swift */,
 				65DSPC022F00F100003CEDC6 /* DisplayCapabilityChannel.swift */,
 				65AUDC022F00F200003CEDC6 /* AudioCapabilityChannel.swift */,
@@ -617,6 +620,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
+				65SPLT002F11A000003CEDC6 /* SpotlightChannel.swift in Sources */,
 				65WDCH002F00F000003CEDC6 /* WidgetDataChannel.swift in Sources */,
 				65DSPC012F00F100003CEDC6 /* DisplayCapabilityChannel.swift in Sources */,
 				65AUDC012F00F200003CEDC6 /* AudioCapabilityChannel.swift in Sources */,

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/platform/spotlight/spotlight_hook.dart';
+import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 漫画缓存条目
@@ -153,6 +155,9 @@ class ComicLibraryCacheService {
     if (_cache == null) return 0;
 
     final originalCount = _cache!.comics.length;
+    final removedComics = _cache!.comics
+        .where((c) => c.sourceId == sourceId)
+        .toList();
     final filteredComics = _cache!.comics
         .where((c) => c.sourceId != sourceId)
         .toList();
@@ -166,6 +171,11 @@ class ComicLibraryCacheService {
       );
       await saveCache(newCache);
       logger.i('ComicLibraryCacheService: 已删除 $deletedCount 本漫画 (sourceId: $sourceId)');
+
+      SpotlightHook.afterDelete(
+        SpotlightItemKind.comic,
+        removedComics.map((c) => '${c.sourceId}|${c.folderPath}'),
+      );
     }
     return deletedCount;
   }

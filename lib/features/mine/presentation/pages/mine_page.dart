@@ -10,6 +10,7 @@ import 'package:my_nas/shared/pages/favorites_page.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/mine/presentation/pages/appearance_settings_page.dart';
+import 'package:my_nas/features/mine/presentation/pages/spotlight_settings_page.dart';
 import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
 import 'package:my_nas/features/media_management/presentation/pages/media_management_list_page.dart';
 import 'package:my_nas/features/media_tracking/presentation/pages/media_tracking_list_page.dart';
@@ -397,6 +398,27 @@ class MinePage extends ConsumerWidget {
               ),
             ),
           ),
+        ],
+      ),
+      _MineSection(
+        title: '高级',
+        icon: Icons.tune_rounded,
+        tilesBuilder: (ctx) => [
+          if (Theme.of(ctx).platform == TargetPlatform.macOS)
+            _buildSettingsTile(
+              context,
+              isDark,
+              icon: Icons.search_rounded,
+              iconColor: AppColors.info,
+              title: 'Spotlight 索引',
+              subtitle: '让系统聚焦能搜到 MyNAS 数据',
+              onTap: () => Navigator.push(
+                ctx,
+                MaterialPageRoute<void>(
+                  builder: (_) => const SpotlightSettingsPage(),
+                ),
+              ),
+            ),
         ],
       ),
       _MineSection(

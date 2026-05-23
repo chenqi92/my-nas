@@ -198,14 +198,14 @@ Phase 4: 生态扩展     ██████████░░░░░░  🚧
 - [x] **Mac App Store 上架适配**（沙盒 / entitlements / 加密配置）
 - [x] **Keychain 降级方案**（entitlement 缺失时 Hive AES box 兜底）
 - [x] 桌面歌词原生窗口
-- [ ] Spotlight 索引
+- [x] **Spotlight 索引**（设置开关默认关；视频/音乐/书籍/漫画/笔记标题级元数据；点击系统聚焦结果跳回 App 对应入口）
 
 #### Windows ✅
 - [x] 媒体键支持
 - [x] 任务栏
 - [x] 系统主题跟随
 - [x] 桌面歌词原生窗口
-- [ ] 跳转列表
+- [x] **跳转列表**（任务栏图标右键 Tasks 4 项 + Recent 最近 5 视频 / 5 音乐，单实例转发）
 
 #### iOS ✅
 - [x] AirPlay
@@ -213,7 +213,7 @@ Phase 4: 生态扩展     ██████████░░░░░░  🚧
 - [x] **灵动岛**
 - [x] 媒体小组件
 - [x] **麦克风 / 相机权限配置 + 应用签名**
-- [ ] CarPlay
+- [x] **CarPlay**（音乐浏览：艺术家 / 专辑 / 歌单 / 收藏；需 `com.apple.developer.carplay-audio` entitlement）
 - [ ] Siri 快捷指令
 - [ ] Handoff
 
