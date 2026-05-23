@@ -8,8 +8,12 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
 import 'package:my_nas/features/video/domain/entities/hdr_capability.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
+import 'package:my_nas/core/translation/translation_provider.dart';
+import 'package:my_nas/core/translation/translation_providers.dart';
+import 'package:my_nas/features/video/data/services/subtitle_translation/subtitle_translation_service.dart';
 import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
+import 'package:my_nas/features/video/presentation/providers/subtitle_translation_settings_provider.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
@@ -23,6 +27,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final settings = ref.watch(qualitySettingsProvider);
     final hdrAudioSettings = ref.watch(hdrAudioSettingsProvider);
+    final translation = ref.watch(subtitleTranslationSettingsProvider);
 
     return HideBottomNavWrapper(
       child: Scaffold(
@@ -259,11 +264,153 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
             ],
           ),
 
+          const SizedBox(height: AppSpacing.xl),
+
+          // 字幕翻译
+          _buildSectionHeader(context, '字幕翻译', Icons.translate_rounded, isDark),
+          const SizedBox(height: AppSpacing.sm),
+          _buildSettingsCard(
+            context,
+            isDark,
+            children: [
+              _buildSettingsTile(
+                context,
+                isDark,
+                icon: Icons.language_rounded,
+                iconColor: AppColors.primary,
+                title: '默认目标语言',
+                subtitle: translation.targetLangEnum.displayName,
+                onTap: () => _showTranslationLangPicker(
+                  context,
+                  ref,
+                  translation.targetLangEnum,
+                  isDark,
+                ),
+              ),
+              _buildDivider(isDark),
+              _buildSettingsTile(
+                context,
+                isDark,
+                icon: Icons.cloud_queue_rounded,
+                iconColor: AppColors.accent,
+                title: '翻译服务',
+                subtitle: TranslationProviders.byId(translation.providerId).displayName,
+                onTap: () => _showTranslationProviderPicker(
+                  context,
+                  ref,
+                  translation.providerId,
+                  isDark,
+                ),
+              ),
+              _buildDivider(isDark),
+              _buildSwitchTile(
+                context,
+                isDark,
+                icon: Icons.layers_rounded,
+                iconColor: AppColors.info,
+                title: '双语显示',
+                subtitle: '译文上方 + 原文下方',
+                value: translation.bilingual,
+                onChanged: (value) {
+                  ref
+                      .read(subtitleTranslationSettingsProvider.notifier)
+                      .setBilingual(value: value);
+                },
+              ),
+              _buildDivider(isDark),
+              _buildSwitchTile(
+                context,
+                isDark,
+                icon: Icons.save_alt_rounded,
+                iconColor: AppColors.success,
+                title: '启用翻译缓存',
+                subtitle: '相同字幕再次播放时秒出',
+                value: translation.useCache,
+                onChanged: (value) {
+                  ref
+                      .read(subtitleTranslationSettingsProvider.notifier)
+                      .setUseCache(value: value);
+                },
+              ),
+              _buildDivider(isDark),
+              _buildSettingsTile(
+                context,
+                isDark,
+                icon: Icons.delete_outline_rounded,
+                iconColor: AppColors.warning,
+                title: '清除翻译缓存',
+                subtitle: '不影响原字幕，仅清掉译文存档',
+                onTap: () async {
+                  await SubtitleTranslationService.instance.clearCache();
+                  if (!context.mounted) return;
+                  context.showSuccessSnackBar('翻译缓存已清除');
+                },
+              ),
+            ],
+          ),
+
           const SizedBox(height: AppSpacing.xxxl),
         ],
         ),
       ),
     );
+  }
+
+  Future<void> _showTranslationLangPicker(
+    BuildContext context,
+    WidgetRef ref,
+    TranslationLang current,
+    bool isDark,
+  ) async {
+    final picked = await showDialog<TranslationLang>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : null,
+        title: const Text('默认翻译目标语言'),
+        children: [
+          for (final lang in TranslationLang.values)
+            RadioListTile<TranslationLang>(
+              value: lang,
+              groupValue: current,
+              title: Text(lang.displayName),
+              subtitle: Text(lang.bcp47),
+              onChanged: (v) => Navigator.pop(dialogContext, v),
+            ),
+        ],
+      ),
+    );
+    if (picked != null) {
+      ref
+          .read(subtitleTranslationSettingsProvider.notifier)
+          .setTargetLang(picked.bcp47);
+    }
+  }
+
+  Future<void> _showTranslationProviderPicker(
+    BuildContext context,
+    WidgetRef ref,
+    String currentId,
+    bool isDark,
+  ) async {
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : null,
+        title: const Text('翻译服务'),
+        children: [
+          for (final p in TranslationProviders.all)
+            RadioListTile<String>(
+              value: p.id,
+              groupValue: currentId,
+              title: Text(p.displayName),
+              onChanged: (v) => Navigator.pop(dialogContext, v),
+            ),
+        ],
+      ),
+    );
+    if (picked != null) {
+      ref.read(subtitleTranslationSettingsProvider.notifier).setProvider(picked);
+    }
   }
 
   String _getHdrModeLabel(HdrMode mode) => switch (mode) {

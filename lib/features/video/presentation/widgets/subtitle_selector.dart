@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart' show SubtitleTrack;
+import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/translation/translation_provider.dart';
 import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
+import 'package:my_nas/features/video/presentation/providers/subtitle_translation_provider.dart';
+import 'package:my_nas/features/video/presentation/providers/subtitle_translation_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_player_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_download_dialog.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_style_sheet.dart';
@@ -42,6 +46,9 @@ class SubtitleSelectorSheet extends ConsumerWidget {
     final externalSubtitles = ref.watch(availableSubtitlesProvider);
     final currentSubtitle = ref.watch(currentSubtitleProvider);
     final currentEmbeddedId = ref.watch(currentEmbeddedSubtitleIdProvider);
+    final currentTranslatedId = ref.watch(currentTranslatedSubtitleIdProvider);
+    final translationProgress = ref.watch(subtitleTranslationProgressProvider);
+    final translationSettings = ref.watch(subtitleTranslationSettingsProvider);
     final playerNotifier = ref.read(videoPlayerControllerProvider.notifier);
     final embeddedSubtitles = playerNotifier.embeddedSubtitles;
     final hasSubtitleConfig = ref.watch(hasOpenSubtitlesConfigProvider);
@@ -50,7 +57,10 @@ class SubtitleSelectorSheet extends ConsumerWidget {
     final validEmbedded = embeddedSubtitles.where((s) => s.id != 'no' && s.id != 'auto').toList();
 
     // 判断是否没有选中任何字幕
-    final isSubtitleOff = currentSubtitle == null && currentEmbeddedId == null;
+    final isSubtitleOff = currentSubtitle == null &&
+        currentEmbeddedId == null &&
+        currentTranslatedId == null;
+    final canTranslate = currentSubtitle != null;
 
     return Container(
       constraints: BoxConstraints(
@@ -95,6 +105,20 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
+                // AI 翻译字幕
+                if (canTranslate)
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showTranslateLanguagePicker(
+                        context,
+                        ref,
+                        translationSettings.targetLangEnum,
+                      );
+                    },
+                    icon: const Icon(Icons.translate_rounded, color: Colors.white70),
+                    tooltip: '翻译字幕到...',
+                  ),
                 // 在线字幕下载按钮
                 if (hasSubtitleConfig && videoPath != null)
                   IconButton(
@@ -124,6 +148,16 @@ class SubtitleSelectorSheet extends ConsumerWidget {
 
           const Divider(color: Colors.white24, height: 1),
 
+          // 翻译进度
+          if (translationProgress != null)
+            _TranslationProgressBar(
+              progress: translationProgress,
+              targetLang: translationSettings.targetLangEnum,
+              onCancel: () {
+                ref.read(subtitleTranslationControllerProvider).cancel();
+              },
+            ),
+
           // 字幕列表
           Flexible(
             child: ListView(
@@ -149,6 +183,22 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                   },
                 ),
 
+                // 翻译字幕
+                if (currentTranslatedId != null) ...[
+                  _SectionHeader(
+                    title: '翻译字幕',
+                    count: 1,
+                  ),
+                  _SubtitleTile(
+                    title:
+                        '${translationSettings.targetLangEnum.displayName} (翻译)',
+                    subtitle: currentSubtitle?.name ?? '',
+                    isSelected: true,
+                    icon: Icons.translate_rounded,
+                    onTap: () {},
+                  ),
+                ],
+
                 // 外部字幕
                 if (externalSubtitles.isNotEmpty) ...[
                   _SectionHeader(
@@ -159,8 +209,10 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                     (sub) => _SubtitleTile(
                       title: sub.language ?? sub.name,
                       subtitle: sub.name,
-                      isSelected: currentSubtitle == sub ||
-                          (currentSubtitle != null && currentSubtitle.path == sub.path),
+                      isSelected: currentTranslatedId == null &&
+                          (currentSubtitle == sub ||
+                              (currentSubtitle != null &&
+                                  currentSubtitle.path == sub.path)),
                       icon: Icons.closed_caption_rounded,
                       onTap: () {
                         ref.read(currentEmbeddedSubtitleIdProvider.notifier).state = null;
@@ -244,6 +296,34 @@ class SubtitleSelectorSheet extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showTranslateLanguagePicker(
+    BuildContext context,
+    WidgetRef ref,
+    TranslationLang current,
+  ) {
+    showAdaptiveModalSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _TranslateLanguageSheet(
+        current: current,
+        onPicked: (lang) async {
+          Navigator.pop(sheetContext);
+          ref
+              .read(subtitleTranslationSettingsProvider.notifier)
+              .setTargetLang(lang.bcp47);
+          final controller = ref.read(subtitleTranslationControllerProvider);
+          final started = await controller.translateCurrent(targetLang: lang);
+          if (!context.mounted) return;
+          if (!started) {
+            context.showErrorToast('翻译字幕失败，请重试');
+          } else {
+            context.showInfoToast('已开始翻译为 ${lang.displayName}');
+          }
+        },
       ),
     );
   }
@@ -498,3 +578,189 @@ void showSubtitleSelector(
     ),
   );
 }
+
+/// 翻译进度条
+class _TranslationProgressBar extends StatelessWidget {
+  const _TranslationProgressBar({
+    required this.progress,
+    required this.targetLang,
+    required this.onCancel,
+  });
+
+  final double progress;
+  final TranslationLang targetLang;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = (progress * 100).clamp(0, 100).toStringAsFixed(0);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
+      child: Row(
+        children: [
+          const Icon(Icons.translate_rounded, size: 16, color: Colors.white60),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '翻译为 ${targetLang.displayName} · $pct%',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress.clamp(0, 1).toDouble(),
+                    minHeight: 4,
+                    backgroundColor: Colors.white10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onCancel,
+            icon: const Icon(Icons.close_rounded, size: 18, color: Colors.white54),
+            tooltip: '取消翻译',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 翻译目标语言选择 sheet
+class _TranslateLanguageSheet extends StatelessWidget {
+  const _TranslateLanguageSheet({
+    required this.current,
+    required this.onPicked,
+  });
+
+  final TranslationLang current;
+  final void Function(TranslationLang) onPicked;
+
+  static const _common = [
+    TranslationLang.zhHans,
+    TranslationLang.zhHant,
+    TranslationLang.en,
+    TranslationLang.ja,
+    TranslationLang.ko,
+    TranslationLang.fr,
+    TranslationLang.de,
+    TranslationLang.es,
+    TranslationLang.ru,
+  ];
+
+  @override
+  Widget build(BuildContext context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.92),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 8, 8),
+              child: Row(
+                children: [
+                  Icon(Icons.translate_rounded, color: Colors.white70, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    '翻译字幕到...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(color: Colors.white24, height: 1),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                itemCount: _common.length,
+                itemBuilder: (context, i) {
+                  final lang = _common[i];
+                  final selected = lang == current;
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => onPicked(lang),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.language_rounded,
+                              color: selected ? Colors.white : Colors.white54,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                lang.displayName,
+                                style: TextStyle(
+                                  color: selected ? Colors.white : Colors.white70,
+                                  fontSize: 14,
+                                  fontWeight: selected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                  decoration: TextDecoration.none,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              lang.bcp47,
+                              style: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 11,
+                                decoration: TextDecoration.none,
+                              ),
+                            ),
+                            if (selected) ...[
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+}
+

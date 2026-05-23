@@ -39,6 +39,7 @@ MyNAS 是一款跨平台的家用 NAS 媒体管理工具，把你常用的多种
 - 支持主流容器（MP4 / MKV / AVI / MOV / WMV / WebM / RMVB / TS / M2TS）和编码（H.264 / H.265 / VP9 / AV1）
 - 字幕：SRT / ASS / SSA / VTT / SUB / PGS / 内嵌；支持样式自定义和**字幕延迟**调节
 - 在线字幕搜索（OpenSubtitles，可使用自己的 API key）
+- **AI 字幕翻译**：将当前字幕轨翻译为目标语言（默认中文），优先翻译当前播放位置附近的段，结果落盘缓存
 - 倍速播放（0.5x–4x）、画中画、手势进度/亮度/音量
 - 投屏：AirPlay / DLNA（含字幕扩展） / Chromecast
 - 客户端转码（CPU / Android MediaCodec / Apple VideoToolbox）
@@ -557,7 +558,7 @@ my-nas/
 
 ### Backlog
 - [ ] 更多 NAS（铁威马、海康等）
-- [ ] AI 字幕翻译 / 元数据补全
+- [ ] AI 元数据补全
 - [ ] 智能推荐（基于本地观看历史）
 - [ ] 插件系统
 

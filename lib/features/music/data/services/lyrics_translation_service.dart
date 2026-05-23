@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:dio/dio.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/errors.dart';
-import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/translation/translation_provider.dart';
+import 'package:my_nas/core/translation/translation_providers.dart';
 
 /// 歌词翻译目标语言（BCP-47）。primuse 那 9 种，按使用频率排序。
 enum LyricsTranslationLang {
@@ -32,81 +32,6 @@ enum LyricsTranslationLang {
   }
 }
 
-/// 翻译 provider 抽象。新增 provider（DeepL / OpenAI / Gemini）实现这个接口即可。
-abstract class TranslationProvider {
-  String get id;
-  String get displayName;
-
-  /// 批量翻译。返回值数组与输入 [texts] 一一对应；失败的项返回 null。
-  Future<List<String?>> translate({
-    required List<String> texts,
-    required String targetLangBcp47,
-  });
-}
-
-/// 默认 provider：调用 Google Translate 公共 API（免费 / 无需 key）。
-/// API 文档无官方地址，是社区常用反向工程端点；返回 JSON 数组。
-/// 仅适合个人使用，请求量大时可能被 rate-limit。
-class GoogleFreeTranslationProvider implements TranslationProvider {
-  GoogleFreeTranslationProvider() : _dio = Dio();
-
-  final Dio _dio;
-
-  @override
-  String get id => 'google_free';
-
-  @override
-  String get displayName => 'Google 翻译（免费）';
-
-  @override
-  Future<List<String?>> translate({
-    required List<String> texts,
-    required String targetLangBcp47,
-  }) async {
-    final out = <String?>[];
-    for (final t in texts) {
-      out.add(await _translateOne(t, targetLangBcp47));
-    }
-    return out;
-  }
-
-  Future<String?> _translateOne(String text, String tl) async {
-    if (text.trim().isEmpty) return null;
-    try {
-      final resp = await _dio.get<dynamic>(
-        'https://translate.googleapis.com/translate_a/single',
-        queryParameters: {
-          'client': 'gtx',
-          'sl': 'auto',
-          'tl': tl,
-          'dt': 't',
-          'q': text,
-        },
-        options: Options(
-          receiveTimeout: const Duration(seconds: 8),
-          sendTimeout: const Duration(seconds: 8),
-        ),
-      );
-      final data = resp.data;
-      // 返回结构：[[[translatedText, sourceText, ...], ...], null, ...]
-      if (data is List && data.isNotEmpty && data.first is List) {
-        final segments = (data.first as List).cast<dynamic>();
-        final buf = StringBuffer();
-        for (final seg in segments) {
-          if (seg is List && seg.isNotEmpty && seg.first is String) {
-            buf.write(seg.first as String);
-          }
-        }
-        final translated = buf.toString().trim();
-        return translated.isEmpty ? null : translated;
-      }
-    } on Exception catch (e) {
-      logger.w('GoogleTranslate: 失败 "$text": $e');
-    }
-    return null;
-  }
-}
-
 /// 歌词翻译服务：
 /// - 多 provider 可选，目前默认 [GoogleFreeTranslationProvider]
 /// - SHA256(targetLang+source) 作 cache key，5000 条 LRU
@@ -120,7 +45,7 @@ class LyricsTranslationService {
   static const Duration _negativeTtl = Duration(hours: 24);
   static const String _boxName = 'lyrics_translation_cache';
 
-  final TranslationProvider _provider = GoogleFreeTranslationProvider();
+  final TranslationProvider _provider = TranslationProviders.defaultProvider;
   Box<dynamic>? _box;
   Timer? _saveDebounce;
 

@@ -20,6 +20,7 @@ import 'package:my_nas/features/video/data/services/player/dolby_vision_detector
 import 'package:my_nas/features/video/data/services/player/native_av_player_backend.dart';
 import 'package:my_nas/features/video/data/services/player/video_player_backend.dart';
 import 'package:my_nas/features/video/data/services/subtitle_service.dart';
+import 'package:my_nas/features/video/data/services/subtitle_translation/subtitle_translation_service.dart';
 import 'package:my_nas/features/video/data/services/trakt_scrobble_service.dart';
 import 'package:my_nas/features/video/data/services/video_history_service.dart';
 import 'package:my_nas/features/video/data/services/video_thumbnail_service.dart';
@@ -48,6 +49,14 @@ final currentSubtitleProvider = StateProvider<SubtitleItem?>((ref) => null);
 /// 当前选中的内嵌字幕轨道 ID（需要持久化，不使用 autoDispose）
 /// 用于跟踪内嵌字幕的选中状态
 final currentEmbeddedSubtitleIdProvider = StateProvider<String?>((ref) => null);
+
+/// 当前正在显示的"翻译字幕"标识：null 表示未启用翻译字幕。
+/// 字符串内容形如 "translated:zh-CN:<sessionId>"，仅供 UI 高亮选中项。
+final currentTranslatedSubtitleIdProvider = StateProvider<String?>((ref) => null);
+
+/// 字幕翻译进度（0~1）。null 表示当前没有进行中的翻译会话。
+final subtitleTranslationProgressProvider =
+    StateProvider<double?>((ref) => null);
 
 /// 播放器状态
 class VideoPlayerState {
@@ -307,6 +316,8 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     ..add(_player.stream.position.listen((position) {
       if (_isDisposed) return;
       state = state.copyWith(position: position);
+      // 同步给字幕翻译服务，让它优先翻译当前位置附近的段
+      SubtitleTranslationService.instance.updateAnchor(position);
     }))
 
     // 监听总时长
@@ -457,6 +468,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     ..add(_player.stream.position.listen((position) {
       if (_isDisposed) return;
       state = state.copyWith(position: position);
+      SubtitleTranslationService.instance.updateAnchor(position);
     }))
 
     ..add(_player.stream.duration.listen((duration) {
@@ -1370,6 +1382,10 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   /// 设置字幕
   Future<void> setSubtitle(SubtitleItem? subtitle) async {
     _ref.read(currentSubtitleProvider.notifier).state = subtitle;
+    // 切换到普通字幕时，结束正在进行的翻译会话
+    SubtitleTranslationService.instance.cancelActive();
+    _ref.read(currentTranslatedSubtitleIdProvider.notifier).state = null;
+    _ref.read(subtitleTranslationProgressProvider.notifier).state = null;
 
     if (subtitle == null) {
       // 关闭字幕
@@ -1385,6 +1401,17 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       } on Exception catch (e, st) {
         AppError.handle(e, st, 'VideoPlayer.loadSubtitle', {'name': subtitle.name});
       }
+    }
+  }
+
+  /// 把"翻译字幕"以内联文本形式喂给 media_kit；title 仅作为字幕轨道显示名。
+  /// 不修改 [currentSubtitleProvider]（它对应"外部字幕文件"）。
+  Future<void> setInlineSubtitleData(String data, {required String title}) async {
+    try {
+      await _player.setSubtitleTrack(SubtitleTrack.data(data, title: title));
+      logger.i('VideoPlayerNotifier: 加载翻译字幕 $title (${data.length} 字节)');
+    } on Exception catch (e, st) {
+      AppError.handle(e, st, 'VideoPlayer.loadInlineSubtitle', {'title': title});
     }
   }
 
@@ -1408,6 +1435,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   /// 设置内嵌字幕轨道
   Future<void> setEmbeddedSubtitleTrack(SubtitleTrack track) async {
+    SubtitleTranslationService.instance.cancelActive();
+    _ref.read(currentTranslatedSubtitleIdProvider.notifier).state = null;
+    _ref.read(subtitleTranslationProgressProvider.notifier).state = null;
     await _player.setSubtitleTrack(track);
     logger.i('VideoPlayerNotifier: 设置内嵌字幕 ${track.title ?? track.id}');
   }
