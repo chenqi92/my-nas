@@ -4,6 +4,7 @@
 
 #include "flutter/generated_plugin_registrant.h"
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
+#include "single_instance.h"
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -26,6 +27,10 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+
+  // 注册 Jump List 通道（仅主窗口需要）。
+  jump_list_channel_ = std::make_unique<JumpListChannel>(
+      flutter_controller_->engine()->messenger());
 
   // 为子窗口注册插件回调（desktop_multi_window 子窗口需要此回调来注册插件）
   DesktopMultiWindowSetWindowCreatedCallback([](void *controller) {
@@ -50,6 +55,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  jump_list_channel_.reset();
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -75,6 +81,18 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;
+    case WM_COPYDATA: {
+      // 第二个实例通过 single_instance 发来的 deep link 转发。
+      auto* cds = reinterpret_cast<COPYDATASTRUCT*>(lparam);
+      if (cds != nullptr && cds->dwData == kMyNasCopyDataMagic &&
+          cds->cbData >= sizeof(wchar_t) && jump_list_channel_) {
+        const wchar_t* payload = static_cast<const wchar_t*>(cds->lpData);
+        std::wstring url(payload);
+        jump_list_channel_->DispatchDeepLink(url);
+        return TRUE;
+      }
+      break;
+    }
   }
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);

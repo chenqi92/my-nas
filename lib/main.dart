@@ -14,6 +14,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:my_nas/app/app.dart';
 import 'package:my_nas/core/di/injection.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/platform/jump_list_service.dart';
 import 'package:my_nas/core/services/desktop_window_service.dart';
 import 'package:my_nas/core/services/performance_mode_service.dart';
 import 'package:my_nas/core/sync/app_settings_sync_module.dart';
@@ -51,6 +52,17 @@ Future<void> main(List<String> args) async {
     // 子窗口入口：args[1] = windowId, args[2] = arguments
     await desktopLyricMain(args.sublist(1));
     return;
+  }
+
+  // Windows 通过命令行参数传入 jump list / secondary 实例转发的 deep link；
+  // 先暂存，等 JumpListController 初始化后再消费。
+  if (Platform.isWindows) {
+    for (final a in args) {
+      if (a.startsWith('mynas://')) {
+        JumpListService().registerInitialArg(a);
+        break;
+      }
+    }
   }
 
   // 主窗口入口
