@@ -14,6 +14,7 @@ import 'package:my_nas/features/downloader/presentation/pages/downloader_list_pa
 import 'package:my_nas/features/media_management/presentation/pages/media_management_list_page.dart';
 import 'package:my_nas/features/media_tracking/presentation/pages/media_tracking_list_page.dart';
 import 'package:my_nas/features/mine/presentation/pages/appearance_settings_page.dart';
+import 'package:my_nas/features/mine/presentation/pages/hosts_mapping_page.dart';
 import 'package:my_nas/features/mine/presentation/pages/spotlight_settings_page.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/presentation/pages/duplicate_songs_page.dart';
@@ -424,7 +425,22 @@ class MinePage extends ConsumerWidget {
         title: '高级',
         icon: Icons.tune_rounded,
         tilesBuilder: (ctx) => [
-          if (Theme.of(ctx).platform == TargetPlatform.macOS)
+          _buildSettingsTile(
+            context,
+            isDark,
+            icon: Icons.dns_rounded,
+            iconColor: AppColors.accent,
+            title: 'Hosts 映射',
+            subtitle: '指定域名走特定 IP，绕过 DNS 污染',
+            onTap: () => Navigator.push(
+              ctx,
+              MaterialPageRoute<void>(
+                builder: (_) => const HostsMappingPage(),
+              ),
+            ),
+          ),
+          if (Theme.of(ctx).platform == TargetPlatform.macOS) ...[
+            _buildDivider(isDark),
             _buildSettingsTile(
               context,
               isDark,
@@ -439,6 +455,7 @@ class MinePage extends ConsumerWidget {
                 ),
               ),
             ),
+          ],
         ],
       ),
       _MineSection(

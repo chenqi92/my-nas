@@ -511,11 +511,22 @@ class _VideoScraperConfigSheet extends StatefulWidget {
 }
 
 class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
+  static const _tmdbCustomSentinel = '__custom__';
+  static const _tmdbPresetUrls = <String>{
+    'https://api.themoviedb.org/3',
+    'https://api.tmdb.org/3',
+    'https://tmdb.nastool.cn/3',
+    'https://tmdb.nastool.workers.dev/3',
+    'https://tmdb.cub.red/3',
+    'https://api.tmdb.cdn.kvxd.workers.dev/3',
+  };
+
   final _apiKeyController = TextEditingController();
   final _apiUrlController = TextEditingController();
   final _cookieController = TextEditingController();
   final _imageProxyController = TextEditingController();
-  String _tmdbApiUrl = 'https://api.themoviedb.org/3';
+  final _tmdbCustomUrlController = TextEditingController();
+  String _tmdbApiUrlSelection = 'https://api.themoviedb.org/3';
   bool _obscureApiKey = true;
   bool _obscureCookie = true;
 
@@ -527,10 +538,24 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
       _apiUrlController.text = widget.source!.apiUrl ?? '';
       _cookieController.text = widget.source!.cookie ?? '';
       if (widget.type == ScraperType.tmdb) {
-        _tmdbApiUrl = widget.source!.apiUrl ?? 'https://api.themoviedb.org/3';
+        final savedUrl = widget.source!.apiUrl ?? 'https://api.themoviedb.org/3';
+        if (_tmdbPresetUrls.contains(savedUrl)) {
+          _tmdbApiUrlSelection = savedUrl;
+        } else {
+          _tmdbApiUrlSelection = _tmdbCustomSentinel;
+          _tmdbCustomUrlController.text = savedUrl;
+        }
         _imageProxyController.text = widget.source!.extraConfig?['imageProxy'] as String? ?? '';
       }
     }
+  }
+
+  /// 当前实际使用的 TMDB API URL（预设直接返回；自定义返回用户输入）
+  String get _effectiveTmdbApiUrl {
+    if (_tmdbApiUrlSelection == _tmdbCustomSentinel) {
+      return _tmdbCustomUrlController.text.trim();
+    }
+    return _tmdbApiUrlSelection;
   }
 
   @override
@@ -539,6 +564,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
     _apiUrlController.dispose();
     _cookieController.dispose();
     _imageProxyController.dispose();
+    _tmdbCustomUrlController.dispose();
     super.dispose();
   }
 
@@ -766,11 +792,21 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
       return;
     }
 
+    // TMDB 选择"自定义"但未填写 URL → 拦截
+    if (widget.type == ScraperType.tmdb &&
+        _tmdbApiUrlSelection == _tmdbCustomSentinel &&
+        _tmdbCustomUrlController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请填写自定义 API URL'), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
+
     widget.onSave(_VideoScraperConfigData()
       ..apiKey = _apiKeyController.text.trim()
       ..apiUrl = _apiUrlController.text.trim()
       ..cookie = _cookieController.text.trim()
-      ..tmdbApiUrl = _tmdbApiUrl
+      ..tmdbApiUrl = _effectiveTmdbApiUrl
       ..imageProxy = _imageProxyController.text.trim());
   }
 
@@ -780,6 +816,9 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
       ('https://api.tmdb.org/3', 'TMDB 备用', 'api.tmdb.org'),
       ('https://tmdb.nastool.cn/3', 'NasTool 代理', 'tmdb.nastool.cn（国内推荐）'),
       ('https://tmdb.nastool.workers.dev/3', 'Workers 代理', 'tmdb.nastool.workers.dev'),
+      ('https://tmdb.cub.red/3', 'Cub.red 代理', 'tmdb.cub.red'),
+      ('https://api.tmdb.cdn.kvxd.workers.dev/3', 'KVXD Workers', 'api.tmdb.cdn.kvxd.workers.dev'),
+      (_tmdbCustomSentinel, '自定义', '手动填写代理或镜像 URL'),
     ];
 
     return Column(
@@ -802,7 +841,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: _tmdbApiUrl,
+              value: _tmdbApiUrlSelection,
               isExpanded: true,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               borderRadius: BorderRadius.circular(10),
@@ -828,11 +867,22 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                 );
               }).toList(),
               onChanged: (value) {
-                if (value != null) setState(() => _tmdbApiUrl = value);
+                if (value != null) setState(() => _tmdbApiUrlSelection = value);
               },
             ),
           ),
         ),
+        if (_tmdbApiUrlSelection == _tmdbCustomSentinel) ...[
+          const SizedBox(height: 12),
+          _buildTextField(
+            label: '自定义 API URL',
+            hint: '例如 https://your-proxy.example.com/3',
+            controller: _tmdbCustomUrlController,
+            isRequired: true,
+            isUrl: true,
+            isDark: isDark,
+          ),
+        ],
       ],
     );
   }
