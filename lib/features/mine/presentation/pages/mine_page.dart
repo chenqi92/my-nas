@@ -187,6 +187,8 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '连接',
         icon: Icons.lan_rounded,
+        // 桌面端：直接显示 tabs（连接源 / 媒体库），无需先点 tile 再进入页
+        desktopBuilder: (ctx) => const _DesktopConnectionTabs(),
         tilesBuilder: (ctx) => [
           _buildSourcesTile(context, ref, isDark),
           _buildDivider(isDark),
@@ -1692,6 +1694,7 @@ class _MineSection {
     required this.icon,
     required this.tilesBuilder,
     this.useCardWrapper = true,
+    this.desktopBuilder,
   });
 
   final String title;
@@ -1704,6 +1707,11 @@ class _MineSection {
   /// 是否要用 [AdaptiveGlassContainer] 包裹 tiles。
   /// 部分 section（如 "传输"）的内容本身就是 card，不需要再包一层。
   final bool useCardWrapper;
+
+  /// 桌面专属渲染：传入则桌面 detail 直接渲染该 widget（替代 tilesBuilder 列表），
+  /// 用于像「连接」这种希望直接展示 tabs / inline 内容而非二级 tile 列表的场景。
+  /// 移动端仍按 [tilesBuilder] 渲染。
+  final Widget Function(BuildContext context)? desktopBuilder;
 }
 
 /// 桌面 mine 页左侧 section 列表。
@@ -1897,7 +1905,16 @@ class _DesktopSectionRootContent extends StatelessWidget {
   final Widget Function({required List<Widget> children}) buildSettingsCard;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    // 桌面端如果 section 提供了 desktopBuilder，直接渲染（用于 tabs / inline 内容）。
+    if (context.isDesktopLayout && section.desktopBuilder != null) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: section.desktopBuilder!(context),
+      );
+    }
+
+    return Scaffold(
       backgroundColor: Colors.transparent,
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
@@ -1946,6 +1963,7 @@ class _DesktopSectionRootContent extends StatelessWidget {
         ],
       ),
     );
+  }
 }
 
 /// Mine 页所有 tile 共用的统一行布局：图标+标题+副标题+末尾控件。
@@ -2063,3 +2081,46 @@ Widget _mineCountBadge(String text, Color color) => Container(
         ),
       ),
     );
+
+/// 桌面端「连接」section 的 detail：tabs 在顶部，下方 inline 展示连接源 / 媒体库。
+/// 避免点 tile 再 push 新页造成"整页覆盖" + 失去 section 上下文。
+class _DesktopConnectionTabs extends StatelessWidget {
+  const _DesktopConnectionTabs();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: TabBar(
+              tabAlignment: TabAlignment.start,
+              isScrollable: true,
+              indicatorSize: TabBarIndicatorSize.label,
+              dividerColor: isDark
+                  ? AppColors.darkOutline.withValues(alpha: 0.3)
+                  : null,
+              labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              unselectedLabelStyle: const TextStyle(fontSize: 13),
+              tabs: const [
+                Tab(text: '连接源'),
+                Tab(text: '媒体库'),
+              ],
+            ),
+          ),
+          const Expanded(
+            child: TabBarView(
+              children: [
+                SourcesPage(embedded: true),
+                MediaLibraryPage(embedded: true),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

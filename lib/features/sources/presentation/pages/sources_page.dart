@@ -17,7 +17,11 @@ import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 class SourcesPage extends ConsumerStatefulWidget {
-  const SourcesPage({super.key});
+  const SourcesPage({super.key, this.embedded = false});
+
+  /// 嵌入式渲染（桌面 mine_page 内联使用）：去掉 Scaffold/AppBar，
+  /// 改用紧凑工具栏，避免和外层 detail 容器叠 AppBar。
+  final bool embedded;
 
   @override
   ConsumerState<SourcesPage> createState() => _SourcesPageState();
@@ -43,78 +47,102 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
     final connections = ref.watch(activeConnectionsProvider);
     final discoveryState = ref.watch(networkDiscoveryProvider);
 
+    final body = sourcesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, st) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
+            const SizedBox(height: 16),
+            Text('加载失败: $e'),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => ref.read(sourcesProvider.notifier).refresh(),
+              child: const Text('重试'),
+            ),
+          ],
+        ),
+      ),
+      data: (allSources) {
+        // 只显示存储类源（包括媒体服务器）
+        final sources = allSources
+            .where((s) => s.type.category.isStorageCategory)
+            .toList();
+
+        if (sources.isEmpty && discoveryState.devices.isEmpty) {
+          return _buildEmptyState(context);
+        }
+
+        if (_isReorderMode) {
+          return _buildReorderableList(sources, connections);
+        }
+
+        return _buildSourcesList(sources, connections, discoveryState);
+      },
+    );
+
+    if (widget.embedded) {
+      return Column(
+        children: [
+          _buildEmbeddedToolbar(discoveryState),
+          Expanded(child: body),
+        ],
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
         title: const Text('连接源'),
-        actions: [
-          // 刷新发现按钮
-          IconButton(
-            icon: discoveryState.isDiscovering
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.radar),
-            onPressed: discoveryState.isDiscovering
-                ? null
-                : () => ref.read(networkDiscoveryProvider.notifier).startDiscovery(),
-            tooltip: '扫描局域网设备',
-          ),
-          // 排序模式切换按钮
-          IconButton(
-            icon: Icon(_isReorderMode ? Icons.done_rounded : Icons.reorder),
-            onPressed: () {
-              setState(() {
-                _isReorderMode = !_isReorderMode;
-              });
-            },
-            tooltip: _isReorderMode ? '完成排序' : '调整顺序',
-          ),
-          IconButton(
-            icon: const Icon(Icons.add_rounded),
-            onPressed: () => _showAddSourceSheet(context),
-            tooltip: '添加源',
-          ),
-        ],
+        actions: _buildActions(discoveryState, embedded: false),
       ),
-      body: sourcesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
-              const SizedBox(height: 16),
-              Text('加载失败: $e'),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => ref.read(sourcesProvider.notifier).refresh(),
-                child: const Text('重试'),
-              ),
-            ],
-          ),
-        ),
-        data: (allSources) {
-          // 只显示存储类源（包括媒体服务器）
-          final sources = allSources
-              .where((s) => s.type.category.isStorageCategory)
-              .toList();
-
-          if (sources.isEmpty && discoveryState.devices.isEmpty) {
-            return _buildEmptyState(context);
-          }
-
-          if (_isReorderMode) {
-            return _buildReorderableList(sources, connections);
-          }
-
-          return _buildSourcesList(sources, connections, discoveryState);
-        },
-      ),
+      body: body,
     );
   }
+
+  List<Widget> _buildActions(NetworkDiscoveryState discoveryState, {required bool embedded}) {
+    final iconSize = embedded ? 20.0 : 24.0;
+    final density = embedded ? VisualDensity.compact : VisualDensity.standard;
+    return [
+      IconButton(
+        icon: discoveryState.isDiscovering
+            ? SizedBox(
+                width: iconSize - 2,
+                height: iconSize - 2,
+                child: const CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(Icons.radar, size: iconSize),
+        onPressed: discoveryState.isDiscovering
+            ? null
+            : () => ref.read(networkDiscoveryProvider.notifier).startDiscovery(),
+        tooltip: '扫描局域网设备',
+        visualDensity: density,
+      ),
+      IconButton(
+        icon: Icon(_isReorderMode ? Icons.done_rounded : Icons.reorder, size: iconSize),
+        onPressed: () => setState(() => _isReorderMode = !_isReorderMode),
+        tooltip: _isReorderMode ? '完成排序' : '调整顺序',
+        visualDensity: density,
+      ),
+      IconButton(
+        icon: Icon(Icons.add_rounded, size: iconSize),
+        onPressed: () => _showAddSourceSheet(context),
+        tooltip: '添加源',
+        visualDensity: density,
+      ),
+    ];
+  }
+
+  Widget _buildEmbeddedToolbar(NetworkDiscoveryState discoveryState) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
+        child: Row(
+          children: [
+            const Spacer(),
+            ..._buildActions(discoveryState, embedded: true),
+          ],
+        ),
+      );
 
   /// 构建包含发现设备和已配置源的列表
   Widget _buildSourcesList(

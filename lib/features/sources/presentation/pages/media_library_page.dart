@@ -36,7 +36,11 @@ import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 class MediaLibraryPage extends ConsumerStatefulWidget {
-  const MediaLibraryPage({super.key});
+  const MediaLibraryPage({super.key, this.embedded = false});
+
+  /// 嵌入式渲染（桌面 mine_page 内联）：去掉 Scaffold/AppBar，
+  /// 只保留 TabBar + TabBarView 给外层 detail 容器使用。
+  final bool embedded;
 
   @override
   ConsumerState<MediaLibraryPage> createState() => _MediaLibraryPageState();
@@ -76,6 +80,71 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
     final useScrollableTab =
         !isMobile && MediaQuery.of(context).size.width < 500;
 
+    final tabBar = TabBar(
+      isScrollable: useScrollableTab,
+      tabAlignment: useScrollableTab
+          ? TabAlignment.start
+          : TabAlignment.fill,
+      padding: useScrollableTab
+          ? const EdgeInsets.symmetric(horizontal: 8)
+          : EdgeInsets.zero,
+      labelPadding: useScrollableTab
+          ? const EdgeInsets.symmetric(horizontal: 12)
+          : const EdgeInsets.symmetric(horizontal: 4),
+      indicatorSize: TabBarIndicatorSize.label,
+      dividerColor: isDark
+          ? AppColors.darkOutline.withValues(alpha: 0.3)
+          : null,
+      labelStyle: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+      ),
+      unselectedLabelStyle: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.normal,
+      ),
+      tabs: MediaType.values
+          .map(
+            (type) => Tab(
+              iconMargin: const EdgeInsets.only(bottom: 4),
+              icon: Icon(_getMediaTypeIcon(type), size: 20),
+              text: type.displayName,
+            ),
+          )
+          .toList(),
+    );
+
+    final tabBarView = TabBarView(
+      children: MediaType.values
+          .map((type) => _MediaTypeTab(mediaType: type))
+          .toList(),
+    );
+
+    if (widget.embedded) {
+      // 嵌入式：上方紧凑工具栏（性能模式） + TabBar + TabBarView
+      return DefaultTabController(
+        length: MediaType.values.length,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  _buildPerformanceModeButton(context, isMobile),
+                ],
+              ),
+            ),
+            Material(
+              color: Colors.transparent,
+              child: tabBar,
+            ),
+            Expanded(child: tabBarView),
+          ],
+        ),
+      );
+    }
+
     return DefaultTabController(
       length: MediaType.values.length,
       child: Scaffold(
@@ -83,48 +152,11 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
           leading: const RoundedBackButton(),
           title: const Text('媒体库'),
           actions: [
-            // 性能模式开关
             _buildPerformanceModeButton(context, isMobile),
           ],
-          bottom: TabBar(
-            isScrollable: useScrollableTab,
-            tabAlignment: useScrollableTab
-                ? TabAlignment.start
-                : TabAlignment.fill,
-            padding: useScrollableTab
-                ? const EdgeInsets.symmetric(horizontal: 8)
-                : EdgeInsets.zero,
-            labelPadding: useScrollableTab
-                ? const EdgeInsets.symmetric(horizontal: 12)
-                : const EdgeInsets.symmetric(horizontal: 4),
-            indicatorSize: TabBarIndicatorSize.label,
-            dividerColor: isDark
-                ? AppColors.darkOutline.withValues(alpha: 0.3)
-                : null,
-            labelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.normal,
-            ),
-            tabs: MediaType.values
-                .map(
-                  (type) => Tab(
-                    iconMargin: const EdgeInsets.only(bottom: 4),
-                    icon: Icon(_getMediaTypeIcon(type), size: 20),
-                    text: type.displayName,
-                  ),
-                )
-                .toList(),
-          ),
+          bottom: tabBar,
         ),
-        body: TabBarView(
-          children: MediaType.values
-              .map((type) => _MediaTypeTab(mediaType: type))
-              .toList(),
-        ),
+        body: tabBarView,
       ),
     );
   }
