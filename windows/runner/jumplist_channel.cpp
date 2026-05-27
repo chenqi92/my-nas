@@ -91,23 +91,25 @@ HRESULT CreateShellLink(const JumpListItem& item, IShellLinkW** out_link) {
     link->SetDescription(item.label.c_str());
   }
 
-  IPropertyStore* store = nullptr;
-  hr = link->QueryInterface(IID_PPV_ARGS(&store));
-  if (FAILED(hr)) goto fail;
-
   {
-    PROPVARIANT title_var;
-    hr = ::InitPropVariantFromString(item.label.c_str(), &title_var);
-    if (SUCCEEDED(hr)) {
-      hr = store->SetValue(PKEY_Title, title_var);
-      ::PropVariantClear(&title_var);
+    IPropertyStore* store = nullptr;
+    hr = link->QueryInterface(IID_PPV_ARGS(&store));
+    if (FAILED(hr)) goto fail;
+
+    {
+      PROPVARIANT title_var;
+      hr = ::InitPropVariantFromString(item.label.c_str(), &title_var);
+      if (SUCCEEDED(hr)) {
+        hr = store->SetValue(PKEY_Title, title_var);
+        ::PropVariantClear(&title_var);
+      }
+      if (SUCCEEDED(hr)) {
+        hr = store->Commit();
+      }
+      store->Release();
     }
-    if (SUCCEEDED(hr)) {
-      hr = store->Commit();
-    }
-    store->Release();
+    if (FAILED(hr)) goto fail;
   }
-  if (FAILED(hr)) goto fail;
 
   *out_link = link;
   return S_OK;

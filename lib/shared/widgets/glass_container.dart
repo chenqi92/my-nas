@@ -108,7 +108,7 @@ class GlassContainer extends ConsumerWidget {
         borderRadius: borderRadius,
         clipBehavior: clipBehavior,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter,
+          filter: glassStyle.blurFilter!,
           child: content,
         ),
       );
@@ -172,7 +172,7 @@ class GlassBottomSheetContainer extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter,
+          filter: glassStyle.blurFilter!,
           child: content,
         ),
       );

@@ -240,7 +240,7 @@ class _ScrollableBottomSheet extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter,
+          filter: glassStyle.blurFilter!,
           child: content,
         ),
       );
@@ -414,7 +414,7 @@ class _FixedBottomSheet extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter,
+          filter: glassStyle.blurFilter!,
           child: content,
         ),
       );
