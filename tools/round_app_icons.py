@@ -44,6 +44,25 @@ def round_corners(img: Image.Image, radius_ratio: float = RADIUS_RATIO) -> Image
     return Image.merge("RGBA", (r, g, b, Image.fromarray(new_alpha, "L")))
 
 
+def tight_crop_to_square(img: Image.Image) -> Image.Image:
+    """裁掉透明边到 alpha 内容 bbox，再补成正方形。
+
+    Windows 任务栏不像 macOS 给应用图标加外 padding，所以源图自带的内边距
+    需要在 Windows 侧裁掉，让 logo 真正填满图标方框。
+    """
+    img = img.convert("RGBA")
+    alpha = img.split()[-1]
+    bbox = alpha.getbbox()
+    if bbox is None:
+        return img
+    cropped = img.crop(bbox)
+    cw, ch = cropped.size
+    side = max(cw, ch)
+    square = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    square.paste(cropped, ((side - cw) // 2, (side - ch) // 2))
+    return square
+
+
 def main() -> None:
     src_path = SRC if SRC.exists() else SRC_FALLBACK
     if not src_path.exists():
@@ -52,7 +71,7 @@ def main() -> None:
     src = Image.open(src_path).convert("RGBA")
     print(f"源图：{src_path.relative_to(ROOT)}  {src.size}")
 
-    # macOS PNG
+    # macOS PNG：保留源图内 padding（macOS 系统会再加 squircle 外 padding）
     for size in MAC_SIZES:
         resized = src.resize((size, size), Image.LANCZOS)
         rounded = round_corners(resized)
@@ -60,9 +79,11 @@ def main() -> None:
         rounded.save(target, format="PNG", optimize=True)
         print(f"  macOS {size:>4}px → {target.name}")
 
-    # Windows ICO（多尺寸 PNG 嵌入 ICO 容器）
+    # Windows ICO：先裁掉内边距让 logo 填满，再做圆角（任务栏不会另加 padding）
+    win_src = tight_crop_to_square(src)
+    print(f"  Windows 源（裁内边距后）: {win_src.size}")
     win_target = ROOT / "windows/runner/resources/app_icon.ico"
-    win_images = [round_corners(src.resize((s, s), Image.LANCZOS)) for s in WIN_SIZES]
+    win_images = [round_corners(win_src.resize((s, s), Image.LANCZOS)) for s in WIN_SIZES]
     win_images[-1].save(
         win_target,
         format="ICO",
