@@ -24,6 +24,7 @@ import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 class MusicPlayerPage extends ConsumerStatefulWidget {
   const MusicPlayerPage({super.key});
@@ -960,16 +961,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 16),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SheetDragHandle(topPadding: 16, bottomPadding: 16),
             Text(
               '定时关闭',
               style: TextStyle(

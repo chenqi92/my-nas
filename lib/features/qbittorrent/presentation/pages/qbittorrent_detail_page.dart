@@ -9,6 +9,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/qbittorrent/api/qbittorrent_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// qBittorrent 详情页面
 class QBittorrentDetailPage extends ConsumerStatefulWidget {
@@ -956,17 +957,7 @@ class _TorrentTile extends ConsumerWidget {
           controller: scrollController,
           padding: const EdgeInsets.all(16),
           children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SheetDragHandle(topPadding: 0, bottomPadding: 16),
             Text(
               torrent.name,
               style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -1026,15 +1017,7 @@ class _TorrentTile extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(),
             ListTile(
               leading: Icon(torrent.isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
               title: Text(torrent.isPaused ? '继续' : '暂停'),
@@ -1466,17 +1449,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
         child: Column(
           children: [
             // 拖动指示器
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetDragHandle(),
             // 标题
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1675,17 +1648,7 @@ class _SortOptionsSheet extends ConsumerWidget {
         child: Column(
           children: [
             // 拖动指示器
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetDragHandle(),
             // 标题
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1820,17 +1783,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
         child: Column(
           children: [
             // 拖动指示器
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetDragHandle(),
             // 标题栏
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 12, 16),
@@ -2089,17 +2042,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
           child: Column(
             children: [
               // 拖动指示器
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[600] : Colors.grey[400],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const SheetDragHandle(),
               // 标题（固定）
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),

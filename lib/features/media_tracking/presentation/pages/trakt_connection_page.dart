@@ -13,6 +13,7 @@ import 'package:my_nas/service_adapters/trakt/trakt_config.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
@@ -654,15 +655,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
         builder: (context, scrollController) => Column(
           children: [
             // 拖动指示器
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(),
             // 标题
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

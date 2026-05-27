@@ -15,6 +15,7 @@ import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 import 'package:path/path.dart' as path;
 import 'package:photo_view/photo_view.dart';
@@ -342,15 +343,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         builder: (context, scrollController) => Column(
           children: [
             // 拖拽指示器
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDarkBg ? Colors.grey.shade600 : Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(topPadding: 8, bottomPadding: 8),
             // 标题
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -10,6 +10,7 @@ import 'package:my_nas/features/video/presentation/providers/video_player_provid
 import 'package:my_nas/features/video/presentation/widgets/subtitle_download_dialog.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_style_sheet.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 字幕选择器弹窗（Infuse 暗色风格）
 class SubtitleSelectorSheet extends ConsumerWidget {
@@ -74,15 +75,7 @@ class SubtitleSelectorSheet extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // 拖动条
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetDragHandle(bottomPadding: 0),
 
           // 标题栏
           Padding(
@@ -669,15 +662,7 @@ class _TranslateLanguageSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             const Padding(
               padding: EdgeInsets.fromLTRB(20, 16, 8, 8),
               child: Row(

@@ -10,6 +10,7 @@ import 'package:my_nas/features/transfer/data/services/cache_config_service.dart
 import 'package:my_nas/features/transfer/domain/entities/transfer_task.dart';
 import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 传输类型
 enum TransferSheetType {
@@ -103,17 +104,7 @@ class _TransferSheet extends ConsumerWidget {
             child: Column(
               children: [
                 // 拖动指示器
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.3)
-                        : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                const SheetDragHandle(),
                 // 标题栏
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

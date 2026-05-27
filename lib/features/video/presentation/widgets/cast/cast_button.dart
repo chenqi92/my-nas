@@ -5,6 +5,7 @@ import 'package:my_nas/features/video/presentation/providers/cast_provider.dart'
 import 'package:my_nas/features/video/presentation/theme/video_player_colors.dart';
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 投屏按钮 - PopupMenu 风格
 class CastButton extends ConsumerStatefulWidget {
@@ -369,14 +370,7 @@ class _CastControlSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 拖拽指示条
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: VideoPlayerColors.disabled,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(topPadding: 0, bottomPadding: 0),
             const SizedBox(height: 20),
 
             // 设备信息

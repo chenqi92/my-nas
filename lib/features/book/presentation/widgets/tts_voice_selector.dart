@@ -4,6 +4,7 @@ import 'package:my_nas/features/book/data/services/tts/edge_tts_voices.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_voice.dart';
 import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 音色选择器
 class TTSVoiceSelector extends ConsumerStatefulWidget {
@@ -53,15 +54,7 @@ class _TTSVoiceSelectorState extends ConsumerState<TTSVoiceSelector> {
       child: Column(
         children: [
           // 拖动指示器
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetDragHandle(bottomPadding: 0),
 
           // 标题
           Padding(

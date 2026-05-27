@@ -7,6 +7,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 上传目标选择结果
 class UploadTarget {
@@ -69,7 +70,6 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final connections = ref.watch(activeConnectionsProvider);
     final libraryConfig = ref.watch(mediaLibraryConfigProvider);
 
@@ -89,15 +89,7 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
       builder: (context, scrollController) => Column(
         children: [
           // 拖动手柄
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: colorScheme.outlineVariant,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetDragHandle(topPadding: 12, bottomPadding: 12),
 
           // 标题
           Padding(

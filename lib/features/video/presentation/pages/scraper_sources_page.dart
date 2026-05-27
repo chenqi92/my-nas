@@ -9,6 +9,7 @@ import 'package:my_nas/features/video/presentation/providers/scraper_provider.da
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 刮削源管理页面
 /// - 点击需要配置的卡片弹出配置弹框
@@ -596,17 +597,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
             child: Column(
               children: [
                 // 拖动指示器
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.3)
-                        : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                const SheetDragHandle(),
                 // 标题栏
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

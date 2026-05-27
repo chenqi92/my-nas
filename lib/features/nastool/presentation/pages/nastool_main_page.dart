@@ -11,6 +11,7 @@ import 'package:my_nas/service_adapters/nastool/models/models.dart';
 import 'package:my_nas/service_adapters/nastool/nastool_adapter.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// NASTool 主页面
 class NasToolMainPage extends ConsumerStatefulWidget {
@@ -1348,12 +1349,7 @@ class _TorrentDetailSheet extends ConsumerWidget {
       child: Column(
         children: [
           // 拖动指示器
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
-          ),
+          const SheetDragHandle(topPadding: 8, bottomPadding: 8),
           // 标题栏
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),

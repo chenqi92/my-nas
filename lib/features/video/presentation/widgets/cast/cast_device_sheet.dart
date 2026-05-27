@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/features/video/domain/entities/cast_device.dart';
 import 'package:my_nas/features/video/presentation/providers/cast_provider.dart';
 import 'package:my_nas/features/video/presentation/theme/video_player_colors.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 投屏设备选择面板
 class CastDeviceSheet extends ConsumerStatefulWidget {
@@ -48,17 +49,7 @@ class _CastDeviceSheetState extends ConsumerState<CastDeviceSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 拖拽指示条
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: VideoPlayerColors.disabled,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
 
             // 标题栏
             Padding(

@@ -52,6 +52,7 @@ import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/media_setup_widget.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 音乐文件及其来源
 class MusicFileWithSource {
@@ -3545,15 +3546,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
           mainAxisSize: MainAxisSize.min,
           children: [
             // 拖动指示器
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             // 标题
             Padding(
               padding: const EdgeInsets.all(16),
@@ -4040,15 +4033,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 拖动指示器
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: widget.isDark ? AppColors.darkOutline : AppColors.lightOutline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             // 标题
             Padding(
               padding: const EdgeInsets.all(16),
@@ -4782,16 +4767,7 @@ class _MusicListTile extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 16),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SheetDragHandle(topPadding: 16, bottomPadding: 16),
             Text(
               '添加到歌单',
               style: TextStyle(
@@ -5912,15 +5888,7 @@ class _AlbumCard extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  const SheetDragHandle(topPadding: 0, bottomPadding: 16),
                   Row(
                     children: [
                       Container(
@@ -6112,15 +6080,7 @@ class _AlbumCardFromDb extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                  const SheetDragHandle(topPadding: 0, bottomPadding: 16),
                   Row(
                     children: [
                       Container(
@@ -8530,15 +8490,7 @@ class _ModernMusicTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 拖拽指示器
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             // 歌曲信息头
             Padding(
               padding: const EdgeInsets.all(16),
@@ -8701,17 +8653,7 @@ class _ModernMusicTile extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 拖拽指示器
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             // 标题
             Padding(
               padding: const EdgeInsets.all(16),
@@ -9305,16 +9247,7 @@ class _CompactMusicTile extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 16),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SheetDragHandle(topPadding: 16, bottomPadding: 16),
             Text(
               '添加到歌单',
               style: TextStyle(

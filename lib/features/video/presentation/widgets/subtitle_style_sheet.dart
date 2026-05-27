@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/features/video/presentation/providers/subtitle_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 显示字幕样式设置（Infuse 暗色风格）
 void showSubtitleStyleSheet(BuildContext context) {
@@ -34,19 +35,7 @@ class SubtitleStyleSheet extends ConsumerWidget {
           controller: scrollController,
           slivers: [
             // 拖拽指示器
-            SliverToBoxAdapter(
-              child: Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-            ),
+            const SliverToBoxAdapter(child: SheetDragHandle(bottomPadding: 0)),
 
             // 标题栏
             SliverToBoxAdapter(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 媒体信息条目（一行 key-value）
 class MediaInfoEntry {
@@ -66,15 +67,7 @@ class MediaInfoSheet extends StatelessWidget {
       builder: (context, scrollController) => Column(
         children: [
           // 拖动指示器
-          Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetDragHandle(),
           // 标题
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),

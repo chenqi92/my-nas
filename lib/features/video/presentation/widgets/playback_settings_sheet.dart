@@ -5,6 +5,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/presentation/providers/playback_settings_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 显示播放设置
 void showPlaybackSettingsSheet(BuildContext context) {
@@ -37,17 +38,7 @@ class PlaybackSettingsSheet extends ConsumerWidget {
         child: Column(
           children: [
             // 拖拽指示器
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkOutline.withValues(alpha: 0.3)
-                    : AppColors.lightOutline.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
 
             // 标题栏
             Padding(

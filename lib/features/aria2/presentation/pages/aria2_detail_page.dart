@@ -8,6 +8,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/aria2/api/aria2_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// Aria2 详情页面
 class Aria2DetailPage extends ConsumerStatefulWidget {
@@ -822,17 +823,7 @@ class _DownloadTile extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const SheetDragHandle(),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -943,17 +934,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetDragHandle(),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -1020,17 +1001,7 @@ class _SortOptionsSheet extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetDragHandle(),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -1124,17 +1095,7 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
           key: _formKey,
           child: Column(
             children: [
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const SheetDragHandle(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 12, 16),
                 child: Row(

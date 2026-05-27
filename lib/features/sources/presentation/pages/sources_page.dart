@@ -14,6 +14,7 @@ import 'package:my_nas/features/sources/presentation/widgets/two_fa_sheet.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 class SourcesPage extends ConsumerStatefulWidget {
   const SourcesPage({super.key});
@@ -564,17 +565,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // 拖动指示器
-          Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[600]
-                  : Colors.grey[400],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetDragHandle(),
           // 存储类源显示"连接/断开"
           ListTile(
             leading: Icon(
@@ -803,17 +794,7 @@ class _SourceTypeBottomSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 拖动条
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+            const SheetDragHandle(topPadding: 0, bottomPadding: 16),
 
             // 标题
             Text(

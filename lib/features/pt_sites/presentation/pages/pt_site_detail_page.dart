@@ -11,6 +11,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// PT 站点详情页
 class PTSiteDetailPage extends ConsumerStatefulWidget {
@@ -391,17 +392,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                 child: Column(
                   children: [
                     // 拖动指示器
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 12, bottom: 8),
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[600] : Colors.grey[400],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
+                    const SheetDragHandle(),
                     // 标题栏
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -564,17 +555,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                 child: Column(
                   children: [
                     // 拖动指示器
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 12, bottom: 8),
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[600] : Colors.grey[400],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
+                    const SheetDragHandle(),
                     // 标题栏
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -714,17 +695,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                 child: Column(
                   children: [
                     // 拖动指示器
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 12, bottom: 8),
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[600] : Colors.grey[400],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
+                    const SheetDragHandle(),
                     // 标题栏
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1038,17 +1009,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
           child: Column(
             children: [
               // 拖动指示器
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetDragHandle(topPadding: 12, bottomPadding: 12),
               // 内容
               Expanded(
                 child: SingleChildScrollView(
@@ -1385,17 +1346,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
             child: Column(
               children: [
                 // 拖动指示器
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 12, bottom: 8),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[600] : Colors.grey[400],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
+                const SheetDragHandle(),
                 // 标题栏
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

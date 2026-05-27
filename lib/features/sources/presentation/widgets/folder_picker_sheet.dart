@@ -3,6 +3,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 class FolderPickerSheet extends StatefulWidget {
   const FolderPickerSheet({
@@ -82,7 +83,6 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
     return DraggableScrollableSheet(
@@ -98,15 +98,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
         child: Column(
           children: [
             // 拖动条
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[600] : Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
 
             // 标题栏
             Padding(

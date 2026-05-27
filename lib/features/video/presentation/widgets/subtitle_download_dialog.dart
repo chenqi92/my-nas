@@ -8,6 +8,7 @@ import 'package:my_nas/features/sources/presentation/pages/service_sources_page.
 import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 字幕下载对话框
 ///
@@ -195,15 +196,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
       builder: (context, scrollController) => Column(
         children: [
           // 拖动条
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetDragHandle(topPadding: 8, bottomPadding: 8),
           // 标题栏
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

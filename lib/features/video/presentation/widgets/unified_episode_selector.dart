@@ -13,6 +13,7 @@ import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 统一剧集选择器
 ///
@@ -782,15 +783,7 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 拖动指示器
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[600] : Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(topPadding: 12, bottomPadding: 12),
             // 标题
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -944,15 +937,7 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetDragHandle(topPadding: 12, bottomPadding: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
@@ -1087,15 +1072,7 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetDragHandle(topPadding: 12, bottomPadding: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(

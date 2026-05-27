@@ -7,6 +7,7 @@ import 'package:my_nas/features/video/presentation/providers/playback_settings_p
 import 'package:my_nas/features/video/presentation/widgets/aspect_ratio_selector.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_style_sheet.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 显示高级设置面板
 void showAdvancedSettingsSheet(BuildContext context) {
@@ -50,17 +51,7 @@ class AdvancedSettingsSheet extends ConsumerWidget {
         child: Column(
           children: [
             // 拖拽指示器
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkOutline.withValues(alpha: 0.3)
-                    : AppColors.lightOutline.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
 
             // 标题栏
             Padding(

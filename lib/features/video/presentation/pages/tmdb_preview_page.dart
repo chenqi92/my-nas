@@ -16,6 +16,7 @@ import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// TMDB 预览页面 - 用于展示本地不存在的 TMDB 内容
 class TmdbPreviewPage extends ConsumerStatefulWidget {
@@ -640,15 +641,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
             mainAxisSize: MainAxisSize.min,
             children: [
               // 拖动指示器
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetDragHandle(topPadding: 12, bottomPadding: 12),
               // 标题
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -808,15 +801,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
             mainAxisSize: MainAxisSize.min,
             children: [
               // 拖动指示器
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetDragHandle(topPadding: 12, bottomPadding: 12),
               // 标题
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

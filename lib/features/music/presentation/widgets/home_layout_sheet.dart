@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/features/music/presentation/providers/home_layout_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 显示首页布局设置弹框
 void showHomeLayoutSheet(BuildContext context) {
@@ -62,17 +63,7 @@ class _HomeLayoutSheetState extends ConsumerState<HomeLayoutSheet> {
             child: Column(
               children: [
                 // 拖拽指示器
-                Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.3)
-                        : Colors.black.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                const SheetDragHandle(bottomPadding: 0),
                 // 标题栏
                 _buildHeader(context, isDark),
                 // 分隔线

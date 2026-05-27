@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:my_nas/features/video/presentation/providers/video_player_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 显示音轨选择器（Infuse 暗色风格）
 void showAudioTrackSelector(BuildContext context) {
@@ -34,15 +35,7 @@ class AudioTrackSelector extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // 拖拽指示器
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+          const SheetDragHandle(bottomPadding: 0),
 
           // 标题栏
           Padding(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// TTS 设置面板
 class TTSSettingsSheet extends ConsumerWidget {
@@ -27,16 +28,7 @@ class TTSSettingsSheet extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 拖动指示器
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const SheetDragHandle(topPadding: 0, bottomPadding: 0),
 
               const SizedBox(height: 16),
 

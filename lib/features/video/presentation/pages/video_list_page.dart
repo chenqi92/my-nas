@@ -56,6 +56,7 @@ import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/media_info_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 视频文件及其来源
 class VideoFileWithSource {
@@ -6476,15 +6477,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 拖拽指示器
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(top: 12),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[600] : Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
@@ -6656,15 +6649,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
           child: Column(
             children: [
               // 拖拽指示器
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetDragHandle(bottomPadding: 0),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
@@ -7788,15 +7773,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white24 : Colors.black12,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
@@ -7951,15 +7928,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         // 拖动条
-        Container(
-          margin: const EdgeInsets.only(top: 12),
-          width: 40,
-          height: 4,
-          decoration: BoxDecoration(
-            color: widget.isDark ? Colors.white24 : Colors.black12,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
+        const SheetDragHandle(bottomPadding: 0),
         // 标题栏
         Padding(
           padding: const EdgeInsets.all(16),
@@ -8401,15 +8370,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white24 : Colors.black12,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
@@ -8859,15 +8820,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(top: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
@@ -10380,15 +10333,7 @@ class _FilteredVideosPaginatedPageState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white24 : Colors.black12,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(

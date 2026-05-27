@@ -19,6 +19,7 @@ import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/animated_list_item.dart';
 import 'package:my_nas/shared/widgets/download_manager_sheet.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 import 'package:my_nas/shared/widgets/skeleton_loader.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -2263,17 +2264,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             mainAxisSize: MainAxisSize.min,
             children: [
               // 拖动指示器（固定在顶部）
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.3)
-                      : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              const SheetDragHandle(bottomPadding: 0),
               // 标题（固定在顶部）
               if (title.isNotEmpty)
                 Padding(

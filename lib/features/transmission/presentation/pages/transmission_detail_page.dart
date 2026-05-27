@@ -8,6 +8,7 @@ import 'package:my_nas/features/transmission/presentation/providers/transmission
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// Transmission 详情页面
 class TransmissionDetailPage extends ConsumerStatefulWidget {
@@ -833,17 +834,7 @@ class _TorrentTile extends ConsumerWidget {
           child: Column(
             children: [
               // 拖动指示器
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[600] : Colors.grey[400],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const SheetDragHandle(),
               // 标题
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -979,17 +970,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetDragHandle(),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -1057,17 +1038,7 @@ class _SortOptionsSheet extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const SheetDragHandle(),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -1165,17 +1136,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
           key: _formKey,
           child: Column(
             children: [
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[600] : Colors.grey[400],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
+              const SheetDragHandle(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 12, 16),
                 child: Row(

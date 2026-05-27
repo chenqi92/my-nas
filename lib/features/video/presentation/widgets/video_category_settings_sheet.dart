@@ -15,6 +15,7 @@ import 'package:my_nas/features/video/presentation/providers/video_category_sett
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 视频分类设置弹窗
 ///
@@ -173,15 +174,7 @@ class _VideoCategorySettingsSheetState
         child: Column(
           children: [
             // 拖动指示器
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             // 标题栏
             Padding(
               padding: const EdgeInsets.all(16),

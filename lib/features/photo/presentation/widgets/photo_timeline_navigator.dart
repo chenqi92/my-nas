@@ -5,6 +5,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 
 /// 时间线导航器 Provider
@@ -530,15 +531,7 @@ class TimelineFilterBottomSheet extends ConsumerWidget {
         child: Column(
           children: [
             // 拖动指示器
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const SheetDragHandle(bottomPadding: 0),
             // 标题栏
             Padding(
               padding: const EdgeInsets.all(16),
