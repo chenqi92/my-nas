@@ -199,35 +199,45 @@ class BookSettingsPage extends ConsumerWidget {
   ) {
     final isNative = settings.epubEngine == EpubReaderEngine.native;
 
+    // 内层胶囊半径 = 外层 - padding，保证选中态胶囊不会突出底层背景
+    const outerRadius = 18.0;
+    const innerPadding = 3.0;
+    const innerRadius = outerRadius - innerPadding;
+
     return DecoratedBox(
       decoration: BoxDecoration(
         color: isDark
             ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
             : AppColors.lightSurfaceVariant.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(outerRadius),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildEngineOption(
-            context,
-            ref,
-            label: '原生',
-            isSelected: isNative,
-            isDark: isDark,
-            onTap: () => ref.read(bookReaderSettingsProvider.notifier)
-                .setEpubEngine(EpubReaderEngine.native),
-          ),
-          _buildEngineOption(
-            context,
-            ref,
-            label: 'WebView',
-            isSelected: !isNative,
-            isDark: isDark,
-            onTap: () => ref.read(bookReaderSettingsProvider.notifier)
-                .setEpubEngine(EpubReaderEngine.foliate),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(innerPadding),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildEngineOption(
+              context,
+              ref,
+              label: '原生',
+              isSelected: isNative,
+              isDark: isDark,
+              radius: innerRadius,
+              onTap: () => ref.read(bookReaderSettingsProvider.notifier)
+                  .setEpubEngine(EpubReaderEngine.native),
+            ),
+            _buildEngineOption(
+              context,
+              ref,
+              label: 'WebView',
+              isSelected: !isNative,
+              isDark: isDark,
+              radius: innerRadius,
+              onTap: () => ref.read(bookReaderSettingsProvider.notifier)
+                  .setEpubEngine(EpubReaderEngine.foliate),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -238,17 +248,18 @@ class BookSettingsPage extends ConsumerWidget {
     required String label,
     required bool isSelected,
     required bool isDark,
+    required double radius,
     required VoidCallback onTap,
   }) => GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(radius),
         ),
         child: Text(
           label,

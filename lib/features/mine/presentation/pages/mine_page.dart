@@ -45,6 +45,7 @@ import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -1397,7 +1398,7 @@ class _LanguagePreferenceTile extends ConsumerWidget {
   }
 }
 
-/// 语言设置底部弹窗
+/// 语言设置弹窗（移动端底部 sheet / 桌面端居中 dialog 自适应）
 class _LanguageSettingsSheet extends ConsumerWidget {
   const _LanguageSettingsSheet({required this.isDark});
 
@@ -1406,9 +1407,16 @@ class _LanguageSettingsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final preference = ref.watch(languagePreferenceProvider);
+    final isDesktop = context.isDesktopLayout;
+
+    // 桌面下外层 Dialog 已经处理圆角和容器，sheet 内部走全圆角；
+    // 移动端保留底部 sheet 风格的顶部圆角。
+    final radius = isDesktop
+        ? const BorderRadius.all(Radius.circular(20))
+        : const BorderRadius.vertical(top: Radius.circular(24));
 
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: radius,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: DecoratedBox(
@@ -1416,31 +1424,32 @@ class _LanguageSettingsSheet extends ConsumerWidget {
             color: isDark
                 ? AppColors.darkSurface.withValues(alpha: 0.95)
                 : AppColors.lightSurface.withValues(alpha: 0.98),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            border: Border(
-              top: BorderSide(
-                color: isDark ? AppColors.glassStroke : AppColors.lightOutline.withValues(alpha: 0.2),
-              ),
-            ),
+            borderRadius: radius,
+            border: isDesktop
+                ? null
+                : Border(
+                    top: BorderSide(
+                      color: isDark
+                          ? AppColors.glassStroke
+                          : AppColors.lightOutline.withValues(alpha: 0.2),
+                    ),
+                  ),
           ),
           child: SafeArea(
+            top: !isDesktop,
+            bottom: !isDesktop,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 拖动指示器
-                Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.3)
-                        : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                // 桌面下 SheetDragHandle 自动渲染为 SizedBox.shrink
+                const SheetDragHandle(),
                 Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    isDesktop ? AppSpacing.lg : AppSpacing.sm,
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                  ),
                   child: Text(
                     '语言偏好设置',
                     style: context.textTheme.titleLarge?.copyWith(
