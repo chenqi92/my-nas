@@ -149,17 +149,32 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
     List<SourceEntity> sources,
     Map<String, SourceConnection> connections,
     NetworkDiscoveryState discoveryState,
-  ) {
-    // ignore: unused_local_variable
-    final theme = Theme.of(context);
+  ) => LayoutBuilder(
+        builder: (context, constraints) {
+          // 桌面下限宽 720 居中（macOS 系统设置 detail 风格），手机全宽。
+          // 用 LayoutBuilder 取实际可用宽度，避免 embedded 模式下用 screenWidth
+          // 算 padding 把内容挤到窄条里。
+          final isDesktop = context.isDesktopLayout;
+          final available = constraints.maxWidth;
+          final horizontal = isDesktop && available > 720
+              ? ((available - 720) / 2).clamp(16.0, double.infinity)
+              : 16.0;
+          return _buildSourcesListView(
+            sources,
+            connections,
+            discoveryState,
+            horizontal: horizontal,
+          );
+        },
+      );
 
-    // 桌面下限宽 720 居中（macOS 系统设置 detail 风格），手机全宽。
-    final isDesktop = context.isDesktopLayout;
-    final horizontal = isDesktop
-        ? ((context.screenWidth - 720) / 2).clamp(16.0, double.infinity)
-        : 16.0;
-
-    return ListView(
+  Widget _buildSourcesListView(
+    List<SourceEntity> sources,
+    Map<String, SourceConnection> connections,
+    NetworkDiscoveryState discoveryState, {
+    required double horizontal,
+  }) =>
+      ListView(
       padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 16),
       children: [
         // 发现的设备部分
@@ -193,7 +208,6 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
         ],
       ],
     );
-  }
 
   Widget _buildSectionHeader(
     BuildContext context,
