@@ -33,16 +33,9 @@ import UIKit
         // 这是 iOS Now Playing / 灵动岛显示的关键
         application.beginReceivingRemoteControlEvents()
 
-        // 4. 创建 UIWindow 和根控制器
-        window = UIWindow(frame: UIScreen.main.bounds)
-
-        // iOS 平台使用原生 UITabBarController 实现 Liquid Glass
-        nativeTabBarController = NativeTabBarController(flutterEngine: flutterEngine)
-        window?.rootViewController = nativeTabBarController
-
-        window?.makeKeyAndVisible()
-        NSLog("🔮 AppDelegate: NativeTabBarController set as root")
-
+        // 4. window 由 SceneDelegate 在 scene(_:willConnectTo:options:) 中创建
+        //    iOS 13+ scene-based lifecycle 下，AppDelegate 不能直接管理 window：
+        //    必须用 UIWindow(windowScene:) 关联到具体的 UIWindowScene 才能显示。
         return true
     }
 
@@ -136,10 +129,11 @@ import UIKit
         NSLog("🔮 AppDelegate: Custom plugins registered")
     }
 
-    // MARK: - UIScene Lifecycle (CarPlay only)
+    // MARK: - UIScene Lifecycle
 
-    /// 仅为 CarPlay role 返回 scene 配置；主 App UI 仍走 AppDelegate.window 模式。
-    /// CarPlay framework 的 list/handler API 最早 iOS 14，老系统不会激活 scene。
+    /// 按 scene role 路由：
+    /// - 普通 iPhone / iPad window → SceneDelegate（在那里创建 UIWindow + 挂 NativeTabBarController）
+    /// - CarPlay role → CarPlaySceneDelegate
     func application(
         _ application: UIApplication,
         configurationForConnecting connectingSceneSession: UISceneSession,
@@ -156,7 +150,12 @@ import UIKit
                 return config
             }
         }
-        return UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        let config = UISceneConfiguration(
+            name: "Default Configuration",
+            sessionRole: connectingSceneSession.role
+        )
+        config.delegateClass = SceneDelegate.self
+        return config
     }
 
     /// App 即将终止时清理 Live Activity
@@ -192,5 +191,39 @@ import UIKit
 
         // 确保远程控制事件仍然激活
         application.beginReceivingRemoteControlEvents()
+    }
+}
+
+// MARK: - SceneDelegate
+
+/// 普通 iPhone / iPad window 的 scene delegate。
+/// iOS 13+ scene-based lifecycle 下，window 必须通过 UIWindow(windowScene:) 创建并
+/// 关联到具体的 UIWindowScene；老式 UIWindow(frame:) + makeKeyAndVisible() 在 iOS 18
+/// 上不再生效（导致 application.windows 为空、屏幕全黑）。
+@objc class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+    private var nativeTabBarController: NativeTabBarController?
+
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            NSLog("🔮 SceneDelegate: AppDelegate not available, abort")
+            return
+        }
+
+        let window = UIWindow(windowScene: windowScene)
+        let tabBar = NativeTabBarController(flutterEngine: appDelegate.flutterEngine)
+        window.rootViewController = tabBar
+        window.makeKeyAndVisible()
+
+        self.window = window
+        self.nativeTabBarController = tabBar
+        // 兼容部分插件仍读 AppDelegate.window
+        appDelegate.window = window
+        NSLog("🔮 SceneDelegate: window created (NativeTabBarController as root)")
     }
 }

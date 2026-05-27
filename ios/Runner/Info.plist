@@ -114,13 +114,25 @@
 			<key>NSAllowsLocalNetworking</key>
 			<true/>
 		</dict>
-		<!-- CarPlay scene 配置：主 App 仍走 AppDelegate 模式，仅为 CarPlay role 单独声明 scene -->
+		<!-- Scene manifest：iOS 13+ scene-based lifecycle 必须显式声明默认 window scene，
+		     否则 iOS 18+ 会让 application.windows 为空 → 全屏黑 -->
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>
 			<true/>
 			<key>UISceneConfigurations</key>
 			<dict>
+				<!-- 普通 iPhone / iPad window -->
+				<key>UIWindowSceneSessionRoleApplication</key>
+				<array>
+					<dict>
+						<key>UISceneConfigurationName</key>
+						<string>Default Configuration</string>
+						<key>UISceneDelegateClassName</key>
+						<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					</dict>
+				</array>
+				<!-- CarPlay -->
 				<key>CPTemplateApplicationSceneSessionRoleApplication</key>
 				<array>
 					<dict>
