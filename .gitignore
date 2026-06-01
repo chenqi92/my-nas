@@ -253,3 +253,4 @@ packages/audiotags_fixed/linux/*.so
 # Android build reports (generated during build)
 android/build/
 AGENTS.md
+design

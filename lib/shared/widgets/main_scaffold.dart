@@ -1,3 +1,7 @@
+// 原桌面 NavigationRail 实现（`_buildDesktopNav` / `_RailEntry`
+// / `_toolDestinations`）在新外壳 [DesktopScaffold] 下线后暂时保留为
+// 死代码，便于后续清理阶段一并 review。TODO: Group J 收尾时删除。
+// ignore_for_file: unused_element, unused_field
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
@@ -15,6 +19,7 @@ import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
 import 'package:my_nas/shared/services/update_service.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_scaffold.dart';
 import 'package:my_nas/shared/widgets/desktop_shortcuts.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 
@@ -108,12 +113,16 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     }
   }
 
+  // 5 主 tab 的 metadata。`branchIndex` 是它在 StatefulShellRoute.branches
+  // 列表里的索引（顺序与 `app_router.dart::branchNavigatorKeys` 一致）。
+  // 桌面新增 home/live/ops 后这些主 tab 不再是 0-4。
   static const _destinations = [
     _Destination(
       icon: Icons.movie_filter_outlined,
       selectedIcon: Icons.movie_filter_rounded,
       label: '影视',
       route: Routes.video,
+      branchIndex: 1,
       sfSymbol: 'film',
     ),
     _Destination(
@@ -121,6 +130,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.library_music_rounded,
       label: '曲库',
       route: Routes.music,
+      branchIndex: 3,
       sfSymbol: 'music.note.list',
     ),
     _Destination(
@@ -128,6 +138,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.photo_album_rounded,
       label: '相册',
       route: Routes.photo,
+      branchIndex: 4,
       sfSymbol: 'photo.on.rectangle',
     ),
     _Destination(
@@ -135,6 +146,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.menu_book_rounded,
       label: '阅读',
       route: Routes.reading,
+      branchIndex: 5,
       sfSymbol: 'book',
     ),
     _Destination(
@@ -142,19 +154,22 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.account_circle_rounded,
       label: '我的',
       route: Routes.mine,
+      branchIndex: 6,
       sfSymbol: 'person.circle',
     ),
   ];
 
   /// 桌面端工具区 NavigationRail 入口。
-  /// 对应 StatefulShellRoute 中 index 5/6/7 的 branch；移动端不渲染
-  /// （仍可从「我的」页 tile 进入）。
+  /// 桌面端工具区 branch 元数据。桌面现在走 DesktopScaffold（不再用此处的
+  /// `_RailEntry`），保留这份 metadata 仅为兼容旧的桌面 Rail 代码路径；
+  /// `MainScaffold` 在桌面分支已经不会用到这些方法。
   static const _toolDestinations = [
     _Destination(
       icon: Icons.download_rounded,
       selectedIcon: Icons.download_rounded,
       label: '下载',
       route: Routes.download,
+      branchIndex: 8,
       sfSymbol: 'arrow.down.circle',
     ),
     _Destination(
@@ -162,6 +177,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.swap_horiz_rounded,
       label: '任务',
       route: Routes.transfer,
+      branchIndex: 9,
       sfSymbol: 'arrow.up.arrow.down',
     ),
     _Destination(
@@ -169,6 +185,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.lan_rounded,
       label: '连接',
       route: Routes.sources,
+      branchIndex: 10,
       sfSymbol: 'network',
     ),
   ];
@@ -191,23 +208,21 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     return _mainTabRoutes.contains(location);
   }
 
+  /// `index` 是 _destinations 列表的索引（0..4）。
+  /// 通过 destination.branchIndex 映射到全局 branch index。
   void _onDestinationSelected(BuildContext context, int index) {
     if (_isHandlingTabChange) return;
 
     _isHandlingTabChange = true;
 
-    // 切换到主 Tab 页面时，重置底部导航栏可见性
-    // 这确保从详情页直接切换 Tab 时导航栏能正确显示
     ref.read(bottomNavVisibleProvider.notifier).reset();
 
-    // 再次点击当前 tab 时回到该 branch 的初始路由（清空内部栈），
-    // 与一般 tab 应用的"双击 Tab 回顶"语义一致。
+    final branchIndex = _destinations[index].branchIndex;
     widget.navigationShell.goBranch(
-      index,
-      initialLocation: index == widget.navigationShell.currentIndex,
+      branchIndex,
+      initialLocation: branchIndex == widget.navigationShell.currentIndex,
     );
 
-    // 延迟重置标志
     Future.delayed(const Duration(milliseconds: 100), () {
       _isHandlingTabChange = false;
     });
@@ -304,24 +319,16 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
               elevation: 12,
             ),
       );
-      scaffold = Scaffold(
-        backgroundColor: isDark ? AppColors.darkBackground : null,
-        body: Row(
-          children: [
-            _buildDesktopNav(context, currentIndex, isDark, optimizedStyle, enableGlass),
-            Expanded(
-              child: Theme(
-                data: desktopTheme,
-                // 移除手机刘海预留的顶部 padding。各 page 内
-                // `MediaQuery.padding.top` 在桌面下会变 0，避免浪费空间。
-                child: MediaQuery.removePadding(
-                  context: context,
-                  removeTop: true,
-                  child: widget.navigationShell,
-                ),
-              ),
-            ),
-          ],
+      // 桌面端走重设计的 DesktopScaffold（sidebar + topbar + mini dock +
+      // cmdk + activity drawer + ambient），原 _buildDesktopNav 已下线。
+      // desktopTheme 在外壳内层注入，让各 page 的 AppBar/ListTile 享受
+      // 桌面紧凑视觉。
+      scaffold = Theme(
+        data: desktopTheme,
+        child: MediaQuery.removePadding(
+          context: context,
+          removeTop: true,
+          child: DesktopScaffold(navigationShell: widget.navigationShell),
         ),
       );
     } else if (useNativeTabBar) {
@@ -656,7 +663,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(_destinations.length, (index) {
                 final dest = _destinations[index];
-                final isSelected = currentIndex == index;
+                final isSelected = currentIndex == dest.branchIndex;
 
                 return Expanded(
                   child: GestureDetector(
@@ -736,6 +743,7 @@ class _Destination {
     required this.selectedIcon,
     required this.label,
     required this.route,
+    required this.branchIndex,
     this.sfSymbol,
   });
 
@@ -743,6 +751,9 @@ class _Destination {
   final IconData selectedIcon;
   final String label;
   final String route;
+
+  /// 在 `StatefulShellRoute.branches` 中的全局索引（与 app_router 顺序一致）。
+  final int branchIndex;
   final String? sfSymbol;
 }
 

@@ -7,6 +7,7 @@ import 'package:my_nas/app/router/app_router.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_theme.dart';
 import 'package:my_nas/app/theme/color_scheme_preset.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/platform/jump_list_controller.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_deep_link_handler.dart';
@@ -23,6 +24,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/data/services/video_scanner_service.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
+import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/widget_data_service.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
@@ -263,6 +265,7 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
 
     final themeMode = ref.watch(themeModeProvider);
     final colorPreset = ref.watch(colorSchemePresetProvider);
+    final uiStyle = ref.watch(uiStyleProvider);
 
     // 同步更新 AppColors 的静态配色方案
     AppColors.setPreset(colorPreset);
@@ -274,11 +277,27 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       }
     });
 
+    // 桌面端重设计：注入 DesignTokens 到 ThemeData.extensions，所有新外壳
+    // 和 atom widget 通过 `DesignTokens.of(context)` 取色，避免每个 widget
+    // 都订阅 uiStyle / colorPreset / themeMode 三个 provider。
+    final lightTokens = DesignTokens.build(
+      brightness: Brightness.light,
+      uiStyle: uiStyle,
+      preset: colorPreset,
+    );
+    final darkTokens = DesignTokens.build(
+      brightness: Brightness.dark,
+      uiStyle: uiStyle,
+      preset: colorPreset,
+    );
+
     return MaterialApp.router(
       title: 'MyNAS',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightFromPreset(colorPreset),
-      darkTheme: AppTheme.darkFromPreset(colorPreset),
+      theme: AppTheme.lightFromPreset(colorPreset)
+          .copyWith(extensions: [lightTokens]),
+      darkTheme: AppTheme.darkFromPreset(colorPreset)
+          .copyWith(extensions: [darkTokens]),
       themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

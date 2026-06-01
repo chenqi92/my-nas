@@ -5,6 +5,11 @@ abstract final class Routes {
   // Auth & Connection
   static const String connection = '/connection';
 
+  // 桌面端新增 — Home / Live / Ops
+  static const String home = '/home';
+  static const String live = '/live';
+  static const String ops = '/ops';
+
   // Main tabs (5 items: video, music, photo, reading, mine)
   static const String video = '/video';
   static const String music = '/music';
