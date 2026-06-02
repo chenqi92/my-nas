@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
+import 'package:my_nas/features/downloader/presentation/widgets/download_detail_sheet.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
@@ -10,9 +12,8 @@ import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 
 /// 桌面端「运维总览」。
 ///
-/// 现阶段铺出"实时吞吐 panel + 4 stat tiles + 3 客户端卡片 + 双栏"骨架。
-/// 三客户端的 dn/up 真实读取（aria2/qBittorrent/Transmission provider）放在
-/// 后续 Group E 完善 downloads_desktop_page 时一并接入。
+/// 实时吞吐 / stat tiles / 3 客户端卡片 / 正在下载列表均接 downloader 聚合
+/// provider（aria2 + qBittorrent + Transmission）。
 class OpsOverviewPage extends ConsumerWidget {
   const OpsOverviewPage({super.key});
 
@@ -20,6 +21,9 @@ class OpsOverviewPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
     final connections = ref.watch(activeConnectionsProvider);
+    final throughput = ref.watch(downloaderThroughputProvider);
+    final clients = ref.watch(downloaderClientsProvider);
+    final tasks = ref.watch(aggregatedDownloadTasksProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(30, 26, 30, 120),
@@ -43,13 +47,16 @@ class OpsOverviewPage extends ConsumerWidget {
                 style: TextStyle(fontSize: 13, color: t.text2),
               ),
               const SizedBox(height: 22),
-              _LiveThroughput(),
+              _LiveThroughput(throughput: throughput),
               const SizedBox(height: 16),
-              _StatRow(connectedSources: connections.length),
+              _StatRow(
+                connectedSources: connections.length,
+                throughput: throughput,
+              ),
               const SizedBox(height: 22),
-              _ClientsRow(),
+              _ClientsRow(clients: clients),
               const SizedBox(height: 16),
-              _BottomTwoCol(),
+              _BottomTwoCol(tasks: tasks),
             ],
           ),
         ),
@@ -59,9 +66,13 @@ class OpsOverviewPage extends ConsumerWidget {
 }
 
 class _LiveThroughput extends StatelessWidget {
+  const _LiveThroughput({required this.throughput});
+  final DownloaderThroughput throughput;
+
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final live = throughput.connectedClients > 0;
     return GlassPanel(
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 14),
       child: Column(
@@ -78,12 +89,18 @@ class _LiveThroughput extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 9),
-              const StatusDot(DotStatus.ok),
+              StatusDot(live ? DotStatus.ok : DotStatus.off),
               const SizedBox(width: 5),
               Text(
-                '聚合 3 个客户端 · 每秒刷新',
+                live
+                    ? '聚合 ${throughput.connectedClients} 个客户端 · 每秒刷新'
+                    : '暂无在线下载客户端',
                 style: TextStyle(fontSize: 11.5, color: t.text2),
               ),
+              const Spacer(),
+              _speed('↓', formatSpeed(throughput.downloadSpeed), t.accentBright, t),
+              const SizedBox(width: 18),
+              _speed('↑', formatSpeed(throughput.uploadSpeed), t.text0, t),
             ],
           ),
           const SizedBox(height: 10),
@@ -92,9 +109,26 @@ class _LiveThroughput extends StatelessWidget {
       ),
     );
   }
+
+  Widget _speed(String arrow, String value, Color color, DesignTokens t) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(arrow, style: TextStyle(fontSize: 13, color: t.text2)),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      );
 }
 
-/// 简易吞吐图：用两条静态 ribbon 表达 dn / up。后续可接真实 sparkline。
+/// 简易吞吐图：用两条静态 ribbon 表达 dn / up（视觉氛围，数值见上方读数）。
 class _ThroughputChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -130,7 +164,6 @@ class _RibbonPainter extends CustomPainter {
     const points = 60;
     for (var i = 0; i <= points; i++) {
       final x = w * i / points;
-      // 用 sin 模拟稳定的吞吐波形（占位，避免 ops 页空白）。
       final dnY = h - h * 0.55 *
           (0.42 + 0.5 * (0.5 + 0.5 * _sinish(i * 0.42)));
       final upY = h - h * 0.28 *
@@ -158,7 +191,6 @@ class _RibbonPainter extends CustomPainter {
   }
 
   double _sinish(double x) {
-    // 廉价波形，不引入 dart:math
     final wrapped = x - x.toInt();
     return 1 - (wrapped - 0.5).abs() * 4;
   }
@@ -171,8 +203,9 @@ class _RibbonPainter extends CustomPainter {
 }
 
 class _StatRow extends StatelessWidget {
-  const _StatRow({required this.connectedSources});
+  const _StatRow({required this.connectedSources, required this.throughput});
   final int connectedSources;
+  final DownloaderThroughput throughput;
 
   @override
   Widget build(BuildContext context) {
@@ -184,13 +217,21 @@ class _StatRow extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 2.6,
       children: [
-        const _StatTile(label: '活动任务', value: '0', unit: '/ 0'),
+        _StatTile(
+          label: '活动任务',
+          value: '${throughput.activeCount}',
+          unit: '/ ${throughput.totalCount}',
+        ),
         _StatTile(
           label: '源在线 · 共 $connectedSources',
           value: '$connectedSources',
           dot: DotStatus.ok,
         ),
-        const _StatTile(label: 'PT 平均分享率', value: '—'),
+        _StatTile(
+          label: '下载客户端在线',
+          value: '${throughput.connectedClients}',
+          unit: '/ ${throughput.totalClients}',
+        ),
         const _StatTile(label: '订阅追剧中', value: '0', accent: true),
       ],
     );
@@ -267,14 +308,33 @@ class _StatTile extends StatelessWidget {
 }
 
 class _ClientsRow extends StatelessWidget {
+  const _ClientsRow({required this.clients});
+  final List<DownloaderClient> clients;
+
   @override
   Widget build(BuildContext context) {
-    final t = DesignTokens.of(context);
-    final clients = const [
-      ('qBittorrent', '0', '0.0'),
-      ('aria2', '0', '0.0'),
-      ('Transmission', '0', '0.0'),
-    ];
+    // 没有任何下载源时，展示三种受支持客户端的占位卡片。
+    if (clients.isEmpty) {
+      const placeholders = ['qBittorrent', 'aria2', 'Transmission'];
+      return GridView.count(
+        crossAxisCount: 3,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        childAspectRatio: 3.0,
+        children: [
+          for (final name in placeholders)
+            _ClientCard(
+              name: name,
+              connected: false,
+              downloadSpeed: 0,
+              uploadSpeed: 0,
+              taskCount: 0,
+            ),
+        ],
+      );
+    }
     return GridView.count(
       crossAxisCount: 3,
       crossAxisSpacing: 16,
@@ -282,90 +342,107 @@ class _ClientsRow extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 3.0,
-      children: clients
-          .map((c) => AppCard(
-                onTap: () => GoRouter.of(context).go('/download'),
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const StatusDot(DotStatus.off),
-                        const SizedBox(width: 9),
-                        Text(
-                          c.$1,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: t.text0,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '未连接',
-                          style: TextStyle(fontSize: 11, color: t.text2),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '↓${c.$3}',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: t.accentBright,
-                                fontFamily: 'SF Mono',
-                                fontFamilyFallback: const ['Menlo'],
-                              ),
-                            ),
-                            Text(
-                              'MB/s',
-                              style:
-                                  TextStyle(fontSize: 10.5, color: t.text2),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 18),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '↑${c.$3}',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: t.text0,
-                                fontFamily: 'SF Mono',
-                                fontFamilyFallback: const ['Menlo'],
-                              ),
-                            ),
-                            Text(
-                              'MB/s',
-                              style:
-                                  TextStyle(fontSize: 10.5, color: t.text2),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ))
-          .toList(growable: false),
+      children: [
+        for (final c in clients)
+          _ClientCard(
+            name: c.source.displayName,
+            connected: c.connected,
+            downloadSpeed: c.downloadSpeed,
+            uploadSpeed: c.uploadSpeed,
+            taskCount: c.taskCount,
+          ),
+      ],
     );
   }
 }
 
-class _BottomTwoCol extends StatelessWidget {
+class _ClientCard extends StatelessWidget {
+  const _ClientCard({
+    required this.name,
+    required this.connected,
+    required this.downloadSpeed,
+    required this.uploadSpeed,
+    required this.taskCount,
+  });
+
+  final String name;
+  final bool connected;
+  final int downloadSpeed;
+  final int uploadSpeed;
+  final int taskCount;
+
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    return AppCard(
+      onTap: () => GoRouter.of(context).go('/download'),
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              StatusDot(connected ? DotStatus.ok : DotStatus.off),
+              const SizedBox(width: 9),
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: t.text0,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                connected ? '$taskCount 任务' : '未连接',
+                style: TextStyle(fontSize: 11, color: t.text2),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _speedCol('↓', formatSpeed(downloadSpeed), t.accentBright, t),
+              const SizedBox(width: 18),
+              _speedCol('↑', formatSpeed(uploadSpeed), t.text0, t),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _speedCol(String arrow, String value, Color color, DesignTokens t) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$arrow$value',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: color,
+              fontFamily: 'SF Mono',
+              fontFamilyFallback: const ['Menlo'],
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      );
+}
+
+class _BottomTwoCol extends StatelessWidget {
+  const _BottomTwoCol({required this.tasks});
+  final List<UnifiedDownloadTask> tasks;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final downloading = tasks
+        .where((task) => task.status == UnifiedDownloadStatus.downloading)
+        .toList()
+      ..sort((a, b) => b.downloadSpeed.compareTo(a.downloadSpeed));
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -387,23 +464,28 @@ class _BottomTwoCol extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    const AppChip(
+                    AppChip(
                       label: '下载器',
                       icon: Icons.open_in_new_rounded,
                       compact: true,
+                      onTap: () => GoRouter.of(context).go('/download'),
                     ),
                   ],
                 ),
                 const SizedBox(height: 14),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      '没有正在下载的任务。',
-                      style: TextStyle(fontSize: 13, color: t.text2),
+                if (downloading.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text(
+                        '没有正在下载的任务。',
+                        style: TextStyle(fontSize: 13, color: t.text2),
+                      ),
                     ),
-                  ),
-                ),
+                  )
+                else
+                  for (final task in downloading.take(6))
+                    _MiniTaskRow(task: task),
               ],
             ),
           ),
@@ -449,6 +531,72 @@ class _BottomTwoCol extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _MiniTaskRow extends StatelessWidget {
+  const _MiniTaskRow({required this.task});
+  final UnifiedDownloadTask task;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => showDialog<void>(
+          context: context,
+          barrierColor: Colors.black.withValues(alpha: 0.55),
+          builder: (_) => DownloadDetailSheet(taskKey: task.uniqueKey),
+        ),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+        hoverColor: t.chipBg,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: t.text0,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: task.progress,
+                        minHeight: 5,
+                        backgroundColor: t.insetBg,
+                        valueColor: AlwaysStoppedAnimation(t.accent),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                formatSpeed(task.downloadSpeed),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: t.accentBright,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

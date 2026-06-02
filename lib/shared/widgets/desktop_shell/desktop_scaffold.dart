@@ -3,11 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
 import 'package:my_nas/shared/providers/desktop_space_provider.dart';
-import 'package:my_nas/shared/widgets/dialogs/film_detail_sheet.dart';
+import 'package:my_nas/shared/providers/media_counts_provider.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/activity_aggregator.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/activity_drawer.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/ambient_layer.dart';
@@ -17,6 +18,7 @@ import 'package:my_nas/shared/widgets/desktop_shell/command_registry.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_sidebar.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_topbar.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/mini_dock.dart';
+import 'package:my_nas/shared/widgets/dialogs/film_detail_sheet.dart';
 
 /// 桌面端新外壳的统一容器。仅在 `context.isDesktopLayout` 时被
 /// `main_scaffold.dart` 引用，移动端继续走旧 BottomNav 分支。
@@ -231,8 +233,9 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                       space: space,
                       collapsed: _collapsed,
                       currentRoute: currentPath,
-                      mediaGroups: _mediaGroups(),
-                      opsGroups: _opsGroups(),
+                      mediaGroups: _mediaGroups(ref.watch(mediaCountsProvider)),
+                      opsGroups: _opsGroups(
+                          ref.watch(downloaderThroughputProvider).totalCount),
                       onSpaceChanged: (s) {
                         ref.read(desktopSpaceProvider.notifier).set(s);
                         // 切换 space 时跳到该 space 首项。
@@ -299,8 +302,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
 
   // ---- nav items ----
 
-  List<NavGroup> _mediaGroups() => const [
-        NavGroup(items: [
+  List<NavGroup> _mediaGroups(MediaCounts counts) => [
+        const NavGroup(items: [
           NavEntry(
             id: 'home',
             route: '/home',
@@ -314,8 +317,9 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
             route: '/video',
             label: '影视',
             icon: Icons.movie_outlined,
+            count: formatCountBadge(counts.video),
           ),
-          NavEntry(
+          const NavEntry(
             id: 'live',
             route: '/live',
             label: '直播',
@@ -327,21 +331,24 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
             route: '/music',
             label: '音乐',
             icon: Icons.library_music_outlined,
+            count: formatCountBadge(counts.music),
           ),
           NavEntry(
             id: 'photos',
             route: '/photo',
             label: '照片',
             icon: Icons.photo_library_outlined,
+            count: formatCountBadge(counts.photo),
           ),
           NavEntry(
             id: 'reading',
             route: '/reading',
             label: '阅读',
             icon: Icons.menu_book_outlined,
+            count: formatCountBadge(counts.reading),
           ),
         ]),
-        NavGroup(label: '底层', items: [
+        const NavGroup(label: '底层', items: [
           NavEntry(
             id: 'files',
             route: '/sources',
@@ -351,8 +358,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
         ]),
       ];
 
-  List<NavGroup> _opsGroups() => const [
-        NavGroup(items: [
+  List<NavGroup> _opsGroups(int downloadCount) => [
+        const NavGroup(items: [
           NavEntry(
             id: 'ops',
             route: '/ops',
@@ -366,8 +373,9 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
             route: '/download',
             label: '下载器',
             icon: Icons.download_rounded,
+            count: downloadCount > 0 ? '$downloadCount' : null,
           ),
-          NavEntry(
+          const NavEntry(
             id: 'transfers',
             route: '/transfer',
             label: '传输队列',

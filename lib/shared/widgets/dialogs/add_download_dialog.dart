@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/aria2/presentation/providers/aria2_provider.dart';
+import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
+import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
+import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/transmission/presentation/providers/transmission_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -7,27 +14,26 @@ import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 
 /// 设计稿 dialogs.jsx 中 AddDownload：新建下载任务弹窗。
 ///
-/// 4 字段：URI/磁力 textarea + 客户端选择 + 分类 + 保存位置 + 暂停 switch。
-/// 提交动作目前不接 aria2/qBittorrent/Transmission 客户端 API（plan Group E
-/// 完成 downloads_desktop 数据接线时一并接）。
-class AddDownloadDialog extends StatefulWidget {
+/// 客户端列表跟随已配置「下载工具」源；提交时按所选客户端类型分发到
+/// aria2 / qBittorrent / Transmission 的 addUri / addTorrent。
+class AddDownloadDialog extends ConsumerStatefulWidget {
   const AddDownloadDialog({this.prefill, super.key});
 
   /// 从 PT 详情等场景预填一组磁力链接。
   final String? prefill;
 
   @override
-  State<AddDownloadDialog> createState() => _AddDownloadDialogState();
+  ConsumerState<AddDownloadDialog> createState() => _AddDownloadDialogState();
 }
 
-class _AddDownloadDialogState extends State<AddDownloadDialog> {
+class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
   late final TextEditingController _uri =
       TextEditingController(text: widget.prefill ?? '');
-  String _client = 'qBittorrent';
+  String? _sourceId;
   String _category = '电影';
   bool _paused = false;
+  bool _submitting = false;
 
-  static const _clients = ['qBittorrent', 'aria2', 'Transmission'];
   static const _categories = ['电影', '剧集', '动画', '音乐', '其他'];
 
   @override
@@ -39,9 +45,24 @@ class _AddDownloadDialogState extends State<AddDownloadDialog> {
   int get _linkCount =>
       _uri.text.split('\n').where((e) => e.trim().isNotEmpty).length;
 
+  List<String> get _links =>
+      _uri.text.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final clients = ref.watch(downloaderClientsProvider);
+    if (_sourceId == null && clients.isNotEmpty) {
+      _sourceId = clients
+          .firstWhere((c) => c.connected, orElse: () => clients.first)
+          .source
+          .id;
+    }
+    final selectedName = clients
+            .where((c) => c.source.id == _sourceId)
+            .map((c) => c.source.displayName)
+            .firstOrNull ??
+        '—';
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(24),
@@ -93,41 +114,61 @@ class _AddDownloadDialogState extends State<AddDownloadDialog> {
                       const SizedBox(height: 16),
                       _Label('下载到客户端', t: t),
                       const SizedBox(height: 7),
-                      Column(
-                        children: [
-                          for (final c in _clients)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 7),
-                              child: AppCard(
-                                onTap: () => setState(() => _client = c),
-                                selected: c == _client,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 13,
-                                  vertical: 10,
-                                ),
-                                child: Row(
-                                  children: [
-                                    const StatusDot(DotStatus.off),
-                                    const SizedBox(width: 9),
-                                    Expanded(
-                                      child: Text(
-                                        c,
-                                        style: TextStyle(
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.w700,
-                                          color: t.text0,
+                      if (clients.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(13),
+                          decoration: BoxDecoration(
+                            color: t.insetBg,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: t.hairline),
+                          ),
+                          child: Text(
+                            '尚未配置下载客户端，请先到「数据源」添加 qBittorrent / '
+                            'aria2 / Transmission。',
+                            style: TextStyle(
+                                fontSize: 12, color: t.text2, height: 1.5),
+                          ),
+                        )
+                      else
+                        Column(
+                          children: [
+                            for (final c in clients)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 7),
+                                child: AppCard(
+                                  onTap: () =>
+                                      setState(() => _sourceId = c.source.id),
+                                  selected: c.source.id == _sourceId,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 13,
+                                    vertical: 10,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      StatusDot(c.connected
+                                          ? DotStatus.ok
+                                          : DotStatus.off),
+                                      const SizedBox(width: 9),
+                                      Expanded(
+                                        child: Text(
+                                          '${c.source.displayName} · '
+                                          '${c.source.type.displayName}',
+                                          style: TextStyle(
+                                            fontSize: 12.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: t.text0,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    if (c == _client)
-                                      Icon(Icons.check_rounded,
-                                          size: 15, color: t.accent),
-                                  ],
+                                      if (c.source.id == _sourceId)
+                                        Icon(Icons.check_rounded,
+                                            size: 15, color: t.accent),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
+                          ],
+                        ),
                       const SizedBox(height: 14),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,10 +241,10 @@ class _AddDownloadDialogState extends State<AddDownloadDialog> {
                 ),
               ),
               _Footer(
-                hint: '$_linkCount 个链接 → $_client',
+                hint: '$_linkCount 个链接 → $selectedName',
                 t: t,
-                disabled: _linkCount == 0,
-                onSubmit: () => Navigator.of(context).pop(),
+                disabled: _linkCount == 0 || _sourceId == null || _submitting,
+                onSubmit: _submit,
                 onCancel: () => Navigator.of(context).pop(),
               ),
             ],
@@ -211,6 +252,47 @@ class _AddDownloadDialogState extends State<AddDownloadDialog> {
         ),
       ),
     );
+  }
+
+  Future<void> _submit() async {
+    final clients = ref.read(downloaderClientsProvider);
+    final client =
+        clients.where((c) => c.source.id == _sourceId).firstOrNull;
+    if (client == null || _links.isEmpty) return;
+
+    setState(() => _submitting = true);
+    final source = client.source;
+    try {
+      switch (source.type) {
+        case SourceType.aria2:
+          await ref.read(aria2ActionsProvider(source.id)).addUri(_links);
+        case SourceType.qbittorrent:
+          for (final link in _links) {
+            await ref.read(qbittorrentActionsProvider(source.id)).addTorrent(
+                  link,
+                  category: _category,
+                  paused: _paused,
+                );
+          }
+        case SourceType.transmission:
+          for (final link in _links) {
+            await ref
+                .read(transmissionActionsProvider(source.id))
+                .addTorrent(link, paused: _paused);
+          }
+        default:
+          break;
+      }
+      if (mounted) {
+        Navigator.of(context).pop();
+        context.showSuccessToast('已添加 ${_links.length} 个任务到 ${source.displayName}');
+      }
+    } on Object catch (e) {
+      if (mounted) {
+        setState(() => _submitting = false);
+        context.showErrorToast('添加失败：$e');
+      }
+    }
   }
 }
 
