@@ -17,6 +17,10 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 /// 当前歌词
 final currentLyricProvider = StateNotifierProvider<LyricNotifier, LyricState>(LyricNotifier.new);
 
+/// 桌面端「应用内歌词浮窗(.dlyric)」开关。由 NowPlaying 顶部按钮切换，
+/// 桌面外壳据此在底部居中显示玻璃药丸歌词条。
+final desktopLyricFloatProvider = StateProvider<bool>((ref) => false);
+
 /// 歌词状态
 class LyricState {
   const LyricState({

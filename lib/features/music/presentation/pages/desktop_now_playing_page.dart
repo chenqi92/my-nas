@@ -146,10 +146,21 @@ class _Top extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            IconButton(
-              onPressed: () {},
-              icon: Icon(Icons.lyrics_outlined, color: t.text1, size: 18),
-              tooltip: '桌面歌词',
+            Consumer(
+              builder: (context, ref, _) {
+                final on = ref.watch(desktopLyricFloatProvider);
+                return IconButton(
+                  onPressed: () => ref
+                      .read(desktopLyricFloatProvider.notifier)
+                      .update((v) => !v),
+                  icon: Icon(
+                    on ? Icons.lyrics_rounded : Icons.lyrics_outlined,
+                    color: on ? t.accentBright : t.text1,
+                    size: 18,
+                  ),
+                  tooltip: on ? '关闭桌面歌词' : '桌面歌词',
+                );
+              },
             ),
             IconButton(
               onPressed: () {},
