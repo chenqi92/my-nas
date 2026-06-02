@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
-import 'package:my_nas/features/transfer/domain/entities/transfer_task.dart';
-import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
+import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/activity_aggregator.dart';
 
-/// 设计稿 `.drawer` 活动中心：右侧 400px 抽屉，聚合传输 / 下载 / 扫描 /
-/// 刮削 / 人脸 / 同步进度。
-///
-/// 现阶段先接入「传输队列」一路；其余 stream 在后续 Group B 迭代中通过
-/// `activity_aggregator.dart` 合并。
+/// 设计稿 `.drawer` 活动中心：右侧 400px 抽屉。从 [activityItemsProvider]
+/// 取聚合项（传输 / 视频扫描 / 媒体扫描），空状态显示提示。
 class ActivityDrawer extends ConsumerWidget {
   const ActivityDrawer({required this.onClose, super.key});
 
@@ -20,13 +17,7 @@ class ActivityDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
-    final transfers = ref.watch(transferTasksProvider).tasks;
-    final running = transfers
-        .where((x) =>
-            x.status == TransferStatus.transferring ||
-            x.status == TransferStatus.queued ||
-            x.status == TransferStatus.pending)
-        .toList(growable: false);
+    final items = ref.watch(activityItemsProvider);
 
     return GestureDetector(
       onTap: onClose,
@@ -38,8 +29,10 @@ class ActivityDrawer extends ConsumerWidget {
           child: GestureDetector(
             onTap: () {},
             child: ConstrainedBox(
-              constraints:
-                  BoxConstraints.tightFor(width: 400, height: double.infinity),
+              constraints: const BoxConstraints.tightFor(
+                width: 400,
+                height: double.infinity,
+              ),
               child: GlassPanel(
                 strong: true,
                 radius: 0,
@@ -68,7 +61,9 @@ class ActivityDrawer extends ConsumerWidget {
                           ),
                           const SizedBox(width: 10),
                           Text(
-                            '统一进度',
+                            items.isEmpty
+                                ? '没有任务'
+                                : '${items.length} 项进行中',
                             style: TextStyle(fontSize: 12, color: t.text2),
                           ),
                           const Spacer(),
@@ -97,10 +92,10 @@ class ActivityDrawer extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          if (running.isEmpty)
+                          if (items.isEmpty)
                             _EmptyState()
                           else
-                            for (final task in running) _TaskTile(task: task),
+                            for (final it in items) _ItemTile(item: it),
                         ],
                       ),
                     ),
@@ -115,24 +110,13 @@ class ActivityDrawer extends ConsumerWidget {
   }
 }
 
-class _TaskTile extends StatelessWidget {
-  const _TaskTile({required this.task});
-  final TransferTask task;
+class _ItemTile extends StatelessWidget {
+  const _ItemTile({required this.item});
+  final ActivityItem item;
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    final group = switch (task.type) {
-      TransferType.upload => '上传',
-      TransferType.download => '下载',
-      TransferType.cache => '缓存',
-    };
-    final groupIcon = switch (task.type) {
-      TransferType.upload => Icons.upload_rounded,
-      TransferType.download => Icons.download_rounded,
-      TransferType.cache => Icons.inventory_2_outlined,
-    };
-
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
@@ -153,7 +137,7 @@ class _TaskTile extends StatelessWidget {
                   color: t.chipBg,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(groupIcon, size: 16, color: t.accentBright),
+                child: Icon(item.icon, size: 16, color: t.accentBright),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -161,7 +145,7 @@ class _TaskTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      task.fileName,
+                      item.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -170,16 +154,23 @@ class _TaskTile extends StatelessWidget {
                         color: t.text0,
                       ),
                     ),
-                    Text(
-                      task.status.name,
-                      style: TextStyle(fontSize: 11.5, color: t.text2),
-                    ),
+                    if (item.detail.isNotEmpty)
+                      Text(
+                        item.detail,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11.5, color: t.text2),
+                      ),
                   ],
                 ),
               ),
-              AppTag(group),
+              AppTag(item.group),
             ],
           ),
+          if (item.progress != null) ...[
+            const SizedBox(height: 9),
+            AppProgressBar(value: item.progress!),
+          ],
         ],
       ),
     );

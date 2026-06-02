@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
+import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
+    show VideoListLoaded, videoListProvider;
 import 'package:my_nas/shared/providers/desktop_space_provider.dart';
+import 'package:my_nas/shared/widgets/dialogs/film_detail_sheet.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/activity_aggregator.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/activity_drawer.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/ambient_layer.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/appearance_panel.dart';
@@ -116,6 +120,43 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
         run: (c) => _go('/sources'),
       ),
     ]);
+    _registerSearchers();
+  }
+
+  /// 注入跨域内容搜索器。query 非空时会被调用，搜索结果与静态命令一并显示。
+  void _registerSearchers() {
+    // 视频：在影视库 movies / tvShowGroups / others 内按 title 模糊匹配。
+    CmdkRegistry.instance.registerSearcher((ref, query) {
+      final state = ref.read(videoListProvider);
+      if (state is! VideoListLoaded) return const [];
+      final q = query.toLowerCase();
+      final all = [
+        ...state.movies,
+        ...state.tvShowGroups.values.map((g) => g.representative),
+        ...state.others,
+      ];
+      final hit = all.where((m) {
+        final t = (m.title ?? m.fileName).toLowerCase();
+        return t.contains(q);
+      }).take(6);
+      return [
+        for (final m in hit)
+          CmdkCommand(
+            id: 'video.${m.sourceId}.${m.filePath}',
+            label: m.title ?? m.fileName,
+            icon: Icons.movie_outlined,
+            group: '影视',
+            hint: m.year != null ? '${m.year}' : null,
+            run: (ctx) {
+              showDialog<void>(
+                context: ctx,
+                barrierColor: Colors.black.withValues(alpha: 0.55),
+                builder: (_) => FilmDetailSheet(meta: m),
+              );
+            },
+          ),
+      ];
+    });
   }
 
   void _go(String route) {
@@ -141,6 +182,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     final t = DesignTokens.of(context);
     final space = ref.watch(desktopSpaceProvider);
     final hasMusic = ref.watch(currentMusicProvider) != null;
+    final hasActivity = ref.watch(activityItemsProvider).isNotEmpty;
     final currentPath = GoRouterState.of(context).uri.path;
 
     return Shortcuts(
@@ -208,7 +250,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                         children: [
                           DesktopTopbar(
                             crumb: _crumbFor(currentPath),
-                            activityBadge: false,
+                            activityBadge: hasActivity,
                             onToggleSidebar: () =>
                                 setState(() => _collapsed = !_collapsed),
                             onOpenSearch: () =>

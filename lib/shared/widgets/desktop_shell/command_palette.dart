@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/shared/widgets/atoms/app_kbd.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -9,16 +10,16 @@ import 'package:my_nas/shared/widgets/desktop_shell/command_registry.dart';
 ///
 /// 现阶段只索引 [CmdkRegistry] 里的同步命令；跨域内容搜索（视频 / 音乐 /
 /// 照片 / 文件 / PT）作为后续 Group B 的迭代项接入。
-class CommandPalette extends StatefulWidget {
+class CommandPalette extends ConsumerStatefulWidget {
   const CommandPalette({required this.onClose, super.key});
 
   final VoidCallback onClose;
 
   @override
-  State<CommandPalette> createState() => _CommandPaletteState();
+  ConsumerState<CommandPalette> createState() => _CommandPaletteState();
 }
 
-class _CommandPaletteState extends State<CommandPalette> {
+class _CommandPaletteState extends ConsumerState<CommandPalette> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   int _selected = 0;
@@ -39,9 +40,18 @@ class _CommandPaletteState extends State<CommandPalette> {
     super.dispose();
   }
 
-  List<CmdkCommand> _filtered() => CmdkRegistry.instance.all
-      .where((c) => c.matches(_query))
-      .toList(growable: false);
+  /// 合并：静态命令（matches query） + 所有 searcher 在 query 非空时的输出。
+  List<CmdkCommand> _filtered() {
+    final commands = CmdkRegistry.instance.all
+        .where((c) => c.matches(_query))
+        .toList();
+    if (_query.isNotEmpty) {
+      for (final s in CmdkRegistry.instance.searchers) {
+        commands.addAll(s(ref, _query));
+      }
+    }
+    return List.unmodifiable(commands);
+  }
 
   void _onKey(KeyEvent ev, List<CmdkCommand> items) {
     if (ev is! KeyDownEvent && ev is! KeyRepeatEvent) return;

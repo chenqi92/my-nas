@@ -11,6 +11,7 @@ import 'package:my_nas/features/desktop_ops/presentation/pages/ops_overview_page
 import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
 import 'package:my_nas/features/downloader/presentation/pages/downloads_desktop_page.dart';
 import 'package:my_nas/features/mine/presentation/pages/mine_page.dart';
+import 'package:my_nas/features/music/presentation/pages/desktop_now_playing_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_desktop_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_player_page.dart';
@@ -158,10 +159,13 @@ final appRouter = GoRouter(
     ),
 
     // Music player page (full screen, accessed from Deep Link / Live Activity)
+    // 桌面端走重设计的 DesktopNowPlayingPage，移动端保留 MusicPlayerPage。
     GoRoute(
       path: Routes.musicPlayer,
       name: 'musicPlayer',
-      builder: (context, state) => const MusicPlayerPage(),
+      builder: (context, state) => context.isDesktopLayout
+          ? const DesktopNowPlayingPage()
+          : const MusicPlayerPage(),
     ),
 
     // Main shell with 11 branches. Order matches `branchNavigatorKeys` and
