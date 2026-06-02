@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
+import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
+    show VideoListLoaded, videoListProvider;
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
+import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -52,7 +57,6 @@ class _HomeOverviewPageState extends ConsumerState<HomeOverviewPage> {
 
   @override
   Widget build(BuildContext context) {
-    final t = DesignTokens.of(context);
     final sourcesOnline = ref.watch(activeConnectionsProvider).length;
 
     return SingleChildScrollView(
@@ -76,14 +80,9 @@ class _HomeOverviewPageState extends ConsumerState<HomeOverviewPage> {
               const SizedBox(height: 14),
               _QuickGrid(),
               const SizedBox(height: 30),
-              _SectionHead(title: '人物', sub: '人脸聚类 · 128 维特征'),
+              _SectionHead(title: '最近添加', sub: '跨全部源'),
               const SizedBox(height: 14),
-              _PeopleHint(),
-              const SizedBox(height: 8),
-              Text(
-                '映射「照片」媒体库后这里会出现已识别人物。',
-                style: TextStyle(fontSize: 12, color: t.text3),
-              ),
+              const _RecentlyAdded(),
             ],
           ),
         ),
@@ -369,18 +368,22 @@ class _SystemPulse extends ConsumerWidget {
                     iconColor: t.accentBright,
                     title: '下载吞吐',
                     subtitle: '当前无任务',
+                    trailing: _Sparkline(color: t.accentBright),
                   ),
                   _PulseRow(
                     icon: Icons.image_search_rounded,
                     iconColor: const Color(0xFFFB923C),
                     title: '照片扫描',
                     subtitle: '空闲',
+                    trailing:
+                        const _MiniRing(value: 0, color: Color(0xFFFB923C)),
                   ),
                   _PulseRow(
                     icon: Icons.cast_rounded,
                     iconColor: t.hot,
                     title: '直播中',
                     subtitle: '映射 M3U8 源后激活',
+                    trailing: const AppChip(label: '观看', compact: true),
                   ),
                 ],
               ),
@@ -398,12 +401,14 @@ class _PulseRow extends StatelessWidget {
     required this.iconColor,
     required this.title,
     required this.subtitle,
+    this.trailing,
   });
 
   final IconData icon;
   final Color iconColor;
   final String title;
   final String subtitle;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -438,9 +443,102 @@ class _PulseRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 11, color: t.text2),
                 ),
               ],
+            ),
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: 10),
+            trailing!,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 迷你 sparkline（设计稿系统脉搏下载吞吐行）。静态波形 + accent 渐变。
+class _Sparkline extends StatelessWidget {
+  const _Sparkline({required this.color});
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: 64,
+        height: 24,
+        child: CustomPaint(painter: _SparkPainter(color)),
+      );
+}
+
+class _SparkPainter extends CustomPainter {
+  _SparkPainter(this.color);
+  final Color color;
+
+  static const _pts = [.3, .5, .35, .6, .45, .7, .5, .8, .55, .9, .6];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+    for (var i = 0; i < _pts.length; i++) {
+      final x = size.width * i / (_pts.length - 1);
+      final y = size.height * (1 - _pts[i]);
+      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+    }
+    final line = Paint()
+      ..color = color
+      ..strokeWidth = 1.6
+      ..style = PaintingStyle.stroke
+      ..strokeJoin = StrokeJoin.round;
+    final fill = Path.from(path)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(
+      fill,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [color.withValues(alpha: 0.28), color.withValues(alpha: 0.0)],
+        ).createShader(Offset.zero & size),
+    );
+    canvas.drawPath(path, line);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SparkPainter old) => old.color != color;
+}
+
+/// 迷你进度环（设计稿照片扫描行）。
+class _MiniRing extends StatelessWidget {
+  const _MiniRing({required this.value, required this.color});
+  final double value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return SizedBox(
+      width: 26,
+      height: 26,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CircularProgressIndicator(
+            value: value,
+            strokeWidth: 3,
+            backgroundColor: t.insetBg,
+            valueColor: AlwaysStoppedAnimation(color),
+          ),
+          Text(
+            '${(value * 100).toStringAsFixed(0)}',
+            style: TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.w700,
+              color: t.text2,
             ),
           ),
         ],
@@ -569,38 +667,109 @@ class _QuickItem extends StatelessWidget {
   }
 }
 
-class _PeopleHint extends StatelessWidget {
+/// 最近添加（对齐设计稿 media.jsx HomeOverview 末节）。接 videoListProvider
+/// 的 recentVideos，空库时显示提示卡。
+class _RecentlyAdded extends ConsumerWidget {
+  const _RecentlyAdded();
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
-    return SizedBox(
-      height: 110,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: 6,
-        separatorBuilder: (_, _) => const SizedBox(width: 18),
-        itemBuilder: (_, _) => Column(
+    final state = ref.watch(videoListProvider);
+    final recents = (state is VideoListLoaded
+            ? state.recentVideos
+            : const <VideoMetadata>[])
+        .take(7)
+        .toList();
+
+    if (recents.isEmpty) {
+      return AppCard(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+        child: Row(
           children: [
-            Container(
-              width: 84,
-              height: 84,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: t.insetBg,
-                border: Border.all(color: t.hairline),
+            Icon(Icons.movie_outlined, size: 22, color: t.text3),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '映射「影视」媒体库后，最近添加的内容会跨全部源出现在这里。',
+                style: TextStyle(fontSize: 13, color: t.text2),
               ),
-              child: Icon(Icons.person_outline_rounded,
-                  size: 36, color: t.text3),
             ),
-            const SizedBox(height: 8),
-            Text('未识别',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  color: t.text3,
-                )),
           ],
         ),
+      );
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 160,
+        childAspectRatio: 0.58,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: recents.length,
+      itemBuilder: (_, i) {
+        final m = recents[i];
+        final poster = m.localPosterUrl ?? m.posterUrl;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: _Poster(url: poster, fallback: t.insetBg),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              m.displayTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: t.text0,
+              ),
+            ),
+            Text(
+              [
+                if (m.year != null) '${m.year}',
+                if (m.rating != null) '★ ${m.rating!.toStringAsFixed(1)}',
+              ].join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: t.accentBright),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _Poster extends StatelessWidget {
+  const _Poster({required this.url, required this.fallback});
+  final String? url;
+  final Color fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final fb = Container(
+      color: fallback,
+      child: const Center(
+        child: Icon(Icons.movie_outlined, size: 22, color: Colors.white24),
       ),
     );
+    if (url == null || url!.isEmpty) return fb;
+    if (url!.startsWith('file://')) {
+      return Image.file(
+        File(url!.substring(7)),
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => fb,
+      );
+    }
+    return Image.network(url!, fit: BoxFit.cover, errorBuilder: (_, _, _) => fb);
   }
 }
