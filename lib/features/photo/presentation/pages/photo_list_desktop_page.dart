@@ -7,7 +7,6 @@ import 'package:my_nas/features/photo/presentation/widgets/desktop_photo_viewer.
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
-import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
@@ -31,6 +30,9 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
     final subtitle = state is PhotoListLoaded
         ? '${state.totalCount} 张 · ${state.dateGroups.length} 个时间分组'
         : '人脸识别 · EXIF · 重复检测 · 自动增量扫描';
+    // 人脸聚类尚未接入：仅在有照片（库已填充）时展示人物行占位，
+    // 空库时直接显示空态，避免误导性的「未识别」假头像。
+    final hasPhotos = state is PhotoListLoaded && state.allPhotos.isNotEmpty;
 
     return DesktopPageScaffold(
       title: '照片',
@@ -48,54 +50,53 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                '人物',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: t.text0,
+          if (hasPhotos && _view != 'map') ...[
+            Row(
+              children: [
+                Text(
+                  '人物',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: t.text0,
+                  ),
+                ),
+                const SizedBox(width: 9),
+                Text(
+                  '人脸聚类 · 128 维特征',
+                  style: TextStyle(fontSize: 12, color: t.text2),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 120,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: 8,
+                separatorBuilder: (_, _) => const SizedBox(width: 18),
+                itemBuilder: (_, _) => Column(
+                  children: [
+                    Container(
+                      width: 84,
+                      height: 84,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: t.insetBg,
+                        border: Border.all(color: t.hairline),
+                      ),
+                      child: Icon(Icons.person_outline_rounded,
+                          size: 36, color: t.text3),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('未识别',
+                        style: TextStyle(fontSize: 11.5, color: t.text3)),
+                  ],
                 ),
               ),
-              const SizedBox(width: 9),
-              Text(
-                '人脸聚类 · 128 维特征',
-                style: TextStyle(fontSize: 12, color: t.text2),
-              ),
-              if (_view == 'map') ...[
-                const Spacer(),
-                const AppTag('即将推出', variant: TagVariant.plan),
-              ],
-            ],
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 120,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: 8,
-              separatorBuilder: (_, _) => const SizedBox(width: 18),
-              itemBuilder: (_, _) => Column(
-                children: [
-                  Container(
-                    width: 84,
-                    height: 84,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: t.insetBg,
-                      border: Border.all(color: t.hairline),
-                    ),
-                    child: Icon(Icons.person_outline_rounded,
-                        size: 36, color: t.text3),
-                  ),
-                  const SizedBox(height: 8),
-                  Text('未识别', style: TextStyle(fontSize: 11.5, color: t.text3)),
-                ],
-              ),
             ),
-          ),
-          const SizedBox(height: 22),
+            const SizedBox(height: 22),
+          ],
           if (_view == 'map')
             const DesktopComingSoon(
               icon: Icons.map_outlined,

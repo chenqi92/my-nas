@@ -76,8 +76,10 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
     // 右侧显示选中分类的内容。AppBar 收回三段 TabBar。
     if (isDesktop) {
       return Scaffold(
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          leading: const RoundedBackButton(),
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.transparent,
           title: const Text('传输管理'),
           actions: actions,
         ),
