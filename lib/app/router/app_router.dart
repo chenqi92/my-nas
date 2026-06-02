@@ -15,8 +15,10 @@ import 'package:my_nas/features/music/presentation/pages/desktop_now_playing_pag
 import 'package:my_nas/features/music/presentation/pages/music_list_desktop_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_player_page.dart';
+import 'package:my_nas/features/nastool/presentation/pages/nastool_desktop_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_list_desktop_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_list_page.dart';
+import 'package:my_nas/features/pt_sites/presentation/pages/pt_sites_desktop_page.dart';
 import 'package:my_nas/features/reading/presentation/pages/reading_desktop_page.dart';
 import 'package:my_nas/features/reading/presentation/pages/reading_page.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_desktop_page.dart';
@@ -44,11 +46,13 @@ final _opsNavigatorKey = GlobalKey<NavigatorState>(); // 桌面 ops（新）
 final _downloadNavigatorKey = GlobalKey<NavigatorState>();
 final _transferNavigatorKey = GlobalKey<NavigatorState>();
 final _sourcesNavigatorKey = GlobalKey<NavigatorState>();
+final _ptNavigatorKey = GlobalKey<NavigatorState>(); // 桌面 PT 站点
+final _nastoolNavigatorKey = GlobalKey<NavigatorState>(); // 桌面 媒体自动化
 
 /// 按 branch index 顺序排列的 navigator keys，供 main_scaffold / desktop_scaffold
 /// 引用。顺序必须与 `desktop_scaffold._routeForBranch` 完全一致：
 /// 0=home 1=video 2=live 3=music 4=photo 5=reading 6=mine 7=ops
-/// 8=download 9=transfer 10=sources
+/// 8=download 9=transfer 10=sources 11=pt 12=nastool
 final branchNavigatorKeys = <GlobalKey<NavigatorState>>[
   _homeNavigatorKey,
   _videoNavigatorKey,
@@ -61,6 +65,8 @@ final branchNavigatorKeys = <GlobalKey<NavigatorState>>[
   _downloadNavigatorKey,
   _transferNavigatorKey,
   _sourcesNavigatorKey,
+  _ptNavigatorKey,
+  _nastoolNavigatorKey,
 ];
 
 /// 待处理的 deep link 路径
@@ -305,6 +311,28 @@ final appRouter = GoRouter(
               builder: (context, state) => context.isDesktopLayout
                   ? const SourcesDesktopPage()
                   : const SourcesPage(),
+            ),
+          ],
+        ),
+        // 11 pt (桌面工具区) — PT 站点聚合浏览，移动端走源详情页入口
+        StatefulShellBranch(
+          navigatorKey: _ptNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.pt,
+              name: 'pt',
+              builder: (context, state) => const PtSitesDesktopPage(),
+            ),
+          ],
+        ),
+        // 12 nastool (桌面工具区) — 媒体自动化订阅管理
+        StatefulShellBranch(
+          navigatorKey: _nastoolNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.nastool,
+              name: 'nastool',
+              builder: (context, state) => const NasToolDesktopPage(),
             ),
           ],
         ),

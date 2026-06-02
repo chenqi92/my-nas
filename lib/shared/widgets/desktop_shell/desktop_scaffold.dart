@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
@@ -14,6 +15,7 @@ import 'package:my_nas/shared/widgets/desktop_shell/ambient_layer.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/appearance_panel.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/command_palette.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/command_registry.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_lyric_float.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_sidebar.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_topbar.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/mini_dock.dart';
@@ -52,6 +54,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     '/download', // 8
     '/transfer', // 9
     '/sources', // 10
+    '/pt', // 11
+    '/nastool', // 12
   ];
 
   @override
@@ -120,6 +124,20 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
         icon: Icons.lan_rounded,
         run: (c) => _go('/sources'),
       ),
+      CmdkCommand(
+        id: 'goto.pt',
+        label: 'PT 站点',
+        icon: Icons.flag_circle_outlined,
+        keywords: const ['pt', '种子', '资源站'],
+        run: (c) => _go('/pt'),
+      ),
+      CmdkCommand(
+        id: 'goto.nastool',
+        label: '媒体自动化',
+        icon: Icons.auto_awesome_outlined,
+        keywords: const ['nastool', '订阅', '追剧'],
+        run: (c) => _go('/nastool'),
+      ),
     ]);
     _registerSearchers();
   }
@@ -183,6 +201,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     final t = DesignTokens.of(context);
     final space = ref.watch(desktopSpaceProvider);
     final hasMusic = ref.watch(currentMusicProvider) != null;
+    final lyricFloat = ref.watch(desktopLyricFloatProvider);
     final hasActivity = ref.watch(activityItemsProvider).isNotEmpty;
     final currentPath = GoRouterState.of(context).uri.path;
 
@@ -274,6 +293,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                     ),
                     onOpenCast: () {},
                   ),
+                if (hasMusic && lyricFloat) const DesktopLyricFloat(),
                 if (_appearanceOpen)
                   Positioned(
                     top: DesignTokens.topbarH + 8,
@@ -382,13 +402,13 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
         NavGroup(label: '资源与自动化', items: [
           NavEntry(
             id: 'pt',
-            route: '/sources',
+            route: '/pt',
             label: 'PT 站点',
             icon: Icons.flag_circle_outlined,
           ),
           NavEntry(
             id: 'nastool',
-            route: '/sources',
+            route: '/nastool',
             label: '媒体自动化',
             icon: Icons.auto_awesome_outlined,
           ),
@@ -414,6 +434,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
       '/download': ['控制台', '下载器'],
       '/transfer': ['控制台', '传输队列'],
       '/sources': ['控制台', '数据源'],
+      '/pt': ['控制台', 'PT 站点'],
+      '/nastool': ['控制台', '媒体自动化'],
     };
     for (final entry in map.entries) {
       if (path.startsWith(entry.key)) {
