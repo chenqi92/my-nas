@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_list_page.dart';
+import 'package:my_nas/features/photo/presentation/widgets/desktop_photo_viewer.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
@@ -149,7 +150,15 @@ class _PhotoBody extends StatelessWidget {
         itemBuilder: (_, i) {
           final p = photos[i];
           final fs = connections[p.sourceId]?.adapter.fileSystem;
-          return _PhotoTile(photo: p, fileSystem: fs);
+          return _PhotoTile(
+            photo: p,
+            fileSystem: fs,
+            onTap: () => showDesktopPhotoViewer(
+              context,
+              photos: photos,
+              initialIndex: i,
+            ),
+          );
         },
       ),
     );
@@ -157,9 +166,14 @@ class _PhotoBody extends StatelessWidget {
 }
 
 class _PhotoTile extends StatelessWidget {
-  const _PhotoTile({required this.photo, required this.fileSystem});
+  const _PhotoTile({
+    required this.photo,
+    required this.fileSystem,
+    required this.onTap,
+  });
   final PhotoEntity photo;
   final NasFileSystem? fileSystem;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -170,13 +184,22 @@ class _PhotoTile extends StatelessWidget {
     );
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: StreamImage(
-        url: photo.thumbnailUrl,
-        path: photo.filePath,
-        fileSystem: fileSystem,
-        placeholder: placeholder,
-        errorWidget: placeholder,
-        cacheKey: photo.uniqueKey,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          StreamImage(
+            url: photo.thumbnailUrl,
+            path: photo.filePath,
+            fileSystem: fileSystem,
+            placeholder: placeholder,
+            errorWidget: placeholder,
+            cacheKey: photo.uniqueKey,
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(onTap: onTap),
+          ),
+        ],
       ),
     );
   }
