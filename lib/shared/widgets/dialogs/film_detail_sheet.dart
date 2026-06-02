@@ -1,8 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/features/video/domain/entities/video_item.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
+import 'package:my_nas/features/video/presentation/pages/video_player_page.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 
@@ -11,16 +16,16 @@ import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 /// 现阶段从 [VideoMetadata] 取数据铺 hero + 简介 + 操作按钮 + tabs
 /// （版本 / 演职员 / 相关）。多版本列表与剧集分集网格留作后续，由
 /// `videoDetailProvider` 提供详细数据。
-class FilmDetailSheet extends StatefulWidget {
+class FilmDetailSheet extends ConsumerStatefulWidget {
   const FilmDetailSheet({required this.meta, super.key});
 
   final VideoMetadata meta;
 
   @override
-  State<FilmDetailSheet> createState() => _FilmDetailSheetState();
+  ConsumerState<FilmDetailSheet> createState() => _FilmDetailSheetState();
 }
 
-class _FilmDetailSheetState extends State<FilmDetailSheet> {
+class _FilmDetailSheetState extends ConsumerState<FilmDetailSheet> {
   int _tab = 0;
 
   @override
@@ -215,20 +220,17 @@ class _Hero extends StatelessWidget {
       );
 }
 
-class _Actions extends StatelessWidget {
+class _Actions extends ConsumerWidget {
   const _Actions({required this.meta});
   final VideoMetadata meta;
 
   @override
-  Widget build(BuildContext context) => Wrap(
+  Widget build(BuildContext context, WidgetRef ref) => Wrap(
         spacing: 8,
         runSpacing: 8,
         children: [
           FilledButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: 接 videoPlayerProvider.play(meta)
-            },
+            onPressed: () => _play(context, ref),
             icon: const Icon(Icons.play_arrow_rounded, size: 16),
             label: Text(meta.isWatched ? '重新播放' : '播放'),
           ),
@@ -249,6 +251,33 @@ class _Actions extends StatelessWidget {
           ),
         ],
       );
+
+  Future<void> _play(BuildContext context, WidgetRef ref) async {
+    final connection = ref.read(activeConnectionsProvider)[meta.sourceId];
+    if (connection == null) {
+      context.showErrorToast('该影片所在数据源未连接');
+      return;
+    }
+    try {
+      final url = await connection.adapter.fileSystem.getFileUrl(meta.filePath);
+      if (!context.mounted) return;
+      final videoItem = VideoItem(
+        name: meta.displayTitle,
+        path: meta.filePath,
+        url: url,
+        sourceId: meta.sourceId,
+        thumbnailUrl: meta.displayPosterUrl,
+      );
+      Navigator.of(context).pop();
+      await Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute<void>(
+          builder: (_) => VideoPlayerPage(video: videoItem),
+        ),
+      );
+    } on Object catch (e) {
+      if (context.mounted) context.showErrorToast('播放失败：$e');
+    }
+  }
 }
 
 class _TabBar extends StatelessWidget {
