@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
-import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
@@ -234,8 +233,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                       collapsed: _collapsed,
                       currentRoute: currentPath,
                       mediaGroups: _mediaGroups(ref.watch(mediaCountsProvider)),
-                      opsGroups: _opsGroups(
-                          ref.watch(downloaderThroughputProvider).totalCount),
+                      opsGroups: _opsGroups(),
                       onSpaceChanged: (s) {
                         ref.read(desktopSpaceProvider.notifier).set(s);
                         // 切换 space 时跳到该 space 首项。
@@ -358,8 +356,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
         ]),
       ];
 
-  List<NavGroup> _opsGroups(int downloadCount) => [
-        const NavGroup(items: [
+  List<NavGroup> _opsGroups() => const [
+        NavGroup(items: [
           NavEntry(
             id: 'ops',
             route: '/ops',
@@ -373,9 +371,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
             route: '/download',
             label: '下载器',
             icon: Icons.download_rounded,
-            count: downloadCount > 0 ? '$downloadCount' : null,
           ),
-          const NavEntry(
+          NavEntry(
             id: 'transfers',
             route: '/transfer',
             label: '传输队列',
