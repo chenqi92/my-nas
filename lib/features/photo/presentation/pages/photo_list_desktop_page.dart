@@ -7,7 +7,6 @@ import 'package:my_nas/features/photo/presentation/widgets/desktop_photo_viewer.
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
-import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 
@@ -65,6 +64,15 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                 Text(
                   '人脸聚类 · 128 维特征',
                   style: TextStyle(fontSize: 12, color: t.text2),
+                ),
+                const Spacer(),
+                Text(
+                  '全部人物',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: t.accentBright,
+                  ),
                 ),
               ],
             ),
@@ -137,31 +145,77 @@ class _PhotoBody extends StatelessWidget {
       );
     }
     final connections = ref.watch(activeConnectionsProvider);
-    return GlassPanel(
-      padding: const EdgeInsets.all(10),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 150,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-        ),
-        itemCount: photos.length,
-        itemBuilder: (_, i) {
-          final p = photos[i];
-          final fs = connections[p.sourceId]?.adapter.fileSystem;
-          return _PhotoTile(
-            photo: p,
-            fileSystem: fs,
-            onTap: () => showDesktopPhotoViewer(
-              context,
-              photos: photos,
-              initialIndex: i,
+
+    // 按年月分组，对齐设计稿的时间线标签（"2024 年 6 月 · X 张"）。
+    final groups = <String, List<PhotoEntity>>{};
+    for (final p in photos) {
+      final d = p.dateKey;
+      groups.putIfAbsent('${d.year}-${d.month}', () => []).add(p);
+    }
+    final keys = groups.keys.toList()
+      ..sort((a, b) => b.compareTo(a)); // 新→旧
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final key in keys) ...[
+          _TimelineLabel(monthKey: key, count: groups[key]!.length),
+          const SizedBox(height: 8),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 132,
+              crossAxisSpacing: 5,
+              mainAxisSpacing: 5,
             ),
-          );
-        },
-      ),
+            itemCount: groups[key]!.length,
+            itemBuilder: (_, i) {
+              final p = groups[key]![i];
+              final fs = connections[p.sourceId]?.adapter.fileSystem;
+              return _PhotoTile(
+                photo: p,
+                fileSystem: fs,
+                onTap: () => showDesktopPhotoViewer(
+                  context,
+                  photos: photos,
+                  initialIndex: photos.indexOf(p),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 22),
+        ],
+      ],
+    );
+  }
+}
+
+class _TimelineLabel extends StatelessWidget {
+  const _TimelineLabel({required this.monthKey, required this.count});
+  final String monthKey;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final parts = monthKey.split('-');
+    final label = '${parts[0]} 年 ${parts[1]} 月';
+    return Text.rich(
+      TextSpan(children: [
+        TextSpan(
+          text: label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: t.text0,
+          ),
+        ),
+        TextSpan(
+          text: '  · $count 张',
+          style: TextStyle(fontSize: 12.5, color: t.text2),
+        ),
+      ]),
     );
   }
 }
