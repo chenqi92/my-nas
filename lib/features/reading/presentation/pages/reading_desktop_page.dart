@@ -2,10 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/app/router/app_router.dart' show rootNavigatorKey;
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/book/data/services/book_database_service.dart';
+import 'package:my_nas/features/book/domain/entities/book_item.dart';
 import 'package:my_nas/features/book/presentation/pages/book_list_page.dart';
+import 'package:my_nas/features/book/presentation/utils/book_navigator.dart';
 import 'package:my_nas/features/comic/presentation/pages/comic_list_page.dart';
+import 'package:my_nas/features/comic/presentation/pages/comic_reader_page.dart';
 import 'package:my_nas/features/note/presentation/pages/note_list_page.dart';
 import 'package:my_nas/features/note/presentation/widgets/note_tree_widget.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
@@ -77,12 +81,12 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
         children: [
           if (showComics && comics.isNotEmpty) ...[
             if (_tab == '全部') const _SectionHeader('漫画'),
-            _ComicShelf(comics: comics, ref: ref),
+            _ComicShelf(comics: comics, ref: ref, onOpen: _openComic),
             const SizedBox(height: 22),
           ],
           if (showBooks && books.isNotEmpty) ...[
             if (_tab == '全部') const _SectionHeader('图书'),
-            _BookShelf(books: books),
+            _BookShelf(books: books, onOpen: _openBook),
             const SizedBox(height: 22),
           ],
           if (showNotes && notes.isNotEmpty) ...[
@@ -122,6 +126,34 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     final n = showNotes && notes.isNotEmpty;
     return !c && !b && !n;
   }
+
+  Future<void> _openBook(BookEntity book) async {
+    final connection = ref.read(activeConnectionsProvider)[book.sourceId];
+    if (connection == null) return;
+    final file = FileItem(
+      name: book.fileName,
+      path: book.filePath,
+      size: book.size,
+      isDirectory: false,
+      modifiedTime: book.modifiedTime,
+    );
+    final url = await connection.adapter.fileSystem.getFileUrl(file.path);
+    await BookDatabaseService().updateLastReadTime(book.sourceId, book.filePath);
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx == null) return;
+    await BookNavigator.instance.openBook(
+      ctx,
+      BookItem.fromFileItem(file, url, sourceId: book.sourceId),
+    );
+  }
+
+  void _openComic(ComicItem comic) {
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx == null) return;
+    Navigator.of(ctx).push(
+      MaterialPageRoute<void>(builder: (_) => ComicReaderPage(comic: comic)),
+    );
+  }
 }
 
 class _SectionHeader extends StatelessWidget {
@@ -146,9 +178,14 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _ComicShelf extends StatelessWidget {
-  const _ComicShelf({required this.comics, required this.ref});
+  const _ComicShelf({
+    required this.comics,
+    required this.ref,
+    required this.onOpen,
+  });
   final List<ComicItem> comics;
   final WidgetRef ref;
+  final ValueChanged<ComicItem> onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +209,7 @@ class _ComicShelf extends StatelessWidget {
           streamPath: c.coverPath,
           fileSystem: fs,
           cacheKey: '${c.sourceId}_${c.coverPath}',
+          onTap: () => onOpen(c),
         );
       },
     );
@@ -179,8 +217,9 @@ class _ComicShelf extends StatelessWidget {
 }
 
 class _BookShelf extends StatelessWidget {
-  const _BookShelf({required this.books});
+  const _BookShelf({required this.books, required this.onOpen});
   final List<BookEntity> books;
+  final ValueChanged<BookEntity> onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -201,6 +240,7 @@ class _BookShelf extends StatelessWidget {
           subtitle: b.displayAuthor,
           localPath: b.coverPath,
           badge: b.format.name.toUpperCase(),
+          onTap: () => onOpen(b),
         );
       },
     );
@@ -270,6 +310,7 @@ class _Cover extends StatelessWidget {
     this.fileSystem,
     this.cacheKey,
     this.badge,
+    this.onTap,
   });
 
   final String title;
@@ -279,6 +320,7 @@ class _Cover extends StatelessWidget {
   final NasFileSystem? fileSystem;
   final String? cacheKey;
   final String? badge;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -324,6 +366,10 @@ class _Cover extends StatelessWidget {
                     left: 6,
                     child: AppTag(badge!, variant: TagVariant.neutral),
                   ),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(onTap: onTap),
+                ),
               ],
             ),
           ),
