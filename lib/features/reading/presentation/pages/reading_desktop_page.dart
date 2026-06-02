@@ -1,38 +1,67 @@
-import 'package:flutter/material.dart';
-import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
-import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
+import 'dart:io';
 
-/// 桌面端「阅读」骨架。
-///
-/// 视觉对齐设计稿 media2.jsx (Reading)：全部 / 漫画 / 图书 / 笔记 chips +
-/// 在线书源入口 + media-grid（漫画 ratio 3/4，图书 ratio 3/4）+ 笔记面板。
-class ReadingDesktopPage extends StatefulWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/book/data/services/book_database_service.dart';
+import 'package:my_nas/features/book/presentation/pages/book_list_page.dart';
+import 'package:my_nas/features/comic/presentation/pages/comic_list_page.dart';
+import 'package:my_nas/features/note/presentation/pages/note_list_page.dart';
+import 'package:my_nas/features/note/presentation/widgets/note_tree_widget.dart';
+import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
+import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
+import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
+import 'package:my_nas/shared/widgets/stream_image.dart';
+
+/// 桌面端「阅读」——聚合漫画 / 图书 / 笔记三库真实数据。
+class ReadingDesktopPage extends ConsumerStatefulWidget {
   const ReadingDesktopPage({super.key});
 
   @override
-  State<ReadingDesktopPage> createState() => _ReadingDesktopPageState();
+  ConsumerState<ReadingDesktopPage> createState() =>
+      _ReadingDesktopPageState();
 }
 
-class _ReadingDesktopPageState extends State<ReadingDesktopPage> {
+class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
   String _tab = '全部';
 
   static const _tabs = ['全部', '漫画', '图书', '笔记'];
 
   @override
   Widget build(BuildContext context) {
+    final comicState = ref.watch(comicListProvider);
+    final bookState = ref.watch(bookListProvider);
+    final noteState = ref.watch(notePageProvider);
+
+    final comics =
+        comicState is ComicListLoaded ? comicState.comics : const <ComicItem>[];
+    final books =
+        bookState is BookListLoaded ? bookState.allBooks : const <BookEntity>[];
+    final notes = noteState is NotePageLoaded
+        ? noteState.treeNodes
+        : const <NoteTreeNode>[];
+
+    final showComics = _tab == '全部' || _tab == '漫画';
+    final showBooks = _tab == '全部' || _tab == '图书';
+    final showNotes = _tab == '全部' || _tab == '笔记';
+
     return DesktopPageScaffold(
       title: '阅读',
-      subtitle: '漫画 · 图书 · 笔记 聚合 — 统一阅读进度（按类型区分，共享书签）',
+      subtitle: '漫画 ${comics.length} · 图书 ${books.length} · '
+          '笔记 ${notes.length} — 统一阅读进度（共享书签）',
       actions: Row(
         children: [
-          for (final t in _tabs)
+          for (final tab in _tabs)
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: AppChip(
-                label: t,
-                active: t == _tab,
+                label: tab,
+                active: tab == _tab,
                 compact: true,
-                onTap: () => setState(() => _tab = t),
+                onTap: () => setState(() => _tab = tab),
               ),
             ),
           const SizedBox(width: 12),
@@ -43,20 +72,280 @@ class _ReadingDesktopPageState extends State<ReadingDesktopPage> {
           ),
         ],
       ),
-      body: DesktopComingSoon(
-        icon: _tab == '笔记'
-            ? Icons.edit_note_rounded
-            : _tab == '漫画'
-                ? Icons.collections_bookmark_outlined
-                : Icons.menu_book_outlined,
-        message: switch (_tab) {
-          '笔记' =>
-            'Markdown 编辑 · 待办（- [ ]）解析 · 优先级 / 截止 / 逾期提示 · 多层目录树。',
-          '漫画' => '映射「漫画」媒体库后，此处显示漫画书架（封面 + 续读进度）。',
-          '图书' => '映射「图书」媒体库后，此处显示图书书架 + EPUB / PDF / TXT 入口。',
-          _ => '聚合视图：漫画 + 图书 + 笔记 一并展示，按统一阅读进度排序。',
-        },
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showComics && comics.isNotEmpty) ...[
+            if (_tab == '全部') const _SectionHeader('漫画'),
+            _ComicShelf(comics: comics, ref: ref),
+            const SizedBox(height: 22),
+          ],
+          if (showBooks && books.isNotEmpty) ...[
+            if (_tab == '全部') const _SectionHeader('图书'),
+            _BookShelf(books: books),
+            const SizedBox(height: 22),
+          ],
+          if (showNotes && notes.isNotEmpty) ...[
+            if (_tab == '全部') const _SectionHeader('笔记'),
+            _NoteList(nodes: notes),
+          ],
+          if (_isEmpty(showComics, comics, showBooks, books, showNotes, notes))
+            DesktopComingSoon(
+              icon: switch (_tab) {
+                '笔记' => Icons.edit_note_rounded,
+                '漫画' => Icons.collections_bookmark_outlined,
+                '图书' => Icons.menu_book_outlined,
+                _ => Icons.auto_stories_outlined,
+              },
+              message: switch (_tab) {
+                '笔记' => '映射「笔记」目录后，此处显示 Markdown 笔记树。',
+                '漫画' => '映射「漫画」媒体库后，此处显示漫画书架（封面 + 页数）。',
+                '图书' => '映射「图书」媒体库后，此处显示图书书架 + EPUB / PDF / TXT。',
+                _ => '聚合视图：漫画 + 图书 + 笔记 一并展示。先到「数据源」映射对应媒体库。',
+              },
+            ),
+        ],
       ),
+    );
+  }
+
+  bool _isEmpty(
+    bool showComics,
+    List<ComicItem> comics,
+    bool showBooks,
+    List<BookEntity> books,
+    bool showNotes,
+    List<NoteTreeNode> notes,
+  ) {
+    final c = showComics && comics.isNotEmpty;
+    final b = showBooks && books.isNotEmpty;
+    final n = showNotes && notes.isNotEmpty;
+    return !c && !b && !n;
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.title);
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          color: t.text0,
+        ),
+      ),
+    );
+  }
+}
+
+class _ComicShelf extends StatelessWidget {
+  const _ComicShelf({required this.comics, required this.ref});
+  final List<ComicItem> comics;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final connections = ref.watch(activeConnectionsProvider);
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 150,
+        childAspectRatio: 0.62,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+      ),
+      itemCount: comics.length,
+      itemBuilder: (_, i) {
+        final c = comics[i];
+        final fs = connections[c.sourceId]?.adapter.fileSystem;
+        return _Cover(
+          title: c.folderName,
+          subtitle: '${c.pageCount} 页',
+          streamPath: c.coverPath,
+          fileSystem: fs,
+          cacheKey: '${c.sourceId}_${c.coverPath}',
+        );
+      },
+    );
+  }
+}
+
+class _BookShelf extends StatelessWidget {
+  const _BookShelf({required this.books});
+  final List<BookEntity> books;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 150,
+        childAspectRatio: 0.62,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
+      ),
+      itemCount: books.length,
+      itemBuilder: (_, i) {
+        final b = books[i];
+        return _Cover(
+          title: b.displayName,
+          subtitle: b.displayAuthor,
+          localPath: b.coverPath,
+          badge: b.format.name.toUpperCase(),
+        );
+      },
+    );
+  }
+}
+
+class _NoteList extends StatelessWidget {
+  const _NoteList({required this.nodes});
+  final List<NoteTreeNode> nodes;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return GlassPanel(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Column(
+        children: [
+          for (final node in nodes)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+              child: Row(
+                children: [
+                  Icon(
+                    node.type == NoteTreeNodeType.folder
+                        ? Icons.folder_outlined
+                        : node.isTaskFile
+                            ? Icons.checklist_rounded
+                            : Icons.description_outlined,
+                    size: 17,
+                    color: node.type == NoteTreeNodeType.folder
+                        ? t.accentBright
+                        : t.text2,
+                  ),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Text(
+                      node.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: t.text0,
+                      ),
+                    ),
+                  ),
+                  if (node.type == NoteTreeNodeType.folder)
+                    Text(
+                      '${node.children.length} 项',
+                      style: TextStyle(fontSize: 11.5, color: t.text3),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Cover extends StatelessWidget {
+  const _Cover({
+    required this.title,
+    required this.subtitle,
+    this.localPath,
+    this.streamPath,
+    this.fileSystem,
+    this.cacheKey,
+    this.badge,
+  });
+
+  final String title;
+  final String subtitle;
+  final String? localPath;
+  final String? streamPath;
+  final NasFileSystem? fileSystem;
+  final String? cacheKey;
+  final String? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final placeholder = ColoredBox(
+      color: t.insetBg,
+      child: Icon(Icons.menu_book_outlined, size: 22, color: t.text3),
+    );
+    Widget cover;
+    if (localPath != null &&
+        localPath!.isNotEmpty &&
+        File(localPath!).existsSync()) {
+      cover = Image.file(
+        File(localPath!),
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => placeholder,
+      );
+    } else if (streamPath != null && streamPath!.isNotEmpty) {
+      cover = StreamImage(
+        path: streamPath,
+        fileSystem: fileSystem,
+        placeholder: placeholder,
+        errorWidget: placeholder,
+        cacheKey: cacheKey,
+      );
+    } else {
+      cover = placeholder;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                cover,
+                if (badge != null)
+                  Positioned(
+                    top: 6,
+                    left: 6,
+                    child: AppTag(badge!, variant: TagVariant.neutral),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: t.text0,
+          ),
+        ),
+        Text(
+          subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 11, color: t.text2),
+        ),
+      ],
     );
   }
 }

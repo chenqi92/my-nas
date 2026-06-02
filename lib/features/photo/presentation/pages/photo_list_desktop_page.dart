@@ -1,41 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
+import 'package:my_nas/features/photo/presentation/pages/photo_list_page.dart';
+import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
+import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
+import 'package:my_nas/shared/widgets/stream_image.dart';
 
-/// 桌面端「照片」骨架。
-///
-/// 视觉对齐设计稿 media2.jsx (Photos)：时间线 / 相册 / 地图 segmented +
-/// 人物 row + 响应式网格。地图展示 [TagVariant.plan] 占位（PHO-22 规划）。
-class PhotoListDesktopPage extends StatefulWidget {
+/// 桌面端「照片」——接 photoListProvider 真实数据，时间线响应式网格。
+class PhotoListDesktopPage extends ConsumerStatefulWidget {
   const PhotoListDesktopPage({super.key});
 
   @override
-  State<PhotoListDesktopPage> createState() => _PhotoListDesktopPageState();
+  ConsumerState<PhotoListDesktopPage> createState() =>
+      _PhotoListDesktopPageState();
 }
 
-class _PhotoListDesktopPageState extends State<PhotoListDesktopPage> {
+class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
   String _view = 'timeline';
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final state = ref.watch(photoListProvider);
+    final subtitle = state is PhotoListLoaded
+        ? '${state.totalCount} 张 · ${state.dateGroups.length} 个时间分组'
+        : '人脸识别 · EXIF · 重复检测 · 自动增量扫描';
+
     return DesktopPageScaffold(
       title: '照片',
-      subtitle: '人脸识别 · EXIF · 重复检测 · 自动增量扫描',
-      actions: Row(
-        children: [
-          AppSegmented<String>(
-            value: _view,
-            onChanged: (v) => setState(() => _view = v),
-            dense: true,
-            options: const [
-              AppSegmentedOption(value: 'timeline', label: '时间线'),
-              AppSegmentedOption(value: 'albums', label: '相册'),
-              AppSegmentedOption(value: 'map', label: '地图'),
-            ],
-          ),
+      subtitle: subtitle,
+      actions: AppSegmented<String>(
+        value: _view,
+        onChanged: (v) => setState(() => _view = v),
+        dense: true,
+        options: const [
+          AppSegmentedOption(value: 'timeline', label: '时间线'),
+          AppSegmentedOption(value: 'albums', label: '相册'),
+          AppSegmentedOption(value: 'map', label: '地图'),
         ],
       ),
       body: Column(
@@ -83,24 +89,94 @@ class _PhotoListDesktopPageState extends State<PhotoListDesktopPage> {
                         size: 36, color: t.text3),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '未识别',
-                    style: TextStyle(fontSize: 11.5, color: t.text3),
-                  ),
+                  Text('未识别', style: TextStyle(fontSize: 11.5, color: t.text3)),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 22),
-          DesktopComingSoon(
-            icon: _view == 'map'
-                ? Icons.map_outlined
-                : Icons.photo_library_outlined,
-            message: _view == 'map'
-                ? '按 GPS EXIF 在地图上聚合照片足迹（规划中）。'
-                : '映射「照片」媒体库后，此处显示响应式网格 + 时间分组。',
-          ),
+          if (_view == 'map')
+            const DesktopComingSoon(
+              icon: Icons.map_outlined,
+              message: '按 GPS EXIF 在地图上聚合照片足迹（规划中）。',
+            )
+          else
+            _PhotoBody(state: state, ref: ref),
         ],
+      ),
+    );
+  }
+}
+
+class _PhotoBody extends StatelessWidget {
+  const _PhotoBody({required this.state, required this.ref});
+  final PhotoListState state;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    if (state is PhotoListLoading) {
+      return const SizedBox(
+        height: 320,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (state is! PhotoListLoaded) {
+      return const DesktopComingSoon(
+        icon: Icons.photo_library_outlined,
+        message: '映射「照片」媒体库后，此处显示响应式网格 + 时间分组。',
+      );
+    }
+    final photos = (state as PhotoListLoaded).allPhotos;
+    if (photos.isEmpty) {
+      return const DesktopComingSoon(
+        icon: Icons.photo_library_outlined,
+        message: '照片库为空，扫描「照片」媒体库后会出现在这里。',
+      );
+    }
+    final connections = ref.watch(activeConnectionsProvider);
+    return GlassPanel(
+      padding: const EdgeInsets.all(10),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 150,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+        ),
+        itemCount: photos.length,
+        itemBuilder: (_, i) {
+          final p = photos[i];
+          final fs = connections[p.sourceId]?.adapter.fileSystem;
+          return _PhotoTile(photo: p, fileSystem: fs);
+        },
+      ),
+    );
+  }
+}
+
+class _PhotoTile extends StatelessWidget {
+  const _PhotoTile({required this.photo, required this.fileSystem});
+  final PhotoEntity photo;
+  final NasFileSystem? fileSystem;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final placeholder = ColoredBox(
+      color: t.insetBg,
+      child: Icon(Icons.photo_rounded, size: 20, color: t.text3),
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: StreamImage(
+        url: photo.thumbnailUrl,
+        path: photo.filePath,
+        fileSystem: fileSystem,
+        placeholder: placeholder,
+        errorWidget: placeholder,
+        cacheKey: photo.uniqueKey,
       ),
     );
   }
