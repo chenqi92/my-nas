@@ -333,10 +333,11 @@ class _SystemPulse extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
     return GlassPanel(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       child: SizedBox(
         width: double.infinity,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -401,17 +402,17 @@ class _PulseRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 26,
+            height: 26,
             decoration: BoxDecoration(
               color: t.insetBg,
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 16, color: iconColor),
+            child: Icon(icon, size: 14, color: iconColor),
           ),
           const SizedBox(width: 12),
           Expanded(
