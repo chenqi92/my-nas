@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/domain/entities/transfer_task.dart';
@@ -75,18 +76,46 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
     // 桌面：左 sidebar 替代 TabBar，让"下载/上传/缓存"垂直排列，
     // 右侧显示选中分类的内容。AppBar 收回三段 TabBar。
     if (isDesktop) {
+      final t = DesignTokens.of(context);
       return Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          backgroundColor: Colors.transparent,
-          title: const Text('传输管理'),
-          actions: actions,
-        ),
-        body: state.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        body: Padding(
+          padding: const EdgeInsets.fromLTRB(30, 26, 30, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '传输队列',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: t.text0,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '上传 · 下载 · 缓存 — 任务进度集中管理',
+                          style: TextStyle(fontSize: 13, color: t.text2),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ...actions,
+                ],
+              ),
+              const SizedBox(height: 22),
+              Expanded(
+                child: state.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(
                     width: 180,
@@ -132,7 +161,11 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
                   ),
                 ],
               ),
-      );
+            ),
+          ],
+        ),
+      ),
+    );
     }
 
     return Scaffold(
