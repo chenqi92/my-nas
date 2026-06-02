@@ -337,7 +337,6 @@ class _SystemPulse extends ConsumerWidget {
       child: SizedBox(
         width: double.infinity,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -359,24 +358,32 @@ class _SystemPulse extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            _PulseRow(
-              icon: Icons.download_rounded,
-              iconColor: t.accentBright,
-              title: '下载吞吐',
-              subtitle: '当前无任务',
-            ),
-            _PulseRow(
-              icon: Icons.image_search_rounded,
-              iconColor: const Color(0xFFFB923C),
-              title: '照片扫描',
-              subtitle: '空闲',
-            ),
-            _PulseRow(
-              icon: Icons.cast_rounded,
-              iconColor: t.hot,
-              title: '直播中',
-              subtitle: '映射 M3U8 源后激活',
+            const SizedBox(height: 4),
+            // 三行在剩余空间内均匀分布，避免固定高度下溢出。
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _PulseRow(
+                    icon: Icons.download_rounded,
+                    iconColor: t.accentBright,
+                    title: '下载吞吐',
+                    subtitle: '当前无任务',
+                  ),
+                  _PulseRow(
+                    icon: Icons.image_search_rounded,
+                    iconColor: const Color(0xFFFB923C),
+                    title: '照片扫描',
+                    subtitle: '空闲',
+                  ),
+                  _PulseRow(
+                    icon: Icons.cast_rounded,
+                    iconColor: t.hot,
+                    title: '直播中',
+                    subtitle: '映射 M3U8 源后激活',
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -402,7 +409,7 @@ class _PulseRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
           Container(

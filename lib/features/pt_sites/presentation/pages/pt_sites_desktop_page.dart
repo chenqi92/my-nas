@@ -195,17 +195,23 @@ class _UserInfoBar extends StatelessWidget {
               ? DotStatus.ok
               : DotStatus.off),
           const SizedBox(width: 10),
-          Text(
-            user?.username ?? conn.source.displayName,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: t.text0,
+          Flexible(
+            child: Text(
+              user?.username ?? conn.source.displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: t.text0,
+              ),
             ),
           ),
           if (user?.userClass != null) ...[
             const SizedBox(width: 8),
             Text(user!.userClass!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 12, color: t.text2)),
           ],
           const Spacer(),
