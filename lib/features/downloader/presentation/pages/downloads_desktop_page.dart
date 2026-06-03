@@ -4,6 +4,7 @@ import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/downloader/presentation/widgets/download_detail_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
+import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
@@ -210,35 +211,115 @@ class _TaskTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    return GlassPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      child: Column(
-        children: [
-          _headerRow(t),
-          for (final task in tasks)
-            _TaskRow(task: task, onTap: () => onOpen(task)),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        GlassPanel(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              _headerRow(t),
+              for (final task in tasks)
+                _TaskRow(task: task, onTap: () => onOpen(task)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Text('全局限速', style: TextStyle(fontSize: 12, color: t.text2)),
+            const SizedBox(width: 8),
+            const AppTag('UI 受限', variant: TagVariant.neutral),
+            const Spacer(),
+            Text(
+              '分类 · 标签 · 保存位置 · 备用限速均可在客户端设置内管理',
+              style: TextStyle(fontSize: 12, color: t.text2),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _headerRow(DesignTokens t) {
     TextStyle s() => TextStyle(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w600,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
           color: t.text3,
         );
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: t.hairline)),
+      ),
       child: Row(
         children: [
-          Expanded(flex: 5, child: Text('名称', style: s())),
-          Expanded(flex: 3, child: Text('进度', style: s())),
-          SizedBox(width: 90, child: Text('↓ 下行', style: s())),
-          SizedBox(width: 90, child: Text('↑ 上行', style: s())),
-          SizedBox(width: 70, child: Text('剩余', style: s())),
-          SizedBox(width: 64, child: Text('状态', style: s())),
+          Expanded(child: Text('名称', style: s())),
+          const SizedBox(width: 10),
+          SizedBox(width: 96, child: Text('客户端', style: s())),
+          SizedBox(width: 80, child: Text('状态', style: s())),
+          SizedBox(width: 150, child: Text('进度', style: s())),
+          const SizedBox(width: 10),
+          SizedBox(width: 92, child: Text('↓ 速度', style: s())),
+          SizedBox(width: 92, child: Text('↑ 速度', style: s())),
+          SizedBox(width: 72, child: Text('大小', style: s())),
+          SizedBox(width: 64, child: Text('ETA', style: s())),
         ],
+      ),
+    );
+  }
+}
+
+/// 设计稿 .state-pill：彩色状态徽章。
+class _StatePill extends StatelessWidget {
+  const _StatePill({required this.status});
+  final UnifiedDownloadStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg) = switch (status) {
+      UnifiedDownloadStatus.downloading => (
+          const Color(0x245B9DFF),
+          const Color(0xFF7DB1FF)
+        ),
+      UnifiedDownloadStatus.seeding => (
+          const Color(0x2434D399),
+          const Color(0xFF34D399)
+        ),
+      UnifiedDownloadStatus.paused => (
+          const Color(0x2494A3B8),
+          const Color(0xFF94A3B8)
+        ),
+      UnifiedDownloadStatus.waiting => (
+          const Color(0x24F5B754),
+          const Color(0xFFF5B754)
+        ),
+      UnifiedDownloadStatus.completed => (
+          const Color(0x246E788C),
+          const Color(0xFF8B94A7)
+        ),
+      UnifiedDownloadStatus.error => (
+          const Color(0x24F87171),
+          const Color(0xFFF87171)
+        ),
+    };
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          status.label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: fg,
+          ),
+        ),
       ),
     );
   }
@@ -258,12 +339,14 @@ class _TaskRow extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
         hoverColor: t.chipBg,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: t.hairline)),
+          ),
           child: Row(
             children: [
               Expanded(
-                flex: 5,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -277,27 +360,39 @@ class _TaskRow extends StatelessWidget {
                         color: t.text0,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${task.sourceName} · ${formatBytes(task.totalBytes)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11, color: t.text2),
-                    ),
+                    if (task.ratio != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '分享率 ${task.ratio!.toStringAsFixed(2)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 10.5, color: t.text3),
+                      ),
+                    ],
                   ],
                 ),
               ),
               const SizedBox(width: 10),
-              Expanded(
-                flex: 3,
+              SizedBox(
+                width: 96,
+                child: Text(
+                  task.sourceName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: t.text2),
+                ),
+              ),
+              SizedBox(width: 80, child: _StatePill(status: task.status)),
+              SizedBox(
+                width: 150,
                 child: Row(
                   children: [
                     Expanded(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(999),
                         child: LinearProgressIndicator(
                           value: task.progress,
-                          minHeight: 6,
+                          minHeight: 5,
                           backgroundColor: t.insetBg,
                           valueColor: AlwaysStoppedAnimation(
                             task.status == UnifiedDownloadStatus.seeding
@@ -308,12 +403,16 @@ class _TaskRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      '${(task.progress * 100).toStringAsFixed(0)}%',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: t.text2,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                    SizedBox(
+                      width: 30,
+                      child: Text(
+                        '${(task.progress * 100).toStringAsFixed(0)}%',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: t.text3,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                       ),
                     ),
                   ],
@@ -321,9 +420,11 @@ class _TaskRow extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               SizedBox(
-                width: 90,
+                width: 92,
                 child: Text(
-                  formatSpeed(task.downloadSpeed),
+                  task.downloadSpeed > 0
+                      ? '↓${formatSpeed(task.downloadSpeed)}'
+                      : '—',
                   style: TextStyle(
                     fontSize: 12,
                     color: task.downloadSpeed > 0 ? t.accentBright : t.text3,
@@ -332,9 +433,11 @@ class _TaskRow extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 90,
+                width: 92,
                 child: Text(
-                  formatSpeed(task.uploadSpeed),
+                  task.uploadSpeed > 0
+                      ? '↑${formatSpeed(task.uploadSpeed)}'
+                      : '—',
                   style: TextStyle(
                     fontSize: 12,
                     color: t.text2,
@@ -343,27 +446,21 @@ class _TaskRow extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 70,
+                width: 72,
                 child: Text(
-                  formatEta(task.etaSeconds),
-                  style: TextStyle(fontSize: 12, color: t.text2),
+                  formatBytes(task.totalBytes),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: t.text2,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
               SizedBox(
                 width: 64,
-                child: Row(
-                  children: [
-                    StatusDot(_dot(task.status)),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        task.status.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11, color: t.text2),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  formatEta(task.etaSeconds),
+                  style: TextStyle(fontSize: 12, color: t.text2),
                 ),
               ),
             ],
@@ -417,11 +514,3 @@ class _EmptyTasks extends StatelessWidget {
   }
 }
 
-DotStatus _dot(UnifiedDownloadStatus s) => switch (s) {
-      UnifiedDownloadStatus.downloading => DotStatus.accent,
-      UnifiedDownloadStatus.seeding => DotStatus.ok,
-      UnifiedDownloadStatus.paused => DotStatus.off,
-      UnifiedDownloadStatus.completed => DotStatus.ok,
-      UnifiedDownloadStatus.waiting => DotStatus.warn,
-      UnifiedDownloadStatus.error => DotStatus.err,
-    };

@@ -114,28 +114,112 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
             if (_filter == 'tv') return s.isTv;
             return true;
           }).toList();
-          if (filtered.isEmpty) {
-            return DesktopComingSoon(
-              icon: Icons.bookmark_border_rounded,
-              message: subs.isEmpty
-                  ? '还没有订阅。点击右上角「新增订阅」搜索并添加想追的影视。'
-                  : '当前筛选下没有订阅。',
-            );
-          }
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 160,
-              childAspectRatio: 0.56,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: filtered.length,
-            itemBuilder: (_, i) =>
-                _SubCard(sub: filtered[i], sourceId: selected, t: t),
+          final stats = _SubStatRow(
+            total: subs.length,
+            movies: subs.where((s) => s.isMovie).length,
+            tv: subs.where((s) => s.isTv).length,
+            chasing: subs.where((s) => s.isTv && !s.isCompleted).length,
+          );
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              stats,
+              const SizedBox(height: 22),
+              if (filtered.isEmpty)
+                DesktopComingSoon(
+                  icon: Icons.bookmark_border_rounded,
+                  message: subs.isEmpty
+                      ? '还没有订阅。点击右上角「新增订阅」搜索并添加想追的影视。'
+                      : '当前筛选下没有订阅。',
+                )
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate:
+                      const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 160,
+                    childAspectRatio: 0.56,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: filtered.length,
+                  itemBuilder: (_, i) =>
+                      _SubCard(sub: filtered[i], sourceId: selected, t: t),
+                ),
+            ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _SubStatRow extends StatelessWidget {
+  const _SubStatRow({
+    required this.total,
+    required this.movies,
+    required this.tv,
+    required this.chasing,
+  });
+  final int total;
+  final int movies;
+  final int tv;
+  final int chasing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: _StatCard(value: '$total', label: '订阅中')),
+        const SizedBox(width: 14),
+        Expanded(child: _StatCard(value: '$movies', label: '电影')),
+        const SizedBox(width: 14),
+        Expanded(child: _StatCard(value: '$tv', label: '剧集')),
+        const SizedBox(width: 14),
+        Expanded(child: _StatCard(value: '$chasing', label: '追剧中', accent: true)),
+      ],
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.value,
+    required this.label,
+    this.accent = false,
+  });
+  final String value;
+  final String label;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: t.cardBg,
+        border: Border.all(color: t.cardBorder),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+              color: accent ? t.accentBright : t.text0,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, color: t.text2)),
+        ],
       ),
     );
   }
