@@ -8,10 +8,27 @@ import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_p
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/transmission/presentation/providers/transmission_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
-import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 
-/// 下载任务详情浮层（设计稿 dialogs.jsx · DownloadDetail）。
+/// 打开下载任务详情右侧抽屉（设计稿 dialogs.jsx · DownloadDetail，右侧 drawer）。
+Future<void> showDownloadDetailDrawer(BuildContext context, String taskKey) {
+  return showGeneralDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: '下载详情',
+    barrierColor: Colors.black.withValues(alpha: 0.45),
+    transitionDuration: const Duration(milliseconds: 220),
+    pageBuilder: (_, _, _) =>
+        Align(alignment: Alignment.centerRight, child: DownloadDetailSheet(taskKey: taskKey)),
+    transitionBuilder: (_, anim, _, child) => SlideTransition(
+      position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+          .animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+      child: child,
+    ),
+  );
+}
+
+/// 下载任务详情抽屉内容（设计稿 dialogs.jsx · DownloadDetail）。
 ///
 /// 复用 [UnifiedDownloadTask]，按 sourceId 实时跟随 aggregate provider，
 /// 提供 暂停 / 继续 / 删除（可选删文件）等操作，跨 aria2 / qBittorrent /
@@ -28,18 +45,18 @@ class DownloadDetailSheet extends ConsumerWidget {
     final tasks = ref.watch(aggregatedDownloadTasksProvider);
     final task = tasks.where((e) => e.uniqueKey == taskKey).firstOrNull;
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.all(24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 640, maxHeight: 720),
-        child: GlassPanel(
-          strong: true,
-          padding: EdgeInsets.zero,
+    return Material(
+      color: t.panelBgStrong,
+      child: Container(
+        width: 440,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          border: Border(left: BorderSide(color: t.hairline)),
+        ),
+        child: SafeArea(
           child: task == null
               ? _Gone(t: t, onClose: () => Navigator.of(context).pop())
               : Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _Header(
@@ -47,7 +64,7 @@ class DownloadDetailSheet extends ConsumerWidget {
                       t: t,
                       onClose: () => Navigator.of(context).pop(),
                     ),
-                    Flexible(
+                    Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 22, vertical: 18),

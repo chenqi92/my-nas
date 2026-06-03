@@ -545,11 +545,7 @@ class _MiniTaskRow extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => showDialog<void>(
-          context: context,
-          barrierColor: Colors.black.withValues(alpha: 0.55),
-          builder: (_) => DownloadDetailSheet(taskKey: task.uniqueKey),
-        ),
+        onTap: () => showDownloadDetailDrawer(context, task.uniqueKey),
         borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
         hoverColor: t.chipBg,
         child: Padding(

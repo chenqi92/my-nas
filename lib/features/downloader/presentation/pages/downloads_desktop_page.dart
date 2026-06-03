@@ -82,11 +82,8 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
           else
             _TaskTable(
               tasks: tasks,
-              onOpen: (task) => showDialog<void>(
-                context: context,
-                barrierColor: Colors.black.withValues(alpha: 0.55),
-                builder: (_) => DownloadDetailSheet(taskKey: task.uniqueKey),
-              ),
+              onOpen: (task) =>
+                  showDownloadDetailDrawer(context, task.uniqueKey),
             ),
         ],
       ),

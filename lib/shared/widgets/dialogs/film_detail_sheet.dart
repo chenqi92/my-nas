@@ -127,10 +127,11 @@ class _Hero extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.18),
-                  Colors.black.withValues(alpha: 0.92),
+                  Colors.black.withValues(alpha: 0.15),
+                  Colors.black.withValues(alpha: 0.45),
+                  t.panelBgStrong,
                 ],
-                stops: const [0.45, 1.0],
+                stops: const [0.0, 0.55, 0.98],
               ),
             ),
           ),
@@ -225,19 +226,23 @@ class _Actions extends ConsumerWidget {
   final VideoMetadata meta;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Wrap(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quality = meta.resolution ?? meta.hdrFormat;
+    final playLabel = (meta.isWatched ? '继续播放' : '播放') +
+        (quality != null ? ' · $quality' : '');
+    return Wrap(
         spacing: 8,
         runSpacing: 8,
         children: [
           FilledButton.icon(
             onPressed: () => _play(context, ref),
             icon: const Icon(Icons.play_arrow_rounded, size: 16),
-            label: Text(meta.isWatched ? '重新播放' : '播放'),
+            label: Text(playLabel),
           ),
           OutlinedButton.icon(
             onPressed: () {},
-            icon: const Icon(Icons.favorite_border_rounded, size: 14),
-            label: const Text('收藏'),
+            icon: const Icon(Icons.playlist_add_rounded, size: 15),
+            label: const Text('片单'),
           ),
           OutlinedButton.icon(
             onPressed: () {},
@@ -251,6 +256,7 @@ class _Actions extends ConsumerWidget {
           ),
         ],
       );
+  }
 
   Future<void> _play(BuildContext context, WidgetRef ref) async {
     final connection = ref.read(activeConnectionsProvider)[meta.sourceId];
@@ -426,32 +432,32 @@ class _Cast extends StatelessWidget {
           style: TextStyle(fontSize: 12.5, color: t.text2));
     }
     return Wrap(
-      spacing: 12,
-      runSpacing: 12,
+      spacing: 14,
+      runSpacing: 14,
       children: [
         for (final name in cast.take(18))
           SizedBox(
-            width: 86,
+            width: 88,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: t.insetBg,
+                AspectRatio(
+                  aspectRatio: 1,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: t.insetBg,
+                    ),
+                    child: Icon(Icons.person_outline_rounded, color: t.text3),
                   ),
-                  child: Icon(Icons.person_outline_rounded,
-                      color: t.text3),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 7),
                 Text(
                   name,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: t.text1,
                   ),
