@@ -164,12 +164,13 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.fromLTRB(0, 4, 0, 18),
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 16,
+          fontSize: 20,
           fontWeight: FontWeight.w800,
+          letterSpacing: -0.015 * 20,
           color: t.text0,
         ),
       ),
@@ -196,8 +197,8 @@ class _ComicShelf extends StatelessWidget {
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 150,
         childAspectRatio: 0.62,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
+        crossAxisSpacing: 18,
+        mainAxisSpacing: 18,
       ),
       itemCount: comics.length,
       itemBuilder: (_, i) {
@@ -229,8 +230,8 @@ class _BookShelf extends StatelessWidget {
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 150,
         childAspectRatio: 0.62,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
+        crossAxisSpacing: 18,
+        mainAxisSpacing: 18,
       ),
       itemCount: books.length,
       itemBuilder: (_, i) {
@@ -255,53 +256,107 @@ class _NoteList extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     return GlassPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.all(24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final node in nodes)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-              child: Row(
-                children: [
-                  Icon(
-                    node.type == NoteTreeNodeType.folder
-                        ? Icons.folder_outlined
-                        : node.isTaskFile
-                            ? Icons.checklist_rounded
-                            : Icons.description_outlined,
-                    size: 17,
-                    color: node.type == NoteTreeNodeType.folder
-                        ? t.accentBright
-                        : t.text2,
-                  ),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Text(
-                      node.displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: t.text0,
-                      ),
-                    ),
-                  ),
-                  if (node.type == NoteTreeNodeType.folder)
-                    Text(
-                      '${node.children.length} 项',
-                      style: TextStyle(fontSize: 11.5, color: t.text3),
-                    ),
-                ],
+          Row(
+            children: [
+              Text(
+                'Markdown 笔记',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: t.text0,
+                ),
               ),
-            ),
+              const Spacer(),
+              const AppChip(label: '新建', icon: Icons.add_rounded, compact: true),
+            ],
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < nodes.length; i++)
+            _NoteRow(node: nodes[i], isLast: i == nodes.length - 1),
         ],
       ),
     );
   }
 }
 
-class _Cover extends StatelessWidget {
+class _NoteRow extends StatelessWidget {
+  const _NoteRow({required this.node, required this.isLast});
+  final NoteTreeNode node;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final isFolder = node.type == NoteTreeNodeType.folder;
+    // 真实 model 无每条笔记的阅读进度字段，避免伪造百分比：右侧只显示可派生的
+    // 文件夹子项数（详见 data-blocked），文件行则给副文本占位。
+    final detail = isFolder
+        ? '${node.children.length} 项'
+        : node.isTaskFile
+            ? '任务清单'
+            : 'Markdown';
+    return Container(
+      decoration: BoxDecoration(
+        border: isLast
+            ? null
+            : Border(bottom: BorderSide(color: t.hairline)),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: t.insetBg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              isFolder
+                  ? Icons.folder_outlined
+                  : node.isTaskFile
+                      ? Icons.checklist_rounded
+                      : Icons.menu_book_rounded,
+              size: 16,
+              color: t.accentBright,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  node.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: t.text0,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: t.text2),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Cover extends StatefulWidget {
   const _Cover({
     required this.title,
     required this.subtitle,
@@ -323,6 +378,13 @@ class _Cover extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
+  State<_Cover> createState() => _CoverState();
+}
+
+class _CoverState extends State<_Cover> {
+  bool _hover = false;
+
+  @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     final placeholder = ColoredBox(
@@ -330,68 +392,113 @@ class _Cover extends StatelessWidget {
       child: Icon(Icons.menu_book_outlined, size: 22, color: t.text3),
     );
     Widget cover;
-    if (localPath != null &&
-        localPath!.isNotEmpty &&
-        File(localPath!).existsSync()) {
+    if (widget.localPath != null &&
+        widget.localPath!.isNotEmpty &&
+        File(widget.localPath!).existsSync()) {
       cover = Image.file(
-        File(localPath!),
+        File(widget.localPath!),
         fit: BoxFit.cover,
         errorBuilder: (_, _, _) => placeholder,
       );
-    } else if (streamPath != null && streamPath!.isNotEmpty) {
+    } else if (widget.streamPath != null && widget.streamPath!.isNotEmpty) {
       cover = StreamImage(
-        path: streamPath,
-        fileSystem: fileSystem,
+        path: widget.streamPath,
+        fileSystem: widget.fileSystem,
         placeholder: placeholder,
         errorWidget: placeholder,
-        cacheKey: cacheKey,
+        cacheKey: widget.cacheKey,
       );
     } else {
       cover = placeholder;
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                cover,
-                if (badge != null)
-                  Positioned(
-                    top: 6,
-                    left: 6,
-                    child: AppTag(badge!, variant: TagVariant.neutral),
-                  ),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(onTap: onTap),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: AnimatedScale(
+              scale: _hover ? 1.012 : 1,
+              duration: const Duration(milliseconds: 220),
+              curve: DesignTokens.easeOut,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: DesignTokens.easeOut,
+                transform: Matrix4.translationValues(0, _hover ? -5 : 0, 0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: _hover ? 0.55 : 0.4),
+                      blurRadius: _hover ? 28 : 16,
+                      offset: const Offset(0, 12),
+                    ),
+                    if (_hover)
+                      BoxShadow(
+                        color: t.accent.withValues(alpha: 0.25),
+                        blurRadius: 28,
+                        offset: const Offset(0, 8),
+                      ),
+                  ],
                 ),
-              ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      cover,
+                      if (widget.badge != null)
+                        Positioned(
+                          top: 6,
+                          left: 6,
+                          child: AppTag(widget.badge!,
+                              variant: TagVariant.neutral),
+                        ),
+                      if (_hover)
+                        const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Colors.transparent, Color(0x8C000000)],
+                              stops: [0.4, 1],
+                            ),
+                          ),
+                        ),
+                      // 设计稿封面底部有 accent 进度条；但漫画/图书 model 无逐项
+                      // 阅读进度字段，无法真实填充，故省略（data-blocked）。
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(onTap: widget.onTap),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w600,
-            color: t.text0,
+          const SizedBox(height: 9),
+          Text(
+            widget.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: t.text0,
+            ),
           ),
-        ),
-        Text(
-          subtitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 11, color: t.text2),
-        ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            widget.subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11.5, color: t.text2),
+          ),
+        ],
+      ),
     );
   }
 }
