@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
-import 'package:my_nas/features/pt_sites/presentation/widgets/pt_torrent_card.dart';
 import 'package:my_nas/features/pt_sites/presentation/widgets/send_to_downloader_sheet.dart';
+import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
+import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
-import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/dialogs/pt_torrent_detail_sheet.dart';
 
@@ -24,6 +26,9 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
   String? _sourceId;
   final _searchCtrl = TextEditingController();
   final _connected = <String>{};
+
+  /// 本地分类过滤（电影/剧集/音乐），设计稿为本地单选态。
+  String? _category;
 
   @override
   void dispose() {
@@ -58,7 +63,7 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
     if (sources.isEmpty) {
       return const DesktopPageScaffold(
         title: 'PT 站点',
-        subtitle: '资源站点聚合 — 浏览 / 搜索 / 一键发送到下载器',
+        subtitle: '聚合搜索 · 签到 · 一键发送到下载器',
         body: DesktopComingSoon(
           icon: Icons.rss_feed_rounded,
           message: '尚未配置 PT 站点。到「数据源」添加资源站点后，这里可浏览种子并一键发送到下载器。',
@@ -76,8 +81,8 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
 
     return DesktopPageScaffold(
       title: 'PT 站点',
-      subtitle: '资源站点聚合 — 浏览 / 搜索 / 一键发送到下载器',
-      maxWidth: 1400,
+      subtitle: '聚合搜索 · 签到 · 一键发送到下载器',
+      maxWidth: 1500,
       actions: sources.length > 1
           ? Row(
               children: [
@@ -97,201 +102,538 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _UserInfoBar(conn: conn),
-          const SizedBox(height: 14),
-          _SearchBar(
+          _SiteStatsRow(sources: sources),
+          const SizedBox(height: 20),
+          _SearchPanel(
             controller: _searchCtrl,
+            siteCount: sources.length,
+            resultCount: listState.torrents.length,
+            category: _category,
+            onCategory: (c) =>
+                setState(() => _category = _category == c ? null : c),
             onSubmit: () => _search(selected),
+            child: _resultsBody(context, t, conn, listState, selected),
           ),
-          const SizedBox(height: 14),
-          if (conn.status == PTSiteConnectionStatus.error)
-            DesktopComingSoon(
-              icon: Icons.link_off_rounded,
-              message: '连接失败：${conn.errorMessage ?? "请检查站点配置"}',
-            )
-          else if (listState.isLoading)
-            const SizedBox(
-              height: 280,
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (listState.error != null)
-            DesktopComingSoon(
-              icon: Icons.error_outline_rounded,
-              message: listState.error!,
-            )
-          else if (listState.torrents.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 42),
-              decoration: BoxDecoration(
-                color: t.panelBg,
-                border: Border.all(color: t.panelBorder),
-                borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-              ),
-              child: Center(
-                child: Text('没有匹配的种子。',
-                    style: TextStyle(fontSize: 13, color: t.text2)),
-              ),
-            )
-          else
-            Column(
-              children: [
-                for (final torrent in listState.torrents)
-                  PTTorrentCard(
-                    torrent: torrent,
-                    onTap: () => showDialog<void>(
-                      context: context,
-                      barrierColor: Colors.black.withValues(alpha: 0.55),
-                      builder: (_) => PtTorrentDetailSheet(
-                        torrent: torrent,
-                        sourceId: selected,
-                      ),
-                    ),
-                    onDownload: () => showAdaptiveModalSheet<void>(
-                      context: context,
-                      builder: (_) => SendToDownloaderSheet(
-                        torrent: torrent,
-                        sourceId: selected,
-                      ),
-                    ),
-                  ),
-                if (listState.hasMore)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: OutlinedButton(
-                      onPressed: () => ref
-                          .read(ptTorrentListProvider(selected).notifier)
-                          .loadMore(),
-                      child: listState.isLoadingMore
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('加载更多'),
-                    ),
-                  ),
-              ],
-            ),
         ],
       ),
+    );
+  }
+
+  Widget _resultsBody(
+    BuildContext context,
+    DesignTokens t,
+    PTSiteConnection conn,
+    PTTorrentListState listState,
+    String selected,
+  ) {
+    if (conn.status == PTSiteConnectionStatus.error) {
+      return _PanelMessage(
+        icon: Icons.link_off_rounded,
+        message: '连接失败：${conn.errorMessage ?? "请检查站点配置"}',
+      );
+    }
+    if (listState.isLoading) {
+      return const SizedBox(
+        height: 240,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (listState.error != null) {
+      return _PanelMessage(
+        icon: Icons.error_outline_rounded,
+        message: listState.error!,
+      );
+    }
+
+    // 本地分类过滤：后端无独立分类字段时按 category 文案模糊匹配。
+    final rows = _category == null
+        ? listState.torrents
+        : listState.torrents
+            .where((x) => (x.category ?? '').contains(_category!))
+            .toList();
+
+    if (rows.isEmpty) {
+      return const _PanelMessage(
+        icon: Icons.inbox_outlined,
+        message: '没有匹配的种子。',
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _ResultHeaderRow(),
+        for (final torrent in rows)
+          _ResultRow(
+            torrent: torrent,
+            onOpen: () => showDialog<void>(
+              context: context,
+              barrierColor: Colors.black.withValues(alpha: 0.55),
+              builder: (_) => PtTorrentDetailSheet(
+                torrent: torrent,
+                sourceId: selected,
+              ),
+            ),
+            onDownload: () => showAdaptiveModalSheet<void>(
+              context: context,
+              builder: (_) => SendToDownloaderSheet(
+                torrent: torrent,
+                sourceId: selected,
+              ),
+            ),
+          ),
+        if (listState.hasMore)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: OutlinedButton(
+                onPressed: () => ref
+                    .read(ptTorrentListProvider(selected).notifier)
+                    .loadMore(),
+                child: listState.isLoadingMore
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('加载更多'),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
 
-class _UserInfoBar extends StatelessWidget {
-  const _UserInfoBar({required this.conn});
-  final PTSiteConnection conn;
+/// 设计稿 `.stat-row`：每个站点一张统计卡片（分享率 / 魔力 / 上传 + 等级）。
+class _SiteStatsRow extends StatelessWidget {
+  const _SiteStatsRow({required this.sources});
+  final List<SourceEntity> sources;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, c) {
+          // 与 .stat-row minmax(240) 对齐的响应式列数。
+          const minTile = 240.0;
+          const gap = 14.0;
+          final cols =
+              ((c.maxWidth + gap) / (minTile + gap)).floor().clamp(1, 4);
+          final tileW = (c.maxWidth - gap * (cols - 1)) / cols;
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              for (final s in sources)
+                SizedBox(width: tileW, child: _SiteStatCard(sourceId: s.id)),
+            ],
+          );
+        },
+      );
+}
+
+class _SiteStatCard extends ConsumerWidget {
+  const _SiteStatCard({required this.sourceId});
+  final String sourceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final conn = ref.watch(ptSiteConnectionProvider(sourceId));
     final user = conn.userInfo;
     final connecting = conn.status == PTSiteConnectionStatus.connecting;
-    return GlassPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      child: Row(
+    final ratioVal = user?.ratio;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          StatusDot(conn.status == PTSiteConnectionStatus.connected
-              ? DotStatus.ok
-              : DotStatus.off),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              user?.username ?? conn.source.displayName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: t.text0,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  conn.source.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: t.text0,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              // 后端无「签到状态」字段：始终给签到入口（data-blocked，不伪造已签到态）。
+              const AppChip(label: '签到', compact: true),
+            ],
           ),
-          if (user?.userClass != null) ...[
-            const SizedBox(width: 8),
-            Text(user!.userClass!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, color: t.text2)),
-          ],
-          const Spacer(),
+          const SizedBox(height: 10),
           if (connecting)
             const SizedBox(
-                width: 16, height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2))
-          else if (user != null) ...[
-            _metric('↑', user.formattedUploaded, t.ok, t),
-            _div(t),
-            _metric('↓', user.formattedDownloaded, t.accentBright, t),
-            _div(t),
-            _metric('分享率', user.formattedRatio, t.text0, t),
-            _div(t),
-            _metric('魔力', user.formattedBonus, t.warn, t),
-          ],
+              height: 38,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            Row(
+              children: [
+                _metric(
+                  '分享率',
+                  user?.formattedRatio ?? '—',
+                  (ratioVal != null && ratioVal > 4) ? t.ok : t.text0,
+                  t,
+                ),
+                const SizedBox(width: 16),
+                _metric('魔力', user != null ? user.formattedBonus : '—', t.text0, t),
+                const SizedBox(width: 16),
+                _metric(
+                  '上传',
+                  user?.formattedUploaded ?? '—',
+                  t.accentBright,
+                  t,
+                ),
+              ],
+            ),
+          const SizedBox(height: 9),
+          Text(
+            user?.userClass ?? '—',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11, color: t.text2),
+          ),
         ],
       ),
     );
   }
-
-  Widget _div(DesignTokens t) => Container(
-        width: 1,
-        height: 26,
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        color: t.hairline,
-      );
 
   Widget _metric(String label, String value, Color color, DesignTokens t) =>
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 11, color: t.text2)),
-          const SizedBox(height: 2),
           Text(
             value,
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
               color: color,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
+          const SizedBox(height: 1),
+          Text(label, style: TextStyle(fontSize: 10, color: t.text2)),
         ],
       );
 }
 
-class _SearchBar extends StatelessWidget {
-  const _SearchBar({required this.controller, required this.onSubmit});
+/// 设计稿 `.panel`：顶部融入搜索框 + 分类 chip + 计数，下方 dense 表格。
+class _SearchPanel extends StatelessWidget {
+  const _SearchPanel({
+    required this.controller,
+    required this.siteCount,
+    required this.resultCount,
+    required this.category,
+    required this.onCategory,
+    required this.onSubmit,
+    required this.child,
+  });
+
   final TextEditingController controller;
+  final int siteCount;
+  final int resultCount;
+  final String? category;
+  final ValueChanged<String> onCategory;
   final VoidCallback onSubmit;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    return TextField(
-      controller: controller,
-      onSubmitted: (_) => onSubmit(),
-      decoration: InputDecoration(
-        hintText: '搜索种子（标题 / 关键词）…',
-        hintStyle: TextStyle(color: t.text3, fontSize: 13),
-        prefixIcon: Icon(Icons.search_rounded, size: 18, color: t.text2),
-        suffixIcon: TextButton(onPressed: onSubmit, child: const Text('搜索')),
-        filled: true,
-        fillColor: t.insetBg,
-        isDense: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: t.hairline),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: t.hairline),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: t.accent, width: 1.5),
+    return GlassPanel(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: t.hairline)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.search_rounded, size: 17, color: t.text2),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    onSubmitted: (_) => onSubmit(),
+                    cursorColor: t.accent,
+                    style: TextStyle(color: t.text0, fontSize: 13),
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      filled: false,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      hintText: '跨站搜索种子…',
+                      hintStyle: TextStyle(color: t.text3, fontSize: 13),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                for (final c in const ['电影', '剧集', '音乐'])
+                  Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: AppChip(
+                      label: c,
+                      active: category == c,
+                      onTap: () => onCategory(c),
+                    ),
+                  ),
+                const SizedBox(width: 12),
+                Text(
+                  '$siteCount 站 · 找到 $resultCount 条',
+                  style: TextStyle(fontSize: 12, color: t.text2),
+                ),
+              ],
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+/// 设计稿 `.dense-table thead`：标题/大小/做种/下载/评分/折扣/操作。
+class _ResultHeaderRow extends StatelessWidget {
+  const _ResultHeaderRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    TextStyle s() => TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+          color: t.text3,
+        );
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: t.hairline)),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text('标题', style: s())),
+          const SizedBox(width: 10),
+          SizedBox(width: 90, child: Text('大小', style: s())),
+          SizedBox(width: 70, child: Text('做种', style: s())),
+          SizedBox(width: 70, child: Text('下载', style: s())),
+          SizedBox(width: 90, child: Text('评分', style: s())),
+          SizedBox(width: 80, child: Text('折扣', style: s())),
+          SizedBox(width: 180, child: Text('操作', style: s())),
+        ],
+      ),
+    );
+  }
+}
+
+/// 设计稿 `.dense-table tbody tr`：单行种子结果。
+class _ResultRow extends StatelessWidget {
+  const _ResultRow({
+    required this.torrent,
+    required this.onOpen,
+    required this.onDownload,
+  });
+
+  final PTTorrent torrent;
+  final VoidCallback onOpen;
+  final VoidCallback onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final promo = torrent.status.promotionLabel;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onOpen,
+        hoverColor: t.chipBg,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: t.hairline)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  torrent.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: t.text0,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 90,
+                child: Text(
+                  torrent.formattedSize,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: t.text2,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 70,
+                child: Text(
+                  '${torrent.seeders}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: torrent.seeders > 0 ? t.ok : t.text3,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 70,
+                child: Text(
+                  '${torrent.leechers}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: t.text2,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              SizedBox(width: 90, child: _RatingCell(torrent: torrent)),
+              SizedBox(
+                width: 80,
+                child: promo != null
+                    ? Align(
+                        alignment: Alignment.centerLeft,
+                        child: AppTag(
+                          promo,
+                          variant: torrent.status.isFree ||
+                                  torrent.status.isDoubleFree
+                              ? TagVariant.free
+                              : TagVariant.accent,
+                        ),
+                      )
+                    : Text('—',
+                        style: TextStyle(fontSize: 11, color: t.text3)),
+              ),
+              SizedBox(
+                width: 180,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: onDownload,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        minimumSize: const Size(0, 30),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        textStyle: const TextStyle(
+                            fontSize: 11.5, fontWeight: FontWeight.w600),
+                      ),
+                      icon: const Icon(Icons.download_rounded, size: 13),
+                      label: const Text('发送下载器'),
+                    ),
+                    const SizedBox(width: 6),
+                    IconButton(
+                      onPressed: onOpen,
+                      tooltip: '详情',
+                      visualDensity: VisualDensity.compact,
+                      iconSize: 16,
+                      style: IconButton.styleFrom(
+                        backgroundColor: t.chipBg,
+                        minimumSize: const Size(28, 28),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: Icon(Icons.chevron_right_rounded, color: t.text2),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      style: TextStyle(color: t.text0, fontSize: 13),
+    );
+  }
+}
+
+/// 评分列：后端只有 douban/imdb 的 ID（无具体评分数值），按存在性降级为标记。
+class _RatingCell extends StatelessWidget {
+  const _RatingCell({required this.torrent});
+  final PTTorrent torrent;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final hasDouban = torrent.doubanId != null && torrent.doubanId!.isNotEmpty;
+    final hasImdb = torrent.imdbId != null && torrent.imdbId!.isNotEmpty;
+    if (!hasDouban && !hasImdb) {
+      return Text('—', style: TextStyle(fontSize: 11, color: t.text3));
+    }
+    return Row(
+      children: [
+        if (hasDouban)
+          Text(
+            '豆瓣',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: t.accentBright,
+            ),
+          ),
+        if (hasImdb) ...[
+          if (hasDouban) const SizedBox(width: 6),
+          Text('IMDb', style: TextStyle(fontSize: 11, color: t.text2)),
+        ],
+      ],
+    );
+  }
+}
+
+class _PanelMessage extends StatelessWidget {
+  const _PanelMessage({required this.icon, required this.message});
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 42),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 34, color: t.text3),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: t.text2),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
