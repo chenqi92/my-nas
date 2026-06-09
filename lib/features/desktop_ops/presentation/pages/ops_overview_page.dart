@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/downloader/presentation/widgets/download_detail_sheet.dart';
+import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
@@ -21,9 +22,35 @@ class OpsOverviewPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
     final connections = ref.watch(activeConnectionsProvider);
+    final totalSources =
+        ref.watch(sourcesProvider).valueOrNull?.length ?? connections.length;
     final throughput = ref.watch(downloaderThroughputProvider);
     final clients = ref.watch(downloaderClientsProvider);
     final tasks = ref.watch(aggregatedDownloadTasksProvider);
+
+    // PT 概况：仅复用已建立连接拿到的 userInfo（本页不主动发起连接），
+    // 未连接的站点同样列出但 ratio 留空降级。平均分享率只对已拿到 ratio
+    // 的站点求平均。
+    final ptSources = ref.watch(ptSitesSourcesProvider);
+    final ptRows = [
+      for (final s in ptSources)
+        () {
+          final conn = ref.watch(ptSiteConnectionProvider(s.id));
+          return _PtSiteRow(
+            name: conn.userInfo?.username ?? s.displayName,
+            level: conn.userInfo?.userClass,
+            ratio: conn.userInfo?.ratio,
+          );
+        }(),
+    ];
+    final ratios = ptRows
+        .map((r) => r.ratio)
+        .whereType<double>()
+        .where((v) => v.isFinite)
+        .toList();
+    final avgRatio = ratios.isEmpty
+        ? null
+        : ratios.reduce((a, b) => a + b) / ratios.length;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(30, 26, 30, 120),
@@ -51,12 +78,14 @@ class OpsOverviewPage extends ConsumerWidget {
               const SizedBox(height: 16),
               _StatRow(
                 connectedSources: connections.length,
+                totalSources: totalSources,
                 throughput: throughput,
+                avgRatio: avgRatio,
               ),
               const SizedBox(height: 22),
               _ClientsRow(clients: clients),
               const SizedBox(height: 16),
-              _BottomTwoCol(tasks: tasks),
+              _BottomTwoCol(tasks: tasks, ptRows: ptRows),
             ],
           ),
         ),
@@ -203,9 +232,19 @@ class _RibbonPainter extends CustomPainter {
 }
 
 class _StatRow extends StatelessWidget {
-  const _StatRow({required this.connectedSources, required this.throughput});
+  const _StatRow({
+    required this.connectedSources,
+    required this.totalSources,
+    required this.throughput,
+    required this.avgRatio,
+  });
+
   final int connectedSources;
+  final int totalSources;
   final DownloaderThroughput throughput;
+
+  /// 已连接 PT 站点的平均分享率；无数据时为 null（降级占位）。
+  final double? avgRatio;
 
   @override
   Widget build(BuildContext context) {
@@ -223,14 +262,13 @@ class _StatRow extends StatelessWidget {
           unit: '/ ${throughput.totalCount}',
         ),
         _StatTile(
-          label: '源在线 · 共 $connectedSources',
+          label: '源在线 · 共 $totalSources',
           value: '$connectedSources',
           dot: DotStatus.ok,
         ),
         _StatTile(
-          label: '下载客户端在线',
-          value: '${throughput.connectedClients}',
-          unit: '/ ${throughput.totalClients}',
+          label: 'PT 平均分享率',
+          value: avgRatio == null ? '—' : avgRatio!.toStringAsFixed(2),
         ),
         const _StatTile(label: '订阅追剧中', value: '0', accent: true),
       ],
@@ -431,9 +469,18 @@ class _ClientCard extends StatelessWidget {
       );
 }
 
+/// PT 概况单行视图模型（从已连接站点的 userInfo 派生，纯展示）。
+class _PtSiteRow {
+  const _PtSiteRow({required this.name, this.level, this.ratio});
+  final String name;
+  final String? level;
+  final double? ratio;
+}
+
 class _BottomTwoCol extends StatelessWidget {
-  const _BottomTwoCol({required this.tasks});
+  const _BottomTwoCol({required this.tasks, required this.ptRows});
   final List<UnifiedDownloadTask> tasks;
+  final List<_PtSiteRow> ptRows;
 
   @override
   Widget build(BuildContext context) {
@@ -517,20 +564,86 @@ class _BottomTwoCol extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      '尚未配置 PT 站点。',
-                      style: TextStyle(fontSize: 13, color: t.text2),
+                if (ptRows.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text(
+                        '尚未配置 PT 站点。',
+                        style: TextStyle(fontSize: 13, color: t.text2),
+                      ),
                     ),
-                  ),
-                ),
+                  )
+                else
+                  for (final row in ptRows.take(6)) _PtRow(row: row),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PtRow extends StatelessWidget {
+  const _PtRow({required this.row});
+  final _PtSiteRow row;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final ratio = row.ratio;
+    final hasRatio = ratio != null && ratio.isFinite;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  row.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: t.text0,
+                  ),
+                ),
+                if (row.level != null && row.level!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    row.level!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: t.text2),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                hasRatio ? ratio.toStringAsFixed(2) : '—',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  // 设计稿：分享率 > 4 用 ok 绿，否则常规文本色。
+                  color: hasRatio && ratio > 4 ? t.ok : t.text0,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text('分享率', style: TextStyle(fontSize: 10.5, color: t.text2)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -549,7 +662,7 @@ class _MiniTaskRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
         hoverColor: t.chipBg,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
           child: Row(
             children: [
               Expanded(
@@ -566,7 +679,7 @@ class _MiniTaskRow extends StatelessWidget {
                         color: t.text0,
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 7),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
@@ -580,13 +693,31 @@ class _MiniTaskRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                formatSpeed(task.downloadSpeed),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: t.accentBright,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              // 设计稿右侧两行：速度（accent）/ ETA（muted），右对齐。
+              SizedBox(
+                width: 90,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '↓${formatSpeed(task.downloadSpeed)}',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: t.accentBright,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      formatEta(task.etaSeconds),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: t.text2,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
