@@ -89,10 +89,18 @@ class _Loading extends StatelessWidget {
       );
 }
 
-class _Loaded extends ConsumerWidget {
+class _Loaded extends ConsumerStatefulWidget {
   const _Loaded({required this.state, required this.view});
   final VideoListLoaded state;
   final String view;
+
+  @override
+  ConsumerState<_Loaded> createState() => _LoadedState();
+}
+
+class _LoadedState extends ConsumerState<_Loaded> {
+  // 排序仅影响网格展示，属纯前端表现层状态，本地维护即可（默认评分降序）。
+  String _sort = 'rating';
 
   static const _tabs = [
     ('全部', VideoTab.all),
@@ -103,8 +111,9 @@ class _Loaded extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final t = DesignTokens.of(context);
+  Widget build(BuildContext context) {
+    final state = widget.state;
+    final view = widget.view;
     final notifier = ref.read(videoListProvider.notifier);
 
     // Hero 用最高分（topRated）第一项，没有时退到 recent / movies 第一项。
@@ -116,7 +125,12 @@ class _Loaded extends ConsumerWidget {
                 ? state.movies.first
                 : null;
 
-    final items = state.filteredMetadata;
+    final items = [...state.filteredMetadata]..sort((a, b) {
+        if (_sort == 'year') {
+          return (b.year ?? 0).compareTo(a.year ?? 0);
+        }
+        return (b.rating ?? 0).compareTo(a.rating ?? 0);
+      });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,10 +152,17 @@ class _Loaded extends ConsumerWidget {
                 ),
               ),
             const Spacer(),
-            Text(
-              '${state.totalCount} 项',
-              style: TextStyle(fontSize: 12, color: t.text3),
+            AppSegmented<String>(
+              value: _sort,
+              dense: true,
+              onChanged: (v) => setState(() => _sort = v),
+              options: const [
+                AppSegmentedOption(value: 'rating', label: '评分'),
+                AppSegmentedOption(value: 'year', label: '年份'),
+              ],
             ),
+            const SizedBox(width: 8),
+            const _FilterIconButton(),
           ],
         ),
         const SizedBox(height: 14),
@@ -150,6 +171,30 @@ class _Loaded extends ConsumerWidget {
         else
           _PosterList(items: items),
       ],
+    );
+  }
+}
+
+/// 设计稿 `.icon-btn`：32×32 透明底图标按钮，hover 浅底。过滤功能尚未接入，
+/// 暂仅呈现外观（data-blocked：无筛选维度后端）。
+class _FilterIconButton extends StatelessWidget {
+  const _FilterIconButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+        child: Container(
+          width: 32,
+          height: 32,
+          alignment: Alignment.center,
+          child: Icon(Icons.tune_rounded, size: 17, color: t.text2),
+        ),
+      ),
     );
   }
 }
@@ -224,46 +269,10 @@ class _Hero extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        if (meta.rating != null) ...[
-                          Icon(Icons.star_rounded,
-                              color: t.warn, size: 17),
-                          const SizedBox(width: 4),
-                          Text(
-                            meta.rating!.toStringAsFixed(1),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                        ],
-                        if (meta.year != null) ...[
-                          Text(
-                            '${meta.year}',
-                            style: const TextStyle(
-                              color: Color(0xFFD9D9DC),
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                        ],
-                        if (meta.runtime != null) ...[
-                          Text(
-                            '${meta.runtime} 分钟',
-                            style: const TextStyle(
-                              color: Color(0xFFD9D9DC),
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                    const SizedBox(height: 14),
+                    _HeroMeta(meta: meta),
+                    const SizedBox(height: 16),
                     if (meta.overview != null) ...[
-                      const SizedBox(height: 12),
                       Text(
                         meta.overview!,
                         maxLines: 2,
@@ -274,10 +283,198 @@ class _Hero extends StatelessWidget {
                           height: 1.55,
                         ),
                       ),
+                      const SizedBox(height: 20),
                     ],
+                    _HeroActions(meta: meta),
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 设计稿 `.hero-meta`：★ 评分(accent 粗) · 年份 · 类型 · 时长，以 `·` 间隔。
+class _HeroMeta extends StatelessWidget {
+  const _HeroMeta({required this.meta});
+  final VideoMetadata meta;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    const muted = Color(0xFFD9D9DC);
+    final segs = <Widget>[];
+
+    if (meta.rating != null) {
+      segs.add(Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.star_rounded, color: t.accentBright, size: 16),
+          const SizedBox(width: 4),
+          Text(
+            meta.rating!.toStringAsFixed(1),
+            style: TextStyle(
+              color: t.accentBright,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ));
+    }
+    if (meta.year != null) {
+      segs.add(Text('${meta.year}',
+          style: const TextStyle(color: muted, fontSize: 13)));
+    }
+    final genre = meta.genreList.take(2).join(' / ');
+    if (genre.isNotEmpty) {
+      segs.add(Text(genre,
+          style: const TextStyle(color: muted, fontSize: 13)));
+    }
+    final runtime = meta.runtimeText;
+    if (runtime.isNotEmpty) {
+      segs.add(Text(runtime,
+          style: const TextStyle(color: muted, fontSize: 13)));
+    }
+
+    final children = <Widget>[];
+    for (var i = 0; i < segs.length; i++) {
+      if (i > 0) {
+        children.add(Text('·',
+            style: TextStyle(color: muted.withValues(alpha: 0.6), fontSize: 13)));
+      }
+      children.add(segs[i]);
+    }
+    return Wrap(
+      spacing: 14,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: children,
+    );
+  }
+}
+
+/// 设计稿 `.hero-actions`：主按钮（继续观看）+ 描边「详情」+ 幽灵「更多」。
+class _HeroActions extends StatelessWidget {
+  const _HeroActions({required this.meta});
+  final VideoMetadata meta;
+
+  /// 由播放位置 ticks（10M/秒）与片长（分钟）派生续播百分比；任一缺失则返回
+  /// null，主按钮降级为「播放」（data-blocked：无独立时长 ticks 字段）。
+  int? get _progress {
+    final ticks = meta.playbackPositionTicks;
+    final runtime = meta.runtime;
+    if (ticks == null || ticks <= 0 || runtime == null || runtime <= 0) {
+      return null;
+    }
+    final watchedSec = ticks / 10000000;
+    final totalSec = runtime * 60;
+    final pct = (watchedSec / totalSec * 100).round();
+    return pct.clamp(1, 99);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final prog = _progress;
+    return Row(
+      children: [
+        _HeroButton(
+          label: prog != null ? '继续观看 · $prog%' : '播放',
+          icon: Icons.play_arrow_rounded,
+          variant: _HeroBtnVariant.primary,
+          onTap: () => _open(context, meta),
+        ),
+        const SizedBox(width: 12),
+        _HeroButton(
+          label: '详情',
+          icon: Icons.add_rounded,
+          variant: _HeroBtnVariant.outline,
+          onTap: () => _open(context, meta),
+        ),
+        const SizedBox(width: 12),
+        _HeroButton(
+          icon: Icons.more_vert_rounded,
+          variant: _HeroBtnVariant.ghost,
+          onTap: () => _open(context, meta),
+        ),
+      ],
+    );
+  }
+}
+
+enum _HeroBtnVariant { primary, outline, ghost }
+
+class _HeroButton extends StatelessWidget {
+  const _HeroButton({
+    required this.icon,
+    required this.variant,
+    required this.onTap,
+    this.label,
+  });
+
+  final IconData icon;
+  final _HeroBtnVariant variant;
+  final VoidCallback onTap;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final Color bg;
+    final Color fg;
+    final Border? border;
+    final FontWeight weight;
+    switch (variant) {
+      case _HeroBtnVariant.primary:
+        bg = t.accent;
+        fg = t.accentContrast;
+        border = null;
+        weight = FontWeight.w600;
+      case _HeroBtnVariant.outline:
+        bg = Colors.transparent;
+        fg = Colors.white;
+        border = Border.all(color: t.cardBorder);
+        weight = FontWeight.w500;
+      case _HeroBtnVariant.ghost:
+        bg = Colors.transparent;
+        fg = Colors.white;
+        border = null;
+        weight = FontWeight.w500;
+    }
+
+    final iconOnly = label == null;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+        child: Container(
+          padding: iconOnly
+              ? const EdgeInsets.all(8)
+              : const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+            border: border,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: fg),
+              if (!iconOnly) ...[
+                const SizedBox(width: 7),
+                Text(
+                  label!,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: weight,
+                    color: fg,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -303,7 +500,7 @@ class _PosterGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 170,
+        maxCrossAxisExtent: 180,
         crossAxisSpacing: 18,
         mainAxisSpacing: 22,
         childAspectRatio: 0.62,
@@ -440,7 +637,7 @@ class _PosterCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w700,
                 color: t.text0,
               ),
@@ -453,7 +650,7 @@ class _PosterCard extends StatelessWidget {
               ].join(' · '),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11, color: t.text2),
+              style: TextStyle(fontSize: 11.5, color: t.text2),
             ),
           ],
         ),
