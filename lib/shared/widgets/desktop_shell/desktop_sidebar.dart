@@ -82,6 +82,7 @@ class DesktopSidebar extends StatelessWidget {
               child: AppSegmented<DesktopSpace>(
                 value: space,
                 onChanged: onSpaceChanged,
+                expand: true,
                 options: const [
                   AppSegmentedOption(
                     value: DesktopSpace.media,

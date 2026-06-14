@@ -23,6 +23,7 @@ class AppSegmented<T> extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.dense = false,
+    this.expand = false,
     super.key,
   });
 
@@ -30,6 +31,10 @@ class AppSegmented<T> extends StatelessWidget {
   final T value;
   final ValueChanged<T> onChanged;
   final bool dense;
+
+  /// 是否撑满父宽并把各段等分（用于侧栏全宽 toggle，避免段控件背景
+  /// 拉满后内容靠左留白）。默认 false：按内容宽度（页面 actions 用）。
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
@@ -42,15 +47,26 @@ class AppSegmented<T> extends StatelessWidget {
         border: Border.all(color: t.hairline, width: 1),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
         children: [
           for (final opt in options)
-            _Seg<T>(
-              option: opt,
-              selected: opt.value == value,
-              dense: dense,
-              onTap: () => onChanged(opt.value),
-            ),
+            if (expand)
+              Expanded(
+                child: _Seg<T>(
+                  option: opt,
+                  selected: opt.value == value,
+                  dense: dense,
+                  expand: true,
+                  onTap: () => onChanged(opt.value),
+                ),
+              )
+            else
+              _Seg<T>(
+                option: opt,
+                selected: opt.value == value,
+                dense: dense,
+                onTap: () => onChanged(opt.value),
+              ),
         ],
       ),
     );
@@ -63,12 +79,14 @@ class _Seg<T> extends StatelessWidget {
     required this.selected,
     required this.dense,
     required this.onTap,
+    this.expand = false,
   });
 
   final AppSegmentedOption<T> option;
   final bool selected;
   final bool dense;
   final VoidCallback onTap;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +118,8 @@ class _Seg<T> extends StatelessWidget {
                 : null,
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (option.icon != null) ...[
                 Icon(option.icon, size: 13, color: fg),
