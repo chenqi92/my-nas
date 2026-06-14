@@ -6,6 +6,7 @@ import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.
 import 'package:my_nas/features/nastool/presentation/widgets/subscription_poster.dart';
 import 'package:my_nas/service_adapters/nastool/models/subscribe_models.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
+import 'package:my_nas/shared/widgets/atoms/ep_grid.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 
 /// NAStool 订阅详情浮层：展示订阅信息 + 搜索资源 / 删除订阅。
@@ -80,19 +81,17 @@ class SubscriptionDetailSheet extends ConsumerWidget {
                             const SizedBox(height: 14),
                             if (sub.isTv && sub.totalEp != null) ...[
                               Text(
-                                '进度 ${sub.currentEp ?? 0} / ${sub.totalEp} 集',
-                                style: TextStyle(fontSize: 13, color: t.text1),
-                              ),
-                              const SizedBox(height: 6),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: sub.progress,
-                                  minHeight: 6,
-                                  backgroundColor: t.insetBg,
-                                  valueColor:
-                                      AlwaysStoppedAnimation(t.accent),
+                                '剧集进度 · ${sub.currentEp ?? 0}/${sub.totalEp}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: t.text2,
                                 ),
+                              ),
+                              const SizedBox(height: 8),
+                              EpisodeGrid(
+                                total: sub.totalEp!,
+                                have: sub.currentEp ?? 0,
                               ),
                               const SizedBox(height: 14),
                             ],
