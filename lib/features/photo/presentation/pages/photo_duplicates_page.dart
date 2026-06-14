@@ -10,6 +10,7 @@ import 'package:my_nas/features/photo/data/services/photo_hash_service.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 
@@ -35,6 +36,10 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
   // 重复照片数据 - 基于文件名+大小的快速检测
   Map<String, List<PhotoEntity>> _nameSizeDuplicates = {};
   ({int duplicateGroups, int totalDuplicatePhotos})? _nameSizeStats;
+
+  // 重复照片数据 - 仅基于文件名（同名）
+  Map<String, List<PhotoEntity>> _nameDuplicates = {};
+  ({int duplicateGroups, int totalDuplicatePhotos})? _nameStats;
 
   // 重复照片数据 - 基于哈希的深度检测
   Map<String, List<PhotoEntity>> _hashDuplicates = {};
@@ -62,7 +67,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
   HashProgress? _scanProgress;
   StreamSubscription<HashProgress>? _progressSubscription;
 
-  // 当前显示模式: 0=快速检测, 1=完全相同, 2=视觉相似
+  // 当前显示模式: 0=快速检测, 1=完全相同, 2=视觉相似, 3=同名
   int _currentMode = 0;
 
   // 相似度阈值（汉明距离）
@@ -73,6 +78,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
         0 => _nameSizeDuplicates.isNotEmpty,
         1 => _hashDuplicates.isNotEmpty,
         2 => _similarGroups.isNotEmpty,
+        3 => _nameDuplicates.isNotEmpty,
         _ => false,
       };
 
@@ -128,7 +134,32 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
       }
     } on Exception catch (e) {
       setState(() {
-        _errorMessage = '加载失败: $e';
+        _errorMessage = AppLocalizations.of(context).dedupLoadFailed('$e');
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// 加载同名（仅文件名）重复结果
+  Future<void> _loadNameDuplicates() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _db.init();
+      final nameStats = await _db.getNameDuplicateStats();
+      final nameDups = await _db.getDuplicatesByFileName();
+
+      setState(() {
+        _nameStats = nameStats;
+        _nameDuplicates = nameDups;
+        _isLoading = false;
+      });
+    } on Exception catch (e) {
+      setState(() {
+        _errorMessage = AppLocalizations.of(context).dedupLoadFailed('$e');
         _isLoading = false;
       });
     }
@@ -142,7 +173,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
         .toList();
 
     if (connectedSources.isEmpty) {
-      context.showWarningToast('请先连接到 NAS');
+      context.showWarningToast(AppLocalizations.of(context).dedupConnectNasFirst);
       return;
     }
 
@@ -190,7 +221,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
       });
     } on Exception catch (e) {
       setState(() {
-        _errorMessage = '查找相似照片失败: $e';
+        _errorMessage = AppLocalizations.of(context).dedupFindSimilarFailed('$e');
         _isFindingSimilar = false;
         _similarProgress = null;
       });
@@ -230,6 +261,12 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
           }
         case 2: // 视觉相似
           for (final photos in _similarGroups) {
+            for (var i = 1; i < photos.length; i++) {
+              _selectedPhotos.add(photos[i].uniqueKey);
+            }
+          }
+        case 3: // 同名
+          for (final photos in _nameDuplicates.values) {
             for (var i = 1; i < photos.length; i++) {
               _selectedPhotos.add(photos[i].uniqueKey);
             }
@@ -311,7 +348,9 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
     required Map<String, SourceConnection> connections,
     required bool isDark,
     required bool showSourceLabel,
-  }) => Listener(
+  }) {
+    final l = AppLocalizations.of(context);
+    return Listener(
       onPointerDown: (event) {
         // 检查点击位置对应哪个照片
         for (final photo in photos) {
@@ -384,9 +423,9 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                         color: AppColors.success,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
-                        '推荐保留',
-                        style: TextStyle(
+                      child: Text(
+                        l.dedupKeepRecommended,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -462,25 +501,26 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
         }).toList(),
       ),
     );
+  }
 
   Future<void> _deleteSelected() async {
     if (_selectedPhotos.isEmpty) return;
 
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除选中的 ${_selectedPhotos.length} 张照片吗？\n\n'
-            '注意：此操作会从 NAS 中永久删除文件，无法恢复。'),
+        title: Text(l.dedupDeleteConfirmTitle),
+        content: Text(l.dedupDeleteConfirmMessage(_selectedPhotos.length)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(l.dedupCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(l.dedupDelete),
           ),
         ],
       ),
@@ -525,11 +565,15 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
       await _loadDuplicates();
 
       if (mounted) {
-        context.showSnackBar('已删除 $deleted 张照片${failed > 0 ? '，$failed 张失败' : ''}');
+        context.showSnackBar(
+          failed > 0
+              ? l.dedupDeleteResultWithFailed(deleted, failed)
+              : l.dedupDeleteResult(deleted),
+        );
       }
     } on Exception catch (e) {
       setState(() {
-        _errorMessage = '删除失败: $e';
+        _errorMessage = AppLocalizations.of(context).dedupDeleteFailed('$e');
         _isLoading = false;
       });
     }
@@ -538,35 +582,36 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
-        title: const Text('重复照片'),
+        title: Text(l.dedupPageTitle),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
           if (_selectedPhotos.isNotEmpty) ...[
             TextButton(
               onPressed: _clearSelection,
-              child: Text('取消选择 (${_selectedPhotos.length})'),
+              child: Text(l.dedupClearSelection(_selectedPhotos.length)),
             ),
             IconButton(
               onPressed: _deleteSelected,
               icon: Icon(Icons.delete_rounded, color: AppColors.error),
-              tooltip: '删除选中',
+              tooltip: l.dedupDeleteSelected,
             ),
           ] else if (_hasAnyDuplicates) ...[
             IconButton(
               onPressed: _selectAllRecommended,
               icon: const Icon(Icons.checklist_rounded),
-              tooltip: '一键全选推荐',
+              tooltip: l.dedupSelectAllRecommended,
             ),
           ],
           if (!_isScanning)
             IconButton(
               onPressed: _startScan,
               icon: const Icon(Icons.play_circle_outline_rounded),
-              tooltip: '开始扫描',
+              tooltip: l.dedupStartScan,
             ),
         ],
       ),
@@ -590,7 +635,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadDuplicates,
-              child: const Text('重试'),
+              child: Text(AppLocalizations.of(context).dedupRetry),
             ),
           ],
         ),
@@ -672,12 +717,29 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
           ),
         ];
 
+      case 3: // 同名（仅文件名）
+        if (_nameDuplicates.isEmpty) {
+          return [SliverFillRemaining(child: _buildEmptyState(isDark))];
+        }
+        return [
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final entry = _nameDuplicates.entries.elementAt(index);
+                return _buildDuplicateGroup(entry.key, entry.value, isDark);
+              },
+              childCount: _nameDuplicates.length,
+            ),
+          ),
+        ];
+
       default:
         return [SliverFillRemaining(child: _buildEmptyState(isDark))];
     }
   }
 
   Widget _buildFindingSimilarCard(bool isDark) {
+    final l = AppLocalizations.of(context);
     final progress = _similarProgress;
     final hasProgress = progress != null && progress.total > 0;
 
@@ -699,7 +761,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '正在分析照片相似度...',
+                    l.dedupAnalyzingSimilarity,
                     style: context.textTheme.titleMedium,
                   ),
                 ),
@@ -712,7 +774,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
               ),
               const SizedBox(height: 8),
               Text(
-                '已分析 ${progress.processed} / ${progress.total} 个分组',
+                l.dedupAnalyzedGroups(progress.processed, progress.total),
                 style: context.textTheme.bodySmall?.copyWith(
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                 ),
@@ -725,6 +787,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
   }
 
   Widget _buildSimilarGroup(int index, List<PhotoEntity> photos, bool isDark) {
+    final l = AppLocalizations.of(context);
     final connections = ref.watch(activeConnectionsProvider);
 
     return Card(
@@ -745,7 +808,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '${photos.length} 张相似',
+                    l.dedupSimilarCount(photos.length),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -757,7 +820,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                 TextButton.icon(
                   onPressed: () => _selectAllExceptFirst(photos),
                   icon: const Icon(Icons.select_all, size: 18),
-                  label: const Text('选择其他'),
+                  label: Text(l.dedupSelectOthers),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
@@ -816,7 +879,9 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
   }
 
   /// 模式切换选项卡
-  Widget _buildModeTabBar(bool isDark) => Container(
+  Widget _buildModeTabBar(bool isDark) {
+    final l = AppLocalizations.of(context);
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -827,8 +892,8 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
         children: [
           Expanded(
             child: _buildModeTab(
-              title: '快速',
-              subtitle: '名称+大小',
+              title: l.dedupModeQuick,
+              subtitle: l.dedupModeQuickSubtitle,
               isSelected: _currentMode == 0,
               count: _nameSizeStats?.duplicateGroups ?? 0,
               isDark: isDark,
@@ -837,8 +902,8 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
           ),
           Expanded(
             child: _buildModeTab(
-              title: '精确',
-              subtitle: 'MD5哈希',
+              title: l.dedupModeExact,
+              subtitle: l.dedupModeExactSubtitle,
               isSelected: _currentMode == 1,
               count: _hashStats?.fileHashDuplicates ?? 0,
               isDark: isDark,
@@ -847,8 +912,8 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
           ),
           Expanded(
             child: _buildModeTab(
-              title: '相似',
-              subtitle: '视觉匹配',
+              title: l.dedupModeSimilar,
+              subtitle: l.dedupModeSimilarSubtitle,
               isSelected: _currentMode == 2,
               count: _similarGroups.length,
               isDark: isDark,
@@ -861,9 +926,26 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
               },
             ),
           ),
+          Expanded(
+            child: _buildModeTab(
+              title: l.dedupModeSameName,
+              subtitle: l.dedupModeSameNameSubtitle,
+              isSelected: _currentMode == 3,
+              count: _nameStats?.duplicateGroups ?? 0,
+              isDark: isDark,
+              onTap: () {
+                setState(() => _currentMode = 3);
+                // 选中时若未加载则触发加载
+                if (_nameDuplicates.isEmpty && _nameStats == null) {
+                  _loadNameDuplicates();
+                }
+              },
+            ),
+          ),
         ],
       ),
     );
+  }
 
   Widget _buildModeTab({
     required String title,
@@ -944,6 +1026,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
     );
 
   Widget _buildScanProgressCard(bool isDark) {
+    final l = AppLocalizations.of(context);
     final progress = _scanProgress;
 
     return Card(
@@ -979,19 +1062,19 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                 Expanded(
                   child: Text(
                     _isScanning
-                        ? '正在扫描...'
+                        ? l.dedupScanning
                         : progress?.status == HashStatus.completed
-                            ? '扫描完成'
+                            ? l.dedupScanCompleted
                             : progress?.status == HashStatus.cancelled
-                                ? '已取消'
-                                : '扫描出错',
+                                ? l.dedupScanCancelled
+                                : l.dedupScanError,
                     style: context.textTheme.titleMedium,
                   ),
                 ),
                 if (_isScanning)
                   TextButton(
                     onPressed: _cancelScan,
-                    child: const Text('取消'),
+                    child: Text(l.dedupCancel),
                   ),
               ],
             ),
@@ -1008,8 +1091,10 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
               ),
               const SizedBox(height: 8),
               Text(
-                '已处理 ${progress.processed} / ${progress.total} 张'
-                '${progress.failed > 0 ? '，失败 ${progress.failed}' : ''}',
+                progress.failed > 0
+                    ? l.dedupProcessedWithFailed(
+                        progress.processed, progress.total, progress.failed)
+                    : l.dedupProcessed(progress.processed, progress.total),
                 style: context.textTheme.bodySmall?.copyWith(
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                 ),
@@ -1031,6 +1116,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
   }
 
   Widget _buildStatsCard(bool isDark) {
+    final l = AppLocalizations.of(context);
     final calcStats = _hashCalcStats;
     final needsScan = (calcStats?.pending ?? 0) > 0 || (calcStats?.failed ?? 0) > 0;
 
@@ -1049,14 +1135,14 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
               Row(
                 children: [
                   _buildStatItem(
-                    '重复组',
+                    l.dedupStatDuplicateGroups,
                     '${stats?.fileHashDuplicates ?? 0}',
                     Icons.collections_rounded,
                     isDark,
                   ),
                   const SizedBox(width: 24),
                   _buildStatItem(
-                    '涉及照片',
+                    l.dedupStatAffectedPhotos,
                     '${stats?.totalDuplicatePhotos ?? 0}',
                     Icons.photo_library_rounded,
                     isDark,
@@ -1086,14 +1172,14 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
               Row(
                 children: [
                   _buildStatItem(
-                    '相似组',
+                    l.dedupStatSimilarGroups,
                     '${_similarGroups.length}',
                     Icons.compare_rounded,
                     isDark,
                   ),
                   const SizedBox(width: 24),
                   _buildStatItem(
-                    '涉及照片',
+                    l.dedupStatAffectedPhotos,
                     '$totalSimilarPhotos',
                     Icons.photo_library_rounded,
                     isDark,
@@ -1105,7 +1191,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
               Row(
                 children: [
                   Text(
-                    '相似度阈值: ',
+                    l.dedupSimilarityThreshold,
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -1163,8 +1249,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '视觉相似检测可找出经过压缩、裁剪、调色后的相同照片。'
-                        '阈值越低越严格，越高则匹配更宽松。',
+                        l.dedupSimilarInfo,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -1183,8 +1268,9 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
           ),
         ),
       );
-    } else {
-      final stats = _nameSizeStats;
+    } else if (_currentMode == 3) {
+      // 同名模式（仅文件名）
+      final stats = _nameStats;
       return Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         color: isDark ? AppColors.darkSurfaceElevated : null,
@@ -1196,14 +1282,14 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
               Row(
                 children: [
                   _buildStatItem(
-                    '重复组',
+                    l.dedupStatDuplicateGroups,
                     '${stats?.duplicateGroups ?? 0}',
                     Icons.collections_rounded,
                     isDark,
                   ),
                   const SizedBox(width: 24),
                   _buildStatItem(
-                    '涉及照片',
+                    l.dedupStatAffectedPhotos,
                     '${stats?.totalDuplicatePhotos ?? 0}',
                     Icons.photo_library_rounded,
                     isDark,
@@ -1223,7 +1309,61 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '快速检测基于相同的文件名和大小，可能存在误判。建议使用深度检测确认。',
+                        l.dedupSameNameInfo,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      final stats = _nameSizeStats;
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        color: isDark ? AppColors.darkSurfaceElevated : null,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _buildStatItem(
+                    l.dedupStatDuplicateGroups,
+                    '${stats?.duplicateGroups ?? 0}',
+                    Icons.collections_rounded,
+                    isDark,
+                  ),
+                  const SizedBox(width: 24),
+                  _buildStatItem(
+                    l.dedupStatAffectedPhotos,
+                    '${stats?.totalDuplicatePhotos ?? 0}',
+                    Icons.photo_library_rounded,
+                    isDark,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l.dedupQuickInfo,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -1267,7 +1407,14 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
     ({int total, int hashed, int pending, int failed}) calcStats,
     bool needsScan,
     bool isDark,
-  ) => Container(
+  ) {
+    final l = AppLocalizations.of(context);
+    final statusText = needsScan
+        ? l.dedupScannedProgress(calcStats.hashed, calcStats.total) +
+            (calcStats.pending > 0 ? l.dedupScanPendingSuffix(calcStats.pending) : '') +
+            (calcStats.failed > 0 ? l.dedupScanFailedSuffix(calcStats.failed) : '')
+        : l.dedupScanAllCompleted(calcStats.total);
+    return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: needsScan
@@ -1285,11 +1432,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              needsScan
-                  ? '已扫描 ${calcStats.hashed}/${calcStats.total} 张'
-                      '${calcStats.pending > 0 ? '，待扫描 ${calcStats.pending}' : ''}'
-                      '${calcStats.failed > 0 ? '，失败 ${calcStats.failed}' : ''}'
-                  : '全部 ${calcStats.total} 张照片已完成扫描',
+              statusText,
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -1303,17 +1446,19 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 minimumSize: const Size(0, 32),
               ),
-              child: const Text('开始扫描'),
+              child: Text(l.dedupStartScan),
             ),
         ],
       ),
     );
+  }
 
   String _getThresholdLabel(int threshold) {
-    if (threshold <= 3) return '严格';
-    if (threshold <= 6) return '较严格';
-    if (threshold <= 10) return '适中';
-    return '宽松';
+    final l = AppLocalizations.of(context);
+    if (threshold <= 3) return l.dedupThresholdStrict;
+    if (threshold <= 6) return l.dedupThresholdRather;
+    if (threshold <= 10) return l.dedupThresholdModerate;
+    return l.dedupThresholdLoose;
   }
 
   Color _getThresholdColor(int threshold) {
@@ -1324,11 +1469,13 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
   }
 
   Widget _buildEmptyState(bool isDark) {
+    final l = AppLocalizations.of(context);
     final (title, subtitle) = switch (_currentMode) {
-      0 => ('没有发现疑似重复', '快速检测未发现相同文件名和大小的照片'),
-      1 => ('没有发现重复照片', '点击右上角刷新按钮扫描照片哈希值'),
-      2 => ('没有发现相似照片', '尝试调高相似度阈值，或点击刷新按钮重新分析'),
-      _ => ('没有数据', ''),
+      0 => (l.dedupEmptyQuickTitle, l.dedupEmptyQuickSubtitle),
+      1 => (l.dedupEmptyExactTitle, l.dedupEmptyExactSubtitle),
+      2 => (l.dedupEmptySimilarTitle, l.dedupEmptySimilarSubtitle),
+      3 => (l.dedupEmptySameNameTitle, l.dedupEmptySameNameSubtitle),
+      _ => (l.dedupEmptyNoData, ''),
     };
 
     return Center(
@@ -1360,7 +1507,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
             ElevatedButton.icon(
               onPressed: _findSimilarPhotos,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重新分析'),
+              label: Text(l.dedupReanalyze),
             ),
           ],
         ],
@@ -1373,6 +1520,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
     List<PhotoEntity> photos,
     bool isDark,
   ) {
+    final l = AppLocalizations.of(context);
     final connections = ref.watch(activeConnectionsProvider);
 
     return Card(
@@ -1393,7 +1541,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '${photos.length} 张相同',
+                    l.dedupSameCount(photos.length),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -1405,7 +1553,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
                 TextButton.icon(
                   onPressed: () => _selectAllExceptFirst(photos),
                   icon: const Icon(Icons.select_all, size: 18),
-                  label: const Text('选择其他'),
+                  label: Text(l.dedupSelectOthers),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
@@ -1420,7 +1568,8 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
               photos: photos,
               connections: connections,
               isDark: isDark,
-              showSourceLabel: _currentMode == 1,
+              // 精确(MD5) 与 同名 模式都可能跨源，需显示来源以便区分。
+              showSourceLabel: _currentMode == 1 || _currentMode == 3,
             ),
           ),
           // 文件路径信息

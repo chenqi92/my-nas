@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
+import 'package:my_nas/features/sources/data/services/network_discovery_service.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -18,11 +19,26 @@ import 'package:my_nas/shared/widgets/dialogs/source_wizard_dialog.dart';
 ///
 /// 视觉对齐设计稿 ops2.jsx (Sources)：source card grid + 状态点 + 库映射
 /// chips + 「添加源」走 [SourceWizardDialog] 多步弹窗。
-class SourcesDesktopPage extends ConsumerWidget {
+class SourcesDesktopPage extends ConsumerStatefulWidget {
   const SourcesDesktopPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SourcesDesktopPage> createState() => _SourcesDesktopPageState();
+}
+
+class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
+  @override
+  void initState() {
+    super.initState();
+    // 打开页面自动扫描一次局域网设备（mDNS / Bonjour）。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(networkDiscoveryProvider.notifier).startDiscovery();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final sourcesAsync = ref.watch(sourcesProvider);
     final connections = ref.watch(activeConnectionsProvider);
@@ -43,42 +59,50 @@ class SourcesDesktopPage extends ConsumerWidget {
           label: Text(l.sourcesPageAddSource),
         ),
       ),
-      body: sourcesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Text(
-          l.sourcesPageLoadError(e.toString()),
-          style: TextStyle(color: t.err),
-        ),
-        data: (sources) {
-          if (sources.isEmpty) {
-            return DesktopComingSoon(
-              icon: Icons.lan_outlined,
-              message: l.sourcesPageEmptyHint,
-            );
-          }
-          // 库映射来自 mediaLibraryConfig 派生：源 → 已映射的媒体类型集合，
-          // 设计稿 s.libs 没有对应后端字段，故从既有 state 派生而非臆造。
-          final libsConfig = ref.watch(mediaLibraryConfigProvider).valueOrNull;
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: sources.length,
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 330,
-              mainAxisExtent: 168,
-              crossAxisSpacing: 14,
-              mainAxisSpacing: 14,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 局域网自动发现区：放在已连接源 grid 之上，无设备且未在扫描时收起。
+          const _DiscoveredDevicesSection(),
+          sourcesAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Text(
+              l.sourcesPageLoadError(e.toString()),
+              style: TextStyle(color: t.err),
             ),
-            itemBuilder: (_, i) {
-              final s = sources[i];
-              return _SourceCard(
-                source: s,
-                conn: connections[s.id],
-                libs: _libsForSource(libsConfig, s.id),
+            data: (sources) {
+              if (sources.isEmpty) {
+                return DesktopComingSoon(
+                  icon: Icons.lan_outlined,
+                  message: l.sourcesPageEmptyHint,
+                );
+              }
+              // 库映射来自 mediaLibraryConfig 派生：源 → 已映射的媒体类型集合，
+              // 设计稿 s.libs 没有对应后端字段，故从既有 state 派生而非臆造。
+              final libsConfig =
+                  ref.watch(mediaLibraryConfigProvider).valueOrNull;
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: sources.length,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 330,
+                  mainAxisExtent: 168,
+                  crossAxisSpacing: 14,
+                  mainAxisSpacing: 14,
+                ),
+                itemBuilder: (_, i) {
+                  final s = sources[i];
+                  return _SourceCard(
+                    source: s,
+                    conn: connections[s.id],
+                    libs: _libsForSource(libsConfig, s.id),
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+        ],
       ),
     );
   }
@@ -94,6 +118,172 @@ class SourcesDesktopPage extends ConsumerWidget {
         if (config.getPathsForType(type).any((p) => p.sourceId == sourceId))
           type.displayName,
     ];
+  }
+}
+
+/// 「发现的设备」区：mDNS / Bonjour 自动扫描到的可添加设备列表。
+///
+/// 卡片头部含标题 + 扫描状态文案（正在扫描…/发现 N 台）+「重新扫描」按钮；
+/// 下方为设备行（类型图标 + 名称 + host:port·类型 +「添加」一键预填进添加源
+/// 表单）。无设备且未在扫描时整段收起不渲染。视觉对齐本页 [AppCard]。
+class _DiscoveredDevicesSection extends ConsumerWidget {
+  const _DiscoveredDevicesSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(networkDiscoveryProvider);
+    final devices = state.devices;
+    // 无设备且未在扫描时收起（错误态也并入：无结果即不打扰）。
+    if (devices.isEmpty && !state.isDiscovering) {
+      return const SizedBox.shrink();
+    }
+    final l = AppLocalizations.of(context);
+    final t = DesignTokens.of(context);
+
+    final statusText = state.error != null
+        ? l.paneSourcesDiscoveryError('${state.error}')
+        : state.isDiscovering
+            ? l.paneSourcesDiscoveryScanning
+            : devices.isNotEmpty
+                ? l.paneSourcesDiscoveryFound(devices.length)
+                : l.paneSourcesDiscoveryIdle;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: AppCard(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.radar_rounded, size: 18, color: t.accentBright),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l.paneSourcesDiscoveredSection,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: t.text0,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        statusText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 12, color: t.text2),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (state.isDiscovering)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: t.accentBright,
+                      ),
+                    ),
+                  ),
+                AppChip(
+                  label: state.isDiscovering
+                      ? l.paneSourcesScanning
+                      : l.paneSourcesScan,
+                  icon: Icons.refresh_rounded,
+                  compact: true,
+                  onTap: state.isDiscovering
+                      ? null
+                      : () => ref
+                          .read(networkDiscoveryProvider.notifier)
+                          .startDiscovery(),
+                ),
+              ],
+            ),
+            for (final device in devices)
+              _DiscoveryRow(device: device),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 单台发现设备行：类型图标 + 名称 + host:port·类型 +「添加」按钮（预填进表单）。
+class _DiscoveryRow extends StatelessWidget {
+  const _DiscoveryRow({required this.device});
+
+  final DiscoveredDevice device;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final t = DesignTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: t.insetBg,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(device.type.icon, size: 18, color: t.accentBright),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  device.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: t.text0,
+                  ),
+                ),
+                Text(
+                  '${device.host}:${device.port} · ${device.type.displayName}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: t.text2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          AppChip(
+            label: l.paneSourcesAddShort,
+            icon: Icons.add_rounded,
+            compact: true,
+            onTap: () => SourceFormPage.openAdaptive<void>(
+              context,
+              sourceType: device.type,
+              initialValues: {
+                'name': device.name,
+                'host': device.host,
+                'port': device.port.toString(),
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

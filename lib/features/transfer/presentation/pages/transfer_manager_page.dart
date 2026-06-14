@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
-import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/domain/entities/transfer_task.dart';
@@ -10,6 +9,7 @@ import 'package:my_nas/features/transfer/presentation/widgets/cache_list_view.da
 import 'package:my_nas/features/transfer/presentation/widgets/transfer_task_tile.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 传输管理页面
@@ -81,101 +81,71 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
     // 桌面：左 sidebar 替代 TabBar，让"下载/上传/缓存"垂直排列，
     // 右侧显示选中分类的内容。AppBar 收回三段 TabBar。
     if (isDesktop) {
-      final t = DesignTokens.of(context);
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Padding(
-          padding: const EdgeInsets.fromLTRB(30, 26, 30, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l.transferPageQueueTitle,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: t.text0,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l.transferPageQueueSubtitle,
-                          style: TextStyle(fontSize: 13, color: t.text2),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ...actions,
-                ],
-              ),
-              const SizedBox(height: 22),
-              Expanded(
-                child: state.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : state.error != null
-                    ? _TransferError(
-                        message: state.error!,
-                        onRetry: () => ref.invalidate(transferTasksProvider),
-                      )
-                    : Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    width: 180,
-                    child: _buildDesktopSidebar(
-                      downloadCount: downloadTasks.where(_isActive).length,
-                      uploadCount: uploadTasks.where(_isActive).length,
-                      cacheCount: cachedCount,
-                    ),
-                  ),
-                  VerticalDivider(
-                    width: 1,
-                    thickness: 1,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.darkOutline.withValues(alpha: 0.3)
-                        : Theme.of(context).colorScheme.outlineVariant,
-                  ),
-                  Expanded(
-                    child: AnimatedBuilder(
-                      animation: _tabController,
-                      builder: (_, _) => IndexedStack(
-                        index: _tabController.index,
-                        children: [
-                          _buildTaskList(
-                            tasks: downloadTasks,
-                            emptyIcon: Icons.download_done,
-                            emptyText: l.transferPageNoDownloadTasks,
-                          ),
-                          _buildTaskList(
-                            tasks: uploadTasks,
-                            emptyIcon: Icons.cloud_upload_outlined,
-                            emptyText: l.transferPageNoUploadTasks,
-                          ),
-                          CacheListView(
-                            activeTasks: cacheTasks
-                                .where((t) => !t.isCompleted)
-                                .toList(),
-                            onDeleteCache: _handleDeleteCacheItem,
-                            onClearAll: _showClearCacheConfirmDialog,
-                          ),
-                        ],
+      return DesktopPageScaffold(
+        title: l.transferPageQueueTitle,
+        subtitle: l.transferPageQueueSubtitle,
+        maxWidth: 1500,
+        actions: Row(mainAxisSize: MainAxisSize.min, children: actions),
+        body: SizedBox(
+          // DesktopPageScaffold 是 SingleChildScrollView，内部列表需有界高度：
+          // 用视口高度减去页眉/留白估值，随窗口大小自适应。
+          height: (context.screenHeight - 220).clamp(360.0, 1100.0),
+          child: state.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : state.error != null
+              ? _TransferError(
+                  message: state.error!,
+                  onRetry: () => ref.invalidate(transferTasksProvider),
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      width: 180,
+                      child: _buildDesktopSidebar(
+                        downloadCount: downloadTasks.where(_isActive).length,
+                        uploadCount: uploadTasks.where(_isActive).length,
+                        cacheCount: cachedCount,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                    VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkOutline.withValues(alpha: 0.3)
+                          : Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                    Expanded(
+                      child: AnimatedBuilder(
+                        animation: _tabController,
+                        builder: (_, _) => IndexedStack(
+                          index: _tabController.index,
+                          children: [
+                            _buildTaskList(
+                              tasks: downloadTasks,
+                              emptyIcon: Icons.download_done,
+                              emptyText: l.transferPageNoDownloadTasks,
+                            ),
+                            _buildTaskList(
+                              tasks: uploadTasks,
+                              emptyIcon: Icons.cloud_upload_outlined,
+                              emptyText: l.transferPageNoUploadTasks,
+                            ),
+                            CacheListView(
+                              activeTasks: cacheTasks
+                                  .where((t) => !t.isCompleted)
+                                  .toList(),
+                              onDeleteCache: _handleDeleteCacheItem,
+                              onClearAll: _showClearCacheConfirmDialog,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
         ),
-      ),
-    );
+      );
     }
 
     return Scaffold(

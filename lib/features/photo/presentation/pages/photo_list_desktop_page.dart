@@ -5,6 +5,7 @@ import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/photo/data/services/face_database_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
 import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
+import 'package:my_nas/features/photo/presentation/pages/photo_duplicates_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_list_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_people_page.dart';
 import 'package:my_nas/features/photo/presentation/providers/photo_favorites_provider.dart';
@@ -54,6 +55,14 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
       actions: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          IconButton(
+            tooltip: l.maintPhotoTitle,
+            icon: const Icon(Icons.photo_library_outlined, size: 18),
+            onPressed: () => Navigator.of(context).push<void>(
+              MaterialPageRoute(builder: (_) => const PhotoDuplicatesPage()),
+            ),
+          ),
+          const SizedBox(width: 4),
           if (hasPhotos)
             _SourceFilterButton(
               value: sourceFilter,

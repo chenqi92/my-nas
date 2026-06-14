@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/file_browser/presentation/providers/file_browser_provider.dart';
@@ -18,6 +19,7 @@ import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/animated_list_item.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/download_manager_sheet.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -74,10 +76,20 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     final isMultiSelectMode = ref.watch(multiSelectModeProvider);
     final selectedFiles = ref.watch(selectedFilesProvider);
 
-    // 桌面下若有多个连接源，把 source 选择器从顶部水平条搬到左侧 sidebar。
+    // 桌面布局统一套标准外壳 DesktopPageScaffold，左侧「数据源」侧栏常驻。
     final isDesktop = context.isDesktopLayout;
-    final showDesktopSourceSidebar =
-        isDesktop && browsableSources.length > 1 && !isMultiSelectMode;
+    if (isDesktop) {
+      return _buildDesktopLayout(
+        fileState: fileState,
+        currentPath: currentPath,
+        isGridView: isGridView,
+        isDark: isDark,
+        browsableSources: browsableSources,
+        selectedSourceId: selectedSourceId,
+        isMultiSelectMode: isMultiSelectMode,
+        selectedFiles: selectedFiles,
+      );
+    }
 
     final mainColumn = Column(
       children: [
@@ -85,10 +97,8 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           _buildMultiSelectAppBar(context, selectedFiles, isDark)
         else
           _buildAppBar(context, currentPath, isGridView, isDark),
-        // 顶部源选择器：仅移动端 / 桌面但只有 1 个源时显示
-        if (!showDesktopSourceSidebar &&
-            browsableSources.length > 1 &&
-            !isMultiSelectMode)
+        // 顶部源选择器：移动端多源时显示
+        if (browsableSources.length > 1 && !isMultiSelectMode)
           _buildSourceSelector(browsableSources, selectedSourceId, isDark),
         if (!isMultiSelectMode) _buildBreadcrumb(currentPath, isDark),
         Expanded(
@@ -104,8 +114,75 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
-      body: showDesktopSourceSidebar
-          ? Row(
+      body: mainColumn,
+      floatingActionButton: isMultiSelectMode ? null : _buildFab(isDark),
+    );
+  }
+
+  /// 桌面分支：标准 [DesktopPageScaffold] 外壳 + 常驻左侧数据源侧栏。
+  ///
+  /// body 给固定高度的卡片容器（左 200px 源侧栏 + 分隔线 + 右侧面包屑/网格），
+  /// 上传/新建等入口从移动端 FAB 改为页眉 actions 区，多选时右侧改用工具条。
+  Widget _buildDesktopLayout({
+    required FileListState fileState,
+    required String currentPath,
+    required bool isGridView,
+    required bool isDark,
+    required List<(SourceEntity, BrowsableConnection)> browsableSources,
+    required String? selectedSourceId,
+    required bool isMultiSelectMode,
+    required Set<String> selectedFiles,
+  }) {
+    final l = AppLocalizations.of(context);
+    final t = DesignTokens.of(context);
+
+    // 副标题优先显示当前源名，回落到通用描述。
+    String? selectedSourceName;
+    for (final (source, _) in browsableSources) {
+      if (source.id == selectedSourceId) {
+        selectedSourceName = source.name;
+        break;
+      }
+    }
+    final subtitle = selectedSourceName ?? l.filesAlignSubtitle;
+
+    // 右侧主体（面包屑 + 内容），原 mainColumn 内容迁移到此。
+    final rightPanel = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (isMultiSelectMode)
+          _buildMultiSelectAppBar(context, selectedFiles, isDark)
+        else
+          _buildBreadcrumb(currentPath, isDark),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => ref.read(fileListProvider.notifier).refresh(),
+            color: AppColors.primary,
+            backgroundColor: isDark ? AppColors.darkSurface : null,
+            child: _buildContent(fileState, isGridView, isDark),
+          ),
+        ),
+      ],
+    );
+
+    // SingleChildScrollView 内需要有界高度：用视口高度减去页眉/留白的估值。
+    final bodyHeight = (context.screenHeight - 220).clamp(360.0, 1200.0);
+
+    return DesktopPageScaffold(
+      title: l.filesTitle,
+      subtitle: subtitle,
+      actions: _buildDesktopHeaderActions(isGridView, isDark, l),
+      body: SizedBox(
+        height: bodyHeight,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: t.panelBg,
+            border: Border.all(color: t.panelBorder),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
@@ -119,17 +196,61 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 VerticalDivider(
                   width: 1,
                   thickness: 1,
-                  color: isDark
-                      ? AppColors.darkOutline.withValues(alpha: 0.3)
-                      : context.colorScheme.outlineVariant,
+                  color: t.panelBorder,
                 ),
-                Expanded(child: mainColumn),
+                Expanded(child: rightPanel),
               ],
-            )
-          : mainColumn,
-      floatingActionButton: isMultiSelectMode ? null : _buildFab(isDark),
+            ),
+          ),
+        ),
+      ),
     );
   }
+
+  /// 桌面页眉右侧操作区：视图切换 / 排序 / 下载中心 / 新建 / 上传。
+  Widget _buildDesktopHeaderActions(
+    bool isGridView,
+    bool isDark,
+    AppLocalizations l,
+  ) =>
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildIconButton(
+            icon: isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
+            onTap: () {
+              ref.read(viewModeProvider.notifier).state =
+                  isGridView ? ViewMode.list : ViewMode.grid;
+            },
+            isDark: isDark,
+            tooltip: isGridView ? l.filesListView : l.filesGridView,
+          ),
+          _buildIconButton(
+            icon: Icons.swap_vert_rounded,
+            onTap: () => _showSortOptions(context, isDark),
+            isDark: isDark,
+            tooltip: l.filesSort,
+          ),
+          _buildIconButton(
+            icon: Icons.download_rounded,
+            onTap: () => showDownloadManager(context),
+            isDark: isDark,
+            tooltip: l.filesDownloadManager,
+          ),
+          _buildIconButton(
+            icon: Icons.create_new_folder_rounded,
+            onTap: () => _showCreateFolderDialog(isDark),
+            isDark: isDark,
+            tooltip: l.filesNewFolder,
+          ),
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            onPressed: _pickAndUploadFiles,
+            icon: const Icon(Icons.upload_file_rounded, size: 16),
+            label: Text(l.filesUploadFile),
+          ),
+        ],
+      );
 
   /// 桌面端左侧 source sidebar：每个已连接源一个 entry，点击切换当前源。
   Widget _buildDesktopSourceSidebar(

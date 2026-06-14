@@ -7,6 +7,7 @@ import 'package:my_nas/features/app_lock/presentation/pages/setup_pin_page.dart'
 import 'package:my_nas/features/app_lock/presentation/providers/app_lock_provider.dart';
 import 'package:my_nas/features/app_lock/presentation/widgets/app_lock_gate.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
@@ -163,10 +164,8 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
   Future<void> _onToggleEnabled({required bool value}) async {
     final notifier = ref.read(appLockProvider.notifier);
     if (value) {
-      // 启用 → 跳设置 PIN 页
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const SetupPinPage()),
-      );
+      // 启用 → 桌面弹窗里设置 PIN（实际启用在 PinSetupView 内完成）
+      await _openPinSetup();
     } else {
       // 关闭 → 需要验证当前 PIN
       final ok = await _verifyCurrentPin();
@@ -179,8 +178,25 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
     final ok = await _verifyCurrentPin();
     if (!mounted) return;
     if (!ok) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const SetupPinPage()),
+    await _openPinSetup();
+  }
+
+  /// 桌面端用居中弹窗承载 PIN 设置（对齐设计稿 `openSheet("changePin")`），
+  /// 替代旧的整页跳转。设置成功后由 [PinSetupView] 回调关闭弹窗。
+  Future<void> _openPinSetup() async {
+    await showAdaptiveModalSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: SingleChildScrollView(
+            child: PinSetupView(
+              onCompleted: () => Navigator.of(sheetCtx).pop(),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

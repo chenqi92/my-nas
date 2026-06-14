@@ -7,6 +7,7 @@ import 'package:my_nas/features/music/data/services/playlist_service.dart';
 import 'package:my_nas/features/music/presentation/pages/duplicate_songs_page.dart';
 import 'package:my_nas/features/music/presentation/pages/listening_stats_page.dart';
 import 'package:my_nas/features/music/presentation/pages/recycle_bin_page.dart';
+import 'package:my_nas/features/photo/presentation/pages/photo_duplicates_page.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
@@ -169,6 +170,18 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
               dense: true,
               onPressed: () => Navigator.of(context).push<void>(
                 MaterialPageRoute(builder: (_) => const DuplicateSongsPage()),
+              ),
+            ),
+          ),
+          SetRow(
+            title: l.maintPhotoTitle,
+            desc: l.maintPhotoDesc,
+            trailing: AppButton(
+              label: l.maintPhotoButton,
+              icon: Icons.photo_library_outlined,
+              dense: true,
+              onPressed: () => Navigator.of(context).push<void>(
+                MaterialPageRoute(builder: (_) => const PhotoDuplicatesPage()),
               ),
             ),
           ),

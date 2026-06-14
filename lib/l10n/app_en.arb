@@ -2329,5 +2329,226 @@
         "type": "int"
       }
     }
-  }
+  },
+  "libmapEditTypeTooltip": "Change library type",
+  "libmapEditConfirmTitle": "Change library type?",
+  "libmapEditConfirmBody": "Changing “{path}” from {from} to {to} will delete its indexed data under {from}; you will need to rescan in {to} afterward. Continue?",
+  "@libmapEditConfirmBody": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "libmapEditCancel": "Cancel",
+  "libmapEditConfirmOk": "Switch & clear",
+  "libmapEditChanged": "Switched to {to} library — please rescan",
+  "@libmapEditChanged": {
+    "placeholders": {
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "dedupPageTitle": "Duplicate Photos",
+  "dedupRetry": "Retry",
+  "dedupCancel": "Cancel",
+  "dedupDelete": "Delete",
+  "dedupStartScan": "Start scan",
+  "dedupDeleteSelected": "Delete selected",
+  "dedupSelectAllRecommended": "Select all recommended",
+  "dedupClearSelection": "Deselect ({n})",
+  "@dedupClearSelection": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupConnectNasFirst": "Please connect to NAS first",
+  "dedupLoadFailed": "Failed to load: {error}",
+  "@dedupLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dedupFindSimilarFailed": "Failed to find similar photos: {error}",
+  "@dedupFindSimilarFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dedupDeleteFailed": "Failed to delete: {error}",
+  "@dedupDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dedupDeleteConfirmTitle": "Confirm deletion",
+  "dedupDeleteConfirmMessage": "Delete the {n} selected photos?\n\nNote: this permanently removes the files from the NAS and cannot be undone.",
+  "@dedupDeleteConfirmMessage": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupDeleteResult": "Deleted {n} photos",
+  "@dedupDeleteResult": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupDeleteResultWithFailed": "Deleted {n} photos, {failed} failed",
+  "@dedupDeleteResultWithFailed": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupModeQuick": "Quick",
+  "dedupModeQuickSubtitle": "Name + size",
+  "dedupModeExact": "Exact",
+  "dedupModeExactSubtitle": "MD5 hash",
+  "dedupModeSimilar": "Similar",
+  "dedupModeSimilarSubtitle": "Visual match",
+  "dedupModeSameName": "Same name",
+  "dedupModeSameNameSubtitle": "Same file name",
+  "dedupStatDuplicateGroups": "Duplicate groups",
+  "dedupStatAffectedPhotos": "Affected photos",
+  "dedupStatSimilarGroups": "Similar groups",
+  "dedupSimilarityThreshold": "Similarity threshold: ",
+  "dedupSimilarInfo": "Visual similarity detection finds the same photo after compression, cropping, or color adjustment. A lower threshold is stricter; a higher one matches more loosely.",
+  "dedupQuickInfo": "Quick detection relies on matching file name and size and may yield false positives. Use deep detection to confirm.",
+  "dedupSameNameInfo": "Same-name detection groups by file name only, ignoring size, to find photos with the same name across sources and folders.",
+  "dedupThresholdStrict": "Strict",
+  "dedupThresholdRather": "Rather strict",
+  "dedupThresholdModerate": "Moderate",
+  "dedupThresholdLoose": "Loose",
+  "dedupScanning": "Scanning...",
+  "dedupScanCompleted": "Scan complete",
+  "dedupScanCancelled": "Cancelled",
+  "dedupScanError": "Scan error",
+  "dedupProcessed": "Processed {processed} / {total}",
+  "@dedupProcessed": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupProcessedWithFailed": "Processed {processed} / {total}, {failed} failed",
+  "@dedupProcessedWithFailed": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupScannedProgress": "Scanned {hashed}/{total}",
+  "@dedupScannedProgress": {
+    "placeholders": {
+      "hashed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupScanPendingSuffix": ", {n} pending",
+  "@dedupScanPendingSuffix": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupScanFailedSuffix": ", {n} failed",
+  "@dedupScanFailedSuffix": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupScanAllCompleted": "All {total} photos scanned",
+  "@dedupScanAllCompleted": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupAnalyzingSimilarity": "Analyzing photo similarity...",
+  "dedupAnalyzedGroups": "Analyzed {processed} / {total} groups",
+  "@dedupAnalyzedGroups": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupSimilarCount": "{n} similar",
+  "@dedupSimilarCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupSameCount": "{n} identical",
+  "@dedupSameCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupSelectOthers": "Select others",
+  "dedupKeepRecommended": "Keep",
+  "dedupReanalyze": "Re-analyze",
+  "dedupEmptyQuickTitle": "No suspected duplicates found",
+  "dedupEmptyQuickSubtitle": "Quick detection found no photos with the same name and size",
+  "dedupEmptyExactTitle": "No duplicate photos found",
+  "dedupEmptyExactSubtitle": "Tap the refresh button at the top right to scan photo hashes",
+  "dedupEmptySimilarTitle": "No similar photos found",
+  "dedupEmptySimilarSubtitle": "Try raising the similarity threshold, or tap refresh to re-analyze",
+  "dedupEmptySameNameTitle": "No same-name photos found",
+  "dedupEmptySameNameSubtitle": "No photos with the same file name were found",
+  "dedupEmptyNoData": "No data",
+  "filesAlignSubtitle": "Browse and manage files across your connected sources",
+  "maintPhotoTitle": "Duplicate photos",
+  "maintPhotoDesc": "Filename / MD5 across sources / visual pHash similarity · adjustable confidence",
+  "maintPhotoButton": "Scan settings"
 }

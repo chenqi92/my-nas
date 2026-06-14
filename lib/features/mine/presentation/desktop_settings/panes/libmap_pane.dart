@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -185,12 +186,46 @@ class _MapRow extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AppTag(
-            entry.type.displayName,
-            icon: _typeIcon(entry.type),
-            variant: TagVariant.accent,
+          // 库类型内联切换（设计稿期望就地改类型）。切换会清除原库已索引数据，
+          // 故经确认弹窗后再执行。
+          PopupMenuButton<MediaType>(
+            tooltip: l.libmapEditTypeTooltip,
+            position: PopupMenuPosition.under,
+            onSelected: (newType) {
+              if (newType == entry.type) return;
+              _confirmChangeType(context, ref, newType);
+            },
+            itemBuilder: (_) => [
+              for (final type in LibMapPane._libTypes)
+                PopupMenuItem<MediaType>(
+                  value: type,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(_typeIcon(type), size: 16, color: t.text2),
+                      const SizedBox(width: 8),
+                      Text(type.displayName),
+                      if (type == entry.type) ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.check_rounded, size: 15, color: t.accent),
+                      ],
+                    ],
+                  ),
+                ),
+            ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppTag(
+                  entry.type.displayName,
+                  icon: _typeIcon(entry.type),
+                  variant: TagVariant.accent,
+                ),
+                Icon(Icons.arrow_drop_down_rounded, size: 18, color: t.text3),
+              ],
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           AppSwitch(
             value: entry.path.isEnabled,
             onChanged: (v) => ref
@@ -209,6 +244,47 @@ class _MapRow extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// 切换库类型：确认后清除原库已索引数据（[MediaLibraryConfigNotifier.removePath]
+  /// 会级联删除）并把该目录加入新库，提示用户重新扫描。
+  Future<void> _confirmChangeType(
+    BuildContext context,
+    WidgetRef ref,
+    MediaType newType,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final from = entry.type.displayName;
+    final to = newType.displayName;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.libmapEditConfirmTitle),
+        content: Text(l.libmapEditConfirmBody(entry.path.path, from, to)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.libmapEditCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.libmapEditConfirmOk),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final notifier = ref.read(mediaLibraryConfigProvider.notifier);
+    await notifier.removePath(entry.type, entry.path.id);
+    await notifier.addPath(
+      newType,
+      MediaLibraryPath(
+        sourceId: entry.path.sourceId,
+        path: entry.path.path,
+        name: entry.path.name,
+      ),
+    );
+    if (context.mounted) context.showSuccessToast(l.libmapEditChanged(to));
   }
 
   IconData _typeIcon(MediaType type) => switch (type) {

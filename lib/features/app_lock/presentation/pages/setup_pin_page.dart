@@ -9,19 +9,56 @@ import 'package:my_nas/features/app_lock/presentation/widgets/pin_keypad.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
-/// 设置 PIN（首次启用应用锁）
+/// 设置 PIN（首次启用应用锁）整页形态。
 ///
-/// 流程：输入 → 确认 → 可选启用生物识别 → 完成
-class SetupPinPage extends ConsumerStatefulWidget {
+/// 流程：输入 → 确认 → 可选启用生物识别 → 完成。内容与状态逻辑封装在
+/// [PinSetupView]，桌面端可改用弹窗承载（见 `SecurityPane`），移动端走本整页。
+class SetupPinPage extends StatelessWidget {
   const SetupPinPage({super.key});
 
   @override
-  ConsumerState<SetupPinPage> createState() => _SetupPinPageState();
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.darkBackground : null,
+      appBar: AppBar(
+        leading: const RoundedBackButton(),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(l.appLockSetupTitle),
+      ),
+      body: SafeArea(
+        child: PinSetupView(
+          fillHeight: true,
+          onCompleted: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
+  }
+}
+
+/// PIN 设置内容（输入 → 确认 → 可选生物识别），可嵌入整页或弹窗。
+///
+/// 成功保存并启用应用锁后回调 [onCompleted]（由宿主决定关闭整页或弹窗）。
+/// [fillHeight] 为 true 时键盘吸底（整页用），false 时内容自适应高度（弹窗用）。
+class PinSetupView extends ConsumerStatefulWidget {
+  const PinSetupView({
+    this.onCompleted,
+    this.fillHeight = false,
+    super.key,
+  });
+
+  final VoidCallback? onCompleted;
+  final bool fillHeight;
+
+  @override
+  ConsumerState<PinSetupView> createState() => _PinSetupViewState();
 }
 
 enum _SetupStep { enterPin, confirmPin }
 
-class _SetupPinPageState extends ConsumerState<SetupPinPage> {
+class _PinSetupViewState extends ConsumerState<PinSetupView> {
   static const _minLength = 4;
   static const _maxLength = 6;
 
@@ -108,7 +145,7 @@ class _SetupPinPageState extends ConsumerState<SetupPinPage> {
     if (!mounted) return;
 
     _showSnack(l.appLockSetupSuccess);
-    Navigator.of(context).pop();
+    widget.onCompleted?.call();
   }
 
   Future<bool?> _askBiometric() {
@@ -139,6 +176,9 @@ class _SetupPinPageState extends ConsumerState<SetupPinPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final muted = isDark
+        ? AppColors.darkOnSurfaceVariant
+        : AppColors.lightOnSurfaceVariant;
     final title = _step == _SetupStep.enterPin
         ? l.appLockSetupTitle
         : l.appLockSetupConfirmTitle;
@@ -146,41 +186,42 @@ class _SetupPinPageState extends ConsumerState<SetupPinPage> {
         ? l.appLockSetupSubtitle
         : l.appLockSetupConfirmSubtitle;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : null,
-      appBar: AppBar(
-        leading: const RoundedBackButton(),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(title),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: AppSpacing.xl),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isDark
-                    ? AppColors.darkOnSurfaceVariant
-                    : AppColors.lightOnSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            PinDots(
-              length: _currentInput.length,
-              maxLength: _maxLength,
-              error: _mismatchError,
-            ),
-            const Spacer(),
-            PinKeypad(
-              onDigit: _onDigit,
-              onDelete: _onDelete,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-          ],
+    final children = <Widget>[
+      const SizedBox(height: AppSpacing.xl),
+      // 弹窗形态无 AppBar，标题在内容里展示；整页形态标题在 AppBar，避免重复。
+      if (!widget.fillHeight) ...[
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
+        const SizedBox(height: AppSpacing.sm),
+      ],
+      Text(
+        subtitle,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: muted),
       ),
+      const SizedBox(height: AppSpacing.xl),
+      PinDots(
+        length: _currentInput.length,
+        maxLength: _maxLength,
+        error: _mismatchError,
+      ),
+      if (widget.fillHeight)
+        const Spacer()
+      else
+        const SizedBox(height: AppSpacing.xl),
+      PinKeypad(onDigit: _onDigit, onDelete: _onDelete),
+      const SizedBox(height: AppSpacing.xl),
+    ];
+
+    return Column(
+      mainAxisSize: widget.fillHeight ? MainAxisSize.max : MainAxisSize.min,
+      children: children,
     );
   }
 }
