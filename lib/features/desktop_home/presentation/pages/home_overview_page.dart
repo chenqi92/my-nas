@@ -147,7 +147,8 @@ class _NowHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     return SizedBox(
-      height: 340,
+      // 容纳右侧时钟卡 + 三行系统脉搏（脉搏行加高后 340 会溢出 24px）。
+      height: 372,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
