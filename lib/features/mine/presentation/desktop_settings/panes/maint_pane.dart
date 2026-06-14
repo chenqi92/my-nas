@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/music/data/services/play_history_store.dart';
+import 'package:my_nas/features/music/data/services/playlist_service.dart';
 import 'package:my_nas/features/music/presentation/pages/duplicate_songs_page.dart';
 import 'package:my_nas/features/music/presentation/pages/listening_stats_page.dart';
 import 'package:my_nas/features/music/presentation/pages/recycle_bin_page.dart';
@@ -16,7 +17,9 @@ import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 /// + Top 排行）+ 库维护（重复检测 / 回收站）。
 ///
 /// 听歌统计直接读 [PlayHistoryStore]（本地播放历史聚合）的真实数据：周/月/年切换、
-/// 摘要四项、按天热力图。Top 排行 / 重复检测 / 回收站用按钮打开现有功能页保留完整能力。
+/// 摘要四项、按天热力图。回收站行内显示待恢复项数量（[PlaylistService] 软删除记录，
+/// 小 box 低成本计数）。Top 排行 / 重复检测 / 回收站用按钮打开现有功能页保留完整能力。
+/// 重复检测无低成本计数 provider（需全表扫描 + 内存分组），仅保留按钮。
 class MaintPane extends ConsumerStatefulWidget {
   const MaintPane({super.key});
 
@@ -27,11 +30,26 @@ class MaintPane extends ConsumerStatefulWidget {
 class _MaintPaneState extends ConsumerState<MaintPane> {
   PlayHistoryRange _range = PlayHistoryRange.month;
   Future<void>? _initFuture;
+  int? _recycleCount;
 
   @override
   void initState() {
     super.initState();
     _initFuture = PlayHistoryStore.instance.init();
+    _loadRecycleCount();
+  }
+
+  Future<void> _loadRecycleCount() async {
+    final deleted = await PlaylistService().getDeletedPlaylists();
+    if (mounted) setState(() => _recycleCount = deleted.length);
+  }
+
+  Future<void> _openRecycleBin() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => const RecycleBinPage()),
+    );
+    // 回到 pane 后刷新计数（页面里可能恢复 / 永久删除了项目）
+    await _loadRecycleCount();
   }
 
   @override
@@ -139,13 +157,27 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
             title: '回收站',
             desc: '歌单删除项保留 30 天可恢复',
             last: true,
-            trailing: AppButton(
-              label: '打开',
-              icon: Icons.restore_from_trash_outlined,
-              dense: true,
-              onPressed: () => Navigator.of(context).push<void>(
-                MaterialPageRoute(builder: (_) => const RecycleBinPage()),
-              ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_recycleCount != null && _recycleCount! > 0) ...[
+                  Text(
+                    '$_recycleCount 项',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      color: DesignTokens.of(context).text2,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                AppButton(
+                  label: '打开',
+                  icon: Icons.restore_from_trash_outlined,
+                  dense: true,
+                  onPressed: _openRecycleBin,
+                ),
+              ],
             ),
           ),
         ],

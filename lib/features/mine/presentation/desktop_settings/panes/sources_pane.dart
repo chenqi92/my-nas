@@ -66,21 +66,26 @@ class SourcesPane extends ConsumerWidget {
           bottomMargin: false,
           children: [
             _DiscoveryRow(),
-            SetRow(
+            const SetRow(
               title: '自动连接',
-              desc: '启动时自动登录已启用的源（按各源 autoConnect 单独配置）',
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              desc: '启动时自动登录已启用的源。目前在「添加 / 编辑源」时按各源单独配置，全局开关待接入',
+              trailing: AppTag('即将推出', variant: TagVariant.plan),
             ),
-            SetRow(
+            const SetRow(
               title: '信任自签名证书',
-              desc: '允许 HTTPS 自签名证书（按各源单独配置）',
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              desc: '允许 HTTPS 自签名证书。当前由网络层统一放行，尚无可持久化的开关',
+              trailing: AppTag('即将推出', variant: TagVariant.plan),
             ),
-            SetRow(
+            const SetRow(
+              title: '记住 2FA 设备',
+              desc: '通过群晖 TOTP 后记住此设备以跳过二次验证。目前在「添加 / 编辑源」时按各源单独配置',
+              trailing: AppTag('即将推出', variant: TagVariant.plan),
+            ),
+            const SetRow(
               title: '规划中的源类型',
               desc: '绿联 · 飞牛 fnOS · NFS — 入口已预留',
               last: true,
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              trailing: AppTag('即将推出', variant: TagVariant.plan),
             ),
           ],
         ),

@@ -6,6 +6,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 
@@ -13,8 +14,10 @@ import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 ///
 /// 对齐设计稿 `settings.jsx` 的 `PaneLibMap`：把源里的目录标记为
 /// 视频 / 音乐 / 照片 / 漫画 / 图书 库（SRC-30）。每行展示目录路径（mono）+
-/// 所属源 + 库类型标签。映射的新增 / 编辑（涉及跨库移动 + 扫描副作用）打开
-/// 现有 [MediaLibraryPage] 完成；外壳负责滚动与 padding + maxWidth 居中。
+/// 所属源 + 库类型标签，并内联「启用」开关（[MediaLibraryConfigNotifier.togglePath]，
+/// 仅切换 isEnabled、无数据删除副作用）。库类型切换 / 取消映射涉及跨库移动 +
+/// 级联删除已索引数据 + 重扫描（[MediaLibraryConfigNotifier.removePath]），副作用
+/// 复杂，仍打开现有 [MediaLibraryPage] 完成；外壳负责滚动与 padding + maxWidth 居中。
 class LibMapPane extends ConsumerWidget {
   const LibMapPane({super.key});
 
@@ -148,8 +151,12 @@ class _LibMapEntry {
   final MediaLibraryPath path;
 }
 
-/// 单行映射：folder 图标 + 目录路径（mono）+ 源名 + 库类型标签。
-class _MapRow extends StatelessWidget {
+/// 单行映射：folder 图标 + 目录路径（mono）+ 源名 + 库类型标签 + 内联启用开关。
+///
+/// 「启用」开关内联接通 [MediaLibraryConfigNotifier.togglePath]（仅切换
+/// isEnabled，不删除任何已索引数据）。库类型切换 / 取消映射的破坏性副作用
+/// 仍走「编辑映射」按钮打开 [MediaLibraryPage]。
+class _MapRow extends ConsumerWidget {
   const _MapRow({
     required this.entry,
     required this.sourceName,
@@ -163,7 +170,7 @@ class _MapRow extends StatelessWidget {
   final VoidCallback onEdit;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
     final src = sourceName ?? '未知源';
     return SetRow(
@@ -179,6 +186,13 @@ class _MapRow extends StatelessWidget {
             icon: _typeIcon(entry.type),
             variant: TagVariant.accent,
           ),
+          const SizedBox(width: 12),
+          AppSwitch(
+            value: entry.path.isEnabled,
+            onChanged: (v) => ref
+                .read(mediaLibraryConfigProvider.notifier)
+                .togglePath(entry.type, entry.path.id, enabled: v),
+          ),
           const SizedBox(width: 10),
           IconButton(
             onPressed: onEdit,
@@ -186,7 +200,7 @@ class _MapRow extends StatelessWidget {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             icon: Icon(Icons.tune_rounded, size: 16, color: t.text2),
-            tooltip: '编辑映射',
+            tooltip: '切换库类型 / 取消映射',
           ),
         ],
       ),

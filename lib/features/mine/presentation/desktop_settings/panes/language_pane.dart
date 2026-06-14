@@ -92,14 +92,20 @@ class _InterfaceLanguageControl extends StatelessWidget {
       children: [
         const AppTag('即将推出', variant: TagVariant.plan),
         const SizedBox(width: 12),
-        AppSegmented<bool>(
-          options: const [
-            AppSegmentedOption(value: false, label: '简体中文'),
-            AppSegmentedOption(value: true, label: 'English'),
-          ],
-          value: isEnglish,
-          // 跟随系统语言，暂不可手动切换。
-          onChanged: (_) {},
+        // 跟随系统语言，应用无可写 locale provider，故以只读分段展示当前
+        // 解析结果（IgnorePointer + 降透明度表明不可手动切换）。
+        Opacity(
+          opacity: 0.55,
+          child: IgnorePointer(
+            child: AppSegmented<bool>(
+              options: const [
+                AppSegmentedOption(value: false, label: '简体中文'),
+                AppSegmentedOption(value: true, label: 'English'),
+              ],
+              value: isEnglish,
+              onChanged: (_) {},
+            ),
+          ),
         ),
       ],
     );

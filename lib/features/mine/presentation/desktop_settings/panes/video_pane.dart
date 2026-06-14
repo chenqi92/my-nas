@@ -8,7 +8,9 @@ import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
 import 'package:my_nas/features/video/domain/entities/hdr_capability.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/pages/scraper_sources_page.dart';
+import 'package:my_nas/features/video/presentation/providers/cast_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_provider.dart';
+import 'package:my_nas/features/video/presentation/providers/playback_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/subtitle_translation_settings_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
@@ -21,8 +23,10 @@ import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 /// 桌面「设置 · 视频播放」详情 pane（对齐设计稿 settings_panes.jsx PaneVideo）。
 ///
 /// 播放 / HDR 与后端 / 音频直通 / 投屏与转码 / 字幕 五张卡片。能接的开关、
-/// 分段、滑块直接读写真实 provider（清晰度、HDR/音频、字幕翻译）；字幕源 /
-/// 刮削源用按钮打开现有管理页；尚无后端的项以「即将推出」只读行降级。
+/// 分段、滑块直接读写真实 provider（清晰度、HDR/音频、字幕翻译、自动续播 /
+/// 自动下一集、投屏设备发现）；视频刮削源用按钮打开现有管理页；视频后端、
+/// 服务端 / 客户端转码无可写的全局设置（运行时按源能力自动判定），字幕源无
+/// 现成管理页，这些项以「即将推出」只读行降级。
 class VideoPane extends ConsumerWidget {
   const VideoPane({super.key});
 
@@ -40,6 +44,12 @@ class VideoPane extends ConsumerWidget {
     final subtitle = ref.watch(subtitleTranslationSettingsProvider);
     final subtitleNotifier =
         ref.read(subtitleTranslationSettingsProvider.notifier);
+
+    final playback = ref.watch(playbackSettingsProvider);
+    final playbackNotifier = ref.read(playbackSettingsProvider.notifier);
+
+    final cast = ref.watch(castProvider);
+    final castNotifier = ref.read(castProvider.notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -90,12 +100,19 @@ class VideoPane extends ConsumerWidget {
             SetRow(
               title: '自动续播',
               desc: '从上次停止处继续',
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              trailing: AppSwitch(
+                value: playback.rememberPosition,
+                onChanged: (v) =>
+                    playbackNotifier.setRememberPosition(enabled: v),
+              ),
             ),
             SetRow(
               title: '自动下一集',
               desc: '剧集结束自动播放下一集',
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              trailing: AppSwitch(
+                value: playback.autoPlayNext,
+                onChanged: (v) => playbackNotifier.setAutoPlayNext(enabled: v),
+              ),
             ),
             SetRow(
               title: '缓冲阈值',
@@ -190,8 +207,18 @@ class VideoPane extends ConsumerWidget {
           children: [
             SetRow(
               title: 'DLNA / AirPlay 投屏',
-              desc: '设备发现 · 远程控制 · 投屏状态显示',
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              desc: cast.isCasting
+                  ? '投屏中 · ${cast.session?.device.name ?? '已连接设备'}'
+                  : cast.isDiscovering
+                      ? '正在搜索设备…'
+                      : '设备发现 · 远程控制（播放 / 暂停 / 音量 / 进度）',
+              trailing: AppButton(
+                label: cast.isDiscovering ? '搜索中…' : '搜索设备',
+                icon: Icons.wifi_tethering_rounded,
+                dense: true,
+                onPressed:
+                    cast.isDiscovering ? null : castNotifier.startDiscovery,
+              ),
             ),
             SetRow(
               title: '服务端转码',

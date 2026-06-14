@@ -8,9 +8,10 @@ import 'package:my_nas/features/media_tracking/presentation/providers/trakt_prov
 import 'package:my_nas/features/pt_sites/presentation/pages/pt_sites_list_page.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/features/video/data/services/trakt_scrobble_service.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
-import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 
@@ -19,8 +20,10 @@ import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 /// - PT 资源站点：读 [ptSitesSourcesProvider] 真实源列表，行内状态点 +「管理」
 ///   打开 [PTSitesListPage]。
 /// - 媒体追踪：Trakt 接 [traktConnectionProvider]，状态点随连接态变化，
-///   「用户统计 / 断开 / 连接」打开 [TraktConnectionPage]。
-/// - 媒体管理后端：NAStool 打开 [MediaManagementListPage]；MoviePilot 暂为规划。
+///   「用户统计 / 断开 / 连接」打开 [TraktConnectionPage]；自动上报开关接
+///   [traktScrobbleSettingsProvider]（Hive 持久化）。
+/// - 媒体管理后端：NAStool / MoviePilot 均为 [SourceCategory.mediaManagement]
+///   源，行内状态点随已配置源变化，「配置」打开 [MediaManagementListPage]。
 class SitesPane extends ConsumerWidget {
   const SitesPane({super.key});
 
@@ -29,6 +32,8 @@ class SitesPane extends ConsumerWidget {
     final t = DesignTokens.of(context);
     final ptSites = ref.watch(ptSitesSourcesProvider);
     final trakt = ref.watch(traktConnectionProvider);
+    final scrobble = ref.watch(traktScrobbleSettingsProvider);
+    final mediaMgmt = ref.watch(mediaManagementSourcesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -88,9 +93,15 @@ class SitesPane extends ConsumerWidget {
             ),
             SetRow(
               title: '自动上报',
-              desc: '播放进度 ≥ 80% 自动标记为已看',
+              desc:
+                  '播放进度 ≥ ${scrobble.minProgress.toStringAsFixed(0)}% 自动标记为已看（Scrobble）',
               last: true,
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              trailing: AppSwitch(
+                value: scrobble.enabled,
+                onChanged: (v) => ref
+                    .read(traktScrobbleSettingsProvider.notifier)
+                    .setEnabled(v),
+              ),
             ),
           ],
         ),
@@ -113,9 +124,19 @@ class SitesPane extends ConsumerWidget {
             ),
             SetRow(
               title: 'MoviePilot',
-              desc: '下一代媒体自动化 — 源配置对齐中',
+              desc: '下一代媒体自动化 — 订阅 / 搜索 / 站点 / 工作流',
               last: true,
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              leading: StatusDot(
+                _backendDot(
+                  mediaMgmt
+                      .where((s) => s.type == SourceType.moviepilot)
+                      .toList(),
+                ),
+              ),
+              trailing: AppChip(
+                label: '配置',
+                onTap: () => _openMediaManagement(context),
+              ),
             ),
           ],
         ),

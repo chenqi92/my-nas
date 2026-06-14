@@ -4,10 +4,15 @@ import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/presentation/pages/music_scraper_sources_page.dart';
 import 'package:my_nas/features/music/presentation/providers/music_scraper_provider.dart';
+import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
+import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/pages/scraper_sources_page.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
+import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
@@ -22,7 +27,8 @@ import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 ///   完整的源增删改测在 [ScraperSourcesPage]。
 /// - 音乐各刮削源开关接 [musicScraperSourcesProvider]（按类型定位 entity）；
 ///   完整管理在 [MusicScraperSourcesPage]。
-/// - 字幕源（OpenSubtitles）暂无独立 provider / 管理页，降级为「即将推出」只读行。
+/// - 字幕源（OpenSubtitles）接 [hasOpenSubtitlesConfigProvider] 显示连接状态点，
+///   「账户」按钮打开 [SourceFormPage]（账号 / API Key 配置是多步表单，保留弹窗）。
 class ScraperPane extends ConsumerWidget {
   const ScraperPane({super.key});
 
@@ -33,6 +39,7 @@ class ScraperPane extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scraperAsync = ref.watch(scraperSourcesProvider);
     final musicState = ref.watch(musicScraperSourcesProvider);
+    final hasOpenSubtitles = ref.watch(hasOpenSubtitlesConfigProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -52,6 +59,11 @@ class ScraperPane extends ConsumerWidget {
             const SetRow(
               title: '解析本地 NFO',
               desc: '优先使用媒体目录内的 .nfo',
+              trailing: AppTag('即将推出', variant: TagVariant.plan),
+            ),
+            const SetRow(
+              title: '海报 / 背景缓存',
+              desc: '关键帧缩略图 + 海报多尺寸缓存',
               trailing: AppTag('即将推出', variant: TagVariant.plan),
             ),
             SetRow(
@@ -81,12 +93,19 @@ class ScraperPane extends ConsumerWidget {
           children: [
             SetRow(
               title: 'OpenSubtitles',
-              desc: '在线字幕搜索与下载',
+              desc: hasOpenSubtitles
+                  ? '在线字幕搜索与下载 · 已配置账户'
+                  : '在线字幕搜索与下载 · 使用内置公共配额',
               last: true,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  AppTag('即将推出', variant: TagVariant.plan),
+                children: [
+                  StatusDot(hasOpenSubtitles ? DotStatus.ok : DotStatus.off),
+                  const SizedBox(width: 8),
+                  AppChip(
+                    label: '账户',
+                    onTap: () => _openOpenSubtitlesAccount(context, ref),
+                  ),
                 ],
               ),
             ),
@@ -187,6 +206,24 @@ class ScraperPane extends ConsumerWidget {
     await ref
         .read(scraperSourcesProvider.notifier)
         .reorderSources(targetIndex, 0);
+  }
+
+  /// 打开 OpenSubtitles 账户配置表单。若已存在 opensubtitles 源则进入编辑模式，
+  /// 否则新建。账号 / API Key / 密码属多步表单，复用 [SourceFormPage]。
+  void _openOpenSubtitlesAccount(BuildContext context, WidgetRef ref) {
+    final sources = ref.read(sourcesProvider).valueOrNull ?? const [];
+    SourceEntity? existing;
+    for (final s in sources) {
+      if (s.type == SourceType.opensubtitles) {
+        existing = s;
+        break;
+      }
+    }
+    SourceFormPage.openAdaptive<void>(
+      context,
+      sourceType: SourceType.opensubtitles,
+      existingSource: existing,
+    );
   }
 
   /// 音乐单个刮削源开关行：按 [type] 在已配置源里定位 entity 后接真实 toggle；

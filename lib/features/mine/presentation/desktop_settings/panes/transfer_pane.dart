@@ -10,6 +10,16 @@ import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 
+/// 缓存上限可配置的媒体类型（与 [CacheConfigService] 持久化的键一致）。
+const _cacheLimitTypes = <(MediaType, String)>[
+  (MediaType.photo, '照片 / 封面'),
+  (MediaType.music, '音乐'),
+  (MediaType.video, '视频'),
+  (MediaType.book, '图书'),
+  (MediaType.comic, '漫画'),
+  (MediaType.note, '笔记'),
+];
+
 /// 桌面「设置 · 传输与缓存」详情 pane。
 ///
 /// 对应设计稿 `settings_panes.jsx` 的 `PaneTransfer`：传输并发 / 后台 / 启动恢复 /
@@ -20,11 +30,13 @@ import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 /// - 「清理缓存」chip 调用 [TransferTasksNotifier.clearAllCache] 按类型/全部清除。
 /// - 「打开传输队列」push 现有 [TransferManagerPage]。
 /// - 「上传去重」是 [uploadedMarkService] 既有行为（跳过已上传），始终开启、只读展示。
+/// - 「缓存上限」按媒体类型读写 [CacheConfigService]（[cacheConfigProvider]），
+///   每类一个下拉档位（[CacheSizeOption.options]），超限按 LRU 自动清理。
 ///
 /// 降级说明（无对应可写 provider，标「即将推出」）：
-/// - 并发任务数固定为 [TransferService.maxConcurrentTransfers]，暂无可写设置。
+/// - 并发任务数固定为 [TransferService.maxConcurrentTransfers]（static const），
+///   暂无可写设置。
 /// - 后台传输 / 启动恢复暂无开关。
-/// - 全局缓存上限暂无单一 API（现按媒体类型在 [CacheConfigService] 各自配置）。
 class TransferPane extends ConsumerWidget {
   const TransferPane({super.key});
 
@@ -126,11 +138,7 @@ class TransferPane extends ConsumerWidget {
                 error: (_, _) => const _CacheKvStrip.placeholder(),
               ),
             ),
-            const SetRow(
-              title: '缓存上限',
-              desc: '超出后按 LRU 自动清理最久未用（当前按媒体类型分别配置）',
-              trailing: AppTag('全局上限即将推出', variant: TagVariant.plan),
-            ),
+            const _CacheLimitRow(),
             SetRow(
               title: '清理缓存',
               desc: '按类型或全部清除已缓存文件',
@@ -202,6 +210,169 @@ class TransferPane extends ConsumerWidget {
     ref
       ..invalidate(cacheStatsProvider)
       ..invalidate(allCachedItemsProvider);
+  }
+}
+
+/// 「缓存上限」行：按媒体类型逐项读写 [CacheConfigService] 的缓存大小限制。
+///
+/// 后端无单一「全局上限」API，各类型在 [CacheConfigService] 独立持久化，故此处
+/// 平铺为每类一个下拉档位（[CacheSizeOption.options]，含「无限制」）。改值即时
+/// 调用 [CacheConfigService.setCacheSizeLimit] 持久化，并刷新 [cacheConfigProvider]。
+class _CacheLimitRow extends ConsumerWidget {
+  const _CacheLimitRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = DesignTokens.of(context);
+    final configAsync = ref.watch(cacheConfigProvider);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: t.hairline)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '缓存上限',
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: t.text0,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '按媒体类型设上限，超出后按 LRU 自动清理最久未用',
+            style: TextStyle(fontSize: 12, color: t.text2),
+          ),
+          const SizedBox(height: 12),
+          configAsync.when(
+            data: (limits) => Column(
+              children: [
+                for (final entry in _cacheLimitTypes)
+                  _CacheLimitTile(
+                    label: entry.$2,
+                    sizeMB: limits[entry.$1] ??
+                        CacheConfigService.defaultCacheSizesMB[entry.$1] ??
+                        1024,
+                    onChanged: (sizeMB) async {
+                      await ref
+                          .read(cacheConfigServiceProvider)
+                          .setCacheSizeLimit(entry.$1, sizeMB);
+                      ref.invalidate(cacheConfigProvider);
+                    },
+                  ),
+              ],
+            ),
+            loading: () => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                '加载中…',
+                style: TextStyle(fontSize: 12, color: t.text3),
+              ),
+            ),
+            error: (_, _) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                '无法读取缓存配置',
+                style: TextStyle(fontSize: 12, color: t.text3),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 单个媒体类型的缓存上限行：标签 + 档位下拉。
+class _CacheLimitTile extends StatelessWidget {
+  const _CacheLimitTile({
+    required this.label,
+    required this.sizeMB,
+    required this.onChanged,
+  });
+
+  final String label;
+  final int sizeMB;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: t.text1,
+              ),
+            ),
+          ),
+          _CacheLimitDropdown(sizeMB: sizeMB, onChanged: onChanged),
+        ],
+      ),
+    );
+  }
+}
+
+/// 缓存档位下拉（[CacheSizeOption.options]，0 = 无限制）。
+///
+/// 当前值不在预定义选项内时（历史自定义值），临时补一个选项以免 [DropdownButton]
+/// 因 value 不匹配抛错。
+class _CacheLimitDropdown extends StatelessWidget {
+  const _CacheLimitDropdown({required this.sizeMB, required this.onChanged});
+
+  final int sizeMB;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final values = CacheSizeOption.options.map((o) => o.sizeMB).toList();
+    final items = <DropdownMenuItem<int>>[
+      for (final o in CacheSizeOption.options)
+        DropdownMenuItem(value: o.sizeMB, child: Text(o.label)),
+      if (!values.contains(sizeMB))
+        DropdownMenuItem(
+          value: sizeMB,
+          child: Text(CacheConfigService.formatSizeMB(sizeMB)),
+        ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11),
+      decoration: BoxDecoration(
+        color: t.insetBg,
+        border: Border.all(color: t.hairline, width: 0.5),
+        borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: sizeMB,
+          isDense: true,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+          dropdownColor: t.cardBg,
+          icon: Icon(Icons.expand_more_rounded, size: 18, color: t.text2),
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w600,
+            color: t.text0,
+          ),
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
+          items: items,
+        ),
+      ),
+    );
   }
 }
 
