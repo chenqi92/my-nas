@@ -6,8 +6,14 @@ import 'package:my_nas/features/nastool/presentation/widgets/add_subscription_sh
 import 'package:my_nas/features/nastool/presentation/widgets/subscription_detail_sheet.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/subscription_poster.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/service_adapters/nastool/models/organization_models.dart';
+import 'package:my_nas/service_adapters/nastool/models/plugin_models.dart';
 import 'package:my_nas/service_adapters/nastool/models/subscribe_models.dart';
+import 'package:my_nas/service_adapters/nastool/models/sync_models.dart';
+import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
+import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
+import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 
@@ -163,10 +169,443 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
                   itemBuilder: (_, i) =>
                       _SubCard(sub: filtered[i], sourceId: selected, t: t),
                 ),
+              const SizedBox(height: 28),
+              Text(
+                '自动化工具',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: t.text0,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _ToolsRow(sourceId: selected),
             ],
           );
         },
       ),
+    );
+  }
+}
+
+/// 4 个自动化工具入口（插件商店 / 目录同步 / 转移历史 / 系统信息）+
+/// MoviePilot 规划占位。点击打开对应数据 sheet。
+class _ToolsRow extends StatelessWidget {
+  const _ToolsRow({required this.sourceId});
+  final String sourceId;
+
+  void _open(BuildContext context, String title, Widget child) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (_) => _ToolSheet(title: title, child: child),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = <(String, IconData, VoidCallback)>[
+      (
+        '插件商店',
+        Icons.extension_outlined,
+        () => _open(context, '插件', _PluginsSheet(sourceId: sourceId)),
+      ),
+      (
+        '目录同步',
+        Icons.sync_alt_rounded,
+        () => _open(context, '目录同步', _SyncDirsSheet(sourceId: sourceId)),
+      ),
+      (
+        '转移历史',
+        Icons.move_to_inbox_outlined,
+        () => _open(context, '转移历史', _TransferHistorySheet(sourceId: sourceId)),
+      ),
+      (
+        '系统信息',
+        Icons.dns_outlined,
+        () => _open(context, '系统信息', _SystemInfoSheet(sourceId: sourceId)),
+      ),
+    ];
+    return GridView.count(
+      crossAxisCount: 5,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: 2.4,
+      children: [
+        for (final (label, icon, onTap) in entries)
+          _ToolCard(label: label, icon: icon, onTap: onTap),
+        const _ToolCard(
+          label: 'MoviePilot',
+          icon: Icons.auto_awesome_outlined,
+          plan: true,
+        ),
+      ],
+    );
+  }
+}
+
+class _ToolCard extends StatelessWidget {
+  const _ToolCard({
+    required this.label,
+    required this.icon,
+    this.onTap,
+    this.plan = false,
+  });
+  final String label;
+  final IconData icon;
+  final VoidCallback? onTap;
+  final bool plan;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Opacity(
+      opacity: plan ? 0.6 : 1,
+      child: AppCard(
+        onTap: plan ? null : onTap,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: t.chipBgActive,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(icon, size: 17, color: t.accentBright),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: t.text0,
+                ),
+              ),
+            ),
+            if (plan) const AppTag('规划', variant: TagVariant.plan),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 通用工具 sheet 外壳：标题 + 滚动内容。
+class _ToolSheet extends StatelessWidget {
+  const _ToolSheet({required this.title, required this.child});
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560, maxHeight: 640),
+        child: GlassPanel(
+          strong: true,
+          padding: EdgeInsets.zero,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: t.hairline)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: t.text0,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.close_rounded, size: 16, color: t.text2),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: child,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 通用：FutureProvider 列表 → loading/error/empty/list。
+class _AsyncList<T> extends StatelessWidget {
+  const _AsyncList({
+    required this.async,
+    required this.empty,
+    required this.itemBuilder,
+  });
+  final AsyncValue<List<T>> async;
+  final String empty;
+  final Widget Function(BuildContext, T) itemBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return async.when(
+      loading: () => const SizedBox(
+        height: 200,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => SizedBox(
+        height: 200,
+        child: Center(
+          child: Text('加载失败：$e',
+              style: TextStyle(fontSize: 12.5, color: t.err)),
+        ),
+      ),
+      data: (items) {
+        if (items.isEmpty) {
+          return SizedBox(
+            height: 160,
+            child: Center(
+              child: Text(empty,
+                  style: TextStyle(fontSize: 12.5, color: t.text2)),
+            ),
+          );
+        }
+        return ListView.separated(
+          shrinkWrap: true,
+          itemCount: items.length,
+          separatorBuilder: (_, _) => Divider(height: 1, color: t.hairline),
+          itemBuilder: (c, i) => itemBuilder(c, items[i]),
+        );
+      },
+    );
+  }
+}
+
+class _PluginsSheet extends ConsumerWidget {
+  const _PluginsSheet({required this.sourceId});
+  final String sourceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = DesignTokens.of(context);
+    return _AsyncList<NtPlugin>(
+      async: ref.watch(nastoolPluginsProvider(sourceId)),
+      empty: '未安装插件。',
+      itemBuilder: (_, p) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              (p.enabled ?? false)
+                  ? Icons.check_circle
+                  : Icons.radio_button_unchecked,
+              size: 15,
+              color: (p.enabled ?? false) ? t.ok : t.text3,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(p.name,
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: t.text0)),
+                  if (p.description != null && p.description!.isNotEmpty)
+                    Text(p.description!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 11.5, color: t.text2)),
+                ],
+              ),
+            ),
+            if (p.version != null)
+              Text('v${p.version}',
+                  style: TextStyle(fontSize: 11, color: t.text3)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SyncDirsSheet extends ConsumerWidget {
+  const _SyncDirsSheet({required this.sourceId});
+  final String sourceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = DesignTokens.of(context);
+    return _AsyncList<NtSyncDir>(
+      async: ref.watch(nastoolSyncDirsProvider(sourceId)),
+      empty: '未配置目录同步。',
+      itemBuilder: (_, d) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${d.from ?? '—'}  →  ${d.to ?? '—'}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12.5, color: t.text0)),
+                  if (d.mode != null)
+                    Text(d.mode!,
+                        style: TextStyle(fontSize: 11, color: t.text2)),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: '立即同步',
+              onPressed: d.id == null
+                  ? null
+                  : () => ref
+                      .read(nastoolActionsProvider(sourceId))
+                      .runSyncDir(d.id!),
+              icon: Icon(Icons.play_circle_outline, size: 18, color: t.accent),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TransferHistorySheet extends ConsumerWidget {
+  const _TransferHistorySheet({required this.sourceId});
+  final String sourceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = DesignTokens.of(context);
+    return _AsyncList<NtTransferHistory>(
+      async: ref.watch(nastoolTransferHistoryProvider(sourceId)),
+      empty: '暂无转移历史。',
+      itemBuilder: (_, h) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              (h.success ?? false)
+                  ? Icons.check_circle_outline
+                  : Icons.error_outline,
+              size: 15,
+              color: (h.success ?? false) ? t.ok : t.err,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    h.seasonEpisode != null && h.seasonEpisode!.isNotEmpty
+                        ? '${h.title} · ${h.seasonEpisode}'
+                        : h.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: t.text0),
+                  ),
+                  if (h.mode != null)
+                    Text(h.mode!,
+                        style: TextStyle(fontSize: 11, color: t.text2)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SystemInfoSheet extends ConsumerWidget {
+  const _SystemInfoSheet({required this.sourceId});
+  final String sourceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = DesignTokens.of(context);
+    final async = ref.watch(nastoolSystemInfoProvider(sourceId));
+    return async.when(
+      loading: () => const SizedBox(
+          height: 160, child: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Text('加载失败：$e',
+          style: TextStyle(fontSize: 12.5, color: t.err)),
+      data: (info) {
+        String space(int? b) {
+          if (b == null || b <= 0) return '—';
+          const u = ['B', 'KB', 'MB', 'GB', 'TB'];
+          var v = b.toDouble();
+          var i = 0;
+          while (v >= 1024 && i < u.length - 1) {
+            v /= 1024;
+            i++;
+          }
+          return '${v.toStringAsFixed(1)} ${u[i]}';
+        }
+
+        final rows = <(String, String)>[
+          ('版本', info.version ?? '—'),
+          ('最新版本', info.latestVersion ?? '—'),
+          ('更新通道', info.updateChannel ?? '—'),
+          ('总空间', space(info.totalSpace)),
+          ('可用空间', space(info.freeSpace)),
+          if (info.cpuUsage != null)
+            ('CPU', '${info.cpuUsage!.toStringAsFixed(0)}%'),
+          if (info.memoryUsage != null)
+            ('内存', '${info.memoryUsage!.toStringAsFixed(0)}%'),
+        ];
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (label, value) in rows)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 9),
+                child: Row(
+                  children: [
+                    Text(label,
+                        style: TextStyle(fontSize: 12.5, color: t.text2)),
+                    const Spacer(),
+                    Text(value,
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: t.text0)),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
