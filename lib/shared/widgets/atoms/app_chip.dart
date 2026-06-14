@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 
-/// 设计稿 `.chip` 原子：12px 圆角胶囊，hover/active 两态。
-/// - [active]=true 时背景换 accent、文字换 accentContrast。
+/// 设计稿 `.chip` 原子：12px 圆角胶囊。
+/// - [active]=true 时背景换 accent、文字换 accentContrast（active 态）。
+/// - [onTap] 非空时可点击（InkWell 自带按压/hover 涟漪）。
 /// - 可选 [icon] 前置图标 / [trailing] 后置 widget。
 class AppChip extends StatelessWidget {
   const AppChip({

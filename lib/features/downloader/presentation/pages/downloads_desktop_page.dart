@@ -7,6 +7,7 @@ import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
+import 'package:my_nas/shared/widgets/atoms/status_pill.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/dialogs/add_download_dialog.dart';
 
@@ -269,57 +270,26 @@ class _TaskTable extends StatelessWidget {
 }
 
 /// 设计稿 .state-pill：彩色状态徽章。
+/// 下载任务状态徽标：薄适配层，复用共享原子 [StatusPill]，
+/// 不再重复一套配色 switch。
 class _StatePill extends StatelessWidget {
   const _StatePill({required this.status});
   final UnifiedDownloadStatus status;
 
+  static PillStatus _toPill(UnifiedDownloadStatus s) => switch (s) {
+        UnifiedDownloadStatus.downloading => PillStatus.downloading,
+        UnifiedDownloadStatus.seeding => PillStatus.seeding,
+        UnifiedDownloadStatus.paused => PillStatus.paused,
+        UnifiedDownloadStatus.waiting => PillStatus.queued,
+        UnifiedDownloadStatus.completed => PillStatus.completed,
+        UnifiedDownloadStatus.error => PillStatus.error,
+      };
+
   @override
-  Widget build(BuildContext context) {
-    final (bg, fg) = switch (status) {
-      UnifiedDownloadStatus.downloading => (
-          const Color(0x245B9DFF),
-          const Color(0xFF7DB1FF)
-        ),
-      UnifiedDownloadStatus.seeding => (
-          const Color(0x2434D399),
-          const Color(0xFF34D399)
-        ),
-      UnifiedDownloadStatus.paused => (
-          const Color(0x2494A3B8),
-          const Color(0xFF94A3B8)
-        ),
-      UnifiedDownloadStatus.waiting => (
-          const Color(0x24F5B754),
-          const Color(0xFFF5B754)
-        ),
-      UnifiedDownloadStatus.completed => (
-          const Color(0x246E788C),
-          const Color(0xFF8B94A7)
-        ),
-      UnifiedDownloadStatus.error => (
-          const Color(0x24F87171),
-          const Color(0xFFF87171)
-        ),
-    };
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          status.label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: fg,
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Align(
+        alignment: Alignment.centerLeft,
+        child: StatusPill(_toPill(status), label: status.label),
+      );
 }
 
 class _TaskRow extends StatelessWidget {

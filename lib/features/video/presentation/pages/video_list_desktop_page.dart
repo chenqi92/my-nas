@@ -9,7 +9,6 @@ import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, VideoListLoading, VideoTab, videoListProvider;
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
-import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
@@ -703,61 +702,6 @@ class _Image extends StatelessWidget {
       fadeInDuration: const Duration(milliseconds: 150),
       errorWidget: (_, _, _) => Container(color: fallbackColor),
       placeholder: (_, _) => Container(color: fallbackColor),
-    );
-  }
-}
-
-/// 一行小封面 + 进度（继续观看 strip 占位）。
-class ContinueStripItem extends StatelessWidget {
-  const ContinueStripItem({
-    required this.meta,
-    required this.progress,
-    super.key,
-  });
-
-  final VideoMetadata meta;
-  final double progress;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = DesignTokens.of(context);
-    return SizedBox(
-      width: 230,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 10,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(DesignTokens.radius),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _Image(
-                    url: meta.backdropUrl ?? meta.localPosterUrl,
-                    fallbackColor: t.insetBg,
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: AppProgressBar(value: progress, height: 3),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            meta.title ?? meta.fileName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: t.text0,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
