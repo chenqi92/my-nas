@@ -8,6 +8,7 @@ import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
+import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 
 /// 设计稿 `.appearance-menu`：topbar palette 按钮唤起的悬浮设置 popover。
 /// 包含：主题模式 / UI 风格 / 强调色 / 动态取色氛围光。
@@ -23,12 +24,15 @@ class AppearancePanel extends ConsumerWidget {
     final uiStyle = ref.watch(uiStyleProvider);
     final preset = ref.watch(colorSchemePresetProvider);
 
-    return SizedBox(
-      width: 288,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
+    return GlassPanel(
+      strong: true,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: SizedBox(
+        width: 256,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
           _Row(
             label: '主题',
             control: AppSegmented<ThemeMode>(
@@ -98,7 +102,8 @@ class AppearancePanel extends ConsumerWidget {
               ),
             ],
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

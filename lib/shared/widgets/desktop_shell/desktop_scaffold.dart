@@ -327,7 +327,14 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                     onOpenCast: _openCast,
                   ),
                 if (hasMusic && lyricFloat) const DesktopLyricFloat(),
-                if (_appearanceOpen)
+                if (_appearanceOpen) ...[
+                  // 点击空白处关闭外观浮层。
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => setState(() => _appearanceOpen = false),
+                    ),
+                  ),
                   Positioned(
                     top: DesignTokens.topbarH + 8,
                     right: 20,
@@ -335,6 +342,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                       onClose: () => setState(() => _appearanceOpen = false),
                     ),
                   ),
+                ],
                 if (_cmdkOpen)
                   CommandPalette(
                     onClose: () => setState(() => _cmdkOpen = false),
