@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
@@ -251,8 +252,7 @@ class _Hero extends StatelessWidget {
                           AppTag(meta.resolution!),
                         if (meta.videoCodec != null)
                           AppTag(meta.videoCodec!),
-                        for (final g
-                            in (meta.genres ?? '').split(',').take(3))
+                        for (final g in meta.genreList.take(3))
                           if (g.trim().isNotEmpty) AppTag(g.trim()),
                       ],
                     ),
@@ -357,14 +357,13 @@ class _HeroMeta extends StatelessWidget {
   }
 }
 
-/// 设计稿 `.hero-actions`：主按钮（继续观看）+ 描边「详情」+ 幽灵「更多」。
-class _HeroActions extends StatelessWidget {
+/// 设计稿 `.hero-actions`：主按钮（继续观看/播放/重新播放）+ 描边「详情」。
+class _HeroActions extends ConsumerWidget {
   const _HeroActions({required this.meta});
   final VideoMetadata meta;
 
-  /// 由播放位置 ticks（10M/秒）与片长（分钟）派生续播百分比；任一缺失则返回
-  /// null，主按钮降级为「播放」（data-blocked：无独立时长 ticks 字段）。
-  int? get _progress {
+  /// 由播放位置 ticks（10M/秒）与片长（分钟）派生续播百分比；任一缺失返回 null。
+  int? get _progressPct {
     final ticks = meta.playbackPositionTicks;
     final runtime = meta.runtime;
     if (ticks == null || ticks <= 0 || runtime == null || runtime <= 0) {
@@ -372,32 +371,34 @@ class _HeroActions extends StatelessWidget {
     }
     final watchedSec = ticks / 10000000;
     final totalSec = runtime * 60;
-    final pct = (watchedSec / totalSec * 100).round();
-    return pct.clamp(1, 99);
+    return (watchedSec / totalSec * 100).round();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final prog = _progress;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pct = _progressPct;
+    // 已看完（≥95%）或标记已看 → 重新播放；进行中（1~94%）→ 继续观看；否则播放。
+    final String label;
+    if (meta.isWatched || (pct != null && pct >= 95)) {
+      label = '重新播放';
+    } else if (pct != null && pct >= 1) {
+      label = '继续观看 · $pct%';
+    } else {
+      label = '播放';
+    }
     return Row(
       children: [
         _HeroButton(
-          label: prog != null ? '继续观看 · $prog%' : '播放',
+          label: label,
           icon: Icons.play_arrow_rounded,
           variant: _HeroBtnVariant.primary,
-          onTap: () => _open(context, meta),
+          onTap: () => playVideoMetadata(context, ref, meta),
         ),
         const SizedBox(width: 12),
         _HeroButton(
           label: '详情',
           icon: Icons.add_rounded,
           variant: _HeroBtnVariant.outline,
-          onTap: () => _open(context, meta),
-        ),
-        const SizedBox(width: 12),
-        _HeroButton(
-          icon: Icons.more_vert_rounded,
-          variant: _HeroBtnVariant.ghost,
           onTap: () => _open(context, meta),
         ),
       ],
@@ -505,7 +506,8 @@ class _PosterGrid extends StatelessWidget {
         mainAxisSpacing: 22,
         childAspectRatio: 0.62,
       ),
-      itemBuilder: (_, i) => _PosterCard(meta: items[i]),
+      itemBuilder: (_, i) =>
+          _PosterCard(key: ValueKey(items[i].uniqueKey), meta: items[i]),
     );
   }
 }
@@ -526,6 +528,7 @@ class _PosterList extends StatelessWidget {
       children: [
         for (final meta in items.take(120))
           Padding(
+            key: ValueKey(meta.uniqueKey),
             padding: const EdgeInsets.only(bottom: 10),
             child: AppCard(
               onTap: () => _open(context, meta),
@@ -585,7 +588,7 @@ class _PosterList extends StatelessWidget {
 }
 
 class _PosterCard extends StatelessWidget {
-  const _PosterCard({required this.meta});
+  const _PosterCard({required this.meta, super.key});
   final VideoMetadata meta;
 
   @override
@@ -693,12 +696,13 @@ class _Image extends StatelessWidget {
         errorBuilder: (_, _, _) => Container(color: fallbackColor),
       );
     }
-    return Image.network(
-      url!,
+    // 网络海报走磁盘缓存（VID-SCR-04），避免每次滚动重拉。
+    return CachedNetworkImage(
+      imageUrl: url!,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => Container(color: fallbackColor),
-      loadingBuilder: (_, c, p) =>
-          p == null ? c : Container(color: fallbackColor),
+      fadeInDuration: const Duration(milliseconds: 150),
+      errorWidget: (_, _, _) => Container(color: fallbackColor),
+      placeholder: (_, _) => Container(color: fallbackColor),
     );
   }
 }

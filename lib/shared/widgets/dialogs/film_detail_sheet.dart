@@ -8,6 +8,9 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/pages/video_player_page.dart';
+import 'package:my_nas/features/video/presentation/providers/video_history_provider.dart';
+import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 
@@ -159,8 +162,7 @@ class _Hero extends StatelessWidget {
                     if (meta.hdrFormat != null) AppTag(meta.hdrFormat!),
                     if (meta.resolution != null) AppTag(meta.resolution!),
                     if (meta.videoCodec != null) AppTag(meta.videoCodec!),
-                    for (final g
-                        in (meta.genres ?? '').split(',').take(3))
+                    for (final g in meta.genreList.take(3))
                       if (g.trim().isNotEmpty) AppTag(g.trim()),
                   ],
                 ),
@@ -240,17 +242,30 @@ class _Actions extends ConsumerWidget {
             label: Text(playLabel),
           ),
           OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.playlist_add_rounded, size: 15),
-            label: const Text('片单'),
-          ),
-          OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.download_rounded, size: 14),
-            label: const Text('下载'),
+            onPressed: () async {
+              final watched =
+                  await toggleWatchedStatus(ref, meta.filePath);
+              if (context.mounted) {
+                context.showSuccessToast(watched ? '已标记为已看' : '已标记为未看');
+              }
+            },
+            icon: Icon(
+              meta.isWatched
+                  ? Icons.visibility_off_outlined
+                  : Icons.check_circle_outline,
+              size: 15,
+            ),
+            label: Text(meta.isWatched ? '标记未看' : '标记已看'),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () => showAdaptiveModalSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (ctx) => CastDeviceSheet(
+                onDeviceSelected: (_) => Navigator.of(ctx).pop(),
+              ),
+            ),
             icon: const Icon(Icons.cast_rounded, size: 16),
             tooltip: '投屏',
           ),
@@ -258,31 +273,41 @@ class _Actions extends ConsumerWidget {
       );
   }
 
-  Future<void> _play(BuildContext context, WidgetRef ref) async {
-    final connection = ref.read(activeConnectionsProvider)[meta.sourceId];
-    if (connection == null) {
-      context.showErrorToast('该影片所在数据源未连接');
-      return;
-    }
-    try {
-      final url = await connection.adapter.fileSystem.getFileUrl(meta.filePath);
-      if (!context.mounted) return;
-      final videoItem = VideoItem(
-        name: meta.displayTitle,
-        path: meta.filePath,
-        url: url,
-        sourceId: meta.sourceId,
-        thumbnailUrl: meta.displayPosterUrl,
-      );
-      Navigator.of(context).pop();
-      await Navigator.of(context, rootNavigator: true).push(
-        MaterialPageRoute<void>(
-          builder: (_) => VideoPlayerPage(video: videoItem),
-        ),
-      );
-    } on Object catch (e) {
-      if (context.mounted) context.showErrorToast('播放失败：$e');
-    }
+  Future<void> _play(BuildContext context, WidgetRef ref) =>
+      playVideoMetadata(context, ref, meta, closeSheet: true);
+}
+
+/// 取流并打开播放器。[closeSheet] 为 true 时先关闭当前详情弹窗再 push 播放器。
+/// 供影视库 hero 主按钮与详情弹窗共用，避免重复取流逻辑。
+Future<void> playVideoMetadata(
+  BuildContext context,
+  WidgetRef ref,
+  VideoMetadata meta, {
+  bool closeSheet = false,
+}) async {
+  final connection = ref.read(activeConnectionsProvider)[meta.sourceId];
+  if (connection == null) {
+    context.showErrorToast('该影片所在数据源未连接');
+    return;
+  }
+  try {
+    final url = await connection.adapter.fileSystem.getFileUrl(meta.filePath);
+    if (!context.mounted) return;
+    final videoItem = VideoItem(
+      name: meta.displayTitle,
+      path: meta.filePath,
+      url: url,
+      sourceId: meta.sourceId,
+      thumbnailUrl: meta.displayPosterUrl,
+    );
+    if (closeSheet) Navigator.of(context).pop();
+    await Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VideoPlayerPage(video: videoItem),
+      ),
+    );
+  } on Object catch (e) {
+    if (context.mounted) context.showErrorToast('播放失败：$e');
   }
 }
 
