@@ -34,7 +34,8 @@ class DesktopTopbar extends StatelessWidget {
       height: DesignTokens.topbarH,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: t.panelBg,
+        // 与侧栏同色，统一外壳 chrome；避免经典浅色下纯白顶栏过于突兀。
+        color: t.sidebarBg,
         border: Border(bottom: BorderSide(color: t.hairline)),
       ),
       child: Row(

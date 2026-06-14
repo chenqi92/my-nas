@@ -11,6 +11,7 @@ import 'package:my_nas/core/network/doh_resolver.dart';
 import 'package:my_nas/core/network/host_mapping_entry.dart';
 import 'package:my_nas/core/network/hosts_resolver_service.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
@@ -351,7 +352,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
       );
 
   Future<void> _showEditSheet(HostMappingEntry? existing) async {
-    await showModalBottomSheet<void>(
+    await showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

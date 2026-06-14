@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/shared/providers/interface_locale_provider.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
@@ -190,7 +191,7 @@ class _PrioritySection extends ConsumerWidget {
     DesignTokens t,
     List<LanguageOption> remaining,
   ) =>
-      showModalBottomSheet<LanguageOption>(
+      showAdaptiveModalSheet<LanguageOption>(
         context: context,
         backgroundColor: t.cardBg,
         shape: const RoundedRectangleBorder(

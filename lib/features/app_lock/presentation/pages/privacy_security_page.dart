@@ -9,6 +9,7 @@ import 'package:my_nas/features/app_lock/domain/app_lock_settings.dart';
 import 'package:my_nas/features/app_lock/presentation/pages/setup_pin_page.dart';
 import 'package:my_nas/features/app_lock/presentation/providers/app_lock_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
@@ -250,7 +251,7 @@ class _PrivacySecurityPageState extends ConsumerState<PrivacySecurityPage> {
   Future<void> _onPickTimeout() async {
     final l = AppLocalizations.of(context);
     final current = ref.read(appLockProvider).settings.timeout;
-    final picked = await showModalBottomSheet<AppLockTimeout>(
+    final picked = await showAdaptiveModalSheet<AppLockTimeout>(
       context: context,
       builder: (ctx) => SafeArea(
         child: Column(
