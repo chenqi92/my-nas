@@ -739,6 +739,10 @@ class MinePage extends ConsumerWidget {
     showLicensePage(
       context: context,
       applicationName: 'MyNAS',
+      applicationIcon: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Image.asset('assets/logo.png', width: 64, height: 64),
+      ),
       applicationLegalese: '© 2024 MyNAS. All rights reserved.\n\n'
           '本应用使用了以下开源软件：\n\n'
           '• FFmpeg - 视频转码（GPL v3）\n'

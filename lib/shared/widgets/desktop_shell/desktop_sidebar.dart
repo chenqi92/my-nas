@@ -187,11 +187,6 @@ class _Brand extends StatelessWidget {
       width: 26,
       height: 26,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [t.accentBright, t.accentDeep],
-        ),
         borderRadius: BorderRadius.circular(7),
         boxShadow: [
           BoxShadow(
@@ -201,10 +196,12 @@ class _Brand extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(
-        Icons.dns_rounded,
-        color: t.accentContrast,
-        size: 16,
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        'assets/logo.png',
+        width: 26,
+        height: 26,
+        fit: BoxFit.cover,
       ),
     );
     return Padding(

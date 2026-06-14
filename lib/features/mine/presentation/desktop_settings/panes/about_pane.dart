@@ -77,6 +77,10 @@ class _AboutPaneState extends ConsumerState<AboutPane> {
       applicationVersion: _buildNumber.isNotEmpty
           ? '$_version ($_buildNumber)'
           : _version,
+      applicationIcon: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Image.asset('assets/logo.png', width: 64, height: 64),
+      ),
       applicationLegalese: l.paneAboutLegalese,
     );
   }
@@ -100,6 +104,15 @@ class _AboutPaneState extends ConsumerState<AboutPane> {
           title: l.paneAboutSectionApp,
           children: [
             SetRow(
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 34,
+                  height: 34,
+                  fit: BoxFit.cover,
+                ),
+              ),
               title: 'MyNAS',
               desc: l.paneAboutAppDesc,
               trailing: Text(
