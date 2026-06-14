@@ -27,6 +27,9 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
   final _searchCtrl = TextEditingController();
   final _connected = <String>{};
 
+  /// 正在连接中的站点（去重并发触发，且不预先标记成功）。
+  final _connecting = <String>{};
+
   /// 本地分类过滤（电影/剧集/音乐），设计稿为本地单选态。
   String? _category;
 
@@ -37,22 +40,49 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
   }
 
   Future<void> _ensureConnected(String sourceId) async {
-    if (_connected.contains(sourceId)) return;
-    _connected.add(sourceId);
+    if (_connected.contains(sourceId) || _connecting.contains(sourceId)) return;
+    final conn = ref.read(ptSiteConnectionProvider(sourceId));
+    if (conn.status == PTSiteConnectionStatus.connected) {
+      _connected.add(sourceId);
+      await ref
+          .read(ptTorrentListProvider(sourceId).notifier)
+          .loadTorrents(refresh: true);
+      return;
+    }
     final sources = ref.read(ptSitesSourcesProvider);
     final source = sources.where((s) => s.id == sourceId).firstOrNull;
     if (source == null) return;
-    final conn = ref.read(ptSiteConnectionProvider(sourceId));
-    if (conn.status != PTSiteConnectionStatus.connected) {
-      await ref.read(ptSiteConnectionProvider(sourceId).notifier).connect(source);
+    _connecting.add(sourceId);
+    try {
+      await ref
+          .read(ptSiteConnectionProvider(sourceId).notifier)
+          .connect(source);
+      // 仅连接成功后才标记，失败保持未标记，下次仍会重试。
+      if (ref.read(ptSiteConnectionProvider(sourceId)).status ==
+          PTSiteConnectionStatus.connected) {
+        _connected.add(sourceId);
+        await ref
+            .read(ptTorrentListProvider(sourceId).notifier)
+            .loadTorrents(refresh: true);
+      }
+    } finally {
+      _connecting.remove(sourceId);
     }
-    await ref.read(ptTorrentListProvider(sourceId).notifier).loadTorrents(refresh: true);
   }
 
   void _search(String sourceId) {
     ref.read(ptTorrentListProvider(sourceId).notifier)
       ..setKeyword(_searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim())
       ..loadTorrents(refresh: true);
+  }
+
+  /// 本地分类过滤：后端无独立分类字段时按 category 文案模糊匹配。
+  /// 计数与表格共用，保证「找到 N 条」与实际行数一致。
+  List<PTTorrent> _applyCategory(List<PTTorrent> torrents) {
+    if (_category == null) return torrents;
+    return torrents
+        .where((x) => (x.category ?? '').contains(_category!))
+        .toList();
   }
 
   @override
@@ -63,7 +93,7 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
     if (sources.isEmpty) {
       return const DesktopPageScaffold(
         title: 'PT 站点',
-        subtitle: '聚合搜索 · 签到 · 一键发送到下载器',
+        subtitle: '种子搜索 · 一键发送到下载器',
         body: DesktopComingSoon(
           icon: Icons.rss_feed_rounded,
           message: '尚未配置 PT 站点。到「数据源」添加资源站点后，这里可浏览种子并一键发送到下载器。',
@@ -81,7 +111,7 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
 
     return DesktopPageScaffold(
       title: 'PT 站点',
-      subtitle: '聚合搜索 · 签到 · 一键发送到下载器',
+      subtitle: '种子搜索 · 一键发送到下载器',
       maxWidth: 1500,
       actions: sources.length > 1
           ? Row(
@@ -106,8 +136,7 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
           const SizedBox(height: 20),
           _SearchPanel(
             controller: _searchCtrl,
-            siteCount: sources.length,
-            resultCount: listState.torrents.length,
+            resultCount: _applyCategory(listState.torrents).length,
             category: _category,
             onCategory: (c) =>
                 setState(() => _category = _category == c ? null : c),
@@ -145,12 +174,7 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
       );
     }
 
-    // 本地分类过滤：后端无独立分类字段时按 category 文案模糊匹配。
-    final rows = _category == null
-        ? listState.torrents
-        : listState.torrents
-            .where((x) => (x.category ?? '').contains(_category!))
-            .toList();
+    final rows = _applyCategory(listState.torrents);
 
     if (rows.isEmpty) {
       return const _PanelMessage(
@@ -262,8 +286,8 @@ class _SiteStatCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              // 后端无「签到状态」字段：始终给签到入口（data-blocked，不伪造已签到态）。
-              const AppChip(label: '签到', compact: true),
+              // 站点签到尚未实现：标注规划占位，不放可点却无行为的死按钮。
+              const AppTag('签到', variant: TagVariant.plan),
             ],
           ),
           const SizedBox(height: 10),
@@ -334,7 +358,6 @@ class _SiteStatCard extends ConsumerWidget {
 class _SearchPanel extends StatelessWidget {
   const _SearchPanel({
     required this.controller,
-    required this.siteCount,
     required this.resultCount,
     required this.category,
     required this.onCategory,
@@ -343,7 +366,6 @@ class _SearchPanel extends StatelessWidget {
   });
 
   final TextEditingController controller;
-  final int siteCount;
   final int resultCount;
   final String? category;
   final ValueChanged<String> onCategory;
@@ -380,7 +402,7 @@ class _SearchPanel extends StatelessWidget {
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
-                      hintText: '跨站搜索种子…',
+                      hintText: '搜索当前站点种子…',
                       hintStyle: TextStyle(color: t.text3, fontSize: 13),
                     ),
                   ),
@@ -397,7 +419,7 @@ class _SearchPanel extends StatelessWidget {
                   ),
                 const SizedBox(width: 12),
                 Text(
-                  '$siteCount 站 · 找到 $resultCount 条',
+                  '当前站点 · 找到 $resultCount 条',
                   style: TextStyle(fontSize: 12, color: t.text2),
                 ),
               ],
