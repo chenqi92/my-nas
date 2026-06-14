@@ -23,16 +23,32 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
   String? _sourceId;
   String _filter = 'all';
   final _connected = <String>{};
+  final _connecting = <String>{};
 
   Future<void> _ensureConnected(String sourceId) async {
-    if (_connected.contains(sourceId)) return;
-    _connected.add(sourceId);
-    final source =
-        ref.read(nastoolSourcesProvider).where((s) => s.id == sourceId).firstOrNull;
-    if (source == null) return;
+    if (_connected.contains(sourceId) || _connecting.contains(sourceId)) return;
     final conn = ref.read(nastoolConnectionProvider(sourceId));
-    if (conn?.status != NasToolConnectionStatus.connected) {
-      await ref.read(nastoolConnectionProvider(sourceId).notifier).connect(source);
+    if (conn?.status == NasToolConnectionStatus.connected) {
+      _connected.add(sourceId);
+      return;
+    }
+    final source = ref
+        .read(nastoolSourcesProvider)
+        .where((s) => s.id == sourceId)
+        .firstOrNull;
+    if (source == null) return;
+    _connecting.add(sourceId);
+    try {
+      await ref
+          .read(nastoolConnectionProvider(sourceId).notifier)
+          .connect(source);
+      // 仅连接成功后才标记，失败保持未标记以便重试。
+      if (ref.read(nastoolConnectionProvider(sourceId))?.status ==
+          NasToolConnectionStatus.connected) {
+        _connected.add(sourceId);
+      }
+    } finally {
+      _connecting.remove(sourceId);
     }
   }
 

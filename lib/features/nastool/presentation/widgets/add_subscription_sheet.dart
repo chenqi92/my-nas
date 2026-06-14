@@ -47,9 +47,20 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
     }
   }
 
-  Future<void> _add(NtMediaSearchResult r) async {
-    setState(() => _addingKey = '${r.key}');
-    final type = (r.type ?? '').toUpperCase().contains('TV') ? 'TV' : 'MOV';
+  Future<void> _add(int index, NtMediaSearchResult r) async {
+    // 用列表索引作为「正在添加」标记，避免 key 缺失/重复时多行同时转圈。
+    setState(() => _addingKey = '$index');
+    // 媒体类型判定：兼容英文 tv/series 与中文「电视剧/剧集/动漫/综艺」，
+    // 否则中文剧集会被误判成电影。
+    final raw = (r.type ?? '');
+    final upper = raw.toUpperCase();
+    final isTv = upper.contains('TV') ||
+        upper.contains('SERIES') ||
+        upper.contains('SEASON') ||
+        raw.contains('剧') ||
+        raw.contains('动漫') ||
+        raw.contains('综艺');
+    final type = isTv ? 'TV' : 'MOV';
     try {
       await ref.read(nastoolActionsProvider(widget.sourceId)).addSubscribe(
             name: r.title,
@@ -166,8 +177,8 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
                             itemCount: _results.length,
                             itemBuilder: (_, i) => _ResultRow(
                               result: _results[i],
-                              adding: _addingKey == '${_results[i].key}',
-                              onAdd: () => _add(_results[i]),
+                              adding: _addingKey == '$i',
+                              onAdd: () => _add(i, _results[i]),
                               t: t,
                             ),
                           ),

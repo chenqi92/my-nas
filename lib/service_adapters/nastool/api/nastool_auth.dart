@@ -74,9 +74,9 @@ class NasToolAuth {
         body: {'username': username, 'password': password},
       );
 
-      // 调试日志：登录响应
+      // 调试日志：登录响应。不要打印 body —— 其中含 apikey/凭据。
       if (kDebugMode) {
-        logger.d('[NasToolAuth] Login Response - Status: ${response.statusCode}, Body: ${response.body}');
+        logger.d('[NasToolAuth] Login Response - Status: ${response.statusCode}');
       }
 
       if (response.statusCode == 200) {
