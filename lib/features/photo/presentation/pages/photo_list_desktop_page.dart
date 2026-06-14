@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/photo/data/services/face_database_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
 import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
@@ -11,6 +10,7 @@ import 'package:my_nas/features/photo/presentation/pages/photo_people_page.dart'
 import 'package:my_nas/features/photo/presentation/providers/photo_favorites_provider.dart';
 import 'package:my_nas/features/photo/presentation/widgets/desktop_photo_viewer.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
@@ -33,6 +33,9 @@ class PhotoListDesktopPage extends ConsumerStatefulWidget {
 class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
   String _view = 'timeline';
 
+  /// 相册视图中钻取的文件夹路径；null 表示展示文件夹一览。
+  String? _albumFolder;
+
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
@@ -43,7 +46,8 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
         : l.photoPageSubtitleFeatures;
     final hasPhotos = state is PhotoListLoaded && state.allPhotos.isNotEmpty;
     // 人物来自真实人脸库聚类；未聚类/无结果时不展示该行，不再伪造「未识别」头像。
-    final persons = ref.watch(_desktopPersonsProvider).valueOrNull ??
+    final persons =
+        ref.watch(_desktopPersonsProvider).valueOrNull ??
         const <PersonEntity>[];
     final sourceFilter = state is PhotoListLoaded
         ? state.sourceFilter
@@ -72,10 +76,16 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
           const SizedBox(width: 10),
           AppSegmented<String>(
             value: _view,
-            onChanged: (v) => setState(() => _view = v),
+            onChanged: (v) => setState(() {
+              _view = v;
+              _albumFolder = null;
+            }),
             dense: true,
             options: [
-              AppSegmentedOption(value: 'timeline', label: l.photoPageTabTimeline),
+              AppSegmentedOption(
+                value: 'timeline',
+                label: l.photoPageTabTimeline,
+              ),
               AppSegmentedOption(value: 'albums', label: l.photoPageTabAlbums),
               AppSegmentedOption(value: 'map', label: l.photoPageTabMap),
             ],
@@ -107,7 +117,9 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                   borderRadius: BorderRadius.circular(6),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     child: Text(
                       l.photoPageAllPeople,
                       style: TextStyle(
@@ -143,8 +155,11 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                               color: t.insetBg,
                               border: Border.all(color: t.hairline),
                             ),
-                            child: Icon(Icons.person_rounded,
-                                size: 36, color: t.text2),
+                            child: Icon(
+                              Icons.person_rounded,
+                              size: 36,
+                              color: t.text2,
+                            ),
                           ),
                           const SizedBox(height: 9),
                           Text(
@@ -152,9 +167,10 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: t.text1),
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: t.text1,
+                            ),
                           ),
                           Text(
                             l.photoPagePersonPhotoCount(p.photoCount),
@@ -175,10 +191,19 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
               message: l.photoPageMapComingSoon,
             )
           else if (_view == 'albums')
-            DesktopComingSoon(
-              icon: Icons.photo_album_outlined,
-              message: l.photoPageAlbumsComingSoon,
-            )
+            if (_albumFolder != null)
+              _AlbumDetail(
+                state: state,
+                ref: ref,
+                folder: _albumFolder!,
+                onBack: () => setState(() => _albumFolder = null),
+              )
+            else
+              _AlbumGrid(
+                state: state,
+                ref: ref,
+                onOpen: (folder) => setState(() => _albumFolder = folder),
+              )
           else
             _PhotoBody(state: state, ref: ref),
         ],
@@ -187,9 +212,9 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
   }
 
   void _openPeople(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const PhotoPeoplePage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const PhotoPeoplePage()));
   }
 }
 
@@ -222,8 +247,7 @@ class _SourceFilterButton extends StatelessWidget {
           children: [
             Icon(Icons.filter_list_rounded, size: 14, color: t.text2),
             const SizedBox(width: 6),
-            Text(value.label,
-                style: TextStyle(fontSize: 12.5, color: t.text1)),
+            Text(value.label, style: TextStyle(fontSize: 12.5, color: t.text1)),
           ],
         ),
       ),
@@ -317,6 +341,232 @@ class _PhotoBody extends StatelessWidget {
   }
 }
 
+/// 取文件路径的父目录（相册/文件夹分组键）。
+String _folderPathOf(String filePath) {
+  final i = filePath.lastIndexOf('/');
+  return i > 0 ? filePath.substring(0, i) : '/';
+}
+
+/// 文件夹展示名：取末段路径；根目录用本地化文案。
+String _folderLabel(BuildContext context, String folderPath) {
+  if (folderPath == '/' || folderPath.isEmpty) {
+    return AppLocalizations.of(context).photoPageAlbumRoot;
+  }
+  final i = folderPath.lastIndexOf('/');
+  return i >= 0 ? folderPath.substring(i + 1) : folderPath;
+}
+
+/// 相册（文件夹）一览：把 displayPhotos 按父目录分组成文件夹卡片。
+class _AlbumGrid extends StatelessWidget {
+  const _AlbumGrid({
+    required this.state,
+    required this.ref,
+    required this.onOpen,
+  });
+  final PhotoListState state;
+  final WidgetRef ref;
+  final ValueChanged<String> onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (state is! PhotoListLoaded) {
+      return DesktopComingSoon(
+        icon: Icons.photo_library_outlined,
+        message: l.photoPageNoLibraryHint,
+      );
+    }
+    final photos = (state as PhotoListLoaded).displayPhotos;
+    if (photos.isEmpty) {
+      return DesktopComingSoon(
+        icon: Icons.photo_library_outlined,
+        message: l.photoPageNoFilteredPhotos,
+      );
+    }
+    final connections = ref.watch(activeConnectionsProvider);
+    final groups = <String, List<PhotoEntity>>{};
+    for (final p in photos) {
+      groups.putIfAbsent(_folderPathOf(p.filePath), () => []).add(p);
+    }
+    final folders = groups.keys.toList()..sort();
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(top: 8),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 200,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.82,
+      ),
+      itemCount: folders.length,
+      itemBuilder: (_, i) {
+        final folder = folders[i];
+        final items = groups[folder]!;
+        final cover = items.first;
+        final fs = connections[cover.sourceId]?.adapter.fileSystem;
+        return _AlbumCard(
+          folder: folder,
+          cover: cover,
+          fileSystem: fs,
+          count: items.length,
+          onTap: () => onOpen(folder),
+        );
+      },
+    );
+  }
+}
+
+class _AlbumCard extends StatelessWidget {
+  const _AlbumCard({
+    required this.folder,
+    required this.cover,
+    required this.fileSystem,
+    required this.count,
+    required this.onTap,
+  });
+  final String folder;
+  final PhotoEntity cover;
+  final NasFileSystem? fileSystem;
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
+    final placeholder = ColoredBox(
+      color: t.insetBg,
+      child: Icon(Icons.folder_rounded, size: 28, color: t.text3),
+    );
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: StreamImage(
+                  url: cover.thumbnailUrl,
+                  path: cover.filePath,
+                  fileSystem: fileSystem,
+                  placeholder: placeholder,
+                  errorWidget: placeholder,
+                  cacheKey: cover.uniqueKey,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _folderLabel(context, folder),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: t.text0,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              l.photoPagePhotoCount(count),
+              style: TextStyle(fontSize: 11.5, color: t.text2),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 单个文件夹内的照片网格（从相册一览钻取进来）。
+class _AlbumDetail extends StatelessWidget {
+  const _AlbumDetail({
+    required this.state,
+    required this.ref,
+    required this.folder,
+    required this.onBack,
+  });
+  final PhotoListState state;
+  final WidgetRef ref;
+  final String folder;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
+    final photos = state is PhotoListLoaded
+        ? (state as PhotoListLoaded).displayPhotos
+              .where((p) => _folderPathOf(p.filePath) == folder)
+              .toList()
+        : const <PhotoEntity>[];
+    final connections = ref.watch(activeConnectionsProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            IconButton(
+              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              onPressed: onBack,
+            ),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                _folderLabel(context, folder),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: t.text0,
+                ),
+              ),
+            ),
+            const SizedBox(width: 9),
+            Text(
+              l.photoPagePhotoCount(photos.length),
+              style: TextStyle(fontSize: 12, color: t.text2),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 130,
+            crossAxisSpacing: 5,
+            mainAxisSpacing: 5,
+          ),
+          itemCount: photos.length,
+          itemBuilder: (_, i) {
+            final p = photos[i];
+            final fs = connections[p.sourceId]?.adapter.fileSystem;
+            return _PhotoTile(
+              photo: p,
+              fileSystem: fs,
+              onTap: () => showDesktopPhotoViewer(
+                context,
+                photos: photos,
+                initialIndex: i,
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
 class _TimelineLabel extends StatelessWidget {
   const _TimelineLabel({required this.monthKey, required this.count});
   final String monthKey;
@@ -334,20 +584,22 @@ class _TimelineLabel extends StatelessWidget {
       label = l.photoPageYearMonth(int.parse(parts[0]), int.parse(parts[1]));
     }
     return Text.rich(
-      TextSpan(children: [
-        TextSpan(
-          text: label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            color: t.text0,
+      TextSpan(
+        children: [
+          TextSpan(
+            text: label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: t.text0,
+            ),
           ),
-        ),
-        TextSpan(
-          text: l.photoPageTimelineCount(count),
-          style: TextStyle(fontSize: 12.5, color: t.text2),
-        ),
-      ]),
+          TextSpan(
+            text: l.photoPageTimelineCount(count),
+            style: TextStyle(fontSize: 12.5, color: t.text2),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -370,20 +622,22 @@ class _PhotoTileState extends ConsumerState<_PhotoTile> {
   bool _hover = false;
 
   PhotoItem _toPhotoItem() => PhotoItem(
-        name: widget.photo.fileName,
-        path: widget.photo.filePath,
-        url: '',
-        sourceId: widget.photo.sourceId,
-        thumbnailUrl: widget.photo.thumbnailUrl,
-        size: widget.photo.size,
-        modifiedAt: widget.photo.modifiedTime,
-      );
+    name: widget.photo.fileName,
+    path: widget.photo.filePath,
+    url: '',
+    sourceId: widget.photo.sourceId,
+    thumbnailUrl: widget.photo.thumbnailUrl,
+    size: widget.photo.size,
+    modifiedAt: widget.photo.modifiedTime,
+  );
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    final favKey =
-        photoFavoriteKey(widget.photo.sourceId, widget.photo.filePath);
+    final favKey = photoFavoriteKey(
+      widget.photo.sourceId,
+      widget.photo.filePath,
+    );
     final isFav = ref.watch(
       photoFavoritesProvider.select((favs) => favs.contains(favKey)),
     );
@@ -416,10 +670,9 @@ class _PhotoTileState extends ConsumerState<_PhotoTile> {
               right: 6,
               child: _FavBadge(
                 isFavorite: isFav,
-                onTap: () =>
-                    ref.read(photoFavoritesProvider.notifier).toggle(
-                          _toPhotoItem(),
-                        ),
+                onTap: () => ref
+                    .read(photoFavoritesProvider.notifier)
+                    .toggle(_toPhotoItem()),
               ),
             ),
         ],
@@ -463,31 +716,29 @@ class _FavBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(2),
-            child: Icon(
-              isFavorite
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-              size: 15,
-              // 已收藏纯白实心；未收藏（hover 态）用半透明白描边。
-              color: isFavorite
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.85),
-              // 对齐设计稿 .fav 的 drop-shadow(0 1px 3px rgba(0,0,0,.6))。
-              shadows: const [
-                Shadow(
-                  color: Color(0x99000000),
-                  blurRadius: 3,
-                  offset: Offset(0, 1),
-                ),
-              ],
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: Icon(
+          isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          size: 15,
+          // 已收藏纯白实心；未收藏（hover 态）用半透明白描边。
+          color: isFavorite
+              ? Colors.white
+              : Colors.white.withValues(alpha: 0.85),
+          // 对齐设计稿 .fav 的 drop-shadow(0 1px 3px rgba(0,0,0,.6))。
+          shadows: const [
+            Shadow(
+              color: Color(0x99000000),
+              blurRadius: 3,
+              offset: Offset(0, 1),
             ),
-          ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }

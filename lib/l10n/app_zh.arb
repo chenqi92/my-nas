@@ -921,6 +921,7 @@
   "filmDetailMarkUnwatched": "标记未看",
   "filmDetailMarkWatched": "标记已看",
   "filmDetailCast": "投屏",
+  "filmDetailSearchPt": "在 PT 搜索",
   "filmDetailSourceNotConnected": "该影片所在数据源未连接",
   "filmDetailPlayFailed": "播放失败：{error}",
   "filmDetailDefault": "默认",
@@ -1034,7 +1035,6 @@
   "musicPageStatTotalDuration": "总时长",
   "musicPageStatArtists": "艺术家",
   "musicPageStatAnnualReport": "年度报告",
-  "musicPageStatLastFmReady": "Last.fm 可接",
   "musicPageComingSoon": "即将推出",
   "musicPageEmptyHint": "曲库为空，扫描「音乐」媒体库后会出现在这里。",
   "musicPageHeaderAlbums": "专辑",
@@ -1048,6 +1048,31 @@
   "musicPageFavorites": "我喜欢的音乐",
   "musicPagePlaylistHint": "自建歌单与「我喜欢」会显示在这里。",
   "musicPageEqualizer": "均衡器",
+  "musicPlaylistEmpty": "暂无歌单",
+  "musicPlaylistCreateTitle": "新建歌单",
+  "musicPlaylistNameHint": "歌单名称",
+  "musicPlaylistCreateAction": "创建",
+  "musicPlaylistRename": "重命名",
+  "musicPlaylistRenameTitle": "重命名歌单",
+  "musicPlaylistDelete": "删除",
+  "musicPlaylistDeleteTitle": "删除歌单",
+  "musicPlaylistDeleteMessage": "删除“{name}”？曲库中的歌曲不会被删除。",
+  "@musicPlaylistDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "musicPlaylistTrackCount": "{count} 首",
+  "@musicPlaylistTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPageStatListeningStats": "听歌统计",
   "nastoolPageTitle": "媒体自动化",
   "nastoolPageSubtitle": "NAStool 订阅 — 自动追剧 / 电影补全",
   "nastoolPageNotConfigured": "尚未配置 NAStool。到「数据源」添加 NAStool 之后，可在此管理订阅、自动追剧。",
@@ -1119,11 +1144,11 @@
   "photoPageAllPeople": "全部人物",
   "photoPagePersonPhotoCount": "{n} 张",
   "photoPageMapComingSoon": "按 GPS EXIF 在地图上聚合照片足迹（规划中）。",
-  "photoPageAlbumsComingSoon": "按相册/文件夹分组浏览（规划中）。当前可用「时间线」视图。",
   "photoPageSourceFilterTooltip": "来源筛选",
   "photoPageNoLibraryHint": "映射「照片」媒体库后，此处显示响应式网格 + 时间分组。",
   "photoPageNoFilteredPhotos": "没有符合当前筛选的照片。",
   "photoPageUnknownDate": "未知日期",
+  "photoPageAlbumRoot": "根目录",
   "photoPageYearMonth": "{year} 年 {month} 月",
   "photoPageTimelineCount": "  · {n} 张",
   "photoViewerBarrierLabel": "照片查看器",
@@ -1254,6 +1279,24 @@
   "videoPageTabRecent": "最近添加",
   "videoPageSortRating": "评分",
   "videoPageSortYear": "年份",
+  "videoSearchHint": "搜索影视",
+  "videoSearchNoResults": "未找到 \"{query}\" 的相关结果",
+  "@videoSearchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "videoFilterTitle": "筛选",
+  "videoFilterWatchStatus": "观看状态",
+  "videoFilterWatched": "已看",
+  "videoFilterUnwatched": "未看",
+  "videoFilterGenre": "类型",
+  "videoFilterSource": "数据源",
+  "videoFilterNoGenres": "暂无类型数据",
+  "videoFilterReset": "重置",
+  "videoFilterApply": "应用",
   "videoPageActionReplay": "重新播放",
   "videoPageActionResume": "继续观看 · {pct}%",
   "videoPageActionPlay": "播放",
@@ -1304,6 +1347,42 @@
   "actAggStatusFailed": "失败",
   "actAggStatusCompleted": "已完成",
   "actAggStatusCancelled": "已取消",
+  "actAggGroupFaceRecognition": "人脸",
+  "actAggGroupCloudSync": "同步",
+  "actAggFaceLabel": "人脸识别 · {processed}/{total}",
+  "@actAggFaceLabel": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggMusicScrapeLabel": "音乐刮削 · {processed}/{total}",
+  "@actAggMusicScrapeLabel": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggCloudSyncLabel": "云同步 · {processed}/{total}",
+  "@actAggCloudSyncLabel": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggCloudSyncPreparing": "云同步 · 准备中",
   "detailPanelRuntimeMinutes": "{minutes} 分钟",
   "libmapEditTypeTooltip": "切换库类型",
   "libmapEditConfirmTitle": "切换库类型？",

@@ -3,6 +3,10 @@ import 'package:my_nas/features/pt_sites/data/services/pt_site_api.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 
+/// 影视详情「在 PT 搜索」携带过来的待搜索关键词。
+/// PT 桌面页首帧消费后置空，避免重复触发。
+final ptPendingSearchProvider = StateProvider<String?>((ref) => null);
+
 /// PT 站点连接状态
 enum PTSiteConnectionStatus {
   disconnected,

@@ -1536,6 +1536,7 @@
   "filmDetailMarkUnwatched": "Mark unwatched",
   "filmDetailMarkWatched": "Mark watched",
   "filmDetailCast": "Cast",
+  "filmDetailSearchPt": "Search on PT",
   "filmDetailSourceNotConnected": "The source for this title is not connected",
   "filmDetailPlayFailed": "Playback failed: {error}",
   "@filmDetailPlayFailed": {
@@ -1786,7 +1787,6 @@
   "musicPageStatTotalDuration": "Total duration",
   "musicPageStatArtists": "Artists",
   "musicPageStatAnnualReport": "Annual report",
-  "musicPageStatLastFmReady": "Last.fm ready",
   "musicPageComingSoon": "Coming soon",
   "musicPageEmptyHint": "Your library is empty. Tracks appear here after scanning the Music library.",
   "musicPageHeaderAlbums": "Albums",
@@ -1807,6 +1807,31 @@
   "musicPageFavorites": "My favorite music",
   "musicPagePlaylistHint": "Your playlists and favorites will appear here.",
   "musicPageEqualizer": "Equalizer",
+  "musicPlaylistEmpty": "No playlists yet",
+  "musicPlaylistCreateTitle": "New playlist",
+  "musicPlaylistNameHint": "Playlist name",
+  "musicPlaylistCreateAction": "Create",
+  "musicPlaylistRename": "Rename",
+  "musicPlaylistRenameTitle": "Rename playlist",
+  "musicPlaylistDelete": "Delete",
+  "musicPlaylistDeleteTitle": "Delete playlist",
+  "musicPlaylistDeleteMessage": "Delete \"{name}\"? Tracks are not removed from your library.",
+  "@musicPlaylistDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "musicPlaylistTrackCount": "{count} tracks",
+  "@musicPlaylistTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPageStatListeningStats": "Listening stats",
   "nastoolPageTitle": "Media Automation",
   "nastoolPageSubtitle": "NAStool subscriptions — auto-track shows / complete movies",
   "nastoolPageNotConfigured": "NAStool is not configured yet. Add NAStool under Sources to manage subscriptions and auto-track shows here.",
@@ -1934,11 +1959,11 @@
     }
   },
   "photoPageMapComingSoon": "Cluster photo locations on a map by GPS EXIF (coming soon).",
-  "photoPageAlbumsComingSoon": "Browse grouped by album/folder (coming soon). The Timeline view is available now.",
   "photoPageSourceFilterTooltip": "Filter by source",
   "photoPageNoLibraryHint": "Once a Photos library is mapped, a responsive grid with time grouping appears here.",
   "photoPageNoFilteredPhotos": "No photos match the current filter.",
   "photoPageUnknownDate": "Unknown date",
+  "photoPageAlbumRoot": "Root",
   "photoPageYearMonth": "{month}/{year}",
   "@photoPageYearMonth": {
     "placeholders": {
@@ -2224,6 +2249,24 @@
   "videoPageTabRecent": "Recently Added",
   "videoPageSortRating": "Rating",
   "videoPageSortYear": "Year",
+  "videoSearchHint": "Search films",
+  "videoSearchNoResults": "No results for \"{query}\"",
+  "@videoSearchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "videoFilterTitle": "Filter",
+  "videoFilterWatchStatus": "Watch status",
+  "videoFilterWatched": "Watched",
+  "videoFilterUnwatched": "Unwatched",
+  "videoFilterGenre": "Genre",
+  "videoFilterSource": "Source",
+  "videoFilterNoGenres": "No genre data available",
+  "videoFilterReset": "Reset",
+  "videoFilterApply": "Apply",
   "videoPageActionReplay": "Replay",
   "videoPageActionResume": "Resume · {pct}%",
   "@videoPageActionResume": {
@@ -2322,6 +2365,42 @@
   "actAggStatusFailed": "Failed",
   "actAggStatusCompleted": "Completed",
   "actAggStatusCancelled": "Cancelled",
+  "actAggGroupFaceRecognition": "Faces",
+  "actAggGroupCloudSync": "Sync",
+  "actAggFaceLabel": "Face recognition · {processed}/{total}",
+  "@actAggFaceLabel": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggMusicScrapeLabel": "Music scraping · {processed}/{total}",
+  "@actAggMusicScrapeLabel": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggCloudSyncLabel": "Cloud sync · {processed}/{total}",
+  "@actAggCloudSyncLabel": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggCloudSyncPreparing": "Cloud sync · preparing",
   "detailPanelRuntimeMinutes": "{minutes} min",
   "@detailPanelRuntimeMinutes": {
     "placeholders": {

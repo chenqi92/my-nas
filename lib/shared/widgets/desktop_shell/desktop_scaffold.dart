@@ -361,6 +361,10 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                 if (_activityOpen)
                   ActivityDrawer(
                     onClose: () => setState(() => _activityOpen = false),
+                    onNavigate: (route) {
+                      setState(() => _activityOpen = false);
+                      _go(route);
+                    },
                   ),
               ],
             ),

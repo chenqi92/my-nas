@@ -1,41 +1,45 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/music/data/services/audio_effects_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
+import 'package:my_nas/features/music/presentation/pages/listening_stats_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
+import 'package:my_nas/features/music/presentation/pages/playlist_detail_page.dart';
 import 'package:my_nas/features/music/presentation/providers/music_favorites_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
+import 'package:my_nas/features/music/presentation/providers/playlist_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
-import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 
 /// MusicTrackEntity（曲库 DB 行）→ MusicItem（播放器/收藏用）。
 /// 复用 MusicFileWithSource.toMusicItem，保持与移动端一致的 nas:// URL 语义。
 MusicItem _entityToMusicItem(MusicTrackEntity m) => MusicFileWithSource(
-      file: FileItem(
-        name: m.fileName,
-        path: m.filePath,
-        size: m.size ?? 0,
-        isDirectory: false,
-        modifiedTime: m.modifiedTime,
-      ),
-      sourceId: m.sourceId,
-      title: m.title,
-      artist: m.artist,
-      album: m.album,
-      duration: m.duration,
-      year: m.year,
-      genre: m.genre,
-      coverPath: m.coverPath,
-      metadataExtracted: true,
-    ).toMusicItem();
+  file: FileItem(
+    name: m.fileName,
+    path: m.filePath,
+    size: m.size ?? 0,
+    isDirectory: false,
+    modifiedTime: m.modifiedTime,
+  ),
+  sourceId: m.sourceId,
+  title: m.title,
+  artist: m.artist,
+  album: m.album,
+  duration: m.duration,
+  year: m.year,
+  genre: m.genre,
+  coverPath: m.coverPath,
+  metadataExtracted: true,
+).toMusicItem();
 
 /// 把 [tracks] 装入播放队列并从 [startIndex] 开始播放；[shuffle] 时切随机模式。
 Future<void> _playFromList(
@@ -105,8 +109,10 @@ class _MusicListDesktopPageState extends ConsumerState<MusicListDesktopPage> {
               children: [
                 Expanded(
                   child: GlassPanel(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     child: _MainView(state: state, view: _view),
                   ),
                 ),
@@ -133,11 +139,13 @@ class _StatRow extends StatelessWidget {
     final l = AppLocalizations.of(context);
     // 全库总时长用 getStats 全量统计（totalDurationMs），不再只累加首页 100 首。
     final totalMs = loaded?.totalDurationMs ?? 0;
-    final hours = (totalMs / 3600000);
+    final hours = totalMs / 3600000;
     final hoursText = hours >= 1
         ? hours.toStringAsFixed(hours >= 10 ? 0 : 1)
         : (totalMs / 60000).toStringAsFixed(0);
-    final hoursUnit = hours >= 1 ? l.musicPageUnitHours : l.musicPageUnitMinutes;
+    final hoursUnit = hours >= 1
+        ? l.musicPageUnitHours
+        : l.musicPageUnitMinutes;
 
     return Row(
       children: [
@@ -169,9 +177,13 @@ class _StatRow extends StatelessWidget {
         Expanded(
           child: _Stat(
             value: l.musicPageStatAnnualReport,
-            valueMuted: true,
-            label: l.musicPageStatLastFmReady,
-            planTag: true,
+            label: l.musicPageStatListeningStats,
+            icon: Icons.insights_rounded,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const ListeningStatsPage(),
+              ),
+            ),
           ),
         ),
       ],
@@ -185,76 +197,81 @@ class _Stat extends StatelessWidget {
     required this.label,
     this.unit,
     this.icon,
-    this.valueMuted = false,
-    this.planTag = false,
+    this.onTap,
   });
 
   final String value;
   final String? unit;
   final String label;
   final IconData? icon;
-  final bool valueMuted;
-  final bool planTag;
+
+  /// 可点击时（如「听歌统计」打开统计页）展示水波纹。
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        color: t.cardBg,
-        border: Border.all(color: t.cardBorder),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text.rich(
-            TextSpan(children: [
-              TextSpan(
-                text: value,
-                style: TextStyle(
-                  fontSize: valueMuted ? 18 : 26,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.4,
-                  color: valueMuted ? t.text2 : t.text0,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          decoration: BoxDecoration(
+            color: t.cardBg,
+            border: Border.all(color: t.cardBorder),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: value,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.4,
+                        color: t.text0,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    if (unit != null)
+                      TextSpan(
+                        text: ' $unit',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: t.text2,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              if (unit != null)
-                TextSpan(
-                  text: ' $unit',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: t.text2,
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, size: 13, color: t.text2),
+                    const SizedBox(width: 6),
+                  ],
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: t.text2),
+                    ),
                   ),
-                ),
-            ]),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              if (planTag) ...[
-                AppTag(l.musicPageComingSoon, variant: TagVariant.plan),
-                const SizedBox(width: 6),
-              ] else if (icon != null) ...[
-                Icon(icon, size: 13, color: t.text2),
-                const SizedBox(width: 6),
-              ],
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, color: t.text2),
-                ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -358,27 +375,25 @@ class _SongTable extends ConsumerWidget {
   final bool hasMore;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return NotificationListener<ScrollNotification>(
-      onNotification: (n) {
-        // 触底前 300px 触发加载下一页（曲库分页 100 首/页）。
-        if (hasMore &&
-            n.metrics.pixels >= n.metrics.maxScrollExtent - 300) {
-          ref.read(musicListProvider.notifier).loadMoreTracks();
-        }
-        return false;
-      },
-      child: ListView.builder(
-        itemCount: tracks.length,
-        itemBuilder: (_, i) => _SongRow(
-          track: tracks[i],
-          index: i + 1,
-          allTracks: tracks,
-          position: i,
+  Widget build(BuildContext context, WidgetRef ref) =>
+      NotificationListener<ScrollNotification>(
+        onNotification: (n) {
+          // 触底前 300px 触发加载下一页（曲库分页 100 首/页）。
+          if (hasMore && n.metrics.pixels >= n.metrics.maxScrollExtent - 300) {
+            ref.read(musicListProvider.notifier).loadMoreTracks();
+          }
+          return false;
+        },
+        child: ListView.builder(
+          itemCount: tracks.length,
+          itemBuilder: (_, i) => _SongRow(
+            track: tracks[i],
+            index: i + 1,
+            allTracks: tracks,
+            position: i,
+          ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 class _SongRow extends ConsumerWidget {
@@ -397,8 +412,7 @@ class _SongRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
     final isFav =
-        ref.watch(isMusicFavoriteProvider(track.filePath)).valueOrNull ??
-            false;
+        ref.watch(isMusicFavoriteProvider(track.filePath)).valueOrNull ?? false;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -522,8 +536,9 @@ class _AlbumGrid extends ConsumerWidget {
         return InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: () {
-            final albumTracks =
-                tracks.where((x) => x.displayAlbum == album).toList();
+            final albumTracks = tracks
+                .where((x) => x.displayAlbum == album)
+                .toList();
             _playFromList(ref, albumTracks, 0);
           },
           child: Column(
@@ -584,8 +599,7 @@ class _GroupList extends ConsumerWidget {
         onTap: () {
           final key = entries[i].key;
           final groupTracks = tracks
-              .where((x) =>
-                  (byArtist ? x.displayArtist : x.folderName) == key)
+              .where((x) => (byArtist ? x.displayArtist : x.folderName) == key)
               .toList();
           _playFromList(ref, groupTracks, 0);
         },
@@ -593,36 +607,39 @@ class _GroupList extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           child: Row(
             children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: byArtist ? BoxShape.circle : BoxShape.rectangle,
-                borderRadius:
-                    byArtist ? null : BorderRadius.circular(8),
-                color: t.insetBg,
-              ),
-              child: Icon(
-                byArtist ? Icons.person_outline_rounded : Icons.folder_outlined,
-                size: 18,
-                color: t.text3,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                entries[i].key,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: t.text0,
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  shape: byArtist ? BoxShape.circle : BoxShape.rectangle,
+                  borderRadius: byArtist ? null : BorderRadius.circular(8),
+                  color: t.insetBg,
+                ),
+                child: Icon(
+                  byArtist
+                      ? Icons.person_outline_rounded
+                      : Icons.folder_outlined,
+                  size: 18,
+                  color: t.text3,
                 ),
               ),
-            ),
-            Text(l.musicPageTrackCount(entries[i].value),
-                style: TextStyle(fontSize: 12, color: t.text2)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  entries[i].key,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: t.text0,
+                  ),
+                ),
+              ),
+              Text(
+                l.musicPageTrackCount(entries[i].value),
+                style: TextStyle(fontSize: 12, color: t.text2),
+              ),
             ],
           ),
         ),
@@ -635,24 +652,117 @@ class _RightRail extends StatelessWidget {
   const _RightRail();
 
   @override
-  Widget build(BuildContext context) {
-    return const Column(
-      children: [
-        _PlaylistPanel(),
-        SizedBox(height: 18),
-        _EqPanel(),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => const Column(
+    children: [_PlaylistPanel(), SizedBox(height: 18), _EqPanel()],
+  );
 }
 
-class _PlaylistPanel extends StatelessWidget {
+class _PlaylistPanel extends ConsumerWidget {
   const _PlaylistPanel();
 
+  Future<void> _create(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.musicPlaylistCreateTitle),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: l.musicPlaylistNameHint,
+            border: const OutlineInputBorder(),
+          ),
+          onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: Text(l.musicPlaylistCreateAction),
+          ),
+        ],
+      ),
+    );
+    if (name != null && name.isNotEmpty) {
+      await ref.read(playlistProvider.notifier).createPlaylist(name: name);
+    }
+  }
+
+  Future<void> _rename(
+    BuildContext context,
+    WidgetRef ref,
+    PlaylistEntry p,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final controller = TextEditingController(text: p.name);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.musicPlaylistRenameTitle),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: l.musicPlaylistNameHint,
+            border: const OutlineInputBorder(),
+          ),
+          onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
+            child: Text(l.musicPlaylistRename),
+          ),
+        ],
+      ),
+    );
+    if (name != null && name.isNotEmpty && name != p.name) {
+      await ref.read(playlistProvider.notifier).renamePlaylist(p.id, name);
+    }
+  }
+
+  Future<void> _delete(
+    BuildContext context,
+    WidgetRef ref,
+    PlaylistEntry p,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.musicPlaylistDeleteTitle),
+        content: Text(l.musicPlaylistDeleteMessage(p.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.musicPlaylistDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok ?? false) {
+      await ref.read(playlistProvider.notifier).deletePlaylist(p.id);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
+    final playlists = ref.watch(playlistProvider).playlists;
     return GlassPanel(
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -660,11 +770,30 @@ class _PlaylistPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.library_music_outlined, size: 15, color: t.accentBright),
+              Icon(
+                Icons.library_music_outlined,
+                size: 15,
+                color: t.accentBright,
+              ),
               const SizedBox(width: 8),
-              Text(l.musicPagePlaylists,
-                  style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w700, color: t.text0)),
+              Text(
+                l.musicPagePlaylists,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: t.text0,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                tooltip: l.musicPlaylistCreateTitle,
+                visualDensity: VisualDensity.compact,
+                iconSize: 18,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                icon: Icon(Icons.add_rounded, color: t.accentBright),
+                onPressed: () => _create(context, ref),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -681,41 +810,177 @@ class _PlaylistPanel extends StatelessWidget {
                     colors: [t.accent, t.accentDeep],
                   ),
                 ),
-                child: Icon(Icons.favorite_rounded,
-                    size: 14, color: t.accentContrast),
+                child: Icon(
+                  Icons.favorite_rounded,
+                  size: 14,
+                  color: t.accentContrast,
+                ),
               ),
               const SizedBox(width: 11),
               Expanded(
                 child: Text(
                   l.musicPageFavorites,
                   style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: t.text0),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: t.text0,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            l.musicPagePlaylistHint,
-            style: TextStyle(fontSize: 12, color: t.text2, height: 1.5),
-          ),
+          if (playlists.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                l.musicPlaylistEmpty,
+                style: TextStyle(fontSize: 12, color: t.text2, height: 1.5),
+              ),
+            )
+          else
+            for (final p in playlists)
+              _PlaylistRow(
+                entry: p,
+                onOpen: () => PlaylistDetailPage.open(context, p),
+                onRename: () => _rename(context, ref, p),
+                onDelete: () => _delete(context, ref, p),
+              ),
         ],
       ),
     );
   }
 }
 
-class _EqPanel extends StatelessWidget {
-  const _EqPanel();
+class _PlaylistRow extends StatelessWidget {
+  const _PlaylistRow({
+    required this.entry,
+    required this.onOpen,
+    required this.onRename,
+    required this.onDelete,
+  });
 
-  static const _bars = [.4, .7, .9, .6, .3, .5, .75, .85, .5, .35];
+  final PlaylistEntry entry;
+  final VoidCallback onOpen;
+  final VoidCallback onRename;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(7),
+                  color: t.chipBg,
+                ),
+                child: Icon(
+                  Icons.queue_music_rounded,
+                  size: 15,
+                  color: t.text1,
+                ),
+              ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: t.text0,
+                      ),
+                    ),
+                    Text(
+                      l.musicPlaylistTrackCount(entry.trackPaths.length),
+                      style: TextStyle(fontSize: 11, color: t.text2),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                tooltip: '',
+                iconSize: 16,
+                padding: EdgeInsets.zero,
+                icon: Icon(Icons.more_horiz_rounded, color: t.text2),
+                onSelected: (v) {
+                  if (v == 'rename') onRename();
+                  if (v == 'delete') onDelete();
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'rename',
+                    child: Text(l.musicPlaylistRename),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(l.musicPlaylistDelete),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 桌面端 10 段均衡器面板：接 [AudioEffectsService]（与移动端 audio_effects_page
+/// 共享后端，桌面 media_kit 引擎通过 mpv `af` 滤镜实时生效）。
+class _EqPanel extends StatefulWidget {
+  const _EqPanel();
+
+  @override
+  State<_EqPanel> createState() => _EqPanelState();
+}
+
+class _EqPanelState extends State<_EqPanel> {
+  EqualizerState? _state;
+  StreamSubscription<EqualizerState>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    await AudioEffectsService.instance.init();
+    if (!mounted) return;
+    setState(() => _state = AudioEffectsService.instance.state);
+    _sub = AudioEffectsService.instance.onChange.listen((s) {
+      if (mounted) setState(() => _state = s);
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  String _bandLabel(int hz) => hz >= 1000 ? '${hz ~/ 1000}k' : '$hz';
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final t = DesignTokens.of(context);
+    final state = _state;
     return GlassPanel(
       padding: const EdgeInsets.all(18),
       child: Column(
@@ -725,41 +990,122 @@ class _EqPanel extends StatelessWidget {
             children: [
               Icon(Icons.equalizer_rounded, size: 15, color: t.accentBright),
               const SizedBox(width: 8),
-              Text(l.musicPageEqualizer,
-                  style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w700, color: t.text0)),
+              Text(
+                l.musicPageEqualizer,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: t.text0,
+                ),
+              ),
               const Spacer(),
-              // 10 段 EQ 调节尚未在桌面接入，标注规划而非伪装可用预设。
-              AppTag(l.musicPageComingSoon, variant: TagVariant.plan),
+              if (state != null)
+                SizedBox(
+                  height: 24,
+                  child: Switch(
+                    value: state.enabled,
+                    onChanged: (v) =>
+                        AudioEffectsService.instance.setEnabled(enabled: v),
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 60,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+          if (state == null)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 18),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
               children: [
-                for (var i = 0; i < _bars.length; i++) ...[
-                  Expanded(
-                    child: FractionallySizedBox(
-                      heightFactor: _bars[i],
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(3),
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [t.accentBright, t.accentDeep],
-                          ),
-                        ),
-                      ),
-                    ),
+                for (final p in kEqPresets)
+                  ChoiceChip(
+                    label: Text(p.name, style: const TextStyle(fontSize: 11)),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    selected: state.presetId == p.id,
+                    onSelected: state.enabled
+                        ? (_) => AudioEffectsService.instance.applyPreset(p.id)
+                        : null,
                   ),
-                  if (i != _bars.length - 1) const SizedBox(width: 6),
-                ],
+                if (state.presetId == 'custom')
+                  ChoiceChip(
+                    label: Text(
+                      l.paneMusicEqCustom,
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    selected: true,
+                    onSelected: (_) {},
+                  ),
               ],
             ),
-          ),
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 110,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var i = 0; i < kEqBands.length; i++)
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: RotatedBox(
+                              quarterTurns: 3,
+                              child: SliderTheme(
+                                data: SliderThemeData(
+                                  trackHeight: 2,
+                                  overlayShape: SliderComponentShape.noOverlay,
+                                  thumbShape: const RoundSliderThumbShape(
+                                    enabledThumbRadius: 5,
+                                  ),
+                                ),
+                                child: Slider(
+                                  value: state.gains[i].clamp(
+                                    kEqMinGain,
+                                    kEqMaxGain,
+                                  ),
+                                  min: kEqMinGain,
+                                  max: kEqMaxGain,
+                                  divisions: 48,
+                                  activeColor: t.accentBright,
+                                  onChanged: state.enabled
+                                      ? (v) => AudioEffectsService.instance
+                                            .setBandGain(i, v)
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Text(
+                            _bandLabel(kEqBands[i]),
+                            style: TextStyle(fontSize: 9, color: t.text3),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: AudioEffectsService.instance.resetFlat,
+                child: Text(l.paneMusicEqReset),
+              ),
+            ),
+          ],
         ],
       ),
     );

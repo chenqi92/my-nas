@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
@@ -12,6 +13,7 @@ import 'package:my_nas/features/video/presentation/pages/video_player_page.dart'
 import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_history_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
@@ -68,8 +70,10 @@ class _FilmDetailSheetState extends ConsumerState<FilmDetailSheet> {
               _Hero(meta: m, onClose: () => Navigator.of(context).pop(), t: t),
               Flexible(
                 child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 18,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -159,8 +163,11 @@ class _Hero extends StatelessWidget {
             right: 14,
             child: IconButton(
               onPressed: onClose,
-              icon: const Icon(Icons.close_rounded,
-                  color: Colors.white, size: 18),
+              icon: const Icon(
+                Icons.close_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
               style: IconButton.styleFrom(
                 backgroundColor: Colors.black.withValues(alpha: 0.45),
               ),
@@ -221,22 +228,22 @@ class _Hero extends StatelessWidget {
   }
 
   Widget _stat(IconData? icon, String text, {Color? color}) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, color: color ?? Colors.white, size: 14),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            text,
-            style: TextStyle(
-              color: color ?? Colors.white.withValues(alpha: 0.82),
-              fontSize: 12.5,
-              fontWeight: icon != null ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (icon != null) ...[
+        Icon(icon, color: color ?? Colors.white, size: 14),
+        const SizedBox(width: 4),
+      ],
+      Text(
+        text,
+        style: TextStyle(
+          color: color ?? Colors.white.withValues(alpha: 0.82),
+          fontSize: 12.5,
+          fontWeight: icon != null ? FontWeight.w700 : FontWeight.w500,
+        ),
+      ),
+    ],
+  );
 }
 
 class _Actions extends ConsumerWidget {
@@ -249,49 +256,64 @@ class _Actions extends ConsumerWidget {
     final quality = meta.resolution ?? meta.hdrFormat;
     final playLabel =
         (meta.isWatched ? l.filmDetailContinuePlay : l.filmDetailPlay) +
-            (quality != null ? ' · $quality' : '');
+        (quality != null ? ' · $quality' : '');
     return Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          FilledButton.icon(
-            onPressed: () => _play(context, ref),
-            icon: const Icon(Icons.play_arrow_rounded, size: 16),
-            label: Text(playLabel),
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        FilledButton.icon(
+          onPressed: () => _play(context, ref),
+          icon: const Icon(Icons.play_arrow_rounded, size: 16),
+          label: Text(playLabel),
+        ),
+        OutlinedButton.icon(
+          onPressed: () async {
+            final watched = await toggleWatchedStatus(ref, meta.filePath);
+            if (context.mounted) {
+              context.showSuccessToast(
+                watched
+                    ? l.filmDetailMarkedWatched
+                    : l.filmDetailMarkedUnwatched,
+              );
+            }
+          },
+          icon: Icon(
+            meta.isWatched
+                ? Icons.visibility_off_outlined
+                : Icons.check_circle_outline,
+            size: 15,
           ),
-          OutlinedButton.icon(
-            onPressed: () async {
-              final watched =
-                  await toggleWatchedStatus(ref, meta.filePath);
-              if (context.mounted) {
-                context.showSuccessToast(
-                    watched ? l.filmDetailMarkedWatched : l.filmDetailMarkedUnwatched);
-              }
-            },
-            icon: Icon(
-              meta.isWatched
-                  ? Icons.visibility_off_outlined
-                  : Icons.check_circle_outline,
-              size: 15,
-            ),
-            label: Text(meta.isWatched
+          label: Text(
+            meta.isWatched
                 ? l.filmDetailMarkUnwatched
-                : l.filmDetailMarkWatched),
+                : l.filmDetailMarkWatched,
           ),
-          IconButton(
-            onPressed: () => showAdaptiveModalSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (ctx) => CastDeviceSheet(
-                onDeviceSelected: (_) => Navigator.of(ctx).pop(),
-              ),
+        ),
+        OutlinedButton.icon(
+          onPressed: () {
+            final keyword = meta.title ?? meta.fileName;
+            final router = GoRouter.of(context);
+            ref.read(ptPendingSearchProvider.notifier).state = keyword;
+            Navigator.of(context).pop();
+            router.go('/pt');
+          },
+          icon: const Icon(Icons.travel_explore_rounded, size: 15),
+          label: Text(l.filmDetailSearchPt),
+        ),
+        IconButton(
+          onPressed: () => showAdaptiveModalSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (ctx) => CastDeviceSheet(
+              onDeviceSelected: (_) => Navigator.of(ctx).pop(),
             ),
-            icon: const Icon(Icons.cast_rounded, size: 16),
-            tooltip: l.filmDetailCast,
           ),
-        ],
-      );
+          icon: const Icon(Icons.cast_rounded, size: 16),
+          tooltip: l.filmDetailCast,
+        ),
+      ],
+    );
   }
 
   Future<void> _play(BuildContext context, WidgetRef ref) =>
@@ -329,7 +351,9 @@ Future<void> playVideoMetadata(
       ),
     );
   } on Object catch (e) {
-    if (context.mounted) context.showErrorToast(l.filmDetailPlayFailed(e.toString()));
+    if (context.mounted) {
+      context.showErrorToast(l.filmDetailPlayFailed(e.toString()));
+    }
   }
 }
 
@@ -347,43 +371,41 @@ class _TabBar extends StatelessWidget {
   final DesignTokens t;
 
   @override
-  Widget build(BuildContext context) => Container(
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: t.hairline)),
-        ),
-        child: Row(
-          children: [
-            for (var i = 0; i < tabs.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: InkWell(
-                  onTap: () => onTap(i),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: i == current
-                              ? t.accent
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      tabs[i],
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: i == current ? t.text0 : t.text2,
-                      ),
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      border: Border(bottom: BorderSide(color: t.hairline)),
+    ),
+    child: Row(
+      children: [
+        for (var i = 0; i < tabs.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: InkWell(
+              onTap: () => onTap(i),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: i == current ? t.accent : Colors.transparent,
+                      width: 2,
                     ),
                   ),
                 ),
+                child: Text(
+                  tabs[i],
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: i == current ? t.text0 : t.text2,
+                  ),
+                ),
               ),
-          ],
-        ),
-      );
+            ),
+          ),
+      ],
+    ),
+  );
 }
 
 class _Versions extends StatelessWidget {
@@ -446,8 +468,7 @@ class _Versions extends StatelessWidget {
               if (meta.hdrFormat != null) AppTag(meta.hdrFormat!),
               if (meta.videoCodec != null) AppTag(meta.videoCodec!),
               if (meta.fileSize != null)
-                AppTag(_fmtSize(meta.fileSize!),
-                    variant: TagVariant.neutral),
+                AppTag(_fmtSize(meta.fileSize!), variant: TagVariant.neutral),
             ],
           ),
         ],
@@ -477,8 +498,10 @@ class _Cast extends StatelessWidget {
         .where((e) => e.isNotEmpty)
         .toList(growable: false);
     if (cast.isEmpty) {
-      return Text(l.filmDetailNoCast,
-          style: TextStyle(fontSize: 12.5, color: t.text2));
+      return Text(
+        l.filmDetailNoCast,
+        style: TextStyle(fontSize: 12.5, color: t.text2),
+      );
     }
     return Wrap(
       spacing: 14,
@@ -492,7 +515,7 @@ class _Cast extends StatelessWidget {
               children: [
                 AspectRatio(
                   aspectRatio: 1,
-                  child: Container(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       color: t.insetBg,
@@ -552,11 +575,10 @@ class _SeasonsState extends ConsumerState<_Seasons> {
   int? _season;
 
   Widget _hint(String text) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 22),
-        alignment: Alignment.center,
-        child: Text(text,
-            style: TextStyle(fontSize: 12.5, color: widget.t.text2)),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 22),
+    alignment: Alignment.center,
+    child: Text(text, style: TextStyle(fontSize: 12.5, color: widget.t.text2)),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -567,8 +589,9 @@ class _SeasonsState extends ConsumerState<_Seasons> {
     if (m.tmdbId != null) {
       episodesAsync = ref.watch(localEpisodeFilesProvider(m.tmdbId!));
     } else if (m.showDirectory != null && m.showDirectory!.isNotEmpty) {
-      episodesAsync =
-          ref.watch(localEpisodesByShowDirProvider(m.showDirectory!));
+      episodesAsync = ref.watch(
+        localEpisodesByShowDirProvider(m.showDirectory!),
+      );
     } else {
       return _hint(l.filmDetailSeasonsNoLocator);
     }
@@ -585,8 +608,8 @@ class _SeasonsState extends ConsumerState<_Seasons> {
         final sel = (_season != null && seasons.containsKey(_season))
             ? _season!
             : (seasonNums.contains(m.seasonNumber)
-                ? m.seasonNumber!
-                : seasonNums.first);
+                  ? m.seasonNumber!
+                  : seasonNums.first);
         final eps = (seasons[sel] ?? const {}).entries.toList()
           ..sort((a, b) => a.key.compareTo(b.key));
         return Column(

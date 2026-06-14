@@ -73,7 +73,9 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
 
   void _search(String sourceId) {
     ref.read(ptTorrentListProvider(sourceId).notifier)
-      ..setKeyword(_searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim())
+      ..setKeyword(
+        _searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim(),
+      )
       ..loadTorrents(refresh: true);
   }
 
@@ -104,6 +106,23 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
     }
 
     final selected = _sourceId ?? sources.first.id;
+
+    // 消费来自影视详情「在 PT 搜索」的待搜索关键词：填入搜索框 + 设置 keyword，
+    // 站点连接后的加载会自动套用；若已连接则立即刷新。
+    final pendingSearch = ref.read(ptPendingSearchProvider);
+    if (pendingSearch != null) {
+      _searchCtrl.text = pendingSearch;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(ptPendingSearchProvider.notifier).state = null;
+        final notifier = ref.read(ptTorrentListProvider(selected).notifier)
+          ..setKeyword(pendingSearch);
+        if (_connected.contains(selected)) {
+          notifier.loadTorrents(refresh: true);
+        }
+      });
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _ensureConnected(selected);
     });
@@ -198,17 +217,13 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
             onOpen: () => showDialog<void>(
               context: context,
               barrierColor: Colors.black.withValues(alpha: 0.55),
-              builder: (_) => PtTorrentDetailSheet(
-                torrent: torrent,
-                sourceId: selected,
-              ),
+              builder: (_) =>
+                  PtTorrentDetailSheet(torrent: torrent, sourceId: selected),
             ),
             onDownload: () => showAdaptiveModalSheet<void>(
               context: context,
-              builder: (_) => SendToDownloaderSheet(
-                torrent: torrent,
-                sourceId: selected,
-              ),
+              builder: (_) =>
+                  SendToDownloaderSheet(torrent: torrent, sourceId: selected),
             ),
           ),
         if (listState.hasMore)
@@ -241,23 +256,25 @@ class _SiteStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
-        builder: (context, c) {
-          // 与 .stat-row minmax(240) 对齐的响应式列数。
-          const minTile = 240.0;
-          const gap = 14.0;
-          final cols =
-              ((c.maxWidth + gap) / (minTile + gap)).floor().clamp(1, 4);
-          final tileW = (c.maxWidth - gap * (cols - 1)) / cols;
-          return Wrap(
-            spacing: gap,
-            runSpacing: gap,
-            children: [
-              for (final s in sources)
-                SizedBox(width: tileW, child: _SiteStatCard(sourceId: s.id)),
-            ],
-          );
-        },
+    builder: (context, c) {
+      // 与 .stat-row minmax(240) 对齐的响应式列数。
+      const minTile = 240.0;
+      const gap = 14.0;
+      final cols = ((c.maxWidth + gap) / (minTile + gap)).floor().clamp(1, 4);
+      final tileW = (c.maxWidth - gap * (cols - 1)) / cols;
+      return Wrap(
+        spacing: gap,
+        runSpacing: gap,
+        children: [
+          for (final s in sources)
+            SizedBox(
+              width: tileW,
+              child: _SiteStatCard(sourceId: s.id),
+            ),
+        ],
       );
+    },
+  );
 }
 
 class _SiteStatCard extends ConsumerWidget {
@@ -319,8 +336,12 @@ class _SiteStatCard extends ConsumerWidget {
                   t,
                 ),
                 const SizedBox(width: 16),
-                _metric(l.ptPageBonus, user != null ? user.formattedBonus : '—',
-                    t.text0, t),
+                _metric(
+                  l.ptPageBonus,
+                  user != null ? user.formattedBonus : '—',
+                  t.text0,
+                  t,
+                ),
                 const SizedBox(width: 16),
                 _metric(
                   l.ptPageUploaded,
@@ -454,11 +475,11 @@ class _ResultHeaderRow extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     TextStyle s() => TextStyle(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-          color: t.text3,
-        );
+      fontSize: 10.5,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
+      color: t.text3,
+    );
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 8, 18, 8),
       decoration: BoxDecoration(
@@ -563,14 +584,14 @@ class _ResultRow extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: AppTag(
                           promo,
-                          variant: torrent.status.isFree ||
+                          variant:
+                              torrent.status.isFree ||
                                   torrent.status.isDoubleFree
                               ? TagVariant.free
                               : TagVariant.accent,
                         ),
                       )
-                    : Text('—',
-                        style: TextStyle(fontSize: 11, color: t.text3)),
+                    : Text('—', style: TextStyle(fontSize: 11, color: t.text3)),
               ),
               SizedBox(
                 width: 180,
@@ -581,11 +602,15 @@ class _ResultRow extends StatelessWidget {
                       onPressed: onDownload,
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         minimumSize: const Size(0, 30),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         textStyle: const TextStyle(
-                            fontSize: 11.5, fontWeight: FontWeight.w600),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       icon: const Icon(Icons.download_rounded, size: 13),
                       label: Text(l.ptPageSendToDownloader),

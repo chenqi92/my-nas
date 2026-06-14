@@ -11,9 +11,16 @@ import 'package:my_nas/shared/widgets/desktop_shell/activity_aggregator.dart';
 /// 设计稿 `.drawer` 活动中心：右侧 400px 抽屉。从 [activityItemsProvider]
 /// 取聚合项（传输 / 视频扫描 / 媒体扫描），空状态显示提示。
 class ActivityDrawer extends ConsumerWidget {
-  const ActivityDrawer({required this.onClose, super.key});
+  const ActivityDrawer({
+    required this.onClose,
+    required this.onNavigate,
+    super.key,
+  });
 
   final VoidCallback onClose;
+
+  /// 点击活动项时跳转到对应分支路由（由外壳负责切 branch 并关闭抽屉）。
+  final void Function(String route) onNavigate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,13 +52,15 @@ class ActivityDrawer extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.fromLTRB(20, 18, 14, 18),
                       decoration: BoxDecoration(
-                        border:
-                            Border(bottom: BorderSide(color: t.hairline)),
+                        border: Border(bottom: BorderSide(color: t.hairline)),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.notifications_none_rounded,
-                              size: 18, color: t.accentBright),
+                          Icon(
+                            Icons.notifications_none_rounded,
+                            size: 18,
+                            color: t.accentBright,
+                          ),
                           const SizedBox(width: 10),
                           Text(
                             l.shellActTitle,
@@ -71,8 +80,11 @@ class ActivityDrawer extends ConsumerWidget {
                           const Spacer(),
                           IconButton(
                             onPressed: onClose,
-                            icon: Icon(Icons.close_rounded,
-                                size: 16, color: t.text2),
+                            icon: Icon(
+                              Icons.close_rounded,
+                              size: 16,
+                              color: t.text2,
+                            ),
                           ),
                         ],
                       ),
@@ -83,7 +95,9 @@ class ActivityDrawer extends ConsumerWidget {
                         children: [
                           Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 4),
+                              horizontal: 4,
+                              vertical: 4,
+                            ),
                             child: Text(
                               l.shellActAggregationHint,
                               style: TextStyle(
@@ -97,7 +111,8 @@ class ActivityDrawer extends ConsumerWidget {
                           if (items.isEmpty)
                             _EmptyState()
                           else
-                            for (final it in items) _ItemTile(item: it),
+                            for (final it in items)
+                              _ItemTile(item: it, onNavigate: onNavigate),
                         ],
                       ),
                     ),
@@ -113,67 +128,78 @@ class ActivityDrawer extends ConsumerWidget {
 }
 
 class _ItemTile extends StatelessWidget {
-  const _ItemTile({required this.item});
+  const _ItemTile({required this.item, required this.onNavigate});
   final ActivityItem item;
+  final void Function(String route) onNavigate;
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
+    final route = activityItemRoute(item.id);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
         color: t.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: t.cardBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: t.chipBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(item.icon, size: 16, color: t.accentBright),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        child: InkWell(
+          onTap: route == null ? null : () => onNavigate(route),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: t.cardBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      item.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: t.text0,
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: t.chipBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(item.icon, size: 16, color: t.accentBright),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: t.text0,
+                            ),
+                          ),
+                          if (item.detail.isNotEmpty)
+                            Text(
+                              item.detail,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 11.5, color: t.text2),
+                            ),
+                        ],
                       ),
                     ),
-                    if (item.detail.isNotEmpty)
-                      Text(
-                        item.detail,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11.5, color: t.text2),
-                      ),
+                    AppTag(item.group),
                   ],
                 ),
-              ),
-              AppTag(item.group),
-            ],
+                if (item.progress != null) ...[
+                  const SizedBox(height: 9),
+                  AppProgressBar(value: item.progress!),
+                ],
+              ],
+            ),
           ),
-          if (item.progress != null) ...[
-            const SizedBox(height: 9),
-            AppProgressBar(value: item.progress!),
-          ],
-        ],
+        ),
       ),
     );
   }
