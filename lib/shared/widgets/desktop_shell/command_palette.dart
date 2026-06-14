@@ -53,24 +53,18 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     return List.unmodifiable(commands);
   }
 
-  void _onKey(KeyEvent ev, List<CmdkCommand> items) {
-    if (ev is! KeyDownEvent && ev is! KeyRepeatEvent) return;
-    if (ev.logicalKey == LogicalKeyboardKey.arrowDown) {
-      setState(() {
-        _selected = (_selected + 1).clamp(0, items.length - 1);
-      });
-    } else if (ev.logicalKey == LogicalKeyboardKey.arrowUp) {
-      setState(() {
-        _selected = (_selected - 1).clamp(0, items.length - 1);
-      });
-    } else if (ev.logicalKey == LogicalKeyboardKey.enter) {
-      if (items.isEmpty) return;
-      final c = items[_selected];
-      widget.onClose();
-      c.run(context);
-    } else if (ev.logicalKey == LogicalKeyboardKey.escape) {
-      widget.onClose();
-    }
+  void _moveSelection(int delta, List<CmdkCommand> items) {
+    if (items.isEmpty) return;
+    setState(() {
+      _selected = (_selected + delta).clamp(0, items.length - 1);
+    });
+  }
+
+  void _runSelected(List<CmdkCommand> items) {
+    if (items.isEmpty) return;
+    final c = items[_selected.clamp(0, items.length - 1)];
+    widget.onClose();
+    c.run(context);
   }
 
   @override
@@ -87,9 +81,17 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
           alignment: const Alignment(0, -0.5),
           child: GestureDetector(
             onTap: () {}, // 阻止穿透
-            child: KeyboardListener(
-              focusNode: FocusNode()..canRequestFocus = false,
-              onKeyEvent: (ev) => _onKey(ev, items),
+            child: CallbackShortcuts(
+              bindings: <ShortcutActivator, VoidCallback>{
+                const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+                    _moveSelection(1, items),
+                const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+                    _moveSelection(-1, items),
+                const SingleActivator(LogicalKeyboardKey.enter): () =>
+                    _runSelected(items),
+                const SingleActivator(LogicalKeyboardKey.escape):
+                    widget.onClose,
+              },
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 620),
                 child: GlassPanel(

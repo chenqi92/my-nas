@@ -49,13 +49,13 @@ class CmdkRegistry {
   static final instance = CmdkRegistry._();
 
   final List<CmdkCommand> _commands = [];
-  final List<CmdkSearcher> _searchers = [];
+  final Map<String, CmdkSearcher> _searchers = {};
 
   /// 当前注册的所有静态命令快照。
   List<CmdkCommand> get all => List.unmodifiable(_commands);
 
   /// 当前注册的所有内容搜索器快照。
-  List<CmdkSearcher> get searchers => List.unmodifiable(_searchers);
+  List<CmdkSearcher> get searchers => List.unmodifiable(_searchers.values);
 
   void register(CmdkCommand c) {
     _commands
@@ -73,7 +73,12 @@ class CmdkRegistry {
     _commands.removeWhere((c) => c.id == id);
   }
 
-  void registerSearcher(CmdkSearcher s) {
-    _searchers.add(s);
+  /// 按 [id] 注册内容搜索器；同 id 覆盖，避免 DesktopScaffold 重建时无界累加。
+  void registerSearcher(String id, CmdkSearcher s) {
+    _searchers[id] = s;
+  }
+
+  void unregisterSearcher(String id) {
+    _searchers.remove(id);
   }
 }

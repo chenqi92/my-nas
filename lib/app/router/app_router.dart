@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
-import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/connection/presentation/pages/connection_page.dart';
 import 'package:my_nas/features/desktop_home/presentation/pages/home_overview_page.dart';
 import 'package:my_nas/features/desktop_ops/presentation/pages/ops_overview_page.dart';
 import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
 import 'package:my_nas/features/downloader/presentation/pages/downloads_desktop_page.dart';
+import 'package:my_nas/features/file_browser/presentation/pages/file_browser_page.dart';
 import 'package:my_nas/features/mine/presentation/pages/mine_page.dart';
 import 'package:my_nas/features/music/presentation/pages/desktop_now_playing_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_desktop_page.dart';
@@ -48,11 +49,12 @@ final _transferNavigatorKey = GlobalKey<NavigatorState>();
 final _sourcesNavigatorKey = GlobalKey<NavigatorState>();
 final _ptNavigatorKey = GlobalKey<NavigatorState>(); // 桌面 PT 站点
 final _nastoolNavigatorKey = GlobalKey<NavigatorState>(); // 桌面 媒体自动化
+final _filesNavigatorKey = GlobalKey<NavigatorState>(); // 桌面 文件浏览
 
 /// 按 branch index 顺序排列的 navigator keys，供 main_scaffold / desktop_scaffold
 /// 引用。顺序必须与 `desktop_scaffold._routeForBranch` 完全一致：
 /// 0=home 1=video 2=live 3=music 4=photo 5=reading 6=mine 7=ops
-/// 8=download 9=transfer 10=sources 11=pt 12=nastool
+/// 8=download 9=transfer 10=sources 11=pt 12=nastool 13=files
 final branchNavigatorKeys = <GlobalKey<NavigatorState>>[
   _homeNavigatorKey,
   _videoNavigatorKey,
@@ -67,6 +69,7 @@ final branchNavigatorKeys = <GlobalKey<NavigatorState>>[
   _sourcesNavigatorKey,
   _ptNavigatorKey,
   _nastoolNavigatorKey,
+  _filesNavigatorKey,
 ];
 
 /// 待处理的 deep link 路径
@@ -97,8 +100,8 @@ final appRouter = GoRouter(
             Text('导航错误: ${state.uri}'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go(Routes.music),
-              child: const Text('返回音乐'),
+              onPressed: () => context.go(Routes.home),
+              child: const Text('返回首页'),
             ),
           ],
         ),
@@ -136,15 +139,21 @@ final appRouter = GoRouter(
       return fullPath;
     }
 
-    // 情况2: GoRouter 可能只收到路径部分 (music/player)
-    // 没有前导斜杠的路径可能来自 deep link
+    // 情况2: GoRouter 可能只收到路径部分 (music/player / video / pt ...)
+    // 没有前导斜杠的路径可能来自 deep link：只要一级前缀是已知路由就补 '/'。
     final uriString = uri.toString();
-    if (!uriString.startsWith('/') &&
-        !uriString.startsWith('http') &&
-        uriString.contains('music/player')) {
-      final path = '/$uriString';
-      logger.i('GoRouter: Path without leading slash, redirecting to $path');
-      return path;
+    if (!uriString.startsWith('/') && !uriString.startsWith('http')) {
+      const knownPrefixes = {
+        'home', 'video', 'live', 'music', 'photo', 'reading', 'mine',
+        'ops', 'download', 'transfer', 'sources', 'pt', 'nastool', 'files',
+        'book', 'note', 'comic', 'connection',
+      };
+      final firstSegment = uriString.split('/').first;
+      if (knownPrefixes.contains(firstSegment)) {
+        final path = '/$uriString';
+        logger.i('GoRouter: Path without leading slash, redirecting to $path');
+        return path;
+      }
     }
 
     return null;
@@ -174,7 +183,7 @@ final appRouter = GoRouter(
           : const MusicPlayerPage(),
     ),
 
-    // Main shell with 11 branches. Order matches `branchNavigatorKeys` and
+    // Main shell with 14 branches. Order matches `branchNavigatorKeys` and
     // `desktop_scaffold._routeForBranch`. Move/insert here requires updating
     // both arrays in lockstep.
     StatefulShellRoute.indexedStack(
@@ -333,6 +342,17 @@ final appRouter = GoRouter(
               path: Routes.nastool,
               name: 'nastool',
               builder: (context, state) => const NasToolDesktopPage(),
+            ),
+          ],
+        ),
+        // 13 files (桌面媒体区「文件」入口) — 跨源文件浏览，自带源选择
+        StatefulShellBranch(
+          navigatorKey: _filesNavigatorKey,
+          routes: [
+            GoRoute(
+              path: Routes.files,
+              name: 'files',
+              builder: (context, state) => const FileBrowserPage(),
             ),
           ],
         ),

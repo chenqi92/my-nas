@@ -7,8 +7,10 @@ import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
+import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
 import 'package:my_nas/shared/providers/desktop_space_provider.dart';
 import 'package:my_nas/shared/providers/media_counts_provider.dart';
+import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/activity_aggregator.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/activity_drawer.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/ambient_layer.dart';
@@ -41,7 +43,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
   bool _activityOpen = false;
   bool _appearanceOpen = false;
 
-  /// 与 11 branch 路由的对应（与 `app_router.dart` 保持顺序一致）。
+  /// 与 14 branch 路由的对应（与 `app_router.dart` 的 branchNavigatorKeys
+  /// 顺序必须完全一致）。
   static const _routeForBranch = <String>[
     '/home', // 0
     '/video', // 1
@@ -56,6 +59,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     '/sources', // 10
     '/pt', // 11
     '/nastool', // 12
+    '/files', // 13
   ];
 
   @override
@@ -98,7 +102,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
         label: '文件',
         icon: Icons.folder_outlined,
         keywords: const ['浏览'],
-        run: (c) => _go('/sources'),
+        run: (c) => _go('/files'),
       ),
       CmdkCommand(
         id: 'goto.ops',
@@ -145,7 +149,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
   /// 注入跨域内容搜索器。query 非空时会被调用，搜索结果与静态命令一并显示。
   void _registerSearchers() {
     // 视频：在影视库 movies / tvShowGroups / others 内按 title 模糊匹配。
-    CmdkRegistry.instance.registerSearcher((ref, query) {
+    CmdkRegistry.instance.registerSearcher('video', (ref, query) {
       final state = ref.read(videoListProvider);
       if (state is! VideoListLoaded) return const [];
       final q = query.toLowerCase();
@@ -176,6 +180,28 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
           ),
       ];
     });
+  }
+
+  bool get _hasOverlay => _cmdkOpen || _activityOpen || _appearanceOpen;
+
+  void _closeOverlays() {
+    setState(() {
+      _cmdkOpen = false;
+      _activityOpen = false;
+      _appearanceOpen = false;
+    });
+  }
+
+  /// 迷你播放器投屏：弹出投屏设备发现/选择 sheet（复用视频侧 CastDeviceSheet）。
+  void _openCast() {
+    showAdaptiveModalSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => CastDeviceSheet(
+        onDeviceSelected: (_) => Navigator.of(ctx).pop(),
+      ),
+    );
   }
 
   void _go(String route) {
@@ -222,21 +248,10 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
               return null;
             },
           ),
-          _EscapeIntent: CallbackAction<_EscapeIntent>(
-            onInvoke: (_) {
-              if (_cmdkOpen ||
-                  _activityOpen ||
-                  _appearanceOpen) {
-                setState(() {
-                  _cmdkOpen = false;
-                  _activityOpen = false;
-                  _appearanceOpen = false;
-                });
-                return null;
-              }
-              return null;
-            },
-          ),
+          // 仅在有浮层打开时才接管 Esc 并消费按键；没有浮层时
+          // isEnabled=false，让事件冒泡到外层 DesktopShortcuts 的
+          // pop 逻辑（否则 push 出的详情/播放页按 Esc 无法返回）。
+          _EscapeIntent: _EscapeAction(this),
         },
         child: Focus(
           autofocus: true,
@@ -291,7 +306,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                     onOpenNowPlaying: () => GoRouter.of(context).push(
                       '/music/player',
                     ),
-                    onOpenCast: () {},
+                    onOpenCast: _openCast,
                   ),
                 if (hasMusic && lyricFloat) const DesktopLyricFloat(),
                 if (_appearanceOpen)
@@ -369,7 +384,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
         const NavGroup(label: '底层', items: [
           NavEntry(
             id: 'files',
-            route: '/sources',
+            route: '/files',
             label: '文件',
             icon: Icons.folder_outlined,
           ),
@@ -452,4 +467,25 @@ class _OpenCmdkIntent extends Intent {
 
 class _EscapeIntent extends Intent {
   const _EscapeIntent();
+}
+
+/// Esc 行为：仅当有浮层（cmdk / activity / appearance）打开时启用并消费按键，
+/// 关闭浮层；无浮层时 isEnabled=false，按键冒泡到外层 [DesktopShortcuts]，
+/// 由其 pop 当前 branch / root navigator（详情、播放器等 push 页返回）。
+class _EscapeAction extends Action<_EscapeIntent> {
+  _EscapeAction(this._state);
+
+  final _DesktopScaffoldState _state;
+
+  @override
+  bool isEnabled(_EscapeIntent intent) => _state._hasOverlay;
+
+  @override
+  bool consumesKey(_EscapeIntent intent) => _state._hasOverlay;
+
+  @override
+  Object? invoke(_EscapeIntent intent) {
+    _state._closeOverlays();
+    return null;
+  }
 }
