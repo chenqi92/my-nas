@@ -24,7 +24,7 @@ import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 /// - 音频输出能力（输出设备 / 杜比直通）→ [hdrAudioSettingsProvider] 检测到的只读能力。
 ///
 /// 暂无可写设置的项（输出设备主动选择、杜比/空间音频开关、投屏状态显示开关）以
-/// 检测到的真实状态只读呈现；确无任何状态的保留「即将推出」。
+/// 检测到的真实状态只读呈现。
 class CastPane extends ConsumerWidget {
   const CastPane({super.key});
 

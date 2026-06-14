@@ -8,7 +8,6 @@ import 'package:my_nas/features/music/presentation/pages/listening_stats_page.da
 import 'package:my_nas/features/music/presentation/pages/recycle_bin_page.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
-import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 
 /// 桌面「维护与统计」设置 pane。
@@ -128,9 +127,17 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
           ),
           SetRow(
             title: '年度报告',
-            desc: '可分享的年度听歌总结',
+            desc: '近一年听歌总结：时长 / Top 歌曲艺术家专辑 / 最活跃月份',
             last: true,
-            trailing: const AppTag('即将推出', variant: TagVariant.plan),
+            trailing: AppButton(
+              label: '查看报告',
+              icon: Icons.auto_awesome_outlined,
+              dense: true,
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => const _YearReportDialog(),
+              ),
+            ),
           ),
         ],
       ),
@@ -307,4 +314,213 @@ class _HeatCell extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// 年度听歌报告 — 全部数据取自 [PlayHistoryStore]（近一年范围）。
+///
+/// 摘要四项与 Top 排行复用 store 已有聚合 API；「最活跃月份」额外按月份桶统计
+/// [PlayHistoryStore.entriesIn] 的播放数。无新增持久化字段、无新业务逻辑，仅做
+/// 只读展示。
+class _YearReportDialog extends StatelessWidget {
+  const _YearReportDialog();
+
+  static const _monthNames = [
+    '1 月', '2 月', '3 月', '4 月', '5 月', '6 月',
+    '7 月', '8 月', '9 月', '10 月', '11 月', '12 月',
+  ];
+
+  /// 找出近一年播放次数最多的月份；无数据返回 null。
+  ({String label, int count})? _topMonth() {
+    final entries = PlayHistoryStore.instance.entriesIn(PlayHistoryRange.year);
+    if (entries.isEmpty) return null;
+    final buckets = <int, int>{}; // year*100 + month -> count
+    for (final e in entries) {
+      final key = e.playedAt.year * 100 + e.playedAt.month;
+      buckets[key] = (buckets[key] ?? 0) + 1;
+    }
+    var bestKey = buckets.keys.first;
+    var bestCount = buckets[bestKey]!;
+    buckets.forEach((k, v) {
+      if (v > bestCount) {
+        bestKey = k;
+        bestCount = v;
+      }
+    });
+    final year = bestKey ~/ 100;
+    final month = bestKey % 100;
+    return (label: '$year 年 ${_monthNames[month - 1]}', count: bestCount);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final store = PlayHistoryStore.instance;
+    final summary = store.summary(PlayHistoryRange.year);
+
+    if (summary.totalPlays == 0) {
+      return AlertDialog(
+        title: const Text('年度报告'),
+        content: const Text(
+          '近一年还没有听歌记录。听满 30 秒的歌曲会被记入统计，攒够数据后再来看吧。',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('知道了'),
+          ),
+        ],
+      );
+    }
+
+    final hours = summary.totalSec / 3600;
+    final hoursLabel = hours >= 10
+        ? '${hours.toStringAsFixed(0)} h'
+        : '${hours.toStringAsFixed(1)} h';
+    final topSongs = store.topSongs(PlayHistoryRange.year, limit: 1);
+    final topArtists = store.topArtists(PlayHistoryRange.year, limit: 1);
+    final topAlbums = store.topAlbums(PlayHistoryRange.year, limit: 1);
+    final topMonth = _topMonth();
+
+    final summaryCells = <(String, String)>[
+      (summary.totalPlays.toString(), '播放次数'),
+      (hoursLabel, '总时长'),
+      (summary.activeDays.toString(), '活跃天'),
+      (summary.uniqueSongs.toString(), '不重复曲目'),
+    ];
+
+    return AlertDialog(
+      title: const Text('年度报告'),
+      content: SizedBox(
+        width: 380,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '近一年的听歌总结',
+                style: TextStyle(fontSize: 12, color: t.text2),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 24,
+                runSpacing: 14,
+                children: [
+                  for (final (value, label) in summaryCells)
+                    SizedBox(
+                      width: 150,
+                      child: _KvCell(value: value, label: label),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Divider(height: 1, color: t.hairline),
+              const SizedBox(height: 12),
+              if (topSongs.isNotEmpty)
+                _ReportLine(
+                  icon: Icons.music_note_outlined,
+                  label: '最常听歌曲',
+                  value: topSongs.first.title,
+                  meta:
+                      '${topSongs.first.subtitle.isEmpty ? '' : '${topSongs.first.subtitle} · '}${topSongs.first.playCount} 次',
+                ),
+              if (topArtists.isNotEmpty)
+                _ReportLine(
+                  icon: Icons.person_outline,
+                  label: '最常听艺术家',
+                  value: topArtists.first.title,
+                  meta: '${topArtists.first.playCount} 次',
+                ),
+              if (topAlbums.isNotEmpty)
+                _ReportLine(
+                  icon: Icons.album_outlined,
+                  label: '最常听专辑',
+                  value: topAlbums.first.title,
+                  meta:
+                      '${topAlbums.first.subtitle.isEmpty ? '' : '${topAlbums.first.subtitle} · '}${topAlbums.first.playCount} 次',
+                ),
+              if (topMonth != null)
+                _ReportLine(
+                  icon: Icons.calendar_month_outlined,
+                  label: '最活跃月份',
+                  value: topMonth.label,
+                  meta: '${topMonth.count} 次',
+                ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('关闭'),
+        ),
+      ],
+    );
+  }
+}
+
+/// 年度报告内的一行「图标 + 标签 / 主值 + 次要信息」。
+class _ReportLine extends StatelessWidget {
+  const _ReportLine({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.meta,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final String meta;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(icon, size: 16, color: t.accent),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: 11, color: t.text3)),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: t.text0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Padding(
+            padding: const EdgeInsets.only(top: 14),
+            child: Text(
+              meta,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: t.text2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

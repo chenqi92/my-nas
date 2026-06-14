@@ -44,8 +44,24 @@ class TransferService {
   /// [_processQueue] 运行时读取，改值即生效。
   static int maxConcurrentTransfers = 3;
 
+  /// 启动时是否恢复未完成任务（默认 true，与现状一致）。
+  ///
+  /// 由 `resumeOnStartupProvider` 持久化并在启动时同步写入。关闭后 [init]
+  /// 不再把数据库里未完成的任务读回内存队列（任务保留在 DB，不丢失）。
+  static bool resumeOnStartup = true;
+
+  /// 窗口最小化 / 隐藏后是否继续传输（默认 true，与现状一致）。
+  ///
+  /// 由 `backgroundTransferProvider` 持久化并在启动时同步写入。关闭后窗口监听器
+  /// 调用 [pauseActiveForBackground] / [resumeFromBackground] 在隐藏时暂停、
+  /// 恢复时续传。开态时这两个方法为 no-op，保持纯 Future 持续传输的现状。
+  static bool backgroundTransfer = true;
+
   /// 当前正在传输的任务数
   int _activeTransfers = 0;
+
+  /// 因「后台传输」关闭而被自动暂停的任务 id（仅恢复这批，不动用户手动暂停的）。
+  final _backgroundPaused = <String>{};
 
   /// 是否已初始化
   bool _initialized = false;
@@ -101,15 +117,17 @@ class TransferService {
       await _uploadedMarkService.init();
       await _cacheService.init();
 
-      // 从数据库加载未完成的任务
-      final tasks = await _db.getActiveTasks();
-      _tasks.addAll(tasks);
+      // 从数据库加载未完成的任务（「启动恢复」关闭时跳过，任务仍保留在 DB）。
+      if (resumeOnStartup) {
+        final tasks = await _db.getActiveTasks();
+        _tasks.addAll(tasks);
 
-      // 重置正在传输的任务状态为暂停
-      for (final task in _tasks) {
-        if (task.status == TransferStatus.transferring) {
-          task.status = TransferStatus.paused;
-          await _db.updateTask(task);
+        // 重置正在传输的任务状态为暂停
+        for (final task in _tasks) {
+          if (task.status == TransferStatus.transferring) {
+            task.status = TransferStatus.paused;
+            await _db.updateTask(task);
+          }
         }
       }
 
@@ -361,6 +379,61 @@ class TransferService {
 
     _notifyTasksChanged();
     logger.i('TransferService: 清除 ${toRemove.length} 个已完成任务');
+  }
+
+  /// 窗口隐藏 / 最小化时暂停正在进行的任务（仅当「后台传输」关闭时生效）。
+  ///
+  /// 只暂停 transferring / queued / pending 的任务，并记录在 [_backgroundPaused]，
+  /// 以便窗口恢复时只续传这批、不影响用户手动暂停的任务。开态时直接 no-op。
+  Future<void> pauseActiveForBackground() async {
+    if (backgroundTransfer) return;
+    if (!_initialized) return;
+
+    final toPause = _tasks
+        .where((t) =>
+            t.status == TransferStatus.transferring ||
+            t.status == TransferStatus.queued ||
+            t.status == TransferStatus.pending)
+        .toList();
+
+    for (final task in toPause) {
+      if (!task.canPause &&
+          task.status != TransferStatus.queued &&
+          task.status != TransferStatus.pending) {
+        continue;
+      }
+      _backgroundPaused.add(task.id);
+      task.status = TransferStatus.paused;
+      await _db.updateTask(task);
+      _notifyTaskChanged(task);
+    }
+
+    if (toPause.isNotEmpty) {
+      logger.i('TransferService: 后台传输关闭，暂停 ${_backgroundPaused.length} 个任务');
+    }
+  }
+
+  /// 窗口恢复时续传此前因后台暂停的任务（仅恢复 [_backgroundPaused] 这批）。
+  Future<void> resumeFromBackground() async {
+    if (_backgroundPaused.isEmpty) return;
+    if (!_initialized) return;
+
+    final ids = _backgroundPaused.toList();
+    _backgroundPaused.clear();
+
+    for (final id in ids) {
+      final index = _tasks.indexWhere((t) => t.id == id);
+      if (index == -1) continue;
+      final task = _tasks[index];
+      // 仅当仍处于暂停态才恢复（用户可能期间已手动取消 / 删除）。
+      if (task.status != TransferStatus.paused) continue;
+      task.status = TransferStatus.pending;
+      await _db.updateTask(task);
+      _notifyTaskChanged(task);
+    }
+
+    logger.i('TransferService: 窗口恢复，续传 ${ids.length} 个后台暂停的任务');
+    _processQueue();
   }
 
   /// 处理任务队列

@@ -10,12 +10,12 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/pages/scraper_sources_page.dart';
+import 'package:my_nas/features/video/presentation/providers/scrape_defaults_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
-import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 
@@ -40,6 +40,7 @@ class ScraperPane extends ConsumerWidget {
     final scraperAsync = ref.watch(scraperSourcesProvider);
     final musicState = ref.watch(musicScraperSourcesProvider);
     final hasOpenSubtitles = ref.watch(hasOpenSubtitlesConfigProvider);
+    final scrapeDefaults = ref.watch(scrapeDefaultsProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -56,15 +57,28 @@ class ScraperPane extends ConsumerWidget {
           hint: 'NFO 优先',
           children: [
             _buildMoviePriorityRow(context, ref, scraperAsync),
-            const SetRow(
-              title: '解析本地 NFO',
-              desc: '优先使用媒体目录内的 .nfo',
-              trailing: AppTag('即将推出', variant: TagVariant.plan),
+            SetRow(
+              title: '生成本地 NFO',
+              desc: '刮削时在媒体目录写入 .nfo',
+              trailing: AppSwitch(
+                value: scrapeDefaults.generateNfo,
+                onChanged: (v) => ref
+                    .read(scrapeDefaultsProvider.notifier)
+                    .setGenerateNfo(enabled: v),
+              ),
             ),
-            const SetRow(
-              title: '海报 / 背景缓存',
-              desc: '关键帧缩略图 + 海报多尺寸缓存',
-              trailing: AppTag('即将推出', variant: TagVariant.plan),
+            SetRow(
+              title: '下载海报 / 背景图',
+              desc: '刮削时将海报与背景图保存到媒体目录',
+              trailing: AppSwitch(
+                value: scrapeDefaults.downloadPoster ||
+                    scrapeDefaults.downloadFanart,
+                onChanged: (v) {
+                  ref.read(scrapeDefaultsProvider.notifier)
+                    ..setDownloadPoster(enabled: v)
+                    ..setDownloadFanart(enabled: v);
+                },
+              ),
             ),
             SetRow(
               title: '管理刮削源',

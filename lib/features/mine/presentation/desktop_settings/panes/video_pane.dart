@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
+import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/data/services/capability/playback_capability_service.dart';
+import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
 import 'package:my_nas/features/video/data/services/subtitle_translation/subtitle_translation_service.dart';
 import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
 import 'package:my_nas/features/video/domain/entities/hdr_capability.dart';
@@ -18,16 +22,18 @@ import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
-import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
+import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 
 /// 桌面「设置 · 视频播放」详情 pane（对齐设计稿 settings_panes.jsx PaneVideo）。
 ///
 /// 播放 / HDR 与后端 / 音频直通 / 投屏与转码 / 字幕 五张卡片。能接的开关、
 /// 分段、滑块直接读写真实 provider（清晰度、HDR/音频、字幕翻译、自动续播 /
-/// 自动下一集、视频后端、投屏设备发现）；视频刮削源用按钮打开现有管理页；
-/// 服务端 / 客户端转码无可写的全局设置（运行时按源能力自动判定），字幕源无
-/// 现成管理页，这些项以「即将推出」只读行降级。
+/// 自动下一集、视频后端、投屏设备发现）；视频刮削源用按钮打开现有管理页。
+/// 服务端 / 客户端转码各为一个持久化开关（[QualitySettings.allowServerTranscoding]
+/// / [allowClientTranscoding]），在播放初始化时若关闭则把对应能力降级为仅原画；
+/// 字幕源接 [hasOpenSubtitlesConfigProvider] 显示连接状态点，「账户」按钮打开
+/// [SourceFormPage]（账号 / API Key 配置是多步表单，保留弹窗）。
 class VideoPane extends ConsumerWidget {
   const VideoPane({super.key});
 
@@ -54,6 +60,8 @@ class VideoPane extends ConsumerWidget {
 
     final videoBackend = ref.watch(videoBackendProvider);
     final videoBackendNotifier = ref.read(videoBackendProvider.notifier);
+
+    final hasOpenSubtitles = ref.watch(hasOpenSubtitlesConfigProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -243,13 +251,21 @@ class VideoPane extends ConsumerWidget {
             ),
             SetRow(
               title: '服务端转码',
-              desc: 'Synology / Jellyfin 服务端转码',
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              desc: '允许 Synology / Jellyfin 等服务端转码以切换清晰度',
+              trailing: AppSwitch(
+                value: quality.allowServerTranscoding,
+                onChanged: (v) =>
+                    qualityNotifier.setAllowServerTranscoding(enabled: v),
+              ),
             ),
             SetRow(
               title: '客户端转码',
-              desc: '本地软件转码 — 受平台编解码能力限制',
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              desc: '直连不可用时允许本地 FFmpeg 转码（受平台编解码能力限制）',
+              trailing: AppSwitch(
+                value: quality.allowClientTranscoding,
+                onChanged: (v) =>
+                    qualityNotifier.setAllowClientTranscoding(enabled: v),
+              ),
             ),
             SetRow(
               title: '不支持转码提示',
@@ -319,8 +335,20 @@ class VideoPane extends ConsumerWidget {
             ),
             SetRow(
               title: '字幕源',
-              desc: 'OpenSubtitles 等在线字幕',
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              desc: hasOpenSubtitles
+                  ? 'OpenSubtitles 在线字幕 · 已配置账户'
+                  : 'OpenSubtitles 在线字幕 · 使用内置公共配额',
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  StatusDot(hasOpenSubtitles ? DotStatus.ok : DotStatus.off),
+                  const SizedBox(width: 8),
+                  AppChip(
+                    label: '账户',
+                    onTap: () => _openOpenSubtitlesAccount(context, ref),
+                  ),
+                ],
+              ),
             ),
             SetRow(
               title: '视频刮削源',
@@ -356,6 +384,24 @@ class VideoPane extends ConsumerWidget {
     final name = capability.deviceName;
     if (name != null && name.isNotEmpty) return '$device · $name';
     return device;
+  }
+
+  /// 打开 OpenSubtitles 账户配置表单。若已存在 opensubtitles 源则进入编辑模式，
+  /// 否则新建。账号 / API Key / 密码属多步表单，复用 [SourceFormPage]。
+  void _openOpenSubtitlesAccount(BuildContext context, WidgetRef ref) {
+    final sources = ref.read(sourcesProvider).valueOrNull ?? const [];
+    SourceEntity? existing;
+    for (final s in sources) {
+      if (s.type == SourceType.opensubtitles) {
+        existing = s;
+        break;
+      }
+    }
+    SourceFormPage.openAdaptive<void>(
+      context,
+      sourceType: SourceType.opensubtitles,
+      existingSource: existing,
+    );
   }
 }
 

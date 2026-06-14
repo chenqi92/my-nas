@@ -126,33 +126,30 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
               ),
           ],
         ),
-        SetSection(
-          title: '隐私',
-          children: [
-            SetRow(
-              title: '应用切换器遮蔽',
-              desc: '切到后台时模糊窗口内容，防窥屏（LOCK-05）',
-              last: true,
-              trailing: _appSwitcherMaskTrailing(settings.enabled),
-            ),
-          ],
-        ),
+        // 应用切换器遮蔽依赖 secure_application，仅在支持的平台
+        // （iOS / Android / Windows）渲染；macOS / Linux 不支持则整段不显示。
+        if (AppLockGate.supportsSecureApplication)
+          SetSection(
+            title: '隐私',
+            children: [
+              SetRow(
+                title: '应用切换器遮蔽',
+                desc: '切到后台时模糊窗口内容，防窥屏（LOCK-05）',
+                last: true,
+                trailing: _appSwitcherMaskTrailing(settings.enabled),
+              ),
+            ],
+          ),
       ],
     );
   }
 
   /// 应用切换器遮蔽随应用锁自动开启（无独立开关）：
-  /// - 支持的平台（iOS / Android / Windows）下，启用应用锁即生效。
-  /// - 不支持的平台（macOS / Linux）显示「即将推出」。
-  Widget _appSwitcherMaskTrailing(bool lockEnabled) {
-    if (!AppLockGate.supportsSecureApplication) {
-      return const AppTag('即将推出', variant: TagVariant.plan);
-    }
-    return AppTag(
-      lockEnabled ? '随应用锁开启' : '已关闭',
-      variant: lockEnabled ? TagVariant.free : TagVariant.limit,
-    );
-  }
+  /// 在支持的平台（iOS / Android / Windows）下，启用应用锁即生效。
+  Widget _appSwitcherMaskTrailing(bool lockEnabled) => AppTag(
+    lockEnabled ? '随应用锁开启' : '已关闭',
+    variant: lockEnabled ? TagVariant.free : TagVariant.limit,
+  );
 
   String _timeoutLabel(AppLocalizations l, AppLockTimeout t) => switch (t) {
     AppLockTimeout.immediate => l.appLockTimeoutImmediate,

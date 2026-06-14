@@ -30,6 +30,8 @@ class QualitySettings {
     this.bufferThresholdSeconds = 3,
     this.rememberPerVideo = true,
     this.showUnsupportedHint = true,
+    this.allowServerTranscoding = true,
+    this.allowClientTranscoding = true,
   });
 
   factory QualitySettings.fromMap(Map<dynamic, dynamic> map) => QualitySettings(
@@ -41,6 +43,8 @@ class QualitySettings {
         bufferThresholdSeconds: map['bufferThresholdSeconds'] as int? ?? 3,
         rememberPerVideo: map['rememberPerVideo'] as bool? ?? true,
         showUnsupportedHint: map['showUnsupportedHint'] as bool? ?? true,
+        allowServerTranscoding: map['allowServerTranscoding'] as bool? ?? true,
+        allowClientTranscoding: map['allowClientTranscoding'] as bool? ?? true,
       );
 
   /// 默认清晰度
@@ -58,12 +62,22 @@ class QualitySettings {
   /// 不支持转码时显示提示
   final bool showUnsupportedHint;
 
+  /// 是否允许服务端转码（Synology / Jellyfin 等）。
+  /// 关闭后服务端能力的源被降级为「仅原画」，播放时不再向服务端请求转码流。
+  final bool allowServerTranscoding;
+
+  /// 是否允许客户端（本地 FFmpeg）转码。
+  /// 关闭后客户端能力的源被降级为「仅原画」，不再初始化本地转码。
+  final bool allowClientTranscoding;
+
   QualitySettings copyWith({
     VideoQuality? defaultQuality,
     bool? enableAdaptiveSuggestion,
     int? bufferThresholdSeconds,
     bool? rememberPerVideo,
     bool? showUnsupportedHint,
+    bool? allowServerTranscoding,
+    bool? allowClientTranscoding,
   }) =>
       QualitySettings(
         defaultQuality: defaultQuality ?? this.defaultQuality,
@@ -71,6 +85,8 @@ class QualitySettings {
         bufferThresholdSeconds: bufferThresholdSeconds ?? this.bufferThresholdSeconds,
         rememberPerVideo: rememberPerVideo ?? this.rememberPerVideo,
         showUnsupportedHint: showUnsupportedHint ?? this.showUnsupportedHint,
+        allowServerTranscoding: allowServerTranscoding ?? this.allowServerTranscoding,
+        allowClientTranscoding: allowClientTranscoding ?? this.allowClientTranscoding,
       );
 
   Map<String, dynamic> toMap() => {
@@ -79,6 +95,8 @@ class QualitySettings {
         'bufferThresholdSeconds': bufferThresholdSeconds,
         'rememberPerVideo': rememberPerVideo,
         'showUnsupportedHint': showUnsupportedHint,
+        'allowServerTranscoding': allowServerTranscoding,
+        'allowClientTranscoding': allowClientTranscoding,
       };
 }
 
@@ -150,6 +168,18 @@ class QualitySettingsNotifier extends StateNotifier<QualitySettings> {
   /// 设置是否显示不支持转码提示
   Future<void> setShowUnsupportedHint({required bool enabled}) async {
     state = state.copyWith(showUnsupportedHint: enabled);
+    await _save();
+  }
+
+  /// 设置是否允许服务端转码
+  Future<void> setAllowServerTranscoding({required bool enabled}) async {
+    state = state.copyWith(allowServerTranscoding: enabled);
+    await _save();
+  }
+
+  /// 设置是否允许客户端转码
+  Future<void> setAllowClientTranscoding({required bool enabled}) async {
+    state = state.copyWith(allowClientTranscoding: enabled);
     await _save();
   }
 }
@@ -307,9 +337,26 @@ class QualityNotifier extends StateNotifier<QualityState> {
     _transcodingService = transcodingService;
     _clientTranscodingService = clientTranscodingService;
 
+    // 读取转码相关设置（服务端 / 客户端转码开关）
+    final settings = _ref.read(qualitySettingsProvider);
+
     // 检测转码能力
     var capability = _capabilityService.getCapability(sourceType);
     logger.d('清晰度: 源类型=$sourceType, 初始能力=$capability');
+
+    // 服务端转码开关：关闭后服务端能力源降级为「仅原画」
+    if (capability == TranscodingCapability.serverSide &&
+        !settings.allowServerTranscoding) {
+      capability = TranscodingCapability.none;
+      logger.i('清晰度: 服务端转码已被用户关闭，降级为仅原画');
+    }
+
+    // 客户端转码开关：关闭后客户端能力源降级为「仅原画」，跳过 FFmpeg 初始化
+    if (capability == TranscodingCapability.clientSide &&
+        !settings.allowClientTranscoding) {
+      capability = TranscodingCapability.none;
+      logger.i('清晰度: 客户端转码已被用户关闭，降级为仅原画');
+    }
 
     // 对于客户端转码，需要检查 FFmpeg 是否可用
     if (capability == TranscodingCapability.clientSide) {
@@ -355,7 +402,6 @@ class QualityNotifier extends StateNotifier<QualityState> {
     }
 
     // 获取默认清晰度
-    final settings = _ref.read(qualitySettingsProvider);
     var defaultQuality = settings.defaultQuality;
 
     // 如果默认清晰度不在可用列表中，使用原画

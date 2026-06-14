@@ -7,8 +7,10 @@ import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/shared/providers/source_defaults_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
@@ -63,29 +65,43 @@ class SourcesPane extends ConsumerWidget {
         ),
         SetSection(
           title: '连接行为',
+          hint: 'trust_self_signed_cert · source_default_auto_connect · '
+              'source_default_remember_device',
           bottomMargin: false,
           children: [
             _DiscoveryRow(),
-            const SetRow(
-              title: '自动连接',
-              desc: '启动时自动登录已启用的源。目前在「添加 / 编辑源」时按各源单独配置，全局开关待接入',
-              trailing: AppTag('即将推出', variant: TagVariant.plan),
+            SetRow(
+              title: '新建源默认自动连接',
+              desc: '新增数据源时默认勾选「启动时自动连接」。已有源仍按各自配置，'
+                  '可在「编辑源」中单独调整',
+              trailing: AppSwitch(
+                value: ref.watch(defaultAutoConnectProvider),
+                onChanged: (v) => ref
+                    .read(defaultAutoConnectProvider.notifier)
+                    .setEnabled(enabled: v),
+              ),
             ),
-            const SetRow(
+            SetRow(
               title: '信任自签名证书',
-              desc: '允许 HTTPS 自签名证书。当前由网络层统一放行，尚无可持久化的开关',
-              trailing: AppTag('即将推出', variant: TagVariant.plan),
+              desc: '允许 HTTPS 自签名证书。关闭后将对所有源启用证书校验，自签名证书的服务器会连接失败',
+              trailing: AppSwitch(
+                value: ref.watch(trustSelfSignedCertProvider),
+                onChanged: (v) => ref
+                    .read(trustSelfSignedCertProvider.notifier)
+                    .setEnabled(enabled: v),
+              ),
             ),
-            const SetRow(
-              title: '记住 2FA 设备',
-              desc: '通过群晖 TOTP 后记住此设备以跳过二次验证。目前在「添加 / 编辑源」时按各源单独配置',
-              trailing: AppTag('即将推出', variant: TagVariant.plan),
-            ),
-            const SetRow(
-              title: '规划中的源类型',
-              desc: '绿联 · 飞牛 fnOS · NFS — 入口已预留',
+            SetRow(
+              title: '新建源默认记住 2FA 设备',
+              desc: '新增支持两步验证的源时，默认勾选「记住此设备以跳过二次验证」。'
+                  '已有源仍按各自配置',
               last: true,
-              trailing: AppTag('即将推出', variant: TagVariant.plan),
+              trailing: AppSwitch(
+                value: ref.watch(defaultRememberDeviceProvider),
+                onChanged: (v) => ref
+                    .read(defaultRememberDeviceProvider.notifier)
+                    .setEnabled(enabled: v),
+              ),
             ),
           ],
         ),
@@ -103,7 +119,13 @@ class SourcesPane extends ConsumerWidget {
   ) => sourcesAsync.when(
     loading: () => [const SetRow(title: '正在加载源…', last: true)],
     error: (e, _) => [SetRow(title: '加载源失败', desc: '$e', last: true)],
-    data: (sources) {
+    data: (allSources) {
+      // 仅展示已实现的源类型；未实现类型（绿联 / 飞牛 / NFS 等）不可连接，
+      // 不在列表中渲染。
+      final sources = [
+        for (final s in allSources)
+          if (s.type.isSupported) s,
+      ];
       if (sources.isEmpty) {
         return [
           SetRow(
@@ -155,7 +177,7 @@ class SourcesPane extends ConsumerWidget {
 }
 
 /// 单个源行（设计稿 `.conn-row`）：图标 + 名称/类型·host·库 + 状态点/文案 +
-/// 测试 + 更多。未实现的源类型降级为「即将推出」plan 行。
+/// 测试 + 更多。仅渲染已实现的源类型（未实现类型已在列表层过滤）。
 class _SourceRow extends ConsumerStatefulWidget {
   const _SourceRow({
     required this.source,
@@ -180,10 +202,8 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     final source = widget.source;
-    final isPlan = !source.type.isSupported;
     final status = widget.conn?.status;
     final (dot, label, isErr) = _statusView(
-      isPlan,
       status,
       widget.conn?.errorMessage,
     );
@@ -194,8 +214,8 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
       if (widget.libs.isNotEmpty) '${widget.libs.join(' / ')} 库',
     ];
 
-    final row = SetRow(
-      leading: _SourceIcon(icon: source.type.icon, enabled: !isPlan),
+    return SetRow(
+      leading: _SourceIcon(icon: source.type.icon, enabled: true),
       title: source.name.isEmpty ? source.type.displayName : source.name,
       desc: descParts.join(' · '),
       last: widget.last,
@@ -221,46 +241,36 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
               ),
             ),
           ),
-          if (isPlan) ...[
-            const SizedBox(width: 10),
-            const AppTag('即将推出', variant: TagVariant.plan),
-          ] else ...[
-            const SizedBox(width: 10),
-            AppChip(
-              label: _testing ? '测试中' : '测试',
-              compact: true,
-              onTap: _testing ? null : _reconnect,
-            ),
-            const SizedBox(width: 4),
-            _SourceMenu(
-              color: t.text2,
-              onEdit: _edit,
-              onReconnect: _reconnect,
-              onDelete: _confirmDelete,
-            ),
-          ],
+          const SizedBox(width: 10),
+          AppChip(
+            label: _testing ? '测试中' : '测试',
+            compact: true,
+            onTap: _testing ? null : _reconnect,
+          ),
+          const SizedBox(width: 4),
+          _SourceMenu(
+            color: t.text2,
+            onEdit: _edit,
+            onReconnect: _reconnect,
+            onDelete: _confirmDelete,
+          ),
         ],
       ),
     );
-
-    return isPlan ? Opacity(opacity: 0.6, child: row) : row;
   }
 
-  /// 把（plan / 实时连接态）映射为「圆点 + 文案 + 是否错误色」。
+  /// 把实时连接态映射为「圆点 + 文案 + 是否错误色」。
   (DotStatus, String, bool) _statusView(
-    bool isPlan,
     SourceStatus? status,
     String? errorMessage,
-  ) {
-    if (isPlan) return (DotStatus.off, '即将推出', false);
-    return switch (status) {
-      SourceStatus.connected => (DotStatus.ok, '已连接', false),
-      SourceStatus.requires2FA => (DotStatus.warn, '需 2FA', false),
-      SourceStatus.connecting => (DotStatus.warn, '连接中', false),
-      SourceStatus.error => (DotStatus.err, errorMessage ?? '错误', true),
-      SourceStatus.disconnected || null => (DotStatus.off, '未连接', false),
-    };
-  }
+  ) =>
+      switch (status) {
+        SourceStatus.connected => (DotStatus.ok, '已连接', false),
+        SourceStatus.requires2FA => (DotStatus.warn, '需 2FA', false),
+        SourceStatus.connecting => (DotStatus.warn, '连接中', false),
+        SourceStatus.error => (DotStatus.err, errorMessage ?? '错误', true),
+        SourceStatus.disconnected || null => (DotStatus.off, '未连接', false),
+      };
 
   Future<void> _reconnect() async {
     final source = widget.source;

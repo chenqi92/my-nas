@@ -26,8 +26,8 @@ import 'package:share_plus/share_plus.dart';
 ///   域名 → IP，「管理」打开现有的 [HostsMappingPage]（增删改 / DoH 解析）。
 /// - 系统集成：Spotlight 索引接真实 [spotlightEnabledProvider]（仅 macOS）；
 ///   Jump List 对应已有 [JumpListController]（Windows 任务栏，随播放历史自动
-///   填充，无独立开关）；系统托盘暂无实现（未引入 tray_manager），保留只读状态；
-///   深度链接 `mynas://` 已注册并由 DeepLinkService 处理，显示「已注册」。
+///   填充，无独立开关）；深度链接 `mynas://` 已注册并由 DeepLinkService 处理，
+///   显示「已注册」。
 /// - 诊断：诊断日志接真实 [AppLogger.logFilePath]（运行日志 app.log）——桌面端
 ///   行内提供「打开」「在文件夹中显示」「复制路径」，移动端走系统分享。
 ///
@@ -83,7 +83,6 @@ class _AdvancedPaneState extends ConsumerState<AdvancedPane> {
           title: '系统集成',
           children: const [
             _SpotlightRow(),
-            _SystemTrayRow(),
             _JumpListRow(),
             _DeepLinkRow(last: true),
           ],
@@ -174,7 +173,7 @@ class _HostIcon extends StatelessWidget {
       );
 }
 
-/// Spotlight 索引行：仅 macOS 接 [spotlightEnabledProvider]，其它平台只读「即将推出」。
+/// Spotlight 索引行：仅 macOS 接 [spotlightEnabledProvider]，其它平台只读「仅 macOS」。
 class _SpotlightRow extends ConsumerWidget {
   const _SpotlightRow();
 
@@ -227,19 +226,6 @@ class _SpotlightRow extends ConsumerWidget {
           null;
     }
   }
-}
-
-/// 系统托盘行：代码库尚未引入托盘能力（无 tray_manager / 最小化到托盘逻辑），
-/// 无可写设置，保留「即将推出」只读状态。
-class _SystemTrayRow extends StatelessWidget {
-  const _SystemTrayRow();
-
-  @override
-  Widget build(BuildContext context) => const SetRow(
-        title: '系统托盘',
-        desc: '最小化到托盘（Windows / Linux）',
-        trailing: AppTag('即将推出', variant: TagVariant.plan),
-      );
 }
 
 /// Jump List / 跳转列表行：对应 [JumpListController]，仅 Windows 任务栏可用。

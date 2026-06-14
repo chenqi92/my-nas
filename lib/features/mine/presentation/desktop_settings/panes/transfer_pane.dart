@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/services/background_transfer_guard.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/data/services/cache_config_service.dart';
 import 'package:my_nas/features/transfer/data/services/transfer_service.dart';
 import 'package:my_nas/features/transfer/presentation/pages/transfer_manager_page.dart';
 import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
+import 'package:my_nas/shared/providers/transfer_background_provider.dart';
 import 'package:my_nas/shared/providers/transfer_concurrency_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
-import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 
 /// 缓存上限可配置的媒体类型（与 [CacheConfigService] 持久化的键一致）。
@@ -36,9 +38,10 @@ const _cacheLimitTypes = <(MediaType, String)>[
 /// - 「上传去重」是 [uploadedMarkService] 既有行为（跳过已上传），始终开启、只读展示。
 /// - 「缓存上限」按媒体类型读写 [CacheConfigService]（[cacheConfigProvider]），
 ///   每类一个下拉档位（[CacheSizeOption.options]），超限按 LRU 自动清理。
-///
-/// 降级说明（无对应可写 provider，标「即将推出」）：
-/// - 后台传输 / 启动恢复暂无开关。
+/// - 「后台传输」读写 [backgroundTransferProvider]（默认开），关闭后桌面窗口
+///   最小化时由 [BackgroundTransferGuard] 暂停传输、恢复时续传。
+/// - 「启动恢复」读写 [resumeOnStartupProvider]（默认开），关闭后启动时不再把
+///   上次未完成的任务恢复到队列（任务仍保留在数据库）。
 class TransferPane extends ConsumerWidget {
   const TransferPane({super.key});
 
@@ -87,15 +90,25 @@ class TransferPane extends ConsumerWidget {
                     ref.read(transferConcurrencyProvider.notifier).setValue(v),
               ),
             ),
-            const SetRow(
+            SetRow(
               title: '后台传输',
               desc: '窗口最小化后继续传输',
-              trailing: AppTag('即将推出', variant: TagVariant.plan),
+              trailing: AppSwitch(
+                value: ref.watch(backgroundTransferProvider),
+                onChanged: (v) => ref
+                    .read(backgroundTransferProvider.notifier)
+                    .setEnabled(enabled: v),
+              ),
             ),
-            const SetRow(
+            SetRow(
               title: '启动恢复',
               desc: '启动时恢复未完成的任务',
-              trailing: AppTag('即将推出', variant: TagVariant.plan),
+              trailing: AppSwitch(
+                value: ref.watch(resumeOnStartupProvider),
+                onChanged: (v) => ref
+                    .read(resumeOnStartupProvider.notifier)
+                    .setEnabled(enabled: v),
+              ),
             ),
             SetRow(
               title: '上传去重',

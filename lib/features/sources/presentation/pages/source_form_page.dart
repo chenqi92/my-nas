@@ -22,6 +22,7 @@ import 'package:my_nas/service_adapters/nastool/api/nastool_api.dart';
 import 'package:my_nas/service_adapters/qbittorrent/api/qbittorrent_api.dart';
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/providers/source_defaults_provider.dart';
 
 /// 表单模式
 enum SourceFormMode {
@@ -188,6 +189,12 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         } else if (widget.initialValues != null && widget.initialValues!.containsKey(field.key)) {
           // 从发现的设备预填
           initialValue = widget.initialValues![field.key];
+        } else if (field.key == 'autoConnect') {
+          // 新建源：套用全局「新建源默认自动连接」开关
+          initialValue = ref.read(defaultAutoConnectProvider).toString();
+        } else if (field.key == 'rememberDevice') {
+          // 新建源：套用全局「新建源默认记住 2FA 设备」开关
+          initialValue = ref.read(defaultRememberDeviceProvider).toString();
         }
 
         // 如果没有现有值，使用默认值

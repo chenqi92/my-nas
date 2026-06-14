@@ -12,6 +12,7 @@ import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/platform/jump_list_controller.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_deep_link_handler.dart';
 import 'package:my_nas/core/services/background_task_service.dart';
+import 'package:my_nas/core/services/background_transfer_guard.dart';
 import 'package:my_nas/core/services/deep_link_service.dart';
 import 'package:my_nas/core/services/toast_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -26,6 +27,7 @@ import 'package:my_nas/features/video/data/services/video_scanner_service.dart';
 import 'package:my_nas/shared/providers/glass_material_provider.dart';
 import 'package:my_nas/shared/providers/interface_locale_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
+import 'package:my_nas/shared/providers/transfer_background_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/widget_data_service.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
@@ -107,6 +109,11 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       AppError.handle(e, stackTrace, 'initDeepLinkService');
       // 不抛出异常，允许应用继续运行
     }
+  }
+
+  /// 初始化「后台传输」窗口守卫（桌面）。是否暂停由设置控制，默认不改变现状。
+  void _initBackgroundTransferGuard() {
+    BackgroundTransferGuard.instance.ensureStarted();
   }
 
   /// 初始化 Windows 任务栏 Jump List
@@ -264,6 +271,13 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
 
     // 初始化 Windows JumpList（任务栏图标右键的快捷操作 / 最近播放）
     _initJumpList();
+
+    // 注册「后台传输」窗口守卫（桌面）；同时 read 两个设置 provider，
+    // 让其在启动时把持久化值写回 TransferService 静态字段。
+    _initBackgroundTransferGuard();
+    ref
+      ..read(resumeOnStartupProvider)
+      ..read(backgroundTransferProvider);
 
     final themeMode = ref.watch(themeModeProvider);
     final colorPreset = ref.watch(colorSchemePresetProvider);
