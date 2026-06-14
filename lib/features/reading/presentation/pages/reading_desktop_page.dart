@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/router/app_router.dart' show rootNavigatorKey;
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/book/data/services/book_database_service.dart';
 import 'package:my_nas/features/book/domain/entities/book_item.dart';
 import 'package:my_nas/features/book/presentation/pages/book_list_page.dart';
+import 'package:my_nas/features/book/presentation/pages/book_sources_page.dart';
 import 'package:my_nas/features/book/presentation/utils/book_navigator.dart';
 import 'package:my_nas/features/comic/presentation/pages/comic_list_page.dart';
 import 'package:my_nas/features/comic/presentation/pages/comic_reader_page.dart';
@@ -69,10 +71,11 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
               ),
             ),
           const SizedBox(width: 12),
-          const AppChip(
+          AppChip(
             label: '在线书源',
             icon: Icons.language_rounded,
             compact: true,
+            onTap: () => _pushPage(const BookSourcesPage()),
           ),
         ],
       ),
@@ -91,25 +94,77 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
           ],
           if (showNotes && notes.isNotEmpty) ...[
             if (_tab == '全部') const _SectionHeader('笔记'),
-            _NoteList(nodes: notes),
+            _NoteList(
+              nodes: notes,
+              onOpen: () => _pushPage(const NoteListPage()),
+            ),
           ],
           if (_isEmpty(showComics, comics, showBooks, books, showNotes, notes))
-            DesktopComingSoon(
-              icon: switch (_tab) {
-                '笔记' => Icons.edit_note_rounded,
-                '漫画' => Icons.collections_bookmark_outlined,
-                '图书' => Icons.menu_book_outlined,
-                _ => Icons.auto_stories_outlined,
-              },
-              message: switch (_tab) {
-                '笔记' => '映射「笔记」目录后，此处显示 Markdown 笔记树。',
-                '漫画' => '映射「漫画」媒体库后，此处显示漫画书架（封面 + 页数）。',
-                '图书' => '映射「图书」媒体库后，此处显示图书书架 + EPUB / PDF / TXT。',
-                _ => '聚合视图：漫画 + 图书 + 笔记 一并展示。先到「数据源」映射对应媒体库。',
-              },
-            ),
+            _emptyOrStatus(comicState, bookState, noteState),
         ],
       ),
+    );
+  }
+
+  /// 空内容时区分三态：加载中 → 转圈；出错 → 错误 + 重试；真空 → 引导文案。
+  Widget _emptyOrStatus(
+    ComicListState comicState,
+    BookListState bookState,
+    NotePageState noteState,
+  ) {
+    final anyLoading = comicState is ComicListLoading ||
+        bookState is BookListLoading ||
+        noteState is NotePageLoading;
+    final anyError = comicState is ComicListError ||
+        bookState is BookListError ||
+        noteState is NotePageError;
+    if (anyLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 48),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (anyError) {
+      final t = DesignTokens.of(context);
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded, size: 38, color: t.err),
+              const SizedBox(height: 12),
+              Text('部分阅读库加载失败',
+                  style: TextStyle(fontSize: 13, color: t.text2)),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () {
+                  ref
+                    ..invalidate(comicListProvider)
+                    ..invalidate(bookListProvider)
+                    ..invalidate(notePageProvider);
+                },
+                icon: const Icon(Icons.refresh_rounded, size: 16),
+                label: const Text('重试'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return DesktopComingSoon(
+      icon: switch (_tab) {
+        '笔记' => Icons.edit_note_rounded,
+        '漫画' => Icons.collections_bookmark_outlined,
+        '图书' => Icons.menu_book_outlined,
+        _ => Icons.auto_stories_outlined,
+      },
+      message: switch (_tab) {
+        '笔记' => '映射「笔记」目录后，此处显示 Markdown 笔记树。',
+        '漫画' => '映射「漫画」媒体库后，此处显示漫画书架（封面 + 页数）。',
+        '图书' => '映射「图书」媒体库后，此处显示图书书架 + EPUB / PDF / TXT。',
+        _ => '聚合视图：漫画 + 图书 + 笔记 一并展示。先到「数据源」映射对应媒体库。',
+      },
     );
   }
 
@@ -129,22 +184,30 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
 
   Future<void> _openBook(BookEntity book) async {
     final connection = ref.read(activeConnectionsProvider)[book.sourceId];
-    if (connection == null) return;
-    final file = FileItem(
-      name: book.fileName,
-      path: book.filePath,
-      size: book.size,
-      isDirectory: false,
-      modifiedTime: book.modifiedTime,
-    );
-    final url = await connection.adapter.fileSystem.getFileUrl(file.path);
-    await BookDatabaseService().updateLastReadTime(book.sourceId, book.filePath);
-    final ctx = rootNavigatorKey.currentContext;
-    if (ctx == null) return;
-    await BookNavigator.instance.openBook(
-      ctx,
-      BookItem.fromFileItem(file, url, sourceId: book.sourceId),
-    );
+    if (connection == null) {
+      rootNavigatorKey.currentContext?.showErrorToast('该图书所在数据源未连接');
+      return;
+    }
+    try {
+      final file = FileItem(
+        name: book.fileName,
+        path: book.filePath,
+        size: book.size,
+        isDirectory: false,
+        modifiedTime: book.modifiedTime,
+      );
+      final url = await connection.adapter.fileSystem.getFileUrl(file.path);
+      await BookDatabaseService()
+          .updateLastReadTime(book.sourceId, book.filePath);
+      final ctx = rootNavigatorKey.currentContext;
+      if (ctx == null) return;
+      await BookNavigator.instance.openBook(
+        ctx,
+        BookItem.fromFileItem(file, url, sourceId: book.sourceId),
+      );
+    } on Object catch (e) {
+      rootNavigatorKey.currentContext?.showErrorToast('打开图书失败：$e');
+    }
   }
 
   void _openComic(ComicItem comic) {
@@ -153,6 +216,12 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     Navigator.of(ctx).push(
       MaterialPageRoute<void>(builder: (_) => ComicReaderPage(comic: comic)),
     );
+  }
+
+  void _pushPage(Widget page) {
+    final ctx = rootNavigatorKey.currentContext;
+    if (ctx == null) return;
+    Navigator.of(ctx).push(MaterialPageRoute<void>(builder: (_) => page));
   }
 }
 
@@ -249,8 +318,11 @@ class _BookShelf extends StatelessWidget {
 }
 
 class _NoteList extends StatelessWidget {
-  const _NoteList({required this.nodes});
+  const _NoteList({required this.nodes, required this.onOpen});
   final List<NoteTreeNode> nodes;
+
+  /// 打开完整笔记页（新建/查看/展开均在此完成）。
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -271,12 +343,21 @@ class _NoteList extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              const AppChip(label: '新建', icon: Icons.add_rounded, compact: true),
+              AppChip(
+                label: '新建',
+                icon: Icons.add_rounded,
+                compact: true,
+                onTap: onOpen,
+              ),
             ],
           ),
           const SizedBox(height: 16),
           for (var i = 0; i < nodes.length; i++)
-            _NoteRow(node: nodes[i], isLast: i == nodes.length - 1),
+            _NoteRow(
+              node: nodes[i],
+              isLast: i == nodes.length - 1,
+              onTap: onOpen,
+            ),
         ],
       ),
     );
@@ -284,9 +365,14 @@ class _NoteList extends StatelessWidget {
 }
 
 class _NoteRow extends StatelessWidget {
-  const _NoteRow({required this.node, required this.isLast});
+  const _NoteRow({
+    required this.node,
+    required this.isLast,
+    required this.onTap,
+  });
   final NoteTreeNode node;
   final bool isLast;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +385,11 @@ class _NoteRow extends StatelessWidget {
         : node.isTaskFile
             ? '任务清单'
             : 'Markdown';
-    return Container(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
       decoration: BoxDecoration(
         border: isLast
             ? null
@@ -351,6 +441,8 @@ class _NoteRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
