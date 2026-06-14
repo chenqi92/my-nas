@@ -675,7 +675,7 @@ class _EpgGuide extends StatelessWidget {
     TextStyle cornerStyle() => TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.8,
+          letterSpacing: 0.88,
           color: t.text3,
         );
     return Container(
@@ -833,11 +833,12 @@ class _EpgGuide extends StatelessWidget {
         width: w,
         child: Container(
           margin: const EdgeInsets.only(right: 2),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
           decoration: BoxDecoration(
             color: live ? t.chipBgActive : t.insetBg,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: live ? t.accent : t.hairline),
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(
+                color: live ? t.accent.withValues(alpha: 0.4) : t.hairline),
           ),
           alignment: Alignment.centerLeft,
           child: Text(
@@ -847,7 +848,7 @@ class _EpgGuide extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: live ? FontWeight.w700 : FontWeight.w500,
-              color: live ? t.text0 : t.text2,
+              color: live ? t.accentBright : t.text2,
             ),
           ),
         ),
@@ -920,7 +921,7 @@ class _LiveBadge extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: Colors.white,
-              letterSpacing: 0.5,
+              letterSpacing: 0.55,
             ),
           ),
         ],

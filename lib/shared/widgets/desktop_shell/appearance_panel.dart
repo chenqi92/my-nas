@@ -6,6 +6,7 @@ import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 
 /// 设计稿 `.appearance-menu`：topbar palette 按钮唤起的悬浮设置 popover。
 /// 包含：主题模式 / UI 风格 / 强调色 / 动态取色氛围光。
@@ -89,7 +90,7 @@ class AppearancePanel extends ConsumerWidget {
                 ),
               ),
               // 占位 — 真实开关绑 dynamic_accent provider 由 settings 页统一收口
-              Switch(
+              AppSwitch(
                 value: true,
                 onChanged: (_) {},
               ),

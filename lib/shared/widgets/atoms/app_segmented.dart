@@ -44,7 +44,7 @@ class AppSegmented<T> extends StatelessWidget {
       decoration: BoxDecoration(
         color: t.insetBg,
         borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
-        border: Border.all(color: t.hairline, width: 1),
+        border: Border.all(color: t.hairline, width: 0.5),
       ),
       child: Row(
         mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,

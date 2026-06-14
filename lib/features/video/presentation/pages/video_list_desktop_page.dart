@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show ImageFilter;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -215,34 +216,39 @@ class _Hero extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-        child: SizedBox(
-          height: 300,
-          width: double.infinity,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 300),
           child: Stack(
-            fit: StackFit.expand,
+            alignment: AlignmentDirectional.bottomStart,
             children: [
-              _Image(url: backdrop, fallbackColor: t.bgStrong),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.92),
-                      Colors.black.withValues(alpha: 0.34),
-                      Colors.black.withValues(alpha: 0.10),
-                    ],
-                    stops: const [0.0, 0.55, 1.0],
+              Positioned.fill(
+                child: _Image(url: backdrop, fallbackColor: t.bgStrong),
+              ),
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.92),
+                        Colors.black.withValues(alpha: 0.34),
+                        Colors.black.withValues(alpha: 0.10),
+                      ],
+                      stops: const [0.0, 0.55, 1.0],
+                    ),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(36, 32, 32, 32),
+                padding: const EdgeInsets.fromLTRB(44, 40, 44, 40),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Wrap(
+                    SizedBox(
+                      width: double.infinity,
+                      child: Wrap(
                       spacing: 8,
                       children: [
                         if (meta.hdrFormat != null)
@@ -254,15 +260,16 @@ class _Hero extends StatelessWidget {
                         for (final g in meta.genreList.take(3))
                           if (g.trim().isNotEmpty) AppTag(g.trim()),
                       ],
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       meta.title ?? meta.fileName,
                       style: const TextStyle(
-                        fontSize: 38,
+                        fontSize: 42,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        letterSpacing: -0.8,
+                        letterSpacing: -0.84,
                         shadows: [
                           Shadow(color: Colors.black87, blurRadius: 14),
                         ],
@@ -502,7 +509,7 @@ class _PosterGrid extends StatelessWidget {
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 180,
         crossAxisSpacing: 18,
-        mainAxisSpacing: 22,
+        mainAxisSpacing: 18,
         childAspectRatio: 0.62,
       ),
       itemBuilder: (_, i) =>
@@ -612,19 +619,25 @@ class _PosterCard extends StatelessWidget {
                       Positioned(
                         top: 8,
                         left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            '★ ${meta.rating!.toStringAsFixed(1)}',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.55),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '★ ${meta.rating!.toStringAsFixed(1)}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ),
                         ),

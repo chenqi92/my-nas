@@ -4,12 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/network/doh_resolver.dart';
 import 'package:my_nas/core/network/host_mapping_entry.dart';
 import 'package:my_nas/core/network/hosts_resolver_service.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/widgets/atoms/app_button.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
+import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
+import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 应用内 hosts 映射设置页
@@ -59,14 +64,159 @@ class _HostsMappingPageState extends State<HostsMappingPage>
           ),
         ],
       ),
-      body: Column(
+      body: context.isDesktopLayout
+          ? _buildDesktopBody(context)
+          : Column(
+              children: [
+                _buildHeader(isDark),
+                _buildDohBar(isDark),
+                Expanded(
+                  child: _entries.isEmpty
+                      ? _buildEmpty(isDark)
+                      : _buildList(isDark),
+                ),
+              ],
+            ),
+    );
+  }
+
+  // ===================== 桌面端 =====================
+
+  Widget _buildDesktopBody(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(38, 32, 38, 96),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 780),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SetHead(
+                icon: Icons.dns_rounded,
+                title: '主机映射',
+                subtitle: '自定义域名到 IP 的解析（DoH / 手动），用于直连内网或加速。',
+                actions: [
+                  AppButton(
+                    label: '添加映射',
+                    icon: Icons.add_rounded,
+                    variant: AppButtonVariant.primary,
+                    onPressed: () => _showEditSheet(null),
+                  ),
+                ],
+              ),
+              SetSection(
+                title: 'DoH 解析',
+                children: [
+                  SetRow(
+                    title: 'DoH 提供商',
+                    desc: '通过加密 DNS 解析常用域名，绕过本地 DNS 污染。',
+                    last: true,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildDohDropdown(t),
+                        const SizedBox(width: 12),
+                        AppButton(
+                          label: _isResolving ? '解析中…' : '一键解析常用域名',
+                          icon: _isResolving ? null : Icons.cloud_download_rounded,
+                          onPressed: _isResolving ? null : _resolveAllViaDoh,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (_entries.isEmpty)
+                SetSection(
+                  title: '映射条目',
+                  bottomMargin: false,
+                  children: const [
+                    SetRow(
+                      title: '暂无映射',
+                      desc: '点右上角「添加映射」手动添加，或用上方 DoH 自动解析。',
+                      last: true,
+                    ),
+                  ],
+                )
+              else
+                SetSection(
+                  title: '映射条目',
+                  hint: '${_entries.length} 条',
+                  bottomMargin: false,
+                  children: [
+                    for (var i = 0; i < _entries.length; i++)
+                      _buildDesktopEntryRow(
+                        _entries[i],
+                        last: i == _entries.length - 1,
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDohDropdown(DesignTokens t) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: t.insetBg,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+          border: Border.all(color: t.hairline, width: 0.5),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<DohProvider>(
+            value: _dohProvider,
+            isDense: true,
+            dropdownColor: t.cardBg,
+            style: TextStyle(fontSize: 12.5, color: t.text0),
+            icon: Icon(Icons.expand_more_rounded, size: 16, color: t.text2),
+            items: DohProvider.values
+                .map(
+                  (p) => DropdownMenuItem(
+                    value: p,
+                    child: Text(p.displayName),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) {
+              if (v != null) setState(() => _dohProvider = v);
+            },
+          ),
+        ),
+      );
+
+  Widget _buildDesktopEntryRow(HostMappingEntry entry, {required bool last}) {
+    final t = DesignTokens.of(context);
+    final sourceLabel = entry.source == HostMappingSource.doh ? 'DoH' : '手动';
+    return SetRow(
+      title: entry.host,
+      desc: entry.ip,
+      last: last,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildHeader(isDark),
-          _buildDohBar(isDark),
-          Expanded(
-            child: _entries.isEmpty
-                ? _buildEmpty(isDark)
-                : _buildList(isDark),
+          AppTag(sourceLabel, variant: TagVariant.accent),
+          const SizedBox(width: 10),
+          AppSwitch(
+            value: entry.enabled,
+            onChanged: (enabled) => HostsResolverService.instance
+                .toggle(entry.host, enabled: enabled),
+          ),
+          const SizedBox(width: 6),
+          IconButton(
+            tooltip: '编辑',
+            icon: Icon(Icons.edit_outlined, size: 18, color: t.text2),
+            visualDensity: VisualDensity.compact,
+            onPressed: () => _showEditSheet(entry),
+          ),
+          IconButton(
+            tooltip: '删除',
+            icon: Icon(Icons.delete_outline_rounded, size: 18, color: t.text2),
+            visualDensity: VisualDensity.compact,
+            onPressed: () => _confirmDelete(entry),
           ),
         ],
       ),

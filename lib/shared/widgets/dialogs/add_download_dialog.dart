@@ -150,7 +150,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                                       StatusDot(c.connected
                                           ? DotStatus.ok
                                           : DotStatus.off),
-                                      const SizedBox(width: 9),
+                                      const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
                                           '${c.source.displayName} · '

@@ -27,20 +27,20 @@ class AppTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    // plan/limit/free 在浅色下需更深的文字色 + 更浅的底色，对齐 styles.css
+    // `html[data-theme="light"] .tag-*` 分支。
     final (bg, fg) = switch (variant) {
       TagVariant.neutral => (t.insetBg, t.text2),
-      TagVariant.plan => (
-          const Color(0x24F5B754),
-          const Color(0xFFF5B754),
-        ),
-      TagVariant.limit => (
-          const Color(0x1F94A3B8),
-          const Color(0xFF94A3B8),
-        ),
-      TagVariant.free => (
-          const Color(0x2434D399),
-          const Color(0xFF34D399),
-        ),
+      TagVariant.plan => isLight
+          ? (const Color(0x29D39429), const Color(0xFF90600F))
+          : (const Color(0x24F5B754), const Color(0xFFF5B754)),
+      TagVariant.limit => isLight
+          ? (const Color(0x1F5A6474), const Color(0xFF5A6470))
+          : (const Color(0x1F94A3B8), const Color(0xFF94A3B8)),
+      TagVariant.free => isLight
+          ? (const Color(0x211F9D6B), const Color(0xFF107A52))
+          : (const Color(0x2434D399), const Color(0xFF34D399)),
       TagVariant.accent => (t.chipBgActive, t.accentBright),
       TagVariant.hot => (
           const Color(0x24E0322E),
@@ -54,7 +54,11 @@ class AppTag extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(5),
         border: variant == TagVariant.plan
-            ? Border.all(color: const Color(0x4DF5B754))
+            ? Border.all(
+                color: isLight
+                    ? const Color(0x52D39429)
+                    : const Color(0x4DF5B754),
+              )
             : null,
       ),
       child: Row(

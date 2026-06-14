@@ -206,7 +206,7 @@ class _Brand extends StatelessWidget {
       ),
     );
     return Padding(
-      padding: EdgeInsets.fromLTRB(collapsed ? 0 : 16, 12, collapsed ? 0 : 16, 12),
+      padding: EdgeInsets.fromLTRB(collapsed ? 0 : 8, 12, collapsed ? 0 : 8, 12),
       child: Row(
         mainAxisAlignment:
             collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
@@ -363,7 +363,7 @@ class _NavItem extends StatelessWidget {
           child: Container(
             padding: collapsed
                 ? const EdgeInsets.symmetric(horizontal: 0, vertical: 9)
-                : const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                : const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: bg,
               borderRadius: BorderRadius.circular(DesignTokens.radiusSm),

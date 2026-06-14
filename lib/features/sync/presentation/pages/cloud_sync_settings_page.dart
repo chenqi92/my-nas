@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/sync/cloud_sync_service.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
+import 'package:my_nas/shared/widgets/atoms/app_button.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
+import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
+import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 云同步设置页（WebDAV）：配置后端凭证 + 选择要同步的模块 + 手动触发同步。
@@ -26,6 +32,11 @@ class _CloudSyncSettingsPageState
 
   Set<String> _enabled = {};
   bool _loaded = false;
+
+  /// 桌面分支专用的纯 UI 门控（对应设计稿 PaneSync 的 `useState` on/off）：
+  /// 仅控制后端 / 同步范围卡片的 opacity 与 pointerEvents，不写入任何业务状态。
+  /// 不影响移动端，也不改 provider / settings。
+  bool _desktopSyncOn = true;
   bool _testingConnection = false;
   bool _syncing = false;
   String? _statusMessage;
@@ -58,6 +69,7 @@ class _CloudSyncSettingsPageState
     _password.text = s.password ?? '';
     _rootPath.text = s.rootPath;
     _enabled = Set<String>.from(s.enabledModuleKeys);
+    _desktopSyncOn = s.isConfigured;
     if (mounted) setState(() => _loaded = true);
   }
 
@@ -143,27 +155,361 @@ class _CloudSyncSettingsPageState
       ),
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: AppSpacing.paddingMd,
+          : context.isDesktopLayout
+              ? _buildDesktopBody(modules)
+              : ListView(
+                  padding: AppSpacing.paddingMd,
+                  children: [
+                    _buildIntro(isDark),
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildBackendSection(isDark),
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildModulesSection(modules, isDark),
+                    const SizedBox(height: AppSpacing.lg),
+                    _buildActions(),
+                    if (_statusMessage != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _buildStatus(isDark),
+                    ],
+                    if (_lastReports != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _buildReports(isDark),
+                    ],
+                  ],
+                ),
+    );
+  }
+
+  // ===================== 桌面端分支（macOS 风设计语言） =====================
+  //
+  // 复用与移动端完全相同的 controller / state / 回调（_endpoint、_username、
+  // _password、_rootPath、_enabled、_test、_testingConnection、_statusMessage、
+  // _lastReports），仅替换呈现层为 design atoms。
+
+  Widget _buildDesktopBody(List<SyncableModule> modules) =>
+      SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(38, 32, 38, 96),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 780),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildIntro(isDark),
-                const SizedBox(height: AppSpacing.lg),
-                _buildBackendSection(isDark),
-                const SizedBox(height: AppSpacing.lg),
-                _buildModulesSection(modules, isDark),
-                const SizedBox(height: AppSpacing.lg),
-                _buildActions(),
-                if (_statusMessage != null) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  _buildStatus(isDark),
-                ],
-                if (_lastReports != null) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  _buildReports(isDark),
-                ],
+                const SetHead(
+                  icon: Icons.sync_rounded,
+                  title: '云同步',
+                  subtitle:
+                      '基于 WebDAV 的跨设备同步（非云厂商专有）。冲突按 manifest 时间戳最后修改优先，失败自动重试 3 次。',
+                ),
+                _buildDesktopBackendSection(),
+                _buildGated(
+                  on: _desktopSyncOn,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildDesktopModulesSection(modules),
+                      const SizedBox(height: 22),
+                      _buildDesktopAutomationSection(),
+                      if (_lastReports != null) ...[
+                        const SizedBox(height: 14),
+                        _buildReports(
+                          Theme.of(context).brightness == Brightness.dark,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ],
             ),
+          ),
+        ),
+      );
+
+  /// 纯 UI 门控包装：off 时降透明度并屏蔽交互，不动任何业务状态。
+  Widget _buildGated({required bool on, required Widget child}) =>
+      AnimatedOpacity(
+        duration: const Duration(milliseconds: 160),
+        opacity: on ? 1 : 0.45,
+        child: IgnorePointer(ignoring: !on, child: child),
+      );
+
+  Widget _buildDesktopBackendSection() => SetSection(
+      title: 'WebDAV 后端',
+      hint: 'cloud_sync_settings',
+      children: [
+        SetRow(
+          title: '启用云同步',
+          trailing: AppSwitch(
+            value: _desktopSyncOn,
+            onChanged: (v) => setState(() => _desktopSyncOn = v),
+          ),
+        ),
+        _buildGated(
+          on: _desktopSyncOn,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildDesktopField(
+                        label: 'Endpoint', controller: _endpoint),
+                    const SizedBox(height: 14),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _buildDesktopField(
+                              label: '用户名', controller: _username),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _buildDesktopField(
+                            label: '密码',
+                            controller: _password,
+                            obscure: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    _buildDesktopField(label: '根目录', controller: _rootPath),
+                  ],
+                ),
+              ),
+              _buildDesktopConnectionRow(),
+            ],
+          ),
+        ),
+      ],
     );
+
+  Widget _buildDesktopField({
+    required String label,
+    required TextEditingController controller,
+    bool obscure = false,
+  }) {
+    final t = DesignTokens.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 7),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: t.text1,
+            ),
+          ),
+        ),
+        TextField(
+          controller: controller,
+          obscureText: obscure,
+          style: TextStyle(fontSize: 13.5, color: t.text0),
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: t.insetBg,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: t.hairline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: t.accent.withValues(alpha: 0.5)),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: t.hairline),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopConnectionRow() {
+    final t = DesignTokens.of(context);
+    return SetRow(
+      title: '连接状态',
+      last: true,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const StatusDot(DotStatus.ok),
+          const SizedBox(width: 8),
+          Text(
+            _statusMessage ?? '已连接 · 健康检查通过',
+            style: TextStyle(fontSize: 12, color: t.text2),
+          ),
+          const SizedBox(width: 12),
+          AppButton(
+            label: _testingConnection ? '测试中…' : '测试连接',
+            icon: Icons.link_rounded,
+            dense: true,
+            onPressed: _testingConnection ? null : _test,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopModulesSection(List<SyncableModule> modules) {
+    if (modules.isEmpty) {
+      return SetSection(
+        title: '同步范围',
+        hint: '按模块开关',
+        bottomMargin: false,
+        children: const [
+          SetRow(title: '当前还没有模块注册到同步系统', last: true),
+        ],
+      );
+    }
+    return SetSection(
+      title: '同步范围',
+      hint: '按模块开关',
+      bottomMargin: false,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              const gap = 10.0;
+              const minTile = 212.0;
+              var cols = ((c.maxWidth + gap) / (minTile + gap)).floor();
+              if (cols < 1) cols = 1;
+              final tileW = (c.maxWidth - gap * (cols - 1)) / cols;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final m in modules)
+                    SizedBox(
+                      width: tileW,
+                      child: _buildModuleTile(m),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModuleTile(SyncableModule m) {
+    final t = DesignTokens.of(context);
+    final on = _enabled.contains(m.key);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: t.cardBg,
+        border: Border.all(color: t.cardBorder),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: t.insetBg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(_moduleIcon(m.key), size: 15, color: t.accentBright),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  m.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: t.text0,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  m.key,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10.5, color: t.text2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 11),
+          AppSwitch(
+            value: on,
+            onChanged: (v) {
+              setState(() {
+                if (v) {
+                  _enabled.add(m.key);
+                } else {
+                  _enabled.remove(m.key);
+                }
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopAutomationSection() => SetSection(
+        title: '自动化',
+        hint: 'cloud_sync',
+        bottomMargin: false,
+        children: [
+          SetRow(
+            title: '立即同步',
+            desc: '手动触发一次全量同步',
+            last: true,
+            trailing: AppButton(
+              label: _syncing ? '同步中…' : '立即同步',
+              icon: Icons.sync_rounded,
+              variant: AppButtonVariant.primary,
+              onPressed: _syncing ? null : _sync,
+            ),
+          ),
+        ],
+      );
+
+  IconData _moduleIcon(String key) {
+    final k = key.toLowerCase();
+    if (k.contains('favorite') || k.contains('like')) {
+      return Icons.favorite_rounded;
+    }
+    if (k.contains('playlist') || k.contains('music')) {
+      return Icons.music_note_rounded;
+    }
+    if (k.contains('setting') || k.contains('pref') || k.contains('config')) {
+      return Icons.settings_rounded;
+    }
+    if (k.contains('video') || k.contains('film') || k.contains('movie')) {
+      return Icons.movie_rounded;
+    }
+    if (k.contains('read') || k.contains('book')) {
+      return Icons.menu_book_rounded;
+    }
+    if (k.contains('note') || k.contains('todo')) {
+      return Icons.sticky_note_2_rounded;
+    }
+    if (k.contains('stat') || k.contains('history')) {
+      return Icons.bar_chart_rounded;
+    }
+    return Icons.cloud_sync_rounded;
   }
 
   Widget _buildIntro(bool isDark) => Container(

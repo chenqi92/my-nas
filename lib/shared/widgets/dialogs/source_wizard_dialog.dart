@@ -58,6 +58,10 @@ class _SourceWizardDialogState extends State<SourceWizardDialog> {
             children: [
               _Header(t: t, onClose: () => Navigator.of(context).pop()),
               Padding(
+                padding: const EdgeInsets.fromLTRB(24, 18, 24, 0),
+                child: _WizardSteps(t: t, current: _type == null ? 0 : 1),
+              ),
+              Padding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
                 child: Text(
                   '选择要连接的源类型，下一步进入连接配置与测试。',
@@ -118,6 +122,85 @@ class _Header extends StatelessWidget {
           ],
         ),
       );
+}
+
+/// 步骤指示器（设计稿 ops2.jsx wizard-steps）：1 选择类型 / 2 连接信息 /
+/// 3 测试连接 / 4 库映射。[current] 为当前步索引（0 起），小于它的为已完成。
+class _WizardSteps extends StatelessWidget {
+  const _WizardSteps({required this.t, required this.current});
+  final DesignTokens t;
+  final int current;
+
+  static const _labels = ['选择类型', '连接信息', '测试连接', '库映射'];
+
+  @override
+  Widget build(BuildContext context) => Row(
+        children: [
+          for (var i = 0; i < _labels.length; i++) ...[
+            if (i > 0) const SizedBox(width: 8),
+            _step(i),
+          ],
+        ],
+      );
+
+  Widget _step(int i) {
+    final isOn = i == current;
+    final isDone = i < current;
+    final Color numberBg;
+    final Color numberFg;
+    final Color labelColor;
+    final bool border;
+    if (isOn) {
+      numberBg = t.accent;
+      numberFg = t.accentContrast;
+      labelColor = t.text0;
+      border = false;
+    } else if (isDone) {
+      numberBg = t.accent.withValues(alpha: 0.2);
+      numberFg = t.accentBright;
+      labelColor = t.text3;
+      border = false;
+    } else {
+      numberBg = t.insetBg;
+      numberFg = t.text3;
+      labelColor = t.text3;
+      border = true;
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: numberBg,
+            shape: BoxShape.circle,
+            border: border ? Border.all(color: t.hairline) : null,
+          ),
+          child: isDone
+              ? Icon(Icons.check_rounded, size: 12, color: numberFg)
+              : Text(
+                  '${i + 1}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: numberFg,
+                  ),
+                ),
+        ),
+        const SizedBox(width: 9),
+        Text(
+          _labels[i],
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            color: labelColor,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _Footer extends StatelessWidget {

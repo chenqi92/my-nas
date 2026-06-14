@@ -161,7 +161,7 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
                   gridDelegate:
                       const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 160,
-                    childAspectRatio: 0.56,
+                    childAspectRatio: 0.65,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                   ),

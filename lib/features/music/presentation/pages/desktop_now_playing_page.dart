@@ -36,19 +36,28 @@ class DesktopNowPlayingPage extends ConsumerWidget {
       backgroundColor: t.bg,
       body: Stack(
         children: [
-          if (bgImage != null)
+          if (bgImage != null) ...[
             Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: bgImage,
-                    fit: BoxFit.cover,
+              child: ColorFiltered(
+                // np-bg saturate(140%)：仅提升背景图饱和度（亮度保持）。
+                colorFilter: const ColorFilter.matrix(<double>[
+                  1.31496, -0.28608, -0.02888, 0, 0,
+                  -0.08504, 1.11392, -0.02888, 0, 0,
+                  -0.08504, -0.28608, 1.37112, 0, 0,
+                  0, 0, 0, 1, 0,
+                ]),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: bgImage,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-                child: BackdropAndScrim(t: t),
               ),
-            )
-          else
+            ),
+            const Positioned.fill(child: BackdropAndScrim()),
+          ] else
             const Positioned.fill(child: SizedBox.shrink()),
           ColoredBox(color: Colors.black.withValues(alpha: 0.55)),
           SafeArea(
@@ -128,18 +137,18 @@ void _openCast(BuildContext context) {
 }
 
 class BackdropAndScrim extends StatelessWidget {
-  const BackdropAndScrim({required this.t, super.key});
-  final DesignTokens t;
+  const BackdropAndScrim({super.key});
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) => const DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
+            // 设计固定 scrim：rgba(6,7,11,.6) → rgba(6,7,11,.92)。
             colors: [
-              t.bg.withValues(alpha: 0.6),
-              t.bg.withValues(alpha: 0.92),
+              Color(0x9906070B),
+              Color(0xEB06070B),
             ],
           ),
         ),
@@ -154,7 +163,7 @@ class _Top extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
+        padding: const EdgeInsets.fromLTRB(28, 22, 28, 22),
         child: Row(
           children: [
             IconButton(
@@ -169,7 +178,7 @@ class _Top extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: t.text2,
-                letterSpacing: 1.2,
+                letterSpacing: 0.6,
               ),
             ),
             const Spacer(),
@@ -401,7 +410,7 @@ class _LyricRow extends StatelessWidget {
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 220),
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: active ? t.text1 : t.text3,
                 ),

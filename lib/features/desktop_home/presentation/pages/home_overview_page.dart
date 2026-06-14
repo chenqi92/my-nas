@@ -461,15 +461,15 @@ class _PulseRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 9),
       child: Row(
         children: [
           Container(
-            width: 26,
-            height: 26,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: t.insetBg,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(9),
             ),
             child: Icon(icon, size: 14, color: iconColor),
           ),
@@ -632,10 +632,10 @@ class _ContinueCard extends StatelessWidget {
     final dur = item.duration?.inMilliseconds ?? 0;
     final progress = dur > 0 ? (pos / dur).clamp(0.0, 1.0) : 0.0;
     return SizedBox(
-      width: 240,
+      width: 200,
       child: AppCard(
         onTap: onTap,
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(11),
         child: Row(
           children: [
             ClipRRect(
@@ -762,7 +762,7 @@ class _QuickItem extends StatelessWidget {
     final t = DesignTokens.of(context);
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
       child: Row(
         children: [
           Container(

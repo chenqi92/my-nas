@@ -133,17 +133,19 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                             child: Icon(Icons.person_rounded,
                                 size: 36, color: t.text2),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 9),
                           Text(
                             p.displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                                fontSize: 11.5, color: t.text1),
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: t.text1),
                           ),
                           Text(
                             '${p.photoCount} 张',
-                            style: TextStyle(fontSize: 10.5, color: t.text3),
+                            style: TextStyle(fontSize: 11, color: t.text2),
                           ),
                         ],
                       ),
@@ -152,7 +154,7 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                 },
               ),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 8),
           ],
           if (_view == 'map')
             const DesktopComingSoon(
@@ -268,13 +270,14 @@ class _PhotoBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (final key in keys) ...[
+          const SizedBox(height: 24),
           _TimelineLabel(monthKey: key, count: groups[key]!.length),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 132,
+              maxCrossAxisExtent: 130,
               crossAxisSpacing: 5,
               mainAxisSpacing: 5,
             ),
@@ -293,7 +296,6 @@ class _PhotoBody extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 22),
         ],
       ],
     );
@@ -334,7 +336,7 @@ class _TimelineLabel extends StatelessWidget {
   }
 }
 
-class _PhotoTile extends StatelessWidget {
+class _PhotoTile extends StatefulWidget {
   const _PhotoTile({
     required this.photo,
     required this.fileSystem,
@@ -345,30 +347,64 @@ class _PhotoTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_PhotoTile> createState() => _PhotoTileState();
+}
+
+class _PhotoTileState extends State<_PhotoTile> {
+  bool _hover = false;
+
+  @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     final placeholder = ColoredBox(
       color: t.insetBg,
       child: Icon(Icons.photo_rounded, size: 20, color: t.text3),
     );
-    return ClipRRect(
+    final tile = ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: Stack(
         fit: StackFit.expand,
         children: [
           StreamImage(
-            url: photo.thumbnailUrl,
-            path: photo.filePath,
-            fileSystem: fileSystem,
+            url: widget.photo.thumbnailUrl,
+            path: widget.photo.filePath,
+            fileSystem: widget.fileSystem,
             placeholder: placeholder,
             errorWidget: placeholder,
-            cacheKey: photo.uniqueKey,
+            cacheKey: widget.photo.uniqueKey,
           ),
           Material(
             color: Colors.transparent,
-            child: InkWell(onTap: onTap),
+            child: InkWell(onTap: widget.onTap),
           ),
         ],
+      ),
+    );
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: AnimatedScale(
+        scale: _hover ? 1.02 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: _hover
+                ? const [
+                    BoxShadow(
+                      color: Color(0xCC000000),
+                      blurRadius: 24,
+                      spreadRadius: -8,
+                      offset: Offset(0, 8),
+                    ),
+                  ]
+                : null,
+          ),
+          child: tile,
+        ),
       ),
     );
   }

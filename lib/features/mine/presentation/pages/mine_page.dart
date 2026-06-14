@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/app_lock/presentation/pages/privacy_security_page.dart';
@@ -109,7 +110,6 @@ class MinePage extends ConsumerWidget {
           child: _DesktopSectionList(
             sections: sections,
             selectedIndex: selectedIndex,
-            isDark: isDark,
             onSelect: (i) =>
                 ref.read(_selectedDesktopSectionProvider.notifier).state = i,
           ),
@@ -1719,13 +1719,11 @@ class _DesktopSectionList extends StatelessWidget {
   const _DesktopSectionList({
     required this.sections,
     required this.selectedIndex,
-    required this.isDark,
     required this.onSelect,
   });
 
   final List<_MineSection> sections;
   final int selectedIndex;
-  final bool isDark;
   final ValueChanged<int> onSelect;
 
   @override
@@ -1754,46 +1752,44 @@ class _DesktopSectionList extends StatelessWidget {
         ),
         itemCount: sections.length,
         itemBuilder: (context, index) {
+        final t = DesignTokens.of(context);
         final section = sections[index];
         final isSelected = index == selectedIndex;
-        final color = isSelected
-            ? AppColors.primary
-            : (isDark
-                ? AppColors.darkOnSurfaceVariant
-                : context.colorScheme.onSurfaceVariant);
+        // 对齐设计稿 `.set-cat`：选中态为实心 accent + accentContrast 文字。
+        final fg = isSelected ? t.accentContrast : t.text1;
+        final iconColor = isSelected ? t.accentContrast : t.text2;
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
+          padding: const EdgeInsets.symmetric(vertical: 1),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: () => onSelect(index),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
+              hoverColor: isSelected ? null : t.chipBg,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
+                curve: DesignTokens.ease,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
+                  horizontal: 11,
+                  vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.1)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  color: isSelected ? t.accent : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    // 与 _mineTileRow 内 tile icon 对齐（桌面 18）
-                    Icon(section.icon, size: 18, color: color),
-                    const SizedBox(width: 12),
+                    Icon(section.icon, size: 18, color: iconColor),
+                    const SizedBox(width: 11),
                     Expanded(
                       child: Text(
                         section.title,
                         style: TextStyle(
-                          fontSize: 14,
-                          color: color,
+                          fontSize: 13,
+                          color: fg,
                           fontWeight: isSelected
                               ? FontWeight.w600
-                              : FontWeight.normal,
+                              : FontWeight.w500,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

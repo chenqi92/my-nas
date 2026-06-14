@@ -66,7 +66,7 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
               child: AppChip(
                 label: tab,
                 active: tab == _tab,
-                compact: true,
+                compact: false,
                 onTap: () => setState(() => _tab = tab),
               ),
             ),
@@ -74,7 +74,7 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
           AppChip(
             label: '在线书源',
             icon: Icons.language_rounded,
-            compact: true,
+            compact: false,
             onTap: () => _pushPage(const BookSourcesPage()),
           ),
         ],
@@ -264,7 +264,7 @@ class _ComicShelf extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 150,
+        maxCrossAxisExtent: 180,
         childAspectRatio: 0.62,
         crossAxisSpacing: 18,
         mainAxisSpacing: 18,
@@ -297,7 +297,7 @@ class _BookShelf extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 150,
+        maxCrossAxisExtent: 180,
         childAspectRatio: 0.62,
         crossAxisSpacing: 18,
         mainAxisSpacing: 18,
@@ -543,8 +543,8 @@ class _CoverState extends State<_Cover> {
                       cover,
                       if (widget.badge != null)
                         Positioned(
-                          top: 6,
-                          left: 6,
+                          top: 8,
+                          left: 8,
                           child: AppTag(widget.badge!,
                               variant: TagVariant.neutral),
                         ),

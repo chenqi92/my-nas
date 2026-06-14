@@ -83,7 +83,7 @@ class OpsOverviewPage extends ConsumerWidget {
                   color: t.text0,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               Text(
                 '下载器 · 传输 · PT · 自动化 · 数据源 — 一处掌控',
                 style: TextStyle(fontSize: 13, color: t.text2),
@@ -328,7 +328,7 @@ class _StatTile extends StatelessWidget {
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   color: accent ? t.accentBright : t.text0,
-                  letterSpacing: -0.4,
+                  letterSpacing: -0.52,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -343,7 +343,7 @@ class _StatTile extends StatelessWidget {
                 ),
             ],
           )),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Row(
             children: [
               if (dot != null) ...[
@@ -629,7 +629,7 @@ class _PtRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: t.text0,
                   ),
                 ),
@@ -683,7 +683,7 @@ class _MiniTaskRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
         hoverColor: t.chipBg,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 11),
+          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 11),
           child: Row(
             children: [
               Expanded(

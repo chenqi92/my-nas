@@ -34,6 +34,7 @@ class _AppCardState extends State<AppCard> {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final r = widget.radius ?? DesignTokens.radius;
     final br = BorderRadius.circular(r);
     final hovered = _hovering || widget.hover;
@@ -53,11 +54,14 @@ class _AppCardState extends State<AppCard> {
         borderRadius: br,
         border: Border.all(
             color: borderColor, width: widget.selected ? 1.2 : 1),
+        // 对齐 `--card-elev: 0 12px 30px -18px rgba(0,0,0,.6)`（深色）/
+        // 浅色下显著减弱，避免卡片发灰。
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.16),
+            blurRadius: 30,
+            offset: const Offset(0, 12),
+            spreadRadius: -18,
           ),
         ],
       ),
