@@ -5,6 +5,7 @@ import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/downloader/presentation/widgets/download_detail_sheet.dart';
 import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
+import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
@@ -52,6 +53,20 @@ class OpsOverviewPage extends ConsumerWidget {
         ? null
         : ratios.reduce((a, b) => a + b) / ratios.length;
 
+    // 订阅追剧数：聚合各 NAStool 源的订阅列表；无 NAStool 源时降级为「—」。
+    final nastoolSources = ref.watch(nastoolSourcesProvider);
+    final subscribeValue = nastoolSources.isEmpty
+        ? '—'
+        : nastoolSources
+            .fold<int>(
+              0,
+              (sum, s) =>
+                  sum +
+                  (ref.watch(nastoolSubscribesProvider(s.id)).valueOrNull?.length ??
+                      0),
+            )
+            .toString();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(30, 26, 30, 120),
       child: Center(
@@ -81,6 +96,7 @@ class OpsOverviewPage extends ConsumerWidget {
                 totalSources: totalSources,
                 throughput: throughput,
                 avgRatio: avgRatio,
+                subscribeValue: subscribeValue,
               ),
               const SizedBox(height: 22),
               _ClientsRow(clients: clients),
@@ -122,7 +138,7 @@ class _LiveThroughput extends StatelessWidget {
               const SizedBox(width: 5),
               Text(
                 live
-                    ? '聚合 ${throughput.connectedClients} 个客户端 · 每秒刷新'
+                    ? '聚合 ${throughput.connectedClients} 个客户端 · 实时'
                     : '暂无在线下载客户端',
                 style: TextStyle(fontSize: 11.5, color: t.text2),
               ),
@@ -237,6 +253,7 @@ class _StatRow extends StatelessWidget {
     required this.totalSources,
     required this.throughput,
     required this.avgRatio,
+    required this.subscribeValue,
   });
 
   final int connectedSources;
@@ -245,6 +262,9 @@ class _StatRow extends StatelessWidget {
 
   /// 已连接 PT 站点的平均分享率；无数据时为 null（降级占位）。
   final double? avgRatio;
+
+  /// NAStool 订阅追剧数（聚合文本，无源时为「—」）。
+  final String subscribeValue;
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +290,7 @@ class _StatRow extends StatelessWidget {
           label: 'PT 平均分享率',
           value: avgRatio == null ? '—' : avgRatio!.toStringAsFixed(2),
         ),
-        const _StatTile(label: '订阅追剧中', value: '0', accent: true),
+        _StatTile(label: '订阅追剧中', value: subscribeValue, accent: true),
       ],
     );
   }
@@ -556,10 +576,11 @@ class _BottomTwoCol extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    const AppChip(
+                    AppChip(
                       label: '站点',
                       icon: Icons.open_in_new_rounded,
                       compact: true,
+                      onTap: () => GoRouter.of(context).go('/pt'),
                     ),
                   ],
                 ),

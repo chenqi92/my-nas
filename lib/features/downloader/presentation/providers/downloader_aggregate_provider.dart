@@ -305,7 +305,18 @@ UnifiedDownloadStatus _qbStatus(String state, double progress) {
   if (s.contains('error') || s.contains('missingfiles')) {
     return UnifiedDownloadStatus.error;
   }
-  if (s.contains('up')) return UnifiedDownloadStatus.seeding;
+  // 校验 / 搬运 / 分配等过渡态先归为等待，避免 checkingUP（校验做种文件）
+  // 被下面的 'up' 子串误判为做种。
+  if (s.startsWith('checking') ||
+      s == 'moving' ||
+      s == 'allocating' ||
+      s == 'checkingresumedata') {
+    return UnifiedDownloadStatus.waiting;
+  }
+  // 做种：uploading / stalledUP / queuedUP / forcedUP（UP 后缀）。
+  if (s == 'uploading' || s.endsWith('up')) {
+    return UnifiedDownloadStatus.seeding;
+  }
   if (s.contains('queued')) return UnifiedDownloadStatus.waiting;
   if (s.contains('dl') || s.contains('downloading') || s.contains('meta')) {
     return UnifiedDownloadStatus.downloading;

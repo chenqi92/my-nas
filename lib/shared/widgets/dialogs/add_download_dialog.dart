@@ -265,7 +265,12 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
     try {
       switch (source.type) {
         case SourceType.aria2:
-          await ref.read(aria2ActionsProvider(source.id)).addUri(_links);
+          final gid =
+              await ref.read(aria2ActionsProvider(source.id)).addUri(_links);
+          // aria2 addUri 无 paused 参数，添加后立即暂停以兑现「添加后暂停」开关。
+          if (_paused) {
+            await ref.read(aria2ActionsProvider(source.id)).pause(gid);
+          }
         case SourceType.qbittorrent:
           for (final link in _links) {
             await ref.read(qbittorrentActionsProvider(source.id)).addTorrent(
