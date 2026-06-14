@@ -6,7 +6,9 @@ import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/sync/cloud_sync_service.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
+import 'package:my_nas/shared/providers/cloud_sync_auto_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
+import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
@@ -467,24 +469,56 @@ class _CloudSyncSettingsPageState
     );
   }
 
-  Widget _buildDesktopAutomationSection() => SetSection(
-        title: '自动化',
-        hint: 'cloud_sync',
-        bottomMargin: false,
-        children: [
-          SetRow(
-            title: '立即同步',
-            desc: '手动触发一次全量同步',
-            last: true,
-            trailing: AppButton(
-              label: _syncing ? '同步中…' : '立即同步',
-              icon: Icons.sync_rounded,
-              variant: AppButtonVariant.primary,
-              onPressed: _syncing ? null : _sync,
+  Widget _buildDesktopAutomationSection() {
+    final autoOn = ref.watch(cloudSyncAutoEnabledProvider);
+    final interval = ref.watch(cloudSyncIntervalProvider);
+    return SetSection(
+      title: '自动化',
+      hint: 'cloud_sync',
+      bottomMargin: false,
+      children: [
+        SetRow(
+          title: '自动同步',
+          desc: '开启后在 app 运行期间按周期自动同步（不含后台 / 系统级调度）',
+          trailing: AppSwitch(
+            value: autoOn,
+            onChanged: (v) => ref
+                .read(cloudSyncAutoEnabledProvider.notifier)
+                .setEnabled(enabled: v),
+          ),
+        ),
+        _buildGated(
+          on: autoOn,
+          child: SetRow(
+            title: '同步周期',
+            desc: '两次自动同步之间的最短间隔',
+            trailing: AppSegmented<int>(
+              value: interval,
+              options: const [
+                AppSegmentedOption(value: 15, label: '15 分钟'),
+                AppSegmentedOption(value: 30, label: '30 分钟'),
+                AppSegmentedOption(value: 60, label: '1 小时'),
+                AppSegmentedOption(value: 360, label: '6 小时'),
+              ],
+              onChanged: (v) =>
+                  ref.read(cloudSyncIntervalProvider.notifier).setMinutes(v),
             ),
           ),
-        ],
-      );
+        ),
+        SetRow(
+          title: '立即同步',
+          desc: '手动触发一次全量同步',
+          last: true,
+          trailing: AppButton(
+            label: _syncing ? '同步中…' : '立即同步',
+            icon: Icons.sync_rounded,
+            variant: AppButtonVariant.primary,
+            onPressed: _syncing ? null : _sync,
+          ),
+        ),
+      ],
+    );
+  }
 
   IconData _moduleIcon(String key) {
     final k = key.toLowerCase();

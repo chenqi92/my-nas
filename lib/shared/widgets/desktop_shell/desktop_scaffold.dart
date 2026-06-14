@@ -8,6 +8,7 @@ import 'package:my_nas/features/music/presentation/providers/music_player_provid
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
+import 'package:my_nas/shared/providers/cloud_sync_auto_provider.dart';
 import 'package:my_nas/shared/providers/desktop_space_provider.dart';
 import 'package:my_nas/shared/providers/dynamic_ambient_provider.dart';
 import 'package:my_nas/shared/providers/media_counts_provider.dart';
@@ -232,6 +233,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     final lyricFloat = ref.watch(desktopLyricFloatProvider);
     final hasActivity = ref.watch(activityItemsProvider).isNotEmpty;
     final currentPath = GoRouterState.of(context).uri.path;
+    // 激活云同步自动调度器（轻量，仅在 app 运行期间持有一个 timer）。
+    ref.watch(cloudSyncSchedulerProvider);
 
     return Shortcuts(
       shortcuts: <ShortcutActivator, Intent>{
