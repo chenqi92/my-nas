@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
-import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/app_lock/presentation/pages/privacy_security_page.dart';
@@ -14,6 +13,7 @@ import 'package:my_nas/features/book/presentation/pages/book_sources_page.dart';
 import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
 import 'package:my_nas/features/media_management/presentation/pages/media_management_list_page.dart';
 import 'package:my_nas/features/media_tracking/presentation/pages/media_tracking_list_page.dart';
+import 'package:my_nas/features/mine/presentation/desktop_settings/desktop_settings_screen.dart';
 import 'package:my_nas/features/mine/presentation/pages/appearance_settings_page.dart';
 import 'package:my_nas/features/mine/presentation/pages/hosts_mapping_page.dart';
 import 'package:my_nas/features/mine/presentation/pages/spotlight_settings_page.dart';
@@ -50,9 +50,6 @@ import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-/// 桌面端 mine 页选中的 section 索引（在 [_buildSections] 列表中）。
-final _selectedDesktopSectionProvider = StateProvider.autoDispose<int>((_) => 0);
-
 class MinePage extends ConsumerWidget {
   const MinePage({super.key});
 
@@ -69,68 +66,18 @@ class MinePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
-      body: Column(
-        children: [
-          _buildHeader(context, isDark, connectedCount, connections.length),
-          Expanded(
-            child: context.isDesktopLayout
-                ? _buildDesktopBody(context, ref, isDark, uiStyle, sections)
-                : _buildMobileBody(context, isDark, uiStyle, sections),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ===========================================================================
-  // 桌面端：左侧 section 列表 + 右侧选中 section 的 settings card
-  // ===========================================================================
-
-  Widget _buildDesktopBody(
-    BuildContext context,
-    WidgetRef ref,
-    bool isDark,
-    UIStyle uiStyle,
-    List<_MineSection> sections,
-  ) {
-    final selectedIndex = ref
-        .watch(_selectedDesktopSectionProvider)
-        .clamp(0, sections.length - 1);
-    final dividerColor = isDark
-        ? AppColors.darkOutline.withValues(alpha: 0.3)
-        : context.colorScheme.outlineVariant;
-    final masterWidth = context.screenWidth >= 1100 ? 220.0 : 180.0;
-    final selected = sections[selectedIndex];
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          width: masterWidth,
-          child: _DesktopSectionList(
-            sections: sections,
-            selectedIndex: selectedIndex,
-            onSelect: (i) =>
-                ref.read(_selectedDesktopSectionProvider.notifier).state = i,
-          ),
-        ),
-        VerticalDivider(width: 1, thickness: 1, color: dividerColor),
-        Expanded(
-          child: _DesktopSectionDetail(
-            section: selected,
-            isDark: isDark,
-            uiStyle: uiStyle,
-            // ignore: avoid_types_on_closure_parameters
-            buildSettingsCard: ({required List<Widget> children}) =>
-                _buildSettingsCard(
-                  context,
-                  isDark,
-                  uiStyle,
-                  children: children,
+      // 桌面端：整页 = 设计稿设置 master-detail 外壳（无 Mine 身份头）。
+      // 移动端：保留原 头部 + ListView 形态。
+      body: context.isDesktopLayout
+          ? const DesktopSettingsScreen()
+          : Column(
+              children: [
+                _buildHeader(context, isDark, connectedCount, connections.length),
+                Expanded(
+                  child: _buildMobileBody(context, isDark, uiStyle, sections),
                 ),
-          ),
-        ),
-      ],
+              ],
+            ),
     );
   }
 
@@ -187,8 +134,6 @@ class MinePage extends ConsumerWidget {
       _MineSection(
         title: '连接',
         icon: Icons.lan_rounded,
-        // 桌面端：直接显示 tabs（连接源 / 媒体库），无需先点 tile 再进入页
-        desktopBuilder: (ctx) => const _DesktopConnectionTabs(),
         tilesBuilder: (ctx) => [
           _buildSourcesTile(context, ref, isDark),
           _buildDivider(isDark),
@@ -1694,7 +1639,6 @@ class _MineSection {
     required this.icon,
     required this.tilesBuilder,
     this.useCardWrapper = true,
-    this.desktopBuilder,
   });
 
   final String title;
@@ -1707,259 +1651,6 @@ class _MineSection {
   /// 是否要用 [AdaptiveGlassContainer] 包裹 tiles。
   /// 部分 section（如 "传输"）的内容本身就是 card，不需要再包一层。
   final bool useCardWrapper;
-
-  /// 桌面专属渲染：传入则桌面 detail 直接渲染该 widget（替代 tilesBuilder 列表），
-  /// 用于像「连接」这种希望直接展示 tabs / inline 内容而非二级 tile 列表的场景。
-  /// 移动端仍按 [tilesBuilder] 渲染。
-  final Widget Function(BuildContext context)? desktopBuilder;
-}
-
-/// 桌面 mine 页左侧 section 列表。
-class _DesktopSectionList extends StatelessWidget {
-  const _DesktopSectionList({
-    required this.sections,
-    required this.selectedIndex,
-    required this.onSelect,
-  });
-
-  final List<_MineSection> sections;
-  final int selectedIndex;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    // Focus + Shortcuts：键盘 ↑↓ 切换 sections（macOS sidebar 习惯）。
-    return Focus(
-      autofocus: true,
-      onKeyEvent: (node, event) {
-        if (event is! KeyDownEvent) return KeyEventResult.ignored;
-        if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-          final next = (selectedIndex + 1).clamp(0, sections.length - 1);
-          if (next != selectedIndex) onSelect(next);
-          return KeyEventResult.handled;
-        }
-        if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-          final prev = (selectedIndex - 1).clamp(0, sections.length - 1);
-          if (prev != selectedIndex) onSelect(prev);
-          return KeyEventResult.handled;
-        }
-        return KeyEventResult.ignored;
-      },
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.md,
-        ),
-        itemCount: sections.length,
-        itemBuilder: (context, index) {
-        final t = DesignTokens.of(context);
-        final section = sections[index];
-        final isSelected = index == selectedIndex;
-        // 对齐设计稿 `.set-cat`：选中态为实心 accent + accentContrast 文字。
-        final fg = isSelected ? t.accentContrast : t.text1;
-        final iconColor = isSelected ? t.accentContrast : t.text2;
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 1),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => onSelect(index),
-              borderRadius: BorderRadius.circular(8),
-              hoverColor: isSelected ? null : t.chipBg,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                curve: DesignTokens.ease,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected ? t.accent : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(section.icon, size: 18, color: iconColor),
-                    const SizedBox(width: 11),
-                    Expanded(
-                      child: Text(
-                        section.title,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: fg,
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-      ),
-    );
-  }
-}
-
-/// 桌面 mine 页右侧详情面板：标题 + 当前选中 section 的 tiles。
-/// 桌面 mine 页右侧详情面板。
-///
-/// 内嵌一个 [Navigator]，section 内容是该 navigator 的 root route。
-/// 这样 settings tile 的 `Navigator.push(ctx, ...)` 会 push 到这个嵌套
-/// navigator——子页只覆盖右侧 panel，不会覆盖左侧 NavigationRail 与
-/// section 列表。
-///
-/// section 切换时清空栈，pushAndRemoveUntil 到新 section root route。
-class _DesktopSectionDetail extends StatefulWidget {
-  const _DesktopSectionDetail({
-    required this.section,
-    required this.isDark,
-    required this.uiStyle,
-    required this.buildSettingsCard,
-  });
-
-  final _MineSection section;
-  final bool isDark;
-  final UIStyle uiStyle;
-
-  /// 复用 mine_page 的 _buildSettingsCard 逻辑（保持视觉一致）。
-  final Widget Function({required List<Widget> children}) buildSettingsCard;
-
-  @override
-  State<_DesktopSectionDetail> createState() => _DesktopSectionDetailState();
-}
-
-class _DesktopSectionDetailState extends State<_DesktopSectionDetail> {
-  final _navKey = GlobalKey<NavigatorState>();
-
-  @override
-  void didUpdateWidget(covariant _DesktopSectionDetail oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.section.title != widget.section.title) {
-      // 切换到新 section：清栈、显示新 root 路由。
-      _navKey.currentState?.pushAndRemoveUntil(
-        _buildRootRoute(),
-        (_) => false,
-      );
-    }
-  }
-
-  /// section 切换时使用无过渡动画的 PageRoute，避免 slide-in 让用户感觉
-  /// "进入了新页面"。push 二级 settings 子页仍走默认 slide 动画。
-  PageRoute<void> _buildRootRoute() => PageRouteBuilder<void>(
-        pageBuilder: (_, _, _) => _DesktopSectionRootContent(
-          section: widget.section,
-          isDark: widget.isDark,
-          uiStyle: widget.uiStyle,
-          buildSettingsCard: widget.buildSettingsCard,
-        ),
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    // detail panel 限宽 + 居中：避免 settings 在大屏被拉到全宽。
-    // 1100 宽窗口下 detail 限 800（紧凑）；3000 宽屏幕下 detail 限 1100（不至于
-    // 留白过多）。下限保证 detail 至少 720 宽（够显示 settings card）。
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxWidth = constraints.maxWidth.clamp(720.0, 1100.0);
-        return Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            child: Navigator(
-              key: _navKey,
-              onGenerateInitialRoutes: (_, _) => [_buildRootRoute()],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// detail navigator 的根路由内容：section 标题 + tiles 卡片。
-class _DesktopSectionRootContent extends StatelessWidget {
-  const _DesktopSectionRootContent({
-    required this.section,
-    required this.isDark,
-    required this.uiStyle,
-    required this.buildSettingsCard,
-  });
-
-  final _MineSection section;
-  final bool isDark;
-  final UIStyle uiStyle;
-  final Widget Function({required List<Widget> children}) buildSettingsCard;
-
-  @override
-  Widget build(BuildContext context) {
-    // 桌面端如果 section 提供了 desktopBuilder，直接渲染（用于 tabs / inline 内容）。
-    if (context.isDesktopLayout && section.desktopBuilder != null) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: section.desktopBuilder!(context),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.md,
-          AppSpacing.lg,
-          AppSpacing.md,
-        ),
-        children: [
-          // 桌面下二级菜单已显示当前选中的 section，detail 顶部再重复"连接"
-          // 等标题属于冗余信息；只在移动端保留作为分组标题。
-          if (!context.isDesktopLayout)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md, left: 4),
-              child: Row(
-                children: [
-                  Icon(
-                    section.icon,
-                    size: 20,
-                    color: isDark
-                        ? AppColors.darkOnSurface
-                        : context.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    section.title,
-                    style: context.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppColors.darkOnSurface
-                          : context.colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          // section.tilesBuilder 接收 root route 内 context；
-          // tile 内 Navigator.push(ctx, ...) 会进入嵌套 detail navigator。
-          Builder(builder: (innerCtx) {
-            final tiles = section.tilesBuilder(innerCtx);
-            return section.useCardWrapper
-                ? buildSettingsCard(children: tiles)
-                : Column(children: tiles);
-          }),
-          SizedBox(height: context.scrollBottomPadding),
-        ],
-      ),
-    );
-  }
 }
 
 /// Mine 页所有 tile 共用的统一行布局：图标+标题+副标题+末尾控件。
@@ -2078,45 +1769,3 @@ Widget _mineCountBadge(String text, Color color) => Container(
       ),
     );
 
-/// 桌面端「连接」section 的 detail：tabs 在顶部，下方 inline 展示连接源 / 媒体库。
-/// 避免点 tile 再 push 新页造成"整页覆盖" + 失去 section 上下文。
-class _DesktopConnectionTabs extends StatelessWidget {
-  const _DesktopConnectionTabs();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          Material(
-            color: Colors.transparent,
-            child: TabBar(
-              tabAlignment: TabAlignment.start,
-              isScrollable: true,
-              indicatorSize: TabBarIndicatorSize.label,
-              dividerColor: isDark
-                  ? AppColors.darkOutline.withValues(alpha: 0.3)
-                  : null,
-              labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              unselectedLabelStyle: const TextStyle(fontSize: 13),
-              tabs: const [
-                Tab(text: '连接源'),
-                Tab(text: '媒体库'),
-              ],
-            ),
-          ),
-          const Expanded(
-            child: TabBarView(
-              children: [
-                SourcesPage(embedded: true),
-                MediaLibraryPage(embedded: true),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
