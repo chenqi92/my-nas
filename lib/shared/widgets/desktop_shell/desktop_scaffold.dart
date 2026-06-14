@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
@@ -10,6 +12,7 @@ import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
 import 'package:my_nas/shared/providers/cloud_sync_auto_provider.dart';
 import 'package:my_nas/shared/providers/desktop_space_provider.dart';
+import 'package:my_nas/shared/providers/download_notify_provider.dart';
 import 'package:my_nas/shared/providers/dynamic_ambient_provider.dart';
 import 'package:my_nas/shared/providers/media_counts_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
@@ -44,6 +47,12 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
   bool _cmdkOpen = false;
   bool _activityOpen = false;
   bool _appearanceOpen = false;
+
+  /// 已弹过「下载完成」提示的任务 uniqueKey 集合，按 id 去重避免重复弹。
+  final Set<String> _notifiedCompleted = <String>{};
+
+  /// 首次拿到聚合任务时把当前已完成项纳入基线，避免历史完成在首帧全部弹出。
+  bool _completedBaselineReady = false;
 
   /// 与 14 branch 路由的对应（与 `app_router.dart` 的 branchNavigatorKeys
   /// 顺序必须完全一致）。
@@ -238,6 +247,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     final space = spaceOfRoute(currentPath) ?? persistedSpace;
     // 激活云同步自动调度器（轻量，仅在 app 运行期间持有一个 timer）。
     ref.watch(cloudSyncSchedulerProvider);
+    _listenDownloadComplete();
 
     return Shortcuts(
       shortcuts: <ShortcutActivator, Intent>{
@@ -338,6 +348,31 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
           ),
         ),
       ),
+    );
+  }
+
+  /// 监听聚合下载任务，新出现的「已完成」任务在开关开启时弹应用内 toast。
+  /// 首帧把当前已完成项纳入基线，之后只对增量完成弹窗，并按 uniqueKey 去重。
+  void _listenDownloadComplete() {
+    ref.listen<List<UnifiedDownloadTask>>(
+      aggregatedDownloadTasksProvider,
+      (prev, next) {
+        final completed = next.where(
+          (t) => t.status == UnifiedDownloadStatus.completed,
+        );
+        if (!_completedBaselineReady) {
+          // 基线：首次回调把现有已完成任务标记为已见，不弹窗。
+          _completedBaselineReady = true;
+          _notifiedCompleted.addAll(completed.map((t) => t.uniqueKey));
+          return;
+        }
+        final notify = ref.read(downloadNotifyProvider);
+        for (final t in completed) {
+          if (_notifiedCompleted.add(t.uniqueKey) && notify) {
+            context.showSuccessToast('${t.name} 下载完成');
+          }
+        }
+      },
     );
   }
 

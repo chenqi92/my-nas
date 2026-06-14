@@ -32,6 +32,7 @@ import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_
 import 'package:my_nas/features/video/presentation/providers/playback_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/playlist_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
+import 'package:my_nas/shared/providers/video_backend_provider.dart';
 
 /// 当前播放的视频（autoDispose: 离开播放器页面后自动清理）
 final currentVideoProvider = StateProvider.autoDispose<VideoItem?>((ref) => null);
@@ -726,10 +727,14 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     // 如果没有指定起始位置，尝试从多个来源恢复进度
     resumePosition ??= await _getResumePosition(video);
 
-    // 检测是否需要使用原生播放器（杜比视界）
-    final shouldUseNative = DolbyVisionDetector.shouldUseNativePlayer(
-      video: resolvedVideo,
-    );
+    // 检测是否需要使用原生播放器：手动偏好优先，自动时按能力（杜比视界）判定
+    final backendPreference = _ref.read(videoBackendProvider);
+    final shouldUseNative = switch (backendPreference) {
+      VideoBackendPreference.native => true,
+      VideoBackendPreference.mediaKit => false,
+      VideoBackendPreference.auto =>
+        DolbyVisionDetector.shouldUseNativePlayer(video: resolvedVideo),
+    };
 
     // 标记当前使用的后端类型
     var currentBackend = PlayerBackendType.mediaKit;

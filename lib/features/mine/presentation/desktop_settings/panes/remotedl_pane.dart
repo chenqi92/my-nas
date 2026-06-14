@@ -9,8 +9,10 @@ import 'package:my_nas/features/qbittorrent/presentation/pages/qbittorrent_detai
 import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/transmission/presentation/pages/transmission_detail_page.dart';
+import 'package:my_nas/shared/providers/download_notify_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
@@ -107,9 +109,14 @@ class RemoteDlPane extends ConsumerWidget {
             ),
             SetRow(
               title: '完成后通知',
-              desc: '任务完成推送系统通知',
+              desc: '应用运行时弹窗提示（系统级通知规划中）',
               last: true,
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              trailing: AppSwitch(
+                value: ref.watch(downloadNotifyProvider),
+                onChanged: (v) => ref
+                    .read(downloadNotifyProvider.notifier)
+                    .setEnabled(enabled: v),
+              ),
             ),
           ],
         ),

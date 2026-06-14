@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/shared/providers/interface_locale_provider.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
-import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 
 /// 桌面「设置 · 语言与地区」详情 pane。
@@ -14,8 +14,8 @@ import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 ///
 /// - 优先级三组接 [languagePreferenceProvider]，可拖拽排序 / 添加 / 移除，
 ///   实时写回 Hive 并同步 TMDB / 字幕 / 音轨服务。
-/// - 界面语言当前跟随系统语言（应用未提供可写的 locale provider），故以只读
-///   分段展示当前解析结果并标注「即将推出」。
+/// - 界面语言接 [interfaceLocaleProvider]，简体中文 / English / 跟随系统三选，
+///   实时生效并持久化于 Hive。
 class LanguagePane extends ConsumerWidget {
   const LanguagePane({super.key});
 
@@ -33,16 +33,16 @@ class LanguagePane extends ConsumerWidget {
               '字幕选择，可拖拽排序。',
         ),
 
-        // 界面语言（跟随系统，暂只读）。
+        // 界面语言（简体中文 / English / 跟随系统）。
         SetSection(
           title: '界面',
           hint: 'language_preference',
-          children: [
+          children: const [
             SetRow(
               title: '界面语言',
-              desc: '跟随系统语言 · 所有可见文案本地化',
+              desc: '切换应用界面语言，所有可见文案实时本地化',
               last: true,
-              trailing: _InterfaceLanguageControl(locale: Localizations.localeOf(context)),
+              trailing: _InterfaceLanguageControl(),
             ),
           ],
         ),
@@ -78,36 +78,29 @@ class LanguagePane extends ConsumerWidget {
   }
 }
 
-/// 界面语言：当前跟随系统，展示解析结果 + 「即将推出」标签。
-class _InterfaceLanguageControl extends StatelessWidget {
-  const _InterfaceLanguageControl({required this.locale});
+/// 界面语言：简体中文 / English / 跟随系统三选，实时生效并持久化。
+class _InterfaceLanguageControl extends ConsumerWidget {
+  const _InterfaceLanguageControl();
 
-  final Locale locale;
+  static const _system = 'system';
 
   @override
-  Widget build(BuildContext context) {
-    final isEnglish = locale.languageCode == 'en';
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const AppTag('即将推出', variant: TagVariant.plan),
-        const SizedBox(width: 12),
-        // 跟随系统语言，应用无可写 locale provider，故以只读分段展示当前
-        // 解析结果（IgnorePointer + 降透明度表明不可手动切换）。
-        Opacity(
-          opacity: 0.55,
-          child: IgnorePointer(
-            child: AppSegmented<bool>(
-              options: const [
-                AppSegmentedOption(value: false, label: '简体中文'),
-                AppSegmentedOption(value: true, label: 'English'),
-              ],
-              value: isEnglish,
-              onChanged: (_) {},
-            ),
-          ),
-        ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(interfaceLocaleProvider);
+    final current = locale?.languageCode ?? _system;
+
+    return AppSegmented<String>(
+      options: const [
+        AppSegmentedOption(value: 'zh', label: '简体中文'),
+        AppSegmentedOption(value: 'en', label: 'English'),
+        AppSegmentedOption(value: _system, label: '跟随系统'),
       ],
+      value: current,
+      onChanged: (code) {
+        ref.read(interfaceLocaleProvider.notifier).setLocale(
+              code == _system ? null : Locale(code),
+            );
+      },
     );
   }
 }

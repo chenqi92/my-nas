@@ -38,8 +38,11 @@ class TransferService {
   /// 当前连接映射（由外部设置）
   Map<String, SourceConnection> _connections = {};
 
-  /// 最大并发传输数
-  static const int maxConcurrentTransfers = 3;
+  /// 最大并发传输数（运行时可调，1-3）。
+  ///
+  /// 由 `transferConcurrencyProvider` 持久化并在启动 / 改值时同步写入，
+  /// [_processQueue] 运行时读取，改值即生效。
+  static int maxConcurrentTransfers = 3;
 
   /// 当前正在传输的任务数
   int _activeTransfers = 0;

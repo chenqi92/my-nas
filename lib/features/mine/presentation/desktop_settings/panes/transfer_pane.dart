@@ -6,7 +6,9 @@ import 'package:my_nas/features/transfer/data/services/cache_config_service.dart
 import 'package:my_nas/features/transfer/data/services/transfer_service.dart';
 import 'package:my_nas/features/transfer/presentation/pages/transfer_manager_page.dart';
 import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
+import 'package:my_nas/shared/providers/transfer_concurrency_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
+import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 
@@ -26,6 +28,8 @@ const _cacheLimitTypes = <(MediaType, String)>[
 /// 去重，以及缓存占用统计 + 上限 + 清理。
 ///
 /// 真实接入：
+/// - 并发任务数读写 [transferConcurrencyProvider]（持久化 1-3，实时写入
+///   [TransferService.maxConcurrentTransfers]，下次调度队列即生效）。
 /// - 缓存占用统计来自 [cacheStatsProvider]（聚合各缓存服务的真实计数与体积）。
 /// - 「清理缓存」chip 调用 [TransferTasksNotifier.clearAllCache] 按类型/全部清除。
 /// - 「打开传输队列」push 现有 [TransferManagerPage]。
@@ -34,8 +38,6 @@ const _cacheLimitTypes = <(MediaType, String)>[
 ///   每类一个下拉档位（[CacheSizeOption.options]），超限按 LRU 自动清理。
 ///
 /// 降级说明（无对应可写 provider，标「即将推出」）：
-/// - 并发任务数固定为 [TransferService.maxConcurrentTransfers]（static const），
-///   暂无可写设置。
 /// - 后台传输 / 启动恢复暂无开关。
 class TransferPane extends ConsumerWidget {
   const TransferPane({super.key});
@@ -73,22 +75,16 @@ class TransferPane extends ConsumerWidget {
           children: [
             SetRow(
               title: '并发任务数',
-              desc: '同时进行的传输上限（固定 '
-                  '${TransferService.maxConcurrentTransfers}）',
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${TransferService.maxConcurrentTransfers}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: t.text1,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const AppTag('可调并发即将推出', variant: TagVariant.plan),
+              desc: '同时进行的上传 / 下载 / 缓存任务上限',
+              trailing: AppSegmented<int>(
+                value: ref.watch(transferConcurrencyProvider),
+                options: const [
+                  AppSegmentedOption(value: 1, label: '1'),
+                  AppSegmentedOption(value: 2, label: '2'),
+                  AppSegmentedOption(value: 3, label: '3'),
                 ],
+                onChanged: (v) =>
+                    ref.read(transferConcurrencyProvider.notifier).setValue(v),
               ),
             ),
             const SetRow(

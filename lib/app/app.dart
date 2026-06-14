@@ -24,6 +24,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/data/services/video_scanner_service.dart';
 import 'package:my_nas/shared/providers/glass_material_provider.dart';
+import 'package:my_nas/shared/providers/interface_locale_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/widget_data_service.dart';
@@ -271,6 +272,8 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
     final glassBlurScale = ref.watch(glassBlurScaleProvider);
     final glassOpacityScale = ref.watch(glassOpacityScaleProvider);
     final glassBlurEnabled = ref.watch(glassBlurEnabledProvider);
+    // 界面语言（null=跟随系统）。
+    final interfaceLocale = ref.watch(interfaceLocaleProvider);
 
     // 同步更新 AppColors 的静态配色方案
     AppColors.setPreset(colorPreset);
@@ -310,6 +313,7 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       darkTheme: AppTheme.darkFromPreset(colorPreset)
           .copyWith(extensions: [darkTokens]),
       themeMode: themeMode,
+      locale: interfaceLocale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: appRouter,

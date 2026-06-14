@@ -13,6 +13,7 @@ import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_
 import 'package:my_nas/features/video/presentation/providers/playback_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/subtitle_translation_settings_provider.dart';
+import 'package:my_nas/shared/providers/video_backend_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
@@ -24,7 +25,7 @@ import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 ///
 /// 播放 / HDR 与后端 / 音频直通 / 投屏与转码 / 字幕 五张卡片。能接的开关、
 /// 分段、滑块直接读写真实 provider（清晰度、HDR/音频、字幕翻译、自动续播 /
-/// 自动下一集、投屏设备发现）；视频刮削源用按钮打开现有管理页；视频后端、
+/// 自动下一集、视频后端、投屏设备发现）；视频刮削源用按钮打开现有管理页；
 /// 服务端 / 客户端转码无可写的全局设置（运行时按源能力自动判定），字幕源无
 /// 现成管理页，这些项以「即将推出」只读行降级。
 class VideoPane extends ConsumerWidget {
@@ -50,6 +51,9 @@ class VideoPane extends ConsumerWidget {
 
     final cast = ref.watch(castProvider);
     final castNotifier = ref.read(castProvider.notifier);
+
+    final videoBackend = ref.watch(videoBackendProvider);
+    final videoBackendNotifier = ref.read(videoBackendProvider.notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -155,9 +159,26 @@ class VideoPane extends ConsumerWidget {
             ),
             SetRow(
               title: '视频后端',
-              desc: 'media_kit ⟷ 原生播放器，按 HDR / 杜比能力切换',
+              desc: '自动按 HDR / 杜比能力切换，或手动锁定后端',
               last: true,
-              trailing: const AppTag('即将推出', variant: TagVariant.plan),
+              trailing: AppSegmented<VideoBackendPreference>(
+                value: videoBackend,
+                onChanged: videoBackendNotifier.setPreference,
+                options: const [
+                  AppSegmentedOption(
+                    value: VideoBackendPreference.auto,
+                    label: '自动',
+                  ),
+                  AppSegmentedOption(
+                    value: VideoBackendPreference.mediaKit,
+                    label: 'media_kit',
+                  ),
+                  AppSegmentedOption(
+                    value: VideoBackendPreference.native,
+                    label: '原生',
+                  ),
+                ],
+              ),
             ),
           ],
         ),
