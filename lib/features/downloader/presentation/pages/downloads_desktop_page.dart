@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/aria2/presentation/providers/aria2_provider.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/downloader/presentation/widgets/download_detail_sheet.dart';
+import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
+import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/transmission/presentation/providers/transmission_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -26,8 +31,86 @@ class DownloadsDesktopPage extends ConsumerStatefulWidget {
 class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
   String _client = '全部';
   String _filter = '全部';
+  final Set<String> _selected = {};
 
   static const _filters = ['全部', '下载中', '做种', '已暂停', '已完成'];
+
+  /// 批量操作：按 sourceId 分组后分发到各客户端的批量 API。
+  Future<void> _batch(
+    List<UnifiedDownloadTask> selectedTasks,
+    _BatchOp op,
+  ) async {
+    final groups = <String, List<UnifiedDownloadTask>>{};
+    for (final task in selectedTasks) {
+      groups.putIfAbsent(task.sourceId, () => []).add(task);
+    }
+    try {
+      for (final entry in groups.entries) {
+        final sourceId = entry.key;
+        final group = entry.value;
+        final ids = group.map((t) => t.taskId).toList();
+        switch (group.first.sourceType) {
+          case SourceType.aria2:
+            final a = ref.read(aria2ActionsProvider(sourceId));
+            for (final id in ids) {
+              switch (op) {
+                case _BatchOp.pause:
+                  await a.pause(id);
+                case _BatchOp.resume:
+                  await a.resume(id);
+                case _BatchOp.delete:
+                  await a.remove(id);
+              }
+            }
+          case SourceType.qbittorrent:
+            final a = ref.read(qbittorrentActionsProvider(sourceId));
+            switch (op) {
+              case _BatchOp.pause:
+                await a.pause(ids);
+              case _BatchOp.resume:
+                await a.resume(ids);
+              case _BatchOp.delete:
+                await a.delete(ids, deleteFiles: false);
+            }
+          case SourceType.transmission:
+            final a = ref.read(transmissionActionsProvider(sourceId));
+            final intIds = ids.map(int.tryParse).whereType<int>().toList();
+            switch (op) {
+              case _BatchOp.pause:
+                await a.stop(intIds);
+              case _BatchOp.resume:
+                await a.start(intIds);
+              case _BatchOp.delete:
+                await a.remove(intIds, deleteFiles: false);
+            }
+          default:
+            break;
+        }
+      }
+      if (mounted) setState(_selected.clear);
+    } on Object catch (e) {
+      if (mounted) context.showErrorToast('批量操作失败：$e');
+    }
+  }
+
+  Future<void> _confirmBatchDelete(List<UnifiedDownloadTask> selected) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('删除选中任务'),
+        content: Text('确定删除选中的 ${selected.length} 个任务？（不删除已下载文件）'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('取消')),
+          FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('删除')),
+        ],
+      ),
+    );
+    if (ok == true) await _batch(selected, _BatchOp.delete);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +159,24 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
           const SizedBox(height: 14),
           _SummaryBar(throughput: throughput),
           const SizedBox(height: 14),
+          if (_selected.isNotEmpty) ...[
+            _BatchBar(
+              count: _selected.length,
+              onPause: () => _batch(
+                tasks.where((t) => _selected.contains(t.uniqueKey)).toList(),
+                _BatchOp.pause,
+              ),
+              onResume: () => _batch(
+                tasks.where((t) => _selected.contains(t.uniqueKey)).toList(),
+                _BatchOp.resume,
+              ),
+              onDelete: () => _confirmBatchDelete(
+                tasks.where((t) => _selected.contains(t.uniqueKey)).toList(),
+              ),
+              onClear: () => setState(_selected.clear),
+            ),
+            const SizedBox(height: 12),
+          ],
           if (clients.isEmpty)
             _EmptyClients(t: t)
           else if (tasks.isEmpty)
@@ -83,6 +184,20 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
           else
             _TaskTable(
               tasks: tasks,
+              selected: _selected,
+              onToggle: (key) => setState(() {
+                _selected.contains(key)
+                    ? _selected.remove(key)
+                    : _selected.add(key);
+              }),
+              onToggleAll: () => setState(() {
+                final keys = tasks.map((t) => t.uniqueKey).toSet();
+                if (keys.every(_selected.contains)) {
+                  _selected.removeAll(keys);
+                } else {
+                  _selected.addAll(keys);
+                }
+              }),
               onOpen: (task) =>
                   showDownloadDetailDrawer(context, task.uniqueKey),
             ),
@@ -202,13 +317,24 @@ class _SummaryBar extends StatelessWidget {
 }
 
 class _TaskTable extends StatelessWidget {
-  const _TaskTable({required this.tasks, required this.onOpen});
+  const _TaskTable({
+    required this.tasks,
+    required this.selected,
+    required this.onToggle,
+    required this.onToggleAll,
+    required this.onOpen,
+  });
   final List<UnifiedDownloadTask> tasks;
+  final Set<String> selected;
+  final ValueChanged<String> onToggle;
+  final VoidCallback onToggleAll;
   final ValueChanged<UnifiedDownloadTask> onOpen;
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final allSelected =
+        tasks.isNotEmpty && tasks.every((x) => selected.contains(x.uniqueKey));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -216,9 +342,14 @@ class _TaskTable extends StatelessWidget {
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              _headerRow(t),
+              _headerRow(t, allSelected),
               for (final task in tasks)
-                _TaskRow(task: task, onTap: () => onOpen(task)),
+                _TaskRow(
+                  task: task,
+                  selected: selected.contains(task.uniqueKey),
+                  onToggleSelect: () => onToggle(task.uniqueKey),
+                  onTap: () => onOpen(task),
+                ),
             ],
           ),
         ),
@@ -239,7 +370,7 @@ class _TaskTable extends StatelessWidget {
     );
   }
 
-  Widget _headerRow(DesignTokens t) {
+  Widget _headerRow(DesignTokens t, bool allSelected) {
     TextStyle s() => TextStyle(
           fontSize: 10.5,
           fontWeight: FontWeight.w700,
@@ -253,6 +384,14 @@ class _TaskTable extends StatelessWidget {
       ),
       child: Row(
         children: [
+          SizedBox(
+            width: 30,
+            child: Checkbox(
+              value: allSelected,
+              visualDensity: VisualDensity.compact,
+              onChanged: (_) => onToggleAll(),
+            ),
+          ),
           Expanded(child: Text('名称', style: s())),
           const SizedBox(width: 10),
           SizedBox(width: 96, child: Text('客户端', style: s())),
@@ -293,15 +432,22 @@ class _StatePill extends StatelessWidget {
 }
 
 class _TaskRow extends StatelessWidget {
-  const _TaskRow({required this.task, required this.onTap});
+  const _TaskRow({
+    required this.task,
+    required this.selected,
+    required this.onToggleSelect,
+    required this.onTap,
+  });
   final UnifiedDownloadTask task;
+  final bool selected;
+  final VoidCallback onToggleSelect;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     return Material(
-      color: Colors.transparent,
+      color: selected ? t.chipBgActive : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
@@ -313,6 +459,14 @@ class _TaskRow extends StatelessWidget {
           ),
           child: Row(
             children: [
+              SizedBox(
+                width: 30,
+                child: Checkbox(
+                  value: selected,
+                  visualDensity: VisualDensity.compact,
+                  onChanged: (_) => onToggleSelect(),
+                ),
+              ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -481,3 +635,64 @@ class _EmptyTasks extends StatelessWidget {
   }
 }
 
+
+enum _BatchOp { pause, resume, delete }
+
+/// 多选批量操作条：选中任意任务后出现，跨客户端批量暂停/继续/删除。
+class _BatchBar extends StatelessWidget {
+  const _BatchBar({
+    required this.count,
+    required this.onPause,
+    required this.onResume,
+    required this.onDelete,
+    required this.onClear,
+  });
+
+  final int count;
+  final VoidCallback onPause;
+  final VoidCallback onResume;
+  final VoidCallback onDelete;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return GlassPanel(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      child: Row(
+        children: [
+          Text(
+            '已选 $count 项',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: t.text0,
+            ),
+          ),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: onResume,
+            icon: const Icon(Icons.play_arrow_rounded, size: 16),
+            label: const Text('继续'),
+          ),
+          TextButton.icon(
+            onPressed: onPause,
+            icon: const Icon(Icons.pause_rounded, size: 16),
+            label: const Text('暂停'),
+          ),
+          TextButton.icon(
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline_rounded, size: 16),
+            label: const Text('删除'),
+          ),
+          const SizedBox(width: 6),
+          IconButton(
+            onPressed: onClear,
+            tooltip: '取消选择',
+            icon: Icon(Icons.close_rounded, size: 16, color: t.text2),
+          ),
+        ],
+      ),
+    );
+  }
+}
