@@ -79,7 +79,9 @@ class _DesktopPhotoViewerState extends ConsumerState<_DesktopPhotoViewer> {
           Positioned.fill(
             child: StreamImage(
               key: ValueKey(photo.uniqueKey),
-              url: photo.thumbnailUrl,
+              // 有文件流时不传缩略图 URL，强制走 getFileStream 加载原图；
+              // 没有可流式加载的源时才回退缩略图。
+              url: fs != null ? null : photo.thumbnailUrl,
               path: photo.filePath,
               fileSystem: fs,
               fit: BoxFit.contain,
