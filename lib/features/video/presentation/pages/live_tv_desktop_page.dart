@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +27,23 @@ class LiveTvDesktopPage extends ConsumerStatefulWidget {
 
 class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
   String _cat = '全部';
+  Timer? _clockTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // 每分钟刷新，让 EPG 的「当前时间红线」与时钟随真实时间走，
+    // 而非只在 build 时算一次后静止。
+    _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    super.dispose();
+  }
 
   void _play(LiveChannel channel) {
     Navigator.of(context).push(
@@ -66,7 +85,7 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
               _buildHeader(t, cats, active),
               const SizedBox(height: 22),
               if (featured == null) ...[
-                const _EmptyHero(),
+                _EmptyHero(onManage: _manageSources),
                 const SizedBox(height: 26),
                 _sectionHead(t, sub: '电子节目单 EPG'),
                 const SizedBox(height: 14),
@@ -815,7 +834,9 @@ class _PulseDotState extends State<_PulseDot>
 
 // ── empty states ──────────────────────────────────────────────────────────
 class _EmptyHero extends StatelessWidget {
-  const _EmptyHero();
+  const _EmptyHero({required this.onManage});
+
+  final VoidCallback onManage;
 
   @override
   Widget build(BuildContext context) {
@@ -866,12 +887,18 @@ class _EmptyHero extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    '通过 sidebar → 数据源 → 添加 M3U8 / HLS 直播源后，此处会显示精选频道与电子节目单。',
+                    '在「管理直播源」中添加 M3U8 / HLS 直播源后，此处会显示精选频道与电子节目单。',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.white.withValues(alpha: 0.78),
                       height: 1.5,
                     ),
+                  ),
+                  const SizedBox(height: 18),
+                  FilledButton.icon(
+                    onPressed: onManage,
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: const Text('管理直播源'),
                   ),
                 ],
               ),
