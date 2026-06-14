@@ -23,6 +23,7 @@ import 'package:my_nas/features/photo/data/services/photo_database_service.dart'
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/data/services/video_scanner_service.dart';
+import 'package:my_nas/shared/providers/glass_material_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/widget_data_service.dart';
@@ -266,6 +267,10 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
     final themeMode = ref.watch(themeModeProvider);
     final colorPreset = ref.watch(colorSchemePresetProvider);
     final uiStyle = ref.watch(uiStyleProvider);
+    // 玻璃材质参数（仅 glass 风格生效，默认值保持现状）。
+    final glassBlurScale = ref.watch(glassBlurScaleProvider);
+    final glassOpacityScale = ref.watch(glassOpacityScaleProvider);
+    final glassBlurEnabled = ref.watch(glassBlurEnabledProvider);
 
     // 同步更新 AppColors 的静态配色方案
     AppColors.setPreset(colorPreset);
@@ -284,11 +289,17 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       brightness: Brightness.light,
       uiStyle: uiStyle,
       preset: colorPreset,
+      blurScale: glassBlurScale,
+      opacityScale: glassOpacityScale,
+      blurEnabled: glassBlurEnabled,
     );
     final darkTokens = DesignTokens.build(
       brightness: Brightness.dark,
       uiStyle: uiStyle,
       preset: colorPreset,
+      blurScale: glassBlurScale,
+      opacityScale: glassOpacityScale,
+      blurEnabled: glassBlurEnabled,
     );
 
     return MaterialApp.router(

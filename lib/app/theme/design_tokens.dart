@@ -148,37 +148,66 @@ class DesignTokens extends ThemeExtension<DesignTokens> {
       Theme.of(context).extension<DesignTokens>() ?? _fallback;
 
   /// 同步生成 4 套材质 × 3 套强调色之一的 token。
+  ///
+  /// [blurScale] / [opacityScale] / [blurEnabled] 为「玻璃材质参数」，仅影响
+  /// glass 工厂；默认值保持现状（缩放 1.0、启用模糊），所有既有调用方行为不变。
+  /// classic 工厂完全不受影响。
   factory DesignTokens.build({
     required Brightness brightness,
     required UIStyle uiStyle,
     required ColorSchemePreset preset,
+    double blurScale = 1.0,
+    double opacityScale = 1.0,
+    bool blurEnabled = true,
   }) {
     final isDark = brightness == Brightness.dark;
     final isGlass = uiStyle.isGlass;
 
     if (isDark && isGlass) {
-      return DesignTokens._darkGlass(preset);
+      return DesignTokens._darkGlass(
+        preset,
+        blurScale: blurScale,
+        opacityScale: opacityScale,
+        blurEnabled: blurEnabled,
+      );
     }
     if (isDark && !isGlass) {
       return DesignTokens._darkClassic(preset);
     }
     if (!isDark && isGlass) {
-      return DesignTokens._lightGlass(preset);
+      return DesignTokens._lightGlass(
+        preset,
+        blurScale: blurScale,
+        opacityScale: opacityScale,
+        blurEnabled: blurEnabled,
+      );
     }
     return DesignTokens._lightClassic(preset);
   }
 
+  /// 把玻璃材质不透明度缩放作用到面板背景色 alpha 上（clamp 0–1）。
+  static Color _scaleAlpha(Color color, double opacityScale) =>
+      color.withValues(alpha: (color.a * opacityScale).clamp(0.0, 1.0));
+
   // ---- dark × glass ----
-  factory DesignTokens._darkGlass(ColorSchemePreset p) => DesignTokens(
+  factory DesignTokens._darkGlass(
+    ColorSchemePreset p, {
+    double blurScale = 1.0,
+    double opacityScale = 1.0,
+    bool blurEnabled = true,
+  }) =>
+      DesignTokens(
         text0: const Color(0xFFF6F6F7),
         text1: const Color(0xFFC8C8CB),
         text2: const Color(0xFF8B8B90),
         text3: const Color(0xFF5A5A60),
         bg: const Color(0xFF08080A),
         bgStrong: const Color(0xFF0E0F12),
-        panelBg: const Color(0x991B1C21), // rgba(27,28,33,.60)
-        panelBgStrong: const Color(0xD1131418), // rgba(19,20,24,.82)
-        panelBlurSigma: 30,
+        // rgba(27,28,33,.60)
+        panelBg: _scaleAlpha(const Color(0x991B1C21), opacityScale),
+        // rgba(19,20,24,.82)
+        panelBgStrong: _scaleAlpha(const Color(0xD1131418), opacityScale),
+        panelBlurSigma: (blurEnabled ? 30.0 : 0.0) * blurScale,
         panelBorder: const Color(0x14FFFFFF), // rgba(255,255,255,.08)
         cardBg: const Color(0x9926282E),
         cardBgHover: const Color(0xCC32343C),
@@ -233,16 +262,22 @@ class DesignTokens extends ThemeExtension<DesignTokens> {
       );
 
   // ---- light × glass ----
-  factory DesignTokens._lightGlass(ColorSchemePreset p) => DesignTokens(
+  factory DesignTokens._lightGlass(
+    ColorSchemePreset p, {
+    double blurScale = 1.0,
+    double opacityScale = 1.0,
+    bool blurEnabled = true,
+  }) =>
+      DesignTokens(
         text0: const Color(0xFF1B1B1F),
         text1: const Color(0xFF45454C),
         text2: const Color(0xFF6F6F78),
         text3: const Color(0xFF9C9CA4),
         bg: const Color(0xFFE3E2E7),
         bgStrong: const Color(0xFFEDECEF),
-        panelBg: const Color(0xA8FFFFFF),
-        panelBgStrong: const Color(0xD6FFFFFF),
-        panelBlurSigma: 26,
+        panelBg: _scaleAlpha(const Color(0xA8FFFFFF), opacityScale),
+        panelBgStrong: _scaleAlpha(const Color(0xD6FFFFFF), opacityScale),
+        panelBlurSigma: (blurEnabled ? 26.0 : 0.0) * blurScale,
         panelBorder: const Color(0x14181820),
         cardBg: const Color(0xB8FFFFFF),
         cardBgHover: const Color(0xF2FFFFFF),

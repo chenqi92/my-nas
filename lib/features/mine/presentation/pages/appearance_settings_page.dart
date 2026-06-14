@@ -8,6 +8,7 @@ import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/dynamic_ambient_provider.dart';
+import 'package:my_nas/shared/providers/glass_material_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
@@ -181,12 +182,102 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                   ),
                 ],
               ),
+              _buildGlassSection(t, uiStyle),
             ],
           ),
         ),
       ),
     );
   }
+
+  // ─── 玻璃材质参数（仅 Glass 风格可调）──────────────────────
+
+  Widget _buildGlassSection(DesignTokens t, UIStyle uiStyle) {
+    if (!uiStyle.isGlass) {
+      return SetSection(
+        title: '玻璃材质参数',
+        hint: 'glass_blur_scale · glass_opacity_scale · glass_blur_enabled',
+        children: [
+          SetRow(
+            title: '已停用',
+            desc: 'Classic 风格下玻璃参数已停用，切换到 Glass 风格后可调。',
+            last: true,
+          ),
+        ],
+      );
+    }
+
+    final blurScale = ref.watch(glassBlurScaleProvider);
+    final opacityScale = ref.watch(glassOpacityScaleProvider);
+    final blurEnabled = ref.watch(glassBlurEnabledProvider);
+
+    return SetSection(
+      title: '玻璃材质参数',
+      hint: 'glass_blur_scale · glass_opacity_scale · glass_blur_enabled',
+      children: [
+        SetRow(
+          title: '模糊强度',
+          desc: '玻璃面板高斯模糊半径缩放（${blurScale.toStringAsFixed(2)}×）',
+          trailing: _buildGlassSlider(
+            t,
+            value: blurScale,
+            enabled: blurEnabled,
+            onChanged: (v) =>
+                ref.read(glassBlurScaleProvider.notifier).setValue(v),
+          ),
+        ),
+        SetRow(
+          title: '材质不透明度',
+          desc: '玻璃面板背景不透明度缩放（${opacityScale.toStringAsFixed(2)}×）',
+          trailing: _buildGlassSlider(
+            t,
+            value: opacityScale,
+            onChanged: (v) =>
+                ref.read(glassOpacityScaleProvider.notifier).setValue(v),
+          ),
+        ),
+        SetRow(
+          title: '平台玻璃优化',
+          desc: '关闭后玻璃面板不再做模糊，仅保留半透明材质',
+          last: true,
+          trailing: AppSwitch(
+            value: blurEnabled,
+            onChanged: (v) => ref
+                .read(glassBlurEnabledProvider.notifier)
+                .setEnabled(enabled: v),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGlassSlider(
+    DesignTokens t, {
+    required double value,
+    required ValueChanged<double> onChanged,
+    bool enabled = true,
+  }) =>
+      SizedBox(
+        width: 140,
+        child: SliderTheme(
+          data: SliderThemeData(
+            trackHeight: 3,
+            activeTrackColor: enabled ? t.accent : t.text3,
+            inactiveTrackColor: t.insetBg,
+            thumbColor: enabled ? t.accentBright : t.text3,
+            overlayColor: t.accent.withValues(alpha: 0.12),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+          ),
+          child: Slider(
+            value: value,
+            min: 0.5,
+            max: 1.5,
+            divisions: 10,
+            onChanged: enabled ? onChanged : null,
+          ),
+        ),
+      );
 
   Widget _buildDesktopAccentDot(
     DesignTokens t,
