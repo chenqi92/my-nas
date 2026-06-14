@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/photo/data/services/face_database_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
+import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_list_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_people_page.dart';
+import 'package:my_nas/features/photo/presentation/providers/photo_favorites_provider.dart';
 import 'package:my_nas/features/photo/presentation/widgets/desktop_photo_viewer.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -336,7 +338,7 @@ class _TimelineLabel extends StatelessWidget {
   }
 }
 
-class _PhotoTile extends StatefulWidget {
+class _PhotoTile extends ConsumerStatefulWidget {
   const _PhotoTile({
     required this.photo,
     required this.fileSystem,
@@ -347,15 +349,30 @@ class _PhotoTile extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<_PhotoTile> createState() => _PhotoTileState();
+  ConsumerState<_PhotoTile> createState() => _PhotoTileState();
 }
 
-class _PhotoTileState extends State<_PhotoTile> {
+class _PhotoTileState extends ConsumerState<_PhotoTile> {
   bool _hover = false;
+
+  PhotoItem _toPhotoItem() => PhotoItem(
+        name: widget.photo.fileName,
+        path: widget.photo.filePath,
+        url: '',
+        sourceId: widget.photo.sourceId,
+        thumbnailUrl: widget.photo.thumbnailUrl,
+        size: widget.photo.size,
+        modifiedAt: widget.photo.modifiedTime,
+      );
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final favKey =
+        photoFavoriteKey(widget.photo.sourceId, widget.photo.filePath);
+    final isFav = ref.watch(
+      photoFavoritesProvider.select((favs) => favs.contains(favKey)),
+    );
     final placeholder = ColoredBox(
       color: t.insetBg,
       child: Icon(Icons.photo_rounded, size: 20, color: t.text3),
@@ -377,6 +394,20 @@ class _PhotoTileState extends State<_PhotoTile> {
             color: Colors.transparent,
             child: InkWell(onTap: widget.onTap),
           ),
+          // 收藏角标：对齐设计稿 .photo-cell .fav（右上 6px 白色心形 + drop-shadow）。
+          // 已收藏始终显示实心；未收藏仅在 hover 时显示半透明描边心形。
+          if (isFav || _hover)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: _FavBadge(
+                isFavorite: isFav,
+                onTap: () =>
+                    ref.read(photoFavoritesProvider.notifier).toggle(
+                          _toPhotoItem(),
+                        ),
+              ),
+            ),
         ],
       ),
     );
@@ -408,4 +439,41 @@ class _PhotoTileState extends State<_PhotoTile> {
       ),
     );
   }
+}
+
+/// 照片网格右上角的收藏角标。点击切换收藏，且不冒泡触发打开大图。
+class _FavBadge extends StatelessWidget {
+  const _FavBadge({required this.isFavorite, required this.onTap});
+  final bool isFavorite;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(2),
+            child: Icon(
+              isFavorite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              size: 15,
+              // 已收藏纯白实心；未收藏（hover 态）用半透明白描边。
+              color: isFavorite
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.85),
+              // 对齐设计稿 .fav 的 drop-shadow(0 1px 3px rgba(0,0,0,.6))。
+              shadows: const [
+                Shadow(
+                  color: Color(0x99000000),
+                  blurRadius: 3,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 }
