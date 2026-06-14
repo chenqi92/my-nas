@@ -21,6 +21,8 @@ class M3UParser {
     String? currentCategory;
     String? currentTvgId;
     String? currentTvgName;
+    // 播放列表级 EPG（XMLTV）地址，取自 #EXTM3U 头的 url-tvg / x-tvg-url。
+    String? playlistEpgUrl;
 
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
@@ -28,8 +30,12 @@ class M3UParser {
       // 跳过空行
       if (line.isEmpty) continue;
 
-      // 跳过 #EXTM3U 头部
-      if (line.startsWith('#EXTM3U')) continue;
+      // #EXTM3U 头部：捕获 EPG（XMLTV）地址供电子节目单使用。
+      if (line.startsWith('#EXTM3U')) {
+        playlistEpgUrl = _extractAttribute(line, 'url-tvg') ??
+            _extractAttribute(line, 'x-tvg-url');
+        continue;
+      }
 
       // 解析 #EXTINF 行
       if (line.startsWith('#EXTINF:')) {
@@ -54,6 +60,7 @@ class M3UParser {
           category: currentCategory,
           tvgId: currentTvgId,
           tvgName: currentTvgName,
+          epgUrl: playlistEpgUrl,
         );
         channels.add(channel);
       }

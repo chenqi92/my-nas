@@ -4,9 +4,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/video/data/services/xmltv_parser.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/pages/live_player_page.dart';
 import 'package:my_nas/features/video/presentation/pages/live_stream_settings_page.dart';
+import 'package:my_nas/features/video/presentation/providers/epg_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
@@ -74,6 +76,25 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
             .toList();
     final featured = channels.isNotEmpty ? channels.first : null;
 
+    // EPG（XMLTV）：取首个带 epgUrl 的频道地址，拉取并按 tvgId 匹配节目。
+    final epgUrl = channels
+        .map((c) => c.epgUrl)
+        .firstWhere((u) => u != null && u.isNotEmpty, orElse: () => null);
+    final Map<String, List<EpgProgramme>> epg = epgUrl != null
+        ? (ref.watch(liveEpgProvider(epgUrl)).valueOrNull ?? const {})
+        : const {};
+    final hasEpg = epg.isNotEmpty;
+    final featuredProgs = (featured?.tvgId != null)
+        ? (epg[featured!.tvgId] ?? const <EpgProgramme>[])
+        : const <EpgProgramme>[];
+    final nowDt = DateTime.now();
+    EpgProgramme? nowProg;
+    EpgProgramme? nextProg;
+    for (final p in featuredProgs) {
+      if (p.isLiveAt(nowDt)) nowProg = p;
+      if (nextProg == null && p.start.isAfter(nowDt)) nextProg = p;
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(30, 26, 30, 120),
       child: Center(
@@ -94,6 +115,8 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
                 _Hero(
                   channel: featured,
                   sourceName: _sourceNameFor(featured, sources),
+                  nowProgramme: nowProg,
+                  nextProgramme: nextProg,
                   onPlay: () => _play(featured),
                 ),
                 const SizedBox(height: 26),
@@ -112,11 +135,13 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '节目（EPG）数据需 XMLTV 源，当前仅展示频道与时间轴；点击频道行即可直接播放。',
+                  hasEpg
+                      ? '节目时间轴来自 XMLTV 源；点击频道行直接播放。'
+                      : '当前源未提供 XMLTV 节目数据，仅展示频道与时间轴；点击频道行即可直接播放。',
                   style: TextStyle(fontSize: 12, color: t.text3, height: 1.4),
                 ),
                 const SizedBox(height: 12),
-                _EpgGuide(channels: channels, onPlay: _play),
+                _EpgGuide(channels: channels, epg: epg, onPlay: _play),
               ],
             ],
           ),
@@ -215,6 +240,7 @@ const double _channelColW = 184;
 const double _epgRowH = 62;
 const double _epgHeaderH = 42;
 const int _epgMaxRows = 50;
+const int _epgSpanMin = 360; // EPG 时间窗：6 小时
 
 int _nowMin() {
   final n = DateTime.now();
@@ -234,11 +260,15 @@ class _Hero extends StatelessWidget {
     required this.channel,
     required this.sourceName,
     required this.onPlay,
+    this.nowProgramme,
+    this.nextProgramme,
   });
 
   final LiveChannel channel;
   final String? sourceName;
   final VoidCallback onPlay;
+  final EpgProgramme? nowProgramme;
+  final EpgProgramme? nextProgramme;
 
   @override
   Widget build(BuildContext context) {
@@ -341,6 +371,39 @@ class _Hero extends StatelessWidget {
                         height: 1.05,
                       ),
                     ),
+                    if (nowProgramme != null) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const _LiveBadge('正在播放'),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              nowProgramme!.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (nextProgramme != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          '接下来 ${_fmtClock(nextProgramme!.start.hour * 60 + nextProgramme!.start.minute)} · ${nextProgramme!.title}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Colors.white.withValues(alpha: 0.72),
+                          ),
+                        ),
+                      ],
+                    ],
                     const SizedBox(height: 14),
                     Text(
                       [
@@ -485,9 +548,14 @@ class _HeroBtn extends StatelessWidget {
 
 // ── EPG guide ─────────────────────────────────────────────────────────────
 class _EpgGuide extends StatelessWidget {
-  const _EpgGuide({required this.channels, required this.onPlay});
+  const _EpgGuide({
+    required this.channels,
+    required this.epg,
+    required this.onPlay,
+  });
 
   final List<LiveChannel> channels;
+  final Map<String, List<EpgProgramme>> epg;
   final void Function(LiveChannel) onPlay;
 
   @override
@@ -498,9 +566,11 @@ class _EpgGuide extends StatelessWidget {
         : channels;
 
     final now = _nowMin();
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
     // 时间窗：当前时刻向前对齐到半点的前一格，向后展开约 6 小时。
     final base = ((now - 30) ~/ 30) * 30;
-    const span = 360; // 6h
+    const span = _epgSpanMin;
     final end = base + span;
     final timelineW = span * _pxPerMin;
     final gridW = _channelColW + timelineW;
@@ -518,7 +588,17 @@ class _EpgGuide extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _header(t, slots, base, timelineW),
-              for (final ch in shown) _row(context, t, ch, timelineW),
+              for (final ch in shown)
+                _row(
+                  context,
+                  t,
+                  ch,
+                  timelineW,
+                  ch.tvgId != null ? (epg[ch.tvgId] ?? const []) : const [],
+                  base,
+                  end,
+                  todayMidnight,
+                ),
             ],
           ),
           // 当前时间红线（节目区，从表头下方开始）
@@ -647,7 +727,15 @@ class _EpgGuide extends StatelessWidget {
   }
 
   Widget _row(
-      BuildContext context, DesignTokens t, LiveChannel ch, double timelineW) {
+    BuildContext context,
+    DesignTokens t,
+    LiveChannel ch,
+    double timelineW,
+    List<EpgProgramme> programmes,
+    int base,
+    int end,
+    DateTime todayMidnight,
+  ) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -702,13 +790,69 @@ class _EpgGuide extends StatelessWidget {
                   ],
                 ),
               ),
-              // 节目轨道（暂无 EPG 节目数据，留空）
-              SizedBox(width: timelineW, height: _epgRowH),
+              // 节目轨道：把命中本时间窗的 EPG 节目按起止时间定位为块。
+              SizedBox(
+                width: timelineW,
+                height: _epgRowH,
+                child: Stack(
+                  children: [
+                    for (final p in programmes)
+                      ..._programmeBlock(t, p, base, end, todayMidnight),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// 把单个节目按起止时间（相对今日 0 点的分钟）定位为时间轴上的块；
+  /// 与时间窗 [base, end] 无交集则不渲染。当前正在播放的节目高亮。
+  List<Widget> _programmeBlock(
+    DesignTokens t,
+    EpgProgramme p,
+    int base,
+    int end,
+    DateTime todayMidnight,
+  ) {
+    final startMin = p.start.difference(todayMidnight).inMinutes;
+    final stopMin = p.stop.difference(todayMidnight).inMinutes;
+    if (stopMin <= base || startMin >= end) return const [];
+    final s = startMin < base ? base : startMin;
+    final e = stopMin > end ? end : stopMin;
+    final w = (e - s) * _pxPerMin;
+    if (w < 2) return const [];
+    final live = p.isLiveAt(DateTime.now());
+    return [
+      Positioned(
+        left: (s - base) * _pxPerMin,
+        top: 6,
+        bottom: 6,
+        width: w,
+        child: Container(
+          margin: const EdgeInsets.only(right: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: live ? t.chipBgActive : t.insetBg,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: live ? t.accent : t.hairline),
+          ),
+          alignment: Alignment.centerLeft,
+          child: Text(
+            p.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: live ? FontWeight.w700 : FontWeight.w500,
+              color: live ? t.text0 : t.text2,
+            ),
+          ),
+        ),
+      ),
+    ];
   }
 }
 
