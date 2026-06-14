@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/music/presentation/providers/desktop_lyric_provider.dart';
 import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
 import 'package:my_nas/features/video/presentation/providers/cast_provider.dart';
@@ -30,6 +31,7 @@ class CastPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final lyricState = ref.watch(desktopLyricProvider);
     final lyricNotifier = ref.read(desktopLyricProvider.notifier);
     final lyricSupported = lyricNotifier.isSupported;
@@ -48,32 +50,34 @@ class CastPane extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SetHead(
+        SetHead(
           icon: Icons.cast_rounded,
-          title: '投屏与输出',
-          subtitle: '音频输出、本地媒体代理、DLNA / AirPlay 投屏与桌面歌词浮窗。',
+          title: l.paneCastHeadTitle,
+          subtitle: l.paneCastHeadSubtitle,
         ),
 
         // ===== 音频输出 =====
         SetSection(
-          title: '音频输出',
-          hint: '检测自当前播放设备',
+          title: l.paneCastAudioSectionTitle,
+          hint: l.paneCastAudioSectionHint,
           children: [
             SetRow(
-              title: '输出设备',
-              desc: '系统 / 蓝牙 / AirPlay / 外接 DAC',
+              title: l.paneCastOutputDeviceTitle,
+              desc: l.paneCastOutputDeviceDesc,
               trailing: audioLoading && audioCap == null
-                  ? const AppTag('检测中')
-                  : AppTag(_outputDeviceLabel(audioCap)),
+                  ? AppTag(l.paneCastDetecting)
+                  : AppTag(_outputDeviceLabel(context, audioCap)),
             ),
             SetRow(
-              title: '杜比全景声',
-              desc: '支持的输出设备上启用空间音频',
+              title: l.paneCastDolbyTitle,
+              desc: l.paneCastDolbyDesc,
               last: true,
               trailing: audioLoading && audioCap == null
-                  ? const AppTag('检测中')
+                  ? AppTag(l.paneCastDetecting)
                   : AppTag(
-                      (audioCap?.supportsDolby ?? false) ? '可直通' : '不支持',
+                      (audioCap?.supportsDolby ?? false)
+                          ? l.paneCastDolbyPassthrough
+                          : l.paneCastDolbyUnsupported,
                       variant: (audioCap?.supportsDolby ?? false)
                           ? TagVariant.free
                           : TagVariant.limit,
@@ -84,22 +88,27 @@ class CastPane extends ConsumerWidget {
 
         // ===== 投屏 =====
         SetSection(
-          title: '投屏',
+          title: l.paneCastCastingSectionTitle,
           children: [
             SetRow(
-              title: '本地媒体代理 (shelf)',
-              desc: '为 SMB 等非直链协议提供 HTTP 代理 — 投屏与 media_kit 播放的前提',
-              trailing: const AppTag('随播放自动启用'),
+              title: l.paneCastMediaProxyTitle,
+              desc: l.paneCastMediaProxyDesc,
+              trailing: AppTag(l.paneCastMediaProxyTag),
             ),
             SetRow(
               title: 'DLNA / AirPlay',
               desc: castState.isCasting
-                  ? '投屏中 · ${castState.session?.device.name ?? '已连接设备'}'
+                  ? l.paneCastDlnaCasting(
+                      castState.session?.device.name ??
+                          l.paneCastConnectedDevice,
+                    )
                   : castState.isDiscovering
-                      ? '正在搜索设备…'
-                      : '设备发现 · 远程控制（播放 / 暂停 / 音量 / 进度）',
+                      ? l.paneCastDlnaSearching
+                      : l.paneCastDlnaIdleDesc,
               trailing: AppButton(
-                label: castState.isDiscovering ? '搜索中…' : '搜索设备',
+                label: castState.isDiscovering
+                    ? l.paneCastSearchingShort
+                    : l.paneCastSearchDevices,
                 icon: Icons.wifi_tethering_rounded,
                 dense: true,
                 onPressed:
@@ -107,8 +116,8 @@ class CastPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '投屏状态',
-              desc: '当前投屏目标 · 在迷你 dock 与播放器同步显示',
+              title: l.paneCastStatusTitle,
+              desc: l.paneCastStatusDesc,
               last: true,
               trailing: _CastStatus(castState: castState),
             ),
@@ -117,15 +126,15 @@ class CastPane extends ConsumerWidget {
 
         // ===== 桌面歌词浮窗 =====
         SetSection(
-          title: '桌面歌词浮窗',
-          hint: lyricSupported ? null : '仅桌面端',
+          title: l.paneCastLyricSectionTitle,
+          hint: lyricSupported ? null : l.paneCastLyricDesktopOnly,
           bottomMargin: false,
           children: [
             SetRow(
-              title: '启用浮窗',
+              title: l.paneCastLyricEnableTitle,
               desc: lyricSupported
-                  ? '独立置顶窗口显示同步歌词 · 快捷键 ⌘/Ctrl + Shift + L'
-                  : '独立置顶窗口显示同步歌词（仅 Windows / macOS）',
+                  ? l.paneCastLyricEnableDescShortcut
+                  : l.paneCastLyricEnableDescUnsupported,
               trailing: AppSwitch(
                 value: lyricState.isVisible,
                 enabled: lyricSupported,
@@ -141,8 +150,8 @@ class CastPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '布局',
-              desc: '单行仅当前句 · 双行附带下一句',
+              title: l.paneCastLyricLayoutTitle,
+              desc: l.paneCastLyricLayoutDesc,
               trailing: AppSegmented<bool>(
                 value: lyric.showNextLine,
                 onChanged: lyricSupported
@@ -150,15 +159,17 @@ class CastPane extends ConsumerWidget {
                           lyric.copyWith(showNextLine: v),
                         )
                     : (_) {},
-                options: const [
-                  AppSegmentedOption(value: false, label: '单行'),
-                  AppSegmentedOption(value: true, label: '双行'),
+                options: [
+                  AppSegmentedOption(
+                      value: false, label: l.paneCastLyricLayoutSingle),
+                  AppSegmentedOption(
+                      value: true, label: l.paneCastLyricLayoutDouble),
                 ],
               ),
             ),
             SetRow(
-              title: '显示翻译',
-              desc: '同时间轴的译文行一并显示',
+              title: l.paneCastLyricTranslationTitle,
+              desc: l.paneCastLyricTranslationDesc,
               trailing: AppSwitch(
                 value: lyric.showTranslation,
                 enabled: lyricSupported,
@@ -170,8 +181,8 @@ class CastPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '锁定点击穿透',
-              desc: '锁定后浮窗不拦截鼠标，仅显示',
+              title: l.paneCastLyricLockTitle,
+              desc: l.paneCastLyricLockDesc,
               trailing: AppSwitch(
                 value: lyric.lockPosition,
                 enabled: lyricSupported,
@@ -183,8 +194,8 @@ class CastPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '播放时自动显示',
-              desc: '开始播放音乐时自动弹出浮窗',
+              title: l.paneCastLyricAutoShowTitle,
+              desc: l.paneCastLyricAutoShowDesc,
               trailing: AppSwitch(
                 value: lyric.showWhenPlaying,
                 enabled: lyricSupported,
@@ -196,8 +207,8 @@ class CastPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '最小化主窗口时显示',
-              desc: '主窗口最小化且正在播放时自动弹出浮窗',
+              title: l.paneCastLyricMinimizeTitle,
+              desc: l.paneCastLyricMinimizeDesc,
               last: true,
               trailing: AppSwitch(
                 value: lyric.showOnMinimize,
@@ -216,18 +227,22 @@ class CastPane extends ConsumerWidget {
   }
 
   /// 把检测到的音频输出设备转成可读标签；未知 / 未检测时回退「系统默认」。
-  String _outputDeviceLabel(AudioPassthroughCapability? cap) {
-    if (cap == null || !cap.isSupported) return '系统默认';
+  String _outputDeviceLabel(
+    BuildContext context,
+    AudioPassthroughCapability? cap,
+  ) {
+    final l = AppLocalizations.of(context);
+    if (cap == null || !cap.isSupported) return l.paneCastOutputDeviceSystem;
     final name = cap.deviceName;
     if (name != null && name.isNotEmpty) return name;
     return switch (cap.outputDevice) {
       AudioOutputDevice.hdmi => 'HDMI',
-      AudioOutputDevice.spdif => 'S/PDIF 光纤',
+      AudioOutputDevice.spdif => l.paneCastOutputDeviceSpdif,
       AudioOutputDevice.arc => 'HDMI ARC/eARC',
-      AudioOutputDevice.bluetooth => '蓝牙',
-      AudioOutputDevice.headphones => '耳机',
-      AudioOutputDevice.speaker => '内置扬声器',
-      AudioOutputDevice.unknown => '系统默认',
+      AudioOutputDevice.bluetooth => l.paneCastOutputDeviceBluetooth,
+      AudioOutputDevice.headphones => l.paneCastOutputDeviceHeadphones,
+      AudioOutputDevice.speaker => l.paneCastOutputDeviceSpeaker,
+      AudioOutputDevice.unknown => l.paneCastOutputDeviceSystem,
     };
   }
 }
@@ -240,13 +255,14 @@ class _CastStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final casting = castState.isCasting;
     final label = casting
-        ? (castState.session?.device.name ?? '已连接')
+        ? (castState.session?.device.name ?? l.paneCastStatusConnected)
         : castState.isDiscovering
-            ? '搜索中'
-            : '未投屏';
+            ? l.paneCastStatusSearching
+            : l.paneCastStatusIdle;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

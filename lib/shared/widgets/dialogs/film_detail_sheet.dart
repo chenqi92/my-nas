@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
@@ -36,11 +37,21 @@ class _FilmDetailSheetState extends ConsumerState<FilmDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final m = widget.meta;
     final isTv = (m.seasonNumber ?? 0) > 0;
     final tabs = isTv
-        ? const ['剧集', '版本', '演职员', '相关']
-        : const ['版本', '演职员', '相关'];
+        ? [
+            l.filmDetailTabSeasons,
+            l.filmDetailTabVersions,
+            l.filmDetailTabCast,
+            l.filmDetailTabRelated,
+          ]
+        : [
+            l.filmDetailTabVersions,
+            l.filmDetailTabCast,
+            l.filmDetailTabRelated,
+          ];
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -82,7 +93,7 @@ class _FilmDetailSheetState extends ConsumerState<FilmDetailSheet> {
                         t: t,
                       ),
                       const SizedBox(height: 14),
-                      _tabBody(tabs[_tab], t),
+                      _tabBody(isTv, _tab, t),
                     ],
                   ),
                 ),
@@ -94,16 +105,18 @@ class _FilmDetailSheetState extends ConsumerState<FilmDetailSheet> {
     );
   }
 
-  Widget _tabBody(String name, DesignTokens t) {
+  Widget _tabBody(bool isTv, int index, DesignTokens t) {
     final m = widget.meta;
-    switch (name) {
-      case '剧集':
+    // 非剧集时无 “剧集” tab，整体索引前移一位。
+    final logical = isTv ? index : index + 1;
+    switch (logical) {
+      case 0:
         return _Seasons(meta: m, t: t);
-      case '版本':
+      case 1:
         return _Versions(meta: m, t: t);
-      case '演职员':
+      case 2:
         return _Cast(meta: m, t: t);
-      case '相关':
+      case 3:
         return _Related(t: t);
       default:
         return const SizedBox.shrink();
@@ -119,6 +132,7 @@ class _Hero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final backdrop = meta.backdropUrl ?? meta.localPosterUrl ?? meta.posterUrl;
     return SizedBox(
       height: 220,
@@ -193,7 +207,7 @@ class _Hero extends StatelessWidget {
                     if (meta.director != null && meta.director!.isNotEmpty)
                       _stat(null, meta.director!),
                     if (meta.runtime != null)
-                      _stat(null, '${meta.runtime} 分钟'),
+                      _stat(null, l.filmDetailRuntimeMinutes(meta.runtime!)),
                     if (meta.countries != null && meta.countries!.isNotEmpty)
                       _stat(null, meta.countries!),
                   ],
@@ -231,9 +245,11 @@ class _Actions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final quality = meta.resolution ?? meta.hdrFormat;
-    final playLabel = (meta.isWatched ? '继续播放' : '播放') +
-        (quality != null ? ' · $quality' : '');
+    final playLabel =
+        (meta.isWatched ? l.filmDetailContinuePlay : l.filmDetailPlay) +
+            (quality != null ? ' · $quality' : '');
     return Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -248,7 +264,8 @@ class _Actions extends ConsumerWidget {
               final watched =
                   await toggleWatchedStatus(ref, meta.filePath);
               if (context.mounted) {
-                context.showSuccessToast(watched ? '已标记为已看' : '已标记为未看');
+                context.showSuccessToast(
+                    watched ? l.filmDetailMarkedWatched : l.filmDetailMarkedUnwatched);
               }
             },
             icon: Icon(
@@ -257,7 +274,9 @@ class _Actions extends ConsumerWidget {
                   : Icons.check_circle_outline,
               size: 15,
             ),
-            label: Text(meta.isWatched ? '标记未看' : '标记已看'),
+            label: Text(meta.isWatched
+                ? l.filmDetailMarkUnwatched
+                : l.filmDetailMarkWatched),
           ),
           IconButton(
             onPressed: () => showAdaptiveModalSheet<void>(
@@ -269,7 +288,7 @@ class _Actions extends ConsumerWidget {
               ),
             ),
             icon: const Icon(Icons.cast_rounded, size: 16),
-            tooltip: '投屏',
+            tooltip: l.filmDetailCast,
           ),
         ],
       );
@@ -287,9 +306,10 @@ Future<void> playVideoMetadata(
   VideoMetadata meta, {
   bool closeSheet = false,
 }) async {
+  final l = AppLocalizations.of(context);
   final connection = ref.read(activeConnectionsProvider)[meta.sourceId];
   if (connection == null) {
-    context.showErrorToast('该影片所在数据源未连接');
+    context.showErrorToast(l.filmDetailSourceNotConnected);
     return;
   }
   try {
@@ -309,7 +329,7 @@ Future<void> playVideoMetadata(
       ),
     );
   } on Object catch (e) {
-    if (context.mounted) context.showErrorToast('播放失败：$e');
+    if (context.mounted) context.showErrorToast(l.filmDetailPlayFailed(e.toString()));
   }
 }
 
@@ -373,6 +393,7 @@ class _Versions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(13),
       decoration: BoxDecoration(
@@ -400,7 +421,7 @@ class _Versions extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const AppTag('默认', variant: TagVariant.free),
+                    AppTag(l.filmDetailDefault, variant: TagVariant.free),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -449,13 +470,14 @@ class _Cast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final cast = (meta.cast ?? '')
         .split(',')
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList(growable: false);
     if (cast.isEmpty) {
-      return Text('暂无演职员信息。',
+      return Text(l.filmDetailNoCast,
           style: TextStyle(fontSize: 12.5, color: t.text2));
     }
     return Wrap(
@@ -502,14 +524,17 @@ class _Related extends StatelessWidget {
   final DesignTokens t;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 22),
-        alignment: Alignment.center,
-        child: Text(
-          '相关推荐由 TMDB / 豆瓣 提供，可在影视设置中启用。',
-          style: TextStyle(fontSize: 12.5, color: t.text2),
-        ),
-      );
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 22),
+      alignment: Alignment.center,
+      child: Text(
+        l.filmDetailRelatedHint,
+        style: TextStyle(fontSize: 12.5, color: t.text2),
+      ),
+    );
+  }
 }
 
 /// 剧集分季/分集：按 TMDB ID（或剧目录）查本地分集，季 chip + 集列表，
@@ -535,6 +560,7 @@ class _SeasonsState extends ConsumerState<_Seasons> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final m = widget.meta;
     final t = widget.t;
     final AsyncValue<Map<int, Map<int, VideoMetadata>>> episodesAsync;
@@ -544,7 +570,7 @@ class _SeasonsState extends ConsumerState<_Seasons> {
       episodesAsync =
           ref.watch(localEpisodesByShowDirProvider(m.showDirectory!));
     } else {
-      return _hint('无法定位该剧的分集（缺少 TMDB ID 与剧目录）。');
+      return _hint(l.filmDetailSeasonsNoLocator);
     }
 
     return episodesAsync.when(
@@ -552,9 +578,9 @@ class _SeasonsState extends ConsumerState<_Seasons> {
         padding: EdgeInsets.symmetric(vertical: 24),
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (e, _) => _hint('加载剧集失败：$e'),
+      error: (e, _) => _hint(l.filmDetailSeasonsLoadFailed(e.toString())),
       data: (seasons) {
-        if (seasons.isEmpty) return _hint('未在本地找到该剧的分集文件。');
+        if (seasons.isEmpty) return _hint(l.filmDetailSeasonsEmpty);
         final seasonNums = seasons.keys.toList()..sort();
         final sel = (_season != null && seasons.containsKey(_season))
             ? _season!
@@ -573,7 +599,7 @@ class _SeasonsState extends ConsumerState<_Seasons> {
                 children: [
                   for (final s in seasonNums)
                     AppChip(
-                      label: '第 $s 季',
+                      label: l.filmDetailSeasonLabel(s),
                       active: s == sel,
                       compact: true,
                       onTap: () => setState(() => _season = s),
@@ -598,6 +624,7 @@ class _EpisodeRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -628,7 +655,7 @@ class _EpisodeRow extends ConsumerWidget {
                 child: Text(
                   meta.episodeTitle?.isNotEmpty ?? false
                       ? meta.episodeTitle!
-                      : '第 $ep 集',
+                      : l.filmDetailEpisodeLabel(ep),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/features/music/domain/entities/desktop_lyric_settings.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 
 /// 桌面歌词内容组件
 class DesktopLyricContent extends StatelessWidget {
@@ -49,6 +50,7 @@ class DesktopLyricContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final hasLyric = currentLyric != null && currentLyric!.isNotEmpty;
     final hasTranslation = settings.showTranslation &&
         currentTranslation != null &&
@@ -101,7 +103,7 @@ class DesktopLyricContent extends StatelessWidget {
                   ] else ...[
                     // 无歌词时的占位
                     _LyricLine(
-                      text: isPlaying ? '♪ ♪ ♪' : '暂无歌词',
+                      text: isPlaying ? '♪ ♪ ♪' : l.lyricContentEmptyHint,
                       fontSize: settings.fontSize * 0.8,
                       color: settings.textColor.withValues(alpha: 0.5),
                       isPlaying: false,
@@ -135,14 +137,16 @@ class DesktopLyricContent extends StatelessWidget {
                   // 锁定按钮
                   _ControlButton(
                     icon: settings.lockPosition ? Icons.lock_rounded : Icons.lock_open,
-                    tooltip: settings.lockPosition ? '解锁位置' : '锁定位置',
+                    tooltip: settings.lockPosition
+                        ? l.lyricContentUnlockPosition
+                        : l.lyricContentLockPosition,
                     onTap: onLockToggle,
                   ),
                   const SizedBox(width: 4),
                   // 关闭按钮
                   _ControlButton(
                     icon: Icons.close_rounded,
-                    tooltip: '关闭',
+                    tooltip: l.lyricContentClose,
                     onTap: onClose,
                   ),
                 ],

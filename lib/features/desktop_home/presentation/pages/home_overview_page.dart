@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/data/services/video_history_service.dart';
@@ -49,17 +50,18 @@ class _HomeOverviewPageState extends ConsumerState<HomeOverviewPage> {
     super.dispose();
   }
 
-  String get _greet {
+  String _greet(AppLocalizations l) {
     final h = _now.hour;
-    if (h < 6) return '凌晨好';
-    if (h < 11) return '早上好';
-    if (h < 14) return '中午好';
-    if (h < 18) return '下午好';
-    return '晚上好';
+    if (h < 6) return l.homeGreetEarlyMorning;
+    if (h < 11) return l.homeGreetMorning;
+    if (h < 14) return l.homeGreetNoon;
+    if (h < 18) return l.homeGreetAfternoon;
+    return l.homeGreetEvening;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final sourcesOnline = ref.watch(activeConnectionsProvider).length;
 
     return SingleChildScrollView(
@@ -70,20 +72,24 @@ class _HomeOverviewPageState extends ConsumerState<HomeOverviewPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _NowHero(now: _now, greet: _greet, sourcesOnline: sourcesOnline),
+              _NowHero(
+                now: _now,
+                greet: _greet(l),
+                sourcesOnline: sourcesOnline,
+              ),
               const SizedBox(height: 30),
               _SectionHead(
-                title: '继续',
-                sub: '观看 · 阅读 · 收听 — 本地与 Trakt 合并，本地优先',
+                title: l.homeSectionContinue,
+                sub: l.homeSectionContinueSub,
               ),
               const SizedBox(height: 14),
               const _ContinueStrip(),
               const SizedBox(height: 30),
-              _SectionHead(title: '快速操作'),
+              _SectionHead(title: l.homeSectionQuickActions),
               const SizedBox(height: 14),
               _QuickGrid(),
               const SizedBox(height: 30),
-              _SectionHead(title: '最近添加', sub: '跨全部源'),
+              _SectionHead(title: l.homeSectionRecentlyAdded, sub: l.homeSectionRecentlyAddedSub),
               const SizedBox(height: 14),
               const _RecentlyAdded(),
             ],
@@ -146,6 +152,7 @@ class _NowHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return SizedBox(
       // 容纳右侧时钟卡 + 三行系统脉搏（脉搏行加高后 340 会溢出 24px）。
       height: 372,
@@ -170,7 +177,7 @@ class _NowHero extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '$greet，欢迎回来',
+                          l.homeWelcomeBack(greet),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -192,9 +199,12 @@ class _NowHero extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${now.month} 月 ${now.day} 日 · '
-                          '${_zhWeek(now.weekday)} · '
-                          '$sourcesOnline 个源在线',
+                          l.homeNowDateLine(
+                            now.month,
+                            now.day,
+                            _zhWeek(l, now.weekday),
+                            sourcesOnline,
+                          ),
                           style: TextStyle(fontSize: 12, color: t.text2),
                         ),
                       ],
@@ -211,8 +221,15 @@ class _NowHero extends StatelessWidget {
     );
   }
 
-  String _zhWeek(int w) =>
-      ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][w - 1];
+  String _zhWeek(AppLocalizations l, int w) => [
+        l.homeWeekdayMon,
+        l.homeWeekdayTue,
+        l.homeWeekdayWed,
+        l.homeWeekdayThu,
+        l.homeWeekdayFri,
+        l.homeWeekdaySat,
+        l.homeWeekdaySun,
+      ][w - 1];
 }
 
 class _SpotlightCard extends ConsumerWidget {
@@ -221,6 +238,7 @@ class _SpotlightCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final items = ref.watch(continueWatchingProvider).valueOrNull ?? const [];
     final top = items.isNotEmpty ? items.first : null;
     final pos = top?.lastPosition?.inMilliseconds ?? 0;
@@ -269,15 +287,16 @@ class _SpotlightCard extends ConsumerWidget {
                 children: [
                   Wrap(
                     spacing: 8,
-                    children: const [
-                      AppTag('继续观看', variant: TagVariant.accent),
-                      AppTag('本地优先'),
-                      AppTag('Trakt 同步', variant: TagVariant.accent),
+                    children: [
+                      AppTag(l.homeTagContinueWatching,
+                          variant: TagVariant.accent),
+                      AppTag(l.homeTagLocalFirst),
+                      AppTag(l.homeTagTraktSync, variant: TagVariant.accent),
                     ],
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    top?.videoName ?? '映射「影视」媒体库以激活此处',
+                    top?.videoName ?? l.homeSpotlightEmptyTitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -319,8 +338,10 @@ class _SpotlightCard extends ConsumerWidget {
                           children: [
                             Text(
                               top != null
-                                  ? '继续观看 · ${(progress * 100).toStringAsFixed(0)}%'
-                                  : '继续观看会自动出现在这里',
+                                  ? l.homeSpotlightContinueProgress(
+                                      (progress * 100).round(),
+                                    )
+                                  : l.homeSpotlightContinueHint,
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFFCCCCD0),
@@ -369,12 +390,13 @@ class _SystemPulse extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final tp = ref.watch(downloaderThroughputProvider);
     final downloadSub = tp.activeCount > 0
-        ? '${_fmtSpeed(tp.downloadSpeed)} · ${tp.activeCount} 个任务'
+        ? l.homePulseDownloadActive(_fmtSpeed(tp.downloadSpeed), tp.activeCount)
         : tp.connectedClients > 0
-            ? '空闲 · ${tp.connectedClients} 个客户端'
-            : '未连接下载器';
+            ? l.homePulseDownloadIdle(tp.connectedClients)
+            : l.homePulseDownloadDisconnected;
     return GlassPanel(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       child: SizedBox(
@@ -385,7 +407,7 @@ class _SystemPulse extends ConsumerWidget {
             Row(
               children: [
                 Text(
-                  '系统脉搏',
+                  l.homePulseTitle,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -396,7 +418,7 @@ class _SystemPulse extends ConsumerWidget {
                 const StatusDot(DotStatus.ok),
                 const SizedBox(width: 5),
                 Text(
-                  '实时',
+                  l.homePulseRealtime,
                   style: TextStyle(fontSize: 11, color: t.text2),
                 ),
               ],
@@ -410,25 +432,25 @@ class _SystemPulse extends ConsumerWidget {
                   _PulseRow(
                     icon: Icons.download_rounded,
                     iconColor: t.accentBright,
-                    title: '下载吞吐',
+                    title: l.homePulseDownloadTitle,
                     subtitle: downloadSub,
                     trailing: _Sparkline(color: t.accentBright),
                   ),
                   _PulseRow(
                     icon: Icons.image_search_rounded,
                     iconColor: const Color(0xFFFB923C),
-                    title: '照片扫描',
-                    subtitle: '空闲',
+                    title: l.homePulsePhotoScanTitle,
+                    subtitle: l.homePulsePhotoScanIdle,
                     trailing:
                         const _MiniRing(value: 0, color: Color(0xFFFB923C)),
                   ),
                   _PulseRow(
                     icon: Icons.cast_rounded,
                     iconColor: t.hot,
-                    title: '直播中',
-                    subtitle: '映射 M3U8 源后激活',
+                    title: l.homePulseLiveTitle,
+                    subtitle: l.homePulseLiveHint,
                     trailing: AppChip(
-                      label: '观看',
+                      label: l.homePulseLiveWatch,
                       compact: true,
                       onTap: () => GoRouter.of(context).go('/live'),
                     ),
@@ -629,6 +651,7 @@ class _ContinueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final pos = item.lastPosition?.inMilliseconds ?? 0;
     final dur = item.duration?.inMilliseconds ?? 0;
     final progress = dur > 0 ? (pos / dur).clamp(0.0, 1.0) : 0.0;
@@ -667,7 +690,7 @@ class _ContinueCard extends StatelessWidget {
                   AppProgressBar(value: progress),
                   const SizedBox(height: 5),
                   Text(
-                    '已观看 ${(progress * 100).toStringAsFixed(0)}%',
+                    l.homeWatchedPercent((progress * 100).round()),
                     style: TextStyle(fontSize: 10.5, color: t.text2),
                   ),
                 ],
@@ -686,6 +709,7 @@ class _EmptyContinue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
       child: Row(
@@ -694,7 +718,7 @@ class _EmptyContinue extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '观看 / 阅读 / 收听任意媒体，进度都会出现在这里。',
+              l.homeEmptyContinueHint,
               style: TextStyle(fontSize: 13, color: t.text2),
             ),
           ),
@@ -707,28 +731,29 @@ class _EmptyContinue extends StatelessWidget {
 class _QuickGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final tiles = [
       _QuickItem(
-        title: '新建下载',
-        desc: '发送磁力 / 直链',
+        title: l.homeQuickNewDownloadTitle,
+        desc: l.homeQuickNewDownloadDesc,
         icon: Icons.download_rounded,
         onTap: () => GoRouter.of(context).go('/download'),
       ),
       _QuickItem(
-        title: 'PT 搜索',
-        desc: '跨站找资源',
+        title: l.homeQuickPtSearchTitle,
+        desc: l.homeQuickPtSearchDesc,
         icon: Icons.flag_circle_outlined,
         onTap: () => GoRouter.of(context).go('/pt'),
       ),
       _QuickItem(
-        title: '上传到 NAS',
-        desc: '照片 / 文件备份',
+        title: l.homeQuickUploadTitle,
+        desc: l.homeQuickUploadDesc,
         icon: Icons.upload_rounded,
         onTap: () => GoRouter.of(context).go('/transfer'),
       ),
       _QuickItem(
-        title: '添加数据源',
-        desc: '连接新设备',
+        title: l.homeQuickAddSourceTitle,
+        desc: l.homeQuickAddSourceDesc,
         icon: Icons.lan_rounded,
         onTap: () => GoRouter.of(context).go('/sources'),
       ),
@@ -810,6 +835,7 @@ class _RecentlyAdded extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final state = ref.watch(videoListProvider);
     final recents = (state is VideoListLoaded
             ? state.recentVideos
@@ -826,7 +852,7 @@ class _RecentlyAdded extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '映射「影视」媒体库后，最近添加的内容会跨全部源出现在这里。',
+                l.homeEmptyRecentlyAddedHint,
                 style: TextStyle(fontSize: 13, color: t.text2),
               ),
             ),

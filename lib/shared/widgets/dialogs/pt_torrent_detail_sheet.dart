@@ -5,6 +5,7 @@ import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/pt_sites/presentation/widgets/send_to_downloader_sheet.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -23,6 +24,7 @@ class PtTorrentDetailSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final promo = torrent.status.promotionLabel;
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -75,7 +77,8 @@ class PtTorrentDetailSheet extends ConsumerWidget {
                               if (torrent.category != null)
                                 AppTag(torrent.category!,
                                     variant: TagVariant.neutral),
-                              for (final l in torrent.labels.take(4)) AppTag(l),
+                              for (final label in torrent.labels.take(4))
+                                AppTag(label),
                             ],
                           ),
                         ],
@@ -97,23 +100,33 @@ class PtTorrentDetailSheet extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          _stat('大小', torrent.formattedSize, t.text0, t),
-                          _stat('做种', '${torrent.seeders}', t.ok, t),
-                          _stat('下载', '${torrent.leechers}', t.accentBright, t),
-                          _stat('完成', '${torrent.snatched}', t.text0, t),
+                          _stat(l.ptDetailStatSize, torrent.formattedSize,
+                              t.text0, t),
+                          _stat(l.ptDetailStatSeeders, '${torrent.seeders}',
+                              t.ok, t),
+                          _stat(l.ptDetailStatLeechers, '${torrent.leechers}',
+                              t.accentBright, t),
+                          _stat(l.ptDetailStatSnatched, '${torrent.snatched}',
+                              t.text0, t),
                         ],
                       ),
                       const SizedBox(height: 16),
                       _MetaRow(
-                        label: '上传时间',
+                        label: l.ptDetailMetaUploadTime,
                         value: torrent.formattedRemainingOrUpload(),
                         t: t,
                       ),
                       if (torrent.imdbId != null)
                         _MetaRow(label: 'IMDB', value: torrent.imdbId!, t: t),
                       if (torrent.doubanId != null)
-                        _MetaRow(label: '豆瓣', value: torrent.doubanId!, t: t),
-                      _MetaRow(label: '种子 ID', value: torrent.id, t: t),
+                        _MetaRow(
+                            label: l.ptDetailMetaDouban,
+                            value: torrent.doubanId!,
+                            t: t),
+                      _MetaRow(
+                          label: l.ptDetailMetaTorrentId,
+                          value: torrent.id,
+                          t: t),
                     ],
                   ),
                 ),
@@ -130,10 +143,10 @@ class PtTorrentDetailSheet extends ConsumerWidget {
                         onPressed: () {
                           Clipboard.setData(
                               ClipboardData(text: torrent.detailUrl!));
-                          context.showSuccessToast('详情链接已复制');
+                          context.showSuccessToast(l.ptDetailLinkCopied);
                         },
                         icon: const Icon(Icons.link_rounded, size: 15),
-                        label: const Text('复制链接'),
+                        label: Text(l.ptDetailCopyLink),
                       ),
                     const Spacer(),
                     FilledButton.icon(
@@ -148,7 +161,7 @@ class PtTorrentDetailSheet extends ConsumerWidget {
                         );
                       },
                       icon: const Icon(Icons.download_rounded, size: 16),
-                      label: const Text('发送到下载器'),
+                      label: Text(l.ptDetailSendToDownloader),
                     ),
                   ],
                 ),

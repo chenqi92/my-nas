@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
@@ -40,6 +41,7 @@ class VideoPane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
 
     final quality = ref.watch(qualitySettingsProvider);
     final qualityNotifier = ref.read(qualitySettingsProvider.notifier);
@@ -66,43 +68,42 @@ class VideoPane extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SetHead(
+        SetHead(
           icon: Icons.movie_outlined,
-          title: '视频播放',
-          subtitle:
-              '清晰度、HDR 色调映射、音频直通、投屏转码与字幕翻译。video_quality_settings。',
+          title: l.paneVideoHeadTitle,
+          subtitle: l.paneVideoHeadSubtitle,
         ),
 
         // ---- 播放 ----
         SetSection(
-          title: '播放',
-          hint: '续播 · 自动下一集',
+          title: l.paneVideoSectionPlayback,
+          hint: l.paneVideoSectionPlaybackHint,
           children: [
             SetRow(
-              title: '清晰度',
-              desc: '自适应码率，或手动锁定档位',
+              title: l.paneVideoQualityTitle,
+              desc: l.paneVideoQualityDesc,
               trailing: AppSegmented<bool>(
                 value: quality.enableAdaptiveSuggestion,
                 onChanged: (v) =>
                     qualityNotifier.setEnableAdaptiveSuggestion(enabled: v),
-                options: const [
-                  AppSegmentedOption(value: true, label: '自适应'),
-                  AppSegmentedOption(value: false, label: '手动'),
+                options: [
+                  AppSegmentedOption(value: true, label: l.paneVideoQualityAdaptive),
+                  AppSegmentedOption(value: false, label: l.paneVideoQualityManual),
                 ],
               ),
             ),
             if (!quality.enableAdaptiveSuggestion)
               SetRow(
-                title: '默认档位',
-                desc: '手动模式下播放时锁定的清晰度',
+                title: l.paneVideoDefaultQualityTitle,
+                desc: l.paneVideoDefaultQualityDesc,
                 trailing: _QualityDropdown(
                   value: quality.defaultQuality,
                   onChanged: qualityNotifier.setDefaultQuality,
                 ),
               ),
             SetRow(
-              title: '记住清晰度选择',
-              desc: '下次播放同一视频时自动应用',
+              title: l.paneVideoRememberQualityTitle,
+              desc: l.paneVideoRememberQualityDesc,
               trailing: AppSwitch(
                 value: quality.rememberPerVideo,
                 onChanged: (v) =>
@@ -110,8 +111,8 @@ class VideoPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '自动续播',
-              desc: '从上次停止处继续',
+              title: l.paneVideoAutoResumeTitle,
+              desc: l.paneVideoAutoResumeDesc,
               trailing: AppSwitch(
                 value: playback.rememberPosition,
                 onChanged: (v) =>
@@ -119,22 +120,22 @@ class VideoPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '自动下一集',
-              desc: '剧集结束自动播放下一集',
+              title: l.paneVideoAutoNextTitle,
+              desc: l.paneVideoAutoNextDesc,
               trailing: AppSwitch(
                 value: playback.autoPlayNext,
                 onChanged: (v) => playbackNotifier.setAutoPlayNext(enabled: v),
               ),
             ),
             SetRow(
-              title: '缓冲阈值',
-              desc: '缓冲达到该秒数再开始播放',
+              title: l.paneVideoBufferThresholdTitle,
+              desc: l.paneVideoBufferThresholdDesc,
               last: true,
               trailing: _SliderField(
                 value: quality.bufferThresholdSeconds.toDouble(),
                 min: 1,
                 max: 15,
-                label: '${quality.bufferThresholdSeconds} s',
+                label: l.paneVideoSecondsLabel(quality.bufferThresholdSeconds),
                 onChanged: (v) =>
                     qualityNotifier.setBufferThreshold(v.round()),
               ),
@@ -144,12 +145,12 @@ class VideoPane extends ConsumerWidget {
 
         // ---- HDR 与后端 ----
         SetSection(
-          title: 'HDR 与后端',
-          hint: 'HDR10 / HLG · 色调映射',
+          title: l.paneVideoSectionHdr,
+          hint: l.paneVideoSectionHdrHint,
           children: [
             SetRow(
               title: 'HDR10 / HLG',
-              desc: '启用 HDR 通道与元数据透传',
+              desc: l.paneVideoHdrToggleDesc,
               trailing: AppSwitch(
                 value: hdrSettings.hdrMode != HdrMode.disabled,
                 onChanged: (v) => hdrAudioNotifier.setHdrMode(
@@ -158,32 +159,32 @@ class VideoPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '色调映射',
-              desc: 'HDR → SDR 显示时的映射算法',
+              title: l.paneVideoToneMappingTitle,
+              desc: l.paneVideoToneMappingDesc,
               trailing: _ToneMappingDropdown(
                 value: hdrSettings.toneMappingMode,
                 onChanged: hdrAudioNotifier.setToneMappingMode,
               ),
             ),
             SetRow(
-              title: '视频后端',
-              desc: '自动按 HDR / 杜比能力切换，或手动锁定后端',
+              title: l.paneVideoBackendTitle,
+              desc: l.paneVideoBackendDesc,
               last: true,
               trailing: AppSegmented<VideoBackendPreference>(
                 value: videoBackend,
                 onChanged: videoBackendNotifier.setPreference,
-                options: const [
+                options: [
                   AppSegmentedOption(
                     value: VideoBackendPreference.auto,
-                    label: '自动',
+                    label: l.paneVideoBackendAuto,
                   ),
-                  AppSegmentedOption(
+                  const AppSegmentedOption(
                     value: VideoBackendPreference.mediaKit,
                     label: 'media_kit',
                   ),
                   AppSegmentedOption(
                     value: VideoBackendPreference.native,
-                    label: '原生',
+                    label: l.paneVideoBackendNative,
                   ),
                 ],
               ),
@@ -193,7 +194,7 @@ class VideoPane extends ConsumerWidget {
 
         // ---- 音频直通 ----
         SetSection(
-          title: '音频直通',
+          title: l.paneVideoSectionAudio,
           hint: 'AC3 / DTS / TrueHD / PCM',
           children: [
             _PassthroughTiles(
@@ -202,10 +203,10 @@ class VideoPane extends ConsumerWidget {
               onChanged: hdrAudioNotifier.setEnabledPassthroughCodecs,
             ),
             SetRow(
-              title: '输出端口',
-              desc: '直通目标设备',
+              title: l.paneVideoOutputPortTitle,
+              desc: l.paneVideoOutputPortDesc,
               trailing: Text(
-                _outputDeviceText(hdrAudio.audioCapability),
+                _outputDeviceText(l, hdrAudio.audioCapability),
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
@@ -214,8 +215,8 @@ class VideoPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '始终解码后输出',
-              desc: '不支持直通时强制本地解码为 PCM',
+              title: l.paneVideoAlwaysDecodeTitle,
+              desc: l.paneVideoAlwaysDecodeDesc,
               last: true,
               trailing: AppSwitch(
                 value: hdrSettings.audioPassthroughMode ==
@@ -232,17 +233,20 @@ class VideoPane extends ConsumerWidget {
 
         // ---- 投屏与转码 ----
         SetSection(
-          title: '投屏与转码',
+          title: l.paneVideoSectionCast,
           children: [
             SetRow(
-              title: 'DLNA / AirPlay 投屏',
+              title: l.paneVideoCastTitle,
               desc: cast.isCasting
-                  ? '投屏中 · ${cast.session?.device.name ?? '已连接设备'}'
+                  ? l.paneVideoCastDescCasting(
+                      cast.session?.device.name ?? l.paneVideoCastConnectedDevice)
                   : cast.isDiscovering
-                      ? '正在搜索设备…'
-                      : '设备发现 · 远程控制（播放 / 暂停 / 音量 / 进度）',
+                      ? l.paneVideoCastDescDiscovering
+                      : l.paneVideoCastDescIdle,
               trailing: AppButton(
-                label: cast.isDiscovering ? '搜索中…' : '搜索设备',
+                label: cast.isDiscovering
+                    ? l.paneVideoCastDiscoveringButton
+                    : l.paneVideoCastDiscoverButton,
                 icon: Icons.wifi_tethering_rounded,
                 dense: true,
                 onPressed:
@@ -250,8 +254,8 @@ class VideoPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '服务端转码',
-              desc: '允许 Synology / Jellyfin 等服务端转码以切换清晰度',
+              title: l.paneVideoServerTranscodeTitle,
+              desc: l.paneVideoServerTranscodeDesc,
               trailing: AppSwitch(
                 value: quality.allowServerTranscoding,
                 onChanged: (v) =>
@@ -259,8 +263,8 @@ class VideoPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '客户端转码',
-              desc: '直连不可用时允许本地 FFmpeg 转码（受平台编解码能力限制）',
+              title: l.paneVideoClientTranscodeTitle,
+              desc: l.paneVideoClientTranscodeDesc,
               trailing: AppSwitch(
                 value: quality.allowClientTranscoding,
                 onChanged: (v) =>
@@ -268,8 +272,8 @@ class VideoPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '不支持转码提示',
-              desc: '当源与设备都不支持目标编码时弹出提示',
+              title: l.paneVideoUnsupportedHintTitle,
+              desc: l.paneVideoUnsupportedHintDesc,
               trailing: AppSwitch(
                 value: quality.showUnsupportedHint,
                 onChanged: (v) =>
@@ -277,42 +281,41 @@ class VideoPane extends ConsumerWidget {
               ),
             ),
             _NoteRow(
-              text:
-                  '当源与设备都不支持目标编码、且服务端 / 客户端转码均不可用时，播放器会提示「不支持转码」并给出可播放的备选版本。',
+              text: l.paneVideoTranscodeNote,
             ),
           ],
         ),
 
         // ---- 字幕 ----
         SetSection(
-          title: '字幕',
-          hint: '翻译 · 缓存 · 源',
+          title: l.paneVideoSectionSubtitle,
+          hint: l.paneVideoSectionSubtitleHint,
           bottomMargin: false,
           children: [
             SetRow(
-              title: '双语显示',
-              desc: '原文 + 译文双行',
+              title: l.paneVideoBilingualTitle,
+              desc: l.paneVideoBilingualDesc,
               trailing: AppSwitch(
                 value: subtitle.bilingual,
                 onChanged: (v) => subtitleNotifier.setBilingual(value: v),
               ),
             ),
             SetRow(
-              title: '翻译引擎',
-              desc: '字幕实时翻译',
+              title: l.paneVideoTranslateEngineTitle,
+              desc: l.paneVideoTranslateEngineDesc,
               trailing: AppSegmented<bool>(
                 value: subtitle.providerId != 'off',
                 onChanged: (v) =>
                     subtitleNotifier.setProvider(v ? 'google_free' : 'off'),
-                options: const [
-                  AppSegmentedOption(value: true, label: 'Google 免费'),
-                  AppSegmentedOption(value: false, label: '关闭'),
+                options: [
+                  AppSegmentedOption(value: true, label: l.paneVideoTranslateEngineGoogle),
+                  AppSegmentedOption(value: false, label: l.paneVideoTranslateEngineOff),
                 ],
               ),
             ),
             SetRow(
-              title: '翻译缓存',
-              desc: '缓存译文，重复播放免翻译',
+              title: l.paneVideoTranslateCacheTitle,
+              desc: l.paneVideoTranslateCacheDesc,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -322,40 +325,40 @@ class VideoPane extends ConsumerWidget {
                   ),
                   const SizedBox(width: 10),
                   AppChip(
-                    label: '清译文存档',
+                    label: l.paneVideoClearCacheChip,
                     icon: Icons.delete_outline_rounded,
                     onTap: () async {
                       await SubtitleTranslationService.instance.clearCache();
                       if (!context.mounted) return;
-                      context.showSuccessSnackBar('翻译缓存已清除');
+                      context.showSuccessSnackBar(l.paneVideoCacheCleared);
                     },
                   ),
                 ],
               ),
             ),
             SetRow(
-              title: '字幕源',
+              title: l.paneVideoSubtitleSourceTitle,
               desc: hasOpenSubtitles
-                  ? 'OpenSubtitles 在线字幕 · 已配置账户'
-                  : 'OpenSubtitles 在线字幕 · 使用内置公共配额',
+                  ? l.paneVideoSubtitleSourceDescConfigured
+                  : l.paneVideoSubtitleSourceDescPublic,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   StatusDot(hasOpenSubtitles ? DotStatus.ok : DotStatus.off),
                   const SizedBox(width: 8),
                   AppChip(
-                    label: '账户',
+                    label: l.paneVideoAccountChip,
                     onTap: () => _openOpenSubtitlesAccount(context, ref),
                   ),
                 ],
               ),
             ),
             SetRow(
-              title: '视频刮削源',
-              desc: 'TMDB / 豆瓣 NFO 元数据来源',
+              title: l.paneVideoScraperSourceTitle,
+              desc: l.paneVideoScraperSourceDesc,
               last: true,
               trailing: AppButton(
-                label: '管理刮削源',
+                label: l.paneVideoScraperSourceButton,
                 icon: Icons.tune_rounded,
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -370,16 +373,19 @@ class VideoPane extends ConsumerWidget {
     );
   }
 
-  String _outputDeviceText(AudioPassthroughCapability? capability) {
-    if (capability == null) return '检测中…';
+  String _outputDeviceText(
+    AppLocalizations l,
+    AudioPassthroughCapability? capability,
+  ) {
+    if (capability == null) return l.paneVideoOutputDetecting;
     final device = switch (capability.outputDevice) {
       AudioOutputDevice.hdmi => 'HDMI',
-      AudioOutputDevice.spdif => 'S/PDIF 光纤',
+      AudioOutputDevice.spdif => l.paneVideoOutputSpdif,
       AudioOutputDevice.arc => 'HDMI ARC/eARC',
-      AudioOutputDevice.bluetooth => '蓝牙',
-      AudioOutputDevice.speaker => '内置扬声器',
-      AudioOutputDevice.headphones => '耳机',
-      AudioOutputDevice.unknown => '未知',
+      AudioOutputDevice.bluetooth => l.paneVideoOutputBluetooth,
+      AudioOutputDevice.speaker => l.paneVideoOutputSpeaker,
+      AudioOutputDevice.headphones => l.paneVideoOutputHeadphones,
+      AudioOutputDevice.unknown => l.paneVideoOutputUnknown,
     };
     final name = capability.deviceName;
     if (name != null && name.isNotEmpty) return '$device · $name';
@@ -430,6 +436,7 @@ class _PassthroughTiles extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final enabled = settings.enabledPassthroughCodecs ??
         capability?.supportedCodecs ??
         const <AudioCodec>[];
@@ -473,7 +480,8 @@ class _PassthroughTiles extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${codec.displayName} 直通',
+                                l.paneVideoCodecPassthroughTitle(
+                                    codec.displayName),
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
@@ -482,7 +490,7 @@ class _PassthroughTiles extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '原始码流直出功放',
+                                l.paneVideoCodecPassthroughDesc,
                                 style:
                                     TextStyle(fontSize: 11.5, color: t.text2),
                               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
 import 'package:my_nas/features/book/presentation/pages/book_settings_page.dart';
 import 'package:my_nas/features/book/presentation/pages/book_sources_page.dart';
@@ -125,6 +126,7 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final settings = ref.watch(bookReaderSettingsProvider);
     final sourcesAsync = ref.watch(bookSourcesProvider);
@@ -134,12 +136,11 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
       children: [
         SetHead(
           icon: Icons.menu_book_outlined,
-          title: '阅读',
-          subtitle:
-              '阅读器引擎、在线书源与全局阅读偏好。图书 / 漫画 / PDF 共享统一阅读进度（itemType 区分）。',
+          title: l.paneReadingTitle,
+          subtitle: l.paneReadingSubtitle,
           actions: [
             AppButton(
-              label: '导入书源',
+              label: l.paneReadingImportSource,
               icon: Icons.add_rounded,
               onPressed: () => _openSources(context),
             ),
@@ -148,20 +149,20 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
 
         // ---- 阅读器 ----
         SetSection(
-          title: '阅读器',
+          title: l.paneReadingReaderSection,
           children: [
             SetRow(
-              title: 'EPUB 引擎',
-              desc: '原生（快、省内存）/ WebView（排版还原度高）',
+              title: l.paneReadingEpubEngineTitle,
+              desc: l.paneReadingEpubEngineDesc,
               trailing: AppSegmented<EpubReaderEngine>(
-                options: const [
+                options: [
                   AppSegmentedOption(
                     value: EpubReaderEngine.native,
-                    label: 'EPUB 原生',
+                    label: l.paneReadingEpubEngineNative,
                   ),
                   AppSegmentedOption(
                     value: EpubReaderEngine.foliate,
-                    label: 'WebView',
+                    label: l.paneReadingEpubEngineWebview,
                   ),
                 ],
                 value: settings.epubEngine,
@@ -171,8 +172,8 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
               ),
             ),
             SetRow(
-              title: '保持屏幕常亮',
-              desc: '阅读图书时不自动熄屏',
+              title: l.paneReadingKeepScreenOnTitle,
+              desc: l.paneReadingKeepScreenOnDesc,
               trailing: AppSwitch(
                 value: settings.keepScreenOn,
                 onChanged: (v) => ref
@@ -181,8 +182,8 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
               ),
             ),
             SetRow(
-              title: '显示阅读进度',
-              desc: '在阅读器底部显示章节进度与百分比',
+              title: l.paneReadingShowProgressTitle,
+              desc: l.paneReadingShowProgressDesc,
               trailing: AppSwitch(
                 value: settings.showProgress,
                 onChanged: (v) => ref
@@ -191,24 +192,27 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
               ),
             ),
             SetRow(
-              title: '全局阅读偏好',
-              desc: '字号 / 字体 / 主题 / 翻页方式 — 新书自动套用',
+              title: l.paneReadingGlobalPrefsTitle,
+              desc: l.paneReadingGlobalPrefsDesc,
               trailing: AppButton(
-                label: '打开',
+                label: l.paneReadingGlobalPrefsOpen,
                 icon: Icons.tune_rounded,
                 dense: true,
                 onPressed: () => _openBookSettings(context),
               ),
             ),
             SetRow(
-              title: '阅读历史统计',
+              title: l.paneReadingHistoryTitle,
               desc: _stats.total > 0
-                  ? '在读 ${_stats.reading} · 已读 ${_stats.finished} · '
-                      '完读率 ${_stats.finishRateText}'
-                  : '完读率 / 在读已读 / 阅读活跃热力图',
+                  ? l.paneReadingHistoryDescStats(
+                      _stats.reading,
+                      _stats.finished,
+                      _stats.finishRateText,
+                    )
+                  : l.paneReadingHistoryDescEmpty,
               last: true,
               trailing: AppButton(
-                label: '查看',
+                label: l.paneReadingHistoryView,
                 icon: Icons.insights_outlined,
                 dense: true,
                 onPressed: _stats.total > 0 ? _openStats : null,
@@ -219,10 +223,10 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
 
         // ---- 在线书源 ----
         SetSection(
-          title: '在线书源',
+          title: l.paneReadingSourcesSection,
           hint: sourcesAsync.maybeWhen(
-            data: (s) => 'Legado 格式 · ${s.length} 个',
-            orElse: () => 'Legado 格式',
+            data: (s) => l.paneReadingSourcesHintCount(s.length),
+            orElse: () => l.paneReadingSourcesHint,
           ),
           children: _buildSourceRows(context, t, sourcesAsync),
         ),
@@ -235,6 +239,7 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
     DesignTokens t,
     AsyncValue<List<BookSource>> sourcesAsync,
   ) {
+    final l = AppLocalizations.of(context);
     final preview = sourcesAsync.maybeWhen(
       data: (s) => s,
       orElse: () => const <BookSource>[],
@@ -244,16 +249,16 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
 
     if (sourcesAsync.isLoading && preview.isEmpty) {
       rows.add(
-        const SetRow(
-          title: '加载中…',
-          desc: '正在读取已配置的书源',
+        SetRow(
+          title: l.paneReadingSourcesLoadingTitle,
+          desc: l.paneReadingSourcesLoadingDesc,
         ),
       );
     } else if (preview.isEmpty) {
       rows.add(
-        const SetRow(
-          title: '暂无书源',
-          desc: '导入 Legado 格式书源后可在线搜索、阅读或加入书架',
+        SetRow(
+          title: l.paneReadingSourcesEmptyTitle,
+          desc: l.paneReadingSourcesEmptyDesc,
         ),
       );
     } else {
@@ -264,11 +269,13 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
         rows.add(
           SetRow(
             title: s.displayName,
-            desc: '规则引擎：搜索 / 探索 / 正文 / 目录（CSS-XPath）',
+            desc: l.paneReadingSourceRuleDesc,
             leading: _SourceIcon(t: t),
             last: isLastRow,
             trailing: AppTag(
-              s.enabled ? '启用' : '停用',
+              s.enabled
+                  ? l.paneReadingSourceEnabled
+                  : l.paneReadingSourceDisabled,
               variant: s.enabled ? TagVariant.free : TagVariant.limit,
             ),
           ),
@@ -277,11 +284,11 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
       if (preview.length > 4) {
         rows.add(
           SetRow(
-            title: '查看全部 ${preview.length} 个书源',
-            desc: '导入 / 编辑 / 启停 / 排序 / 在线搜索',
+            title: l.paneReadingSourcesViewAll(preview.length),
+            desc: l.paneReadingSourcesViewAllDesc,
             last: true,
             trailing: AppButton(
-              label: '管理',
+              label: l.paneReadingSourcesManage,
               icon: Icons.tune_rounded,
               dense: true,
               onPressed: () => _openSources(context),
@@ -298,13 +305,13 @@ class _ReadingPaneState extends ConsumerState<ReadingPane> {
           children: [
             Expanded(
               child: Text(
-                '书源支持导入 / 编辑 / 启停 / 搜索；在线结果可直接阅读或加入书架。',
+                l.paneReadingSourcesFooter,
                 style: TextStyle(fontSize: 12, height: 1.4, color: t.text2),
               ),
             ),
             const SizedBox(width: 14),
             AppButton(
-              label: '管理书源',
+              label: l.paneReadingSourcesManageButton,
               icon: Icons.dns_rounded,
               dense: true,
               onPressed: () => _openSources(context),
@@ -356,6 +363,7 @@ class _ReadingStatsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return Dialog(
       backgroundColor: t.cardBg,
@@ -376,7 +384,7 @@ class _ReadingStatsDialog extends StatelessWidget {
                   Icon(Icons.insights_outlined, size: 20, color: t.accentBright),
                   const SizedBox(width: 10),
                   Text(
-                    '阅读历史统计',
+                    l.paneReadingHistoryTitle,
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
@@ -386,7 +394,7 @@ class _ReadingStatsDialog extends StatelessWidget {
                   ),
                   const Spacer(),
                   AppButton(
-                    label: '关闭',
+                    label: l.paneReadingStatsClose,
                     dense: true,
                     variant: AppButtonVariant.ghost,
                     onPressed: () => Navigator.of(context).pop(),
@@ -421,11 +429,12 @@ class _StatKvStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final cells = <(String, String)>[
-      (stats.reading.toString(), '在读'),
-      (stats.finished.toString(), '已读'),
-      (stats.finishRateText, '完读率'),
-      (stats.total.toString(), '有进度'),
+      (stats.reading.toString(), l.paneReadingStatReading),
+      (stats.finished.toString(), l.paneReadingStatFinished),
+      (stats.finishRateText, l.paneReadingStatFinishRate),
+      (stats.total.toString(), l.paneReadingStatTotal),
     ];
     return Row(
       children: [
@@ -473,6 +482,7 @@ class _ReadingHeatmap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final maxCount = daily.fold<int>(0, (a, d) => d.count > a ? d.count : a);
     return Column(
@@ -481,13 +491,13 @@ class _ReadingHeatmap extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 9),
           child: Text(
-            '近 ${daily.length} 天阅读活跃',
+            l.paneReadingHeatmapTitle(daily.length),
             style: TextStyle(fontSize: 11, color: t.text3),
           ),
         ),
         if (maxCount == 0)
           Text(
-            '近期还没有阅读记录',
+            l.paneReadingHeatmapEmpty,
             style: TextStyle(fontSize: 12, color: t.text2),
           )
         else

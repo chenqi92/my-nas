@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/add_subscription_sheet.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/subscription_detail_sheet.dart';
@@ -60,16 +61,17 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final sources = ref.watch(nastoolSourcesProvider);
 
     if (sources.isEmpty) {
-      return const DesktopPageScaffold(
-        title: '媒体自动化',
-        subtitle: 'NAStool 订阅 — 自动追剧 / 电影补全',
+      return DesktopPageScaffold(
+        title: l.nastoolPageTitle,
+        subtitle: l.nastoolPageSubtitle,
         body: DesktopComingSoon(
           icon: Icons.auto_awesome_outlined,
-          message: '尚未配置 NAStool。到「数据源」添加 NAStool 之后，可在此管理订阅、自动追剧。',
+          message: l.nastoolPageNotConfigured,
         ),
       );
     }
@@ -82,8 +84,8 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
     final subsAsync = ref.watch(nastoolSubscribesProvider(selected));
 
     return DesktopPageScaffold(
-      title: '媒体自动化',
-      subtitle: 'NAStool 订阅 — 自动追剧 / 电影补全',
+      title: l.nastoolPageTitle,
+      subtitle: l.nastoolPageSubtitle,
       maxWidth: 1400,
       actions: Row(
         children: [
@@ -91,10 +93,10 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
             value: _filter,
             onChanged: (v) => setState(() => _filter = v),
             dense: true,
-            options: const [
-              AppSegmentedOption(value: 'all', label: '全部'),
-              AppSegmentedOption(value: 'mov', label: '电影'),
-              AppSegmentedOption(value: 'tv', label: '剧集'),
+            options: [
+              AppSegmentedOption(value: 'all', label: l.nastoolPageFilterAll),
+              AppSegmentedOption(value: 'mov', label: l.nastoolPageFilterMovie),
+              AppSegmentedOption(value: 'tv', label: l.nastoolPageFilterTv),
             ],
           ),
           const SizedBox(width: 12),
@@ -117,7 +119,7 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
               builder: (_) => AddSubscriptionSheet(sourceId: selected),
             ),
             icon: const Icon(Icons.add_rounded, size: 16),
-            label: const Text('新增订阅'),
+            label: Text(l.nastoolPageAddSubscription),
           ),
         ],
       ),
@@ -128,7 +130,7 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
         ),
         error: (e, _) => DesktopComingSoon(
           icon: Icons.error_outline_rounded,
-          message: '加载订阅失败：$e',
+          message: l.nastoolPageLoadSubscriptionsFailed(e.toString()),
         ),
         data: (subs) {
           final filtered = subs.where((s) {
@@ -151,8 +153,8 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
                 DesktopComingSoon(
                   icon: Icons.bookmark_border_rounded,
                   message: subs.isEmpty
-                      ? '还没有订阅。点击右上角「新增订阅」搜索并添加想追的影视。'
-                      : '当前筛选下没有订阅。',
+                      ? l.nastoolPageEmptyHint
+                      : l.nastoolPageEmptyFiltered,
                 )
               else
                 GridView.builder(
@@ -171,7 +173,7 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
                 ),
               const SizedBox(height: 28),
               Text(
-                '自动化工具',
+                l.nastoolPageAutomationTools,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -204,26 +206,31 @@ class _ToolsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final entries = <(String, IconData, VoidCallback)>[
       (
-        '插件商店',
+        l.nastoolPageToolPluginStore,
         Icons.extension_outlined,
-        () => _open(context, '插件', _PluginsSheet(sourceId: sourceId)),
+        () => _open(
+            context, l.nastoolPageToolPlugins, _PluginsSheet(sourceId: sourceId)),
       ),
       (
-        '目录同步',
+        l.nastoolPageToolSyncDirs,
         Icons.sync_alt_rounded,
-        () => _open(context, '目录同步', _SyncDirsSheet(sourceId: sourceId)),
+        () => _open(context, l.nastoolPageToolSyncDirs,
+            _SyncDirsSheet(sourceId: sourceId)),
       ),
       (
-        '转移历史',
+        l.nastoolPageToolTransferHistory,
         Icons.move_to_inbox_outlined,
-        () => _open(context, '转移历史', _TransferHistorySheet(sourceId: sourceId)),
+        () => _open(context, l.nastoolPageToolTransferHistory,
+            _TransferHistorySheet(sourceId: sourceId)),
       ),
       (
-        '系统信息',
+        l.nastoolPageToolSystemInfo,
         Icons.dns_outlined,
-        () => _open(context, '系统信息', _SystemInfoSheet(sourceId: sourceId)),
+        () => _open(context, l.nastoolPageToolSystemInfo,
+            _SystemInfoSheet(sourceId: sourceId)),
       ),
     ];
     return GridView.count(
@@ -260,6 +267,7 @@ class _ToolCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return Opacity(
       opacity: plan ? 0.6 : 1,
@@ -290,7 +298,8 @@ class _ToolCard extends StatelessWidget {
                 ),
               ),
             ),
-            if (plan) const AppTag('规划', variant: TagVariant.plan),
+            if (plan)
+              AppTag(l.nastoolPageTagPlan, variant: TagVariant.plan),
           ],
         ),
       ),
@@ -370,6 +379,7 @@ class _AsyncList<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return async.when(
       loading: () => const SizedBox(
@@ -379,7 +389,7 @@ class _AsyncList<T> extends StatelessWidget {
       error: (e, _) => SizedBox(
         height: 200,
         child: Center(
-          child: Text('加载失败：$e',
+          child: Text(l.nastoolPageLoadFailed(e.toString()),
               style: TextStyle(fontSize: 12.5, color: t.err)),
         ),
       ),
@@ -410,10 +420,11 @@ class _PluginsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return _AsyncList<NtPlugin>(
       async: ref.watch(nastoolPluginsProvider(sourceId)),
-      empty: '未安装插件。',
+      empty: l.nastoolPagePluginsEmpty,
       itemBuilder: (_, p) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
@@ -459,10 +470,11 @@ class _SyncDirsSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return _AsyncList<NtSyncDir>(
       async: ref.watch(nastoolSyncDirsProvider(sourceId)),
-      empty: '未配置目录同步。',
+      empty: l.nastoolPageSyncDirsEmpty,
       itemBuilder: (_, d) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
@@ -482,7 +494,7 @@ class _SyncDirsSheet extends ConsumerWidget {
               ),
             ),
             IconButton(
-              tooltip: '立即同步',
+              tooltip: l.nastoolPageSyncNow,
               onPressed: d.id == null
                   ? null
                   : () => ref
@@ -503,10 +515,11 @@ class _TransferHistorySheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return _AsyncList<NtTransferHistory>(
       async: ref.watch(nastoolTransferHistoryProvider(sourceId)),
-      empty: '暂无转移历史。',
+      empty: l.nastoolPageTransferHistoryEmpty,
       itemBuilder: (_, h) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
@@ -553,12 +566,13 @@ class _SystemInfoSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final async = ref.watch(nastoolSystemInfoProvider(sourceId));
     return async.when(
       loading: () => const SizedBox(
           height: 160, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('加载失败：$e',
+      error: (e, _) => Text(l.nastoolPageLoadFailed(e.toString()),
           style: TextStyle(fontSize: 12.5, color: t.err)),
       data: (info) {
         String space(int? b) {
@@ -574,15 +588,15 @@ class _SystemInfoSheet extends ConsumerWidget {
         }
 
         final rows = <(String, String)>[
-          ('版本', info.version ?? '—'),
-          ('最新版本', info.latestVersion ?? '—'),
-          ('更新通道', info.updateChannel ?? '—'),
-          ('总空间', space(info.totalSpace)),
-          ('可用空间', space(info.freeSpace)),
+          (l.nastoolPageInfoVersion, info.version ?? '—'),
+          (l.nastoolPageInfoLatestVersion, info.latestVersion ?? '—'),
+          (l.nastoolPageInfoUpdateChannel, info.updateChannel ?? '—'),
+          (l.nastoolPageInfoTotalSpace, space(info.totalSpace)),
+          (l.nastoolPageInfoFreeSpace, space(info.freeSpace)),
           if (info.cpuUsage != null)
             ('CPU', '${info.cpuUsage!.toStringAsFixed(0)}%'),
           if (info.memoryUsage != null)
-            ('内存', '${info.memoryUsage!.toStringAsFixed(0)}%'),
+            (l.nastoolPageInfoMemory, '${info.memoryUsage!.toStringAsFixed(0)}%'),
         ];
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -624,15 +638,23 @@ class _SubStatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Row(
       children: [
-        Expanded(child: _StatCard(value: '$total', label: '订阅中')),
+        Expanded(
+            child:
+                _StatCard(value: '$total', label: l.nastoolPageStatSubscribing)),
         const SizedBox(width: 14),
-        Expanded(child: _StatCard(value: '$movies', label: '电影')),
+        Expanded(
+            child: _StatCard(value: '$movies', label: l.nastoolPageStatMovies)),
         const SizedBox(width: 14),
-        Expanded(child: _StatCard(value: '$tv', label: '剧集')),
+        Expanded(child: _StatCard(value: '$tv', label: l.nastoolPageStatTv)),
         const SizedBox(width: 14),
-        Expanded(child: _StatCard(value: '$chasing', label: '追剧中', accent: true)),
+        Expanded(
+            child: _StatCard(
+                value: '$chasing',
+                label: l.nastoolPageStatChasing,
+                accent: true)),
       ],
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/aria2/presentation/providers/aria2_provider.dart';
 import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -11,23 +12,38 @@ import 'package:my_nas/features/transmission/presentation/providers/transmission
 enum UnifiedDownloadStatus { downloading, seeding, paused, completed, waiting, error }
 
 extension UnifiedDownloadStatusX on UnifiedDownloadStatus {
-  String get label => switch (this) {
-        UnifiedDownloadStatus.downloading => '下载中',
-        UnifiedDownloadStatus.seeding => '做种',
-        UnifiedDownloadStatus.paused => '已暂停',
-        UnifiedDownloadStatus.completed => '已完成',
-        UnifiedDownloadStatus.waiting => '等待',
-        UnifiedDownloadStatus.error => '出错',
+  String label(AppLocalizations l) => switch (this) {
+        UnifiedDownloadStatus.downloading => l.downloadStatusDownloading,
+        UnifiedDownloadStatus.seeding => l.downloadStatusSeeding,
+        UnifiedDownloadStatus.paused => l.downloadStatusPaused,
+        UnifiedDownloadStatus.completed => l.downloadStatusCompleted,
+        UnifiedDownloadStatus.waiting => l.downloadStatusWaiting,
+        UnifiedDownloadStatus.error => l.downloadStatusError,
+      };
+}
+
+/// 桌面下载器顶部状态筛选 chip（与设计稿对齐）。枚举值与显示标签解耦：
+/// [label] 取本地化文案，[matches] 是纯逻辑匹配，互不影响。
+enum DownloadStatusFilter { all, downloading, seeding, paused, completed }
+
+extension DownloadStatusFilterX on DownloadStatusFilter {
+  String label(AppLocalizations l) => switch (this) {
+        DownloadStatusFilter.all => l.downloadFilterAll,
+        DownloadStatusFilter.downloading => l.downloadStatusDownloading,
+        DownloadStatusFilter.seeding => l.downloadStatusSeeding,
+        DownloadStatusFilter.paused => l.downloadStatusPaused,
+        DownloadStatusFilter.completed => l.downloadStatusCompleted,
       };
 
-  /// 与设计稿筛选 chip（全部/下载中/做种/已暂停/已完成）对齐。
-  bool matchesFilter(String filter) => switch (filter) {
-        '下载中' => this == UnifiedDownloadStatus.downloading ||
-            this == UnifiedDownloadStatus.waiting,
-        '做种' => this == UnifiedDownloadStatus.seeding,
-        '已暂停' => this == UnifiedDownloadStatus.paused,
-        '已完成' => this == UnifiedDownloadStatus.completed,
-        _ => true,
+  bool matches(UnifiedDownloadStatus status) => switch (this) {
+        DownloadStatusFilter.all => true,
+        DownloadStatusFilter.downloading =>
+          status == UnifiedDownloadStatus.downloading ||
+              status == UnifiedDownloadStatus.waiting,
+        DownloadStatusFilter.seeding => status == UnifiedDownloadStatus.seeding,
+        DownloadStatusFilter.paused => status == UnifiedDownloadStatus.paused,
+        DownloadStatusFilter.completed =>
+          status == UnifiedDownloadStatus.completed,
       };
 }
 

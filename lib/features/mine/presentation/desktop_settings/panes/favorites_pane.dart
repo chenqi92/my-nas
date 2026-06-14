@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/music/presentation/providers/music_favorites_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/shared/pages/favorites_page.dart';
@@ -22,42 +23,43 @@ class FavoritesPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final musicCount = ref.watch(musicFavoritesProvider).favorites.length;
 
     final tiles = <_FavTile>[
       _FavTile(
         type: MediaType.video,
-        label: '影视',
+        label: l.paneFavoritesTileVideo,
         icon: Icons.movie_outlined,
         count: _countOf(ref, MediaType.video),
       ),
       _FavTile(
         type: MediaType.photo,
-        label: '照片',
+        label: l.paneFavoritesTilePhoto,
         icon: Icons.photo_outlined,
         count: _countOf(ref, MediaType.photo),
       ),
       _FavTile(
         type: MediaType.music,
-        label: '音乐',
+        label: l.paneFavoritesTileMusic,
         icon: Icons.music_note_outlined,
         count: musicCount,
       ),
       _FavTile(
         type: MediaType.book,
-        label: '图书',
+        label: l.paneFavoritesTileBook,
         icon: Icons.menu_book_outlined,
         count: _countOf(ref, MediaType.book),
       ),
       _FavTile(
         type: MediaType.comic,
-        label: '漫画',
+        label: l.paneFavoritesTileComic,
         icon: Icons.collections_bookmark_outlined,
         count: _countOf(ref, MediaType.comic),
       ),
       _FavTile(
         type: MediaType.note,
-        label: '笔记',
+        label: l.paneFavoritesTileNote,
         icon: Icons.note_alt_outlined,
         count: _countOf(ref, MediaType.note),
       ),
@@ -66,15 +68,15 @@ class FavoritesPane extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SetHead(
+        SetHead(
           icon: Icons.favorite_outline_rounded,
-          title: '我的收藏',
-          subtitle: '跨类型聚合的收藏内容。音乐收藏自动同步到「我喜欢」歌单。',
+          title: l.paneFavoritesHeadTitle,
+          subtitle: l.paneFavoritesHeadSubtitle,
         ),
 
         // ---- 收藏聚合 ----
         SetSection(
-          title: '收藏聚合',
+          title: l.paneFavoritesSectionAggregate,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -156,6 +158,7 @@ class _FavTileCardState extends State<_FavTileCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final tile = widget.tile;
     return MouseRegion(
@@ -203,7 +206,7 @@ class _FavTileCardState extends State<_FavTileCard> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${tile.count} 项',
+                      l.paneFavoritesTileCount(tile.count),
                       style: TextStyle(fontSize: 12, color: t.text2),
                     ),
                   ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/aria2/presentation/pages/aria2_detail_page.dart';
 import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
@@ -28,6 +29,7 @@ class RemoteDlPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final clients = ref.watch(downloaderClientsProvider);
 
     // 全局限速仅 qBittorrent 客户端支持（API 提供 setGlobalSpeedLimits）。
@@ -41,12 +43,11 @@ class RemoteDlPane extends ConsumerWidget {
       children: [
         SetHead(
           icon: Icons.download_rounded,
-          title: '远程下载服务',
-          subtitle: 'aria2 / qBittorrent / Transmission 客户端连接与偏好。 '
-              'PT 一键发送的目标即在此配置。',
+          title: l.paneRemotedlTitle,
+          subtitle: l.paneRemotedlSubtitle,
           actions: [
             AppButton(
-              label: '添加下载器',
+              label: l.paneRemotedlAddDownloader,
               icon: Icons.add_rounded,
               variant: AppButtonVariant.primary,
               onPressed: () => _push(context, const DownloaderListPage()),
@@ -54,16 +55,16 @@ class RemoteDlPane extends ConsumerWidget {
           ],
         ),
         SetSection(
-          title: '下载客户端',
-          hint: '${clients.length} 个',
+          title: l.paneRemotedlClientsSection,
+          hint: l.paneRemotedlClientsCount(clients.length),
           children: [
             if (clients.isEmpty)
               SetRow(
-                title: '尚未添加下载器',
-                desc: '添加 qBittorrent、Transmission 或 Aria2 来管理下载任务',
+                title: l.paneRemotedlEmptyTitle,
+                desc: l.paneRemotedlEmptyDesc,
                 last: true,
                 trailing: AppChip(
-                  label: '添加',
+                  label: l.paneRemotedlAddChip,
                   icon: Icons.add_rounded,
                   onTap: () => _push(context, const DownloaderListPage()),
                 ),
@@ -76,11 +77,11 @@ class RemoteDlPane extends ConsumerWidget {
                 ),
               if (clients.isNotEmpty)
                 SetRow(
-                  title: '管理客户端',
-                  desc: '添加 / 编辑 / 删除下载器与连接凭据',
+                  title: l.paneRemotedlManageTitle,
+                  desc: l.paneRemotedlManageDesc,
                   last: true,
                   trailing: AppChip(
-                    label: '打开',
+                    label: l.paneRemotedlManageChip,
                     icon: Icons.open_in_new_rounded,
                     onTap: () => _push(context, const DownloaderListPage()),
                   ),
@@ -89,15 +90,15 @@ class RemoteDlPane extends ConsumerWidget {
           ],
         ),
         SetSection(
-          title: '默认行为',
+          title: l.paneRemotedlDefaultsSection,
           bottomMargin: false,
           children: [
             SetRow(
-              title: '全局限速',
-              desc: '所有客户端的上传 / 下载上限 — UI 受各客户端 API 能力限制',
+              title: l.paneRemotedlGlobalLimitTitle,
+              desc: l.paneRemotedlGlobalLimitDesc,
               trailing: qbSource != null
                   ? AppChip(
-                      label: '设置（qBittorrent）',
+                      label: l.paneRemotedlGlobalLimitSetChip,
                       icon: Icons.speed_rounded,
                       onTap: () => showDialog<void>(
                         context: context,
@@ -105,11 +106,14 @@ class RemoteDlPane extends ConsumerWidget {
                             _GlobalLimitDialog(sourceId: qbSource.id),
                       ),
                     )
-                  : const AppTag('客户端设置内管理', variant: TagVariant.limit),
+                  : AppTag(
+                      l.paneRemotedlGlobalLimitManagedTag,
+                      variant: TagVariant.limit,
+                    ),
             ),
             SetRow(
-              title: '完成后通知',
-              desc: '应用运行时弹窗提示（系统级通知规划中）',
+              title: l.paneRemotedlNotifyTitle,
+              desc: l.paneRemotedlNotifyDesc,
               last: true,
               trailing: AppSwitch(
                 value: ref.watch(downloadNotifyProvider),
@@ -138,6 +142,7 @@ class _ClientRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final source = client.source;
     final host = '${source.host}:${source.port}';
@@ -161,12 +166,14 @@ class _ClientRow extends StatelessWidget {
           StatusDot(client.connected ? DotStatus.ok : DotStatus.off),
           const SizedBox(width: 10),
           Text(
-            client.connected ? '已连接' : '未连接',
+            client.connected
+                ? l.paneRemotedlConnected
+                : l.paneRemotedlDisconnected,
             style: TextStyle(fontSize: 12, color: t.text2),
           ),
           const SizedBox(width: 10),
           AppChip(
-            label: '偏好',
+            label: l.paneRemotedlPreferenceChip,
             onTap: () => _openDetail(context, source),
           ),
         ],
@@ -212,6 +219,7 @@ class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
   }
 
   Future<void> _apply() async {
+    final l = AppLocalizations.of(context);
     setState(() => _saving = true);
     final dl = (int.tryParse(_dl.text.trim()) ?? 0) * 1024;
     final up = (int.tryParse(_up.text.trim()) ?? 0) * 1024;
@@ -221,18 +229,19 @@ class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
           .setGlobalSpeedLimits(dlLimit: dl, upLimit: up);
       if (mounted) {
         Navigator.of(context).pop();
-        context.showSuccessToast('已更新全局限速');
+        context.showSuccessToast(l.paneRemotedlLimitUpdated);
       }
     } on Object catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        context.showErrorToast('设置失败：$e');
+        context.showErrorToast(l.paneRemotedlLimitFailed(e.toString()));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     // 首次拿到偏好时按 KB/s 回填输入框。
     ref.watch(qbPreferencesProvider(widget.sourceId)).whenData((p) {
       if (!_prefilled && p != null) {
@@ -242,18 +251,18 @@ class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
       }
     });
     return AlertDialog(
-      title: const Text('全局限速'),
+      title: Text(l.paneRemotedlGlobalLimitTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('单位 KB/s，0 表示不限速。', style: TextStyle(fontSize: 12.5)),
+          Text(l.paneRemotedlLimitHint, style: const TextStyle(fontSize: 12.5)),
           const SizedBox(height: 14),
           TextField(
             controller: _dl,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: '下载上限 (KB/s)',
+            decoration: InputDecoration(
+              labelText: l.paneRemotedlLimitDlLabel,
               isDense: true,
             ),
           ),
@@ -261,8 +270,8 @@ class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
           TextField(
             controller: _up,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: '上传上限 (KB/s)',
+            decoration: InputDecoration(
+              labelText: l.paneRemotedlLimitUpLabel,
               isDense: true,
             ),
           ),
@@ -271,11 +280,11 @@ class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l.paneRemotedlLimitCancel),
         ),
         FilledButton(
           onPressed: _saving ? null : _apply,
-          child: const Text('应用'),
+          child: Text(l.paneRemotedlLimitApply),
         ),
       ],
     );

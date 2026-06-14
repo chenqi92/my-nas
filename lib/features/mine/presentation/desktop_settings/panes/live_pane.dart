@@ -7,6 +7,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/pages/live_stream_settings_page.dart';
 import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
@@ -23,6 +24,7 @@ class LivePane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final settings = ref.watch(liveStreamSettingsProvider);
     final sources = settings.sortedSources;
 
@@ -31,11 +33,11 @@ class LivePane extends ConsumerWidget {
       children: [
         SetHead(
           icon: Icons.live_tv_outlined,
-          title: '直播源',
-          subtitle: 'IPTV / M3U / HLS 直播源管理。添加、编辑、排序、刷新与频道预览。',
+          title: l.paneLiveHeadTitle,
+          subtitle: l.paneLiveHeadSubtitle,
           actions: [
             AppButton(
-              label: '添加直播源',
+              label: l.paneLiveAddButton,
               icon: Icons.add_rounded,
               variant: AppButtonVariant.primary,
               onPressed: () => _openManager(context),
@@ -43,19 +45,19 @@ class LivePane extends ConsumerWidget {
           ],
         ),
         SetSection(
-          title: '直播源',
+          title: l.paneLiveSourcesSection,
           hint: sources.isEmpty
               ? 'M3U / HLS'
-              : '${sources.length} 个 · M3U / HLS',
+              : l.paneLiveSourcesHint(sources.length),
           children: sources.isEmpty
               ? [
                   SetRow(
                     leading: _SourceIcon(enabled: false),
-                    title: '暂无直播源',
-                    desc: '添加 M3U / HLS 播放列表开始观看直播',
+                    title: l.paneLiveEmptyTitle,
+                    desc: l.paneLiveEmptyDesc,
                     last: true,
                     trailing: AppButton(
-                      label: '添加',
+                      label: l.paneLiveAddShort,
                       icon: Icons.add_rounded,
                       dense: true,
                       onPressed: () => _openManager(context),
@@ -67,23 +69,25 @@ class LivePane extends ConsumerWidget {
                     SetRow(
                       leading: _SourceIcon(enabled: sources[i].isEnabled),
                       title: sources[i].name,
-                      desc:
-                          '${sources[i].channelCount} 频道 · 更新于 ${_formatUpdated(sources[i].updatedAt)}',
+                      desc: l.paneLiveSourceDesc(
+                        sources[i].channelCount,
+                        _formatUpdated(context, sources[i].updatedAt),
+                      ),
                       last: i == sources.length - 1,
                       trailing: _SourceActions(source: sources[i]),
                     ),
                 ],
         ),
         SetSection(
-          title: '管理',
+          title: l.paneLiveManageSection,
           children: [
             SetRow(
               leading: Icon(Icons.tune_rounded, size: 18, color: t.text2),
-              title: '编辑 / 排序 / 删除',
-              desc: '打开直播源管理页，添加或调整 M3U 播放列表',
+              title: l.paneLiveManageRowTitle,
+              desc: l.paneLiveManageRowDesc,
               last: true,
               trailing: AppButton(
-                label: '打开管理页',
+                label: l.paneLiveOpenManagerButton,
                 icon: Icons.open_in_new_rounded,
                 dense: true,
                 onPressed: () => _openManager(context),
@@ -103,15 +107,16 @@ class LivePane extends ConsumerWidget {
     );
   }
 
-  static String _formatUpdated(DateTime dt) {
+  static String _formatUpdated(BuildContext context, DateTime dt) {
+    final l = AppLocalizations.of(context);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final day = DateTime(dt.year, dt.month, dt.day);
     final diffDays = today.difference(day).inDays;
     final hm = DateFormat('HH:mm').format(dt);
-    if (diffDays == 0) return '今天 $hm';
-    if (diffDays == 1) return '昨天 $hm';
-    if (diffDays < 7) return '$diffDays 天前';
+    if (diffDays == 0) return l.paneLiveUpdatedToday(hm);
+    if (diffDays == 1) return l.paneLiveUpdatedYesterday(hm);
+    if (diffDays < 7) return l.paneLiveUpdatedDaysAgo(diffDays);
     return DateFormat('MM-dd').format(dt);
   }
 }
@@ -157,6 +162,7 @@ class _SourceActionsState extends ConsumerState<_SourceActions> {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -166,7 +172,7 @@ class _SourceActionsState extends ConsumerState<_SourceActions> {
         ),
         const SizedBox(width: 10),
         AppChip(
-          label: '预览',
+          label: l.paneLivePreviewChip,
           icon: Icons.visibility_outlined,
           compact: true,
           onTap: () => LivePane._openManager(context),
@@ -175,13 +181,13 @@ class _SourceActionsState extends ConsumerState<_SourceActions> {
         _IconAction(
           icon: Icons.refresh_rounded,
           busy: _refreshing,
-          tooltip: '刷新频道',
+          tooltip: l.paneLiveRefreshTooltip,
           onTap: _refreshing ? null : _refresh,
         ),
         const SizedBox(width: 2),
         _IconAction(
           icon: Icons.drag_indicator_rounded,
-          tooltip: '排序 / 管理',
+          tooltip: l.paneLiveSortTooltip,
           color: t.text3,
           onTap: () => LivePane._openManager(context),
         ),
@@ -190,17 +196,18 @@ class _SourceActionsState extends ConsumerState<_SourceActions> {
   }
 
   Future<void> _refresh() async {
+    final l = AppLocalizations.of(context);
     setState(() => _refreshing = true);
     try {
       final source = await ref
           .read(liveStreamSettingsProvider.notifier)
           .refreshSource(widget.source.id);
       if (mounted) {
-        context.showToast('已刷新: ${source.channelCount} 个频道');
+        context.showToast(l.paneLiveRefreshedToast(source.channelCount));
       }
     } catch (e, st) {
       if (mounted) {
-        AppError.handleWithUI(context, e, st, '刷新失败');
+        AppError.handleWithUI(context, e, st, l.paneLiveRefreshFailed);
       }
     } finally {
       if (mounted) setState(() => _refreshing = false);

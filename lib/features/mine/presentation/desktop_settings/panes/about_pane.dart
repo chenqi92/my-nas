@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/services/update_service.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
@@ -45,6 +46,7 @@ class _AboutPaneState extends ConsumerState<AboutPane> {
 
   Future<void> _checkForUpdates() async {
     if (_checking) return;
+    final l = AppLocalizations.of(context);
     setState(() => _checking = true);
     final messenger = ScaffoldMessenger.of(context);
     await _service.checkForUpdates();
@@ -56,47 +58,50 @@ class _AboutPaneState extends ConsumerState<AboutPane> {
       await showUpdateDialog(context, _service.updateInfo!);
     } else if (_service.status == UpdateStatus.notAvailable) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('当前已是最新版本')),
+        SnackBar(content: Text(l.paneAboutUpToDate)),
       );
     } else if (_service.status == UpdateStatus.error) {
       messenger.showSnackBar(
-        SnackBar(content: Text('检查更新失败：${_service.errorMessage}')),
+        SnackBar(
+          content: Text(l.paneAboutCheckFailed(_service.errorMessage ?? '')),
+        ),
       );
     }
   }
 
   void _showLicenses() {
+    final l = AppLocalizations.of(context);
     showLicensePage(
       context: context,
       applicationName: 'MyNAS',
       applicationVersion: _buildNumber.isNotEmpty
           ? '$_version ($_buildNumber)'
           : _version,
-      applicationLegalese:
-          '© 2024 MyNAS\n\n本应用使用了 Flutter 及众多开源组件，完整的第三方许可信息见下方列表。',
+      applicationLegalese: l.paneAboutLegalese,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final versionText =
         _buildNumber.isNotEmpty ? 'v$_version ($_buildNumber)' : 'v$_version';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SetHead(
+        SetHead(
           icon: Icons.info_outline_rounded,
-          title: '关于',
-          subtitle: '版本信息、更新与开源许可。',
+          title: l.paneAboutTitle,
+          subtitle: l.paneAboutSubtitle,
         ),
         SetSection(
-          title: '应用',
+          title: l.paneAboutSectionApp,
           children: [
             SetRow(
               title: 'MyNAS',
-              desc: '桌面端 · macOS / Windows / Linux',
+              desc: l.paneAboutAppDesc,
               trailing: Text(
                 versionText,
                 style: TextStyle(
@@ -108,21 +113,21 @@ class _AboutPaneState extends ConsumerState<AboutPane> {
               ),
             ),
             SetRow(
-              title: '应用更新',
-              desc: '检查并在应用内下载新版本',
+              title: l.paneAboutUpdateTitle,
+              desc: l.paneAboutUpdateDesc,
               trailing: AppButton(
-                label: _checking ? '检查中…' : '检查更新',
+                label: _checking ? l.paneAboutChecking : l.paneAboutCheckUpdate,
                 icon: Icons.refresh_rounded,
                 dense: true,
                 onPressed: _checking ? null : _checkForUpdates,
               ),
             ),
             SetRow(
-              title: '开源许可证',
-              desc: '第三方组件与许可',
+              title: l.paneAboutLicenseTitle,
+              desc: l.paneAboutLicenseDesc,
               last: true,
               trailing: AppButton(
-                label: '查看',
+                label: l.paneAboutLicenseView,
                 dense: true,
                 onPressed: _showLicenses,
               ),

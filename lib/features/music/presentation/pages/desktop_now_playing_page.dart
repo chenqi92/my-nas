@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/music/data/services/lyric_service.dart'
     show LyricLine;
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
@@ -21,6 +22,7 @@ class DesktopNowPlayingPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final music = ref.watch(currentMusicProvider);
     final state = ref.watch(musicPlayerControllerProvider);
     final notifier = ref.read(musicPlayerControllerProvider.notifier);
@@ -83,7 +85,7 @@ class DesktopNowPlayingPage extends ConsumerWidget {
                         Expanded(
                           child: _ArtAndTitle(
                             music: music,
-                            title: music?.title ?? music?.name ?? '未播放',
+                            title: music?.title ?? music?.name ?? l.nowPlayNotPlaying,
                             subtitle: [
                               music?.artist,
                               music?.album,
@@ -162,50 +164,53 @@ class _Top extends StatelessWidget {
   final VoidCallback onCast;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(28, 22, 28, 22),
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: onClose,
-              icon: Icon(Icons.keyboard_arrow_down_rounded,
-                  color: t.text0, size: 22),
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 22, 28, 22),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: onClose,
+            icon: Icon(Icons.keyboard_arrow_down_rounded,
+                color: t.text0, size: 22),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l.nowPlayTitle,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: t.text2,
+              letterSpacing: 0.6,
             ),
-            const SizedBox(width: 6),
-            Text(
-              '正在播放',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: t.text2,
-                letterSpacing: 0.6,
-              ),
-            ),
-            const Spacer(),
-            Consumer(
-              builder: (context, ref, _) {
-                final on = ref.watch(desktopLyricFloatProvider);
-                return IconButton(
-                  onPressed: () => ref
-                      .read(desktopLyricFloatProvider.notifier)
-                      .update((v) => !v),
-                  icon: Icon(
-                    on ? Icons.lyrics_rounded : Icons.lyrics_outlined,
-                    color: on ? t.accentBright : t.text1,
-                    size: 18,
-                  ),
-                  tooltip: on ? '关闭桌面歌词' : '桌面歌词',
-                );
-              },
-            ),
-            IconButton(
-              onPressed: onCast,
-              icon: Icon(Icons.cast_rounded, color: t.text1, size: 18),
-              tooltip: '投屏',
-            ),
-          ],
-        ),
-      );
+          ),
+          const Spacer(),
+          Consumer(
+            builder: (context, ref, _) {
+              final on = ref.watch(desktopLyricFloatProvider);
+              return IconButton(
+                onPressed: () => ref
+                    .read(desktopLyricFloatProvider.notifier)
+                    .update((v) => !v),
+                icon: Icon(
+                  on ? Icons.lyrics_rounded : Icons.lyrics_outlined,
+                  color: on ? t.accentBright : t.text1,
+                  size: 18,
+                ),
+                tooltip: on ? l.nowPlayDesktopLyricOff : l.nowPlayDesktopLyricOn,
+              );
+            },
+          ),
+          IconButton(
+            onPressed: onCast,
+            icon: Icon(Icons.cast_rounded, color: t.text1, size: 18),
+            tooltip: l.nowPlayCast,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ArtAndTitle extends StatelessWidget {
@@ -323,11 +328,12 @@ class _LyricsState extends State<_Lyrics> {
   @override
   Widget build(BuildContext context) {
     final t = widget.t;
+    final l = AppLocalizations.of(context);
     final lines = widget.lines;
     if (lines.isEmpty) {
       return Center(
         child: Text(
-          '暂无歌词',
+          l.nowPlayNoLyrics,
           style: TextStyle(fontSize: 16, color: t.text3),
         ),
       );
@@ -451,6 +457,7 @@ class _Controls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final progress = duration.inMilliseconds > 0
         ? position.inMilliseconds / duration.inMilliseconds
         : 0.0;
@@ -483,7 +490,7 @@ class _Controls extends StatelessWidget {
                 // 随机：开则回到列表循环，关则切随机。
                 onPressed: () => onSetPlayMode(
                     isShuffle ? PlayMode.loop : PlayMode.shuffle),
-                tooltip: isShuffle ? '关闭随机' : '随机播放',
+                tooltip: isShuffle ? l.nowPlayShuffleOff : l.nowPlayShuffleOn,
                 icon: Icon(
                   Icons.shuffle_rounded,
                   color: isShuffle ? t.accentBright : t.text1,
@@ -532,7 +539,7 @@ class _Controls extends StatelessWidget {
                 // 循环：单曲循环 ↔ 列表循环。
                 onPressed: () => onSetPlayMode(
                     isRepeatOne ? PlayMode.loop : PlayMode.repeatOne),
-                tooltip: isRepeatOne ? '单曲循环' : '列表循环',
+                tooltip: isRepeatOne ? l.nowPlayRepeatOne : l.nowPlayRepeatAll,
                 icon: Icon(
                   isRepeatOne ? Icons.repeat_one_rounded : Icons.repeat_rounded,
                   color: isRepeatOne ? t.accentBright : t.text1,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/shared/widgets/atoms/app_kbd.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -69,6 +70,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final items = _filtered();
 
@@ -128,7 +130,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                                   });
                                 },
                                 decoration: InputDecoration(
-                                  hintText: '搜索媒体、文件、任务，或输入命令…',
+                                  hintText: l.shellCmdkSearchPlaceholder,
                                   hintStyle:
                                       TextStyle(color: t.text3, fontSize: 16),
                                   border: InputBorder.none,
@@ -149,7 +151,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                             ? Padding(
                                 padding: const EdgeInsets.all(24),
                                 child: Text(
-                                  '无匹配命令。',
+                                  l.shellCmdkNoResults,
                                   style: TextStyle(color: t.text2),
                                 ),
                               )

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_kbd.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 
@@ -30,6 +31,7 @@ class DesktopTopbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return Container(
       height: DesignTokens.topbarH,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -43,7 +45,7 @@ class DesktopTopbar extends StatelessWidget {
           _TbIcon(
             icon: Icons.menu_rounded,
             onTap: onToggleSidebar,
-            tooltip: '折叠侧栏',
+            tooltip: l.shellTopbarToggleSidebar,
           ),
           const SizedBox(width: 6),
           if (crumb.isNotEmpty)
@@ -57,13 +59,13 @@ class DesktopTopbar extends StatelessWidget {
           _TbIcon(
             icon: Icons.notifications_none_rounded,
             onTap: onOpenActivity,
-            tooltip: '活动中心',
+            tooltip: l.shellTopbarActivity,
             badge: activityBadge,
           ),
           _TbIcon(
             icon: Icons.palette_outlined,
             onTap: onOpenAppearance,
-            tooltip: '外观',
+            tooltip: l.shellTopbarAppearance,
           ),
         ],
       ),
@@ -113,6 +115,7 @@ class _SearchTrigger extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -131,7 +134,7 @@ class _SearchTrigger extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '搜索媒体、文件、任务…',
+                  l.shellTopbarSearchPlaceholder,
                   style: TextStyle(fontSize: 12.5, color: t.text2),
                   overflow: TextOverflow.ellipsis,
                 ),

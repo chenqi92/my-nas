@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -22,13 +23,14 @@ class SourcesDesktopPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final sourcesAsync = ref.watch(sourcesProvider);
     final connections = ref.watch(activeConnectionsProvider);
     final t = DesignTokens.of(context);
 
     return DesktopPageScaffold(
-      title: '数据源',
-      subtitle: '添加源 → 媒体库目录映射 → 扫描 → 库。删除源将级联删除其媒体与映射。',
+      title: l.sourcesPageTitle,
+      subtitle: l.sourcesPageSubtitle,
       actions: Padding(
         padding: const EdgeInsets.only(left: 12),
         child: FilledButton.icon(
@@ -38,23 +40,20 @@ class SourcesDesktopPage extends ConsumerWidget {
             builder: (_) => const SourceWizardDialog(),
           ),
           icon: const Icon(Icons.add_rounded, size: 16),
-          label: const Text('添加源'),
+          label: Text(l.sourcesPageAddSource),
         ),
       ),
       body: sourcesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Text(
-          '加载源失败：$e',
+          l.sourcesPageLoadError(e.toString()),
           style: TextStyle(color: t.err),
         ),
         data: (sources) {
           if (sources.isEmpty) {
-            return const DesktopComingSoon(
+            return DesktopComingSoon(
               icon: Icons.lan_outlined,
-              message: '点击右上「添加源」连接你的第一个 NAS / 媒体服务器 / 下载器。\n'
-                  '支持 Synology、QNAP、SMB、WebDAV、SFTP、FTP、UPnP、'
-                  'Jellyfin / Emby / Plex、aria2 / qBittorrent / Transmission、'
-                  'Trakt、NAStool / MoviePilot 等 20+ 种。',
+              message: l.sourcesPageEmptyHint,
             );
           }
           // 库映射来自 mediaLibraryConfig 派生：源 → 已映射的媒体类型集合，
@@ -112,9 +111,10 @@ class _SourceCard extends ConsumerWidget {
 
   /// 测试 / 重新连接当前源，并把结果以 SnackBar 反馈。
   Future<void> _reconnect(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
-      SnackBar(content: Text('正在连接「${source.name}」…')),
+      SnackBar(content: Text(l.sourcesPageConnecting(source.name))),
     );
     final result =
         await ref.read(activeConnectionsProvider.notifier).reconnect(source.id);
@@ -127,11 +127,15 @@ class _SourceCard extends ConsumerWidget {
         SnackBar(
           content: Text(
             ok
-                ? '「${source.name}」连接成功'
+                ? l.sourcesPageConnectSuccess(source.name)
                 : need2fa
-                    ? '「${source.name}」需要两步验证'
-                    : '「${source.name}」连接失败'
-                        '${result?.errorMessage != null ? '：${result!.errorMessage}' : ''}',
+                    ? l.sourcesPageConnectNeeds2FA(source.name)
+                    : l.sourcesPageConnectFailed(
+                        source.name,
+                        result?.errorMessage != null
+                            ? l.sourcesPageErrorSuffix(result!.errorMessage!)
+                            : '',
+                      ),
           ),
         ),
       );
@@ -146,22 +150,20 @@ class _SourceCard extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除数据源'),
-        content: Text(
-          '删除「${source.name}」将级联移除该源的媒体库映射与已扫描的媒体数据，'
-          '此操作不可恢复。确定继续？',
-        ),
+        title: Text(l.sourcesPageDeleteTitle),
+        content: Text(l.sourcesPageDeleteConfirm(source.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child: Text(l.sourcesPageCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('删除'),
+            child: Text(l.sourcesPageDelete),
           ),
         ],
       ),
@@ -176,11 +178,13 @@ class _SourceCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     // 未实现的源类型即「即将推出」，与设计稿 plan 态对齐。
     final isPlan = !source.type.isSupported;
     final status = conn?.status;
-    final (dot, label, isErr) = _statusView(isPlan, status, conn?.errorMessage);
+    final (dot, label, isErr) =
+        _statusView(l, isPlan, status, conn?.errorMessage);
 
     final card = AppCard(
       padding: const EdgeInsets.all(18),
@@ -238,7 +242,7 @@ class _SourceCard extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               if (isPlan)
-                const AppTag('即将推出', variant: TagVariant.plan)
+                AppTag(l.sourcesPageComingSoon, variant: TagVariant.plan)
               else
                 _SourceMenu(
                   color: t.text2,
@@ -267,7 +271,7 @@ class _SourceCard extends ConsumerWidget {
               ),
               if (!isPlan)
                 AppChip(
-                  label: '测试连接',
+                  label: l.sourcesPageTestConnection,
                   compact: true,
                   onTap: () => _reconnect(context, ref),
                 ),
@@ -279,7 +283,7 @@ class _SourceCard extends ConsumerWidget {
               spacing: 6,
               runSpacing: 4,
               children: [
-                for (final l in libs) AppTag('$l库'),
+                for (final lib in libs) AppTag(l.sourcesPageLibraryTag(lib)),
               ],
             ),
           ],
@@ -293,17 +297,20 @@ class _SourceCard extends ConsumerWidget {
 
   /// 把（plan / 实时连接态）映射为「圆点 + 文案 + 是否错误色」。
   (DotStatus, String, bool) _statusView(
+    AppLocalizations l,
     bool isPlan,
     SourceStatus? status,
     String? errorMessage,
   ) {
-    if (isPlan) return (DotStatus.off, '即将推出', false);
+    if (isPlan) return (DotStatus.off, l.sourcesPageComingSoon, false);
     return switch (status) {
-      SourceStatus.connected => (DotStatus.ok, '已连接', false),
-      SourceStatus.requires2FA => (DotStatus.warn, '需 2FA', false),
-      SourceStatus.connecting => (DotStatus.warn, '连接中', false),
-      SourceStatus.error => (DotStatus.err, errorMessage ?? '错误', true),
-      SourceStatus.disconnected || null => (DotStatus.off, '未连接', false),
+      SourceStatus.connected => (DotStatus.ok, l.sourcesPageStatusConnected, false),
+      SourceStatus.requires2FA => (DotStatus.warn, l.sourcesPageStatusNeeds2FA, false),
+      SourceStatus.connecting => (DotStatus.warn, l.sourcesPageStatusConnecting, false),
+      SourceStatus.error =>
+        (DotStatus.err, errorMessage ?? l.sourcesPageStatusError, true),
+      SourceStatus.disconnected || null =>
+        (DotStatus.off, l.sourcesPageStatusDisconnected, false),
     };
   }
 }
@@ -324,28 +331,34 @@ class _SourceMenu extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-        width: 30,
-        height: 30,
-        child: PopupMenuButton<String>(
-          tooltip: '更多',
-          padding: EdgeInsets.zero,
-          icon: Icon(Icons.more_horiz_rounded, size: 18, color: color),
-          onSelected: (v) {
-            switch (v) {
-              case 'edit':
-                onEdit();
-              case 'reconnect':
-                onReconnect();
-              case 'delete':
-                onDelete();
-            }
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'edit', child: Text('编辑')),
-            PopupMenuItem(value: 'reconnect', child: Text('重新连接')),
-            PopupMenuItem(value: 'delete', child: Text('删除')),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return SizedBox(
+      width: 30,
+      height: 30,
+      child: PopupMenuButton<String>(
+        tooltip: l.sourcesPageMore,
+        padding: EdgeInsets.zero,
+        icon: Icon(Icons.more_horiz_rounded, size: 18, color: color),
+        onSelected: (v) {
+          switch (v) {
+            case 'edit':
+              onEdit();
+            case 'reconnect':
+              onReconnect();
+            case 'delete':
+              onDelete();
+          }
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem(value: 'edit', child: Text(l.sourcesPageMenuEdit)),
+          PopupMenuItem(
+            value: 'reconnect',
+            child: Text(l.sourcesPageMenuReconnect),
+          ),
+          PopupMenuItem(value: 'delete', child: Text(l.sourcesPageMenuDelete)),
+        ],
+      ),
+    );
+  }
 }

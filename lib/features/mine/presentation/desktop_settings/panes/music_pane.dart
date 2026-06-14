@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/music/data/services/audio_effects_service.dart';
 import 'package:my_nas/features/music/data/services/lyrics_translation_service.dart';
 import 'package:my_nas/features/music/data/services/music_audio_handler_interface.dart';
@@ -102,6 +103,7 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final settings = ref.watch(musicSettingsProvider);
     final notifier = ref.read(musicSettingsProvider.notifier);
     final crossfadeOn = settings.crossfadeDuration > 0;
@@ -111,25 +113,25 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
       children: [
         SetHead(
           icon: Icons.library_music_outlined,
-          title: '音乐播放',
-          subtitle: '解码引擎、均衡器、无缝与淡入淡出、歌词翻译与 Scrobble。music_settings。',
+          title: l.paneMusicHeadTitle,
+          subtitle: l.paneMusicHeadSubtitle,
         ),
 
         // 引擎与解码
         SetSection(
-          title: '引擎与解码',
-          hint: '切换引擎需重启',
+          title: l.paneMusicEngineSection,
+          hint: l.paneMusicEngineHint,
           children: [
             SetRow(
-              title: '播放引擎',
-              desc: '平台原生（低功耗）/ FFmpeg（格式最全）',
+              title: l.paneMusicEngineRowTitle,
+              desc: l.paneMusicEngineRowDesc,
               trailing: AppSegmented<MusicPlayerEngine>(
-                options: const [
+                options: [
                   AppSegmentedOption(
                     value: MusicPlayerEngine.justAudio,
-                    label: '平台原生',
+                    label: l.paneMusicEngineNative,
                   ),
-                  AppSegmentedOption(
+                  const AppSegmentedOption(
                     value: MusicPlayerEngine.mediaKit,
                     label: 'FFmpeg',
                   ),
@@ -139,16 +141,16 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
               ),
             ),
             SetRow(
-              title: '无缝播放 Gapless',
-              desc: '专辑曲目间无静音间隙',
+              title: l.paneMusicGaplessTitle,
+              desc: l.paneMusicGaplessDesc,
               trailing: AppSwitch(
                 value: settings.gaplessPlayback,
                 onChanged: (v) => notifier.setGaplessPlayback(enabled: v),
               ),
             ),
             SetRow(
-              title: '交叉淡入淡出',
-              desc: '切歌时上一首淡出、下一首淡入',
+              title: l.paneMusicCrossfadeTitle,
+              desc: l.paneMusicCrossfadeDesc,
               trailing: AppSwitch(
                 value: crossfadeOn,
                 onChanged: (v) =>
@@ -156,7 +158,7 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
               ),
             ),
             SetRow(
-              title: '淡入淡出时长',
+              title: l.paneMusicCrossfadeDurationTitle,
               trailing: _CrossfadeSlider(
                 seconds: settings.crossfadeDuration,
                 enabled: crossfadeOn,
@@ -164,21 +166,25 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
               ),
             ),
             SetRow(
-              title: '默认播放模式',
-              desc: '随机 / 列表循环 / 单曲循环',
+              title: l.paneMusicPlayModeTitle,
+              desc: l.paneMusicPlayModeDesc,
               trailing: AppSegmented<PlayMode>(
-                options: const [
-                  AppSegmentedOption(value: PlayMode.shuffle, label: '随机'),
-                  AppSegmentedOption(value: PlayMode.loop, label: '列表'),
-                  AppSegmentedOption(value: PlayMode.repeatOne, label: '单曲'),
+                options: [
+                  AppSegmentedOption(
+                      value: PlayMode.shuffle, label: l.paneMusicPlayModeShuffle),
+                  AppSegmentedOption(
+                      value: PlayMode.loop, label: l.paneMusicPlayModeLoop),
+                  AppSegmentedOption(
+                      value: PlayMode.repeatOne,
+                      label: l.paneMusicPlayModeRepeatOne),
                 ],
                 value: settings.playMode,
                 onChanged: notifier.setPlayMode,
               ),
             ),
             SetRow(
-              title: '连接后自动播放',
-              desc: '连接源后自动续播上次队列',
+              title: l.paneMusicAutoPlayTitle,
+              desc: l.paneMusicAutoPlayDesc,
               last: true,
               trailing: AppSwitch(
                 value: settings.autoPlayOnConnect,
@@ -190,12 +196,12 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
 
         // 均衡器（内联 eq-bank）
         SetSection(
-          title: '均衡器',
-          hint: '10 段 · 8 预设 + 自定义',
+          title: l.paneMusicEqSection,
+          hint: l.paneMusicEqHint,
           children: [
             SetRow(
-              title: '启用均衡器',
-              desc: _eqPlatformNote,
+              title: l.paneMusicEqEnableTitle,
+              desc: _eqPlatformNote(context),
               last: _eq == null,
               trailing: AppSwitch(
                 value: _eq?.enabled ?? false,
@@ -220,19 +226,19 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
 
         // 歌词
         SetSection(
-          title: '歌词',
+          title: l.paneMusicLyricsSection,
           children: [
             SetRow(
-              title: '显示歌词',
-              desc: '播放页与桌面浮窗显示同步歌词',
+              title: l.paneMusicLyricsShowTitle,
+              desc: l.paneMusicLyricsShowDesc,
               trailing: AppSwitch(
                 value: settings.showLyrics,
                 onChanged: (v) => notifier.setShowLyrics(enabled: v),
               ),
             ),
             SetRow(
-              title: '歌词翻译',
-              desc: '译文双行显示 · Google 翻译（免费，需联网）',
+              title: l.paneMusicLyricsTranslateTitle,
+              desc: l.paneMusicLyricsTranslateDesc,
               trailing: AppSwitch(
                 value: settings.lyricsTranslateEnabled,
                 onChanged: (v) =>
@@ -240,8 +246,8 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
               ),
             ),
             SetRow(
-              title: '翻译目标语言',
-              desc: '译文显示为该语言',
+              title: l.paneMusicLyricsLangTitle,
+              desc: l.paneMusicLyricsLangDesc,
               last: true,
               trailing: Opacity(
                 opacity: settings.lyricsTranslateEnabled ? 1 : 0.5,
@@ -260,13 +266,13 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
 
         // Scrobble 与刮削
         SetSection(
-          title: 'Scrobble 与刮削',
+          title: l.paneMusicScrobbleSection,
           hint: 'Last.fm · ListenBrainz',
           bottomMargin: false,
           children: [
             SetRow(
-              title: 'Scrobble 上报',
-              desc: '听满阈值后上报，离线自动重试',
+              title: l.paneMusicScrobbleTitle,
+              desc: l.paneMusicScrobbleDesc,
               trailing: AppSwitch(
                 value: _scrobbleSettings?.enabled ?? false,
                 onChanged:
@@ -275,14 +281,16 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
             ),
             SetRow(
               title: 'Last.fm',
-              desc: _lastfmConfigured ? '已连接 · 凭证已配置' : '未连接 · 需 API key/secret/sk',
+              desc: _lastfmConfigured
+                  ? l.paneMusicLastfmConnected
+                  : l.paneMusicLastfmDisconnected,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   StatusDot(_lastfmConfigured ? DotStatus.ok : DotStatus.off),
                   const SizedBox(width: 10),
                   AppButton(
-                    label: '配置',
+                    label: l.paneMusicConfigure,
                     icon: Icons.podcasts_rounded,
                     variant: AppButtonVariant.ghost,
                     dense: true,
@@ -293,7 +301,9 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
             ),
             SetRow(
               title: 'ListenBrainz',
-              desc: _listenbrainzConfigured ? '已连接 · token 已配置' : '未连接 · 需 user token',
+              desc: _listenbrainzConfigured
+                  ? l.paneMusicListenbrainzConnected
+                  : l.paneMusicListenbrainzDisconnected,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -302,7 +312,7 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
                   ),
                   const SizedBox(width: 10),
                   AppButton(
-                    label: '配置',
+                    label: l.paneMusicConfigure,
                     icon: Icons.key_rounded,
                     variant: AppButtonVariant.ghost,
                     dense: true,
@@ -312,11 +322,11 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
               ),
             ),
             SetRow(
-              title: '音乐刮削源',
-              desc: 'MusicBrainz / 网易云 / AcoustID 指纹',
+              title: l.paneMusicScraperTitle,
+              desc: l.paneMusicScraperDesc,
               last: true,
               trailing: AppButton(
-                label: '管理刮削源',
+                label: l.paneMusicScraperManage,
                 icon: Icons.fingerprint_rounded,
                 onPressed: () => Navigator.of(context).push<void>(
                   MaterialPageRoute(
@@ -342,13 +352,14 @@ class _MusicPaneState extends ConsumerState<MusicPane> {
   bool get _listenbrainzConfigured =>
       _scrobbleSettings?.listenbrainzToken?.isNotEmpty ?? false;
 
-  String get _eqPlatformNote {
-    if (Platform.isAndroid) return '系统硬件均衡器（AudioEffect）';
-    if (Platform.isIOS) return 'iOS 当前播放引擎暂不支持 EQ';
+  String _eqPlatformNote(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    if (Platform.isAndroid) return l.paneMusicEqNoteAndroid;
+    if (Platform.isIOS) return l.paneMusicEqNoteIos;
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      return '桌面端：仅 FFmpeg 引擎生效（mpv af 滤镜）';
+      return l.paneMusicEqNoteDesktop;
     }
-    return '10 段 EQ + 8 个预设';
+    return l.paneMusicEqNoteDefault;
   }
 }
 
@@ -368,6 +379,7 @@ class _EqPresetChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -390,8 +402,8 @@ class _EqPresetChips extends StatelessWidget {
                         onTap: () => onSelect(p.id),
                       ),
                     if (presetId == 'custom')
-                      const AppChip(
-                        label: '自定义',
+                      AppChip(
+                        label: l.paneMusicEqCustom,
                         active: true,
                         compact: true,
                       ),
@@ -400,7 +412,7 @@ class _EqPresetChips extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               IconButton(
-                tooltip: '重置为平直',
+                tooltip: l.paneMusicEqReset,
                 icon: Icon(Icons.restart_alt_rounded, size: 18, color: t.text2),
                 onPressed: onReset,
                 visualDensity: VisualDensity.compact,
@@ -571,6 +583,7 @@ class _CrossfadeSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return Opacity(
       opacity: enabled ? 1 : 0.5,
@@ -607,7 +620,7 @@ class _CrossfadeSlider extends StatelessWidget {
             SizedBox(
               width: 34,
               child: Text(
-                '$seconds s',
+                l.paneMusicCrossfadeSeconds(seconds),
                 style: TextStyle(
                   fontSize: 12,
                   fontFeatures: const [FontFeature.tabularFigures()],

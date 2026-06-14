@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/providers/interface_locale_provider.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
@@ -22,36 +23,37 @@ class LanguagePane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final pref = ref.watch(languagePreferenceProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SetHead(
+        SetHead(
           icon: Icons.language_rounded,
-          title: '语言与地区',
-          subtitle: '界面语言与三组语言优先级。优先级影响刮削元数据语言与默认音轨 / '
-              '字幕选择，可拖拽排序。',
+          title: l.paneLanguageHeadTitle,
+          subtitle: l.paneLanguageHeadSubtitle,
         ),
 
         // 界面语言（简体中文 / English / 跟随系统）。
         SetSection(
-          title: '界面',
+          title: l.paneLanguageInterfaceSection,
           hint: 'language_preference',
-          children: const [
+          children: [
             SetRow(
-              title: '界面语言',
-              desc: '切换应用界面语言，所有可见文案实时本地化',
+              title: l.paneLanguageInterfaceRowTitle,
+              desc: l.paneLanguageInterfaceRowDesc,
               last: true,
-              trailing: _InterfaceLanguageControl(),
+              trailing: const _InterfaceLanguageControl(),
             ),
           ],
         ),
 
         // 元数据语言优先级（全宽）。
         _PrioritySection(
-          title: '元数据语言优先级',
-          hint: '刮削标题 / 简介 / 海报语言',
+          title: l.paneLanguageMetadataSection,
+          name: l.paneLanguageMetadataName,
+          hint: l.paneLanguageMetadataHint,
           type: LanguageType.metadata,
           languages: pref.metadataLanguages,
           options: LanguageOption.metadataLanguages,
@@ -59,15 +61,17 @@ class LanguagePane extends ConsumerWidget {
 
         // 音频 + 字幕优先级（设计稿为两列，桌面外壳宽度有限故纵向堆叠）。
         _PrioritySection(
-          title: '音频语言优先级',
-          hint: '默认音轨',
+          title: l.paneLanguageAudioSection,
+          name: l.paneLanguageAudioName,
+          hint: l.paneLanguageAudioHint,
           type: LanguageType.audio,
           languages: pref.audioLanguages,
           options: LanguageOption.audioSubtitleLanguages,
         ),
         _PrioritySection(
-          title: '字幕语言优先级',
-          hint: '默认字幕',
+          title: l.paneLanguageSubtitleSection,
+          name: l.paneLanguageSubtitleName,
+          hint: l.paneLanguageSubtitleHint,
           type: LanguageType.subtitle,
           languages: pref.subtitleLanguages,
           options: LanguageOption.audioSubtitleLanguages,
@@ -87,14 +91,15 @@ class _InterfaceLanguageControl extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final locale = ref.watch(interfaceLocaleProvider);
     final current = locale?.languageCode ?? _system;
 
     return AppSegmented<String>(
-      options: const [
-        AppSegmentedOption(value: 'zh', label: '简体中文'),
-        AppSegmentedOption(value: 'en', label: 'English'),
-        AppSegmentedOption(value: _system, label: '跟随系统'),
+      options: [
+        const AppSegmentedOption(value: 'zh', label: '简体中文'),
+        const AppSegmentedOption(value: 'en', label: 'English'),
+        AppSegmentedOption(value: _system, label: l.paneLanguageFollowSystem),
       ],
       value: current,
       onChanged: (code) {
@@ -110,6 +115,7 @@ class _InterfaceLanguageControl extends ConsumerWidget {
 class _PrioritySection extends ConsumerWidget {
   const _PrioritySection({
     required this.title,
+    required this.name,
     required this.hint,
     required this.type,
     required this.languages,
@@ -117,6 +123,7 @@ class _PrioritySection extends ConsumerWidget {
   });
 
   final String title;
+  final String name;
   final String hint;
   final LanguageType type;
   final List<LanguageOption> languages;
@@ -124,6 +131,7 @@ class _PrioritySection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final notifier = ref.read(languagePreferenceProvider.notifier);
     final canRemove = languages.length > 1;
@@ -168,7 +176,7 @@ class _PrioritySection extends ConsumerWidget {
           child: Align(
             alignment: Alignment.centerLeft,
             child: AppButton(
-              label: '添加语言',
+              label: l.paneLanguageAddButton,
               icon: Icons.add_rounded,
               dense: true,
               onPressed: remaining.isEmpty
@@ -190,8 +198,9 @@ class _PrioritySection extends ConsumerWidget {
     BuildContext context,
     DesignTokens t,
     List<LanguageOption> remaining,
-  ) =>
-      showAdaptiveModalSheet<LanguageOption>(
+  ) {
+    final l = AppLocalizations.of(context);
+    return showAdaptiveModalSheet<LanguageOption>(
         context: context,
         backgroundColor: t.cardBg,
         shape: const RoundedRectangleBorder(
@@ -206,7 +215,7 @@ class _PrioritySection extends ConsumerWidget {
                 child: Row(
                   children: [
                     Text(
-                      '添加$title'.replaceAll('优先级', ''),
+                      l.paneLanguageAddSheetTitle(name),
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -239,6 +248,7 @@ class _PrioritySection extends ConsumerWidget {
           ),
         ),
       );
+  }
 }
 
 /// 优先级列表中的一行：拖拽手柄 + 序号徽标 + 语言名 + 移除。
@@ -260,6 +270,7 @@ class _LanguageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -324,7 +335,7 @@ class _LanguageTile extends StatelessWidget {
               IconButton(
                 visualDensity: VisualDensity.compact,
                 splashRadius: 18,
-                tooltip: '移除',
+                tooltip: l.paneLanguageRemoveTooltip,
                 icon: Icon(Icons.close_rounded, size: 16, color: t.text3),
                 onPressed: onRemove,
               ),
@@ -341,11 +352,12 @@ class _PriorityNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 2),
       child: Text(
-        '拖动条目重新排序。播放时按此顺序自动匹配可用音轨与字幕；无匹配则回退到媒体默认。',
+        l.paneLanguagePriorityNote,
         style: TextStyle(fontSize: 12, height: 1.5, color: t.text3),
       ),
     );

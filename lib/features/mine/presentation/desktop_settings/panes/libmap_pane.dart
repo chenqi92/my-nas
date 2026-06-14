@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
@@ -32,6 +33,7 @@ class LibMapPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final configAsync = ref.watch(mediaLibraryConfigProvider);
     final sources = ref.watch(sourcesProvider).valueOrNull ?? const [];
 
@@ -40,34 +42,33 @@ class LibMapPane extends ConsumerWidget {
       children: [
         SetHead(
           icon: Icons.folder_outlined,
-          title: '媒体库映射',
-          subtitle:
-              '把源里的目录标记为 视频 / 音乐 / 照片 / 漫画 / 图书 库（SRC-30）。映射后供扫描、搜索与播放使用。',
+          title: l.paneLibmapTitle,
+          subtitle: l.paneLibmapSubtitle,
           actions: [
             AppButton(
-              label: '管理映射',
+              label: l.paneLibmapManage,
               icon: Icons.add_rounded,
               onPressed: () => _openManager(context),
             ),
           ],
         ),
         ...configAsync.when(
-          loading: () => const [
+          loading: () => [
             SetSection(
-              title: '目录 → 库',
+              title: l.paneLibmapSectionDirToLib,
               bottomMargin: false,
               children: [
-                SetRow(title: '加载中…', last: true),
+                SetRow(title: l.paneLibmapLoading, last: true),
               ],
             ),
           ],
           error: (e, _) => [
             SetSection(
-              title: '目录 → 库',
+              title: l.paneLibmapSectionDirToLib,
               bottomMargin: false,
               children: [
                 SetRow(
-                  title: '加载失败',
+                  title: l.paneLibmapLoadFailed,
                   desc: '$e',
                   last: true,
                 ),
@@ -85,6 +86,7 @@ class LibMapPane extends ConsumerWidget {
     MediaLibraryConfig config,
     List<SourceEntity> sources,
   ) {
+    final l = AppLocalizations.of(context);
     // 汇总全部库类型下的目录映射，按类型顺序拼成单一列表。
     final rows = <_LibMapEntry>[
       for (final type in _libTypes)
@@ -96,16 +98,18 @@ class LibMapPane extends ConsumerWidget {
 
     return [
       SetSection(
-        title: '目录 → 库',
-        hint: rows.isEmpty ? '暂无映射' : '${rows.length} 条映射',
+        title: l.paneLibmapSectionDirToLib,
+        hint: rows.isEmpty
+            ? l.paneLibmapNoMappings
+            : l.paneLibmapMappingsCount(rows.length),
         children: rows.isEmpty
             ? [
                 SetRow(
-                  title: '尚未配置目录映射',
-                  desc: '点击「管理映射」选择源里的目录并标记为对应库',
+                  title: l.paneLibmapEmptyTitle,
+                  desc: l.paneLibmapEmptyDesc,
                   last: true,
                   trailing: AppButton(
-                    label: '去配置',
+                    label: l.paneLibmapGoConfigure,
                     icon: Icons.arrow_forward_rounded,
                     variant: AppButtonVariant.ghost,
                     onPressed: () => _openManager(context),
@@ -123,13 +127,12 @@ class LibMapPane extends ConsumerWidget {
               ],
       ),
       // 设计稿 <Note>：删除源时级联删除其全部目录映射与已索引媒体。
-      const SetSection(
+      SetSection(
         bottomMargin: false,
         children: [
           SetRow(
-            title: '级联删除',
-            desc:
-                '删除某个源时，其全部目录映射与已索引媒体会一并删除（数据来源链：源 → 映射 → 扫描 → 库）。',
+            title: l.paneLibmapCascadeTitle,
+            desc: l.paneLibmapCascadeDesc,
             last: true,
           ),
         ],
@@ -171,13 +174,14 @@ class _MapRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
-    final src = sourceName ?? '未知源';
+    final src = sourceName ?? l.paneLibmapUnknownSource;
     return SetRow(
       last: last,
       leading: Icon(Icons.folder_outlined, size: 17, color: t.text3),
       title: entry.path.path,
-      desc: entry.path.isEnabled ? src : '$src · 已停用',
+      desc: entry.path.isEnabled ? src : l.paneLibmapSourceDisabled(src),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -200,7 +204,7 @@ class _MapRow extends ConsumerWidget {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             icon: Icon(Icons.tune_rounded, size: 16, color: t.text2),
-            tooltip: '切换库类型 / 取消映射',
+            tooltip: l.paneLibmapEditTooltip,
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/music/data/services/play_history_store.dart';
 import 'package:my_nas/features/music/data/services/playlist_service.dart';
 import 'package:my_nas/features/music/presentation/pages/duplicate_songs_page.dart';
@@ -52,20 +53,31 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       SetHead(
         icon: Icons.document_scanner_outlined,
-        title: '维护与统计',
-        subtitle: '听歌统计、重复检测与回收站。统计来自本地播放历史。',
+        title: l.paneMaintTitle,
+        subtitle: l.paneMaintSubtitle,
         actions: [
           AppSegmented<PlayHistoryRange>(
             dense: true,
-            options: const [
-              AppSegmentedOption(value: PlayHistoryRange.week, label: '周'),
-              AppSegmentedOption(value: PlayHistoryRange.month, label: '月'),
-              AppSegmentedOption(value: PlayHistoryRange.year, label: '年'),
+            options: [
+              AppSegmentedOption(
+                value: PlayHistoryRange.week,
+                label: l.paneMaintRangeWeek,
+              ),
+              AppSegmentedOption(
+                value: PlayHistoryRange.month,
+                label: l.paneMaintRangeMonth,
+              ),
+              AppSegmentedOption(
+                value: PlayHistoryRange.year,
+                label: l.paneMaintRangeYear,
+              ),
             ],
             value: _range,
             onChanged: (v) => setState(() => _range = v),
@@ -75,7 +87,7 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
 
       // 听歌统计
       SetSection(
-        title: '听歌统计',
+        title: l.paneMaintStatsSection,
         hint: 'music_play_history',
         children: [
           FutureBuilder<void>(
@@ -114,10 +126,10 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
             },
           ),
           SetRow(
-            title: 'Top 排行',
-            desc: '歌曲 / 艺术家 / 专辑 排行榜与活跃总览',
+            title: l.paneMaintTopChartTitle,
+            desc: l.paneMaintTopChartDesc,
             trailing: AppButton(
-              label: '查看排行',
+              label: l.paneMaintTopChartButton,
               icon: Icons.leaderboard_outlined,
               dense: true,
               onPressed: () => Navigator.of(context).push<void>(
@@ -126,11 +138,11 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
             ),
           ),
           SetRow(
-            title: '年度报告',
-            desc: '近一年听歌总结：时长 / Top 歌曲艺术家专辑 / 最活跃月份',
+            title: l.paneMaintYearReportTitle,
+            desc: l.paneMaintYearReportDesc,
             last: true,
             trailing: AppButton(
-              label: '查看报告',
+              label: l.paneMaintYearReportButton,
               icon: Icons.auto_awesome_outlined,
               dense: true,
               onPressed: () => showDialog<void>(
@@ -144,15 +156,15 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
 
       // 库维护
       SetSection(
-        title: '库维护',
-        hint: '仅清理本地索引 · 不动 NAS 原文件',
+        title: l.paneMaintLibrarySection,
+        hint: l.paneMaintLibrarySectionHint,
         bottomMargin: false,
         children: [
           SetRow(
-            title: '重复歌曲检测',
-            desc: '同一首歌的多版本（mp3 + flac），按音质评分推荐保留',
+            title: l.paneMaintDuplicateTitle,
+            desc: l.paneMaintDuplicateDesc,
             trailing: AppButton(
-              label: '处理',
+              label: l.paneMaintDuplicateButton,
               icon: Icons.content_copy_outlined,
               dense: true,
               onPressed: () => Navigator.of(context).push<void>(
@@ -161,15 +173,15 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
             ),
           ),
           SetRow(
-            title: '回收站',
-            desc: '歌单删除项保留 30 天可恢复',
+            title: l.paneMaintRecycleBinTitle,
+            desc: l.paneMaintRecycleBinDesc,
             last: true,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (_recycleCount != null && _recycleCount! > 0) ...[
                   Text(
-                    '$_recycleCount 项',
+                    l.paneMaintRecycleBinCount(_recycleCount!),
                     style: TextStyle(
                       fontSize: 12,
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -179,7 +191,7 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
                   const SizedBox(width: 10),
                 ],
                 AppButton(
-                  label: '打开',
+                  label: l.paneMaintRecycleBinButton,
                   icon: Icons.restore_from_trash_outlined,
                   dense: true,
                   onPressed: _openRecycleBin,
@@ -190,7 +202,8 @@ class _MaintPaneState extends ConsumerState<MaintPane> {
         ],
       ),
     ],
-  );
+    );
+  }
 }
 
 /// 设计稿 `.kv-strip`：摘要四宫格（播放次数 / 总时长 / 活跃天 / 不重复曲目）。
@@ -201,15 +214,16 @@ class _KvStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final hours = summary.totalSec / 3600;
     final hoursLabel = hours >= 10
         ? '${hours.toStringAsFixed(0)} h'
         : '${hours.toStringAsFixed(1)} h';
     final cells = <(String, String)>[
-      (summary.totalPlays.toString(), '播放次数'),
-      (hoursLabel, '总时长'),
-      (summary.activeDays.toString(), '活跃天'),
-      (summary.uniqueSongs.toString(), '不重复曲目'),
+      (summary.totalPlays.toString(), l.paneMaintKvPlays),
+      (hoursLabel, l.paneMaintKvDuration),
+      (summary.activeDays.toString(), l.paneMaintKvActiveDays),
+      (summary.uniqueSongs.toString(), l.paneMaintKvUniqueSongs),
     ];
     return Row(
       children: [
@@ -259,6 +273,7 @@ class _Heatmap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final maxCount = daily.fold<int>(0, (a, d) => d.count > a ? d.count : a);
     return Column(
@@ -267,13 +282,15 @@ class _Heatmap extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(top: 8, bottom: 9),
           child: Text(
-            daily.isEmpty ? '活跃热力图' : '近 ${daily.length} 天活跃热力图',
+            daily.isEmpty
+                ? l.paneMaintHeatmapTitle
+                : l.paneMaintHeatmapTitleDays(daily.length),
             style: TextStyle(fontSize: 11, color: t.text3),
           ),
         ),
         if (daily.isEmpty)
           Text(
-            '听满 30 秒的歌曲会被记入统计',
+            l.paneMaintHeatmapEmpty,
             style: TextStyle(fontSize: 12, color: t.text2),
           )
         else
@@ -324,13 +341,8 @@ class _HeatCell extends StatelessWidget {
 class _YearReportDialog extends StatelessWidget {
   const _YearReportDialog();
 
-  static const _monthNames = [
-    '1 月', '2 月', '3 月', '4 月', '5 月', '6 月',
-    '7 月', '8 月', '9 月', '10 月', '11 月', '12 月',
-  ];
-
   /// 找出近一年播放次数最多的月份；无数据返回 null。
-  ({String label, int count})? _topMonth() {
+  ({String label, int count})? _topMonth(AppLocalizations l) {
     final entries = PlayHistoryStore.instance.entriesIn(PlayHistoryRange.year);
     if (entries.isEmpty) return null;
     final buckets = <int, int>{}; // year*100 + month -> count
@@ -348,26 +360,27 @@ class _YearReportDialog extends StatelessWidget {
     });
     final year = bestKey ~/ 100;
     final month = bestKey % 100;
-    return (label: '$year 年 ${_monthNames[month - 1]}', count: bestCount);
+    return (label: l.paneMaintYearMonthLabel(year, month), count: bestCount);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final store = PlayHistoryStore.instance;
     final summary = store.summary(PlayHistoryRange.year);
 
     if (summary.totalPlays == 0) {
       return AlertDialog(
-        title: const Text('年度报告'),
-        content: const Text(
-          '近一年还没有听歌记录。听满 30 秒的歌曲会被记入统计，攒够数据后再来看吧。',
-          style: TextStyle(fontSize: 13),
+        title: Text(l.paneMaintYearReportTitle),
+        content: Text(
+          l.paneMaintYearReportEmpty,
+          style: const TextStyle(fontSize: 13),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('知道了'),
+            child: Text(l.paneMaintYearReportGotIt),
           ),
         ],
       );
@@ -380,17 +393,17 @@ class _YearReportDialog extends StatelessWidget {
     final topSongs = store.topSongs(PlayHistoryRange.year, limit: 1);
     final topArtists = store.topArtists(PlayHistoryRange.year, limit: 1);
     final topAlbums = store.topAlbums(PlayHistoryRange.year, limit: 1);
-    final topMonth = _topMonth();
+    final topMonth = _topMonth(l);
 
     final summaryCells = <(String, String)>[
-      (summary.totalPlays.toString(), '播放次数'),
-      (hoursLabel, '总时长'),
-      (summary.activeDays.toString(), '活跃天'),
-      (summary.uniqueSongs.toString(), '不重复曲目'),
+      (summary.totalPlays.toString(), l.paneMaintKvPlays),
+      (hoursLabel, l.paneMaintKvDuration),
+      (summary.activeDays.toString(), l.paneMaintKvActiveDays),
+      (summary.uniqueSongs.toString(), l.paneMaintKvUniqueSongs),
     ];
 
     return AlertDialog(
-      title: const Text('年度报告'),
+      title: Text(l.paneMaintYearReportTitle),
       content: SizedBox(
         width: 380,
         child: SingleChildScrollView(
@@ -399,7 +412,7 @@ class _YearReportDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '近一年的听歌总结',
+                l.paneMaintYearReportHeader,
                 style: TextStyle(fontSize: 12, color: t.text2),
               ),
               const SizedBox(height: 14),
@@ -420,32 +433,32 @@ class _YearReportDialog extends StatelessWidget {
               if (topSongs.isNotEmpty)
                 _ReportLine(
                   icon: Icons.music_note_outlined,
-                  label: '最常听歌曲',
+                  label: l.paneMaintTopSongLabel,
                   value: topSongs.first.title,
                   meta:
-                      '${topSongs.first.subtitle.isEmpty ? '' : '${topSongs.first.subtitle} · '}${topSongs.first.playCount} 次',
+                      '${topSongs.first.subtitle.isEmpty ? '' : '${topSongs.first.subtitle} · '}${l.paneMaintPlayCount(topSongs.first.playCount)}',
                 ),
               if (topArtists.isNotEmpty)
                 _ReportLine(
                   icon: Icons.person_outline,
-                  label: '最常听艺术家',
+                  label: l.paneMaintTopArtistLabel,
                   value: topArtists.first.title,
-                  meta: '${topArtists.first.playCount} 次',
+                  meta: l.paneMaintPlayCount(topArtists.first.playCount),
                 ),
               if (topAlbums.isNotEmpty)
                 _ReportLine(
                   icon: Icons.album_outlined,
-                  label: '最常听专辑',
+                  label: l.paneMaintTopAlbumLabel,
                   value: topAlbums.first.title,
                   meta:
-                      '${topAlbums.first.subtitle.isEmpty ? '' : '${topAlbums.first.subtitle} · '}${topAlbums.first.playCount} 次',
+                      '${topAlbums.first.subtitle.isEmpty ? '' : '${topAlbums.first.subtitle} · '}${l.paneMaintPlayCount(topAlbums.first.playCount)}',
                 ),
               if (topMonth != null)
                 _ReportLine(
                   icon: Icons.calendar_month_outlined,
-                  label: '最活跃月份',
+                  label: l.paneMaintTopMonthLabel,
                   value: topMonth.label,
-                  meta: '${topMonth.count} 次',
+                  meta: l.paneMaintPlayCount(topMonth.count),
                 ),
             ],
           ),
@@ -454,7 +467,7 @@ class _YearReportDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('关闭'),
+          child: Text(l.paneMaintClose),
         ),
       ],
     );

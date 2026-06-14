@@ -48,19 +48,18 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SetHead(
+        SetHead(
           icon: Icons.shield_outlined,
-          title: '隐私与安全',
-          subtitle:
-              '应用锁、PIN、生物识别与自动锁定。凭据通过系统安全存储；失败时静默降级，不阻塞使用。',
+          title: l.paneSecurityHeadTitle,
+          subtitle: l.paneSecurityHeadSubtitle,
         ),
         SetSection(
-          title: '应用锁',
+          title: l.paneSecuritySectionAppLock,
           hint: 'app_lock_settings',
           children: [
             SetRow(
-              title: '启用应用锁',
-              desc: '启动与从后台恢复时要求验证',
+              title: l.paneSecurityEnableTitle,
+              desc: l.paneSecurityEnableDesc,
               last: !settings.enabled,
               trailing: AppSwitch(
                 value: settings.enabled,
@@ -69,8 +68,8 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
             ),
             if (settings.enabled)
               SetRow(
-                title: 'PIN 码',
-                desc: '4–6 位数字',
+                title: l.paneSecurityPinTitle,
+                desc: l.paneSecurityPinDesc,
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -87,7 +86,7 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
                     ],
                     const SizedBox(width: 12),
                     AppButton(
-                      label: '修改 PIN',
+                      label: l.paneSecurityChangePin,
                       icon: Icons.password_rounded,
                       dense: true,
                       onPressed: _onChangePin,
@@ -97,8 +96,8 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
               ),
             if (settings.enabled && _biometricAvailable)
               SetRow(
-                title: '生物识别',
-                desc: 'Face ID / Touch ID 解锁',
+                title: l.paneSecurityBiometricTitle,
+                desc: l.paneSecurityBiometricDesc,
                 trailing: AppSwitch(
                   value: settings.biometricEnabled,
                   onChanged: (v) => ref
@@ -108,8 +107,8 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
               ),
             if (settings.enabled)
               SetRow(
-                title: '自动锁定',
-                desc: '闲置超时后自动上锁',
+                title: l.paneSecurityAutoLockTitle,
+                desc: l.paneSecurityAutoLockDesc,
                 last: true,
                 trailing: AppSegmented<AppLockTimeout>(
                   options: [
@@ -130,13 +129,13 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
         // （iOS / Android / Windows）渲染；macOS / Linux 不支持则整段不显示。
         if (AppLockGate.supportsSecureApplication)
           SetSection(
-            title: '隐私',
+            title: l.paneSecuritySectionPrivacy,
             children: [
               SetRow(
-                title: '应用切换器遮蔽',
-                desc: '切到后台时模糊窗口内容，防窥屏（LOCK-05）',
+                title: l.paneSecurityAppSwitcherMaskTitle,
+                desc: l.paneSecurityAppSwitcherMaskDesc,
                 last: true,
-                trailing: _appSwitcherMaskTrailing(settings.enabled),
+                trailing: _appSwitcherMaskTrailing(l, settings.enabled),
               ),
             ],
           ),
@@ -146,8 +145,10 @@ class _SecurityPaneState extends ConsumerState<SecurityPane> {
 
   /// 应用切换器遮蔽随应用锁自动开启（无独立开关）：
   /// 在支持的平台（iOS / Android / Windows）下，启用应用锁即生效。
-  Widget _appSwitcherMaskTrailing(bool lockEnabled) => AppTag(
-    lockEnabled ? '随应用锁开启' : '已关闭',
+  Widget _appSwitcherMaskTrailing(AppLocalizations l, bool lockEnabled) => AppTag(
+    lockEnabled
+        ? l.paneSecurityAppSwitcherMaskOn
+        : l.paneSecurityAppSwitcherMaskOff,
     variant: lockEnabled ? TagVariant.free : TagVariant.limit,
   );
 

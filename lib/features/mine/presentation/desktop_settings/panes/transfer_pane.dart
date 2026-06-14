@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/core/services/background_transfer_guard.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/data/services/cache_config_service.dart';
@@ -15,14 +16,24 @@ import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 
 /// 缓存上限可配置的媒体类型（与 [CacheConfigService] 持久化的键一致）。
-const _cacheLimitTypes = <(MediaType, String)>[
-  (MediaType.photo, '照片 / 封面'),
-  (MediaType.music, '音乐'),
-  (MediaType.video, '视频'),
-  (MediaType.book, '图书'),
-  (MediaType.comic, '漫画'),
-  (MediaType.note, '笔记'),
+const _cacheLimitTypes = <MediaType>[
+  MediaType.photo,
+  MediaType.music,
+  MediaType.video,
+  MediaType.book,
+  MediaType.comic,
+  MediaType.note,
 ];
+
+/// 按媒体类型返回缓存上限行的本地化标签。
+String _cacheLimitLabel(AppLocalizations l, MediaType type) => switch (type) {
+      MediaType.photo => l.paneTransferCacheTypePhoto,
+      MediaType.music => l.paneTransferCacheTypeMusic,
+      MediaType.video => l.paneTransferCacheTypeVideo,
+      MediaType.book => l.paneTransferCacheTypeBook,
+      MediaType.comic => l.paneTransferCacheTypeComic,
+      MediaType.note => l.paneTransferCacheTypeNote,
+    };
 
 /// 桌面「设置 · 传输与缓存」详情 pane。
 ///
@@ -48,6 +59,7 @@ class TransferPane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final statsAsync = ref.watch(cacheStatsProvider);
 
     return Column(
@@ -55,12 +67,11 @@ class TransferPane extends ConsumerWidget {
       children: [
         SetHead(
           icon: Icons.swap_vert_rounded,
-          title: '传输与缓存',
-          subtitle: '上传 / 下载 / 缓存三类任务的并发与缓存策略。实时进度请见控制台 › '
-              '传输队列。',
+          title: l.paneTransferTitle,
+          subtitle: l.paneTransferSubtitle,
           actions: [
             AppButton(
-              label: '打开传输队列',
+              label: l.paneTransferOpenQueue,
               icon: Icons.swap_vert_rounded,
               onPressed: () => Navigator.of(context).push<void>(
                 MaterialPageRoute(
@@ -73,12 +84,12 @@ class TransferPane extends ConsumerWidget {
 
         // ---- 传输 ----
         SetSection(
-          title: '传输',
-          hint: '上传 / 下载 / 缓存',
+          title: l.paneTransferSectionTransfer,
+          hint: l.paneTransferSectionTransferHint,
           children: [
             SetRow(
-              title: '并发任务数',
-              desc: '同时进行的上传 / 下载 / 缓存任务上限',
+              title: l.paneTransferConcurrencyTitle,
+              desc: l.paneTransferConcurrencyDesc,
               trailing: AppSegmented<int>(
                 value: ref.watch(transferConcurrencyProvider),
                 options: const [
@@ -91,8 +102,8 @@ class TransferPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '后台传输',
-              desc: '窗口最小化后继续传输',
+              title: l.paneTransferBackgroundTitle,
+              desc: l.paneTransferBackgroundDesc,
               trailing: AppSwitch(
                 value: ref.watch(backgroundTransferProvider),
                 onChanged: (v) => ref
@@ -101,8 +112,8 @@ class TransferPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '启动恢复',
-              desc: '启动时恢复未完成的任务',
+              title: l.paneTransferResumeTitle,
+              desc: l.paneTransferResumeDesc,
               trailing: AppSwitch(
                 value: ref.watch(resumeOnStartupProvider),
                 onChanged: (v) => ref
@@ -111,8 +122,8 @@ class TransferPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '上传去重',
-              desc: '跳过目标已存在的同名同尺寸文件（默认开启）',
+              title: l.paneTransferDedupTitle,
+              desc: l.paneTransferDedupDesc,
               last: true,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -120,7 +131,7 @@ class TransferPane extends ConsumerWidget {
                   Icon(Icons.check_circle_rounded, size: 16, color: t.ok),
                   const SizedBox(width: 6),
                   Text(
-                    '已启用',
+                    l.paneTransferDedupEnabled,
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
@@ -135,8 +146,8 @@ class TransferPane extends ConsumerWidget {
 
         // ---- 缓存 ----
         SetSection(
-          title: '缓存',
-          hint: '三类聚合 · LRU',
+          title: l.paneTransferSectionCache,
+          hint: l.paneTransferSectionCacheHint,
           bottomMargin: false,
           children: [
             Padding(
@@ -149,28 +160,28 @@ class TransferPane extends ConsumerWidget {
             ),
             const _CacheLimitRow(),
             SetRow(
-              title: '清理缓存',
-              desc: '按类型或全部清除已缓存文件',
+              title: l.paneTransferClearTitle,
+              desc: l.paneTransferClearDesc,
               last: true,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AppButton(
-                    label: '图片',
+                    label: l.paneTransferClearImages,
                     variant: AppButtonVariant.ghost,
                     dense: true,
                     onPressed: () => _clear(context, ref, MediaType.photo),
                   ),
                   const SizedBox(width: 6),
                   AppButton(
-                    label: '流式',
+                    label: l.paneTransferClearStream,
                     variant: AppButtonVariant.ghost,
                     dense: true,
                     onPressed: () => _clear(context, ref, MediaType.video),
                   ),
                   const SizedBox(width: 6),
                   AppButton(
-                    label: '全部',
+                    label: l.paneTransferClearAll,
                     icon: Icons.delete_outline_rounded,
                     dense: true,
                     onPressed: () => _clear(context, ref, null),
@@ -189,25 +200,26 @@ class TransferPane extends ConsumerWidget {
     WidgetRef ref,
     MediaType? mediaType,
   ) async {
+    final l = AppLocalizations.of(context);
     final label = switch (mediaType) {
-      MediaType.photo => '图片缓存',
-      MediaType.video => '流式缓存',
-      null => '全部缓存',
-      _ => '${mediaType.displayName}缓存',
+      MediaType.photo => l.paneTransferClearLabelImages,
+      MediaType.video => l.paneTransferClearLabelStream,
+      null => l.paneTransferClearLabelAll,
+      _ => l.paneTransferClearLabelTyped(mediaType.displayName),
     };
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('清理$label'),
-        content: Text('确定要清除$label吗？此操作不可撤销，但不会影响 NAS 上的原文件。'),
+        title: Text(l.paneTransferClearDialogTitle(label)),
+        content: Text(l.paneTransferClearDialogContent(label)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child: Text(l.paneTransferClearCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('清除'),
+            child: Text(l.paneTransferClearConfirm),
           ),
         ],
       ),
@@ -233,6 +245,7 @@ class _CacheLimitRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final configAsync = ref.watch(cacheConfigProvider);
 
     return Container(
@@ -244,7 +257,7 @@ class _CacheLimitRow extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '缓存上限',
+            l.paneTransferCacheLimitTitle,
             style: TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
@@ -253,23 +266,23 @@ class _CacheLimitRow extends ConsumerWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            '按媒体类型设上限，超出后按 LRU 自动清理最久未用',
+            l.paneTransferCacheLimitDesc,
             style: TextStyle(fontSize: 12, color: t.text2),
           ),
           const SizedBox(height: 12),
           configAsync.when(
             data: (limits) => Column(
               children: [
-                for (final entry in _cacheLimitTypes)
+                for (final type in _cacheLimitTypes)
                   _CacheLimitTile(
-                    label: entry.$2,
-                    sizeMB: limits[entry.$1] ??
-                        CacheConfigService.defaultCacheSizesMB[entry.$1] ??
+                    label: _cacheLimitLabel(l, type),
+                    sizeMB: limits[type] ??
+                        CacheConfigService.defaultCacheSizesMB[type] ??
                         1024,
                     onChanged: (sizeMB) async {
                       await ref
                           .read(cacheConfigServiceProvider)
-                          .setCacheSizeLimit(entry.$1, sizeMB);
+                          .setCacheSizeLimit(type, sizeMB);
                       ref.invalidate(cacheConfigProvider);
                     },
                   ),
@@ -278,14 +291,14 @@ class _CacheLimitRow extends ConsumerWidget {
             loading: () => Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
-                '加载中…',
+                l.paneTransferCacheLimitLoading,
                 style: TextStyle(fontSize: 12, color: t.text3),
               ),
             ),
             error: (_, _) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
-                '无法读取缓存配置',
+                l.paneTransferCacheLimitError,
                 style: TextStyle(fontSize: 12, color: t.text3),
               ),
             ),
@@ -405,22 +418,25 @@ class _CacheKvStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final total = stats.values.fold<int>(0, (sum, v) => sum + v.size);
     final cells = <(String, String)>[
-      (CacheConfigService.formatSize(total), '总占用'),
-      (CacheConfigService.formatSize(_sizeOf(const [MediaType.photo])),
-          '图片 / 封面'),
+      (CacheConfigService.formatSize(total), l.paneTransferKvTotal),
+      (
+        CacheConfigService.formatSize(_sizeOf(const [MediaType.photo])),
+        l.paneTransferKvImages,
+      ),
       (
         CacheConfigService.formatSize(
           _sizeOf(const [MediaType.video, MediaType.music]),
         ),
-        '流式缓存',
+        l.paneTransferKvStream,
       ),
       (
         CacheConfigService.formatSize(
           _sizeOf(const [MediaType.book, MediaType.comic, MediaType.note]),
         ),
-        '阅读 / 元数据',
+        l.paneTransferKvReading,
       ),
     ];
 

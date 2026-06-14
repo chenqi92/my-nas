@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/photo/data/services/face_database_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
 import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
@@ -34,10 +35,11 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final state = ref.watch(photoListProvider);
     final subtitle = state is PhotoListLoaded
-        ? '${state.totalCount} 张照片'
-        : '人脸识别 · EXIF · 重复检测 · 自动增量扫描';
+        ? l.photoPagePhotoCount(state.totalCount)
+        : l.photoPageSubtitleFeatures;
     final hasPhotos = state is PhotoListLoaded && state.allPhotos.isNotEmpty;
     // 人物来自真实人脸库聚类；未聚类/无结果时不展示该行，不再伪造「未识别」头像。
     final persons = ref.watch(_desktopPersonsProvider).valueOrNull ??
@@ -47,7 +49,7 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
         : PhotoSourceFilter.all;
 
     return DesktopPageScaffold(
-      title: '照片',
+      title: l.photoPageTitle,
       subtitle: subtitle,
       actions: Row(
         mainAxisSize: MainAxisSize.min,
@@ -63,10 +65,10 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
             value: _view,
             onChanged: (v) => setState(() => _view = v),
             dense: true,
-            options: const [
-              AppSegmentedOption(value: 'timeline', label: '时间线'),
-              AppSegmentedOption(value: 'albums', label: '相册'),
-              AppSegmentedOption(value: 'map', label: '地图'),
+            options: [
+              AppSegmentedOption(value: 'timeline', label: l.photoPageTabTimeline),
+              AppSegmentedOption(value: 'albums', label: l.photoPageTabAlbums),
+              AppSegmentedOption(value: 'map', label: l.photoPageTabMap),
             ],
           ),
         ],
@@ -78,7 +80,7 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
             Row(
               children: [
                 Text(
-                  '人物',
+                  l.photoPagePeopleTitle,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -87,7 +89,7 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                 ),
                 const SizedBox(width: 9),
                 Text(
-                  '${persons.length} 人 · 人脸聚类',
+                  l.photoPagePeopleSubtitle(persons.length),
                   style: TextStyle(fontSize: 12, color: t.text2),
                 ),
                 const Spacer(),
@@ -98,7 +100,7 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 2),
                     child: Text(
-                      '全部人物',
+                      l.photoPageAllPeople,
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
@@ -146,7 +148,7 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                                 color: t.text1),
                           ),
                           Text(
-                            '${p.photoCount} 张',
+                            l.photoPagePersonPhotoCount(p.photoCount),
                             style: TextStyle(fontSize: 11, color: t.text2),
                           ),
                         ],
@@ -159,14 +161,14 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
             const SizedBox(height: 8),
           ],
           if (_view == 'map')
-            const DesktopComingSoon(
+            DesktopComingSoon(
               icon: Icons.map_outlined,
-              message: '按 GPS EXIF 在地图上聚合照片足迹（规划中）。',
+              message: l.photoPageMapComingSoon,
             )
           else if (_view == 'albums')
-            const DesktopComingSoon(
+            DesktopComingSoon(
               icon: Icons.photo_album_outlined,
-              message: '按相册/文件夹分组浏览（规划中）。当前可用「时间线」视图。',
+              message: l.photoPageAlbumsComingSoon,
             )
           else
             _PhotoBody(state: state, ref: ref),
@@ -191,8 +193,9 @@ class _SourceFilterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return PopupMenuButton<PhotoSourceFilter>(
-      tooltip: '来源筛选',
+      tooltip: l.photoPageSourceFilterTooltip,
       initialValue: value,
       onSelected: onChanged,
       itemBuilder: (_) => [
@@ -226,6 +229,7 @@ class _PhotoBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (state is PhotoListLoading) {
       return const SizedBox(
         height: 320,
@@ -233,17 +237,17 @@ class _PhotoBody extends StatelessWidget {
       );
     }
     if (state is! PhotoListLoaded) {
-      return const DesktopComingSoon(
+      return DesktopComingSoon(
         icon: Icons.photo_library_outlined,
-        message: '映射「照片」媒体库后，此处显示响应式网格 + 时间分组。',
+        message: l.photoPageNoLibraryHint,
       );
     }
     // 用 displayPhotos 让来源/时间筛选生效（而非恒取 allPhotos）。
     final photos = (state as PhotoListLoaded).displayPhotos;
     if (photos.isEmpty) {
-      return const DesktopComingSoon(
+      return DesktopComingSoon(
         icon: Icons.photo_library_outlined,
-        message: '没有符合当前筛选的照片。',
+        message: l.photoPageNoFilteredPhotos,
       );
     }
     final connections = ref.watch(activeConnectionsProvider);
@@ -312,12 +316,13 @@ class _TimelineLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final String label;
     if (monthKey == '未知') {
-      label = '未知日期';
+      label = l.photoPageUnknownDate;
     } else {
       final parts = monthKey.split('-');
-      label = '${parts[0]} 年 ${int.parse(parts[1])} 月';
+      label = l.photoPageYearMonth(int.parse(parts[0]), int.parse(parts[1]));
     }
     return Text.rich(
       TextSpan(children: [
@@ -330,7 +335,7 @@ class _TimelineLabel extends StatelessWidget {
           ),
         ),
         TextSpan(
-          text: '  · $count 张',
+          text: l.photoPageTimelineCount(count),
           style: TextStyle(fontSize: 12.5, color: t.text2),
         ),
       ]),

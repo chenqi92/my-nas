@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/mine/presentation/desktop_settings/settings_pane_registry.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 
 /// 桌面端「设置」master-detail 外壳。对齐设计稿 `settings.jsx` 的 `.settings-wrap`：
@@ -18,7 +19,7 @@ class DesktopSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
-  String _selected = settingsGroups.first.cats.first.id;
+  String _selected = 'appearance';
   String _query = '';
   final _searchCtrl = TextEditingController();
 
@@ -31,14 +32,16 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    final cat = allSettingsCats.firstWhere(
+    final l = AppLocalizations.of(context);
+    final cats = allSettingsCats(l);
+    final cat = cats.firstWhere(
       (c) => c.id == _selected,
-      orElse: () => settingsGroups.first.cats.first,
+      orElse: () => cats.first,
     );
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(width: 262, child: _buildRail(t)),
+        SizedBox(width: 262, child: _buildRail(t, l)),
         Expanded(
           child: ColoredBox(
             color: t.bg,
@@ -48,7 +51,7 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 780),
-                  child: buildSettingsPane(cat.id),
+                  child: buildSettingsPane(cat.id, l),
                 ),
               ),
             ),
@@ -59,11 +62,11 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
   }
 
   // ===== 左栏：标题 + 搜索 + 分组分类 =====
-  Widget _buildRail(DesignTokens t) {
+  Widget _buildRail(DesignTokens t, AppLocalizations l) {
     final ql = _query.trim().toLowerCase();
     bool match(SettingsCat c) => ql.isEmpty || c.label.toLowerCase().contains(ql);
     final visibleGroups =
-        settingsGroups.where((g) => g.cats.any(match)).toList();
+        settingsGroups(l).where((g) => g.cats.any(match)).toList();
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -76,7 +79,7 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
             child: Text(
-              '设置',
+              l.setShellTitle,
               style: TextStyle(
                 fontSize: 19,
                 fontWeight: FontWeight.w900,
@@ -85,12 +88,12 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
               ),
             ),
           ),
-          _buildSearch(t),
+          _buildSearch(t, l),
           if (visibleGroups.isEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 18, 14, 18),
               child: Text(
-                '没有匹配 “$_query” 的设置项',
+                l.setShellNoMatch(_query),
                 style: TextStyle(fontSize: 12.5, color: t.text2),
               ),
             )
@@ -115,7 +118,7 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
     );
   }
 
-  Widget _buildSearch(DesignTokens t) => Padding(
+  Widget _buildSearch(DesignTokens t, AppLocalizations l) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 1),
@@ -138,7 +141,7 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
                     isDense: true,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    hintText: '搜索设置项…',
+                    hintText: l.setShellSearchHint,
                     hintStyle: TextStyle(fontSize: 12.5, color: t.text3),
                   ),
                 ),
@@ -158,6 +161,7 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
       );
 
   Widget _buildCat(DesignTokens t, SettingsCat c) {
+    final l = AppLocalizations.of(context);
     final on = c.id == _selected;
     final fg = on ? t.accentContrast : t.text1;
     final iconColor = on ? t.accentContrast : t.text2;
@@ -204,7 +208,7 @@ class _DesktopSettingsScreenState extends ConsumerState<DesktopSettingsScreen> {
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
-                      '规划',
+                      l.setShellPlannedBadge,
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w800,
@@ -229,6 +233,7 @@ class StubPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -236,8 +241,8 @@ class StubPane extends StatelessWidget {
         SetSection(
           children: [
             SetRow(
-              title: '建设中',
-              desc: '该设置页正在按设计稿迁移',
+              title: l.setShellStubTitle,
+              desc: l.setShellStubDesc,
               last: true,
               trailing: Icon(Icons.construction_rounded, color: t.text3),
             ),

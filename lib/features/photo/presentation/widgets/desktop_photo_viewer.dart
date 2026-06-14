@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 
@@ -13,11 +14,12 @@ Future<void> showDesktopPhotoViewer(
   required List<PhotoEntity> photos,
   required int initialIndex,
 }) {
+  final l = AppLocalizations.of(context);
   return showGeneralDialog<void>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.92),
     barrierDismissible: true,
-    barrierLabel: '照片查看器',
+    barrierLabel: l.photoViewerBarrierLabel,
     pageBuilder: (_, _, _) =>
         _DesktopPhotoViewer(photos: photos, initialIndex: initialIndex),
   );

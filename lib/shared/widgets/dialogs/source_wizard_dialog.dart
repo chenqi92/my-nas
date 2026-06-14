@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
@@ -44,6 +45,7 @@ class _SourceWizardDialogState extends State<SourceWizardDialog> {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(24),
@@ -64,7 +66,7 @@ class _SourceWizardDialogState extends State<SourceWizardDialog> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
                 child: Text(
-                  '选择要连接的源类型，下一步进入连接配置与测试。',
+                  l.srcWizardSubtitle,
                   style: TextStyle(fontSize: 12.5, color: t.text2, height: 1.5),
                 ),
               ),
@@ -96,32 +98,35 @@ class _Header extends StatelessWidget {
   final VoidCallback onClose;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 16, 14, 16),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: t.hairline)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.lan_outlined, size: 17, color: t.accent),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                '添加数据源',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: t.text0,
-                ),
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 14, 16),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: t.hairline)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.lan_outlined, size: 17, color: t.accent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              l.srcWizardTitle,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: t.text0,
               ),
             ),
-            IconButton(
-              onPressed: onClose,
-              icon: Icon(Icons.close_rounded, size: 16, color: t.text2),
-            ),
-          ],
-        ),
-      );
+          ),
+          IconButton(
+            onPressed: onClose,
+            icon: Icon(Icons.close_rounded, size: 16, color: t.text2),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 步骤指示器（设计稿 ops2.jsx wizard-steps）：1 选择类型 / 2 连接信息 /
@@ -131,19 +136,26 @@ class _WizardSteps extends StatelessWidget {
   final DesignTokens t;
   final int current;
 
-  static const _labels = ['选择类型', '连接信息', '测试连接', '库映射'];
-
   @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          for (var i = 0; i < _labels.length; i++) ...[
-            if (i > 0) const SizedBox(width: 8),
-            _step(i),
-          ],
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final labels = [
+      l.srcWizardStepType,
+      l.srcWizardStepConnection,
+      l.srcWizardStepTest,
+      l.srcWizardStepMapping,
+    ];
+    return Row(
+      children: [
+        for (var i = 0; i < labels.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          _step(i, labels[i]),
         ],
-      );
+      ],
+    );
+  }
 
-  Widget _step(int i) {
+  Widget _step(int i, String label) {
     final isOn = i == current;
     final isDone = i < current;
     final Color numberBg;
@@ -191,7 +203,7 @@ class _WizardSteps extends StatelessWidget {
         ),
         const SizedBox(width: 9),
         Text(
-          _labels[i],
+          label,
           style: TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
@@ -209,22 +221,25 @@ class _Footer extends StatelessWidget {
   final VoidCallback? onNext;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(22, 14, 22, 14),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: t.hairline)),
-        ),
-        child: Row(
-          children: [
-            const Spacer(),
-            FilledButton.icon(
-              onPressed: onNext,
-              icon: const Icon(Icons.arrow_forward_rounded, size: 14),
-              label: const Text('下一步'),
-            ),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 14, 22, 14),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: t.hairline)),
+      ),
+      child: Row(
+        children: [
+          const Spacer(),
+          FilledButton.icon(
+            onPressed: onNext,
+            icon: const Icon(Icons.arrow_forward_rounded, size: 14),
+            label: Text(l.srcWizardNext),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _TypeGrid extends StatelessWidget {
@@ -241,6 +256,7 @@ class _TypeGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -290,10 +306,10 @@ class _TypeGrid extends StatelessWidget {
                   ],
                 ),
                 if (plan)
-                  const Positioned(
+                  Positioned(
                     top: -2,
                     right: -2,
-                    child: AppTag('规划', variant: TagVariant.plan),
+                    child: AppTag(l.srcWizardPlanTag, variant: TagVariant.plan),
                   ),
               ],
             ),

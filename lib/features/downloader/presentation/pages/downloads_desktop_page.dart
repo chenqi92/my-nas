@@ -8,6 +8,7 @@ import 'package:my_nas/features/downloader/presentation/widgets/download_detail_
 import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/transmission/presentation/providers/transmission_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -29,17 +30,17 @@ class DownloadsDesktopPage extends ConsumerStatefulWidget {
 }
 
 class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
-  String _client = '全部';
-  String _filter = '全部';
+  /// null = 全部客户端（与 chip 显示标签解耦的内部哨兵）。
+  String? _client;
+  DownloadStatusFilter _filter = DownloadStatusFilter.all;
   final Set<String> _selected = {};
-
-  static const _filters = ['全部', '下载中', '做种', '已暂停', '已完成'];
 
   /// 批量操作：按 sourceId 分组后分发到各客户端的批量 API。
   Future<void> _batch(
     List<UnifiedDownloadTask> selectedTasks,
     _BatchOp op,
   ) async {
+    final l = AppLocalizations.of(context);
     final groups = <String, List<UnifiedDownloadTask>>{};
     for (final task in selectedTasks) {
       groups.putIfAbsent(task.sourceId, () => []).add(task);
@@ -89,23 +90,24 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
       }
       if (mounted) setState(_selected.clear);
     } on Object catch (e) {
-      if (mounted) context.showErrorToast('批量操作失败：$e');
+      if (mounted) context.showErrorToast(l.dlPageBatchOpFailed(e.toString()));
     }
   }
 
   Future<void> _confirmBatchDelete(List<UnifiedDownloadTask> selected) async {
+    final l = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除选中任务'),
-        content: Text('确定删除选中的 ${selected.length} 个任务？（不删除已下载文件）'),
+        title: Text(l.dlPageDeleteSelectedTitle),
+        content: Text(l.dlPageDeleteSelectedConfirm(selected.length)),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('取消')),
+              child: Text(l.dlPageCancel)),
           FilledButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('删除')),
+              child: Text(l.dlPageDelete)),
         ],
       ),
     );
@@ -114,17 +116,20 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final clients = ref.watch(downloaderClientsProvider);
     final throughput = ref.watch(downloaderThroughputProvider);
     final allTasks = ref.watch(aggregatedDownloadTasksProvider);
 
-    final clientNames = ['全部', ...clients.map((c) => c.source.displayName)];
-    if (_client != '全部' && !clientNames.contains(_client)) _client = '全部';
+    if (_client != null &&
+        !clients.any((c) => c.source.displayName == _client)) {
+      _client = null;
+    }
 
     final tasks = allTasks.where((task) {
-      final byClient = _client == '全部' || task.sourceName == _client;
-      final byFilter = task.status.matchesFilter(_filter);
+      final byClient = _client == null || task.sourceName == _client;
+      final byFilter = _filter.matches(task.status);
       return byClient && byFilter;
     }).toList()
       ..sort((a, b) => b.downloadSpeed.compareTo(a.downloadSpeed));
@@ -136,8 +141,8 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
     final qbSourceId = qbClients.isEmpty ? null : qbClients.first.source.id;
 
     return DesktopPageScaffold(
-      title: '下载器',
-      subtitle: 'qBittorrent · aria2 · Transmission — 跨客户端统一任务台',
+      title: l.dlPageTitle,
+      subtitle: l.dlPageSubtitle,
       maxWidth: 1500,
       actions: Padding(
         padding: const EdgeInsets.only(left: 12),
@@ -148,7 +153,7 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
             builder: (_) => const AddDownloadDialog(),
           ),
           icon: const Icon(Icons.add_rounded, size: 16),
-          label: const Text('新建任务'),
+          label: Text(l.dlPageNewTask),
         ),
       ),
       body: Column(
@@ -158,7 +163,6 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
             clients: clients,
             clientFilter: _client,
             statusFilter: _filter,
-            statusFilters: _filters,
             onClient: (c) => setState(() => _client = c),
             onStatus: (f) => setState(() => _filter = f),
           ),
@@ -219,27 +223,26 @@ class _Toolbar extends StatelessWidget {
     required this.clients,
     required this.clientFilter,
     required this.statusFilter,
-    required this.statusFilters,
     required this.onClient,
     required this.onStatus,
   });
 
   final List<DownloaderClient> clients;
-  final String clientFilter;
-  final String statusFilter;
-  final List<String> statusFilters;
-  final ValueChanged<String> onClient;
-  final ValueChanged<String> onStatus;
+  final String? clientFilter;
+  final DownloadStatusFilter statusFilter;
+  final ValueChanged<String?> onClient;
+  final ValueChanged<DownloadStatusFilter> onStatus;
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Row(
       children: [
         AppChip(
-          label: '全部',
-          active: clientFilter == '全部',
+          label: l.downloadFilterAll,
+          active: clientFilter == null,
           compact: true,
-          onTap: () => onClient('全部'),
+          onTap: () => onClient(null),
         ),
         for (final c in clients)
           Padding(
@@ -253,11 +256,11 @@ class _Toolbar extends StatelessWidget {
             ),
           ),
         const Spacer(),
-        for (final f in statusFilters)
+        for (final f in DownloadStatusFilter.values)
           Padding(
             padding: const EdgeInsets.only(left: 8),
             child: AppChip(
-              label: f,
+              label: f.label(l),
               active: f == statusFilter,
               compact: true,
               onTap: () => onStatus(f),
@@ -274,21 +277,23 @@ class _SummaryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return GlassPanel(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       child: Row(
         children: [
-          _metric('↓ 总下行', formatSpeed(throughput.downloadSpeed),
+          _metric('↓ ${l.dlPageTotalDown}', formatSpeed(throughput.downloadSpeed),
               t.accentBright, t),
           _div(t),
-          _metric('↑ 总上行', formatSpeed(throughput.uploadSpeed), t.text0, t),
-          _div(t),
-          _metric('活动任务', '${throughput.activeCount} / ${throughput.totalCount}',
+          _metric('↑ ${l.dlPageTotalUp}', formatSpeed(throughput.uploadSpeed),
               t.text0, t),
           _div(t),
+          _metric(l.dlPageActiveTasks,
+              '${throughput.activeCount} / ${throughput.totalCount}', t.text0, t),
+          _div(t),
           _metric(
-              '在线客户端',
+              l.dlPageOnlineClients,
               '${throughput.connectedClients} / ${throughput.totalClients}',
               t.text0,
               t),
@@ -341,6 +346,7 @@ class _TaskTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final allSelected =
         tasks.isNotEmpty && tasks.every((x) => selected.contains(x.uniqueKey));
@@ -351,7 +357,7 @@ class _TaskTable extends StatelessWidget {
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              _headerRow(t, allSelected),
+              _headerRow(l, t, allSelected),
               for (final task in tasks)
                 _TaskRow(
                   task: task,
@@ -365,11 +371,12 @@ class _TaskTable extends StatelessWidget {
         const SizedBox(height: 14),
         Row(
           children: [
-            Text('全局限速', style: TextStyle(fontSize: 12, color: t.text2)),
+            Text(l.dlPageGlobalRateLimit,
+                style: TextStyle(fontSize: 12, color: t.text2)),
             const SizedBox(width: 8),
             if (qbSourceId != null)
               AppChip(
-                label: '设置（qBittorrent）',
+                label: l.dlPageConfigureQb,
                 icon: Icons.speed_rounded,
                 compact: true,
                 onTap: () => showDialog<void>(
@@ -378,10 +385,10 @@ class _TaskTable extends StatelessWidget {
                 ),
               )
             else
-              const AppTag('客户端设置内管理', variant: TagVariant.neutral),
+              AppTag(l.dlPageManagedInClient, variant: TagVariant.neutral),
             const Spacer(),
             Text(
-              '分类 · 标签 · 备用限速可在客户端设置内管理',
+              l.dlPageRateLimitHint,
               style: TextStyle(fontSize: 12, color: t.text2),
             ),
           ],
@@ -390,7 +397,7 @@ class _TaskTable extends StatelessWidget {
     );
   }
 
-  Widget _headerRow(DesignTokens t, bool allSelected) {
+  Widget _headerRow(AppLocalizations l, DesignTokens t, bool allSelected) {
     TextStyle s() => TextStyle(
           fontSize: 10.5,
           fontWeight: FontWeight.w700,
@@ -412,15 +419,15 @@ class _TaskTable extends StatelessWidget {
               onChanged: (_) => onToggleAll(),
             ),
           ),
-          Expanded(child: Text('名称', style: s())),
+          Expanded(child: Text(l.dlPageColName, style: s())),
           const SizedBox(width: 10),
-          SizedBox(width: 96, child: Text('客户端', style: s())),
-          SizedBox(width: 80, child: Text('状态', style: s())),
-          SizedBox(width: 150, child: Text('进度', style: s())),
+          SizedBox(width: 96, child: Text(l.dlPageColClient, style: s())),
+          SizedBox(width: 80, child: Text(l.dlPageColStatus, style: s())),
+          SizedBox(width: 150, child: Text(l.dlPageColProgress, style: s())),
           const SizedBox(width: 10),
-          SizedBox(width: 92, child: Text('↓ 速度', style: s())),
-          SizedBox(width: 92, child: Text('↑ 速度', style: s())),
-          SizedBox(width: 72, child: Text('大小', style: s())),
+          SizedBox(width: 92, child: Text('↓ ${l.dlPageColSpeed}', style: s())),
+          SizedBox(width: 92, child: Text('↑ ${l.dlPageColSpeed}', style: s())),
+          SizedBox(width: 72, child: Text(l.dlPageColSize, style: s())),
           SizedBox(width: 64, child: Text('ETA', style: s())),
         ],
       ),
@@ -447,7 +454,10 @@ class _StatePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Align(
         alignment: Alignment.centerLeft,
-        child: StatusPill(_toPill(status), label: status.label),
+        child: StatusPill(
+          _toPill(status),
+          label: status.label(AppLocalizations.of(context)),
+        ),
       );
 }
 
@@ -465,6 +475,7 @@ class _TaskRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return Material(
       color: selected ? t.chipBgActive : Colors.transparent,
@@ -504,7 +515,7 @@ class _TaskRow extends StatelessWidget {
                     if (task.ratio != null) ...[
                       const SizedBox(height: 2),
                       Text(
-                        '分享率 ${task.ratio!.toStringAsFixed(2)}',
+                        l.dlPageRatio(task.ratio!.toStringAsFixed(2)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 10.5, color: t.text3),
@@ -618,10 +629,10 @@ class _EmptyClients extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return DesktopComingSoon(
       icon: Icons.download_outlined,
-      message: '尚未连接下载客户端。\n到「数据源」添加 qBittorrent / aria2 / '
-          'Transmission 之后，所有任务会聚合到这里（含 PT 一键发送）。',
+      message: l.dlPageEmptyClientsHint,
     );
   }
 }
@@ -632,6 +643,7 @@ class _EmptyTasks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 42),
       decoration: BoxDecoration(
@@ -645,7 +657,7 @@ class _EmptyTasks extends StatelessWidget {
             Icon(Icons.inbox_outlined, size: 36, color: t.text3),
             const SizedBox(height: 10),
             Text(
-              '当前筛选下没有任务。',
+              l.dlPageNoTasksUnderFilter,
               style: TextStyle(fontSize: 13, color: t.text2),
             ),
           ],
@@ -681,6 +693,7 @@ class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
   }
 
   Future<void> _apply() async {
+    final l = AppLocalizations.of(context);
     setState(() => _saving = true);
     final dl = (int.tryParse(_dl.text.trim()) ?? 0) * 1024;
     final up = (int.tryParse(_up.text.trim()) ?? 0) * 1024;
@@ -691,18 +704,19 @@ class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
       ref.invalidate(qbPreferencesProvider(widget.sourceId));
       if (mounted) {
         Navigator.of(context).pop();
-        context.showSuccessToast('已更新全局限速');
+        context.showSuccessToast(l.dlPageGlobalLimitUpdated);
       }
     } on Object catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        context.showErrorToast('设置失败：$e');
+        context.showErrorToast(l.dlPageSaveFailed(e.toString()));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     // 首次拿到偏好时按 KB/s 回填输入框。
     ref.watch(qbPreferencesProvider(widget.sourceId)).whenData((p) {
       if (!_prefilled && p != null) {
@@ -712,35 +726,35 @@ class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
       }
     });
     return AlertDialog(
-      title: const Text('全局限速'),
+      title: Text(l.dlPageGlobalRateLimit),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('单位 KB/s，0 表示不限速。', style: TextStyle(fontSize: 12.5)),
+          Text(l.dlPageRateLimitUnitHint, style: const TextStyle(fontSize: 12.5)),
           const SizedBox(height: 14),
           TextField(
             controller: _dl,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                labelText: '下载上限 (KB/s)', isDense: true),
+            decoration: InputDecoration(
+                labelText: l.dlPageDownloadLimitLabel, isDense: true),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _up,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-                labelText: '上传上限 (KB/s)', isDense: true),
+            decoration: InputDecoration(
+                labelText: l.dlPageUploadLimitLabel, isDense: true),
           ),
         ],
       ),
       actions: [
         TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消')),
+            child: Text(l.dlPageCancel)),
         FilledButton(
           onPressed: _saving ? null : _apply,
-          child: const Text('应用'),
+          child: Text(l.dlPageApply),
         ),
       ],
     );
@@ -765,13 +779,14 @@ class _BatchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return GlassPanel(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       child: Row(
         children: [
           Text(
-            '已选 $count 项',
+            l.dlPageSelectedCount(count),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -782,22 +797,22 @@ class _BatchBar extends StatelessWidget {
           TextButton.icon(
             onPressed: onResume,
             icon: const Icon(Icons.play_arrow_rounded, size: 16),
-            label: const Text('继续'),
+            label: Text(l.dlPageResume),
           ),
           TextButton.icon(
             onPressed: onPause,
             icon: const Icon(Icons.pause_rounded, size: 16),
-            label: const Text('暂停'),
+            label: Text(l.dlPagePause),
           ),
           TextButton.icon(
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline_rounded, size: 16),
-            label: const Text('删除'),
+            label: Text(l.dlPageDelete),
           ),
           const SizedBox(width: 6),
           IconButton(
             onPressed: onClear,
-            tooltip: '取消选择',
+            tooltip: l.dlPageClearSelection,
             icon: Icon(Icons.close_rounded, size: 16, color: t.text2),
           ),
         ],

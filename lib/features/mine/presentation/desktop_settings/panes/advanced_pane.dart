@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/network/host_mapping_entry.dart';
 import 'package:my_nas/core/network/hosts_resolver_service.dart';
@@ -59,54 +60,58 @@ class _AdvancedPaneState extends ConsumerState<AdvancedPane> {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SetHead(
           icon: Icons.terminal_rounded,
-          title: '高级',
-          subtitle: 'Hosts 映射、系统索引集成与诊断。',
+          title: l.paneAdvancedTitle,
+          subtitle: l.paneAdvancedSubtitle,
           actions: [
             AppButton(
-              label: '管理',
+              label: l.paneAdvancedManageButton,
               icon: Icons.dns_rounded,
               onPressed: _openHostsPage,
             ),
           ],
         ),
         SetSection(
-          title: 'Hosts 映射',
-          hint: '域名 → IP · 绕过 DNS 污染',
+          title: l.paneAdvancedHostsTitle,
+          hint: l.paneAdvancedHostsHint,
           children: _hostRows(),
         ),
         SetSection(
-          title: '系统集成',
+          title: l.paneAdvancedSystemIntegrationTitle,
           children: const [
             _SpotlightRow(),
             _JumpListRow(),
             _DeepLinkRow(last: true),
           ],
         ),
-        const SetSection(
-          title: '诊断',
+        SetSection(
+          title: l.paneAdvancedDiagnosticsTitle,
           bottomMargin: false,
-          children: [
+          children: const [
             _DiagnosticLogRow(last: true),
           ],
         ),
       ],
     );
+  }
 
   List<Widget> _hostRows() {
+    final l = AppLocalizations.of(context);
     if (_hosts.isEmpty) {
       return [
         SetRow(
           leading: const _HostIcon(),
-          title: '暂无映射',
-          desc: '点「管理」手动添加，或用 DoH 自动解析常用域名',
+          title: l.paneAdvancedNoMappingTitle,
+          desc: l.paneAdvancedNoMappingDesc,
           last: true,
           trailing: AppButton(
-            label: '添加映射',
+            label: l.paneAdvancedAddMappingButton,
             icon: Icons.add_rounded,
             dense: true,
             onPressed: _openHostsPage,
@@ -140,7 +145,9 @@ class _HostRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sourceLabel = entry.source == HostMappingSource.doh ? 'DoH' : '手动';
+    final l = AppLocalizations.of(context);
+    final sourceLabel =
+        entry.source == HostMappingSource.doh ? 'DoH' : l.paneAdvancedSourceManual;
     return SetRow(
       leading: const _HostIcon(),
       title: entry.host,
@@ -179,25 +186,26 @@ class _SpotlightRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     if (!Platform.isMacOS) {
-      return const SetRow(
-        title: 'Spotlight 索引',
-        desc: '把媒体库索引进 macOS Spotlight — 仅 macOS',
-        trailing: AppTag('仅 macOS', variant: TagVariant.limit),
+      return SetRow(
+        title: l.paneAdvancedSpotlightTitle,
+        desc: l.paneAdvancedSpotlightDescNonMac,
+        trailing: AppTag(l.paneAdvancedSpotlightTagMacOnly, variant: TagVariant.limit),
       );
     }
     final enabled = ref.watch(spotlightEnabledProvider);
     final rebuilding = ref.watch(SpotlightReindexCoordinator.progressProvider);
     return SetRow(
-      title: 'Spotlight 索引',
+      title: l.paneAdvancedSpotlightTitle,
       desc: rebuilding
-          ? '正在重建系统索引…'
-          : '把视频 / 音乐 / 书籍 / 漫画 / 笔记标题索引进 macOS Spotlight',
+          ? l.paneAdvancedSpotlightDescRebuilding
+          : l.paneAdvancedSpotlightDesc,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           AppButton(
-            label: '设置',
+            label: l.paneAdvancedSpotlightSettingsButton,
             dense: true,
             onPressed: () => Navigator.of(context).push<void>(
               MaterialPageRoute<void>(
@@ -233,13 +241,16 @@ class _JumpListRow extends StatelessWidget {
   const _JumpListRow();
 
   @override
-  Widget build(BuildContext context) => SetRow(
-        title: 'Jump List / 跳转列表',
-        desc: 'Windows 任务栏快捷项 — 随平台启用',
-        trailing: Platform.isWindows
-            ? const AppTag('随平台启用', variant: TagVariant.free)
-            : const AppTag('仅 Windows', variant: TagVariant.limit),
-      );
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return SetRow(
+      title: l.paneAdvancedJumpListTitle,
+      desc: l.paneAdvancedJumpListDesc,
+      trailing: Platform.isWindows
+          ? AppTag(l.paneAdvancedJumpListTagPlatform, variant: TagVariant.free)
+          : AppTag(l.paneAdvancedJumpListTagWindowsOnly, variant: TagVariant.limit),
+    );
+  }
 }
 
 /// 深度链接行：`mynas://` 已在系统注册并由 DeepLinkService 处理（OAuth 回调等）。
@@ -249,12 +260,14 @@ class _DeepLinkRow extends StatelessWidget {
   final bool last;
 
   @override
-  Widget build(BuildContext context) => SetRow(
-      title: '深度链接',
-      desc: 'mynas:// — OAuth 回调走系统浏览器',
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return SetRow(
+      title: l.paneAdvancedDeepLinkTitle,
+      desc: l.paneAdvancedDeepLinkDesc,
       last: last,
       trailing: Text(
-        '已注册',
+        l.paneAdvancedDeepLinkRegistered,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -262,6 +275,7 @@ class _DeepLinkRow extends StatelessWidget {
         ),
       ),
     );
+  }
 }
 
 /// 诊断日志行：接真实 [AppLogger.logFilePath]（运行日志 `app.log`）。
@@ -277,44 +291,47 @@ class _DiagnosticLogRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final path = logger.logFilePath;
     final ready = path != null && path.isNotEmpty;
     final isDesktop = Platform.isMacOS || Platform.isWindows || Platform.isLinux;
 
     return SetRow(
-      title: '诊断日志',
-      desc: ready ? '运行日志 app.log · 排错取证' : '日志尚未就绪',
+      title: l.paneAdvancedDiagnosticLogTitle,
+      desc: ready
+          ? l.paneAdvancedDiagnosticLogDescReady
+          : l.paneAdvancedDiagnosticLogDescNotReady,
       last: last,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isDesktop) ...[
             AppButton(
-              label: '打开',
+              label: l.paneAdvancedDiagnosticLogOpenButton,
               icon: Icons.description_rounded,
               dense: true,
               onPressed: ready ? () => _openFile(context, path) : null,
             ),
             const SizedBox(width: 8),
             AppButton(
-              label: '在文件夹中显示',
+              label: l.paneAdvancedDiagnosticLogRevealButton,
               icon: Icons.folder_open_rounded,
               dense: true,
               onPressed: ready ? () => _revealInFolder(context, path) : null,
             ),
             const SizedBox(width: 8),
             AppButton(
-              label: '复制路径',
+              label: l.paneAdvancedDiagnosticLogCopyPathButton,
               icon: Icons.copy_rounded,
               dense: true,
               onPressed: ready ? () => _copyPath(context, path) : null,
             ),
           ] else
             AppButton(
-              label: '分享日志',
+              label: l.paneAdvancedDiagnosticLogShareButton,
               icon: Icons.ios_share_rounded,
               dense: true,
-              onPressed: ready ? () => _shareFile(path) : null,
+              onPressed: ready ? () => _shareFile(context, path) : null,
             ),
         ],
       ),
@@ -322,6 +339,7 @@ class _DiagnosticLogRow extends StatelessWidget {
   }
 
   Future<void> _openFile(BuildContext context, String path) async {
+    final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
       if (Platform.isMacOS) {
@@ -333,11 +351,14 @@ class _DiagnosticLogRow extends StatelessWidget {
       }
     } on Object catch (e, st) {
       AppError.ignore(e, st, 'AdvancedPane.openLog');
-      messenger.showSnackBar(const SnackBar(content: Text('打开日志失败')));
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.paneAdvancedDiagnosticLogOpenFailed)),
+      );
     }
   }
 
   Future<void> _revealInFolder(BuildContext context, String path) async {
+    final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
       if (Platform.isMacOS) {
@@ -349,19 +370,25 @@ class _DiagnosticLogRow extends StatelessWidget {
       }
     } on Object catch (e, st) {
       AppError.ignore(e, st, 'AdvancedPane.revealLog');
-      messenger.showSnackBar(const SnackBar(content: Text('定位日志失败')));
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.paneAdvancedDiagnosticLogRevealFailed)),
+      );
     }
   }
 
   Future<void> _copyPath(BuildContext context, String path) async {
+    final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     await Clipboard.setData(ClipboardData(text: path));
-    messenger.showSnackBar(const SnackBar(content: Text('日志路径已复制')));
+    messenger.showSnackBar(
+      SnackBar(content: Text(l.paneAdvancedDiagnosticLogPathCopied)),
+    );
   }
 
-  Future<void> _shareFile(String path) async {
+  Future<void> _shareFile(BuildContext context, String path) async {
+    final subject = AppLocalizations.of(context).paneAdvancedDiagnosticLogShareSubject;
     await AppError.guard(
-      () => Share.shareXFiles([XFile(path)], subject: 'MyNAS 诊断日志'),
+      () => Share.shareXFiles([XFile(path)], subject: subject),
       action: 'AdvancedPane.shareLog',
     );
   }

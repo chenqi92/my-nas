@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
 import 'package:my_nas/features/music/presentation/providers/music_favorites_provider.dart';
@@ -70,26 +71,26 @@ class _MusicListDesktopPageState extends ConsumerState<MusicListDesktopPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final state = ref.watch(musicListProvider);
     final loaded = state is MusicListLoaded ? state : null;
 
     final subtitle = loaded != null
-        ? '${loaded.totalCount} 首 · ${loaded.albumCount} 张专辑 · '
-            'Gapless · NCM 解密'
-        : 'Gapless · NCM 解密 · MusicBrainz / AcoustID 刮削';
+        ? l.musicPageSubtitleLoaded(loaded.totalCount, loaded.albumCount)
+        : l.musicPageSubtitleDefault;
 
     return DesktopPageScaffold(
-      title: '音乐',
+      title: l.musicPageTitle,
       subtitle: subtitle,
       actions: AppSegmented<String>(
         value: _view,
         onChanged: (v) => setState(() => _view = v),
         dense: true,
-        options: const [
-          AppSegmentedOption(value: 'songs', label: '歌曲'),
-          AppSegmentedOption(value: 'albums', label: '专辑'),
-          AppSegmentedOption(value: 'artists', label: '艺术家'),
-          AppSegmentedOption(value: 'folders', label: '文件夹'),
+        options: [
+          AppSegmentedOption(value: 'songs', label: l.musicPageTabSongs),
+          AppSegmentedOption(value: 'albums', label: l.musicPageTabAlbums),
+          AppSegmentedOption(value: 'artists', label: l.musicPageTabArtists),
+          AppSegmentedOption(value: 'folders', label: l.musicPageTabFolders),
         ],
       ),
       body: Column(
@@ -129,42 +130,47 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     // 全库总时长用 getStats 全量统计（totalDurationMs），不再只累加首页 100 首。
     final totalMs = loaded?.totalDurationMs ?? 0;
     final hours = (totalMs / 3600000);
     final hoursText = hours >= 1
         ? hours.toStringAsFixed(hours >= 10 ? 0 : 1)
         : (totalMs / 60000).toStringAsFixed(0);
-    final hoursUnit = hours >= 1 ? '小时' : '分钟';
+    final hoursUnit = hours >= 1 ? l.musicPageUnitHours : l.musicPageUnitMinutes;
 
     return Row(
       children: [
         Expanded(
           child: _Stat(
             value: '${loaded?.totalCount ?? 0}',
-            unit: '首',
-            label: '曲目',
+            unit: l.musicPageUnitTracks,
+            label: l.musicPageStatTracks,
             icon: Icons.library_music_outlined,
           ),
         ),
         const SizedBox(width: 14),
         Expanded(
-          child: _Stat(value: hoursText, unit: hoursUnit, label: '总时长'),
+          child: _Stat(
+            value: hoursText,
+            unit: hoursUnit,
+            label: l.musicPageStatTotalDuration,
+          ),
         ),
         const SizedBox(width: 14),
         Expanded(
           child: _Stat(
             value: '${loaded?.artistCount ?? 0}',
-            unit: '位',
-            label: '艺术家',
+            unit: l.musicPageUnitArtists,
+            label: l.musicPageStatArtists,
           ),
         ),
         const SizedBox(width: 14),
-        const Expanded(
+        Expanded(
           child: _Stat(
-            value: '年度报告',
+            value: l.musicPageStatAnnualReport,
             valueMuted: true,
-            label: 'Last.fm 可接',
+            label: l.musicPageStatLastFmReady,
             planTag: true,
           ),
         ),
@@ -192,6 +198,7 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -231,7 +238,7 @@ class _Stat extends StatelessWidget {
           Row(
             children: [
               if (planTag) ...[
-                const AppTag('即将推出', variant: TagVariant.plan),
+                AppTag(l.musicPageComingSoon, variant: TagVariant.plan),
                 const SizedBox(width: 6),
               ] else if (icon != null) ...[
                 Icon(icon, size: 13, color: t.text2),
@@ -260,6 +267,7 @@ class _MainView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (state is MusicListLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -271,9 +279,9 @@ class _MainView extends StatelessWidget {
     }
     final loaded = state is MusicListLoaded ? state as MusicListLoaded : null;
     if (loaded == null || loaded.allTracks.isEmpty) {
-      return const _Empty(
+      return _Empty(
         icon: Icons.queue_music_rounded,
-        message: '曲库为空，扫描「音乐」媒体库后会出现在这里。',
+        message: l.musicPageEmptyHint,
       );
     }
     final tracks = loaded.allTracks;
@@ -301,12 +309,13 @@ class _TableHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final title = switch (view) {
-      'albums' => '专辑',
-      'artists' => '艺术家',
-      'folders' => '文件夹',
-      _ => '全部歌曲',
+      'albums' => l.musicPageHeaderAlbums,
+      'artists' => l.musicPageHeaderArtists,
+      'folders' => l.musicPageHeaderFolders,
+      _ => l.musicPageHeaderAllSongs,
     };
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
@@ -325,14 +334,14 @@ class _TableHeader extends ConsumerWidget {
           ),
           const Spacer(),
           AppChip(
-            label: '播放全部',
+            label: l.musicPagePlayAll,
             icon: Icons.play_arrow_rounded,
             compact: true,
             onTap: () => _playFromList(ref, tracks, 0),
           ),
           const SizedBox(width: 8),
           AppChip(
-            label: '随机',
+            label: l.musicPageShuffle,
             icon: Icons.shuffle_rounded,
             compact: true,
             onTap: () => _playFromList(ref, tracks, 0, shuffle: true),
@@ -559,6 +568,7 @@ class _GroupList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final groups = <String, int>{};
     for (final track in tracks) {
@@ -611,7 +621,7 @@ class _GroupList extends ConsumerWidget {
                 ),
               ),
             ),
-            Text('${entries[i].value} 首',
+            Text(l.musicPageTrackCount(entries[i].value),
                 style: TextStyle(fontSize: 12, color: t.text2)),
             ],
           ),
@@ -641,6 +651,7 @@ class _PlaylistPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return GlassPanel(
       padding: const EdgeInsets.all(18),
@@ -651,7 +662,7 @@ class _PlaylistPanel extends StatelessWidget {
             children: [
               Icon(Icons.library_music_outlined, size: 15, color: t.accentBright),
               const SizedBox(width: 8),
-              Text('歌单',
+              Text(l.musicPagePlaylists,
                   style: TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w700, color: t.text0)),
             ],
@@ -676,7 +687,7 @@ class _PlaylistPanel extends StatelessWidget {
               const SizedBox(width: 11),
               Expanded(
                 child: Text(
-                  '我喜欢的音乐',
+                  l.musicPageFavorites,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -687,7 +698,7 @@ class _PlaylistPanel extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '自建歌单与「我喜欢」会显示在这里。',
+            l.musicPagePlaylistHint,
             style: TextStyle(fontSize: 12, color: t.text2, height: 1.5),
           ),
         ],
@@ -703,6 +714,7 @@ class _EqPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return GlassPanel(
       padding: const EdgeInsets.all(18),
@@ -713,12 +725,12 @@ class _EqPanel extends StatelessWidget {
             children: [
               Icon(Icons.equalizer_rounded, size: 15, color: t.accentBright),
               const SizedBox(width: 8),
-              Text('均衡器',
+              Text(l.musicPageEqualizer,
                   style: TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w700, color: t.text0)),
               const Spacer(),
               // 10 段 EQ 调节尚未在桌面接入，标注规划而非伪装可用预设。
-              const AppTag('即将推出', variant: TagVariant.plan),
+              AppTag(l.musicPageComingSoon, variant: TagVariant.plan),
             ],
           ),
           const SizedBox(height: 12),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/sources/data/services/network_discovery_service.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
@@ -29,6 +30,7 @@ class SourcesPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final sourcesAsync = ref.watch(sourcesProvider);
     final connections = ref.watch(activeConnectionsProvider);
@@ -40,11 +42,11 @@ class SourcesPane extends ConsumerWidget {
       children: [
         SetHead(
           icon: Icons.dns_rounded,
-          title: '数据源',
-          subtitle: '添加 / 编辑 / 删除源，测试连接、2FA 与凭据存储。删除源将级联清除其媒体库映射与已索引媒体。',
+          title: l.paneSourcesTitle,
+          subtitle: l.paneSourcesSubtitle,
           actions: [
             AppButton(
-              label: '添加源',
+              label: l.paneSourcesAddButton,
               icon: Icons.add_rounded,
               variant: AppButtonVariant.primary,
               onPressed: () => _openWizard(context),
@@ -52,8 +54,10 @@ class SourcesPane extends ConsumerWidget {
           ],
         ),
         SetSection(
-          title: '已连接的源',
-          hint: sourcesAsync.isLoading ? '加载中…' : '${sources.length} 个',
+          title: l.paneSourcesConnectedSection,
+          hint: sourcesAsync.isLoading
+              ? l.paneSourcesLoading
+              : l.paneSourcesCount(sources.length),
           children: _connectedRows(
             context,
             ref,
@@ -65,16 +69,15 @@ class SourcesPane extends ConsumerWidget {
         ),
         const _DiscoveredDevicesSection(),
         SetSection(
-          title: '连接行为',
+          title: l.paneSourcesBehaviorSection,
           hint: 'trust_self_signed_cert · source_default_auto_connect · '
               'source_default_remember_device',
           bottomMargin: false,
           children: [
             _DiscoveryRow(),
             SetRow(
-              title: '新建源默认自动连接',
-              desc: '新增数据源时默认勾选「启动时自动连接」。已有源仍按各自配置，'
-                  '可在「编辑源」中单独调整',
+              title: l.paneSourcesDefaultAutoConnectTitle,
+              desc: l.paneSourcesDefaultAutoConnectDesc,
               trailing: AppSwitch(
                 value: ref.watch(defaultAutoConnectProvider),
                 onChanged: (v) => ref
@@ -83,8 +86,8 @@ class SourcesPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '信任自签名证书',
-              desc: '允许 HTTPS 自签名证书。关闭后将对所有源启用证书校验，自签名证书的服务器会连接失败',
+              title: l.paneSourcesTrustSelfSignedTitle,
+              desc: l.paneSourcesTrustSelfSignedDesc,
               trailing: AppSwitch(
                 value: ref.watch(trustSelfSignedCertProvider),
                 onChanged: (v) => ref
@@ -93,9 +96,8 @@ class SourcesPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '新建源默认记住 2FA 设备',
-              desc: '新增支持两步验证的源时，默认勾选「记住此设备以跳过二次验证」。'
-                  '已有源仍按各自配置',
+              title: l.paneSourcesDefaultRememberDeviceTitle,
+              desc: l.paneSourcesDefaultRememberDeviceDesc,
               last: true,
               trailing: AppSwitch(
                 value: ref.watch(defaultRememberDeviceProvider),
@@ -117,9 +119,12 @@ class SourcesPane extends ConsumerWidget {
     AsyncValue<List<SourceEntity>> sourcesAsync,
     Map<String, SourceConnection> connections,
     MediaLibraryConfig? libsConfig,
-  ) => sourcesAsync.when(
-    loading: () => [const SetRow(title: '正在加载源…', last: true)],
-    error: (e, _) => [SetRow(title: '加载源失败', desc: '$e', last: true)],
+  ) {
+    final l = AppLocalizations.of(context);
+    return sourcesAsync.when(
+    loading: () => [SetRow(title: l.paneSourcesRowLoading, last: true)],
+    error: (e, _) =>
+        [SetRow(title: l.paneSourcesRowLoadError, desc: '$e', last: true)],
     data: (allSources) {
       // 仅展示已实现的源类型；未实现类型（绿联 / 飞牛 / NFS 等）不可连接，
       // 不在列表中渲染。
@@ -131,11 +136,11 @@ class SourcesPane extends ConsumerWidget {
         return [
           SetRow(
             leading: _SourceIcon(icon: Icons.lan_outlined, enabled: false),
-            title: '暂无数据源',
-            desc: '点击右上「添加源」连接你的第一个 NAS / 媒体服务器 / 下载器',
+            title: l.paneSourcesEmptyTitle,
+            desc: l.paneSourcesEmptyDesc,
             last: true,
             trailing: AppButton(
-              label: '添加',
+              label: l.paneSourcesAddShort,
               icon: Icons.add_rounded,
               dense: true,
               onPressed: () => _openWizard(context),
@@ -153,7 +158,8 @@ class SourcesPane extends ConsumerWidget {
           ),
       ];
     },
-  );
+    );
+  }
 
   /// 从媒体库配置派生某源已映射的媒体类型展示名（视频/音乐/…）。
   static List<String> _libsForSource(
@@ -201,10 +207,12 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final source = widget.source;
     final status = widget.conn?.status;
     final (dot, label, isErr) = _statusView(
+      l,
       status,
       widget.conn?.errorMessage,
     );
@@ -212,7 +220,7 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
     final descParts = <String>[
       source.type.displayName,
       if (source.host.isNotEmpty) source.host,
-      if (widget.libs.isNotEmpty) '${widget.libs.join(' / ')} 库',
+      if (widget.libs.isNotEmpty) l.paneSourcesLibsSuffix(widget.libs.join(' / ')),
     ];
 
     return SetRow(
@@ -244,7 +252,7 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
           ),
           const SizedBox(width: 10),
           AppChip(
-            label: _testing ? '测试中' : '测试',
+            label: _testing ? l.paneSourcesTesting : l.paneSourcesTest,
             compact: true,
             onTap: _testing ? null : _reconnect,
           ),
@@ -262,22 +270,28 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
 
   /// 把实时连接态映射为「圆点 + 文案 + 是否错误色」。
   (DotStatus, String, bool) _statusView(
+    AppLocalizations l,
     SourceStatus? status,
     String? errorMessage,
   ) =>
       switch (status) {
-        SourceStatus.connected => (DotStatus.ok, '已连接', false),
-        SourceStatus.requires2FA => (DotStatus.warn, '需 2FA', false),
-        SourceStatus.connecting => (DotStatus.warn, '连接中', false),
-        SourceStatus.error => (DotStatus.err, errorMessage ?? '错误', true),
-        SourceStatus.disconnected || null => (DotStatus.off, '未连接', false),
+        SourceStatus.connected => (DotStatus.ok, l.paneSourcesStatusConnected, false),
+        SourceStatus.requires2FA => (DotStatus.warn, l.paneSourcesStatus2FA, false),
+        SourceStatus.connecting => (DotStatus.warn, l.paneSourcesStatusConnecting, false),
+        SourceStatus.error =>
+          (DotStatus.err, errorMessage ?? l.paneSourcesStatusError, true),
+        SourceStatus.disconnected || null =>
+          (DotStatus.off, l.paneSourcesStatusDisconnected, false),
       };
 
   Future<void> _reconnect() async {
+    final l = AppLocalizations.of(context);
     final source = widget.source;
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _testing = true);
-    messenger.showSnackBar(SnackBar(content: Text('正在连接「${source.name}」…')));
+    messenger.showSnackBar(
+      SnackBar(content: Text(l.paneSourcesConnecting(source.name))),
+    );
     try {
       final result = await ref
           .read(activeConnectionsProvider.notifier)
@@ -291,11 +305,15 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
           SnackBar(
             content: Text(
               ok
-                  ? '「${source.name}」连接成功'
+                  ? l.paneSourcesConnectSuccess(source.name)
                   : need2fa
-                  ? '「${source.name}」需要两步验证'
-                  : '「${source.name}」连接失败'
-                        '${result?.errorMessage != null ? '：${result!.errorMessage}' : ''}',
+                  ? l.paneSourcesConnectNeed2FA(source.name)
+                  : l.paneSourcesConnectFailed(
+                      source.name,
+                      result?.errorMessage != null
+                          ? l.paneSourcesConnectFailedReason(result!.errorMessage!)
+                          : '',
+                    ),
             ),
           ),
         );
@@ -313,23 +331,21 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
   }
 
   Future<void> _confirmDelete() async {
+    final l = AppLocalizations.of(context);
     final source = widget.source;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除数据源'),
-        content: Text(
-          '删除「${source.name}」将级联移除该源的媒体库映射与已扫描的媒体数据，'
-          '此操作不可恢复。确定继续？',
-        ),
+        title: Text(l.paneSourcesDeleteTitle),
+        content: Text(l.paneSourcesDeleteContent(source.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
+            child: Text(l.paneSourcesCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('删除'),
+            child: Text(l.paneSourcesDelete),
           ),
         ],
       ),
@@ -380,30 +396,36 @@ class _SourceMenu extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 30,
-    height: 30,
-    child: PopupMenuButton<String>(
-      tooltip: '更多',
-      padding: EdgeInsets.zero,
-      icon: Icon(Icons.more_horiz_rounded, size: 18, color: color),
-      onSelected: (v) {
-        switch (v) {
-          case 'edit':
-            onEdit();
-          case 'reconnect':
-            onReconnect();
-          case 'delete':
-            onDelete();
-        }
-      },
-      itemBuilder: (_) => const [
-        PopupMenuItem(value: 'edit', child: Text('编辑')),
-        PopupMenuItem(value: 'reconnect', child: Text('重新连接')),
-        PopupMenuItem(value: 'delete', child: Text('删除')),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return SizedBox(
+      width: 30,
+      height: 30,
+      child: PopupMenuButton<String>(
+        tooltip: l.paneSourcesMore,
+        padding: EdgeInsets.zero,
+        icon: Icon(Icons.more_horiz_rounded, size: 18, color: color),
+        onSelected: (v) {
+          switch (v) {
+            case 'edit':
+              onEdit();
+            case 'reconnect':
+              onReconnect();
+            case 'delete':
+              onDelete();
+          }
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem(value: 'edit', child: Text(l.paneSourcesMenuEdit)),
+          PopupMenuItem(
+            value: 'reconnect',
+            child: Text(l.paneSourcesMenuReconnect),
+          ),
+          PopupMenuItem(value: 'delete', child: Text(l.paneSourcesMenuDelete)),
+        ],
+      ),
+    );
+  }
 }
 
 /// 「发现的设备」：mDNS / Bonjour 扫描到的可添加设备列表，点击「添加」预填
@@ -415,10 +437,11 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final devices = ref.watch(networkDiscoveryProvider).devices;
     if (devices.isEmpty) return const SizedBox.shrink();
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return SetSection(
-      title: '发现的设备',
-      hint: '${devices.length} 台 · 点击添加',
+      title: l.paneSourcesDiscoveredSection,
+      hint: l.paneSourcesDiscoveredHint(devices.length),
       children: [
         for (var i = 0; i < devices.length; i++)
           SetRow(
@@ -436,7 +459,7 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
               child: Icon(devices[i].type.icon, size: 19, color: t.accentBright),
             ),
             trailing: AppButton(
-              label: '添加',
+              label: l.paneSourcesAddShort,
               icon: Icons.add_rounded,
               dense: true,
               onPressed: () => SourceFormPage.openAdaptive<void>(
@@ -459,27 +482,30 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
 class _DiscoveryRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final state = ref.watch(networkDiscoveryProvider);
     final count = state.devices.length;
     final desc = state.error != null
-        ? '发现失败：${state.error}'
+        ? l.paneSourcesDiscoveryError('${state.error}')
         : state.isDiscovering
-        ? '正在通过 mDNS / Bonjour 扫描局域网…'
+        ? l.paneSourcesDiscoveryScanning
         : count > 0
-        ? '已发现 $count 台可添加的设备'
-        : '通过 mDNS / Bonjour 自动发现可添加的设备';
+        ? l.paneSourcesDiscoveryFound(count)
+        : l.paneSourcesDiscoveryIdle;
 
     return SetRow(
-      title: '局域网发现',
+      title: l.paneSourcesDiscoveryTitle,
       desc: desc,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (count > 0 && !state.isDiscovering)
-            AppTag('$count 台', variant: TagVariant.accent),
+            AppTag(l.paneSourcesDeviceCount(count), variant: TagVariant.accent),
           if (count > 0 && !state.isDiscovering) const SizedBox(width: 8),
           AppChip(
-            label: state.isDiscovering ? '扫描中' : '扫描',
+            label: state.isDiscovering
+                ? l.paneSourcesScanning
+                : l.paneSourcesScan,
             icon: Icons.refresh_rounded,
             compact: true,
             onTap: state.isDiscovering

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/shared/providers/desktop_space_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
@@ -61,6 +62,7 @@ class DesktopSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final groups = space == DesktopSpace.media ? mediaGroups : opsGroups;
     final width = collapsed ? DesignTokens.railW : DesignTokens.navW;
 
@@ -83,15 +85,15 @@ class DesktopSidebar extends StatelessWidget {
                 value: space,
                 onChanged: onSpaceChanged,
                 expand: true,
-                options: const [
+                options: [
                   AppSegmentedOption(
                     value: DesktopSpace.media,
-                    label: '媒体',
+                    label: l.shellSidebarSpaceMedia,
                     icon: Icons.play_circle_outline_rounded,
                   ),
                   AppSegmentedOption(
                     value: DesktopSpace.ops,
-                    label: '控制台',
+                    label: l.shellSidebarSpaceOps,
                     icon: Icons.terminal_rounded,
                   ),
                 ],
@@ -156,10 +158,10 @@ class DesktopSidebar extends StatelessWidget {
             ),
             padding: const EdgeInsets.fromLTRB(10, 6, 10, 12),
             child: _NavItem(
-              entry: const NavEntry(
+              entry: NavEntry(
                 id: 'settings',
                 route: '/mine',
-                label: '设置',
+                label: l.shellSidebarSettings,
                 icon: Icons.settings_outlined,
               ),
               collapsed: collapsed,

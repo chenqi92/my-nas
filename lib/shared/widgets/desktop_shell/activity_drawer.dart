@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -17,7 +18,8 @@ class ActivityDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
-    final items = ref.watch(activityItemsProvider);
+    final l = AppLocalizations.of(context);
+    final items = buildActivityItems(ref, l);
 
     return GestureDetector(
       onTap: onClose,
@@ -52,7 +54,7 @@ class ActivityDrawer extends ConsumerWidget {
                               size: 18, color: t.accentBright),
                           const SizedBox(width: 10),
                           Text(
-                            '活动中心',
+                            l.shellActTitle,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
@@ -62,8 +64,8 @@ class ActivityDrawer extends ConsumerWidget {
                           const SizedBox(width: 10),
                           Text(
                             items.isEmpty
-                                ? '没有任务'
-                                : '${items.length} 项进行中',
+                                ? l.shellActNoTasks
+                                : l.shellActInProgressCount(items.length),
                             style: TextStyle(fontSize: 12, color: t.text2),
                           ),
                           const Spacer(),
@@ -83,7 +85,7 @@ class ActivityDrawer extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 4, vertical: 4),
                             child: Text(
-                              '所有传输 · 下载 · 扫描 · 刮削 · 人脸识别 · 同步 的进度都汇聚于此。',
+                              l.shellActAggregationHint,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: t.text2,
@@ -181,6 +183,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return Container(
       margin: const EdgeInsets.only(top: 32),
       padding: const EdgeInsets.all(24),
@@ -194,7 +197,7 @@ class _EmptyState extends StatelessWidget {
           const StatusDot(DotStatus.off, size: 10, glow: false),
           const SizedBox(height: 10),
           Text(
-            '当前没有进行中的任务',
+            l.shellActEmptyTitle,
             style: TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
@@ -203,7 +206,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '上传 / 下载 / 扫描 / 刮削 / 同步开始时会自动出现在这里。',
+            l.shellActEmptyHint,
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: t.text2, height: 1.4),
           ),

@@ -15,6 +15,7 @@ import 'package:my_nas/features/comic/presentation/pages/comic_reader_page.dart'
 import 'package:my_nas/features/note/presentation/pages/note_list_page.dart';
 import 'package:my_nas/features/note/presentation/widgets/note_tree_widget.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
@@ -38,6 +39,7 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final comicState = ref.watch(comicListProvider);
     final bookState = ref.watch(bookListProvider);
     final noteState = ref.watch(notePageProvider);
@@ -55,16 +57,19 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     final showNotes = _tab == '全部' || _tab == '笔记';
 
     return DesktopPageScaffold(
-      title: '阅读',
-      subtitle: '漫画 ${comics.length} · 图书 ${books.length} · '
-          '笔记 ${notes.length} — 统一阅读进度（共享书签）',
+      title: l.readingPageTitle,
+      subtitle: l.readingPageSubtitle(
+        comics.length,
+        books.length,
+        notes.length,
+      ),
       actions: Row(
         children: [
           for (final tab in _tabs)
             Padding(
               padding: const EdgeInsets.only(left: 8),
               child: AppChip(
-                label: tab,
+                label: _tabLabel(l, tab),
                 active: tab == _tab,
                 compact: false,
                 onTap: () => setState(() => _tab = tab),
@@ -72,7 +77,7 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
             ),
           const SizedBox(width: 12),
           AppChip(
-            label: '在线书源',
+            label: l.readingPageOnlineSources,
             icon: Icons.language_rounded,
             compact: false,
             onTap: () => _pushPage(const BookSourcesPage()),
@@ -83,17 +88,17 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (showComics && comics.isNotEmpty) ...[
-            if (_tab == '全部') const _SectionHeader('漫画'),
+            if (_tab == '全部') _SectionHeader(l.readingPageSectionComic),
             _ComicShelf(comics: comics, ref: ref, onOpen: _openComic),
             const SizedBox(height: 22),
           ],
           if (showBooks && books.isNotEmpty) ...[
-            if (_tab == '全部') const _SectionHeader('图书'),
+            if (_tab == '全部') _SectionHeader(l.readingPageSectionBook),
             _BookShelf(books: books, onOpen: _openBook),
             const SizedBox(height: 22),
           ],
           if (showNotes && notes.isNotEmpty) ...[
-            if (_tab == '全部') const _SectionHeader('笔记'),
+            if (_tab == '全部') _SectionHeader(l.readingPageSectionNote),
             _NoteList(
               nodes: notes,
               onOpen: () => _pushPage(const NoteListPage()),
@@ -106,12 +111,20 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     );
   }
 
+  String _tabLabel(AppLocalizations l, String tab) => switch (tab) {
+        '漫画' => l.readingPageTabComic,
+        '图书' => l.readingPageTabBook,
+        '笔记' => l.readingPageTabNote,
+        _ => l.readingPageTabAll,
+      };
+
   /// 空内容时区分三态：加载中 → 转圈；出错 → 错误 + 重试；真空 → 引导文案。
   Widget _emptyOrStatus(
     ComicListState comicState,
     BookListState bookState,
     NotePageState noteState,
   ) {
+    final l = AppLocalizations.of(context);
     final anyLoading = comicState is ComicListLoading ||
         bookState is BookListLoading ||
         noteState is NotePageLoading;
@@ -134,7 +147,7 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
             children: [
               Icon(Icons.error_outline_rounded, size: 38, color: t.err),
               const SizedBox(height: 12),
-              Text('部分阅读库加载失败',
+              Text(l.readingPageLoadPartialFailed,
                   style: TextStyle(fontSize: 13, color: t.text2)),
               const SizedBox(height: 16),
               FilledButton.icon(
@@ -145,7 +158,7 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
                     ..invalidate(notePageProvider);
                 },
                 icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('重试'),
+                label: Text(l.readingPageRetry),
               ),
             ],
           ),
@@ -160,10 +173,10 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
         _ => Icons.auto_stories_outlined,
       },
       message: switch (_tab) {
-        '笔记' => '映射「笔记」目录后，此处显示 Markdown 笔记树。',
-        '漫画' => '映射「漫画」媒体库后，此处显示漫画书架（封面 + 页数）。',
-        '图书' => '映射「图书」媒体库后，此处显示图书书架 + EPUB / PDF / TXT。',
-        _ => '聚合视图：漫画 + 图书 + 笔记 一并展示。先到「数据源」映射对应媒体库。',
+        '笔记' => l.readingPageEmptyNote,
+        '漫画' => l.readingPageEmptyComic,
+        '图书' => l.readingPageEmptyBook,
+        _ => l.readingPageEmptyAll,
       },
     );
   }
@@ -183,9 +196,12 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
   }
 
   Future<void> _openBook(BookEntity book) async {
+    final l = AppLocalizations.of(context);
     final connection = ref.read(activeConnectionsProvider)[book.sourceId];
     if (connection == null) {
-      rootNavigatorKey.currentContext?.showErrorToast('该图书所在数据源未连接');
+      rootNavigatorKey.currentContext?.showErrorToast(
+        l.readingPageSourceNotConnected,
+      );
       return;
     }
     try {
@@ -206,7 +222,9 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
         BookItem.fromFileItem(file, url, sourceId: book.sourceId),
       );
     } on Object catch (e) {
-      rootNavigatorKey.currentContext?.showErrorToast('打开图书失败：$e');
+      rootNavigatorKey.currentContext?.showErrorToast(
+        l.readingPageOpenBookFailed(e.toString()),
+      );
     }
   }
 
@@ -259,6 +277,7 @@ class _ComicShelf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final connections = ref.watch(activeConnectionsProvider);
     return GridView.builder(
       shrinkWrap: true,
@@ -275,7 +294,7 @@ class _ComicShelf extends StatelessWidget {
         final fs = connections[c.sourceId]?.adapter.fileSystem;
         return _Cover(
           title: c.folderName,
-          subtitle: '${c.pageCount} 页',
+          subtitle: l.readingPageComicPageCount(c.pageCount),
           streamPath: c.coverPath,
           fileSystem: fs,
           cacheKey: '${c.sourceId}_${c.coverPath}',
@@ -326,6 +345,7 @@ class _NoteList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return GlassPanel(
       padding: const EdgeInsets.all(24),
@@ -335,7 +355,7 @@ class _NoteList extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Markdown 笔记',
+                l.readingPageMarkdownNotes,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -344,7 +364,7 @@ class _NoteList extends StatelessWidget {
               ),
               const Spacer(),
               AppChip(
-                label: '新建',
+                label: l.readingPageCreate,
                 icon: Icons.add_rounded,
                 compact: true,
                 onTap: onOpen,
@@ -376,14 +396,15 @@ class _NoteRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final isFolder = node.type == NoteTreeNodeType.folder;
     // 真实 model 无每条笔记的阅读进度字段，避免伪造百分比：右侧只显示可派生的
     // 文件夹子项数（详见 data-blocked），文件行则给副文本占位。
     final detail = isFolder
-        ? '${node.children.length} 项'
+        ? l.readingPageNoteItemCount(node.children.length)
         : node.isTaskFile
-            ? '任务清单'
+            ? l.readingPageNoteTaskList
             : 'Markdown';
     return Material(
       color: Colors.transparent,

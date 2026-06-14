@@ -7,6 +7,7 @@ import 'package:my_nas/features/downloader/presentation/providers/downloader_agg
 import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/transmission/presentation/providers/transmission_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 
@@ -15,7 +16,7 @@ Future<void> showDownloadDetailDrawer(BuildContext context, String taskKey) {
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: '下载详情',
+    barrierLabel: AppLocalizations.of(context).dlDetailBarrierLabel,
     barrierColor: Colors.black.withValues(alpha: 0.45),
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (_, _, _) =>
@@ -102,6 +103,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.fromLTRB(22, 18, 14, 16),
       decoration: BoxDecoration(
@@ -135,7 +137,7 @@ class _Header extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 4,
                   children: [
-                    AppTag(task.status.label),
+                    AppTag(task.status.label(l)),
                     AppTag(task.sourceType.displayName,
                         variant: TagVariant.neutral),
                     AppTag(task.sourceName, variant: TagVariant.free),
@@ -204,13 +206,15 @@ class _Stats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Row(
       children: [
-        _tile('↓ 下行', formatSpeed(task.downloadSpeed), t.accentBright),
-        _tile('↑ 上行', formatSpeed(task.uploadSpeed), t.text0),
-        _tile('剩余', formatEta(task.etaSeconds), t.text0),
+        _tile(l.dlDetailDownSpeed, formatSpeed(task.downloadSpeed),
+            t.accentBright),
+        _tile(l.dlDetailUpSpeed, formatSpeed(task.uploadSpeed), t.text0),
+        _tile(l.dlDetailRemaining, formatEta(task.etaSeconds), t.text0),
         if (task.ratio != null)
-          _tile('分享率', task.ratio!.toStringAsFixed(2), t.text0),
+          _tile(l.dlDetailRatio, task.ratio!.toStringAsFixed(2), t.text0),
       ],
     );
   }
@@ -242,6 +246,7 @@ class _Meta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -252,9 +257,9 @@ class _Meta extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _row('保存位置', task.savePath ?? '—'),
+          _row(l.dlDetailSavePath, task.savePath ?? '—'),
           const SizedBox(height: 8),
-          _row('任务 ID', task.taskId),
+          _row(l.dlDetailTaskId, task.taskId),
         ],
       ),
     );
@@ -291,6 +296,7 @@ class _Actions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final paused = task.status == UnifiedDownloadStatus.paused;
     return Container(
       padding: const EdgeInsets.fromLTRB(22, 14, 22, 14),
@@ -302,13 +308,13 @@ class _Actions extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => _remove(context, deleteFiles: false),
             icon: const Icon(Icons.delete_outline_rounded, size: 15),
-            label: const Text('删除任务'),
+            label: Text(l.dlDetailDeleteTask),
           ),
           const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: () => _remove(context, deleteFiles: true),
             icon: const Icon(Icons.delete_forever_rounded, size: 15),
-            label: const Text('删除并清文件'),
+            label: Text(l.dlDetailDeleteWithFiles),
           ),
           const Spacer(),
           FilledButton.icon(
@@ -317,7 +323,7 @@ class _Actions extends StatelessWidget {
               paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
               size: 16,
             ),
-            label: Text(paused ? '继续' : '暂停'),
+            label: Text(paused ? l.dlDetailResume : l.dlDetailPause),
           ),
         ],
       ),
@@ -345,7 +351,11 @@ class _Actions extends StatelessWidget {
           break;
       }
     } on Object catch (e) {
-      if (context.mounted) context.showErrorToast('操作失败：$e');
+      if (context.mounted) {
+        context.showErrorToast(
+          AppLocalizations.of(context).dlDetailOpFailed('$e'),
+        );
+      }
     }
   }
 
@@ -371,7 +381,11 @@ class _Actions extends StatelessWidget {
       }
       if (context.mounted) Navigator.of(context).pop();
     } on Object catch (e) {
-      if (context.mounted) context.showErrorToast('删除失败：$e');
+      if (context.mounted) {
+        context.showErrorToast(
+          AppLocalizations.of(context).dlDetailDeleteFailed('$e'),
+        );
+      }
     }
   }
 }
@@ -383,6 +397,7 @@ class _Gone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -391,11 +406,11 @@ class _Gone extends StatelessWidget {
           Icon(Icons.task_alt_rounded, size: 40, color: t.text3),
           const SizedBox(height: 12),
           Text(
-            '任务已结束或被移除。',
+            l.dlDetailGone,
             style: TextStyle(fontSize: 13.5, color: t.text2),
           ),
           const SizedBox(height: 16),
-          FilledButton(onPressed: onClose, child: const Text('关闭')),
+          FilledButton(onPressed: onClose, child: Text(l.dlDetailClose)),
         ],
       ),
     );
@@ -419,13 +434,14 @@ class _Files extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final filesAsync =
         ref.watch(qbTorrentFilesProvider((task.sourceId, task.taskId)));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '文件',
+          l.dlDetailFilesTitle,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -445,11 +461,11 @@ class _Files extends ConsumerWidget {
               ),
             ),
           ),
-          error: (e, _) => Text('文件列表加载失败',
+          error: (e, _) => Text(l.dlDetailFilesLoadError,
               style: TextStyle(fontSize: 12.5, color: t.text3)),
           data: (files) {
             if (files.isEmpty) {
-              return Text('无文件信息',
+              return Text(l.dlDetailNoFiles,
                   style: TextStyle(fontSize: 12.5, color: t.text3));
             }
             return Column(

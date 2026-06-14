@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/media_management/presentation/pages/media_management_list_page.dart';
 import 'package:my_nas/features/media_tracking/presentation/pages/trakt_connection_page.dart';
 import 'package:my_nas/features/media_tracking/presentation/providers/trakt_provider.dart';
@@ -29,6 +30,7 @@ class SitesPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final ptSites = ref.watch(ptSitesSourcesProvider);
     final trakt = ref.watch(traktConnectionProvider);
@@ -40,12 +42,11 @@ class SitesPane extends ConsumerWidget {
       children: [
         SetHead(
           icon: Icons.flag_circle_outlined,
-          title: '站点与追踪',
-          subtitle:
-              'PT 资源站点、Trakt 媒体追踪与媒体管理后端。OAuth 走系统浏览器 + mynas:// 回调，不嵌 WebView。',
+          title: l.paneSitesHeadTitle,
+          subtitle: l.paneSitesHeadSubtitle,
           actions: [
             AppButton(
-              label: '添加站点',
+              label: l.paneSitesAddButton,
               icon: Icons.add_rounded,
               variant: AppButtonVariant.primary,
               onPressed: () => _openPtSites(context),
@@ -55,18 +56,18 @@ class SitesPane extends ConsumerWidget {
 
         // ---- PT 资源站点 ----
         SetSection(
-          title: 'PT 资源站点',
-          hint: 'APIKey / Cookie · ${ptSites.length} 个',
+          title: l.paneSitesPtSectionTitle,
+          hint: l.paneSitesPtSectionHint(ptSites.length),
           children: _buildPtRows(context, t, ptSites),
         ),
 
         // ---- 媒体追踪 ----
         SetSection(
-          title: '媒体追踪',
+          title: l.paneSitesTrackingSectionTitle,
           children: [
             SetRow(
               title: 'Trakt',
-              desc: _traktDesc(trakt),
+              desc: _traktDesc(context, trakt),
               leading: StatusDot(_traktDot(trakt.status)),
               trailing: Wrap(
                 spacing: 8,
@@ -74,17 +75,17 @@ class SitesPane extends ConsumerWidget {
                 children: trakt.isConnected
                     ? [
                         AppChip(
-                          label: '用户统计',
+                          label: l.paneSitesTraktStats,
                           onTap: () => _openTrakt(context),
                         ),
                         AppChip(
-                          label: '断开',
+                          label: l.paneSitesTraktDisconnect,
                           onTap: () => _openTrakt(context),
                         ),
                       ]
                     : [
                         AppChip(
-                          label: '连接',
+                          label: l.paneSitesTraktConnect,
                           icon: Icons.link_rounded,
                           onTap: () => _openTrakt(context),
                         ),
@@ -92,9 +93,10 @@ class SitesPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '自动上报',
-              desc:
-                  '播放进度 ≥ ${scrobble.minProgress.toStringAsFixed(0)}% 自动标记为已看（Scrobble）',
+              title: l.paneSitesScrobbleTitle,
+              desc: l.paneSitesScrobbleDesc(
+                scrobble.minProgress.toStringAsFixed(0),
+              ),
               last: true,
               trailing: AppSwitch(
                 value: scrobble.enabled,
@@ -108,23 +110,23 @@ class SitesPane extends ConsumerWidget {
 
         // ---- 媒体管理后端 ----
         SetSection(
-          title: '媒体管理后端',
+          title: l.paneSitesBackendSectionTitle,
           bottomMargin: false,
           children: [
             SetRow(
               title: 'NAStool',
-              desc: '订阅 / 搜索 / 转移 / 刷流 / RSS 源配置',
+              desc: l.paneSitesNastoolDesc,
               leading: StatusDot(
                 _backendDot(ref.watch(nastoolSourcesProvider)),
               ),
               trailing: AppChip(
-                label: '配置',
+                label: l.paneSitesConfigure,
                 onTap: () => _openMediaManagement(context),
               ),
             ),
             SetRow(
               title: 'MoviePilot',
-              desc: '下一代媒体自动化 — 订阅 / 搜索 / 站点 / 工作流',
+              desc: l.paneSitesMoviepilotDesc,
               last: true,
               leading: StatusDot(
                 _backendDot(
@@ -134,7 +136,7 @@ class SitesPane extends ConsumerWidget {
                 ),
               ),
               trailing: AppChip(
-                label: '配置',
+                label: l.paneSitesConfigure,
                 onTap: () => _openMediaManagement(context),
               ),
             ),
@@ -149,14 +151,15 @@ class SitesPane extends ConsumerWidget {
     DesignTokens t,
     List<SourceEntity> sites,
   ) {
+    final l = AppLocalizations.of(context);
     if (sites.isEmpty) {
       return [
         SetRow(
-          title: '尚未添加资源站点',
-          desc: '添加 M-Team / HDChina 等站点以订阅、搜索与下载',
+          title: l.paneSitesEmptyTitle,
+          desc: l.paneSitesEmptyDesc,
           last: true,
           trailing: AppButton(
-            label: '管理',
+            label: l.paneSitesManage,
             icon: Icons.rss_feed_rounded,
             onPressed: () => _openPtSites(context),
           ),
@@ -167,7 +170,7 @@ class SitesPane extends ConsumerWidget {
       for (var i = 0; i < sites.length; i++)
         SetRow(
           title: sites[i].displayName,
-          desc: '分享率 / 魔力 / 邀请 / 签到',
+          desc: l.paneSitesPtRowDesc,
           last: i == sites.length - 1,
           leading: Container(
             width: 32,
@@ -184,7 +187,7 @@ class SitesPane extends ConsumerWidget {
             children: [
               const StatusDot(DotStatus.ok),
               AppChip(
-                label: '管理',
+                label: l.paneSitesManage,
                 onTap: () => _openPtSites(context),
               ),
             ],
@@ -193,19 +196,20 @@ class SitesPane extends ConsumerWidget {
     ];
   }
 
-  String _traktDesc(TraktConnectionState s) {
+  String _traktDesc(BuildContext context, TraktConnectionState s) {
+    final l = AppLocalizations.of(context);
     switch (s.status) {
       case TraktConnectionStatus.connected:
         final name = s.userSettings?.username ?? '';
         return name.isNotEmpty
-            ? 'OAuth 已授权 · $name · 自动刷新 token'
-            : 'OAuth 已授权 · 自动刷新 token · 继续观看合并（本地优先）';
+            ? l.paneSitesTraktDescConnectedNamed(name)
+            : l.paneSitesTraktDescConnected;
       case TraktConnectionStatus.connecting:
-        return '正在授权…';
+        return l.paneSitesTraktDescConnecting;
       case TraktConnectionStatus.error:
-        return s.errorMessage ?? '连接出错，请重试';
+        return s.errorMessage ?? l.paneSitesTraktDescError;
       case TraktConnectionStatus.disconnected:
-        return '未连接 · OAuth 授权后合并 Trakt 进度（本地优先）';
+        return l.paneSitesTraktDescDisconnected;
     }
   }
 

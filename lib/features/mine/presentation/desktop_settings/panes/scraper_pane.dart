@@ -12,6 +12,7 @@ import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/pages/scraper_sources_page.dart';
 import 'package:my_nas/features/video/presentation/providers/scrape_defaults_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
@@ -37,6 +38,7 @@ class ScraperPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final scraperAsync = ref.watch(scraperSourcesProvider);
     final musicState = ref.watch(musicScraperSourcesProvider);
     final hasOpenSubtitles = ref.watch(hasOpenSubtitlesConfigProvider);
@@ -45,21 +47,21 @@ class ScraperPane extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SetHead(
+        SetHead(
           icon: Icons.auto_awesome_outlined,
-          title: '刮削源',
-          subtitle: '影视、字幕与音乐的元数据来源与优先级。',
+          title: l.paneScraperTitle,
+          subtitle: l.paneScraperSubtitle,
         ),
 
         // ===== 影视刮削 =====
         SetSection(
-          title: '影视刮削',
-          hint: 'NFO 优先',
+          title: l.paneScraperMovieSection,
+          hint: l.paneScraperMovieHint,
           children: [
             _buildMoviePriorityRow(context, ref, scraperAsync),
             SetRow(
-              title: '生成本地 NFO',
-              desc: '刮削时在媒体目录写入 .nfo',
+              title: l.paneScraperGenerateNfoTitle,
+              desc: l.paneScraperGenerateNfoDesc,
               trailing: AppSwitch(
                 value: scrapeDefaults.generateNfo,
                 onChanged: (v) => ref
@@ -68,8 +70,8 @@ class ScraperPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '下载海报 / 背景图',
-              desc: '刮削时将海报与背景图保存到媒体目录',
+              title: l.paneScraperDownloadArtworkTitle,
+              desc: l.paneScraperDownloadArtworkDesc,
               trailing: AppSwitch(
                 value: scrapeDefaults.downloadPoster ||
                     scrapeDefaults.downloadFanart,
@@ -81,15 +83,17 @@ class ScraperPane extends ConsumerWidget {
               ),
             ),
             SetRow(
-              title: '管理刮削源',
+              title: l.paneScraperManageSourcesTitle,
               desc: scraperAsync.maybeWhen(
-                data: (list) =>
-                    '已配置 ${list.length} 个 · 启用 ${list.where((s) => s.isEnabled).length} 个',
-                orElse: () => '添加 / 编辑 / 排序 TMDB、豆瓣等来源',
+                data: (list) => l.paneScraperManageSourcesCount(
+                  list.length,
+                  list.where((s) => s.isEnabled).length,
+                ),
+                orElse: () => l.paneScraperManageSourcesHint,
               ),
               last: true,
               trailing: AppButton(
-                label: '打开',
+                label: l.paneScraperOpenButton,
                 icon: Icons.tune_rounded,
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -103,13 +107,13 @@ class ScraperPane extends ConsumerWidget {
 
         // ===== 字幕源 =====
         SetSection(
-          title: '字幕源',
+          title: l.paneScraperSubtitleSection,
           children: [
             SetRow(
               title: 'OpenSubtitles',
               desc: hasOpenSubtitles
-                  ? '在线字幕搜索与下载 · 已配置账户'
-                  : '在线字幕搜索与下载 · 使用内置公共配额',
+                  ? l.paneScraperOpenSubtitlesDescConfigured
+                  : l.paneScraperOpenSubtitlesDescPublic,
               last: true,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -117,7 +121,7 @@ class ScraperPane extends ConsumerWidget {
                   StatusDot(hasOpenSubtitles ? DotStatus.ok : DotStatus.off),
                   const SizedBox(width: 8),
                   AppChip(
-                    label: '账户',
+                    label: l.paneScraperAccountChip,
                     onTap: () => _openOpenSubtitlesAccount(context, ref),
                   ),
                 ],
@@ -128,7 +132,7 @@ class ScraperPane extends ConsumerWidget {
 
         // ===== 音乐刮削 =====
         SetSection(
-          title: '音乐刮削',
+          title: l.paneScraperMusicSection,
           children: [
             _musicSourceRow(
               context,
@@ -136,31 +140,32 @@ class ScraperPane extends ConsumerWidget {
               state: musicState,
               type: MusicScraperType.musicBrainz,
               title: 'MusicBrainz',
-              desc: '主元数据来源',
+              desc: l.paneScraperMusicBrainzDesc,
             ),
             _musicSourceRow(
               context,
               ref,
               state: musicState,
               type: MusicScraperType.neteaseMusic,
-              title: '网易云',
-              desc: '封面 / 歌词补全',
+              title: l.paneScraperNeteaseTitle,
+              desc: l.paneScraperNeteaseDesc,
             ),
             _musicSourceRow(
               context,
               ref,
               state: musicState,
               type: MusicScraperType.acoustId,
-              title: 'AcoustID 指纹',
-              desc: '无标签音频按音频指纹识别',
+              title: l.paneScraperAcoustIdTitle,
+              desc: l.paneScraperAcoustIdDesc,
             ),
             SetRow(
-              title: '管理音乐刮削源',
-              desc: '已启用 ${musicState.sources.where((s) => s.isEnabled).length} 个 · '
-                  '更多来源与优先级',
+              title: l.paneScraperManageMusicSourcesTitle,
+              desc: l.paneScraperManageMusicSourcesDesc(
+                musicState.sources.where((s) => s.isEnabled).length,
+              ),
               last: true,
               trailing: AppButton(
-                label: '打开',
+                label: l.paneScraperOpenButton,
                 icon: Icons.tune_rounded,
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -182,6 +187,7 @@ class ScraperPane extends ConsumerWidget {
     WidgetRef ref,
     AsyncValue<List<ScraperSourceEntity>> async,
   ) {
+    final l = AppLocalizations.of(context);
     final sources = async.valueOrNull ?? const <ScraperSourceEntity>[];
     final ordered = [...sources]
       ..sort((a, b) => a.priority.compareTo(b.priority));
@@ -191,16 +197,16 @@ class ScraperPane extends ConsumerWidget {
     final current = top == null || _isTmdbType(top.type);
 
     return SetRow(
-      title: '来源优先级',
-      desc: '命中顺序：本地 NFO → 在线',
+      title: l.paneScraperPriorityTitle,
+      desc: l.paneScraperPriorityDesc,
       trailing: AppSegmented<bool>(
         value: current,
         onChanged: sources.isEmpty
             ? (_) {}
             : (v) => _applyPriority(ref, ordered, tmdbFirst: v),
-        options: const [
-          AppSegmentedOption(value: true, label: 'TMDB 优先'),
-          AppSegmentedOption(value: false, label: '豆瓣优先'),
+        options: [
+          AppSegmentedOption(value: true, label: l.paneScraperPriorityTmdbFirst),
+          AppSegmentedOption(value: false, label: l.paneScraperPriorityDoubanFirst),
         ],
       ),
     );
@@ -250,6 +256,7 @@ class ScraperPane extends ConsumerWidget {
     required String title,
     required String desc,
   }) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     MusicScraperSourceEntity? entity;
     for (final s in state.sources) {
@@ -269,7 +276,7 @@ class ScraperPane extends ConsumerWidget {
             const StatusDot(DotStatus.off),
             const SizedBox(width: 8),
             Text(
-              '未添加',
+              l.paneScraperNotAdded,
               style: TextStyle(fontSize: 12, color: t.text3),
             ),
           ],

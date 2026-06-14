@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, VideoListLoading, VideoTab, videoListProvider;
@@ -34,23 +35,24 @@ class _VideoListDesktopPageState extends ConsumerState<VideoListDesktopPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(videoListProvider);
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
 
     return DesktopPageScaffold(
-      title: '影视',
-      subtitle: 'Trakt 同步 · 多版本 · 智能续播 · TMDB / 豆瓣 刮削',
+      title: l.videoPageTitle,
+      subtitle: l.videoPageSubtitle,
       actions: AppSegmented<String>(
         value: _view,
         onChanged: (v) => setState(() => _view = v),
         dense: true,
-        options: const [
+        options: [
           AppSegmentedOption(
             value: 'grid',
-            label: '网格',
+            label: l.videoPageViewGrid,
             icon: Icons.grid_view_rounded,
           ),
           AppSegmentedOption(
             value: 'list',
-            label: '列表',
+            label: l.videoPageViewList,
             icon: Icons.view_list_rounded,
           ),
         ],
@@ -58,10 +60,9 @@ class _VideoListDesktopPageState extends ConsumerState<VideoListDesktopPage> {
       body: switch (state) {
         VideoListLoading() => _Loading(t: t),
         VideoListLoaded(:final totalCount) when totalCount == 0 =>
-          const DesktopComingSoon(
+          DesktopComingSoon(
             icon: Icons.movie_outlined,
-            message: '映射「影视」媒体库后，此处显示海报网格 + 继续观看 strip。\n'
-                '点击海报会打开「影视详情」浮层（多版本 / 剧集分集 / 演职 / 相关）。',
+            message: l.videoPageEmptyLibraryHint,
           ),
         VideoListLoaded() => _Loaded(state: state, view: _view),
         _ => const SizedBox.shrink(),
@@ -74,20 +75,23 @@ class _Loading extends StatelessWidget {
   const _Loading({required this.t});
   final DesignTokens t;
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 80),
-        alignment: Alignment.center,
-        child: Column(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 14),
-            Text(
-              '正在扫描影视库…',
-              style: TextStyle(color: t.text2, fontSize: 13),
-            ),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 80),
+      alignment: Alignment.center,
+      child: Column(
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 14),
+          Text(
+            l.videoPageScanningHint,
+            style: TextStyle(color: t.text2, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Loaded extends ConsumerStatefulWidget {
@@ -103,19 +107,20 @@ class _LoadedState extends ConsumerState<_Loaded> {
   // 排序仅影响网格展示，属纯前端表现层状态，本地维护即可（默认评分降序）。
   String _sort = 'rating';
 
-  static const _tabs = [
-    ('全部', VideoTab.all),
-    ('电影', VideoTab.movies),
-    ('剧集', VideoTab.tvShows),
-    ('其他', VideoTab.other),
-    ('最近添加', VideoTab.recent),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final state = widget.state;
     final view = widget.view;
     final notifier = ref.read(videoListProvider.notifier);
+    final l = AppLocalizations.of(context);
+
+    final tabs = <(String, VideoTab)>[
+      (l.videoPageTabAll, VideoTab.all),
+      (l.videoPageTabMovies, VideoTab.movies),
+      (l.videoPageTabTvShows, VideoTab.tvShows),
+      (l.videoPageTabOther, VideoTab.other),
+      (l.videoPageTabRecent, VideoTab.recent),
+    ];
 
     // Hero 用最高分（topRated）第一项，没有时退到 recent / movies 第一项。
     final hero = state.topRatedMovies.isNotEmpty
@@ -142,7 +147,7 @@ class _LoadedState extends ConsumerState<_Loaded> {
         ],
         Row(
           children: [
-            for (final (label, tab) in _tabs)
+            for (final (label, tab) in tabs)
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: AppChip(
@@ -157,9 +162,9 @@ class _LoadedState extends ConsumerState<_Loaded> {
               value: _sort,
               dense: true,
               onChanged: (v) => setState(() => _sort = v),
-              options: const [
-                AppSegmentedOption(value: 'rating', label: '评分'),
-                AppSegmentedOption(value: 'year', label: '年份'),
+              options: [
+                AppSegmentedOption(value: 'rating', label: l.videoPageSortRating),
+                AppSegmentedOption(value: 'year', label: l.videoPageSortYear),
               ],
             ),
             const SizedBox(width: 8),
@@ -382,15 +387,16 @@ class _HeroActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final pct = _progressPct;
     // 已看完（≥95%）或标记已看 → 重新播放；进行中（1~94%）→ 继续观看；否则播放。
     final String label;
     if (meta.isWatched || (pct != null && pct >= 95)) {
-      label = '重新播放';
+      label = l.videoPageActionReplay;
     } else if (pct != null && pct >= 1) {
-      label = '继续观看 · $pct%';
+      label = l.videoPageActionResume(pct);
     } else {
-      label = '播放';
+      label = l.videoPageActionPlay;
     }
     return Row(
       children: [
@@ -402,7 +408,7 @@ class _HeroActions extends ConsumerWidget {
         ),
         const SizedBox(width: 12),
         _HeroButton(
-          label: '详情',
+          label: l.videoPageActionDetails,
           icon: Icons.add_rounded,
           variant: _HeroBtnVariant.outline,
           onTap: () => _open(context, meta),
@@ -496,10 +502,11 @@ class _PosterGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (items.isEmpty) {
-      return const DesktopComingSoon(
+      return DesktopComingSoon(
         icon: Icons.search_off_rounded,
-        message: '该分类下暂无项目。',
+        message: l.videoPageCategoryEmpty,
       );
     }
     return GridView.builder(
@@ -524,10 +531,11 @@ class _PosterList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (items.isEmpty) {
-      return const DesktopComingSoon(
+      return DesktopComingSoon(
         icon: Icons.search_off_rounded,
-        message: '该分类下暂无项目。',
+        message: l.videoPageCategoryEmpty,
       );
     }
     return Column(
@@ -572,7 +580,8 @@ class _PosterList extends StatelessWidget {
                         Text(
                           [
                             if (meta.year != null) '${meta.year}',
-                            if (meta.runtime != null) '${meta.runtime} 分钟',
+                            if (meta.runtime != null)
+                              l.videoPageRuntimeMinutes(meta.runtime!),
                             if (meta.rating != null)
                               '★ ${meta.rating!.toStringAsFixed(1)}',
                           ].join(' · '),

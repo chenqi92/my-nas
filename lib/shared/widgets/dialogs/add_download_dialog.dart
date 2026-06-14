@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/aria2/presentation/providers/aria2_provider.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
@@ -50,9 +51,18 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
   List<String> get _links =>
       _uri.text.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
 
+  String _categoryLabel(AppLocalizations l, String value) => switch (value) {
+        '电影' => l.addDlCategoryMovie,
+        '剧集' => l.addDlCategorySeries,
+        '动画' => l.addDlCategoryAnime,
+        '音乐' => l.addDlCategoryMusic,
+        _ => l.addDlCategoryOther,
+      };
+
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final clients = ref.watch(downloaderClientsProvider);
     if (_sourceId == null && clients.isNotEmpty) {
       _sourceId = clients
@@ -85,13 +95,13 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _Label('链接 · 磁力 · 种子', t: t),
+                      _Label(l.addDlLinksLabel, t: t),
                       const SizedBox(height: 7),
                       TextField(
                         controller: _uri,
                         maxLines: 4,
                         decoration: InputDecoration(
-                          hintText: '粘贴 HTTP 直链、magnet: 磁力链接（每行一个）',
+                          hintText: l.addDlLinksHint,
                           hintStyle: TextStyle(color: t.text3, fontSize: 12.5),
                           filled: true,
                           fillColor: t.insetBg,
@@ -114,7 +124,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 16),
-                      _Label('下载到客户端', t: t),
+                      _Label(l.addDlClientLabel, t: t),
                       const SizedBox(height: 7),
                       if (clients.isEmpty)
                         Container(
@@ -125,8 +135,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                             border: Border.all(color: t.hairline),
                           ),
                           child: Text(
-                            '尚未配置下载客户端，请先到「数据源」添加 qBittorrent / '
-                            'aria2 / Transmission。',
+                            l.addDlNoClientHint,
                             style: TextStyle(
                                 fontSize: 12, color: t.text2, height: 1.5),
                           ),
@@ -179,7 +188,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _Label('分类', t: t),
+                                _Label(l.addDlCategoryLabel, t: t),
                                 const SizedBox(height: 7),
                                 Wrap(
                                   spacing: 6,
@@ -187,7 +196,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                                   children: [
                                     for (final c in _categories)
                                       AppChip(
-                                        label: c,
+                                        label: _categoryLabel(l, c),
                                         active: c == _category,
                                         compact: true,
                                         onTap: () =>
@@ -201,14 +210,14 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                         ],
                       ),
                       const SizedBox(height: 14),
-                      _Label('保存位置（可选）', t: t),
+                      _Label(l.addDlSavePathLabel, t: t),
                       const SizedBox(height: 7),
                       TextField(
                         controller: _savePath,
                         style: TextStyle(color: t.text0, fontSize: 13),
                         decoration: InputDecoration(
                           isDense: true,
-                          hintText: '留空使用下载器默认目录',
+                          hintText: l.addDlSavePathHint,
                           hintStyle: TextStyle(color: t.text3, fontSize: 12.5),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
@@ -238,7 +247,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '添加后暂停',
+                                    l.addDlPausedTitle,
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
@@ -246,7 +255,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                                     ),
                                   ),
                                   Text(
-                                    '先添加任务但不立即开始',
+                                    l.addDlPausedSubtitle,
                                     style:
                                         TextStyle(fontSize: 12, color: t.text2),
                                   ),
@@ -265,7 +274,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                 ),
               ),
               _Footer(
-                hint: '$_linkCount 个链接 → $selectedName',
+                hint: l.addDlFooterHint(_linkCount, selectedName),
                 t: t,
                 disabled: _linkCount == 0 || _sourceId == null || _submitting,
                 onSubmit: _submit,
@@ -279,6 +288,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
   }
 
   Future<void> _submit() async {
+    final l = AppLocalizations.of(context);
     final clients = ref.read(downloaderClientsProvider);
     final client =
         clients.where((c) => c.source.id == _sourceId).firstOrNull;
@@ -318,12 +328,13 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
       }
       if (mounted) {
         Navigator.of(context).pop();
-        context.showSuccessToast('已添加 ${_links.length} 个任务到 ${source.displayName}');
+        context.showSuccessToast(
+            l.addDlSuccessToast(_links.length, source.displayName));
       }
     } on Object catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        context.showErrorToast('添加失败：$e');
+        context.showErrorToast(l.addDlFailToast('$e'));
       }
     }
   }
@@ -335,32 +346,35 @@ class _Header extends StatelessWidget {
   final VoidCallback onClose;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(20, 16, 14, 16),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: t.hairline)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.download_rounded, size: 17, color: t.accent),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                '新建下载任务',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: t.text0,
-                ),
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 14, 16),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: t.hairline)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.download_rounded, size: 17, color: t.accent),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              l.addDlTitle,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: t.text0,
               ),
             ),
-            IconButton(
-              onPressed: onClose,
-              icon: Icon(Icons.close_rounded, size: 16, color: t.text2),
-            ),
-          ],
-        ),
-      );
+          ),
+          IconButton(
+            onPressed: onClose,
+            icon: Icon(Icons.close_rounded, size: 16, color: t.text2),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Footer extends StatelessWidget {
@@ -379,25 +393,28 @@ class _Footer extends StatelessWidget {
   final VoidCallback onCancel;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.fromLTRB(22, 14, 22, 14),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: t.hairline)),
-        ),
-        child: Row(
-          children: [
-            Text(hint, style: TextStyle(fontSize: 11.5, color: t.text2)),
-            const Spacer(),
-            TextButton(onPressed: onCancel, child: const Text('取消')),
-            const SizedBox(width: 8),
-            FilledButton.icon(
-              onPressed: disabled ? null : onSubmit,
-              icon: const Icon(Icons.add_rounded, size: 14),
-              label: const Text('添加任务'),
-            ),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 14, 22, 14),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: t.hairline)),
+      ),
+      child: Row(
+        children: [
+          Text(hint, style: TextStyle(fontSize: 11.5, color: t.text2)),
+          const Spacer(),
+          TextButton(onPressed: onCancel, child: Text(l.addDlCancel)),
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            onPressed: disabled ? null : onSubmit,
+            icon: const Icon(Icons.add_rounded, size: 14),
+            label: Text(l.addDlSubmit),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Label extends StatelessWidget {

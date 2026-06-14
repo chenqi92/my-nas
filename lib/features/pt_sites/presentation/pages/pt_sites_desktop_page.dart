@@ -6,6 +6,7 @@ import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider
 import 'package:my_nas/features/pt_sites/presentation/widgets/send_to_downloader_sheet.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
@@ -87,16 +88,17 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final sources = ref.watch(ptSitesSourcesProvider);
 
     if (sources.isEmpty) {
-      return const DesktopPageScaffold(
-        title: 'PT 站点',
-        subtitle: '种子搜索 · 一键发送到下载器',
+      return DesktopPageScaffold(
+        title: l.ptPageTitle,
+        subtitle: l.ptPageSubtitle,
         body: DesktopComingSoon(
           icon: Icons.rss_feed_rounded,
-          message: '尚未配置 PT 站点。到「数据源」添加资源站点后，这里可浏览种子并一键发送到下载器。',
+          message: l.ptPageEmptyHint,
         ),
       );
     }
@@ -110,8 +112,8 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
     final listState = ref.watch(ptTorrentListProvider(selected));
 
     return DesktopPageScaffold(
-      title: 'PT 站点',
-      subtitle: '种子搜索 · 一键发送到下载器',
+      title: l.ptPageTitle,
+      subtitle: l.ptPageSubtitle,
       maxWidth: 1500,
       actions: sources.length > 1
           ? Row(
@@ -155,10 +157,13 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
     PTTorrentListState listState,
     String selected,
   ) {
+    final l = AppLocalizations.of(context);
     if (conn.status == PTSiteConnectionStatus.error) {
       return _PanelMessage(
         icon: Icons.link_off_rounded,
-        message: '连接失败：${conn.errorMessage ?? "请检查站点配置"}',
+        message: l.ptPageConnectFailed(
+          conn.errorMessage ?? l.ptPageConnectFailedFallback,
+        ),
       );
     }
     if (listState.isLoading) {
@@ -177,9 +182,9 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
     final rows = _applyCategory(listState.torrents);
 
     if (rows.isEmpty) {
-      return const _PanelMessage(
+      return _PanelMessage(
         icon: Icons.inbox_outlined,
-        message: '没有匹配的种子。',
+        message: l.ptPageNoMatch,
       );
     }
 
@@ -220,7 +225,7 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('加载更多'),
+                    : Text(l.ptPageLoadMore),
               ),
             ),
           ),
@@ -261,6 +266,7 @@ class _SiteStatCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final conn = ref.watch(ptSiteConnectionProvider(sourceId));
     final user = conn.userInfo;
@@ -287,7 +293,7 @@ class _SiteStatCard extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               // 站点签到尚未实现：标注规划占位，不放可点却无行为的死按钮。
-              const AppTag('签到', variant: TagVariant.plan),
+              AppTag(l.ptPageCheckIn, variant: TagVariant.plan),
             ],
           ),
           const SizedBox(height: 10),
@@ -307,16 +313,17 @@ class _SiteStatCard extends ConsumerWidget {
             Row(
               children: [
                 _metric(
-                  '分享率',
+                  l.ptPageRatio,
                   user?.formattedRatio ?? '—',
                   (ratioVal != null && ratioVal > 4) ? t.ok : t.text0,
                   t,
                 ),
                 const SizedBox(width: 16),
-                _metric('魔力', user != null ? user.formattedBonus : '—', t.text0, t),
+                _metric(l.ptPageBonus, user != null ? user.formattedBonus : '—',
+                    t.text0, t),
                 const SizedBox(width: 16),
                 _metric(
-                  '上传',
+                  l.ptPageUploaded,
                   user?.formattedUploaded ?? '—',
                   t.accentBright,
                   t,
@@ -374,6 +381,7 @@ class _SearchPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return GlassPanel(
       padding: EdgeInsets.zero,
@@ -402,24 +410,29 @@ class _SearchPanel extends StatelessWidget {
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
                       contentPadding: EdgeInsets.zero,
-                      hintText: '搜索当前站点种子…',
+                      hintText: l.ptPageSearchHint,
                       hintStyle: TextStyle(color: t.text3, fontSize: 13),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
-                for (final c in const ['电影', '剧集', '音乐'])
+                // key 为后端 category 文案匹配用的过滤值（须保持中文），value 为本地化展示标签。
+                for (final entry in <String, String>{
+                  '电影': l.ptPageCategoryMovie,
+                  '剧集': l.ptPageCategoryTv,
+                  '音乐': l.ptPageCategoryMusic,
+                }.entries)
                   Padding(
                     padding: const EdgeInsets.only(left: 6),
                     child: AppChip(
-                      label: c,
-                      active: category == c,
-                      onTap: () => onCategory(c),
+                      label: entry.value,
+                      active: category == entry.key,
+                      onTap: () => onCategory(entry.key),
                     ),
                   ),
                 const SizedBox(width: 12),
                 Text(
-                  '当前站点 · 找到 $resultCount 条',
+                  l.ptPageResultCount(resultCount),
                   style: TextStyle(fontSize: 12, color: t.text2),
                 ),
               ],
@@ -438,6 +451,7 @@ class _ResultHeaderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     TextStyle s() => TextStyle(
           fontSize: 10.5,
@@ -452,14 +466,14 @@ class _ResultHeaderRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: Text('标题', style: s())),
+          Expanded(child: Text(l.ptPageColTitle, style: s())),
           const SizedBox(width: 10),
-          SizedBox(width: 90, child: Text('大小', style: s())),
-          SizedBox(width: 70, child: Text('做种', style: s())),
-          SizedBox(width: 70, child: Text('下载', style: s())),
-          SizedBox(width: 90, child: Text('评分', style: s())),
-          SizedBox(width: 80, child: Text('折扣', style: s())),
-          SizedBox(width: 180, child: Text('操作', style: s())),
+          SizedBox(width: 90, child: Text(l.ptPageColSize, style: s())),
+          SizedBox(width: 70, child: Text(l.ptPageColSeeders, style: s())),
+          SizedBox(width: 70, child: Text(l.ptPageColLeechers, style: s())),
+          SizedBox(width: 90, child: Text(l.ptPageColRating, style: s())),
+          SizedBox(width: 80, child: Text(l.ptPageColPromo, style: s())),
+          SizedBox(width: 180, child: Text(l.ptPageColActions, style: s())),
         ],
       ),
     );
@@ -480,6 +494,7 @@ class _ResultRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final promo = torrent.status.promotionLabel;
     return Material(
@@ -573,12 +588,12 @@ class _ResultRow extends StatelessWidget {
                             fontSize: 11.5, fontWeight: FontWeight.w600),
                       ),
                       icon: const Icon(Icons.download_rounded, size: 13),
-                      label: const Text('发送下载器'),
+                      label: Text(l.ptPageSendToDownloader),
                     ),
                     const SizedBox(width: 6),
                     IconButton(
                       onPressed: onOpen,
-                      tooltip: '详情',
+                      tooltip: l.ptPageDetail,
                       visualDensity: VisualDensity.compact,
                       iconSize: 16,
                       style: IconButton.styleFrom(
@@ -606,6 +621,7 @@ class _RatingCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final hasDouban = torrent.doubanId != null && torrent.doubanId!.isNotEmpty;
     final hasImdb = torrent.imdbId != null && torrent.imdbId!.isNotEmpty;
@@ -616,7 +632,7 @@ class _RatingCell extends StatelessWidget {
       children: [
         if (hasDouban)
           Text(
-            '豆瓣',
+            l.ptPageRatingDouban,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,

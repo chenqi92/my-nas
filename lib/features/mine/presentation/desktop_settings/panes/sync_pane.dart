@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/sync/cloud_sync_service.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/providers/cloud_sync_auto_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
@@ -95,9 +96,10 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
     });
     final ok = await _service.testConnection();
     if (mounted) {
+      final l = AppLocalizations.of(context);
       setState(() {
         _testingConnection = false;
-        _statusMessage = ok ? '连接成功' : '连接失败：检查 endpoint / 用户名 / 密码';
+        _statusMessage = ok ? l.paneSyncTestSuccess : l.paneSyncTestFailure;
       });
     }
   }
@@ -111,6 +113,7 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
     });
     final reports = await _service.syncNow();
     if (mounted) {
+      final l = AppLocalizations.of(context);
       setState(() {
         _syncing = false;
         _lastReports = reports;
@@ -120,24 +123,24 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
             reports.where((r) => r.outcome == CloudSyncOutcome.pushed).length;
         final failed =
             reports.where((r) => r.outcome == CloudSyncOutcome.failed).length;
-        _statusMessage = '完成：拉取 $pulled / 推送 $pushed / 失败 $failed';
+        _statusMessage = l.paneSyncResult(pulled, pushed, failed);
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     if (!_loaded) {
-      return const Column(
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SetHead(
             icon: Icons.sync_rounded,
-            title: '云同步',
-            subtitle:
-                '基于 WebDAV 的跨设备同步（非云厂商专有）。冲突按 manifest 时间戳最后修改优先，失败自动重试 3 次。',
+            title: l.paneSyncTitle,
+            subtitle: l.paneSyncSubtitle,
           ),
-          Padding(
+          const Padding(
             padding: EdgeInsets.symmetric(vertical: 48),
             child: Center(child: CircularProgressIndicator()),
           ),
@@ -150,11 +153,10 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SetHead(
+        SetHead(
           icon: Icons.sync_rounded,
-          title: '云同步',
-          subtitle:
-              '基于 WebDAV 的跨设备同步（非云厂商专有）。冲突按 manifest 时间戳最后修改优先，失败自动重试 3 次。',
+          title: l.paneSyncTitle,
+          subtitle: l.paneSyncSubtitle,
         ),
         _buildBackendSection(),
         _gated(
@@ -183,57 +185,62 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
         child: IgnorePointer(ignoring: !on, child: child),
       );
 
-  Widget _buildBackendSection() => SetSection(
-        title: 'WebDAV 后端',
-        hint: 'cloud_sync_settings',
-        children: [
-          SetRow(
-            title: '启用云同步',
-            trailing: AppSwitch(
-              value: _syncOn,
-              onChanged: (v) => setState(() => _syncOn = v),
-            ),
+  Widget _buildBackendSection() {
+    final l = AppLocalizations.of(context);
+    return SetSection(
+      title: l.paneSyncBackendSection,
+      hint: 'cloud_sync_settings',
+      children: [
+        SetRow(
+          title: l.paneSyncEnableTitle,
+          trailing: AppSwitch(
+            value: _syncOn,
+            onChanged: (v) => setState(() => _syncOn = v),
           ),
-          _gated(
-            on: _syncOn,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildField(label: 'Endpoint', controller: _endpoint),
-                      const SizedBox(height: 14),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _buildField(
-                                label: '用户名', controller: _username),
+        ),
+        _gated(
+          on: _syncOn,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildField(label: 'Endpoint', controller: _endpoint),
+                    const SizedBox(height: 14),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _buildField(
+                              label: l.paneSyncFieldUsername,
+                              controller: _username),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: _buildField(
+                            label: l.paneSyncFieldPassword,
+                            controller: _password,
+                            obscure: true,
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: _buildField(
-                              label: '密码',
-                              controller: _password,
-                              obscure: true,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      _buildField(label: '根目录', controller: _rootPath),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    _buildField(
+                        label: l.paneSyncFieldRootPath, controller: _rootPath),
+                  ],
                 ),
-                _buildConnectionRow(),
-              ],
-            ),
+              ),
+              _buildConnectionRow(),
+            ],
           ),
-        ],
-      );
+        ),
+      ],
+    );
+  }
 
   Widget _buildField({
     required String label,
@@ -285,8 +292,9 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
 
   Widget _buildConnectionRow() {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return SetRow(
-      title: '连接状态',
+      title: l.paneSyncConnectionTitle,
       last: true,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -294,12 +302,14 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
           const StatusDot(DotStatus.ok),
           const SizedBox(width: 8),
           Text(
-            _statusMessage ?? '已连接 · 健康检查通过',
+            _statusMessage ?? l.paneSyncConnectionDefault,
             style: TextStyle(fontSize: 12, color: t.text2),
           ),
           const SizedBox(width: 12),
           AppButton(
-            label: _testingConnection ? '测试中…' : '测试连接',
+            label: _testingConnection
+                ? l.paneSyncTestButtonTesting
+                : l.paneSyncTestButton,
             icon: Icons.link_rounded,
             dense: true,
             onPressed: _testingConnection ? null : _test,
@@ -310,19 +320,20 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
   }
 
   Widget _buildModulesSection(List<SyncableModule> modules) {
+    final l = AppLocalizations.of(context);
     if (modules.isEmpty) {
-      return const SetSection(
-        title: '同步范围',
-        hint: '按模块开关',
+      return SetSection(
+        title: l.paneSyncModulesSection,
+        hint: l.paneSyncModulesHint,
         bottomMargin: false,
         children: [
-          SetRow(title: '当前还没有模块注册到同步系统', last: true),
+          SetRow(title: l.paneSyncModulesEmpty, last: true),
         ],
       );
     }
     return SetSection(
-      title: '同步范围',
-      hint: '按模块开关',
+      title: l.paneSyncModulesSection,
+      hint: l.paneSyncModulesHint,
       bottomMargin: false,
       children: [
         Padding(
@@ -417,16 +428,17 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
   }
 
   Widget _buildAutomationSection() {
+    final l = AppLocalizations.of(context);
     final autoOn = ref.watch(cloudSyncAutoEnabledProvider);
     final interval = ref.watch(cloudSyncIntervalProvider);
     return SetSection(
-      title: '自动化',
+      title: l.paneSyncAutomationSection,
       hint: 'cloud_sync',
       bottomMargin: false,
       children: [
         SetRow(
-          title: '自动同步',
-          desc: '开启后在 app 运行期间按周期自动同步（不含后台 / 系统级调度）',
+          title: l.paneSyncAutoSyncTitle,
+          desc: l.paneSyncAutoSyncDesc,
           trailing: AppSwitch(
             value: autoOn,
             onChanged: (v) => ref
@@ -437,15 +449,15 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
         _gated(
           on: autoOn,
           child: SetRow(
-            title: '同步周期',
-            desc: '两次自动同步之间的最短间隔',
+            title: l.paneSyncIntervalTitle,
+            desc: l.paneSyncIntervalDesc,
             trailing: AppSegmented<int>(
               value: interval,
-              options: const [
-                AppSegmentedOption(value: 15, label: '15 分钟'),
-                AppSegmentedOption(value: 30, label: '30 分钟'),
-                AppSegmentedOption(value: 60, label: '1 小时'),
-                AppSegmentedOption(value: 360, label: '6 小时'),
+              options: [
+                AppSegmentedOption(value: 15, label: l.paneSyncInterval15),
+                AppSegmentedOption(value: 30, label: l.paneSyncInterval30),
+                AppSegmentedOption(value: 60, label: l.paneSyncInterval60),
+                AppSegmentedOption(value: 360, label: l.paneSyncInterval360),
               ],
               onChanged: (v) =>
                   ref.read(cloudSyncIntervalProvider.notifier).setMinutes(v),
@@ -453,11 +465,11 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
           ),
         ),
         SetRow(
-          title: '立即同步',
-          desc: '手动触发一次全量同步',
+          title: l.paneSyncNowTitle,
+          desc: l.paneSyncNowDesc,
           last: true,
           trailing: AppButton(
-            label: _syncing ? '同步中…' : '立即同步',
+            label: _syncing ? l.paneSyncNowButtonSyncing : l.paneSyncNowButton,
             icon: Icons.sync_rounded,
             variant: AppButtonVariant.primary,
             onPressed: _syncing ? null : _sync,
@@ -469,9 +481,10 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
 
   Widget _buildReports(bool isDark) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final reports = _lastReports!;
     return SetSection(
-      title: '本次同步详情',
+      title: l.paneSyncReportsSection,
       bottomMargin: false,
       children: [
         for (var i = 0; i < reports.length; i++)
@@ -484,7 +497,7 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
               color: _colorFor(t, reports[i].outcome),
             ),
             trailing: Text(
-              _labelFor(reports[i].outcome),
+              _labelFor(l, reports[i].outcome),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -547,16 +560,16 @@ class _SyncPaneState extends ConsumerState<SyncPane> {
     }
   }
 
-  String _labelFor(CloudSyncOutcome o) {
+  String _labelFor(AppLocalizations l, CloudSyncOutcome o) {
     switch (o) {
       case CloudSyncOutcome.pulled:
-        return '已拉取';
+        return l.paneSyncOutcomePulled;
       case CloudSyncOutcome.pushed:
-        return '已推送';
+        return l.paneSyncOutcomePushed;
       case CloudSyncOutcome.skipped:
-        return '已是最新';
+        return l.paneSyncOutcomeSkipped;
       case CloudSyncOutcome.failed:
-        return '失败';
+        return l.paneSyncOutcomeFailed;
     }
   }
 }

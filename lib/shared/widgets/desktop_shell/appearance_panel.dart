@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/color_scheme_preset.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/shared/providers/dynamic_ambient_provider.dart';
@@ -19,6 +20,7 @@ class AppearancePanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final themeMode = ref.watch(themeModeProvider);
     final uiStyle = ref.watch(uiStyleProvider);
@@ -34,21 +36,30 @@ class AppearancePanel extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
           _Row(
-            label: '主题',
+            label: l.shellApprThemeMode,
             control: AppSegmented<ThemeMode>(
               value: themeMode,
               onChanged: ref.read(themeModeProvider.notifier).setThemeMode,
               dense: true,
-              options: const [
-                AppSegmentedOption(value: ThemeMode.light, label: '浅色'),
-                AppSegmentedOption(value: ThemeMode.dark, label: '深色'),
-                AppSegmentedOption(value: ThemeMode.system, label: '系统'),
+              options: [
+                AppSegmentedOption(
+                  value: ThemeMode.light,
+                  label: l.shellApprThemeLight,
+                ),
+                AppSegmentedOption(
+                  value: ThemeMode.dark,
+                  label: l.shellApprThemeDark,
+                ),
+                AppSegmentedOption(
+                  value: ThemeMode.system,
+                  label: l.shellApprThemeSystem,
+                ),
               ],
             ),
           ),
           const SizedBox(height: 12),
           _Row(
-            label: 'UI 风格',
+            label: l.shellApprUiStyle,
             control: AppSegmented<UIStyle>(
               value: uiStyle,
               onChanged: ref.read(uiStyleProvider.notifier).setStyle,
@@ -61,7 +72,7 @@ class AppearancePanel extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           _Row(
-            label: '强调色',
+            label: l.shellApprAccentColor,
             control: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -86,7 +97,7 @@ class AppearancePanel extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  '动态取色氛围光',
+                  l.shellApprDynamicAmbient,
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,

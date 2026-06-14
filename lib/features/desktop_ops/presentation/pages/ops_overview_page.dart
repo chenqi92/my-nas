@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/downloader/presentation/widgets/download_detail_sheet.dart';
 import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
@@ -22,6 +23,7 @@ class OpsOverviewPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final connections = ref.watch(activeConnectionsProvider);
     final totalSources =
         ref.watch(sourcesProvider).valueOrNull?.length ?? connections.length;
@@ -76,7 +78,7 @@ class OpsOverviewPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '运维总览',
+                l.opsTitle,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w900,
@@ -85,7 +87,7 @@ class OpsOverviewPage extends ConsumerWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                '下载器 · 传输 · PT · 自动化 · 数据源 — 一处掌控',
+                l.opsSubtitle,
                 style: TextStyle(fontSize: 13, color: t.text2),
               ),
               const SizedBox(height: 22),
@@ -117,6 +119,7 @@ class _LiveThroughput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final live = throughput.connectedClients > 0;
     return GlassPanel(
       padding: const EdgeInsets.fromLTRB(22, 18, 22, 14),
@@ -126,7 +129,7 @@ class _LiveThroughput extends StatelessWidget {
           Row(
             children: [
               Text(
-                '实时吞吐',
+                l.opsLiveThroughput,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -138,8 +141,8 @@ class _LiveThroughput extends StatelessWidget {
               const SizedBox(width: 5),
               Text(
                 live
-                    ? '聚合 ${throughput.connectedClients} 个客户端 · 实时'
-                    : '暂无在线下载客户端',
+                    ? l.opsLiveClientsRealtime(throughput.connectedClients)
+                    : l.opsNoOnlineClients,
                 style: TextStyle(fontSize: 11.5, color: t.text2),
               ),
               const Spacer(),
@@ -268,6 +271,7 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return GridView.count(
       crossAxisCount: 4,
       crossAxisSpacing: 14,
@@ -277,20 +281,20 @@ class _StatRow extends StatelessWidget {
       childAspectRatio: 2.6,
       children: [
         _StatTile(
-          label: '活动任务',
+          label: l.opsStatActiveTasks,
           value: '${throughput.activeCount}',
           unit: '/ ${throughput.totalCount}',
         ),
         _StatTile(
-          label: '源在线 · 共 $totalSources',
+          label: l.opsStatSourcesOnline(totalSources),
           value: '$connectedSources',
           dot: DotStatus.ok,
         ),
         _StatTile(
-          label: 'PT 平均分享率',
+          label: l.opsStatPtAvgRatio,
           value: avgRatio == null ? '—' : avgRatio!.toStringAsFixed(2),
         ),
-        _StatTile(label: '订阅追剧中', value: subscribeValue, accent: true),
+        _StatTile(label: l.opsStatSubscribing, value: subscribeValue, accent: true),
       ],
     );
   }
@@ -432,6 +436,7 @@ class _ClientCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return AppCard(
       onTap: () => GoRouter.of(context).go('/download'),
       padding: const EdgeInsets.all(18),
@@ -452,7 +457,7 @@ class _ClientCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                connected ? '$taskCount 任务' : '未连接',
+                connected ? l.opsClientTaskCount(taskCount) : l.opsClientNotConnected,
                 style: TextStyle(fontSize: 11, color: t.text2),
               ),
             ],
@@ -505,6 +510,7 @@ class _BottomTwoCol extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final downloading = tasks
         .where((task) => task.status == UnifiedDownloadStatus.downloading)
         .toList()
@@ -523,7 +529,7 @@ class _BottomTwoCol extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '正在下载',
+                      l.opsDownloadingTitle,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -532,7 +538,7 @@ class _BottomTwoCol extends StatelessWidget {
                     ),
                     const Spacer(),
                     AppChip(
-                      label: '下载器',
+                      label: l.opsDownloaderChip,
                       icon: Icons.open_in_new_rounded,
                       compact: true,
                       onTap: () => GoRouter.of(context).go('/download'),
@@ -545,7 +551,7 @@ class _BottomTwoCol extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Center(
                       child: Text(
-                        '没有正在下载的任务。',
+                        l.opsNoDownloadingTasks,
                         style: TextStyle(fontSize: 13, color: t.text2),
                       ),
                     ),
@@ -568,7 +574,7 @@ class _BottomTwoCol extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      'PT 概况',
+                      l.opsPtOverviewTitle,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -577,7 +583,7 @@ class _BottomTwoCol extends StatelessWidget {
                     ),
                     const Spacer(),
                     AppChip(
-                      label: '站点',
+                      label: l.opsSitesChip,
                       icon: Icons.open_in_new_rounded,
                       compact: true,
                       onTap: () => GoRouter.of(context).go('/pt'),
@@ -590,7 +596,7 @@ class _BottomTwoCol extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Center(
                       child: Text(
-                        '尚未配置 PT 站点。',
+                        l.opsNoPtSites,
                         style: TextStyle(fontSize: 13, color: t.text2),
                       ),
                     ),
@@ -613,6 +619,7 @@ class _PtRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final ratio = row.ratio;
     final hasRatio = ratio != null && ratio.isFinite;
     return Padding(
@@ -660,7 +667,7 @@ class _PtRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text('分享率', style: TextStyle(fontSize: 10.5, color: t.text2)),
+              Text(l.opsRatioLabel, style: TextStyle(fontSize: 10.5, color: t.text2)),
             ],
           ),
         ],

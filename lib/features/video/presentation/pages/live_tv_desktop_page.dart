@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/video/data/services/xmltv_parser.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/pages/live_player_page.dart';
@@ -27,8 +28,11 @@ class LiveTvDesktopPage extends ConsumerStatefulWidget {
   ConsumerState<LiveTvDesktopPage> createState() => _LiveTvDesktopPageState();
 }
 
+// 「全部」分类的内部哨兵值（不展示给用户，展示时用 l.livePageCategoryAll）。
+const String _kAllCategory = '__all__';
+
 class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
-  String _cat = '全部';
+  String _cat = _kAllCategory;
   Timer? _clockTimer;
 
   @override
@@ -62,17 +66,18 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final allChannels = ref.watch(allLiveChannelsProvider);
     final sources = ref.watch(enabledLiveSourcesProvider);
     final cats = <String>[
-      '全部',
+      _kAllCategory,
       ...(ref.watch(liveChannelCategoriesProvider).toList()..sort()),
     ];
-    final active = cats.contains(_cat) ? _cat : '全部';
-    final channels = active == '全部'
+    final active = cats.contains(_cat) ? _cat : _kAllCategory;
+    final channels = active == _kAllCategory
         ? allChannels
         : allChannels
-            .where((c) => (c.category ?? '未分类') == active)
+            .where((c) => (c.category ?? l.livePageUncategorized) == active)
             .toList();
     final featured = channels.isNotEmpty ? channels.first : null;
 
@@ -103,12 +108,12 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(t, cats, active),
+              _buildHeader(t, l, cats, active),
               const SizedBox(height: 22),
               if (featured == null) ...[
                 _EmptyHero(onManage: _manageSources),
                 const SizedBox(height: 26),
-                _sectionHead(t, sub: '电子节目单 EPG'),
+                _sectionHead(t, l, sub: l.livePageEpgSubtitle),
                 const SizedBox(height: 14),
                 const _EpgEmpty(),
               ] else ...[
@@ -122,13 +127,14 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
                 const SizedBox(height: 26),
                 _sectionHead(
                   t,
-                  sub: '电子节目单 · ${_fmtClock(_nowMin())} 现在',
+                  l,
+                  sub: l.livePageEpgNowSubtitle(_fmtClock(_nowMin())),
                   right: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _PulseDot(color: t.hot, size: 8),
                       const SizedBox(width: 6),
-                      Text('红线为当前时间',
+                      Text(l.livePageRedLineHint,
                           style: TextStyle(fontSize: 12, color: t.text2)),
                     ],
                   ),
@@ -136,8 +142,8 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
                 const SizedBox(height: 6),
                 Text(
                   hasEpg
-                      ? '节目时间轴来自 XMLTV 源；点击频道行直接播放。'
-                      : '当前源未提供 XMLTV 节目数据，仅展示频道与时间轴；点击频道行即可直接播放。',
+                      ? l.livePageEpgFromXmltv
+                      : l.livePageEpgNoData,
                   style: TextStyle(fontSize: 12, color: t.text3, height: 1.4),
                 ),
                 const SizedBox(height: 12),
@@ -151,7 +157,8 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
   }
 
   // ── header ────────────────────────────────────────────────────────────
-  Widget _buildHeader(DesignTokens t, List<String> cats, String active) {
+  Widget _buildHeader(
+      DesignTokens t, AppLocalizations l, List<String> cats, String active) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -161,7 +168,7 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
             Row(
               children: [
                 Text(
-                  '直播',
+                  l.livePageTitle,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
@@ -174,7 +181,7 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              'M3U8 / HLS 频道 · 自适应清晰度 · 电子节目单 (EPG)',
+              l.livePageSubtitle,
               style: TextStyle(fontSize: 13, color: t.text2),
             ),
           ],
@@ -189,13 +196,13 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
             children: [
               for (final c in cats)
                 AppChip(
-                  label: c,
+                  label: c == _kAllCategory ? l.livePageCategoryAll : c,
                   active: c == active,
                   onTap: () => setState(() => _cat = c),
                   compact: true,
                 ),
               AppChip(
-                label: '管理 M3U8 源',
+                label: l.livePageManageM3u8Source,
                 icon: Icons.add_rounded,
                 compact: true,
                 onTap: _manageSources,
@@ -207,11 +214,12 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
     );
   }
 
-  Widget _sectionHead(DesignTokens t, {required String sub, Widget? right}) {
+  Widget _sectionHead(DesignTokens t, AppLocalizations l,
+      {required String sub, Widget? right}) {
     return Row(
       children: [
         Text(
-          '节目单',
+          l.livePageProgramGuide,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
@@ -273,6 +281,7 @@ class _Hero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
       child: SizedBox(
@@ -350,7 +359,7 @@ class _Hero extends StatelessWidget {
                       runSpacing: 8,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const _LiveBadge('正在直播'),
+                        _LiveBadge(l.livePageOnAir),
                         if (channel.category != null &&
                             channel.category!.isNotEmpty)
                           _whiteTag(channel.category!),
@@ -375,7 +384,7 @@ class _Hero extends StatelessWidget {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          const _LiveBadge('正在播放'),
+                          _LiveBadge(l.livePageNowPlaying),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -394,7 +403,11 @@ class _Hero extends StatelessWidget {
                       if (nextProgramme != null) ...[
                         const SizedBox(height: 4),
                         Text(
-                          '接下来 ${_fmtClock(nextProgramme!.start.hour * 60 + nextProgramme!.start.minute)} · ${nextProgramme!.title}',
+                          l.livePageUpNext(
+                            _fmtClock(nextProgramme!.start.hour * 60 +
+                                nextProgramme!.start.minute),
+                            nextProgramme!.title,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -411,7 +424,7 @@ class _Hero extends StatelessWidget {
                             channel.category!.isNotEmpty)
                           channel.category,
                         if (sourceName != null) sourceName,
-                        'M3U8 / HLS · 自适应清晰度',
+                        l.livePageHlsAdaptive,
                       ].whereType<String>().join('  ·  '),
                       style: TextStyle(
                         fontSize: 13,
@@ -422,14 +435,14 @@ class _Hero extends StatelessWidget {
                     Row(
                       children: [
                         _HeroBtn(
-                          label: '立即观看',
+                          label: l.livePageWatchNow,
                           icon: Icons.play_arrow_rounded,
                           variant: _HeroBtnVariant.primary,
                           onTap: onPlay,
                         ),
                         const SizedBox(width: 12),
                         _HeroBtn(
-                          label: '完整节目单',
+                          label: l.livePageFullGuide,
                           icon: Icons.view_agenda_outlined,
                           variant: _HeroBtnVariant.outline,
                           onTap: onPlay,
@@ -561,6 +574,7 @@ class _EpgGuide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     final shown = channels.length > _epgMaxRows
         ? channels.sublist(0, _epgMaxRows)
         : channels;
@@ -587,7 +601,7 @@ class _EpgGuide extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _header(t, slots, base, timelineW),
+              _header(t, l, slots, base, timelineW),
               for (final ch in shown)
                 _row(
                   context,
@@ -670,8 +684,8 @@ class _EpgGuide extends StatelessWidget {
     );
   }
 
-  Widget _header(
-      DesignTokens t, List<int> slots, int base, double timelineW) {
+  Widget _header(DesignTokens t, AppLocalizations l, List<int> slots, int base,
+      double timelineW) {
     TextStyle cornerStyle() => TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
@@ -690,7 +704,7 @@ class _EpgGuide extends StatelessWidget {
             width: _channelColW,
             alignment: Alignment.centerLeft,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text('频道', style: cornerStyle()),
+            child: Text(l.livePageChannelColumn, style: cornerStyle()),
           ),
           SizedBox(
             width: timelineW,
@@ -986,6 +1000,7 @@ class _EmptyHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
       child: Container(
@@ -1019,11 +1034,11 @@ class _EmptyHero extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const _LiveBadge('即将上线'),
+                  _LiveBadge(l.livePageComingSoon),
                   const SizedBox(height: 14),
-                  const Text(
-                    '导入 M3U8 频道源以激活',
-                    style: TextStyle(
+                  Text(
+                    l.livePageEmptyHeroTitle,
+                    style: const TextStyle(
                       fontSize: 34,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
@@ -1032,7 +1047,7 @@ class _EmptyHero extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    '在「管理直播源」中添加 M3U8 / HLS 直播源后，此处会显示精选频道与电子节目单。',
+                    l.livePageEmptyHeroDesc,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.white.withValues(alpha: 0.78),
@@ -1043,7 +1058,7 @@ class _EmptyHero extends StatelessWidget {
                   FilledButton.icon(
                     onPressed: onManage,
                     icon: const Icon(Icons.add_rounded, size: 16),
-                    label: const Text('管理直播源'),
+                    label: Text(l.livePageManageSources),
                   ),
                 ],
               ),
@@ -1061,6 +1076,7 @@ class _EpgEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
     return GlassPanel(
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 38),
       child: Center(
@@ -1069,7 +1085,7 @@ class _EpgEmpty extends StatelessWidget {
             Icon(Icons.live_tv_outlined, size: 40, color: t.text3),
             const SizedBox(height: 12),
             Text(
-              '尚未配置直播源',
+              l.livePageNoSourceTitle,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -1078,7 +1094,7 @@ class _EpgEmpty extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '添加 M3U8 / HLS 源后将自动生成电子节目单（pxPerMin=4，sticky 频道列）。',
+              l.livePageNoSourceDesc,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12.5, color: t.text2, height: 1.5),
             ),

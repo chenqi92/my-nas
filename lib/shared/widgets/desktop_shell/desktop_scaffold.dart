@@ -10,6 +10,7 @@ import 'package:my_nas/features/music/presentation/providers/music_player_provid
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/providers/cloud_sync_auto_provider.dart';
 import 'package:my_nas/shared/providers/desktop_space_provider.dart';
 import 'package:my_nas/shared/providers/download_notify_provider.dart';
@@ -73,92 +74,99 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     '/files', // 13
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _registerCommands();
-  }
+  bool _commandsRegistered = false;
 
   /// 把"切换 UI 风格 / 打开设置 / 立即同步 / 添加数据源 / 跳转 PT"
-  /// 等命令注入 CmdkRegistry。后续每个 feature 可在自己初始化时追加。
-  void _registerCommands() {
+  /// 等命令注入 CmdkRegistry。在 build 中调用（需要 l 取本地化文案），
+  /// registerAll 按 id 去重，幂等，重复调用安全。
+  void _registerCommands(AppLocalizations l) {
+    if (_commandsRegistered) return;
+    _commandsRegistered = true;
     CmdkRegistry.instance.registerAll([
       CmdkCommand(
         id: 'goto.settings',
-        label: '打开设置',
+        label: l.shellNavCmdOpenSettings,
         icon: Icons.settings_outlined,
         hint: '⌘,',
         run: (c) => _go('/mine'),
       ),
       CmdkCommand(
         id: 'goto.films',
-        label: '影视库',
+        label: l.shellNavCmdFilmsLibrary,
         icon: Icons.movie_outlined,
         run: (c) => _go('/video'),
       ),
       CmdkCommand(
         id: 'goto.music',
-        label: '音乐',
+        label: l.shellNavCmdMusic,
         icon: Icons.library_music_outlined,
         run: (c) => _go('/music'),
       ),
       CmdkCommand(
         id: 'goto.photos',
-        label: '照片',
+        label: l.shellNavCmdPhotos,
         icon: Icons.photo_library_outlined,
         run: (c) => _go('/photo'),
       ),
       CmdkCommand(
         id: 'goto.files',
-        label: '文件',
+        label: l.shellNavCmdFiles,
         icon: Icons.folder_outlined,
-        keywords: const ['浏览'],
+        keywords: [l.shellNavCmdFilesKeywordBrowse],
         run: (c) => _go('/files'),
       ),
       CmdkCommand(
         id: 'goto.ops',
-        label: '运维总览',
+        label: l.shellNavCmdOpsOverview,
         icon: Icons.dashboard_customize_outlined,
         run: (c) => _go('/ops'),
       ),
       CmdkCommand(
         id: 'goto.downloads',
-        label: '下载器',
+        label: l.shellNavCmdDownloader,
         icon: Icons.download_rounded,
         run: (c) => _go('/download'),
       ),
       CmdkCommand(
         id: 'goto.transfers',
-        label: '传输队列',
+        label: l.shellNavCmdTransferQueue,
         icon: Icons.swap_horiz_rounded,
         run: (c) => _go('/transfer'),
       ),
       CmdkCommand(
         id: 'goto.sources',
-        label: '数据源',
+        label: l.shellNavCmdSources,
         icon: Icons.lan_rounded,
         run: (c) => _go('/sources'),
       ),
       CmdkCommand(
         id: 'goto.pt',
-        label: 'PT 站点',
+        label: l.shellNavCmdPtSites,
         icon: Icons.flag_circle_outlined,
-        keywords: const ['pt', '种子', '资源站'],
+        keywords: [
+          'pt',
+          l.shellNavCmdPtKeywordTorrent,
+          l.shellNavCmdPtKeywordResourceSite,
+        ],
         run: (c) => _go('/pt'),
       ),
       CmdkCommand(
         id: 'goto.nastool',
-        label: '媒体自动化',
+        label: l.shellNavCmdMediaAutomation,
         icon: Icons.auto_awesome_outlined,
-        keywords: const ['nastool', '订阅', '追剧'],
+        keywords: [
+          'nastool',
+          l.shellNavCmdNastoolKeywordSubscribe,
+          l.shellNavCmdNastoolKeywordFollowShow,
+        ],
         run: (c) => _go('/nastool'),
       ),
     ]);
-    _registerSearchers();
+    _registerSearchers(l);
   }
 
   /// 注入跨域内容搜索器。query 非空时会被调用，搜索结果与静态命令一并显示。
-  void _registerSearchers() {
+  void _registerSearchers(AppLocalizations l) {
     // 视频：在影视库 movies / tvShowGroups / others 内按 title 模糊匹配。
     CmdkRegistry.instance.registerSearcher('video', (ref, query) {
       final state = ref.read(videoListProvider);
@@ -179,7 +187,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
             id: 'video.${m.sourceId}.${m.filePath}',
             label: m.title ?? m.fileName,
             icon: Icons.movie_outlined,
-            group: '影视',
+            group: l.shellNavGroupFilms,
             hint: m.year != null ? '${m.year}' : null,
             run: (ctx) {
               showDialog<void>(
@@ -235,12 +243,14 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
+    _registerCommands(l);
     final persistedSpace = ref.watch(desktopSpaceProvider);
     final hasMusic = ref.watch(currentMusicProvider) != null;
     final ambientOn = ref.watch(dynamicAmbientProvider);
     final lyricFloat = ref.watch(desktopLyricFloatProvider);
-    final hasActivity = ref.watch(activityItemsProvider).isNotEmpty;
+    final hasActivity = ref.watch(activeActivityCountProvider) > 0;
     final currentPath = GoRouterState.of(context).uri.path;
     // sidebar 空间跟随当前路由（媒体/控制台），避免启动时持久化空间与实际
     // 页面不一致；非空间路由（如 /mine 设置）回退到持久化空间。
@@ -284,8 +294,9 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                       space: space,
                       collapsed: _collapsed,
                       currentRoute: currentPath,
-                      mediaGroups: _mediaGroups(ref.watch(mediaCountsProvider)),
-                      opsGroups: _opsGroups(),
+                      mediaGroups:
+                          _mediaGroups(l, ref.watch(mediaCountsProvider)),
+                      opsGroups: _opsGroups(l),
                       onSpaceChanged: (s) {
                         ref.read(desktopSpaceProvider.notifier).set(s);
                         // 切换 space 时跳到该 space 首项。
@@ -302,7 +313,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                       child: Column(
                         children: [
                           DesktopTopbar(
-                            crumb: _crumbFor(currentPath),
+                            crumb: _crumbFor(l, currentPath),
                             activityBadge: hasActivity,
                             onToggleSidebar: () =>
                                 setState(() => _collapsed = !_collapsed),
@@ -375,9 +386,10 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
           return;
         }
         final notify = ref.read(downloadNotifyProvider);
+        final l = AppLocalizations.of(context);
         for (final t in completed) {
           if (_notifiedCompleted.add(t.uniqueKey) && notify) {
-            context.showSuccessToast('${t.name} 下载完成');
+            context.showSuccessToast(l.shellNavToastDownloadComplete(t.name));
           }
         }
       },
@@ -386,122 +398,122 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
 
   // ---- nav items ----
 
-  List<NavGroup> _mediaGroups(MediaCounts counts) => [
-        const NavGroup(items: [
+  List<NavGroup> _mediaGroups(AppLocalizations l, MediaCounts counts) => [
+        NavGroup(items: [
           NavEntry(
             id: 'home',
             route: '/home',
-            label: '概览',
+            label: l.shellNavEntryHome,
             icon: Icons.home_outlined,
           ),
         ]),
-        NavGroup(label: '我的媒体', items: [
+        NavGroup(label: l.shellNavGroupMyMedia, items: [
           NavEntry(
             id: 'films',
             route: '/video',
-            label: '影视',
+            label: l.shellNavEntryFilms,
             icon: Icons.movie_outlined,
             count: formatCountBadge(counts.video),
           ),
-          const NavEntry(
+          NavEntry(
             id: 'live',
             route: '/live',
-            label: '直播',
+            label: l.shellNavEntryLive,
             icon: Icons.cast_rounded,
             live: true,
           ),
           NavEntry(
             id: 'music',
             route: '/music',
-            label: '音乐',
+            label: l.shellNavEntryMusic,
             icon: Icons.library_music_outlined,
             count: formatCountBadge(counts.music),
           ),
           NavEntry(
             id: 'photos',
             route: '/photo',
-            label: '照片',
+            label: l.shellNavEntryPhotos,
             icon: Icons.photo_library_outlined,
             count: formatCountBadge(counts.photo),
           ),
           NavEntry(
             id: 'reading',
             route: '/reading',
-            label: '阅读',
+            label: l.shellNavEntryReading,
             icon: Icons.menu_book_outlined,
             count: formatCountBadge(counts.reading),
           ),
         ]),
-        const NavGroup(label: '底层', items: [
+        NavGroup(label: l.shellNavGroupFoundation, items: [
           NavEntry(
             id: 'files',
             route: '/files',
-            label: '文件',
+            label: l.shellNavEntryFiles,
             icon: Icons.folder_outlined,
           ),
         ]),
       ];
 
-  List<NavGroup> _opsGroups() => const [
+  List<NavGroup> _opsGroups(AppLocalizations l) => [
         NavGroup(items: [
           NavEntry(
             id: 'ops',
             route: '/ops',
-            label: '运维总览',
+            label: l.shellNavEntryOpsOverview,
             icon: Icons.dashboard_customize_outlined,
           ),
         ]),
-        NavGroup(label: '传输与下载', items: [
+        NavGroup(label: l.shellNavGroupTransferDownload, items: [
           NavEntry(
             id: 'downloads',
             route: '/download',
-            label: '下载器',
+            label: l.shellNavEntryDownloader,
             icon: Icons.download_rounded,
           ),
           NavEntry(
             id: 'transfers',
             route: '/transfer',
-            label: '传输队列',
+            label: l.shellNavEntryTransferQueue,
             icon: Icons.swap_horiz_rounded,
           ),
         ]),
-        NavGroup(label: '资源与自动化', items: [
+        NavGroup(label: l.shellNavGroupResourceAutomation, items: [
           NavEntry(
             id: 'pt',
             route: '/pt',
-            label: 'PT 站点',
+            label: l.shellNavEntryPtSites,
             icon: Icons.flag_circle_outlined,
           ),
           NavEntry(
             id: 'nastool',
             route: '/nastool',
-            label: '媒体自动化',
+            label: l.shellNavEntryMediaAutomation,
             icon: Icons.auto_awesome_outlined,
           ),
           NavEntry(
             id: 'sources',
             route: '/sources',
-            label: '数据源',
+            label: l.shellNavEntrySources,
             icon: Icons.lan_rounded,
           ),
         ]),
       ];
 
-  List<String> _crumbFor(String path) {
-    const map = <String, List<String>>{
-      '/home': ['媒体', '概览'],
-      '/video': ['媒体', '影视'],
-      '/live': ['媒体', '直播'],
-      '/music': ['媒体', '音乐'],
-      '/photo': ['媒体', '照片'],
-      '/reading': ['媒体', '阅读'],
-      '/mine': ['', '设置'],
-      '/ops': ['控制台', '运维总览'],
-      '/download': ['控制台', '下载器'],
-      '/transfer': ['控制台', '传输队列'],
-      '/sources': ['控制台', '数据源'],
-      '/pt': ['控制台', 'PT 站点'],
-      '/nastool': ['控制台', '媒体自动化'],
+  List<String> _crumbFor(AppLocalizations l, String path) {
+    final map = <String, List<String>>{
+      '/home': [l.shellNavCrumbMedia, l.shellNavEntryHome],
+      '/video': [l.shellNavCrumbMedia, l.shellNavEntryFilms],
+      '/live': [l.shellNavCrumbMedia, l.shellNavEntryLive],
+      '/music': [l.shellNavCrumbMedia, l.shellNavEntryMusic],
+      '/photo': [l.shellNavCrumbMedia, l.shellNavEntryPhotos],
+      '/reading': [l.shellNavCrumbMedia, l.shellNavEntryReading],
+      '/mine': ['', l.shellNavCrumbSettings],
+      '/ops': [l.shellNavCrumbConsole, l.shellNavEntryOpsOverview],
+      '/download': [l.shellNavCrumbConsole, l.shellNavEntryDownloader],
+      '/transfer': [l.shellNavCrumbConsole, l.shellNavEntryTransferQueue],
+      '/sources': [l.shellNavCrumbConsole, l.shellNavEntrySources],
+      '/pt': [l.shellNavCrumbConsole, l.shellNavEntryPtSites],
+      '/nastool': [l.shellNavCrumbConsole, l.shellNavEntryMediaAutomation],
     };
     for (final entry in map.entries) {
       if (path.startsWith(entry.key)) {
