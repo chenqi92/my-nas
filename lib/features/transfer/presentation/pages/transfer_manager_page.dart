@@ -49,6 +49,9 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
     final uploadTasks = ref.watch(uploadTasksProvider);
     final downloadTasks = ref.watch(downloadTasksProvider);
     final cacheTasks = ref.watch(cacheTasksProvider);
+    // 缓存角标与缓存列表同口径（均取 allCachedItemsProvider），不再用已完成
+    // 缓存「任务」计数（任务可能已清除而缓存项仍在）。
+    final cachedCount = ref.watch(allCachedItemsProvider).valueOrNull?.length ?? 0;
     final isDesktop = context.isDesktopLayout;
 
     final actions = <Widget>[
@@ -114,6 +117,11 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
               Expanded(
                 child: state.isLoading
                     ? const Center(child: CircularProgressIndicator())
+                    : state.error != null
+                    ? _TransferError(
+                        message: state.error!,
+                        onRetry: () => ref.invalidate(transferTasksProvider),
+                      )
                     : Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -122,7 +130,7 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
                     child: _buildDesktopSidebar(
                       downloadCount: downloadTasks.where(_isActive).length,
                       uploadCount: uploadTasks.where(_isActive).length,
-                      cacheCount: cacheTasks.where((t) => t.isCompleted).length,
+                      cacheCount: cachedCount,
                     ),
                   ),
                   VerticalDivider(
@@ -153,7 +161,7 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
                                 .where((t) => !t.isCompleted)
                                 .toList(),
                             onDeleteCache: _handleDeleteCacheItem,
-                            onClearAll: () => _handleClearAllCache(null),
+                            onClearAll: _showClearCacheConfirmDialog,
                           ),
                         ],
                       ),
@@ -189,7 +197,7 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
             _buildTab(
               icon: Icons.storage,
               label: '缓存',
-              count: cacheTasks.where((t) => t.isCompleted).length,
+              count: cachedCount,
             ),
           ],
         ),
@@ -197,7 +205,12 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
       ),
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
+          : state.error != null
+              ? _TransferError(
+                  message: state.error!,
+                  onRetry: () => ref.invalidate(transferTasksProvider),
+                )
+              : TabBarView(
               controller: _tabController,
               children: [
                 _buildTaskList(
@@ -213,7 +226,7 @@ class _TransferManagerPageState extends ConsumerState<TransferManagerPage>
                 CacheListView(
                   activeTasks: cacheTasks.where((t) => !t.isCompleted).toList(),
                   onDeleteCache: _handleDeleteCacheItem,
-                  onClearAll: () => _handleClearAllCache(null),
+                  onClearAll: _showClearCacheConfirmDialog,
                 ),
               ],
             ),
@@ -513,6 +526,35 @@ class _DesktopTransferEntry extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 传输服务初始化失败时的占位（带重试），替代静默空列表。
+class _TransferError extends StatelessWidget {
+  const _TransferError({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.error_outline_rounded, size: 40, color: scheme.error),
+          const SizedBox(height: 12),
+          Text(message, style: TextStyle(color: scheme.onSurfaceVariant)),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('重试'),
+          ),
+        ],
       ),
     );
   }

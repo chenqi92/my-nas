@@ -380,6 +380,22 @@ class TransferService {
   }
 
   /// 执行任务
+  /// 任务是否已被用户暂停/取消（传输循环据此中断）。
+  bool _isInterrupted(TransferTask task) =>
+      task.status == TransferStatus.paused ||
+      task.status == TransferStatus.cancelled;
+
+  /// 取消时清理未完成的本地文件（上传写在远端，不在此清理）。
+  Future<void> _cleanupPartialFile(TransferTask task) async {
+    if (task.type == TransferType.upload) return;
+    try {
+      final f = File(task.targetPath);
+      if (await f.exists()) await f.delete();
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, 'cleanup partial transfer file');
+    }
+  }
+
   Future<void> _executeTask(TransferTask task) async {
     _activeTransfers++;
     task.status = TransferStatus.transferring;
@@ -396,6 +412,8 @@ class TransferService {
           await _executeCache(task);
       }
 
+      // 仅当传输自然结束才置完成；若期间被暂停/取消会在下方分支处理，
+      // 不再无条件覆盖用户刚设置的 paused/cancelled 状态。
       task..status = TransferStatus.completed
       ..completedAt = DateTime.now();
 
@@ -421,6 +439,14 @@ class TransferService {
       }
 
       logger.i('TransferService: 任务完成 ${task.fileName}');
+    } on _TransferInterrupted {
+      // 用户暂停/取消：status 已由 pauseTask/cancelTask 设置，不覆盖。
+      // 取消的下载/缓存清理未完成文件，便于重试时从头开始。
+      if (task.status == TransferStatus.cancelled) {
+        await _cleanupPartialFile(task);
+      }
+      logger.i(
+          'TransferService: 任务中断 ${task.fileName} -> ${task.status.name}');
     } catch (e, st) {
       task..status = TransferStatus.failed
       ..error = e.toString();
@@ -467,15 +493,26 @@ class TransferService {
     }
 
     // 上传文件
+    var lastBytes = 0;
+    var lastTime = DateTime.now();
     await fs.upload(
       localFile.path,
       p.dirname(task.targetPath),
       fileName: task.fileName,
       onProgress: (sent, total) {
+        if (_isInterrupted(task)) throw const _TransferInterrupted();
         task.transferredBytes = sent;
+        final now = DateTime.now();
+        final dtMs = now.difference(lastTime).inMilliseconds;
+        if (dtMs >= 500) {
+          task.speed = ((sent - lastBytes) * 1000 / dtMs).round();
+          lastBytes = sent;
+          lastTime = now;
+        }
         _notifyTaskChanged(task);
       },
     );
+    task.speed = 0;
   }
 
   /// 执行下载
@@ -499,13 +536,28 @@ class TransferService {
     final sink = file.openWrite();
 
     var downloaded = 0;
+    var lastBytes = 0;
+    var lastTime = DateTime.now();
     await for (final chunk in stream) {
+      if (_isInterrupted(task)) {
+        await sink.close();
+        throw const _TransferInterrupted();
+      }
       sink.add(chunk);
       downloaded += chunk.length;
       task.transferredBytes = downloaded;
+      // 每 ~500ms 采样一次瞬时速度（字节/秒）。
+      final now = DateTime.now();
+      final dtMs = now.difference(lastTime).inMilliseconds;
+      if (dtMs >= 500) {
+        task.speed = ((downloaded - lastBytes) * 1000 / dtMs).round();
+        lastBytes = downloaded;
+        lastTime = now;
+      }
       _notifyTaskChanged(task);
     }
 
+    task.speed = 0;
     await sink.close();
 
     // 如果是照片，保存到相册
@@ -537,13 +589,28 @@ class TransferService {
     final sink = file.openWrite();
 
     var downloaded = 0;
+    var lastBytes = 0;
+    var lastTime = DateTime.now();
     await for (final chunk in stream) {
+      if (_isInterrupted(task)) {
+        await sink.close();
+        throw const _TransferInterrupted();
+      }
       sink.add(chunk);
       downloaded += chunk.length;
       task.transferredBytes = downloaded;
+      // 每 ~500ms 采样一次瞬时速度（字节/秒）。
+      final now = DateTime.now();
+      final dtMs = now.difference(lastTime).inMilliseconds;
+      if (dtMs >= 500) {
+        task.speed = ((downloaded - lastBytes) * 1000 / dtMs).round();
+        lastBytes = downloaded;
+        lastTime = now;
+      }
       _notifyTaskChanged(task);
     }
 
+    task.speed = 0;
     await sink.close();
   }
 
@@ -587,4 +654,10 @@ class TransferService {
     await _taskController.close();
     await _tasksController.close();
   }
+}
+
+/// 内部哨兵异常：传输循环检测到任务被用户暂停/取消时抛出，
+/// 让 [_executeTask] 区分「用户中断」与「真实失败」。
+class _TransferInterrupted implements Exception {
+  const _TransferInterrupted();
 }
