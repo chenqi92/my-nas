@@ -14,6 +14,7 @@ import 'package:my_nas/features/comic/presentation/pages/comic_list_page.dart';
 import 'package:my_nas/features/comic/presentation/pages/comic_reader_page.dart';
 import 'package:my_nas/features/note/presentation/pages/note_list_page.dart';
 import 'package:my_nas/features/note/presentation/widgets/note_tree_widget.dart';
+import 'package:my_nas/features/reading/presentation/providers/reading_progress_provider.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -28,8 +29,7 @@ class ReadingDesktopPage extends ConsumerStatefulWidget {
   const ReadingDesktopPage({super.key});
 
   @override
-  ConsumerState<ReadingDesktopPage> createState() =>
-      _ReadingDesktopPageState();
+  ConsumerState<ReadingDesktopPage> createState() => _ReadingDesktopPageState();
 }
 
 class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
@@ -44,13 +44,18 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     final bookState = ref.watch(bookListProvider);
     final noteState = ref.watch(notePageProvider);
 
-    final comics =
-        comicState is ComicListLoaded ? comicState.comics : const <ComicItem>[];
-    final books =
-        bookState is BookListLoaded ? bookState.allBooks : const <BookEntity>[];
+    final comics = comicState is ComicListLoaded
+        ? comicState.comics
+        : const <ComicItem>[];
+    final books = bookState is BookListLoaded
+        ? bookState.allBooks
+        : const <BookEntity>[];
     final notes = noteState is NotePageLoaded
         ? noteState.treeNodes
         : const <NoteTreeNode>[];
+    final progressMap =
+        ref.watch(readingProgressMapProvider).valueOrNull ??
+        const <String, double>{};
 
     final showComics = _tab == '全部' || _tab == '漫画';
     final showBooks = _tab == '全部' || _tab == '图书';
@@ -89,12 +94,17 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
         children: [
           if (showComics && comics.isNotEmpty) ...[
             if (_tab == '全部') _SectionHeader(l.readingPageSectionComic),
-            _ComicShelf(comics: comics, ref: ref, onOpen: _openComic),
+            _ComicShelf(
+              comics: comics,
+              ref: ref,
+              progress: progressMap,
+              onOpen: _openComic,
+            ),
             const SizedBox(height: 22),
           ],
           if (showBooks && books.isNotEmpty) ...[
             if (_tab == '全部') _SectionHeader(l.readingPageSectionBook),
-            _BookShelf(books: books, onOpen: _openBook),
+            _BookShelf(books: books, progress: progressMap, onOpen: _openBook),
             const SizedBox(height: 22),
           ],
           if (showNotes && notes.isNotEmpty) ...[
@@ -112,11 +122,11 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
   }
 
   String _tabLabel(AppLocalizations l, String tab) => switch (tab) {
-        '漫画' => l.readingPageTabComic,
-        '图书' => l.readingPageTabBook,
-        '笔记' => l.readingPageTabNote,
-        _ => l.readingPageTabAll,
-      };
+    '漫画' => l.readingPageTabComic,
+    '图书' => l.readingPageTabBook,
+    '笔记' => l.readingPageTabNote,
+    _ => l.readingPageTabAll,
+  };
 
   /// 空内容时区分三态：加载中 → 转圈；出错 → 错误 + 重试；真空 → 引导文案。
   Widget _emptyOrStatus(
@@ -125,10 +135,12 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     NotePageState noteState,
   ) {
     final l = AppLocalizations.of(context);
-    final anyLoading = comicState is ComicListLoading ||
+    final anyLoading =
+        comicState is ComicListLoading ||
         bookState is BookListLoading ||
         noteState is NotePageLoading;
-    final anyError = comicState is ComicListError ||
+    final anyError =
+        comicState is ComicListError ||
         bookState is BookListError ||
         noteState is NotePageError;
     if (anyLoading) {
@@ -147,8 +159,10 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
             children: [
               Icon(Icons.error_outline_rounded, size: 38, color: t.err),
               const SizedBox(height: 12),
-              Text(l.readingPageLoadPartialFailed,
-                  style: TextStyle(fontSize: 13, color: t.text2)),
+              Text(
+                l.readingPageLoadPartialFailed,
+                style: TextStyle(fontSize: 13, color: t.text2),
+              ),
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: () {
@@ -213,14 +227,18 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
         modifiedTime: book.modifiedTime,
       );
       final url = await connection.adapter.fileSystem.getFileUrl(file.path);
-      await BookDatabaseService()
-          .updateLastReadTime(book.sourceId, book.filePath);
+      await BookDatabaseService().updateLastReadTime(
+        book.sourceId,
+        book.filePath,
+      );
       final ctx = rootNavigatorKey.currentContext;
       if (ctx == null) return;
       await BookNavigator.instance.openBook(
         ctx,
         BookItem.fromFileItem(file, url, sourceId: book.sourceId),
       );
+      // 从阅读器返回后刷新进度条。
+      ref.invalidate(readingProgressMapProvider);
     } on Object catch (e) {
       rootNavigatorKey.currentContext?.showErrorToast(
         l.readingPageOpenBookFailed(e.toString()),
@@ -228,12 +246,14 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     }
   }
 
-  void _openComic(ComicItem comic) {
+  Future<void> _openComic(ComicItem comic) async {
     final ctx = rootNavigatorKey.currentContext;
     if (ctx == null) return;
-    Navigator.of(ctx).push(
+    await Navigator.of(ctx).push(
       MaterialPageRoute<void>(builder: (_) => ComicReaderPage(comic: comic)),
     );
+    // 从阅读器返回后刷新进度条。
+    ref.invalidate(readingProgressMapProvider);
   }
 
   void _pushPage(Widget page) {
@@ -269,10 +289,12 @@ class _ComicShelf extends StatelessWidget {
   const _ComicShelf({
     required this.comics,
     required this.ref,
+    required this.progress,
     required this.onOpen,
   });
   final List<ComicItem> comics;
   final WidgetRef ref;
+  final Map<String, double> progress;
   final ValueChanged<ComicItem> onOpen;
 
   @override
@@ -298,6 +320,7 @@ class _ComicShelf extends StatelessWidget {
           streamPath: c.coverPath,
           fileSystem: fs,
           cacheKey: '${c.sourceId}_${c.coverPath}',
+          progress: progress['${c.sourceId}_${c.folderPath}'],
           onTap: () => onOpen(c),
         );
       },
@@ -306,34 +329,38 @@ class _ComicShelf extends StatelessWidget {
 }
 
 class _BookShelf extends StatelessWidget {
-  const _BookShelf({required this.books, required this.onOpen});
+  const _BookShelf({
+    required this.books,
+    required this.progress,
+    required this.onOpen,
+  });
   final List<BookEntity> books;
+  final Map<String, double> progress;
   final ValueChanged<BookEntity> onOpen;
 
   @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 180,
-        childAspectRatio: 0.62,
-        crossAxisSpacing: 18,
-        mainAxisSpacing: 18,
-      ),
-      itemCount: books.length,
-      itemBuilder: (_, i) {
-        final b = books[i];
-        return _Cover(
-          title: b.displayName,
-          subtitle: b.displayAuthor,
-          localPath: b.coverPath,
-          badge: b.format.name.toUpperCase(),
-          onTap: () => onOpen(b),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => GridView.builder(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+      maxCrossAxisExtent: 180,
+      childAspectRatio: 0.62,
+      crossAxisSpacing: 18,
+      mainAxisSpacing: 18,
+    ),
+    itemCount: books.length,
+    itemBuilder: (_, i) {
+      final b = books[i];
+      return _Cover(
+        title: b.displayName,
+        subtitle: b.displayAuthor,
+        localPath: b.coverPath,
+        badge: b.format.name.toUpperCase(),
+        progress: progress[b.uniqueKey],
+        onTap: () => onOpen(b),
+      );
+    },
+  );
 }
 
 class _NoteList extends StatelessWidget {
@@ -404,65 +431,65 @@ class _NoteRow extends StatelessWidget {
     final detail = isFolder
         ? l.readingPageNoteItemCount(node.children.length)
         : node.isTaskFile
-            ? l.readingPageNoteTaskList
-            : 'Markdown';
+        ? l.readingPageNoteTaskList
+        : 'Markdown';
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Container(
-      decoration: BoxDecoration(
-        border: isLast
-            ? null
-            : Border(bottom: BorderSide(color: t.hairline)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: t.insetBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              isFolder
-                  ? Icons.folder_outlined
-                  : node.isTaskFile
+          decoration: BoxDecoration(
+            border: isLast
+                ? null
+                : Border(bottom: BorderSide(color: t.hairline)),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: t.insetBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  isFolder
+                      ? Icons.folder_outlined
+                      : node.isTaskFile
                       ? Icons.checklist_rounded
                       : Icons.menu_book_rounded,
-              size: 16,
-              color: t.accentBright,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  node.displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: t.text0,
-                  ),
+                  size: 16,
+                  color: t.accentBright,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  detail,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, color: t.text2),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      node.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: t.text0,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      detail,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: t.text2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
         ),
       ),
     );
@@ -478,6 +505,7 @@ class _Cover extends StatefulWidget {
     this.fileSystem,
     this.cacheKey,
     this.badge,
+    this.progress,
     this.onTap,
   });
 
@@ -488,6 +516,9 @@ class _Cover extends StatefulWidget {
   final NasFileSystem? fileSystem;
   final String? cacheKey;
   final String? badge;
+
+  /// 阅读进度 0..1，null / 0 表示不展示进度条。
+  final double? progress;
   final VoidCallback? onTap;
 
   @override
@@ -544,7 +575,9 @@ class _CoverState extends State<_Cover> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: _hover ? 0.55 : 0.4),
+                      color: Colors.black.withValues(
+                        alpha: _hover ? 0.55 : 0.4,
+                      ),
                       blurRadius: _hover ? 28 : 16,
                       offset: const Offset(0, 12),
                     ),
@@ -566,8 +599,10 @@ class _CoverState extends State<_Cover> {
                         Positioned(
                           top: 8,
                           left: 8,
-                          child: AppTag(widget.badge!,
-                              variant: TagVariant.neutral),
+                          child: AppTag(
+                            widget.badge!,
+                            variant: TagVariant.neutral,
+                          ),
                         ),
                       if (_hover)
                         const DecoratedBox(
@@ -580,8 +615,25 @@ class _CoverState extends State<_Cover> {
                             ),
                           ),
                         ),
-                      // 设计稿封面底部有 accent 进度条；但漫画/图书 model 无逐项
-                      // 阅读进度字段，无法真实填充，故省略（data-blocked）。
+                      // 设计稿封面底部 accent 进度条：取 ReadingProgressService
+                      // 的逐项进度（见 readingProgressMapProvider）。
+                      if (widget.progress != null && widget.progress! > 0)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: ColoredBox(
+                            color: Colors.black.withValues(alpha: 0.35),
+                            child: SizedBox(
+                              height: 3,
+                              child: FractionallySizedBox(
+                                alignment: Alignment.centerLeft,
+                                widthFactor: widget.progress!.clamp(0.0, 1.0),
+                                child: ColoredBox(color: t.accent),
+                              ),
+                            ),
+                          ),
+                        ),
                       Material(
                         color: Colors.transparent,
                         child: InkWell(onTap: widget.onTap),
