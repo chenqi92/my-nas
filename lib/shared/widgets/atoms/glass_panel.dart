@@ -33,6 +33,7 @@ class GlassPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final r = radius ?? DesignTokens.radiusLg;
     final bg = strong ? t.panelBgStrong : t.panelBg;
     final borderRadius = BorderRadius.circular(r);
@@ -44,13 +45,16 @@ class GlassPanel extends StatelessWidget {
         color: bg,
         borderRadius: borderRadius,
         border: border ? Border.all(color: t.panelBorder, width: 1) : null,
+        // 经典模式才需要阴影；收紧为带负 spread 的轻柔投影，避免浅色下
+        // 出现过重的深色光晕。
         boxShadow: t.panelBlurSigma > 0
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.32),
-                  blurRadius: 36,
-                  offset: const Offset(0, 18),
+                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.10),
+                  blurRadius: isDark ? 28 : 22,
+                  offset: const Offset(0, 9),
+                  spreadRadius: -10,
                 ),
               ],
       ),
