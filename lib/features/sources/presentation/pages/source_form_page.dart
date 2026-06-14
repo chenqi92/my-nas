@@ -25,10 +25,7 @@ import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/source_defaults_provider.dart';
 
 /// 表单模式
-enum SourceFormMode {
-  create,
-  edit,
-}
+enum SourceFormMode { create, edit }
 
 /// 服务类源连接验证未实现的异常
 ///
@@ -48,7 +45,8 @@ class _ConnectionValidationNotImplementedException implements Exception {
 /// 根据源类型动态生成表单，支持创建和编辑模式
 class SourceFormPage extends ConsumerStatefulWidget {
   const SourceFormPage({
-    required this.sourceType, super.key,
+    required this.sourceType,
+    super.key,
     this.existingSource,
     this.initialValues,
     this.popTwice = false,
@@ -160,7 +158,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     if (!mounted) return;
 
     final sourceManager = ref.read(sourceManagerProvider);
-    final credential = await sourceManager.getCredential(widget.existingSource!.id);
+    final credential = await sourceManager.getCredential(
+      widget.existingSource!.id,
+    );
 
     if (!mounted) return;
 
@@ -186,7 +186,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         if (widget.existingSource != null) {
           // 编辑模式：从现有源获取值
           initialValue = _getValueFromSource(widget.existingSource!, field.key);
-        } else if (widget.initialValues != null && widget.initialValues!.containsKey(field.key)) {
+        } else if (widget.initialValues != null &&
+            widget.initialValues!.containsKey(field.key)) {
           // 从发现的设备预填
           initialValue = widget.initialValues![field.key];
         } else if (field.key == 'autoConnect') {
@@ -368,7 +369,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                           key!.currentContext!,
                           duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
-                          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+                          alignmentPolicy:
+                              ScrollPositionAlignmentPolicy.keepVisibleAtStart,
                         );
                       }
                     });
@@ -386,7 +388,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                     children: [
                       for (int i = 0; i < visibleFields.length; i++) ...[
                         _buildFormField(visibleFields[i], theme),
-                        if (i < visibleFields.length - 1) const SizedBox(height: 16),
+                        if (i < visibleFields.length - 1)
+                          const SizedBox(height: 16),
                       ],
                     ],
                   ),
@@ -441,98 +444,101 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     }
   }
 
-  Widget _buildTextField(SourceFormField field, ThemeData theme) => TextFormField(
-      controller: _controllers[field.key],
-      decoration: InputDecoration(
-        labelText: field.label,
-        hintText: field.placeholder,
-        helperText: field.helpText,
-        helperMaxLines: 2,
-        prefixIcon: _getFieldIcon(field.key),
-      ),
-      validator: (value) {
-        if (field.required && (value == null || value.isEmpty)) {
-          return '请输入${field.label}';
-        }
-        return field.validator?.call(value);
-      },
-      onChanged: (value) {
-        setState(() {
-          _formValues[field.key] = value;
-        });
-      },
-    );
-
-  Widget _buildPasswordField(SourceFormField field, ThemeData theme) => TextFormField(
-      controller: _controllers[field.key],
-      obscureText: _obscurePasswords,
-      decoration: InputDecoration(
-        labelText: widget.mode == SourceFormMode.edit
-            ? '${field.label}（留空保持不变）'
-            : field.label,
-        hintText: field.placeholder,
-        helperText: field.helpText,
-        helperMaxLines: 2,
-        prefixIcon: _getFieldIcon(field.key),
-        suffixIcon: IconButton(
-          icon: Icon(
-            _obscurePasswords
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
-          ),
-          onPressed: () {
-            setState(() {
-              _obscurePasswords = !_obscurePasswords;
-            });
-          },
+  Widget _buildTextField(SourceFormField field, ThemeData theme) =>
+      TextFormField(
+        controller: _controllers[field.key],
+        decoration: InputDecoration(
+          labelText: field.label,
+          hintText: field.placeholder,
+          helperText: field.helpText,
+          helperMaxLines: 2,
+          prefixIcon: _getFieldIcon(field.key),
         ),
-      ),
-      validator: (value) {
-        if (field.required && (value == null || value.isEmpty)) {
-          // 编辑模式下密码可以为空（保持不变）
-          if (widget.mode == SourceFormMode.edit) {
-            return null;
+        validator: (value) {
+          if (field.required && (value == null || value.isEmpty)) {
+            return '请输入${field.label}';
           }
-          return '请输入${field.label}';
-        }
-        return field.validator?.call(value);
-      },
-      onChanged: (value) {
-        setState(() {
-          _formValues[field.key] = value;
-        });
-      },
-    );
+          return field.validator?.call(value);
+        },
+        onChanged: (value) {
+          setState(() {
+            _formValues[field.key] = value;
+          });
+        },
+      );
 
-  Widget _buildNumberField(SourceFormField field, ThemeData theme) => TextFormField(
-      controller: _controllers[field.key],
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      decoration: InputDecoration(
-        labelText: field.label,
-        hintText: field.placeholder,
-        helperText: field.helpText,
-        helperMaxLines: 2,
-        prefixIcon: _getFieldIcon(field.key),
-      ),
-      validator: (value) {
-        if (field.required && (value == null || value.isEmpty)) {
-          return '请输入${field.label}';
-        }
-        if (value != null && value.isNotEmpty) {
-          final number = int.tryParse(value);
-          if (number == null) {
-            return '请输入有效的数字';
+  Widget _buildPasswordField(SourceFormField field, ThemeData theme) =>
+      TextFormField(
+        controller: _controllers[field.key],
+        obscureText: _obscurePasswords,
+        decoration: InputDecoration(
+          labelText: widget.mode == SourceFormMode.edit
+              ? '${field.label}（留空保持不变）'
+              : field.label,
+          hintText: field.placeholder,
+          helperText: field.helpText,
+          helperMaxLines: 2,
+          prefixIcon: _getFieldIcon(field.key),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePasswords
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+            ),
+            onPressed: () {
+              setState(() {
+                _obscurePasswords = !_obscurePasswords;
+              });
+            },
+          ),
+        ),
+        validator: (value) {
+          if (field.required && (value == null || value.isEmpty)) {
+            // 编辑模式下密码可以为空（保持不变）
+            if (widget.mode == SourceFormMode.edit) {
+              return null;
+            }
+            return '请输入${field.label}';
           }
-        }
-        return field.validator?.call(value);
-      },
-      onChanged: (value) {
-        setState(() {
-          _formValues[field.key] = value;
-        });
-      },
-    );
+          return field.validator?.call(value);
+        },
+        onChanged: (value) {
+          setState(() {
+            _formValues[field.key] = value;
+          });
+        },
+      );
+
+  Widget _buildNumberField(SourceFormField field, ThemeData theme) =>
+      TextFormField(
+        controller: _controllers[field.key],
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: InputDecoration(
+          labelText: field.label,
+          hintText: field.placeholder,
+          helperText: field.helpText,
+          helperMaxLines: 2,
+          prefixIcon: _getFieldIcon(field.key),
+        ),
+        validator: (value) {
+          if (field.required && (value == null || value.isEmpty)) {
+            return '请输入${field.label}';
+          }
+          if (value != null && value.isNotEmpty) {
+            final number = int.tryParse(value);
+            if (number == null) {
+              return '请输入有效的数字';
+            }
+          }
+          return field.validator?.call(value);
+        },
+        onChanged: (value) {
+          setState(() {
+            _formValues[field.key] = value;
+          });
+        },
+      );
 
   Widget _buildToggleField(SourceFormField field, ThemeData theme) {
     final value = _formValues[field.key] == 'true';
@@ -563,10 +569,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         prefixIcon: _getFieldIcon(field.key),
       ),
       items: field.options
-          ?.map((option) => DropdownMenuItem(
-                value: option,
-                child: Text(option),
-              ))
+          ?.map(
+            (option) => DropdownMenuItem(value: option, child: Text(option)),
+          )
           .toList(),
       onChanged: (value) {
         if (value != null) {
@@ -616,10 +621,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         Row(
           children: [
             Expanded(
-              child: Text(
-                field.label,
-                style: theme.textTheme.titleSmall,
-              ),
+              child: Text(field.label, style: theme.textTheme.titleSmall),
             ),
             TextButton.icon(
               onPressed: () {
@@ -758,7 +760,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: theme.colorScheme.outline.withValues(alpha: 0.2),
@@ -766,10 +770,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.info_outline,
-              color: theme.colorScheme.primary,
-            ),
+            Icon(Icons.info_outline, color: theme.colorScheme.primary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -793,16 +794,11 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         decoration: BoxDecoration(
           color: Colors.green.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.green.withValues(alpha: 0.3),
-          ),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.check_circle,
-              color: Colors.green,
-            ),
+            const Icon(Icons.check_circle, color: Colors.green),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -882,16 +878,11 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         decoration: BoxDecoration(
           color: Colors.green.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.green.withValues(alpha: 0.3),
-          ),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.check_circle,
-              color: Colors.green,
-            ),
+            const Icon(Icons.check_circle, color: Colors.green),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -914,18 +905,13 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                 ],
               ),
             ),
-            TextButton(
-              onPressed: _resetPlexAuth,
-              child: const Text('重新授权'),
-            ),
+            TextButton(onPressed: _resetPlexAuth, child: const Text('重新授权')),
           ],
         ),
       );
     }
 
-    return PlexAuthWidget(
-      onResult: _handlePlexAuthResult,
-    );
+    return PlexAuthWidget(onResult: _handlePlexAuthResult);
   }
 
   /// 处理 Plex PIN 认证结果
@@ -966,23 +952,21 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
   }
 
   Widget _buildSubmitButton(ThemeData theme) => SizedBox(
-      width: double.infinity,
-      child: FilledButton(
-        onPressed: _isSubmitting || _isTesting ? null : _submit,
-        child: _isSubmitting
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : Text(
-                widget.mode == SourceFormMode.edit ? '保存' : '添加并连接',
+    width: double.infinity,
+    child: FilledButton(
+      onPressed: _isSubmitting || _isTesting ? null : _submit,
+      child: _isSubmitting
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
               ),
-      ),
-    );
+            )
+          : Text(widget.mode == SourceFormMode.edit ? '保存' : '添加并连接'),
+    ),
+  );
 
   Future<void> _testConnection() async {
     if (!_formKey.currentState!.validate()) {
@@ -1125,10 +1109,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             final username = source.username;
             final password = _formValues['password'] as String? ?? '';
             final result = await api.login(username, password);
-            return result.when(
-              success: (_, _) => true,
-              failure: (_) => false,
-            );
+            return result.when(success: (_, _) => true, failure: (_) => false);
           }
         } finally {
           api.dispose();
@@ -1149,7 +1130,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         }
       case SourceType.transmission:
         final trPassword = _formValues['password'] as String? ?? '';
-        final rpcPath = _formValues['rpcPath'] as String? ?? '/transmission/rpc';
+        final rpcPath =
+            _formValues['rpcPath'] as String? ?? '/transmission/rpc';
         final trApi = TransmissionApi(
           baseUrl: source.baseUrl,
           rpcPath: rpcPath,
@@ -1213,10 +1195,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             );
           }
           final result = await jellyfinAdapter.connect(config);
-          return result.when(
-            success: (_) => true,
-            failure: (_) => false,
-          );
+          return result.when(success: (_) => true, failure: (_) => false);
         } finally {
           await jellyfinAdapter.dispose();
         }
@@ -1242,10 +1221,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             apiKey: plexToken,
           );
           final result = await plexAdapter.connect(config);
-          return result.when(
-            success: (_) => true,
-            failure: (_) => false,
-          );
+          return result.when(success: (_) => true, failure: (_) => false);
         } finally {
           await plexAdapter.dispose();
         }
@@ -1269,21 +1245,20 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             );
           }
           final result = await embyAdapter.connect(config);
-          return result.when(
-            success: (_) => true,
-            failure: (_) => false,
-          );
+          return result.when(success: (_) => true, failure: (_) => false);
         } finally {
           await embyAdapter.dispose();
         }
       case SourceType.trakt:
         // Trakt OAuth 验证待实现；用类型化异常告知调用方区分"未实现" vs "失败"
         throw _ConnectionValidationNotImplementedException(
-            source.type.displayName);
+          source.type.displayName,
+        );
       default:
         // 其它未列出的服务类型同样标记为"未实现自动验证"，让 UI 给出友好提示
         throw _ConnectionValidationNotImplementedException(
-            source.type.displayName);
+          source.type.displayName,
+        );
     }
   }
 
@@ -1299,9 +1274,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         ),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -1318,9 +1291,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         ),
         backgroundColor: AppColors.warning,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -1337,9 +1308,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         ),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -1488,9 +1457,24 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         _showErrorSnackBar('连接失败，请检查认证信息');
       }
     } on _ConnectionValidationNotImplementedException catch (e) {
-      // 该源类型尚未实现自动验证：友好提示"暂不支持"
+      // 该源类型不支持表单内一键自动验证（如 Trakt 走交互式 OAuth 设备码授权，
+      // 连接在 media_tracking 流程中完成）。不应阻断添加：直接保存源，并提示
+      // 用户稍后到对应授权入口完成连接。
       if (!mounted) return;
-      _showErrorSnackBar('${e.sourceTypeName}：暂不支持自动验证连接');
+      await sourcesNotifier.addSource(source);
+      final password = _formValues['password'] as String? ?? '';
+      if (password.isNotEmpty) {
+        await sourceManager.saveCredential(
+          source.id,
+          SourceCredential(password: password),
+        );
+      }
+      if (mounted) {
+        _showSuccessAndPop(
+          source,
+          '已添加 ${source.displayName}（${e.sourceTypeName} 需在授权入口完成连接）',
+        );
+      }
     } on Exception catch (e) {
       if (!mounted) return;
       _showErrorSnackBar('连接失败: $e');
