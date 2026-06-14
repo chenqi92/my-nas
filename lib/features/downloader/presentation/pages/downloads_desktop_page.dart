@@ -129,6 +129,12 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
     }).toList()
       ..sort((a, b) => b.downloadSpeed.compareTo(a.downloadSpeed));
 
+    // 全局限速控件仅 qBittorrent 客户端支持（API 提供 setGlobalSpeedLimits）。
+    final qbClients = clients
+        .where((c) => c.source.type == SourceType.qbittorrent)
+        .toList();
+    final qbSourceId = qbClients.isEmpty ? null : qbClients.first.source.id;
+
     return DesktopPageScaffold(
       title: '下载器',
       subtitle: 'qBittorrent · aria2 · Transmission — 跨客户端统一任务台',
@@ -184,6 +190,7 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
           else
             _TaskTable(
               tasks: tasks,
+              qbSourceId: qbSourceId,
               selected: _selected,
               onToggle: (key) => setState(() {
                 _selected.contains(key)
@@ -319,12 +326,14 @@ class _SummaryBar extends StatelessWidget {
 class _TaskTable extends StatelessWidget {
   const _TaskTable({
     required this.tasks,
+    required this.qbSourceId,
     required this.selected,
     required this.onToggle,
     required this.onToggleAll,
     required this.onOpen,
   });
   final List<UnifiedDownloadTask> tasks;
+  final String? qbSourceId;
   final Set<String> selected;
   final ValueChanged<String> onToggle;
   final VoidCallback onToggleAll;
@@ -358,10 +367,21 @@ class _TaskTable extends StatelessWidget {
           children: [
             Text('全局限速', style: TextStyle(fontSize: 12, color: t.text2)),
             const SizedBox(width: 8),
-            const AppTag('UI 受限', variant: TagVariant.neutral),
+            if (qbSourceId != null)
+              AppChip(
+                label: '设置（qBittorrent）',
+                icon: Icons.speed_rounded,
+                compact: true,
+                onTap: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => _GlobalLimitDialog(sourceId: qbSourceId!),
+                ),
+              )
+            else
+              const AppTag('客户端设置内管理', variant: TagVariant.neutral),
             const Spacer(),
             Text(
-              '分类 · 标签 · 保存位置 · 备用限速均可在客户端设置内管理',
+              '分类 · 标签 · 备用限速可在客户端设置内管理',
               style: TextStyle(fontSize: 12, color: t.text2),
             ),
           ],
@@ -637,6 +657,95 @@ class _EmptyTasks extends StatelessWidget {
 
 
 enum _BatchOp { pause, resume, delete }
+
+/// qBittorrent 全局限速对话框：读取当前限速（KB/s）回填，可编辑后下发。
+class _GlobalLimitDialog extends ConsumerStatefulWidget {
+  const _GlobalLimitDialog({required this.sourceId});
+  final String sourceId;
+
+  @override
+  ConsumerState<_GlobalLimitDialog> createState() => _GlobalLimitDialogState();
+}
+
+class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
+  final _dl = TextEditingController();
+  final _up = TextEditingController();
+  bool _prefilled = false;
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _dl.dispose();
+    _up.dispose();
+    super.dispose();
+  }
+
+  Future<void> _apply() async {
+    setState(() => _saving = true);
+    final dl = (int.tryParse(_dl.text.trim()) ?? 0) * 1024;
+    final up = (int.tryParse(_up.text.trim()) ?? 0) * 1024;
+    try {
+      await ref
+          .read(qbittorrentActionsProvider(widget.sourceId))
+          .setGlobalSpeedLimits(dlLimit: dl, upLimit: up);
+      ref.invalidate(qbPreferencesProvider(widget.sourceId));
+      if (mounted) {
+        Navigator.of(context).pop();
+        context.showSuccessToast('已更新全局限速');
+      }
+    } on Object catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        context.showErrorToast('设置失败：$e');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 首次拿到偏好时按 KB/s 回填输入框。
+    ref.watch(qbPreferencesProvider(widget.sourceId)).whenData((p) {
+      if (!_prefilled && p != null) {
+        _prefilled = true;
+        _dl.text = (p.dlLimit / 1024).round().toString();
+        _up.text = (p.upLimit / 1024).round().toString();
+      }
+    });
+    return AlertDialog(
+      title: const Text('全局限速'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('单位 KB/s，0 表示不限速。', style: TextStyle(fontSize: 12.5)),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _dl,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+                labelText: '下载上限 (KB/s)', isDense: true),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _up,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+                labelText: '上传上限 (KB/s)', isDense: true),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消')),
+        FilledButton(
+          onPressed: _saving ? null : _apply,
+          child: const Text('应用'),
+        ),
+      ],
+    );
+  }
+}
 
 /// 多选批量操作条：选中任意任务后出现，跨客户端批量暂停/继续/删除。
 class _BatchBar extends StatelessWidget {
