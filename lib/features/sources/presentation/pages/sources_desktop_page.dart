@@ -4,6 +4,7 @@ import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
@@ -98,7 +99,7 @@ class SourcesDesktopPage extends ConsumerWidget {
 }
 
 /// 单张数据源卡片。视觉对齐 ops2.jsx Sources 49-67。
-class _SourceCard extends StatelessWidget {
+class _SourceCard extends ConsumerWidget {
   const _SourceCard({
     required this.source,
     required this.conn,
@@ -109,8 +110,72 @@ class _SourceCard extends StatelessWidget {
   final SourceConnection? conn;
   final List<String> libs;
 
+  /// 测试 / 重新连接当前源，并把结果以 SnackBar 反馈。
+  Future<void> _reconnect(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(content: Text('正在连接「${source.name}」…')),
+    );
+    final result =
+        await ref.read(activeConnectionsProvider.notifier).reconnect(source.id);
+    if (!context.mounted) return;
+    final ok = result?.status == SourceStatus.connected;
+    final need2fa = result?.status == SourceStatus.requires2FA;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            ok
+                ? '「${source.name}」连接成功'
+                : need2fa
+                    ? '「${source.name}」需要两步验证'
+                    : '「${source.name}」连接失败'
+                        '${result?.errorMessage != null ? '：${result!.errorMessage}' : ''}',
+          ),
+        ),
+      );
+  }
+
+  void _edit(BuildContext context) {
+    SourceFormPage.openAdaptive<SourceEntity>(
+      context,
+      sourceType: source.type,
+      existingSource: source,
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('删除数据源'),
+        content: Text(
+          '删除「${source.name}」将级联移除该源的媒体库映射与已扫描的媒体数据，'
+          '此操作不可恢复。确定继续？',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    // 先解除库映射，再删源（源删除内部级联清理各库媒体数据）。
+    await ref
+        .read(mediaLibraryConfigProvider.notifier)
+        .removePathsForSource(source.id);
+    await ref.read(sourcesProvider.notifier).removeSource(source.id);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
     // 未实现的源类型即「即将推出」，与设计稿 plan 态对齐。
     final isPlan = !source.type.isSupported;
@@ -175,7 +240,12 @@ class _SourceCard extends StatelessWidget {
               if (isPlan)
                 const AppTag('即将推出', variant: TagVariant.plan)
               else
-                _MenuButton(color: t.text2),
+                _SourceMenu(
+                  color: t.text2,
+                  onEdit: () => _edit(context),
+                  onReconnect: () => _reconnect(context, ref),
+                  onDelete: () => _confirmDelete(context, ref),
+                ),
             ],
           ),
           const SizedBox(height: 14),
@@ -196,7 +266,11 @@ class _SourceCard extends StatelessWidget {
                 ),
               ),
               if (!isPlan)
-                const AppChip(label: '测试连接', compact: true),
+                AppChip(
+                  label: '测试连接',
+                  compact: true,
+                  onTap: () => _reconnect(context, ref),
+                ),
             ],
           ),
           if (libs.isNotEmpty) ...[
@@ -235,22 +309,43 @@ class _SourceCard extends StatelessWidget {
 }
 
 /// 卡片右上角 30x30 的「更多」菜单按钮（对齐设计稿 .icon-btn dots）。
-class _MenuButton extends StatelessWidget {
-  const _MenuButton({required this.color});
+/// 提供 编辑 / 重新连接 / 删除（级联）三项操作。
+class _SourceMenu extends StatelessWidget {
+  const _SourceMenu({
+    required this.color,
+    required this.onEdit,
+    required this.onReconnect,
+    required this.onDelete,
+  });
 
   final Color color;
+  final VoidCallback onEdit;
+  final VoidCallback onReconnect;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) => SizedBox(
         width: 30,
         height: 30,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
-            onTap: () {},
-            child: Icon(Icons.more_horiz_rounded, size: 18, color: color),
-          ),
+        child: PopupMenuButton<String>(
+          tooltip: '更多',
+          padding: EdgeInsets.zero,
+          icon: Icon(Icons.more_horiz_rounded, size: 18, color: color),
+          onSelected: (v) {
+            switch (v) {
+              case 'edit':
+                onEdit();
+              case 'reconnect':
+                onReconnect();
+              case 'delete':
+                onDelete();
+            }
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'edit', child: Text('编辑')),
+            PopupMenuItem(value: 'reconnect', child: Text('重新连接')),
+            PopupMenuItem(value: 'delete', child: Text('删除')),
+          ],
         ),
       );
 }
