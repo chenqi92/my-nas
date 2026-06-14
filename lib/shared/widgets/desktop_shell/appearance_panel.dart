@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/color_scheme_preset.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
+import 'package:my_nas/shared/providers/dynamic_ambient_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
@@ -89,10 +90,11 @@ class AppearancePanel extends ConsumerWidget {
                   ),
                 ),
               ),
-              // 占位 — 真实开关绑 dynamic_accent provider 由 settings 页统一收口
               AppSwitch(
-                value: true,
-                onChanged: (_) {},
+                value: ref.watch(dynamicAmbientProvider),
+                onChanged: (v) => ref
+                    .read(dynamicAmbientProvider.notifier)
+                    .setEnabled(enabled: v),
               ),
             ],
           ),

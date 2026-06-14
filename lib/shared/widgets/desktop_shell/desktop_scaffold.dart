@@ -9,6 +9,7 @@ import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
 import 'package:my_nas/shared/providers/desktop_space_provider.dart';
+import 'package:my_nas/shared/providers/dynamic_ambient_provider.dart';
 import 'package:my_nas/shared/providers/media_counts_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/activity_aggregator.dart';
@@ -227,6 +228,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     final t = DesignTokens.of(context);
     final space = ref.watch(desktopSpaceProvider);
     final hasMusic = ref.watch(currentMusicProvider) != null;
+    final ambientOn = ref.watch(dynamicAmbientProvider);
     final lyricFloat = ref.watch(desktopLyricFloatProvider);
     final hasActivity = ref.watch(activityItemsProvider).isNotEmpty;
     final currentPath = GoRouterState.of(context).uri.path;
@@ -259,7 +261,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
             backgroundColor: t.bg,
             body: Stack(
               children: [
-                AmbientLayer(on: hasMusic),
+                AmbientLayer(on: hasMusic && ambientOn),
                 Row(
                   children: [
                     DesktopSidebar(

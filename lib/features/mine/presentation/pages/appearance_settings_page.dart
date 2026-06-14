@@ -7,9 +7,11 @@ import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/providers/dynamic_ambient_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
@@ -157,7 +159,6 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                   SetRow(
                     title: '强调色',
                     desc: '预设方案，可被封面动态取色临时覆盖',
-                    last: true,
                     trailing: Wrap(
                       spacing: 9,
                       runSpacing: 9,
@@ -165,6 +166,17 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                         for (final preset in ColorSchemePresets.all)
                           _buildDesktopAccentDot(t, preset, colorPreset),
                       ],
+                    ),
+                  ),
+                  SetRow(
+                    title: '动态取色氛围光',
+                    desc: '播放时外壳氛围光随封面 / 台标取色',
+                    last: true,
+                    trailing: AppSwitch(
+                      value: ref.watch(dynamicAmbientProvider),
+                      onChanged: (v) => ref
+                          .read(dynamicAmbientProvider.notifier)
+                          .setEnabled(enabled: v),
                     ),
                   ),
                 ],
