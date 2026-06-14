@@ -227,12 +227,15 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    final space = ref.watch(desktopSpaceProvider);
+    final persistedSpace = ref.watch(desktopSpaceProvider);
     final hasMusic = ref.watch(currentMusicProvider) != null;
     final ambientOn = ref.watch(dynamicAmbientProvider);
     final lyricFloat = ref.watch(desktopLyricFloatProvider);
     final hasActivity = ref.watch(activityItemsProvider).isNotEmpty;
     final currentPath = GoRouterState.of(context).uri.path;
+    // sidebar 空间跟随当前路由（媒体/控制台），避免启动时持久化空间与实际
+    // 页面不一致；非空间路由（如 /mine 设置）回退到持久化空间。
+    final space = spaceOfRoute(currentPath) ?? persistedSpace;
     // 激活云同步自动调度器（轻量，仅在 app 运行期间持有一个 timer）。
     ref.watch(cloudSyncSchedulerProvider);
 
