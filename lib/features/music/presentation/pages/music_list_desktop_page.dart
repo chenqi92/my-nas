@@ -4,12 +4,54 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
+import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
+import 'package:my_nas/features/music/presentation/providers/music_favorites_provider.dart';
+import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
+import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
+
+/// MusicTrackEntity（曲库 DB 行）→ MusicItem（播放器/收藏用）。
+/// 复用 MusicFileWithSource.toMusicItem，保持与移动端一致的 nas:// URL 语义。
+MusicItem _entityToMusicItem(MusicTrackEntity m) => MusicFileWithSource(
+      file: FileItem(
+        name: m.fileName,
+        path: m.filePath,
+        size: m.size ?? 0,
+        isDirectory: false,
+        modifiedTime: m.modifiedTime,
+      ),
+      sourceId: m.sourceId,
+      title: m.title,
+      artist: m.artist,
+      album: m.album,
+      duration: m.duration,
+      year: m.year,
+      genre: m.genre,
+      coverPath: m.coverPath,
+      metadataExtracted: true,
+    ).toMusicItem();
+
+/// 把 [tracks] 装入播放队列并从 [startIndex] 开始播放；[shuffle] 时切随机模式。
+Future<void> _playFromList(
+  WidgetRef ref,
+  List<MusicTrackEntity> tracks,
+  int startIndex, {
+  bool shuffle = false,
+}) async {
+  if (tracks.isEmpty) return;
+  final queue = tracks.map(_entityToMusicItem).toList();
+  final controller = ref.read(musicPlayerControllerProvider.notifier);
+  if (shuffle) controller.setPlayMode(PlayMode.shuffle);
+  ref.read(playQueueProvider.notifier).setQueue(queue);
+  final idx = startIndex.clamp(0, queue.length - 1);
+  controller.updateCurrentIndex(idx);
+  await controller.play(queue[idx]);
+}
 
 /// 桌面端「音乐」——对齐设计稿 media2.jsx `MusicLibrary`。
 ///
@@ -33,8 +75,8 @@ class _MusicListDesktopPageState extends ConsumerState<MusicListDesktopPage> {
 
     final subtitle = loaded != null
         ? '${loaded.totalCount} 首 · ${loaded.albumCount} 张专辑 · '
-            'Gapless · 10 段 EQ · NCM 解密'
-        : 'Gapless · 10 段 EQ · NCM 解密 · MusicBrainz / AcoustID 刮削';
+            'Gapless · NCM 解密'
+        : 'Gapless · NCM 解密 · MusicBrainz / AcoustID 刮削';
 
     return DesktopPageScaffold(
       title: '音乐',
@@ -87,8 +129,8 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tracks = loaded?.allTracks ?? const [];
-    final totalMs = tracks.fold<int>(0, (a, t) => a + (t.duration ?? 0));
+    // 全库总时长用 getStats 全量统计（totalDurationMs），不再只累加首页 100 首。
+    final totalMs = loaded?.totalDurationMs ?? 0;
     final hours = (totalMs / 3600000);
     final hoursText = hours >= 1
         ? hours.toStringAsFixed(hours >= 10 ? 0 : 1)
@@ -238,13 +280,13 @@ class _MainView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _TableHeader(view: view),
+        _TableHeader(view: view, tracks: tracks),
         Expanded(
           child: switch (view) {
             'albums' => _AlbumGrid(tracks: tracks),
             'artists' => _GroupList(tracks: tracks, byArtist: true),
             'folders' => _GroupList(tracks: tracks, byArtist: false),
-            _ => _SongTable(tracks: tracks),
+            _ => _SongTable(tracks: tracks, hasMore: loaded.hasMoreTracks),
           },
         ),
       ],
@@ -252,12 +294,13 @@ class _MainView extends StatelessWidget {
   }
 }
 
-class _TableHeader extends StatelessWidget {
-  const _TableHeader({required this.view});
+class _TableHeader extends ConsumerWidget {
+  const _TableHeader({required this.view, required this.tracks});
   final String view;
+  final List<MusicTrackEntity> tracks;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
     final title = switch (view) {
       'albums' => '专辑',
@@ -281,40 +324,76 @@ class _TableHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          const AppChip(label: '播放全部', icon: Icons.play_arrow_rounded, compact: true),
+          AppChip(
+            label: '播放全部',
+            icon: Icons.play_arrow_rounded,
+            compact: true,
+            onTap: () => _playFromList(ref, tracks, 0),
+          ),
           const SizedBox(width: 8),
-          const AppChip(label: '随机', icon: Icons.shuffle_rounded, compact: true),
+          AppChip(
+            label: '随机',
+            icon: Icons.shuffle_rounded,
+            compact: true,
+            onTap: () => _playFromList(ref, tracks, 0, shuffle: true),
+          ),
         ],
       ),
     );
   }
 }
 
-class _SongTable extends StatelessWidget {
-  const _SongTable({required this.tracks});
+class _SongTable extends ConsumerWidget {
+  const _SongTable({required this.tracks, required this.hasMore});
   final List<MusicTrackEntity> tracks;
+  final bool hasMore;
 
   @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: tracks.length,
-      itemBuilder: (_, i) => _SongRow(track: tracks[i], index: i + 1),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (n) {
+        // 触底前 300px 触发加载下一页（曲库分页 100 首/页）。
+        if (hasMore &&
+            n.metrics.pixels >= n.metrics.maxScrollExtent - 300) {
+          ref.read(musicListProvider.notifier).loadMoreTracks();
+        }
+        return false;
+      },
+      child: ListView.builder(
+        itemCount: tracks.length,
+        itemBuilder: (_, i) => _SongRow(
+          track: tracks[i],
+          index: i + 1,
+          allTracks: tracks,
+          position: i,
+        ),
+      ),
     );
   }
 }
 
-class _SongRow extends StatelessWidget {
-  const _SongRow({required this.track, required this.index});
+class _SongRow extends ConsumerWidget {
+  const _SongRow({
+    required this.track,
+    required this.index,
+    required this.allTracks,
+    required this.position,
+  });
   final MusicTrackEntity track;
   final int index;
+  final List<MusicTrackEntity> allTracks;
+  final int position;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final isFav =
+        ref.watch(isMusicFavoriteProvider(track.filePath)).valueOrNull ??
+            false;
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: () => _playFromList(ref, allTracks, position),
         hoverColor: t.chipBg,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
@@ -374,10 +453,17 @@ class _SongRow extends StatelessWidget {
                 ),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: () => ref
+                    .read(musicFavoritesProvider.notifier)
+                    .toggleFavorite(_entityToMusicItem(track)),
                 visualDensity: VisualDensity.compact,
-                icon: Icon(Icons.favorite_border_rounded,
-                    size: 15, color: t.text3),
+                icon: Icon(
+                  isFav
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  size: 15,
+                  color: isFav ? t.accentBright : t.text3,
+                ),
               ),
               SizedBox(
                 width: 40,
@@ -400,12 +486,12 @@ class _SongRow extends StatelessWidget {
   }
 }
 
-class _AlbumGrid extends StatelessWidget {
+class _AlbumGrid extends ConsumerWidget {
   const _AlbumGrid({required this.tracks});
   final List<MusicTrackEntity> tracks;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final albums = <String, MusicTrackEntity>{};
     for (final track in tracks) {
       albums.putIfAbsent(track.displayAlbum, () => track);
@@ -422,48 +508,57 @@ class _AlbumGrid extends StatelessWidget {
       itemCount: entries.length,
       itemBuilder: (_, i) {
         final track = entries[i].value;
+        final album = entries[i].key;
         final t = DesignTokens.of(context);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: _Cover(path: track.displayCoverPath, size: 999),
+        return InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () {
+            final albumTracks =
+                tracks.where((x) => x.displayAlbum == album).toList();
+            _playFromList(ref, albumTracks, 0);
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: _Cover(path: track.displayCoverPath, size: 999),
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              entries[i].key,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: t.text0,
+              const SizedBox(height: 6),
+              Text(
+                album,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: t.text0,
+                ),
               ),
-            ),
-            Text(
-              track.displayArtist,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11, color: t.text2),
-            ),
-          ],
+              Text(
+                track.displayArtist,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11, color: t.text2),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 }
 
-class _GroupList extends StatelessWidget {
+class _GroupList extends ConsumerWidget {
   const _GroupList({required this.tracks, required this.byArtist});
   final List<MusicTrackEntity> tracks;
   final bool byArtist;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
     final groups = <String, int>{};
     for (final track in tracks) {
@@ -475,10 +570,19 @@ class _GroupList extends StatelessWidget {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 4),
       itemCount: entries.length,
-      itemBuilder: (_, i) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        child: Row(
-          children: [
+      itemBuilder: (_, i) => InkWell(
+        onTap: () {
+          final key = entries[i].key;
+          final groupTracks = tracks
+              .where((x) =>
+                  (byArtist ? x.displayArtist : x.folderName) == key)
+              .toList();
+          _playFromList(ref, groupTracks, 0);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            children: [
             Container(
               width: 36,
               height: 36,
@@ -509,7 +613,8 @@ class _GroupList extends StatelessWidget {
             ),
             Text('${entries[i].value} 首',
                 style: TextStyle(fontSize: 12, color: t.text2)),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -612,7 +717,8 @@ class _EqPanel extends StatelessWidget {
                   style: TextStyle(
                       fontSize: 13, fontWeight: FontWeight.w700, color: t.text0)),
               const Spacer(),
-              Text('流行', style: TextStyle(fontSize: 11, color: t.text2)),
+              // 10 段 EQ 调节尚未在桌面接入，标注规划而非伪装可用预设。
+              const AppTag('即将推出', variant: TagVariant.plan),
             ],
           ),
           const SizedBox(height: 12),
@@ -662,7 +768,9 @@ class _Cover extends StatelessWidget {
       color: t.insetBg,
       child: Icon(Icons.music_note_rounded, size: 16, color: t.text3),
     );
-    if (path == null || path!.isEmpty || !File(path!).existsSync()) {
+    // 封面路径在加载时已校验（_validateCoverPaths），此处不再每帧同步
+    // existsSync 触发磁盘 IO；缺图由 Image.file 的 errorBuilder 回退。
+    if (path == null || path!.isEmpty) {
       return size == 999
           ? fallback
           : ClipRRect(borderRadius: BorderRadius.circular(7), child: fallback);

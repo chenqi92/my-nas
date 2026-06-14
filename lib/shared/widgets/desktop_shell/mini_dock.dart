@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
+import 'package:my_nas/features/music/presentation/widgets/music_cover.dart';
 import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 
@@ -41,7 +43,7 @@ class MiniDock extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
-                _Cover(coverUrl: music.coverUrl, onTap: onOpenNowPlaying),
+                _Cover(music: music, onTap: onOpenNowPlaying),
                 const SizedBox(width: 12),
                 SizedBox(
                   width: 148,
@@ -118,27 +120,17 @@ class MiniDock extends ConsumerWidget {
 }
 
 class _Cover extends StatelessWidget {
-  const _Cover({required this.coverUrl, required this.onTap});
-  final String? coverUrl;
+  const _Cover({required this.music, required this.onTap});
+  final MusicItem music;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final t = DesignTokens.of(context);
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 46,
-        height: 46,
+      child: DecoratedBox(
         decoration: BoxDecoration(
-          color: t.insetBg,
           borderRadius: BorderRadius.circular(9),
-          image: (coverUrl != null && coverUrl!.isNotEmpty)
-              ? DecorationImage(
-                  image: NetworkImage(coverUrl!),
-                  fit: BoxFit.cover,
-                )
-              : null,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.5),
@@ -147,9 +139,8 @@ class _Cover extends StatelessWidget {
             ),
           ],
         ),
-        child: (coverUrl == null || coverUrl!.isEmpty)
-            ? Icon(Icons.music_note_rounded, color: t.text3)
-            : null,
+        // 封面三路兼容（内嵌字节 / file:// 本地 / 网络），网络走磁盘缓存。
+        child: MusicCoverImage(music: music, size: 46, radius: 9),
       ),
     );
   }

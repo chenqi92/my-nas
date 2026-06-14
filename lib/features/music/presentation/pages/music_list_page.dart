@@ -366,6 +366,7 @@ class MusicListNotConnected extends MusicListState {}
 class MusicListLoaded extends MusicListState {
   MusicListLoaded({
     required this.totalCount,
+    this.totalDurationMs = 0,
     this.artistCount = 0,
     this.albumCount = 0,
     this.genreCount = 0,
@@ -398,6 +399,9 @@ class MusicListLoaded extends MusicListState {
   });
 
   final int totalCount;
+
+  /// 全库总时长（毫秒），来自 SQLite getStats 全量统计，不受分页影响。
+  final int totalDurationMs;
   final int artistCount;
   final int albumCount;
   final int genreCount;
@@ -540,6 +544,7 @@ class MusicListLoaded extends MusicListState {
 
   MusicListLoaded copyWith({
     int? totalCount,
+    int? totalDurationMs,
     int? artistCount,
     int? albumCount,
     int? genreCount,
@@ -564,6 +569,7 @@ class MusicListLoaded extends MusicListState {
   }) =>
       MusicListLoaded(
         totalCount: totalCount ?? this.totalCount,
+        totalDurationMs: totalDurationMs ?? this.totalDurationMs,
         artistCount: artistCount ?? this.artistCount,
         albumCount: albumCount ?? this.albumCount,
         genreCount: genreCount ?? this.genreCount,
@@ -744,6 +750,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
 
     state = MusicListLoaded(
       totalCount: total,
+      totalDurationMs: stats['totalDuration'] as int? ?? 0,
       artistCount: stats['artists'] as int? ?? 0,
       albumCount: stats['albums'] as int? ?? 0,
       genreCount: stats['genres'] as int? ?? 0,
