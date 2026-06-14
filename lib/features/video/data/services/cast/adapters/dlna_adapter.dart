@@ -167,8 +167,9 @@ class DlnaAdapter {
     }
 
     try {
-      logger.i('开始投屏到 ${_currentDevice!.info.friendlyName}');
-      logger.i('视频URL: $videoUrl');
+      logger
+        ..i('开始投屏到 ${_currentDevice!.info.friendlyName}')
+        ..i('视频URL: $videoUrl');
 
       var subtitleApplied = false;
       if (subtitleUrl != null && subtitleUrl.isNotEmpty) {
@@ -228,6 +229,8 @@ class DlnaAdapter {
 
     final escapedMetadata = _xmlEscape(metadata);
 
+    // XML 声明必须位于内容起始处，前面不能有换行/空白，故保留首行不换行。
+    // ignore: leading_newlines_in_multiline_strings
     final envelope = '''<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
     <s:Body>

@@ -188,7 +188,8 @@ class NasToolAuth {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        return data['code'] == 0 || data['data']?['version'] != null;
+        final dataField = data['data'] as Map<String, dynamic>?;
+        return data['code'] == 0 || dataField?['version'] != null;
       }
       return false;
     } on Exception {
@@ -237,7 +238,8 @@ class NasToolAuth {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        if (data['code'] == 0 || data['data']?['version'] != null) {
+        final dataField = data['data'] as Map<String, dynamic>?;
+        if (data['code'] == 0 || dataField?['version'] != null) {
           // API Key 有效，设置认证信息
           _sessionToken = pureApiKey;
           _username = 'API Key';

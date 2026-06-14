@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
@@ -624,16 +623,15 @@ class MinePage extends ConsumerWidget {
     bool isDark,
     UIStyle uiStyle, {
     required List<Widget> children,
-  }) {
-    // 使用自适应玻璃容器 - 自动根据平台选择原生/Flutter实现
-    // 桌面下圆角与 AppRadius.card 对齐（macOS Settings 风），手机保留 20（iOS 风）。
-    return AdaptiveGlassContainer(
-      uiStyle: uiStyle,
-      isDark: isDark,
-      cornerRadius: context.isDesktopLayout ? AppRadius.card : 20,
-      child: Column(children: children),
-    );
-  }
+  }) =>
+      // 使用自适应玻璃容器 - 自动根据平台选择原生/Flutter实现
+      // 桌面下圆角与 AppRadius.card 对齐（macOS Settings 风），手机保留 20（iOS 风）。
+      AdaptiveGlassContainer(
+        uiStyle: uiStyle,
+        isDark: isDark,
+        cornerRadius: context.isDesktopLayout ? AppRadius.card : 20,
+        child: Column(children: children),
+      );
 
   Widget _buildSettingsTile(
     BuildContext context,
@@ -1772,4 +1770,3 @@ Widget _mineCountBadge(String text, Color color) => Container(
         ),
       ),
     );
-

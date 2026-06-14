@@ -81,11 +81,12 @@ class FfmpegAudioTagService {
 
       // 如果有封面，设置封面编解码器
       if (coverFile != null && await coverFile.exists()) {
-        args.addAll(['-c:v', 'copy']);
-        args.addAll([
-          '-disposition:v:0',
-          'attached_pic',
-        ]); // 标记为附加图片
+        args
+          ..addAll(['-c:v', 'copy'])
+          ..addAll([
+            '-disposition:v:0',
+            'attached_pic',
+          ]); // 标记为附加图片
         updatedFields.add('封面');
       }
 
@@ -165,8 +166,9 @@ class FfmpegAudioTagService {
         final errorSnippet =
             logs != null && logs.length > 500 ? logs.substring(logs.length - 500) : logs ?? '';
 
-        logger.e('FfmpegAudioTagService: FFmpeg 写入失败');
-        logger.e('FfmpegAudioTagService: 错误日志: $errorSnippet');
+        logger
+          ..e('FfmpegAudioTagService: FFmpeg 写入失败')
+          ..e('FfmpegAudioTagService: 错误日志: $errorSnippet');
 
         // 清理临时文件
         if (await tempOutput.exists()) {
@@ -214,8 +216,9 @@ class FfmpegAudioTagService {
         actualOutput.path,
       ];
 
-      logger.d('FfmpegAudioTagService: 修复 FLAC 文件: ${inputFile.path}');
-      logger.d('FfmpegAudioTagService: FFmpeg 命令: ffmpeg ${args.join(' ')}');
+      logger
+        ..d('FfmpegAudioTagService: 修复 FLAC 文件: ${inputFile.path}')
+        ..d('FfmpegAudioTagService: FFmpeg 命令: ffmpeg ${args.join(' ')}');
 
       final session = await FFmpegKit.executeWithArguments(args);
       final returnCode = await session.getReturnCode();

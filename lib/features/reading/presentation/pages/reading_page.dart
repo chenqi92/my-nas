@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element
 
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -266,11 +267,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
           source: fullSource,
         );
         if (mounted) {
-          Navigator.of(context).push(
+          unawaited(Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (context) => OnlineBookDetailPage(book: book),
             ),
-          );
+          ));
         }
       },
       onLongPress: () => _showDeleteConfirmation(item, isDark),
@@ -362,7 +363,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
               Navigator.of(context).pop();
               try {
                 await OnlineBookShelfService.instance.removeBook(item.id);
-                ref.read(onlineBookShelfProvider.notifier).onBookRemoved();
+                unawaited(ref.read(onlineBookShelfProvider.notifier).onBookRemoved());
                 if (mounted) {
                   this.context.showSuccessToast('已从书架移除');
                 }

@@ -52,7 +52,7 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
     setState(() => _addingKey = '$index');
     // 媒体类型判定：兼容英文 tv/series 与中文「电视剧/剧集/动漫/综艺」，
     // 否则中文剧集会被误判成电影。
-    final raw = (r.type ?? '');
+    final raw = r.type ?? '';
     final upper = raw.toUpperCase();
     final isTv = upper.contains('TV') ||
         upper.contains('SERIES') ||
@@ -205,8 +205,7 @@ class _ResultRow extends StatelessWidget {
   final DesignTokens t;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
+  Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,16 +263,14 @@ class _ResultRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          adding
-              ? const SizedBox(
+          if (adding) const SizedBox(
                   width: 32,
                   height: 32,
                   child: Padding(
                     padding: EdgeInsets.all(8),
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                )
-              : IconButton(
+                ) else IconButton(
                   onPressed: onAdd,
                   icon: Icon(Icons.add_circle_outline_rounded,
                       color: t.accent),
@@ -282,5 +279,4 @@ class _ResultRow extends StatelessWidget {
         ],
       ),
     );
-  }
 }

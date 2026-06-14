@@ -530,10 +530,9 @@ class SmbConnectionPool {
         heartbeatConfig: heartbeatConfig,
         onRelease: _releaseDedicatedSlot,
         onDisconnect: onDisconnect,
-      );
-
-      // 默认启动心跳（连接刚建立时处于空闲状态）
-      connection.startHeartbeat();
+      )
+        // 默认启动心跳（连接刚建立时处于空闲状态）
+        ..startHeartbeat();
 
       return connection;
     // ignore: avoid_catches_without_on_clauses

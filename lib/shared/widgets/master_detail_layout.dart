@@ -163,11 +163,9 @@ class _MasterDetailLayoutState<T> extends State<MasterDetailLayout<T>> {
   }
 
   /// 堆叠视图（移动端/小屏）- 使用页面导航
-  Widget _buildStackView(BuildContext context) {
-    // 如果有选中项，直接显示详情页（由外部处理导航）
-    // 这里只返回列表，让外部处理详情页的显示
-    return _buildMasterList(context);
-  }
+  // 如果有选中项，直接显示详情页（由外部处理导航）
+  // 这里只返回列表，让外部处理详情页的显示
+  Widget _buildStackView(BuildContext context) => _buildMasterList(context);
 
   /// 构建主列表
   Widget _buildMasterList(BuildContext context) => Column(

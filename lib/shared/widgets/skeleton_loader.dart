@@ -238,4 +238,3 @@ class _FileGridItemSkeleton extends StatelessWidget {
     );
   }
 }
-

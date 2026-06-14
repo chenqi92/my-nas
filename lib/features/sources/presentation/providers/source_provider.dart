@@ -481,8 +481,10 @@ class ActiveMediaServerConnectionsNotifier
     handler.libraryChanges.listen((event) {
       logger.i('MediaServerConnection: 收到库变更事件，${event.addedItems.length} 新增');
       // 触发增量同步
-      final syncService = _ref.read(mediaServerSyncServiceProvider);
-      syncService.incrementalSync(source.id, connection.adapter);
+      _ref.read(mediaServerSyncServiceProvider).incrementalSync(
+            source.id,
+            connection.adapter,
+          );
     });
   }
 
@@ -500,8 +502,7 @@ class ActiveMediaServerConnectionsNotifier
     // 从全局 Registry 注销
     NasFileSystemRegistry.instance.unregister(sourceId);
     // 清理事件处理器
-    final eventFactory = _ref.read(mediaServerEventHandlerFactoryProvider);
-    eventFactory.remove(sourceId);
+    _ref.read(mediaServerEventHandlerFactoryProvider).remove(sourceId);
     state = Map.from(state)..remove(sourceId);
   }
 

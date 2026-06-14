@@ -5,7 +5,8 @@ import 'package:my_nas/features/video/data/services/subtitle_translation/subtitl
 
 void main() {
   group('SubtitleSerializer.srt', () {
-    const src = '''1
+    const src = '''
+1
 00:00:01,000 --> 00:00:03,500
 Hello world
 
@@ -46,7 +47,8 @@ Second
   });
 
   group('SubtitleSerializer.ass', () {
-    const src = '''[Script Info]
+    const src = '''
+[Script Info]
 Title: Sample
 
 [V4+ Styles]
@@ -78,7 +80,7 @@ Dialogue: 0,0:00:01.00,0:00:03.50,Default,Actor,5,5,10,Effect1,Hello, world
       expect(out, contains('Default,Actor,5,5,10,Effect1'));
     });
 
-    test('译文换行序列化为 \\N', () {
+    test(r'译文换行序列化为 \N', () {
       final parsed = SubtitleParser.parse(src, SubtitleFormat.ass);
       final out = SubtitleSerializer.serialize(
         parsed,
@@ -89,7 +91,8 @@ Dialogue: 0,0:00:01.00,0:00:03.50,Default,Actor,5,5,10,Effect1,Hello, world
   });
 
   group('SubtitleSerializer.vtt', () {
-    const src = '''WEBVTT
+    const src = '''
+WEBVTT
 
 00:00:01.000 --> 00:00:02.000
 Hello
@@ -122,7 +125,8 @@ World
 
   group('Parser ↔ Serializer 往返', () {
     test('SRT: 全部翻译后能再次解析回相同 cue 数', () {
-      const src = '''1
+      const src = '''
+1
 00:00:01,000 --> 00:00:02,000
 Foo
 

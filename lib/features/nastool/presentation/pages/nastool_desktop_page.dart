@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/add_subscription_sheet.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/subscription_detail_sheet.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/subscription_poster.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/service_adapters/nastool/models/organization_models.dart';
 import 'package:my_nas/service_adapters/nastool/models/plugin_models.dart';
 import 'package:my_nas/service_adapters/nastool/models/subscribe_models.dart';
 import 'package:my_nas/service_adapters/nastool/models/sync_models.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
+import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
-import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 
 /// 桌面端「媒体自动化(NAStool)」——订阅管理（电影 / 剧集）+ 新增订阅。
@@ -709,8 +709,7 @@ class _SubCard extends StatelessWidget {
   final DesignTokens t;
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
+  Widget build(BuildContext context) => Material(
       color: Colors.transparent,
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
@@ -772,5 +771,4 @@ class _SubCard extends StatelessWidget {
         ),
       ),
     );
-  }
 }

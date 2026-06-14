@@ -201,8 +201,7 @@ class _MetaRow extends StatelessWidget {
   final DesignTokens t;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
+  Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,7 +219,6 @@ class _MetaRow extends StatelessWidget {
         ],
       ),
     );
-  }
 }
 
 extension on PTTorrent {

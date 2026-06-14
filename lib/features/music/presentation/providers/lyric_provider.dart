@@ -48,27 +48,27 @@ class LyricState {
 class LyricNotifier extends StateNotifier<LyricState> {
   LyricNotifier(this._ref) : super(const LyricState()) {
     // 监听当前音乐变化
-    _ref.listen<MusicItem?>(currentMusicProvider, (previous, next) {
-      if (next != null && next != previous) {
-        loadLyrics(next);
-      } else if (next == null) {
-        state = const LyricState();
-      }
-    });
-
-    // 监听翻译开关 / 目标语言变化 → 即时重翻当前歌词
-    _ref.listen<MusicSettings>(musicSettingsProvider, (prev, next) {
-      final toggled = prev?.lyricsTranslateEnabled !=
-          next.lyricsTranslateEnabled;
-      final langChanged =
-          prev?.lyricsTranslateLang != next.lyricsTranslateLang;
-      if (toggled || langChanged) {
-        AppError.fireAndForget(
-          retranslate(),
-          action: 'lyric.retranslateOnSettingsChange',
-        );
-      }
-    });
+    _ref
+      ..listen<MusicItem?>(currentMusicProvider, (previous, next) {
+        if (next != null && next != previous) {
+          loadLyrics(next);
+        } else if (next == null) {
+          state = const LyricState();
+        }
+      })
+      // 监听翻译开关 / 目标语言变化 → 即时重翻当前歌词
+      ..listen<MusicSettings>(musicSettingsProvider, (prev, next) {
+        final toggled = prev?.lyricsTranslateEnabled !=
+            next.lyricsTranslateEnabled;
+        final langChanged =
+            prev?.lyricsTranslateLang != next.lyricsTranslateLang;
+        if (toggled || langChanged) {
+          AppError.fireAndForget(
+            retranslate(),
+            action: 'lyric.retranslateOnSettingsChange',
+          );
+        }
+      });
 
     // 初始化时检查是否已有音乐在播放
     final currentMusic = _ref.read(currentMusicProvider);

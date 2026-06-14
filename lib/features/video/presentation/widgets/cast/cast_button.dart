@@ -128,39 +128,37 @@ class _CastButtonState extends ConsumerState<CastButton> {
         }
 
         // 未投屏时，显示设备列表
-        final items = <PopupMenuEntry<_CastAction>>[];
-
-        // 标题
-        items.add(
-          PopupMenuItem<_CastAction>(
-            enabled: false,
-            child: Row(
-              children: [
-                const Icon(Icons.cast, size: 18, color: Colors.white70),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text('选择投屏设备', style: TextStyle(color: Colors.white70)),
-                ),
-                if (isDiscovering)
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white54),
-                  )
-                else
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      ref.read(castProvider.notifier).refreshDevices();
-                    },
-                    child: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white54),
+        final items = <PopupMenuEntry<_CastAction>>[]
+          // 标题
+          ..add(
+            PopupMenuItem<_CastAction>(
+              enabled: false,
+              child: Row(
+                children: [
+                  const Icon(Icons.cast, size: 18, color: Colors.white70),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text('选择投屏设备', style: TextStyle(color: Colors.white70)),
                   ),
-              ],
+                  if (isDiscovering)
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 1.5, color: Colors.white54),
+                    )
+                  else
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        ref.read(castProvider.notifier).refreshDevices();
+                      },
+                      child: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white54),
+                    ),
+                ],
+              ),
             ),
-          ),
-        );
-
-        items.add(const PopupMenuDivider());
+          )
+          ..add(const PopupMenuDivider());
 
         if (devices.isEmpty) {
           // 无设备

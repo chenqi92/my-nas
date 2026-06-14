@@ -742,4 +742,3 @@ class _SettingsPopup extends ConsumerWidget {
       ),
     );
 }
-

@@ -1,5 +1,7 @@
 // ignore_for_file: dead_code, dead_null_aware_expression
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
@@ -506,9 +508,10 @@ class _DashboardContent extends ConsumerWidget {
       error: (e, _) => Center(child: Text('加载失败: $e')),
       data: (stats) => RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(nastoolStatsProvider(sourceId));
-          ref.invalidate(nastoolSystemInfoProvider(sourceId));
-          ref.invalidate(nastoolSiteStatisticsProvider(sourceId));
+          ref
+            ..invalidate(nastoolStatsProvider(sourceId))
+            ..invalidate(nastoolSystemInfoProvider(sourceId))
+            ..invalidate(nastoolSiteStatisticsProvider(sourceId));
         },
         child: ListView(
           padding: pad,
@@ -1640,8 +1643,9 @@ class _SitesContent extends ConsumerWidget {
 
         return RefreshIndicator(
           onRefresh: () async {
-            ref.invalidate(nastoolSitesProvider(sourceId));
-            ref.invalidate(nastoolSiteStatisticsProvider(sourceId));
+            ref
+              ..invalidate(nastoolSitesProvider(sourceId))
+              ..invalidate(nastoolSiteStatisticsProvider(sourceId));
           },
           child: ListView.builder(
             padding: _pagePadding(context),
@@ -1771,7 +1775,7 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
                       onPressed: () async {
                         final articles = await ref.read(nastoolActionsProvider(widget.sourceId)).previewRssTask(t.id);
                         if (context.mounted) {
-                          showDialog<void>(context: context, builder: (_) => AlertDialog(
+                          unawaited(showDialog<void>(context: context, builder: (_) => AlertDialog(
                             title: Text('RSS预览: ${t.name}'),
                             content: SizedBox(
                               width: double.maxFinite,
@@ -1779,7 +1783,7 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
                               child: ListView(children: articles.map((a) => ListTile(title: Text(a.title ?? '', maxLines: 2))).toList()),
                             ),
                             actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('关闭'))],
-                          ));
+                          )));
                         }
                       },
                       tooltip: '预览',

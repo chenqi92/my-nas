@@ -132,11 +132,9 @@ class MusicAudioPassthroughService {
   /// 获取最优音频设备名称
   ///
   /// 在多个输出设备可用时选择最优的（如优先 HDMI）
-  Future<String?> getOptimalAudioDevice() async {
-    // 目前使用 'auto' 让 MPV 自动选择
-    // 未来可以根据设备能力返回特定设备
-    return null;
-  }
+  // 目前使用 'auto' 让 MPV 自动选择
+  // 未来可以根据设备能力返回特定设备
+  Future<String?> getOptimalAudioDevice() async => null;
 
   // ==================== 用户设置 ====================
 

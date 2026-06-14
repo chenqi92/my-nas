@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/features/mine/presentation/desktop_settings/desktop_settings_screen.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/mine/presentation/desktop_settings/panes/about_pane.dart';
 import 'package:my_nas/features/mine/presentation/desktop_settings/panes/advanced_pane.dart';
 import 'package:my_nas/features/mine/presentation/desktop_settings/panes/appearance_pane.dart';
@@ -20,6 +19,7 @@ import 'package:my_nas/features/mine/presentation/desktop_settings/panes/sources
 import 'package:my_nas/features/mine/presentation/desktop_settings/panes/sync_pane.dart';
 import 'package:my_nas/features/mine/presentation/desktop_settings/panes/transfer_pane.dart';
 import 'package:my_nas/features/mine/presentation/desktop_settings/panes/video_pane.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 
 /// 一个设置分类（对齐设计稿 `settings.jsx` 的 SET_CATS item）。
 class SettingsCat {

@@ -159,8 +159,7 @@ class MediaServerSyncService {
       ));
 
       logger.i(
-        'MediaServerSyncService: 同步完成，'
-        '新增 $totalNewItems，更新 $totalUpdatedItems',
+        'MediaServerSyncService: 同步完成，新增 $totalNewItems，更新 $totalUpdatedItems',
       );
     } on Exception catch (e) {
       _updateProgress(SyncProgress(

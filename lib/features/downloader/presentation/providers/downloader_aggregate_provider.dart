@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/aria2/presentation/providers/aria2_provider.dart';
 import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/transmission/presentation/providers/transmission_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 
 /// 跨 aria2 / qBittorrent / Transmission 的统一任务抽象。三客户端各有各的
 /// 模型（Aria2Download / QBTorrent / TransmissionTorrent），这里归一化成一个

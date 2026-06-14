@@ -556,8 +556,9 @@ class QualityNotifier extends StateNotifier<QualityState> {
     // 获取当前播放位置（从这个位置开始转码，加速切换）
     final currentPosition = _player?.state.position ?? Duration.zero;
 
-    logger.i('客户端转码: 开始转码到 ${quality.label}，从 ${currentPosition.inSeconds}s 开始');
-    logger.d('客户端转码: 输入 URL = ${state.videoUrl}');
+    logger
+      ..i('客户端转码: 开始转码到 ${quality.label}，从 ${currentPosition.inSeconds}s 开始')
+      ..d('客户端转码: 输入 URL = ${state.videoUrl}');
 
     // 请求转码（传入起始位置）
     final streamUrl = await _clientTranscodingService!.getTranscodedStreamUrl(

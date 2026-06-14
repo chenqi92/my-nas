@@ -98,11 +98,12 @@ class BookContentService {
       final parsedIntro = RuleParser.parseRule(rule.intro, response, baseUrl: book.bookUrl);
       
       // 详细日志：记录各字段的规则和解析结果
-      logger.i('📖 [${source.displayName}] 详情解析结果:');
-      logger.i('   书名规则: "${rule.name}" → "$parsedName" (默认: ${book.name})');
-      logger.i('   作者规则: "${rule.author}" → "$parsedAuthor" (默认: ${book.author})');
-      logger.i('   封面规则: "${rule.coverUrl}" → "$parsedCoverUrl"');
-      logger.i('   简介规则: "${rule.intro}" → "${parsedIntro?.length ?? 0}字"');
+      logger
+        ..i('📖 [${source.displayName}] 详情解析结果:')
+        ..i('   书名规则: "${rule.name}" → "$parsedName" (默认: ${book.name})')
+        ..i('   作者规则: "${rule.author}" → "$parsedAuthor" (默认: ${book.author})')
+        ..i('   封面规则: "${rule.coverUrl}" → "$parsedCoverUrl"')
+        ..i('   简介规则: "${rule.intro}" → "${parsedIntro?.length ?? 0}字"');
 
       // 解析详情
       return BookInfo(
@@ -252,8 +253,9 @@ class BookContentService {
     
     // 如果主规则解析失败，尝试备用选择器
     if (chapterList.isEmpty) {
-      logger.d('章节列表解析结果为空, 响应数据类型: ${responseData.runtimeType}');
-      logger.d('尝试使用备用选择器...');
+      logger
+        ..d('章节列表解析结果为空, 响应数据类型: ${responseData.runtimeType}')
+        ..d('尝试使用备用选择器...');
       return _parseChapterListWithFallback(responseData, baseUrl, primaryRule: rule);
     }
     

@@ -4,13 +4,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/video/data/services/xmltv_parser.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/pages/live_player_page.dart';
 import 'package:my_nas/features/video/presentation/pages/live_stream_settings_page.dart';
 import 'package:my_nas/features/video/presentation/providers/epg_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -85,9 +85,10 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
     final epgUrl = channels
         .map((c) => c.epgUrl)
         .firstWhere((u) => u != null && u.isNotEmpty, orElse: () => null);
-    final Map<String, List<EpgProgramme>> epg = epgUrl != null
-        ? (ref.watch(liveEpgProvider(epgUrl)).valueOrNull ?? const {})
-        : const {};
+    final epg = epgUrl != null
+        ? (ref.watch(liveEpgProvider(epgUrl)).valueOrNull ??
+            const <String, List<EpgProgramme>>{})
+        : const <String, List<EpgProgramme>>{};
     final hasEpg = epg.isNotEmpty;
     final featuredProgs = (featured?.tvgId != null)
         ? (epg[featured!.tvgId] ?? const <EpgProgramme>[])
@@ -158,8 +159,7 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
 
   // ── header ────────────────────────────────────────────────────────────
   Widget _buildHeader(
-      DesignTokens t, AppLocalizations l, List<String> cats, String active) {
-    return Row(
+      DesignTokens t, AppLocalizations l, List<String> cats, String active) => Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Column(
@@ -212,11 +212,9 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
         ),
       ],
     );
-  }
 
   Widget _sectionHead(DesignTokens t, AppLocalizations l,
-      {required String sub, Widget? right}) {
-    return Row(
+      {required String sub, Widget? right}) => Row(
       children: [
         Text(
           l.livePageProgramGuide,
@@ -232,7 +230,6 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
         if (right != null) ...[const Spacer(), right],
       ],
     );
-  }
 
   String? _sourceNameFor(LiveChannel ch, List<LiveStreamSource> sources) {
     for (final s in sources) {
@@ -749,8 +746,7 @@ class _EpgGuide extends StatelessWidget {
     int base,
     int end,
     DateTime todayMidnight,
-  ) {
-    return Material(
+  ) => Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => onPlay(ch),
@@ -820,7 +816,6 @@ class _EpgGuide extends StatelessWidget {
         ),
       ),
     );
-  }
 
   /// 把单个节目按起止时间（相对今日 0 点的分钟）定位为时间轴上的块；
   /// 与时间窗 [base, end] 无交集则不渲染。当前正在播放的节目高亮。
@@ -968,8 +963,7 @@ class _PulseDotState extends State<_PulseDot>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
+  Widget build(BuildContext context) => FadeTransition(
       opacity: Tween<double>(begin: 1, end: 0.35).animate(
         CurvedAnimation(parent: _c, curve: DesignTokens.ease),
       ),
@@ -988,7 +982,6 @@ class _PulseDotState extends State<_PulseDot>
         ),
       ),
     );
-  }
 }
 
 // ── empty states ──────────────────────────────────────────────────────────

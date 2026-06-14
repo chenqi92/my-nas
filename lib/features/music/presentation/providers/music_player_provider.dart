@@ -1438,10 +1438,10 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         }
       }
       
-      logger.d('MusicPlayer: 音频源设置成功');
-
-      // 获取播放器时长
-      logger.i('MusicPlayer: 播放器时长 => $playerDuration');
+      logger
+        ..d('MusicPlayer: 音频源设置成功')
+        // 获取播放器时长
+        ..i('MusicPlayer: 播放器时长 => $playerDuration');
 
       // 使用播放器时长或 MusicItem 的元数据时长
       var effectiveDuration = playerDuration;

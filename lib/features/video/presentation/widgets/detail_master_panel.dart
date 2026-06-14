@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/widgets/media_info_badges.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 
 /// 桌面端详情页左侧的 Master 面板

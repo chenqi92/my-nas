@@ -5,12 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
-import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
-import 'package:my_nas/features/video/domain/entities/hdr_capability.dart';
-import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/core/translation/translation_provider.dart';
 import 'package:my_nas/core/translation/translation_providers.dart';
 import 'package:my_nas/features/video/data/services/subtitle_translation/subtitle_translation_service.dart';
+import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
+import 'package:my_nas/features/video/domain/entities/hdr_capability.dart';
+import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/subtitle_translation_settings_provider.dart';
@@ -369,14 +369,21 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: const Text('默认翻译目标语言'),
         children: [
-          for (final lang in TranslationLang.values)
-            RadioListTile<TranslationLang>(
-              value: lang,
-              groupValue: current,
-              title: Text(lang.displayName),
-              subtitle: Text(lang.bcp47),
-              onChanged: (v) => Navigator.pop(dialogContext, v),
+          RadioGroup<TranslationLang>(
+            groupValue: current,
+            onChanged: (v) => Navigator.pop(dialogContext, v),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final lang in TranslationLang.values)
+                  RadioListTile<TranslationLang>(
+                    value: lang,
+                    title: Text(lang.displayName),
+                    subtitle: Text(lang.bcp47),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -399,13 +406,20 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: const Text('翻译服务'),
         children: [
-          for (final p in TranslationProviders.all)
-            RadioListTile<String>(
-              value: p.id,
-              groupValue: currentId,
-              title: Text(p.displayName),
-              onChanged: (v) => Navigator.pop(dialogContext, v),
+          RadioGroup<String>(
+            groupValue: currentId,
+            onChanged: (v) => Navigator.pop(dialogContext, v),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final p in TranslationProviders.all)
+                  RadioListTile<String>(
+                    value: p.id,
+                    title: Text(p.displayName),
+                  ),
+              ],
             ),
+          ),
         ],
       ),
     );

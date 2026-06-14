@@ -243,9 +243,7 @@ class NativeEpubPaginator {
       text: TextSpan(text: plainText, style: baseStyle),
       textDirection: ui.TextDirection.ltr,
       maxLines: null,
-    );
-
-    textPainter.layout(maxWidth: contentWidth);
+    )..layout(maxWidth: contentWidth);
 
     // 计算行数
     final lineMetrics = textPainter.computeLineMetrics();

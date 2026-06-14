@@ -12,8 +12,7 @@ import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 
 /// 打开下载任务详情右侧抽屉（设计稿 dialogs.jsx · DownloadDetail，右侧 drawer）。
-Future<void> showDownloadDetailDrawer(BuildContext context, String taskKey) {
-  return showGeneralDialog<void>(
+Future<void> showDownloadDetailDrawer(BuildContext context, String taskKey) => showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
     barrierLabel: AppLocalizations.of(context).dlDetailBarrierLabel,
@@ -27,7 +26,6 @@ Future<void> showDownloadDetailDrawer(BuildContext context, String taskKey) {
       child: child,
     ),
   );
-}
 
 /// 下载任务详情抽屉内容（设计稿 dialogs.jsx · DownloadDetail）。
 ///
@@ -162,8 +160,7 @@ class _Progress extends StatelessWidget {
   final DesignTokens t;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
+  Widget build(BuildContext context) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -196,7 +193,6 @@ class _Progress extends StatelessWidget {
         ),
       ],
     );
-  }
 }
 
 class _Stats extends StatelessWidget {

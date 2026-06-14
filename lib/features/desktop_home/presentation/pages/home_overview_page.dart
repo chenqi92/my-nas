@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/data/services/video_history_service.dart';
@@ -13,6 +12,7 @@ import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
 import 'package:my_nas/features/video/presentation/providers/video_history_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
@@ -247,7 +247,7 @@ class _SpotlightCard extends ConsumerWidget {
 
     final card = ClipRRect(
       borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -566,16 +566,17 @@ class _SparkPainter extends CustomPainter {
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
-    canvas.drawPath(
-      fill,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [color.withValues(alpha: 0.28), color.withValues(alpha: 0.0)],
-        ).createShader(Offset.zero & size),
-    );
-    canvas.drawPath(path, line);
+    canvas
+      ..drawPath(
+        fill,
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [color.withValues(alpha: 0.28), color.withValues(alpha: 0.0)],
+          ).createShader(Offset.zero & size),
+      )
+      ..drawPath(path, line);
   }
 
   @override
@@ -604,7 +605,7 @@ class _MiniRing extends StatelessWidget {
             valueColor: AlwaysStoppedAnimation(color),
           ),
           Text(
-            '${(value * 100).toStringAsFixed(0)}',
+            (value * 100).toStringAsFixed(0),
             style: TextStyle(
               fontSize: 8,
               fontWeight: FontWeight.w700,
@@ -917,7 +918,7 @@ class _Poster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fb = Container(
+    final fb = ColoredBox(
       color: fallback,
       child: const Center(
         child: Icon(Icons.movie_outlined, size: 22, color: Colors.white24),

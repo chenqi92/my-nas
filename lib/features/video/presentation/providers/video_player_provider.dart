@@ -52,7 +52,7 @@ final currentSubtitleProvider = StateProvider<SubtitleItem?>((ref) => null);
 final currentEmbeddedSubtitleIdProvider = StateProvider<String?>((ref) => null);
 
 /// 当前正在显示的"翻译字幕"标识：null 表示未启用翻译字幕。
-/// 字符串内容形如 "translated:zh-CN:<sessionId>"，仅供 UI 高亮选中项。
+/// 字符串内容形如 "translated:zh-CN:`<sessionId>`"，仅供 UI 高亮选中项。
 final currentTranslatedSubtitleIdProvider = StateProvider<String?>((ref) => null);
 
 /// 字幕翻译进度（0~1）。null 表示当前没有进行中的翻译会话。
@@ -1518,8 +1518,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
     // 停止转码并清理画质状态
     try {
-      final qualityNotifier = _ref.read(qualityStateProvider.notifier);
-      qualityNotifier.stopTranscoding();
+      _ref.read(qualityStateProvider.notifier).stopTranscoding();
     } catch (e) {
       // 忽略错误，可能 provider 已被销毁
     }

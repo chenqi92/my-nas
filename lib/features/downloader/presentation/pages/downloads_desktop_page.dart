@@ -111,7 +111,7 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
         ],
       ),
     );
-    if (ok == true) await _batch(selected, _BatchOp.delete);
+    if (ok ?? false) await _batch(selected, _BatchOp.delete);
   }
 
   @override

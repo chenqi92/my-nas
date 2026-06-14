@@ -319,17 +319,17 @@ class MusicQueueSheet extends ConsumerWidget {
         child: child,
       ),
       onReorder: (oldIndex, newIndex) {
-        if (newIndex > oldIndex) newIndex--;
-        ref.read(playQueueProvider.notifier).reorder(oldIndex, newIndex);
+        final targetIndex = newIndex > oldIndex ? newIndex - 1 : newIndex;
+        ref.read(playQueueProvider.notifier).reorder(oldIndex, targetIndex);
         // 更新当前索引
         if (oldIndex == playerState.currentIndex) {
-          ref.read(musicPlayerControllerProvider.notifier).updateCurrentIndex(newIndex);
+          ref.read(musicPlayerControllerProvider.notifier).updateCurrentIndex(targetIndex);
         } else if (oldIndex < playerState.currentIndex &&
-            newIndex >= playerState.currentIndex) {
+            targetIndex >= playerState.currentIndex) {
           ref.read(musicPlayerControllerProvider.notifier)
               .updateCurrentIndex(playerState.currentIndex - 1);
         } else if (oldIndex > playerState.currentIndex &&
-            newIndex <= playerState.currentIndex) {
+            targetIndex <= playerState.currentIndex) {
           ref.read(musicPlayerControllerProvider.notifier)
               .updateCurrentIndex(playerState.currentIndex + 1);
         }

@@ -1968,9 +1968,10 @@ class _CenterTonearmPainter extends CustomPainter {
     final headWidth = armWidth * 2.2;
     final headHeight = armWidth * 3.5;
 
-    canvas.save();
-    canvas.translate(armEndX, armEndY);
-    canvas.rotate(armAngle + math.pi / 2); // 让头垂直于臂
+    canvas
+      ..save()
+      ..translate(armEndX, armEndY)
+      ..rotate(armAngle + math.pi / 2); // 让头垂直于臂
 
     // 唱针头主体 - 圆角矩形
     final headRect = Rect.fromCenter(
@@ -1996,13 +1997,13 @@ class _CenterTonearmPainter extends CustomPainter {
       ..color = isDark ? Colors.grey[300]! : Colors.grey[500]!
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(0, headHeight),
-      Offset(0, headHeight + 3),
-      needlePaint,
-    );
-
-    canvas.restore();
+    canvas
+      ..drawLine(
+        Offset(0, headHeight),
+        Offset(0, headHeight + 3),
+        needlePaint,
+      )
+      ..restore();
   }
 
   @override

@@ -125,8 +125,7 @@ class _Cover extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
+  Widget build(BuildContext context) => GestureDetector(
       onTap: onTap,
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -143,7 +142,6 @@ class _Cover extends StatelessWidget {
         child: MusicCoverImage(music: music, size: 46, radius: 9),
       ),
     );
-  }
 }
 
 class _Btn extends StatelessWidget {

@@ -116,7 +116,7 @@ class PlexApi {
 
     if (response is List) {
       return response
-          .where((r) => r['provides'] == 'server')
+          .where((r) => (r as Map<String, dynamic>)['provides'] == 'server')
           .map((r) => PlexServerResource.fromJson(r as Map<String, dynamic>))
           .toList();
     }
@@ -125,7 +125,7 @@ class PlexApi {
   }
 
   /// 使用 PIN 登录（便捷方法）
-  /// 返回 (authUrl, Future<authToken?>)
+  /// 返回 (authUrl, `Future<authToken?>`)
   /// 调用方需要在浏览器中打开 authUrl，然后等待 Future 完成
   Future<({String authUrl, Future<String?> authTokenFuture})> loginWithPin() async {
     final pin = await initiatePin();

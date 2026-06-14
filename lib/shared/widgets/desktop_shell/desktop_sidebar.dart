@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/providers/desktop_space_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';

@@ -244,18 +244,20 @@ class RuleParser {
   /// 处理结果（属性提取和URL解析）
   static String? _processResult(String? result, String? attrName, String? baseUrl) {
     if (result == null) return null;
-    
+
+    String? value = result;
+
     // 处理属性提取
-    if (attrName != null && result.isNotEmpty) {
-      result = _extractAttr(result, attrName);
+    if (attrName != null && value.isNotEmpty) {
+      value = _extractAttr(value, attrName);
     }
-    
+
     // 处理相对URL
-    if (baseUrl != null && result != null && result.isNotEmpty) {
-      result = _resolveUrl(result, baseUrl);
+    if (baseUrl != null && value != null && value.isNotEmpty) {
+      value = _resolveUrl(value, baseUrl);
     }
-    
-    return result?.trim();
+
+    return value?.trim();
   }
 
   /// 解析 JSONPath

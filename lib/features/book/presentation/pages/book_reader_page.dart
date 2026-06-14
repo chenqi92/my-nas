@@ -804,7 +804,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
     if (_scrollController.hasClients) {
       final max = _scrollController.position.maxScrollExtent;
       if (max <= 0) return;
-      _scrollController.animateTo(
+      await _scrollController.animateTo(
         (position * max).clamp(0.0, max),
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,

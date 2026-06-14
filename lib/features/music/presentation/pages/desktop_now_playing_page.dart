@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/music/data/services/lyric_service.dart'
     show LyricLine;
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
@@ -10,6 +9,7 @@ import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/music/presentation/widgets/music_cover.dart';
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
 
@@ -359,7 +359,7 @@ class _LyricsState extends State<_Lyrics> {
             padding: const EdgeInsets.symmetric(vertical: 180),
             itemCount: lines.length,
             itemBuilder: (_, i) {
-              final key = _rowKeys.putIfAbsent(i, () => GlobalKey());
+              final key = _rowKeys.putIfAbsent(i, GlobalKey.new);
               return _LyricRow(
                 key: key,
                 text: lines[i].text,
@@ -589,8 +589,7 @@ class _SeekBar extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
+  Widget build(BuildContext context) => LayoutBuilder(
       builder: (context, c) {
         final w = c.maxWidth;
         return GestureDetector(
@@ -604,5 +603,4 @@ class _SeekBar extends StatelessWidget {
         );
       },
     );
-  }
 }

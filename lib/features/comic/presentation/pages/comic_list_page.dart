@@ -219,30 +219,30 @@ class ComicListNotifier extends StateNotifier<ComicListState> {
 
       await _loadFromCacheImmediately();
 
-      _ref.listen<Map<String, SourceConnection>>(activeConnectionsProvider, (previous, next) {
-        final prevConnected = previous?.values.where((c) => c.status == SourceStatus.connected).length ?? 0;
-        final nextConnected = next.values.where((c) => c.status == SourceStatus.connected).length;
+      _ref
+        ..listen<Map<String, SourceConnection>>(activeConnectionsProvider, (previous, next) {
+          final prevConnected = previous?.values.where((c) => c.status == SourceStatus.connected).length ?? 0;
+          final nextConnected = next.values.where((c) => c.status == SourceStatus.connected).length;
 
-        if (nextConnected > prevConnected && state is ComicListNotConnected) {
-          loadComics();
-        }
-      });
+          if (nextConnected > prevConnected && state is ComicListNotConnected) {
+            loadComics();
+          }
+        })
+        // 监听媒体库配置变化（启用/停用/移除路径）
+        ..listen<AsyncValue<MediaLibraryConfig>>(mediaLibraryConfigProvider, (previous, next) {
+          final prevPaths =
+              previous?.valueOrNull?.getEnabledPathsForType(MediaType.comic) ?? [];
+          final nextPaths =
+              next.valueOrNull?.getEnabledPathsForType(MediaType.comic) ?? [];
 
-      // 监听媒体库配置变化（启用/停用/移除路径）
-      _ref.listen<AsyncValue<MediaLibraryConfig>>(mediaLibraryConfigProvider, (previous, next) {
-        final prevPaths =
-            previous?.valueOrNull?.getEnabledPathsForType(MediaType.comic) ?? [];
-        final nextPaths =
-            next.valueOrNull?.getEnabledPathsForType(MediaType.comic) ?? [];
+          // 比较路径是否变化（包括 sourceId 和 path）
+          final prevKeys = prevPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
+          final nextKeys = nextPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
 
-        // 比较路径是否变化（包括 sourceId 和 path）
-        final prevKeys = prevPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
-        final nextKeys = nextPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
-
-        if (prevKeys.length != nextKeys.length || !prevKeys.containsAll(nextKeys)) {
-          _scheduleRefresh();
-        }
-      });
+          if (prevKeys.length != nextKeys.length || !prevKeys.containsAll(nextKeys)) {
+            _scheduleRefresh();
+          }
+        });
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'initComicListNotifier');
       // 保持空列表状态，让用户可以正常使用界面

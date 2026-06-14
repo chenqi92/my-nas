@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/sources/data/services/network_discovery_service.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
@@ -302,10 +302,10 @@ class _SourceCard extends ConsumerWidget {
   /// 测试 / 重新连接当前源，并把结果以 SnackBar 反馈。
   Future<void> _reconnect(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-      SnackBar(content: Text(l.sourcesPageConnecting(source.name))),
-    );
+    final messenger = ScaffoldMessenger.of(context)
+      ..showSnackBar(
+        SnackBar(content: Text(l.sourcesPageConnecting(source.name))),
+      );
     final result =
         await ref.read(activeConnectionsProvider.notifier).reconnect(source.id);
     if (!context.mounted) return;

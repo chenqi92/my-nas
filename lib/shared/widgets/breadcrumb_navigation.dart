@@ -410,10 +410,9 @@ List<BreadcrumbItem> buildBreadcrumbsFromPath(
   String rootLabel = '根目录',
   String separator = '/',
 }) {
-  final items = <BreadcrumbItem>[];
-
   // 添加根目录
-  items.add(BreadcrumbItem(label: rootLabel, path: separator));
+  final items = <BreadcrumbItem>[]
+    ..add(BreadcrumbItem(label: rootLabel, path: separator));
 
   if (path == separator || path.isEmpty) {
     return items;
@@ -421,13 +420,13 @@ List<BreadcrumbItem> buildBreadcrumbsFromPath(
 
   // 分割路径
   final parts = path.split(separator).where((p) => p.isNotEmpty).toList();
-  var currentPath = '';
+  final currentPath = StringBuffer();
 
   for (final part in parts) {
-    currentPath += '$separator$part';
+    currentPath.write('$separator$part');
     items.add(BreadcrumbItem(
       label: part,
-      path: currentPath,
+      path: currentPath.toString(),
     ));
   }
 

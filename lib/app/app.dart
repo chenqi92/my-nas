@@ -24,6 +24,7 @@ import 'package:my_nas/features/photo/data/services/photo_database_service.dart'
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/data/services/video_scanner_service.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/providers/glass_material_provider.dart';
 import 'package:my_nas/shared/providers/interface_locale_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
@@ -31,7 +32,6 @@ import 'package:my_nas/shared/providers/transfer_background_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/widget_data_service.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/toast_overlay.dart';
 
 class MyNasApp extends ConsumerStatefulWidget {

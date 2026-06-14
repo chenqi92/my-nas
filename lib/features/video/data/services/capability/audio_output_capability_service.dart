@@ -76,21 +76,20 @@ class AudioOutputCapabilityService {
   /// 获取桌面端回退能力
   ///
   /// Windows/Linux 暂时无法检测，返回保守估计
-  AudioPassthroughCapability _getDesktopFallbackCapability() {
-    // 桌面端假设可能支持直通，让用户手动选择
-    return const AudioPassthroughCapability(
-      isSupported: true,
-      supportedCodecs: [
-        AudioCodec.ac3,
-        AudioCodec.eac3,
-        AudioCodec.dts,
-        AudioCodec.dtsHd,
-        AudioCodec.truehd,
-      ],
-      outputDevice: AudioOutputDevice.unknown,
-      maxChannels: 8,
-    );
-  }
+  // 桌面端假设可能支持直通，让用户手动选择
+  AudioPassthroughCapability _getDesktopFallbackCapability() =>
+      const AudioPassthroughCapability(
+        isSupported: true,
+        supportedCodecs: [
+          AudioCodec.ac3,
+          AudioCodec.eac3,
+          AudioCodec.dts,
+          AudioCodec.dtsHd,
+          AudioCodec.truehd,
+        ],
+        outputDevice: AudioOutputDevice.unknown,
+        maxChannels: 8,
+      );
 
   /// 清除缓存
   void clearCache() {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -367,7 +369,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
       if (mounted) {
         setState(() => _isInShelf = true);
         // 刷新书架 Provider 状态
-        ref.read(onlineBookShelfProvider.notifier).onBookAdded();
+        unawaited(ref.read(onlineBookShelfProvider.notifier).onBookAdded());
         context.showToast('已加入书架: $_displayName');
         debugPrint('[在线书架] 已刷新 Provider 并显示 toast');
       }
@@ -391,7 +393,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     if (mounted) {
       setState(() => _isInShelf = false);
       // 刷新书架 Provider 状态
-      ref.read(onlineBookShelfProvider.notifier).onBookRemoved();
+      unawaited(ref.read(onlineBookShelfProvider.notifier).onBookRemoved());
       context.showToast('已从书架移除');
     }
   }
@@ -403,7 +405,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
         await OnlineBookShelfService.instance.addBook(widget.book);
         if (mounted) {
           setState(() => _isInShelf = true);
-          ref.read(onlineBookShelfProvider.notifier).onBookAdded();
+          unawaited(ref.read(onlineBookShelfProvider.notifier).onBookAdded());
         }
       } catch (e) {
         logger.w('加入书架失败，继续阅读', e);

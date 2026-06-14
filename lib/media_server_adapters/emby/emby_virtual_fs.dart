@@ -251,10 +251,8 @@ class EmbyVirtualFileSystem implements NasFileSystem {
     return item;
   }
 
-  Future<String> _buildItemPath(JellyfinItem item) async {
-    // 简化路径构建
-    return '/${item.name}';
-  }
+  // 简化路径构建
+  Future<String> _buildItemPath(JellyfinItem item) async => '/${item.name}';
 
   FileItem _itemToFileItem(JellyfinItem item, String path) {
     final isPlayable = item.type == 'Movie' ||

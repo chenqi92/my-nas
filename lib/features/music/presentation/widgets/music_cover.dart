@@ -58,7 +58,7 @@ class MusicCoverImage extends StatelessWidget {
         color: t.text3,
       ),
     );
-    final Widget child = provider == null
+    final child = provider == null
         ? fallback
         : Image(
             image: provider,

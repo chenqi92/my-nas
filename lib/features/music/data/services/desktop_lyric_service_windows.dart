@@ -159,10 +159,9 @@ class DesktopLyricServiceWindowsImpl implements DesktopLyricService {
   }
 
   @override
-  Future<Offset?> getPosition() async {
-    // WindowController 不支持 getFrame，返回缓存的位置
-    return _currentPosition;
-  }
+  Future<Offset?> getPosition() async =>
+      // WindowController 不支持 getFrame，返回缓存的位置
+      _currentPosition;
 
   @override
   Future<void> updateSettings(DesktopLyricSettings settings) async {

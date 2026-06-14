@@ -6466,7 +6466,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showAdaptiveModalSheet<void>(
+    unawaited(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -6522,7 +6522,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   /// 构建排序选项
@@ -6634,7 +6634,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showAdaptiveModalSheet<void>(
+    unawaited(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
       shape: const RoundedRectangleBorder(
@@ -6748,7 +6748,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Future<void> _openVideoDetail(
@@ -7426,14 +7426,14 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
             _selectedGenre = genre;
             _selectedYear = year;
           });
-          _resetAndReload();
+          unawaited(_resetAndReload());
         }
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showAdaptiveModalSheet<void>(
+    unawaited(showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -7454,7 +7454,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
           }
         },
       ),
-    );
+    ));
   }
 
   bool get _hasFilters => _selectedGenre != null || _selectedYear != null;
@@ -7756,13 +7756,13 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
 
       if (selected != null && selected != _sortOption) {
         setState(() => _sortOption = selected);
-        _resetAndReload();
+        unawaited(_resetAndReload());
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showAdaptiveModalSheet<void>(
+    unawaited(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -7820,7 +7820,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
           ],
         ),
       ),
-    );
+    ));
   }
 
   Future<void> _openVideoDetail(
@@ -8301,14 +8301,14 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
             _selectedGenre = genre;
             _selectedYear = year;
           });
-          _resetAndReload();
+          unawaited(_resetAndReload());
         }
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showAdaptiveModalSheet<void>(
+    unawaited(showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -8329,7 +8329,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
           }
         },
       ),
-    );
+    ));
   }
 
   Future<void> _showSortMenu(BuildContext context, bool isDark) async {
@@ -8353,13 +8353,13 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
 
       if (selected != null && selected != _sortOption) {
         setState(() => _sortOption = selected);
-        _resetAndReload();
+        unawaited(_resetAndReload());
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showAdaptiveModalSheet<void>(
+    unawaited(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -8417,7 +8417,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
           ],
         ),
       ),
-    );
+    ));
   }
 
   bool get _hasFilters => _selectedGenre != null || _selectedYear != null;
@@ -8803,13 +8803,13 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
 
       if (result != null && result != _sortOption) {
         setState(() => _sortOption = result);
-        _resetAndReload();
+        unawaited(_resetAndReload());
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showAdaptiveModalSheet<void>(
+    unawaited(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -8867,7 +8867,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
           ],
         ),
       ),
-    );
+    ));
   }
 
   @override
@@ -10316,13 +10316,13 @@ class _FilteredVideosPaginatedPageState
 
       if (selected != null && selected != _sortOption) {
         setState(() => _sortOption = selected);
-        _resetAndReload();
+        unawaited(_resetAndReload());
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    showAdaptiveModalSheet<void>(
+    unawaited(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -10380,7 +10380,7 @@ class _FilteredVideosPaginatedPageState
           ],
         ),
       ),
-    );
+    ));
   }
 
   @override

@@ -1,3 +1,5 @@
+// 以下常量名沿用 Win32 API 原始命名（如 WM_MOUSELEAVE、FW_BOLD），保持与官方一致便于对照
+// ignore_for_file: constant_identifier_names
 // ignore_for_file: unused_field
 
 import 'dart:async';
@@ -240,8 +242,9 @@ class DesktopLyricServiceWindowsNativeImpl implements DesktopLyricService {
 
     RegisterClass(wc);
 
-    calloc.free(wc);
-    calloc.free(className);
+    calloc
+      ..free(wc)
+      ..free(className);
   }
 
   @override
@@ -306,8 +309,9 @@ class DesktopLyricServiceWindowsNativeImpl implements DesktopLyricService {
       nullptr,
     );
 
-    calloc.free(className);
-    calloc.free(windowName);
+    calloc
+      ..free(className)
+      ..free(windowName);
 
     if (_hwnd != 0) {
       // 设置窗口透明度
@@ -505,8 +509,9 @@ class DesktopLyricServiceWindowsNativeImpl implements DesktopLyricService {
     _win32.selectClipRgn(hdc, NULL);
 
     DeleteObject(clipRgn);
-    calloc.free(clipRect);
-    calloc.free(textPtr);
+    calloc
+      ..free(clipRect)
+      ..free(textPtr);
 
     SelectObject(hdc, oldFont);
     DeleteObject(hFont);
@@ -565,8 +570,9 @@ class DesktopLyricServiceWindowsNativeImpl implements DesktopLyricService {
     _win32.getTextExtentPoint32(hdc, textPtr, text.length, size);
     final width = size.ref.cx;
 
-    calloc.free(textPtr);
-    calloc.free(size);
+    calloc
+      ..free(textPtr)
+      ..free(size);
     SelectObject(hdc, oldFont);
     DeleteObject(hFont);
 

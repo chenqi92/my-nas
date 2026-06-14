@@ -22,7 +22,7 @@ class FakeNasFileSystem extends Fake implements NasFileSystem {}
 void main() {
   setUpAll(() {
     registerFallbackValue(FakeNasFileSystem());
-    registerFallbackValue(const Duration());
+    registerFallbackValue(Duration.zero);
   });
   group('CastService', () {
     late CastService castService;
@@ -42,8 +42,12 @@ void main() {
       airplayDeviceController = StreamController<List<CastDevice>>.broadcast();
 
       // Setup default mock responses BEFORE creating CastService
-      when(() => mockDlnaAdapter.deviceStream).thenAnswer((_) => dlnaDeviceController.stream);
-      when(() => mockAirPlayAdapter.deviceStream).thenAnswer((_) => airplayDeviceController.stream);
+      when(
+        () => mockDlnaAdapter.deviceStream,
+      ).thenAnswer((_) => dlnaDeviceController.stream);
+      when(
+        () => mockAirPlayAdapter.deviceStream,
+      ).thenAnswer((_) => airplayDeviceController.stream);
       when(() => mockDlnaAdapter.dispose()).thenReturn(null);
       when(() => mockAirPlayAdapter.dispose()).thenAnswer((_) async {});
       when(() => mockProxyServer.stop()).thenAnswer((_) async {});
@@ -67,15 +71,23 @@ void main() {
       });
 
       test('should start discovery on both adapters', () async {
-        when(() => mockDlnaAdapter.startDiscovery(timeout: any(named: 'timeout')))
-            .thenAnswer((_) async {});
-        when(() => mockAirPlayAdapter.startDiscovery(timeout: any(named: 'timeout')))
-            .thenAnswer((_) async {});
+        when(
+          () => mockDlnaAdapter.startDiscovery(timeout: any(named: 'timeout')),
+        ).thenAnswer((_) async {});
+        when(
+          () =>
+              mockAirPlayAdapter.startDiscovery(timeout: any(named: 'timeout')),
+        ).thenAnswer((_) async {});
 
         await castService.startDiscovery();
 
-        verify(() => mockDlnaAdapter.startDiscovery(timeout: any(named: 'timeout'))).called(1);
-        verify(() => mockAirPlayAdapter.startDiscovery(timeout: any(named: 'timeout'))).called(1);
+        verify(
+          () => mockDlnaAdapter.startDiscovery(timeout: any(named: 'timeout')),
+        ).called(1);
+        verify(
+          () =>
+              mockAirPlayAdapter.startDiscovery(timeout: any(named: 'timeout')),
+        ).called(1);
       });
 
       test('should stop discovery on both adapters', () {
@@ -136,21 +148,28 @@ void main() {
 
       test('should cast video successfully', () async {
         when(() => mockProxyServer.ensureRunning()).thenAnswer((_) async {});
-        when(() => mockProxyServer.registerStream(
-              path: any(named: 'path'),
-              fileSystem: any(named: 'fileSystem'),
-              fileSize: any(named: 'fileSize'),
-              subtitlePath: any(named: 'subtitlePath'),
-            )).thenReturn('test-token');
-        when(() => mockProxyServer.getStreamUrl(any()))
-            .thenAnswer((_) async => 'http://192.168.1.1:8899/stream/test-token');
-        when(() => mockProxyServer.getSubtitleUrl(any())).thenAnswer((_) async => null);
-        when(() => mockDlnaAdapter.castVideo(
-              deviceId: any(named: 'deviceId'),
-              videoUrl: any(named: 'videoUrl'),
-              title: any(named: 'title'),
-              subtitleUrl: any(named: 'subtitleUrl'),
-            )).thenAnswer((_) async => true);
+        when(
+          () => mockProxyServer.registerStream(
+            path: any(named: 'path'),
+            fileSystem: any(named: 'fileSystem'),
+            fileSize: any(named: 'fileSize'),
+            subtitlePath: any(named: 'subtitlePath'),
+          ),
+        ).thenReturn('test-token');
+        when(
+          () => mockProxyServer.getStreamUrl(any()),
+        ).thenAnswer((_) async => 'http://192.168.1.1:8899/stream/test-token');
+        when(
+          () => mockProxyServer.getSubtitleUrl(any()),
+        ).thenAnswer((_) async => null);
+        when(
+          () => mockDlnaAdapter.castVideo(
+            deviceId: any(named: 'deviceId'),
+            videoUrl: any(named: 'videoUrl'),
+            title: any(named: 'title'),
+            subtitleUrl: any(named: 'subtitleUrl'),
+          ),
+        ).thenAnswer((_) async => true);
 
         final session = await castService.cast(
           device: testDevice,
@@ -167,22 +186,29 @@ void main() {
 
       test('should handle cast failure', () async {
         when(() => mockProxyServer.ensureRunning()).thenAnswer((_) async {});
-        when(() => mockProxyServer.registerStream(
-              path: any(named: 'path'),
-              fileSystem: any(named: 'fileSystem'),
-              fileSize: any(named: 'fileSize'),
-              subtitlePath: any(named: 'subtitlePath'),
-            )).thenReturn('test-token');
-        when(() => mockProxyServer.getStreamUrl(any()))
-            .thenAnswer((_) async => 'http://192.168.1.1:8899/stream/test-token');
-        when(() => mockProxyServer.getSubtitleUrl(any())).thenAnswer((_) async => null);
+        when(
+          () => mockProxyServer.registerStream(
+            path: any(named: 'path'),
+            fileSystem: any(named: 'fileSystem'),
+            fileSize: any(named: 'fileSize'),
+            subtitlePath: any(named: 'subtitlePath'),
+          ),
+        ).thenReturn('test-token');
+        when(
+          () => mockProxyServer.getStreamUrl(any()),
+        ).thenAnswer((_) async => 'http://192.168.1.1:8899/stream/test-token');
+        when(
+          () => mockProxyServer.getSubtitleUrl(any()),
+        ).thenAnswer((_) async => null);
         when(() => mockProxyServer.unregisterStream(any())).thenReturn(null);
-        when(() => mockDlnaAdapter.castVideo(
-              deviceId: any(named: 'deviceId'),
-              videoUrl: any(named: 'videoUrl'),
-              title: any(named: 'title'),
-              subtitleUrl: any(named: 'subtitleUrl'),
-            )).thenAnswer((_) async => false);
+        when(
+          () => mockDlnaAdapter.castVideo(
+            deviceId: any(named: 'deviceId'),
+            videoUrl: any(named: 'videoUrl'),
+            title: any(named: 'title'),
+            subtitleUrl: any(named: 'subtitleUrl'),
+          ),
+        ).thenAnswer((_) async => false);
 
         final session = await castService.cast(
           device: testDevice,
@@ -198,13 +224,17 @@ void main() {
 
       test('should handle IP address failure', () async {
         when(() => mockProxyServer.ensureRunning()).thenAnswer((_) async {});
-        when(() => mockProxyServer.registerStream(
-              path: any(named: 'path'),
-              fileSystem: any(named: 'fileSystem'),
-              fileSize: any(named: 'fileSize'),
-              subtitlePath: any(named: 'subtitlePath'),
-            )).thenReturn('test-token');
-        when(() => mockProxyServer.getStreamUrl(any())).thenAnswer((_) async => null);
+        when(
+          () => mockProxyServer.registerStream(
+            path: any(named: 'path'),
+            fileSystem: any(named: 'fileSystem'),
+            fileSize: any(named: 'fileSize'),
+            subtitlePath: any(named: 'subtitlePath'),
+          ),
+        ).thenReturn('test-token');
+        when(
+          () => mockProxyServer.getStreamUrl(any()),
+        ).thenAnswer((_) async => null);
         when(() => mockProxyServer.unregisterStream(any())).thenReturn(null);
 
         final session = await castService.cast(
@@ -254,22 +284,29 @@ void main() {
 
         // Setup for successful cast
         when(() => mockProxyServer.ensureRunning()).thenAnswer((_) async {});
-        when(() => mockProxyServer.registerStream(
-              path: any(named: 'path'),
-              fileSystem: any(named: 'fileSystem'),
-              fileSize: any(named: 'fileSize'),
-              subtitlePath: any(named: 'subtitlePath'),
-            )).thenReturn('test-token');
-        when(() => mockProxyServer.getStreamUrl(any()))
-            .thenAnswer((_) async => 'http://192.168.1.1:8899/stream/test-token');
-        when(() => mockProxyServer.getSubtitleUrl(any())).thenAnswer((_) async => null);
+        when(
+          () => mockProxyServer.registerStream(
+            path: any(named: 'path'),
+            fileSystem: any(named: 'fileSystem'),
+            fileSize: any(named: 'fileSize'),
+            subtitlePath: any(named: 'subtitlePath'),
+          ),
+        ).thenReturn('test-token');
+        when(
+          () => mockProxyServer.getStreamUrl(any()),
+        ).thenAnswer((_) async => 'http://192.168.1.1:8899/stream/test-token');
+        when(
+          () => mockProxyServer.getSubtitleUrl(any()),
+        ).thenAnswer((_) async => null);
         when(() => mockProxyServer.unregisterStream(any())).thenReturn(null);
-        when(() => mockDlnaAdapter.castVideo(
-              deviceId: any(named: 'deviceId'),
-              videoUrl: any(named: 'videoUrl'),
-              title: any(named: 'title'),
-              subtitleUrl: any(named: 'subtitleUrl'),
-            )).thenAnswer((_) async => true);
+        when(
+          () => mockDlnaAdapter.castVideo(
+            deviceId: any(named: 'deviceId'),
+            videoUrl: any(named: 'videoUrl'),
+            title: any(named: 'title'),
+            subtitleUrl: any(named: 'subtitleUrl'),
+          ),
+        ).thenAnswer((_) async => true);
         when(() => mockDlnaAdapter.stop()).thenAnswer((_) async {});
 
         const testDevice = CastDevice(

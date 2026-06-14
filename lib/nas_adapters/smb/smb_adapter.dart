@@ -179,10 +179,10 @@ class SmbAdapter implements NasAdapter {
 
     for (var attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        logger.d('SmbAdapter: 连接尝试 $attempt/$maxRetries');
-
-        // 创建连接池（统一管理所有连接）
-        logger.i('SmbAdapter: ${SmbPoolConfig.summary}');
+        logger
+          ..d('SmbAdapter: 连接尝试 $attempt/$maxRetries')
+          // 创建连接池（统一管理所有连接）
+          ..i('SmbAdapter: ${SmbPoolConfig.summary}');
         _connectionPool = SmbConnectionPool(
           host: host,
           username: username,

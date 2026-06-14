@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 
 /// 桌面端照片查看器：全屏遮罩 + 大图缩放 + 左右切换 + 缩略图条。
@@ -177,8 +177,7 @@ class _NavButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    return Material(
+  Widget build(BuildContext context) => Material(
       color: Colors.black.withValues(alpha: 0.4),
       shape: const CircleBorder(),
       child: InkWell(
@@ -190,5 +189,4 @@ class _NavButton extends StatelessWidget {
         ),
       ),
     );
-  }
 }
