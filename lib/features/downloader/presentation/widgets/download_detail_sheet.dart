@@ -76,6 +76,11 @@ class DownloadDetailSheet extends ConsumerWidget {
                             _Stats(task: task, t: t),
                             const SizedBox(height: 18),
                             _Meta(task: task, t: t),
+                            if (task.sourceType ==
+                                SourceType.qbittorrent) ...[
+                              const SizedBox(height: 18),
+                              _Files(task: task, t: t),
+                            ],
                           ],
                         ),
                       ),
@@ -405,3 +410,76 @@ DotStatus _dot(UnifiedDownloadStatus s) => switch (s) {
       UnifiedDownloadStatus.waiting => DotStatus.warn,
       UnifiedDownloadStatus.error => DotStatus.err,
     };
+
+/// qBittorrent 任务的文件列表（接 qbTorrentFilesProvider 真实数据）。
+class _Files extends ConsumerWidget {
+  const _Files({required this.task, required this.t});
+  final UnifiedDownloadTask task;
+  final DesignTokens t;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filesAsync =
+        ref.watch(qbTorrentFilesProvider((task.sourceId, task.taskId)));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '文件',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+            color: t.text3,
+          ),
+        ),
+        const SizedBox(height: 10),
+        filesAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+          error: (e, _) => Text('文件列表加载失败',
+              style: TextStyle(fontSize: 12.5, color: t.text3)),
+          data: (files) {
+            if (files.isEmpty) {
+              return Text('无文件信息',
+                  style: TextStyle(fontSize: 12.5, color: t.text3));
+            }
+            return Column(
+              children: [
+                for (final f in files)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            f.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12.5, color: t.text1),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${(f.progress * 100).round()}% · ${formatBytes(f.size)}',
+                          style: TextStyle(fontSize: 11, color: t.text3),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}

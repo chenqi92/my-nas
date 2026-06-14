@@ -124,6 +124,12 @@ class QBittorrentAdapter implements ServiceAdapter {
     return _api!.getTorrentProperties(hash);
   }
 
+  /// 获取 Torrent 文件列表
+  Future<List<QBTorrentFile>> getTorrentFiles(String hash) async {
+    _ensureConnected();
+    return _api!.getTorrentFiles(hash);
+  }
+
   /// 添加 Torrent（通过 URL 或 Magnet 链接）
   Future<void> addTorrent(
     String url, {

@@ -488,6 +488,23 @@ final qbPreferencesProvider = FutureProvider.family
   }
 });
 
+/// qBittorrent 单个 Torrent 的文件列表 Provider（key = (sourceId, hash)）。
+final qbTorrentFilesProvider = FutureProvider.autoDispose
+    .family<List<QBTorrentFile>, (String, String)>((ref, key) async {
+  final (sourceId, hash) = key;
+  final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
+  if (connection == null ||
+      connection.status != QBConnectionStatus.connected) {
+    return const [];
+  }
+  try {
+    return await connection.adapter.getTorrentFiles(hash);
+  } on Exception catch (e) {
+    logger.e('QBittorrentProvider: 获取文件列表失败', e);
+    return const [];
+  }
+});
+
 /// Torrent 排序方式
 enum QBSortMode {
   name('name', '名称'),
