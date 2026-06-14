@@ -5,10 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/features/video/data/services/video_history_service.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
+import 'package:my_nas/features/video/presentation/providers/video_history_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
@@ -74,7 +77,7 @@ class _HomeOverviewPageState extends ConsumerState<HomeOverviewPage> {
                 sub: '观看 · 阅读 · 收听 — 本地与 Trakt 合并，本地优先',
               ),
               const SizedBox(height: 14),
-              _EmptyContinue(),
+              const _ContinueStrip(),
               const SizedBox(height: 30),
               _SectionHead(title: '快速操作'),
               const SizedBox(height: 14),
@@ -211,11 +214,19 @@ class _NowHero extends StatelessWidget {
       ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][w - 1];
 }
 
-class _SpotlightCard extends StatelessWidget {
+class _SpotlightCard extends ConsumerWidget {
+  const _SpotlightCard();
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
-    return ClipRRect(
+    final items = ref.watch(continueWatchingProvider).valueOrNull ?? const [];
+    final top = items.isNotEmpty ? items.first : null;
+    final pos = top?.lastPosition?.inMilliseconds ?? 0;
+    final dur = top?.duration?.inMilliseconds ?? 0;
+    final progress = dur > 0 ? (pos / dur).clamp(0.0, 1.0) : 0.0;
+
+    final card = ClipRRect(
       borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
       child: Container(
         decoration: BoxDecoration(
@@ -231,6 +242,11 @@ class _SpotlightCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            // 顶部继续观看条目的缩略图作为底图（有则铺）。
+            if (top?.thumbnailUrl != null && top!.thumbnailUrl!.isNotEmpty)
+              Positioned.fill(
+                child: _Poster(url: top.thumbnailUrl, fallback: t.insetBg),
+              ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -254,20 +270,22 @@ class _SpotlightCard extends StatelessWidget {
                     spacing: 8,
                     children: const [
                       AppTag('继续观看', variant: TagVariant.accent),
-                      AppTag('4K HDR'),
+                      AppTag('本地优先'),
                       AppTag('Trakt 同步', variant: TagVariant.accent),
                     ],
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    '映射「影视」媒体库以激活此处',
+                    top?.videoName ?? '映射「影视」媒体库以激活此处',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 34,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                       letterSpacing: -0.6,
                       shadows: [
-                        Shadow(color: Colors.black54, blurRadius: 12),
+                        const Shadow(color: Colors.black54, blurRadius: 12),
                       ],
                     ),
                   ),
@@ -298,20 +316,17 @@ class _SpotlightCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: const [
-                                Text(
-                                  '继续观看会自动出现在这里',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFFCCCCD0),
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              top != null
+                                  ? '继续观看 · ${(progress * 100).toStringAsFixed(0)}%'
+                                  : '继续观看会自动出现在这里',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFFCCCCD0),
+                              ),
                             ),
                             const SizedBox(height: 6),
-                            const AppProgressBar(value: 0.0),
+                            AppProgressBar(value: progress),
                           ],
                         ),
                       ),
@@ -324,13 +339,41 @@ class _SpotlightCard extends StatelessWidget {
         ),
       ),
     );
+
+    if (top == null) return card;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        onTap: () => GoRouter.of(context).go('/video'),
+        child: card,
+      ),
+    );
   }
+}
+
+String _fmtSpeed(int bytesPerSec) {
+  if (bytesPerSec <= 0) return '0 KB/s';
+  const units = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+  var v = bytesPerSec.toDouble();
+  var i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return '${v.toStringAsFixed(v >= 100 || i == 0 ? 0 : 1)} ${units[i]}';
 }
 
 class _SystemPulse extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = DesignTokens.of(context);
+    final tp = ref.watch(downloaderThroughputProvider);
+    final downloadSub = tp.activeCount > 0
+        ? '${_fmtSpeed(tp.downloadSpeed)} · ${tp.activeCount} 个任务'
+        : tp.connectedClients > 0
+            ? '空闲 · ${tp.connectedClients} 个客户端'
+            : '未连接下载器';
     return GlassPanel(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       child: SizedBox(
@@ -367,7 +410,7 @@ class _SystemPulse extends ConsumerWidget {
                     icon: Icons.download_rounded,
                     iconColor: t.accentBright,
                     title: '下载吞吐',
-                    subtitle: '当前无任务',
+                    subtitle: downloadSub,
                     trailing: _Sparkline(color: t.accentBright),
                   ),
                   _PulseRow(
@@ -383,7 +426,11 @@ class _SystemPulse extends ConsumerWidget {
                     iconColor: t.hot,
                     title: '直播中',
                     subtitle: '映射 M3U8 源后激活',
-                    trailing: const AppChip(label: '观看', compact: true),
+                    trailing: AppChip(
+                      label: '观看',
+                      compact: true,
+                      onTap: () => GoRouter.of(context).go('/live'),
+                    ),
                   ),
                 ],
               ),
@@ -547,7 +594,94 @@ class _MiniRing extends StatelessWidget {
   }
 }
 
+/// 「继续」strip：接 continueWatchingProvider（本地播放历史，未来与 Trakt
+/// 合并、本地优先）。无进度时回退空态卡。
+class _ContinueStrip extends ConsumerWidget {
+  const _ContinueStrip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items =
+        ref.watch(continueWatchingProvider).valueOrNull ?? const [];
+    if (items.isEmpty) return const _EmptyContinue();
+    final list = items.take(8).toList();
+    return SizedBox(
+      height: 156,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: list.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 14),
+        itemBuilder: (_, i) => _ContinueCard(
+          item: list[i],
+          onTap: () => GoRouter.of(context).go('/video'),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContinueCard extends StatelessWidget {
+  const _ContinueCard({required this.item, required this.onTap});
+  final VideoHistoryItem item;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final pos = item.lastPosition?.inMilliseconds ?? 0;
+    final dur = item.duration?.inMilliseconds ?? 0;
+    final progress = dur > 0 ? (pos / dur).clamp(0.0, 1.0) : 0.0;
+    return SizedBox(
+      width: 240,
+      child: AppCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                width: 92,
+                height: 60,
+                child: _Poster(url: item.thumbnailUrl, fallback: t.insetBg),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    item.videoName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: t.text0,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  AppProgressBar(value: progress),
+                  const SizedBox(height: 5),
+                  Text(
+                    '已观看 ${(progress * 100).toStringAsFixed(0)}%',
+                    style: TextStyle(fontSize: 10.5, color: t.text2),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _EmptyContinue extends StatelessWidget {
+  const _EmptyContinue();
+
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
@@ -583,7 +717,7 @@ class _QuickGrid extends StatelessWidget {
         title: 'PT 搜索',
         desc: '跨站找资源',
         icon: Icons.flag_circle_outlined,
-        onTap: () => GoRouter.of(context).go('/sources'),
+        onTap: () => GoRouter.of(context).go('/pt'),
       ),
       _QuickItem(
         title: '上传到 NAS',

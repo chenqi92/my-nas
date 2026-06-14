@@ -22,16 +22,19 @@ class DesktopSpaceNotifier extends StateNotifier<DesktopSpace> {
 
   static const _key = 'desktop_space';
 
+  /// 用户是否在持久化值加载完成前已主动切换过 space。
+  /// 避免异步 _load() 回填覆盖用户刚点击的切换（冷启动竞态）。
+  bool _userTouched = false;
+
   Future<void> _load() async {
     try {
       final box = await HiveUtils.getSettingsBox();
       final v = box.get(_key) as String?;
-      if (v != null) {
-        for (final s in DesktopSpace.values) {
-          if (s.name == v) {
-            state = s;
-            return;
-          }
+      if (_userTouched || v == null) return;
+      for (final s in DesktopSpace.values) {
+        if (s.name == v) {
+          if (!_userTouched) state = s;
+          return;
         }
       }
     } on Exception catch (e, st) {
@@ -40,6 +43,7 @@ class DesktopSpaceNotifier extends StateNotifier<DesktopSpace> {
   }
 
   Future<void> set(DesktopSpace s) async {
+    _userTouched = true;
     if (s == state) return;
     state = s;
     try {
