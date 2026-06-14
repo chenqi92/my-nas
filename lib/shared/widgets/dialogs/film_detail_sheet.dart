@@ -8,9 +8,11 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/pages/video_player_page.dart';
+import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_history_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
+import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 
@@ -96,7 +98,7 @@ class _FilmDetailSheetState extends ConsumerState<FilmDetailSheet> {
     final m = widget.meta;
     switch (name) {
       case '剧集':
-        return _SeasonsStub(t: t);
+        return _Seasons(meta: m, t: t);
       case '版本':
         return _Versions(meta: m, t: t);
       case '演职员':
@@ -510,19 +512,143 @@ class _Related extends StatelessWidget {
       );
 }
 
-class _SeasonsStub extends StatelessWidget {
-  const _SeasonsStub({required this.t});
+/// 剧集分季/分集：按 TMDB ID（或剧目录）查本地分集，季 chip + 集列表，
+/// 点击集直接播放。数据来自 localEpisodeFilesProvider。
+class _Seasons extends ConsumerStatefulWidget {
+  const _Seasons({required this.meta, required this.t});
+  final VideoMetadata meta;
   final DesignTokens t;
 
   @override
-  Widget build(BuildContext context) => Container(
+  ConsumerState<_Seasons> createState() => _SeasonsState();
+}
+
+class _SeasonsState extends ConsumerState<_Seasons> {
+  int? _season;
+
+  Widget _hint(String text) => Container(
         padding: const EdgeInsets.symmetric(vertical: 22),
         alignment: Alignment.center,
-        child: Text(
-          '剧集分集（按季 + 集网格）由 videoDetailProvider 提供，迁移中。',
-          style: TextStyle(fontSize: 12.5, color: t.text2),
-        ),
+        child: Text(text,
+            style: TextStyle(fontSize: 12.5, color: widget.t.text2)),
       );
+
+  @override
+  Widget build(BuildContext context) {
+    final m = widget.meta;
+    final t = widget.t;
+    final AsyncValue<Map<int, Map<int, VideoMetadata>>> episodesAsync;
+    if (m.tmdbId != null) {
+      episodesAsync = ref.watch(localEpisodeFilesProvider(m.tmdbId!));
+    } else if (m.showDirectory != null && m.showDirectory!.isNotEmpty) {
+      episodesAsync =
+          ref.watch(localEpisodesByShowDirProvider(m.showDirectory!));
+    } else {
+      return _hint('无法定位该剧的分集（缺少 TMDB ID 与剧目录）。');
+    }
+
+    return episodesAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => _hint('加载剧集失败：$e'),
+      data: (seasons) {
+        if (seasons.isEmpty) return _hint('未在本地找到该剧的分集文件。');
+        final seasonNums = seasons.keys.toList()..sort();
+        final sel = (_season != null && seasons.containsKey(_season))
+            ? _season!
+            : (seasonNums.contains(m.seasonNumber)
+                ? m.seasonNumber!
+                : seasonNums.first);
+        final eps = (seasons[sel] ?? const {}).entries.toList()
+          ..sort((a, b) => a.key.compareTo(b.key));
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (seasonNums.length > 1)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final s in seasonNums)
+                    AppChip(
+                      label: '第 $s 季',
+                      active: s == sel,
+                      compact: true,
+                      onTap: () => setState(() => _season = s),
+                    ),
+                ],
+              ),
+            if (seasonNums.length > 1) const SizedBox(height: 14),
+            for (final entry in eps)
+              _EpisodeRow(ep: entry.key, meta: entry.value, t: t),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _EpisodeRow extends ConsumerWidget {
+  const _EpisodeRow({required this.ep, required this.meta, required this.t});
+  final int ep;
+  final VideoMetadata meta;
+  final DesignTokens t;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => playVideoMetadata(context, ref, meta, closeSheet: true),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: t.hairline)),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 34,
+                child: Text(
+                  '$ep',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: t.text2,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  meta.episodeTitle?.isNotEmpty ?? false
+                      ? meta.episodeTitle!
+                      : '第 $ep 集',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: t.text0,
+                  ),
+                ),
+              ),
+              if (meta.isWatched) ...[
+                Icon(Icons.check_circle, size: 15, color: t.ok),
+                const SizedBox(width: 8),
+              ],
+              Icon(Icons.play_arrow_rounded, size: 18, color: t.accentBright),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _FsImage extends StatelessWidget {
