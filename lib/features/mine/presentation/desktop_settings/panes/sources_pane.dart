@@ -63,6 +63,7 @@ class SourcesPane extends ConsumerWidget {
             libsConfig,
           ),
         ),
+        const _DiscoveredDevicesSection(),
         SetSection(
           title: '连接行为',
           hint: 'trust_self_signed_cert · source_default_auto_connect · '
@@ -403,6 +404,55 @@ class _SourceMenu extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// 「发现的设备」：mDNS / Bonjour 扫描到的可添加设备列表，点击「添加」预填
+/// 主机 / 端口 / 类型进入添加源表单。无发现结果时整段不渲染。
+class _DiscoveredDevicesSection extends ConsumerWidget {
+  const _DiscoveredDevicesSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final devices = ref.watch(networkDiscoveryProvider).devices;
+    if (devices.isEmpty) return const SizedBox.shrink();
+    final t = DesignTokens.of(context);
+    return SetSection(
+      title: '发现的设备',
+      hint: '${devices.length} 台 · 点击添加',
+      children: [
+        for (var i = 0; i < devices.length; i++)
+          SetRow(
+            title: devices[i].name,
+            desc: '${devices[i].host}:${devices[i].port} · '
+                '${devices[i].type.displayName}',
+            last: i == devices.length - 1,
+            leading: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: t.insetBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(devices[i].type.icon, size: 19, color: t.accentBright),
+            ),
+            trailing: AppButton(
+              label: '添加',
+              icon: Icons.add_rounded,
+              dense: true,
+              onPressed: () => SourceFormPage.openAdaptive<void>(
+                context,
+                sourceType: devices[i].type,
+                initialValues: {
+                  'name': devices[i].name,
+                  'host': devices[i].host,
+                  'port': devices[i].port.toString(),
+                },
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 /// 局域网发现行（设计稿 .conn 行的「扫描」）：接 mDNS / Bonjour 真实发现。
