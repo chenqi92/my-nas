@@ -29,6 +29,7 @@ class AddDownloadDialog extends ConsumerStatefulWidget {
 class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
   late final TextEditingController _uri =
       TextEditingController(text: widget.prefill ?? '');
+  final TextEditingController _savePath = TextEditingController();
   String? _sourceId;
   String _category = '电影';
   bool _paused = false;
@@ -39,6 +40,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
   @override
   void dispose() {
     _uri.dispose();
+    _savePath.dispose();
     super.dispose();
   }
 
@@ -199,6 +201,28 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
                         ],
                       ),
                       const SizedBox(height: 14),
+                      _Label('保存位置（可选）', t: t),
+                      const SizedBox(height: 7),
+                      TextField(
+                        controller: _savePath,
+                        style: TextStyle(color: t.text0, fontSize: 13),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          hintText: '留空使用下载器默认目录',
+                          hintStyle: TextStyle(color: t.text3, fontSize: 12.5),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: t.hairline),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: t.hairline),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
@@ -262,11 +286,14 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
 
     setState(() => _submitting = true);
     final source = client.source;
+    final savePath = _savePath.text.trim();
+    final dir = savePath.isEmpty ? null : savePath;
     try {
       switch (source.type) {
         case SourceType.aria2:
-          final gid =
-              await ref.read(aria2ActionsProvider(source.id)).addUri(_links);
+          final gid = await ref
+              .read(aria2ActionsProvider(source.id))
+              .addUri(_links, dir: dir);
           // aria2 addUri 无 paused 参数，添加后立即暂停以兑现「添加后暂停」开关。
           if (_paused) {
             await ref.read(aria2ActionsProvider(source.id)).pause(gid);
@@ -275,6 +302,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
           for (final link in _links) {
             await ref.read(qbittorrentActionsProvider(source.id)).addTorrent(
                   link,
+                  savePath: dir,
                   category: _category,
                   paused: _paused,
                 );
@@ -283,7 +311,7 @@ class _AddDownloadDialogState extends ConsumerState<AddDownloadDialog> {
           for (final link in _links) {
             await ref
                 .read(transmissionActionsProvider(source.id))
-                .addTorrent(link, paused: _paused);
+                .addTorrent(link, downloadDir: dir, paused: _paused);
           }
         default:
           break;
