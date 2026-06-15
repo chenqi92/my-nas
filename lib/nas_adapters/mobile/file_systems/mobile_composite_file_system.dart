@@ -209,18 +209,18 @@ class MobileCompositeFileSystem implements NasFileSystem {
       path: '/gallery',
       isDirectory: true,
       size: 0,
-    ));
+    ))
 
     // 音乐库（iOS 和 Android 都支持）
-    items.add(const FileItem(
+    ..add(const FileItem(
       name: '音乐',
       path: '/music',
       isDirectory: true,
       size: 0,
-    ));
+    ))
 
     // 文件（Documents 和 Downloads）
-    items.add(const FileItem(
+    ..add(const FileItem(
       name: '文件',
       path: '/files',
       isDirectory: true,

@@ -46,5 +46,2588 @@
   "appLockPinInputSubmit": "OK",
   "appLockCancel": "Cancel",
   "appLockNext": "Next",
-  "appLockDone": "Done"
+  "appLockDone": "Done",
+  "paneAboutTitle": "About",
+  "paneAboutSubtitle": "Version info, updates and open-source licenses.",
+  "paneAboutSectionApp": "App",
+  "paneAboutAppDesc": "Desktop · macOS / Windows / Linux",
+  "paneAboutUpdateTitle": "App Update",
+  "paneAboutUpdateDesc": "Check for and download new versions in-app",
+  "paneAboutChecking": "Checking…",
+  "paneAboutCheckUpdate": "Check for Updates",
+  "paneAboutLicenseTitle": "Open-Source Licenses",
+  "paneAboutLicenseDesc": "Third-party components and licenses",
+  "paneAboutLicenseView": "View",
+  "paneAboutUpToDate": "You're on the latest version",
+  "paneAboutCheckFailed": "Update check failed: {error}",
+  "@paneAboutCheckFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "paneAboutLegalese": "© 2024 MyNAS\n\nThis app is built with Flutter and many open-source components. The full third-party license information is listed below.",
+  "paneAdvancedTitle": "Advanced",
+  "paneAdvancedSubtitle": "Hosts mapping, system index integration, and diagnostics.",
+  "paneAdvancedManageButton": "Manage",
+  "paneAdvancedHostsTitle": "Hosts Mapping",
+  "paneAdvancedHostsHint": "Domain → IP · bypass DNS pollution",
+  "paneAdvancedSystemIntegrationTitle": "System Integration",
+  "paneAdvancedDiagnosticsTitle": "Diagnostics",
+  "paneAdvancedNoMappingTitle": "No mappings yet",
+  "paneAdvancedNoMappingDesc": "Tap Manage to add manually, or use DoH to auto-resolve common domains",
+  "paneAdvancedAddMappingButton": "Add Mapping",
+  "paneAdvancedSourceManual": "Manual",
+  "paneAdvancedSpotlightTitle": "Spotlight Indexing",
+  "paneAdvancedSpotlightDescNonMac": "Index your media library into macOS Spotlight — macOS only",
+  "paneAdvancedSpotlightTagMacOnly": "macOS only",
+  "paneAdvancedSpotlightDescRebuilding": "Rebuilding system index…",
+  "paneAdvancedSpotlightDesc": "Index video, music, book, comic, and note titles into macOS Spotlight",
+  "paneAdvancedSpotlightSettingsButton": "Settings",
+  "paneAdvancedJumpListTitle": "Jump List",
+  "paneAdvancedJumpListDesc": "Windows taskbar shortcuts — enabled per platform",
+  "paneAdvancedJumpListTagPlatform": "Platform-enabled",
+  "paneAdvancedJumpListTagWindowsOnly": "Windows only",
+  "paneAdvancedDeepLinkTitle": "Deep Links",
+  "paneAdvancedDeepLinkDesc": "mynas:// — OAuth callbacks go through the system browser",
+  "paneAdvancedDeepLinkRegistered": "Registered",
+  "paneAdvancedDiagnosticLogTitle": "Diagnostic Log",
+  "paneAdvancedDiagnosticLogDescReady": "Runtime log app.log · for troubleshooting",
+  "paneAdvancedDiagnosticLogDescNotReady": "Log not ready yet",
+  "paneAdvancedDiagnosticLogOpenButton": "Open",
+  "paneAdvancedDiagnosticLogRevealButton": "Show in Folder",
+  "paneAdvancedDiagnosticLogCopyPathButton": "Copy Path",
+  "paneAdvancedDiagnosticLogShareButton": "Share Log",
+  "paneAdvancedDiagnosticLogOpenFailed": "Failed to open log",
+  "paneAdvancedDiagnosticLogRevealFailed": "Failed to reveal log",
+  "paneAdvancedDiagnosticLogPathCopied": "Log path copied",
+  "paneAdvancedDiagnosticLogShareSubject": "MyNAS Diagnostic Log",
+  "paneAppearanceTitle": "Appearance",
+  "paneAppearanceSubtitle": "Theme, colors, and UI style. Glass / Classic switch globally in real time.",
+  "paneAppearanceThemeSectionTitle": "Theme & Colors",
+  "paneAppearanceThemeModeTitle": "Theme Mode",
+  "paneAppearanceThemeModeDesc": "Light / Dark / Follow system",
+  "paneAppearanceThemeModeLight": "Light",
+  "paneAppearanceThemeModeDark": "Dark",
+  "paneAppearanceThemeModeSystem": "System",
+  "paneAppearanceUiStyleTitle": "UI Style",
+  "paneAppearanceUiStyleDesc": "Glass material / Classic cards — switch in real time",
+  "paneAppearanceAccentColorTitle": "Accent Color",
+  "paneAppearanceAccentColorDesc": "Preset schemes, may be temporarily overridden by dynamic cover colors",
+  "paneAppearanceDynamicAmbientTitle": "Dynamic Ambient Light",
+  "paneAppearanceDynamicAmbientDesc": "Shell ambient light follows cover / station logo colors during playback",
+  "paneAppearanceGlassSectionTitle": "Glass Material Settings",
+  "paneAppearanceGlassDisabledTitle": "Disabled",
+  "paneAppearanceGlassDisabledDesc": "Glass settings are disabled in Classic style; switch to Glass style to adjust.",
+  "paneAppearanceGlassBlurTitle": "Blur Strength",
+  "paneAppearanceGlassBlurDesc": "Gaussian blur radius scale for glass panels ({scale}×)",
+  "@paneAppearanceGlassBlurDesc": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "paneAppearanceGlassOpacityTitle": "Material Opacity",
+  "paneAppearanceGlassOpacityDesc": "Background opacity scale for glass panels ({scale}×)",
+  "@paneAppearanceGlassOpacityDesc": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "paneAppearanceGlassPlatformOptTitle": "Platform Glass Optimization",
+  "paneAppearanceGlassPlatformOptDesc": "When off, glass panels skip blur and keep only the translucent material",
+  "paneCastHeadTitle": "Casting & Output",
+  "paneCastHeadSubtitle": "Audio output, local media proxy, DLNA / AirPlay casting and the desktop lyric overlay.",
+  "paneCastAudioSectionTitle": "Audio Output",
+  "paneCastAudioSectionHint": "Detected from the current playback device",
+  "paneCastOutputDeviceTitle": "Output Device",
+  "paneCastOutputDeviceDesc": "System / Bluetooth / AirPlay / external DAC",
+  "paneCastDetecting": "Detecting",
+  "paneCastDolbyTitle": "Dolby Atmos",
+  "paneCastDolbyDesc": "Enable spatial audio on supported output devices",
+  "paneCastDolbyPassthrough": "Passthrough",
+  "paneCastDolbyUnsupported": "Unsupported",
+  "paneCastCastingSectionTitle": "Casting",
+  "paneCastMediaProxyTitle": "Local Media Proxy (shelf)",
+  "paneCastMediaProxyDesc": "Provides an HTTP proxy for non-direct protocols like SMB — required for casting and media_kit playback",
+  "paneCastMediaProxyTag": "Auto-enabled on playback",
+  "paneCastDlnaCasting": "Casting · {device}",
+  "@paneCastDlnaCasting": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "paneCastConnectedDevice": "Connected device",
+  "paneCastDlnaSearching": "Searching for devices…",
+  "paneCastDlnaIdleDesc": "Device discovery · remote control (play / pause / volume / seek)",
+  "paneCastSearchingShort": "Searching…",
+  "paneCastSearchDevices": "Search Devices",
+  "paneCastStatusTitle": "Cast Status",
+  "paneCastStatusDesc": "Current cast target · synced in the mini dock and player",
+  "paneCastStatusConnected": "Connected",
+  "paneCastStatusSearching": "Searching",
+  "paneCastStatusIdle": "Not casting",
+  "paneCastLyricSectionTitle": "Desktop Lyric Overlay",
+  "paneCastLyricDesktopOnly": "Desktop only",
+  "paneCastLyricEnableTitle": "Enable Overlay",
+  "paneCastLyricEnableDescShortcut": "Show synced lyrics in a standalone always-on-top window · shortcut ⌘/Ctrl + Shift + L",
+  "paneCastLyricEnableDescUnsupported": "Show synced lyrics in a standalone always-on-top window (Windows / macOS only)",
+  "paneCastLyricLayoutTitle": "Layout",
+  "paneCastLyricLayoutDesc": "Single line shows the current line · double line adds the next",
+  "paneCastLyricLayoutSingle": "Single",
+  "paneCastLyricLayoutDouble": "Double",
+  "paneCastLyricTranslationTitle": "Show Translation",
+  "paneCastLyricTranslationDesc": "Show the translated line on the same timeline",
+  "paneCastLyricLockTitle": "Lock Click-Through",
+  "paneCastLyricLockDesc": "Once locked, the overlay ignores the mouse and only displays",
+  "paneCastLyricAutoShowTitle": "Auto-Show On Playback",
+  "paneCastLyricAutoShowDesc": "Pop up the overlay automatically when music starts playing",
+  "paneCastLyricMinimizeTitle": "Show When Main Window Minimized",
+  "paneCastLyricMinimizeDesc": "Pop up the overlay when the main window is minimized during playback",
+  "paneCastOutputDeviceSystem": "System default",
+  "paneCastOutputDeviceSpdif": "S/PDIF Optical",
+  "paneCastOutputDeviceBluetooth": "Bluetooth",
+  "paneCastOutputDeviceHeadphones": "Headphones",
+  "paneCastOutputDeviceSpeaker": "Built-in Speaker",
+  "paneFavoritesHeadTitle": "My Favorites",
+  "paneFavoritesHeadSubtitle": "Favorites aggregated across types. Music favorites sync automatically to the Liked playlist.",
+  "paneFavoritesSectionAggregate": "Favorites Overview",
+  "paneFavoritesTileVideo": "Movies & TV",
+  "paneFavoritesTilePhoto": "Photos",
+  "paneFavoritesTileMusic": "Music",
+  "paneFavoritesTileBook": "Books",
+  "paneFavoritesTileComic": "Comics",
+  "paneFavoritesTileNote": "Notes",
+  "paneFavoritesTileCount": "{count} items",
+  "@paneFavoritesTileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paneLanguageHeadTitle": "Language & Region",
+  "paneLanguageHeadSubtitle": "Interface language and three language priority lists. Priorities affect scraped metadata language and default audio / subtitle selection, and can be reordered by dragging.",
+  "paneLanguageInterfaceSection": "Interface",
+  "paneLanguageInterfaceRowTitle": "Interface language",
+  "paneLanguageInterfaceRowDesc": "Switch the app language; all visible text is localized instantly",
+  "paneLanguageFollowSystem": "System",
+  "paneLanguageMetadataSection": "Metadata language priority",
+  "paneLanguageMetadataName": "metadata language",
+  "paneLanguageMetadataHint": "Title / overview / poster language",
+  "paneLanguageAudioSection": "Audio language priority",
+  "paneLanguageAudioName": "audio language",
+  "paneLanguageAudioHint": "Default audio track",
+  "paneLanguageSubtitleSection": "Subtitle language priority",
+  "paneLanguageSubtitleName": "subtitle language",
+  "paneLanguageSubtitleHint": "Default subtitle",
+  "paneLanguageAddButton": "Add language",
+  "paneLanguageAddSheetTitle": "Add {name}",
+  "@paneLanguageAddSheetTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paneLanguageRemoveTooltip": "Remove",
+  "paneLanguagePriorityNote": "Drag items to reorder. During playback, available audio and subtitles are matched in this order; if none match, the media default is used.",
+  "paneLibmapTitle": "Library Mapping",
+  "paneLibmapSubtitle": "Mark folders in a source as Video / Music / Photo / Comic / Book libraries (SRC-30). Mapped folders are used for scanning, search and playback.",
+  "paneLibmapManage": "Manage Mappings",
+  "paneLibmapSectionDirToLib": "Folder → Library",
+  "paneLibmapLoading": "Loading…",
+  "paneLibmapLoadFailed": "Failed to load",
+  "paneLibmapNoMappings": "No mappings",
+  "paneLibmapMappingsCount": "{n} mappings",
+  "@paneLibmapMappingsCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneLibmapEmptyTitle": "No folder mappings yet",
+  "paneLibmapEmptyDesc": "Tap “Manage Mappings” to pick folders in your sources and mark them as libraries",
+  "paneLibmapGoConfigure": "Configure",
+  "paneLibmapCascadeTitle": "Cascade Delete",
+  "paneLibmapCascadeDesc": "Deleting a source also removes all its folder mappings and indexed media (data chain: Source → Mapping → Scan → Library).",
+  "paneLibmapUnknownSource": "Unknown source",
+  "paneLibmapSourceDisabled": "{src} · Disabled",
+  "@paneLibmapSourceDisabled": {
+    "placeholders": {
+      "src": {
+        "type": "String"
+      }
+    }
+  },
+  "paneLibmapEditTooltip": "Change library type / remove mapping",
+  "paneLiveHeadTitle": "Live Sources",
+  "paneLiveHeadSubtitle": "Manage IPTV / M3U / HLS live sources. Add, edit, reorder, refresh and preview channels.",
+  "paneLiveAddButton": "Add Source",
+  "paneLiveSourcesSection": "Live Sources",
+  "paneLiveSourcesHint": "{count} · M3U / HLS",
+  "@paneLiveSourcesHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paneLiveEmptyTitle": "No live sources",
+  "paneLiveEmptyDesc": "Add an M3U / HLS playlist to start watching live TV",
+  "paneLiveAddShort": "Add",
+  "paneLiveSourceDesc": "{count} channels · updated {updated}",
+  "@paneLiveSourceDesc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "updated": {
+        "type": "String"
+      }
+    }
+  },
+  "paneLiveManageSection": "Manage",
+  "paneLiveManageRowTitle": "Edit / Reorder / Delete",
+  "paneLiveManageRowDesc": "Open the live source manager to add or adjust M3U playlists",
+  "paneLiveOpenManagerButton": "Open Manager",
+  "paneLiveUpdatedToday": "Today {time}",
+  "@paneLiveUpdatedToday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "paneLiveUpdatedYesterday": "Yesterday {time}",
+  "@paneLiveUpdatedYesterday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "paneLiveUpdatedDaysAgo": "{days} days ago",
+  "@paneLiveUpdatedDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "paneLivePreviewChip": "Preview",
+  "paneLiveRefreshTooltip": "Refresh channels",
+  "paneLiveSortTooltip": "Reorder / Manage",
+  "paneLiveRefreshedToast": "Refreshed: {count} channels",
+  "@paneLiveRefreshedToast": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paneLiveRefreshFailed": "Refresh failed",
+  "paneMaintTitle": "Maintenance & Stats",
+  "paneMaintSubtitle": "Listening stats, duplicate detection and recycle bin. Stats come from local play history.",
+  "paneMaintRangeWeek": "Week",
+  "paneMaintRangeMonth": "Month",
+  "paneMaintRangeYear": "Year",
+  "paneMaintStatsSection": "Listening Stats",
+  "paneMaintTopChartTitle": "Top Charts",
+  "paneMaintTopChartDesc": "Top songs / artists / albums and activity overview",
+  "paneMaintTopChartButton": "View Charts",
+  "paneMaintYearReportTitle": "Year in Review",
+  "paneMaintYearReportDesc": "A year of listening: duration / top songs, artists & albums / busiest month",
+  "paneMaintYearReportButton": "View Report",
+  "paneMaintLibrarySection": "Library Maintenance",
+  "paneMaintLibrarySectionHint": "Cleans the local index only · NAS files stay untouched",
+  "paneMaintDuplicateTitle": "Duplicate Detection",
+  "paneMaintDuplicateDesc": "Multiple versions of one song (mp3 + flac), with a keep recommendation by audio quality",
+  "paneMaintDuplicateButton": "Resolve",
+  "paneMaintRecycleBinTitle": "Recycle Bin",
+  "paneMaintRecycleBinDesc": "Deleted playlist items are recoverable for 30 days",
+  "paneMaintRecycleBinCount": "{n} items",
+  "@paneMaintRecycleBinCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneMaintRecycleBinButton": "Open",
+  "paneMaintKvPlays": "Plays",
+  "paneMaintKvDuration": "Total Time",
+  "paneMaintKvActiveDays": "Active Days",
+  "paneMaintKvUniqueSongs": "Unique Tracks",
+  "paneMaintHeatmapTitle": "Activity Heatmap",
+  "paneMaintHeatmapTitleDays": "Activity heatmap of the last {n} days",
+  "@paneMaintHeatmapTitleDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneMaintHeatmapEmpty": "Songs played for 30 seconds or more count toward your stats",
+  "paneMaintYearReportEmpty": "No listening history in the past year yet. Songs played for 30 seconds or more count toward your stats, so come back once you've built some up.",
+  "paneMaintYearReportGotIt": "Got it",
+  "paneMaintYearReportHeader": "Your listening over the past year",
+  "paneMaintTopSongLabel": "Most Played Song",
+  "paneMaintTopArtistLabel": "Most Played Artist",
+  "paneMaintTopAlbumLabel": "Most Played Album",
+  "paneMaintTopMonthLabel": "Busiest Month",
+  "paneMaintPlayCount": "{count} plays",
+  "@paneMaintPlayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paneMaintYearMonthLabel": "{month}/{year}",
+  "@paneMaintYearMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "paneMaintClose": "Close",
+  "paneMusicHeadTitle": "Music Playback",
+  "paneMusicHeadSubtitle": "Decoding engine, equalizer, gapless and crossfade, lyrics translation and Scrobble. music_settings.",
+  "paneMusicEngineSection": "Engine & Decoding",
+  "paneMusicEngineHint": "Restart required to switch engine",
+  "paneMusicEngineRowTitle": "Playback Engine",
+  "paneMusicEngineRowDesc": "Platform native (low power) / FFmpeg (widest format support)",
+  "paneMusicEngineNative": "Native",
+  "paneMusicGaplessTitle": "Gapless Playback",
+  "paneMusicGaplessDesc": "No silent gaps between album tracks",
+  "paneMusicCrossfadeTitle": "Crossfade",
+  "paneMusicCrossfadeDesc": "Fade out the previous track and fade in the next on song change",
+  "paneMusicCrossfadeDurationTitle": "Crossfade Duration",
+  "paneMusicCrossfadeSeconds": "{n} s",
+  "@paneMusicCrossfadeSeconds": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneMusicPlayModeTitle": "Default Play Mode",
+  "paneMusicPlayModeDesc": "Shuffle / Loop / Repeat one",
+  "paneMusicPlayModeShuffle": "Shuffle",
+  "paneMusicPlayModeLoop": "Loop",
+  "paneMusicPlayModeRepeatOne": "Repeat One",
+  "paneMusicAutoPlayTitle": "Auto-play on Connect",
+  "paneMusicAutoPlayDesc": "Resume the last queue automatically after connecting to a source",
+  "paneMusicEqSection": "Equalizer",
+  "paneMusicEqHint": "10 bands · 8 presets + custom",
+  "paneMusicEqEnableTitle": "Enable Equalizer",
+  "paneMusicEqNoteAndroid": "System hardware equalizer (AudioEffect)",
+  "paneMusicEqNoteIos": "EQ is not supported by the current playback engine on iOS",
+  "paneMusicEqNoteDesktop": "Desktop: only the FFmpeg engine applies (mpv af filter)",
+  "paneMusicEqNoteDefault": "10-band EQ + 8 presets",
+  "paneMusicEqCustom": "Custom",
+  "paneMusicEqReset": "Reset to flat",
+  "paneMusicLyricsSection": "Lyrics",
+  "paneMusicLyricsShowTitle": "Show Lyrics",
+  "paneMusicLyricsShowDesc": "Show synced lyrics on the player page and desktop overlay",
+  "paneMusicLyricsTranslateTitle": "Lyrics Translation",
+  "paneMusicLyricsTranslateDesc": "Show translation on a second line · Google Translate (free, requires internet)",
+  "paneMusicLyricsLangTitle": "Target Language",
+  "paneMusicLyricsLangDesc": "Display translations in this language",
+  "paneMusicScrobbleSection": "Scrobble & Scraping",
+  "paneMusicScrobbleTitle": "Scrobble Reporting",
+  "paneMusicScrobbleDesc": "Report after the listening threshold is met, with automatic offline retry",
+  "paneMusicLastfmConnected": "Connected · credentials configured",
+  "paneMusicLastfmDisconnected": "Not connected · API key/secret/sk required",
+  "paneMusicListenbrainzConnected": "Connected · token configured",
+  "paneMusicListenbrainzDisconnected": "Not connected · user token required",
+  "paneMusicConfigure": "Configure",
+  "paneMusicScraperTitle": "Music Scraper Sources",
+  "paneMusicScraperDesc": "MusicBrainz / NetEase Cloud / AcoustID fingerprint",
+  "paneMusicScraperManage": "Manage Sources",
+  "paneReadingTitle": "Reading",
+  "paneReadingSubtitle": "Reader engine, online book sources, and global reading preferences. Books, comics, and PDFs share unified reading progress (distinguished by itemType).",
+  "paneReadingImportSource": "Import source",
+  "paneReadingReaderSection": "Reader",
+  "paneReadingEpubEngineTitle": "EPUB engine",
+  "paneReadingEpubEngineDesc": "Native (fast, low memory) / WebView (higher layout fidelity)",
+  "paneReadingEpubEngineNative": "EPUB native",
+  "paneReadingEpubEngineWebview": "WebView",
+  "paneReadingKeepScreenOnTitle": "Keep screen on",
+  "paneReadingKeepScreenOnDesc": "Don't dim the screen while reading",
+  "paneReadingShowProgressTitle": "Show reading progress",
+  "paneReadingShowProgressDesc": "Show chapter progress and percentage at the bottom of the reader",
+  "paneReadingGlobalPrefsTitle": "Global reading preferences",
+  "paneReadingGlobalPrefsDesc": "Font size / typeface / theme / page-turn mode — applied automatically to new books",
+  "paneReadingGlobalPrefsOpen": "Open",
+  "paneReadingHistoryTitle": "Reading history",
+  "paneReadingHistoryDescStats": "Reading {reading} · Finished {finished} · Completion {rate}",
+  "@paneReadingHistoryDescStats": {
+    "placeholders": {
+      "reading": {
+        "type": "int"
+      },
+      "finished": {
+        "type": "int"
+      },
+      "rate": {
+        "type": "String"
+      }
+    }
+  },
+  "paneReadingHistoryDescEmpty": "Completion rate / reading & finished / activity heatmap",
+  "paneReadingHistoryView": "View",
+  "paneReadingSourcesSection": "Online sources",
+  "paneReadingSourcesHint": "Legado format",
+  "paneReadingSourcesHintCount": "Legado format · {count}",
+  "@paneReadingSourcesHintCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paneReadingSourcesLoadingTitle": "Loading…",
+  "paneReadingSourcesLoadingDesc": "Reading configured book sources",
+  "paneReadingSourcesEmptyTitle": "No book sources",
+  "paneReadingSourcesEmptyDesc": "Import Legado-format sources to search online, read, or add to your shelf",
+  "paneReadingSourceRuleDesc": "Rule engine: search / explore / content / table of contents (CSS-XPath)",
+  "paneReadingSourceEnabled": "Enabled",
+  "paneReadingSourceDisabled": "Disabled",
+  "paneReadingSourcesViewAll": "View all {count} sources",
+  "@paneReadingSourcesViewAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paneReadingSourcesViewAllDesc": "Import / edit / toggle / reorder / search online",
+  "paneReadingSourcesManage": "Manage",
+  "paneReadingSourcesFooter": "Sources support import / edit / toggle / search; online results can be read directly or added to your shelf.",
+  "paneReadingSourcesManageButton": "Manage sources",
+  "paneReadingStatsClose": "Close",
+  "paneReadingStatReading": "Reading",
+  "paneReadingStatFinished": "Finished",
+  "paneReadingStatFinishRate": "Completion",
+  "paneReadingStatTotal": "With progress",
+  "paneReadingHeatmapTitle": "Reading activity, last {days} days",
+  "@paneReadingHeatmapTitle": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "paneReadingHeatmapEmpty": "No reading activity recently",
+  "paneRemotedlTitle": "Remote download services",
+  "paneRemotedlSubtitle": "Connections and preferences for aria2 / qBittorrent / Transmission clients. Configure the targets for PT one-click send here.",
+  "paneRemotedlAddDownloader": "Add downloader",
+  "paneRemotedlClientsSection": "Download clients",
+  "paneRemotedlClientsCount": "{n}",
+  "@paneRemotedlClientsCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneRemotedlEmptyTitle": "No downloader added yet",
+  "paneRemotedlEmptyDesc": "Add qBittorrent, Transmission, or Aria2 to manage download tasks",
+  "paneRemotedlAddChip": "Add",
+  "paneRemotedlManageTitle": "Manage clients",
+  "paneRemotedlManageDesc": "Add / edit / remove downloaders and connection credentials",
+  "paneRemotedlManageChip": "Open",
+  "paneRemotedlDefaultsSection": "Default behavior",
+  "paneRemotedlGlobalLimitTitle": "Global speed limit",
+  "paneRemotedlGlobalLimitDesc": "Upload / download caps for all clients — UI limited by each client's API capabilities",
+  "paneRemotedlGlobalLimitSetChip": "Set (qBittorrent)",
+  "paneRemotedlGlobalLimitManagedTag": "Managed in client settings",
+  "paneRemotedlNotifyTitle": "Notify on completion",
+  "paneRemotedlNotifyDesc": "In-app popup while running (system-level notifications planned)",
+  "paneRemotedlConnected": "Connected",
+  "paneRemotedlDisconnected": "Disconnected",
+  "paneRemotedlPreferenceChip": "Preferences",
+  "paneRemotedlLimitUpdated": "Global speed limit updated",
+  "paneRemotedlLimitFailed": "Failed to apply: {error}",
+  "@paneRemotedlLimitFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "paneRemotedlLimitHint": "Unit: KB/s. 0 means unlimited.",
+  "paneRemotedlLimitDlLabel": "Download cap (KB/s)",
+  "paneRemotedlLimitUpLabel": "Upload cap (KB/s)",
+  "paneRemotedlLimitCancel": "Cancel",
+  "paneRemotedlLimitApply": "Apply",
+  "paneScraperTitle": "Scraper Sources",
+  "paneScraperSubtitle": "Metadata sources and priority for movies, subtitles and music.",
+  "paneScraperMovieSection": "Movie Scraping",
+  "paneScraperMovieHint": "NFO first",
+  "paneScraperGenerateNfoTitle": "Generate local NFO",
+  "paneScraperGenerateNfoDesc": "Write .nfo files to the media folder when scraping",
+  "paneScraperDownloadArtworkTitle": "Download posters / fanart",
+  "paneScraperDownloadArtworkDesc": "Save posters and fanart to the media folder when scraping",
+  "paneScraperManageSourcesTitle": "Manage scraper sources",
+  "paneScraperManageSourcesCount": "{total} configured · {enabled} enabled",
+  "@paneScraperManageSourcesCount": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "enabled": {
+        "type": "int"
+      }
+    }
+  },
+  "paneScraperManageSourcesHint": "Add / edit / reorder sources like TMDB and Douban",
+  "paneScraperOpenButton": "Open",
+  "paneScraperSubtitleSection": "Subtitle Sources",
+  "paneScraperOpenSubtitlesDescConfigured": "Online subtitle search and download · account configured",
+  "paneScraperOpenSubtitlesDescPublic": "Online subtitle search and download · using built-in public quota",
+  "paneScraperAccountChip": "Account",
+  "paneScraperMusicSection": "Music Scraping",
+  "paneScraperMusicBrainzDesc": "Primary metadata source",
+  "paneScraperNeteaseTitle": "NetEase Music",
+  "paneScraperNeteaseDesc": "Cover art / lyrics enrichment",
+  "paneScraperAcoustIdTitle": "AcoustID Fingerprint",
+  "paneScraperAcoustIdDesc": "Identify untagged audio by acoustic fingerprint",
+  "paneScraperManageMusicSourcesTitle": "Manage music scraper sources",
+  "paneScraperManageMusicSourcesDesc": "{enabled} enabled · more sources and priority",
+  "@paneScraperManageMusicSourcesDesc": {
+    "placeholders": {
+      "enabled": {
+        "type": "int"
+      }
+    }
+  },
+  "paneScraperPriorityTitle": "Source priority",
+  "paneScraperPriorityDesc": "Match order: local NFO → online",
+  "paneScraperPriorityTmdbFirst": "TMDB first",
+  "paneScraperPriorityDoubanFirst": "Douban first",
+  "paneScraperNotAdded": "Not added",
+  "paneSecurityHeadTitle": "Privacy & Security",
+  "paneSecurityHeadSubtitle": "App lock, PIN, biometrics and auto-lock. Credentials are kept in the system secure store; on failure it degrades silently without blocking use.",
+  "paneSecuritySectionAppLock": "App Lock",
+  "paneSecurityEnableTitle": "Enable App Lock",
+  "paneSecurityEnableDesc": "Require authentication on launch and when resuming from the background",
+  "paneSecurityPinTitle": "PIN",
+  "paneSecurityPinDesc": "4–6 digits",
+  "paneSecurityChangePin": "Change PIN",
+  "paneSecurityBiometricTitle": "Biometrics",
+  "paneSecurityBiometricDesc": "Unlock with Face ID / Touch ID",
+  "paneSecurityAutoLockTitle": "Auto-Lock",
+  "paneSecurityAutoLockDesc": "Lock automatically after an idle timeout",
+  "paneSecuritySectionPrivacy": "Privacy",
+  "paneSecurityAppSwitcherMaskTitle": "App Switcher Masking",
+  "paneSecurityAppSwitcherMaskDesc": "Blur the window when sent to the background to prevent shoulder surfing (LOCK-05)",
+  "paneSecurityAppSwitcherMaskOn": "On with App Lock",
+  "paneSecurityAppSwitcherMaskOff": "Off",
+  "paneSitesHeadTitle": "Sites & Tracking",
+  "paneSitesHeadSubtitle": "PT resource sites, Trakt media tracking and media management backends. OAuth runs through the system browser with a mynas:// callback — no embedded WebView.",
+  "paneSitesAddButton": "Add site",
+  "paneSitesPtSectionTitle": "PT resource sites",
+  "paneSitesPtSectionHint": "APIKey / Cookie · {count}",
+  "@paneSitesPtSectionHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paneSitesTrackingSectionTitle": "Media tracking",
+  "paneSitesTraktStats": "User stats",
+  "paneSitesTraktDisconnect": "Disconnect",
+  "paneSitesTraktConnect": "Connect",
+  "paneSitesScrobbleTitle": "Auto scrobble",
+  "paneSitesScrobbleDesc": "Auto-mark as watched (Scrobble) when playback progress ≥ {percent}%",
+  "@paneSitesScrobbleDesc": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSitesBackendSectionTitle": "Media management backends",
+  "paneSitesNastoolDesc": "Subscriptions / search / transfers / seeding / RSS source config",
+  "paneSitesMoviepilotDesc": "Next-gen media automation — subscriptions / search / sites / workflows",
+  "paneSitesConfigure": "Configure",
+  "paneSitesEmptyTitle": "No resource sites yet",
+  "paneSitesEmptyDesc": "Add sites like M-Team / HDChina to subscribe, search and download",
+  "paneSitesManage": "Manage",
+  "paneSitesPtRowDesc": "Ratio / bonus / invites / check-in",
+  "paneSitesTraktDescConnectedNamed": "OAuth authorized · {name} · auto token refresh",
+  "@paneSitesTraktDescConnectedNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSitesTraktDescConnected": "OAuth authorized · auto token refresh · Continue Watching merged (local first)",
+  "paneSitesTraktDescConnecting": "Authorizing…",
+  "paneSitesTraktDescError": "Connection failed, please try again",
+  "paneSitesTraktDescDisconnected": "Not connected · merges Trakt progress after OAuth (local first)",
+  "paneSourcesTitle": "Sources",
+  "paneSourcesSubtitle": "Add, edit, or remove sources, test connections, handle 2FA and credential storage. Deleting a source cascades, removing its library mappings and indexed media.",
+  "paneSourcesAddButton": "Add source",
+  "paneSourcesAddShort": "Add",
+  "paneSourcesConnectedSection": "Connected sources",
+  "paneSourcesLoading": "Loading…",
+  "paneSourcesCount": "{n}",
+  "@paneSourcesCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneSourcesBehaviorSection": "Connection behavior",
+  "paneSourcesDefaultAutoConnectTitle": "Auto-connect new sources by default",
+  "paneSourcesDefaultAutoConnectDesc": "New sources have \"Connect on startup\" enabled by default. Existing sources keep their own settings, adjustable in \"Edit source\".",
+  "paneSourcesTrustSelfSignedTitle": "Trust self-signed certificates",
+  "paneSourcesTrustSelfSignedDesc": "Allow self-signed HTTPS certificates. When off, certificate verification applies to all sources and servers with self-signed certificates will fail to connect.",
+  "paneSourcesDefaultRememberDeviceTitle": "Remember 2FA device for new sources by default",
+  "paneSourcesDefaultRememberDeviceDesc": "For new sources that support two-factor authentication, \"Remember this device to skip verification\" is enabled by default. Existing sources keep their own settings.",
+  "paneSourcesRowLoading": "Loading sources…",
+  "paneSourcesRowLoadError": "Failed to load sources",
+  "paneSourcesEmptyTitle": "No sources yet",
+  "paneSourcesEmptyDesc": "Tap \"Add source\" at the top right to connect your first NAS, media server, or downloader.",
+  "paneSourcesLibsSuffix": "{libs} libraries",
+  "@paneSourcesLibsSuffix": {
+    "placeholders": {
+      "libs": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSourcesStatusConnected": "Connected",
+  "paneSourcesStatus2FA": "2FA required",
+  "paneSourcesStatusConnecting": "Connecting",
+  "paneSourcesStatusError": "Error",
+  "paneSourcesStatusDisconnected": "Disconnected",
+  "paneSourcesTesting": "Testing",
+  "paneSourcesTest": "Test",
+  "paneSourcesConnecting": "Connecting to \"{name}\"…",
+  "@paneSourcesConnecting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSourcesConnectSuccess": "Connected to \"{name}\"",
+  "@paneSourcesConnectSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSourcesConnectNeed2FA": "\"{name}\" requires two-factor authentication",
+  "@paneSourcesConnectNeed2FA": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSourcesConnectFailed": "Failed to connect to \"{name}\"{reason}",
+  "@paneSourcesConnectFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSourcesConnectFailedReason": ": {reason}",
+  "@paneSourcesConnectFailedReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSourcesDeleteTitle": "Delete source",
+  "paneSourcesDeleteContent": "Deleting \"{name}\" cascades, removing this source's library mappings and scanned media data. This cannot be undone. Continue?",
+  "@paneSourcesDeleteContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSourcesCancel": "Cancel",
+  "paneSourcesDelete": "Delete",
+  "paneSourcesMore": "More",
+  "paneSourcesMenuEdit": "Edit",
+  "paneSourcesMenuReconnect": "Reconnect",
+  "paneSourcesMenuDelete": "Delete",
+  "paneSourcesDiscoveredSection": "Discovered devices",
+  "paneSourcesDiscoveredHint": "{n} found · tap to add",
+  "@paneSourcesDiscoveredHint": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneSourcesDiscoveryError": "Discovery failed: {error}",
+  "@paneSourcesDiscoveryError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "paneSourcesDiscoveryScanning": "Scanning the local network via mDNS / Bonjour…",
+  "paneSourcesDiscoveryFound": "Found {n} devices you can add",
+  "@paneSourcesDiscoveryFound": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneSourcesDiscoveryIdle": "Auto-discover devices to add via mDNS / Bonjour",
+  "paneSourcesDiscoveryTitle": "Local network discovery",
+  "paneSourcesDeviceCount": "{n}",
+  "@paneSourcesDeviceCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneSourcesScanning": "Scanning",
+  "paneSourcesScan": "Scan",
+  "paneSyncTitle": "Cloud Sync",
+  "paneSyncSubtitle": "Cross-device sync over WebDAV (no proprietary cloud). Conflicts resolve by last-modified manifest timestamp; failures retry up to 3 times automatically.",
+  "paneSyncBackendSection": "WebDAV Backend",
+  "paneSyncEnableTitle": "Enable cloud sync",
+  "paneSyncFieldUsername": "Username",
+  "paneSyncFieldPassword": "Password",
+  "paneSyncFieldRootPath": "Root path",
+  "paneSyncConnectionTitle": "Connection status",
+  "paneSyncConnectionDefault": "Connected · health check passed",
+  "paneSyncTestButton": "Test connection",
+  "paneSyncTestButtonTesting": "Testing…",
+  "paneSyncTestSuccess": "Connected successfully",
+  "paneSyncTestFailure": "Connection failed: check endpoint / username / password",
+  "paneSyncModulesSection": "Sync scope",
+  "paneSyncModulesHint": "Per-module toggles",
+  "paneSyncModulesEmpty": "No modules registered with the sync system yet",
+  "paneSyncAutomationSection": "Automation",
+  "paneSyncAutoSyncTitle": "Auto sync",
+  "paneSyncAutoSyncDesc": "Sync periodically while the app is running (no background or system-level scheduling)",
+  "paneSyncIntervalTitle": "Sync interval",
+  "paneSyncIntervalDesc": "Minimum interval between two auto syncs",
+  "paneSyncInterval15": "15 min",
+  "paneSyncInterval30": "30 min",
+  "paneSyncInterval60": "1 hour",
+  "paneSyncInterval360": "6 hours",
+  "paneSyncNowTitle": "Sync now",
+  "paneSyncNowDesc": "Manually trigger a full sync",
+  "paneSyncNowButton": "Sync now",
+  "paneSyncNowButtonSyncing": "Syncing…",
+  "paneSyncResult": "Done: {pulled} pulled / {pushed} pushed / {failed} failed",
+  "@paneSyncResult": {
+    "placeholders": {
+      "pulled": {
+        "type": "int"
+      },
+      "pushed": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "paneSyncReportsSection": "This sync details",
+  "paneSyncOutcomePulled": "Pulled",
+  "paneSyncOutcomePushed": "Pushed",
+  "paneSyncOutcomeSkipped": "Up to date",
+  "paneSyncOutcomeFailed": "Failed",
+  "paneTransferTitle": "Transfers & Cache",
+  "paneTransferSubtitle": "Concurrency and cache policy for upload, download and cache tasks. See live progress in Console › Transfer queue.",
+  "paneTransferOpenQueue": "Open transfer queue",
+  "paneTransferSectionTransfer": "Transfers",
+  "paneTransferSectionTransferHint": "Upload · Download · Cache",
+  "paneTransferConcurrencyTitle": "Concurrent tasks",
+  "paneTransferConcurrencyDesc": "Max simultaneous upload / download / cache tasks",
+  "paneTransferBackgroundTitle": "Background transfers",
+  "paneTransferBackgroundDesc": "Keep transferring when the window is minimized",
+  "paneTransferResumeTitle": "Resume on launch",
+  "paneTransferResumeDesc": "Restore unfinished tasks on startup",
+  "paneTransferDedupTitle": "Upload deduplication",
+  "paneTransferDedupDesc": "Skip files that already exist with the same name and size (on by default)",
+  "paneTransferDedupEnabled": "Enabled",
+  "paneTransferSectionCache": "Cache",
+  "paneTransferSectionCacheHint": "Aggregated · LRU",
+  "paneTransferCacheLimitTitle": "Cache limit",
+  "paneTransferCacheLimitDesc": "Set a limit per media type; the least recently used items are cleared automatically when exceeded",
+  "paneTransferCacheLimitLoading": "Loading…",
+  "paneTransferCacheLimitError": "Unable to read cache settings",
+  "paneTransferCacheTypePhoto": "Photos / covers",
+  "paneTransferCacheTypeMusic": "Music",
+  "paneTransferCacheTypeVideo": "Video",
+  "paneTransferCacheTypeBook": "Books",
+  "paneTransferCacheTypeComic": "Comics",
+  "paneTransferCacheTypeNote": "Notes",
+  "paneTransferClearTitle": "Clear cache",
+  "paneTransferClearDesc": "Clear cached files by type or all at once",
+  "paneTransferClearImages": "Images",
+  "paneTransferClearStream": "Streaming",
+  "paneTransferClearAll": "All",
+  "paneTransferClearLabelImages": "image cache",
+  "paneTransferClearLabelStream": "streaming cache",
+  "paneTransferClearLabelAll": "all cache",
+  "paneTransferClearLabelTyped": "{name} cache",
+  "@paneTransferClearLabelTyped": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paneTransferClearDialogTitle": "Clear {label}",
+  "@paneTransferClearDialogTitle": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "paneTransferClearDialogContent": "Clear {label}? This cannot be undone, but it will not affect the original files on your NAS.",
+  "@paneTransferClearDialogContent": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "paneTransferClearCancel": "Cancel",
+  "paneTransferClearConfirm": "Clear",
+  "paneTransferKvTotal": "Total used",
+  "paneTransferKvImages": "Photos / covers",
+  "paneTransferKvStream": "Streaming cache",
+  "paneTransferKvReading": "Reading / metadata",
+  "paneVideoHeadTitle": "Video playback",
+  "paneVideoHeadSubtitle": "Quality, HDR tone mapping, audio passthrough, cast transcoding, and subtitle translation. video_quality_settings.",
+  "paneVideoSectionPlayback": "Playback",
+  "paneVideoSectionPlaybackHint": "Resume · Auto next episode",
+  "paneVideoQualityTitle": "Quality",
+  "paneVideoQualityDesc": "Adaptive bitrate, or manually lock a tier",
+  "paneVideoQualityAdaptive": "Adaptive",
+  "paneVideoQualityManual": "Manual",
+  "paneVideoDefaultQualityTitle": "Default tier",
+  "paneVideoDefaultQualityDesc": "Quality locked during playback in manual mode",
+  "paneVideoRememberQualityTitle": "Remember quality choice",
+  "paneVideoRememberQualityDesc": "Apply automatically next time you play the same video",
+  "paneVideoAutoResumeTitle": "Auto resume",
+  "paneVideoAutoResumeDesc": "Continue from where you left off",
+  "paneVideoAutoNextTitle": "Auto next episode",
+  "paneVideoAutoNextDesc": "Play the next episode automatically when one ends",
+  "paneVideoBufferThresholdTitle": "Buffer threshold",
+  "paneVideoBufferThresholdDesc": "Start playback once this many seconds are buffered",
+  "paneVideoSecondsLabel": "{n} s",
+  "@paneVideoSecondsLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "paneVideoSectionHdr": "HDR & backend",
+  "paneVideoSectionHdrHint": "HDR10 / HLG · Tone mapping",
+  "paneVideoHdrToggleDesc": "Enable the HDR pipeline and metadata passthrough",
+  "paneVideoToneMappingTitle": "Tone mapping",
+  "paneVideoToneMappingDesc": "Mapping algorithm for HDR → SDR displays",
+  "paneVideoBackendTitle": "Video backend",
+  "paneVideoBackendDesc": "Switch automatically by HDR / Dolby capability, or lock a backend manually",
+  "paneVideoBackendAuto": "Auto",
+  "paneVideoBackendNative": "Native",
+  "paneVideoSectionAudio": "Audio passthrough",
+  "paneVideoOutputPortTitle": "Output port",
+  "paneVideoOutputPortDesc": "Passthrough target device",
+  "paneVideoAlwaysDecodeTitle": "Always decode before output",
+  "paneVideoAlwaysDecodeDesc": "Force local decode to PCM when passthrough is unsupported",
+  "paneVideoOutputDetecting": "Detecting…",
+  "paneVideoOutputSpdif": "S/PDIF optical",
+  "paneVideoOutputBluetooth": "Bluetooth",
+  "paneVideoOutputSpeaker": "Built-in speaker",
+  "paneVideoOutputHeadphones": "Headphones",
+  "paneVideoOutputUnknown": "Unknown",
+  "paneVideoCodecPassthroughTitle": "{codec} passthrough",
+  "@paneVideoCodecPassthroughTitle": {
+    "placeholders": {
+      "codec": {
+        "type": "String"
+      }
+    }
+  },
+  "paneVideoCodecPassthroughDesc": "Send the raw bitstream straight to the amplifier",
+  "paneVideoSectionCast": "Cast & transcoding",
+  "paneVideoCastTitle": "DLNA / AirPlay cast",
+  "paneVideoCastDescCasting": "Casting · {device}",
+  "@paneVideoCastDescCasting": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "paneVideoCastConnectedDevice": "Connected device",
+  "paneVideoCastDescDiscovering": "Searching for devices…",
+  "paneVideoCastDescIdle": "Device discovery · Remote control (play / pause / volume / seek)",
+  "paneVideoCastDiscoveringButton": "Searching…",
+  "paneVideoCastDiscoverButton": "Find devices",
+  "paneVideoServerTranscodeTitle": "Server-side transcoding",
+  "paneVideoServerTranscodeDesc": "Allow servers like Synology / Jellyfin to transcode for quality switching",
+  "paneVideoClientTranscodeTitle": "Client-side transcoding",
+  "paneVideoClientTranscodeDesc": "Allow local FFmpeg transcoding when direct play is unavailable (limited by platform codec support)",
+  "paneVideoUnsupportedHintTitle": "Unsupported transcoding alert",
+  "paneVideoUnsupportedHintDesc": "Show an alert when neither the source nor the device supports the target codec",
+  "paneVideoTranscodeNote": "When neither the source nor the device supports the target codec and both server- and client-side transcoding are unavailable, the player shows a \"transcoding unsupported\" notice and offers playable alternatives.",
+  "paneVideoSectionSubtitle": "Subtitles",
+  "paneVideoSectionSubtitleHint": "Translation · Cache · Sources",
+  "paneVideoBilingualTitle": "Bilingual display",
+  "paneVideoBilingualDesc": "Two lines: original + translation",
+  "paneVideoTranslateEngineTitle": "Translation engine",
+  "paneVideoTranslateEngineDesc": "Real-time subtitle translation",
+  "paneVideoTranslateEngineGoogle": "Google free",
+  "paneVideoTranslateEngineOff": "Off",
+  "paneVideoTranslateCacheTitle": "Translation cache",
+  "paneVideoTranslateCacheDesc": "Cache translations to skip re-translating on replay",
+  "paneVideoClearCacheChip": "Clear archive",
+  "paneVideoCacheCleared": "Translation cache cleared",
+  "paneVideoSubtitleSourceTitle": "Subtitle source",
+  "paneVideoSubtitleSourceDescConfigured": "OpenSubtitles online subtitles · Account configured",
+  "paneVideoSubtitleSourceDescPublic": "OpenSubtitles online subtitles · Using the built-in public quota",
+  "paneVideoAccountChip": "Account",
+  "paneVideoScraperSourceTitle": "Scraper sources",
+  "paneVideoScraperSourceDesc": "Metadata sources: TMDB / Douban NFO",
+  "paneVideoScraperSourceButton": "Manage sources",
+  "setShellGroupGeneral": "General",
+  "setShellGroupConnection": "Connection",
+  "setShellGroupPlayback": "Playback & Media",
+  "setShellGroupServices": "Services & Automation",
+  "setShellGroupData": "Data",
+  "setShellGroupAdvanced": "Advanced",
+  "setShellCatAppearanceLabel": "Appearance",
+  "setShellCatAppearanceSubtitle": "Theme, color scheme, and UI style. Glass / Classic are live global toggles.",
+  "setShellCatLanguageLabel": "Language & Region",
+  "setShellCatLanguageSubtitle": "Interface language and metadata / audio / subtitle language priority.",
+  "setShellCatSecurityLabel": "Privacy & Security",
+  "setShellCatSecuritySubtitle": "App lock, PIN, biometrics, and auto-lock.",
+  "setShellCatSourcesLabel": "Sources",
+  "setShellCatSourcesSubtitle": "Add / edit / remove sources, test connections, 2FA, and credential storage.",
+  "setShellCatLibmapLabel": "Library Mapping",
+  "setShellCatLibmapSubtitle": "Mark source folders as Video / Music / Photo / Comic / Book libraries.",
+  "setShellCatVideoLabel": "Video Playback",
+  "setShellCatVideoSubtitle": "Resolution, HDR, audio passthrough, cast transcoding, and subtitles.",
+  "setShellCatMusicLabel": "Music Playback",
+  "setShellCatMusicSubtitle": "Decode engine, equalizer, gapless crossfade, lyrics, and scrobbling.",
+  "setShellCatReadingLabel": "Reading",
+  "setShellCatReadingSubtitle": "Reader engine, online book sources, and global reading preferences.",
+  "setShellCatCastLabel": "Cast & Output",
+  "setShellCatCastSubtitle": "Audio output, local media proxy, casting, and the desktop lyrics overlay.",
+  "setShellCatSitesLabel": "Sites & Tracking",
+  "setShellCatSitesSubtitle": "PT sites, Trakt tracking, and media management backends.",
+  "setShellCatLiveLabel": "Live Sources",
+  "setShellCatLiveSubtitle": "Manage IPTV / M3U / HLS live sources.",
+  "setShellCatScraperLabel": "Scrapers",
+  "setShellCatScraperSubtitle": "Metadata sources and priority for movies/TV, subtitles, and music.",
+  "setShellCatRemotedlLabel": "Remote Downloaders",
+  "setShellCatRemotedlSubtitle": "aria2 / qBittorrent / Transmission client connections and preferences.",
+  "setShellCatSyncLabel": "Cloud Sync",
+  "setShellCatSyncSubtitle": "WebDAV-based cross-device sync (not tied to any cloud provider).",
+  "setShellCatTransferLabel": "Transfer & Cache",
+  "setShellCatTransferSubtitle": "Concurrency and cache policy for upload / download / cache tasks.",
+  "setShellCatMaintLabel": "Maintenance & Stats",
+  "setShellCatMaintSubtitle": "Listening stats, duplicate detection, and the recycle bin.",
+  "setShellCatFavoritesLabel": "Favorites",
+  "setShellCatFavoritesSubtitle": "Favorited content aggregated across all types.",
+  "setShellCatAdvancedLabel": "Advanced",
+  "setShellCatAdvancedSubtitle": "Hosts mapping, system index integration, and diagnostics.",
+  "setShellCatAboutLabel": "About",
+  "setShellCatAboutSubtitle": "Version info, updates, and open-source licenses.",
+  "setShellTitle": "Settings",
+  "setShellSearchHint": "Search settings…",
+  "setShellNoMatch": "No settings match “{query}”",
+  "@setShellNoMatch": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "setShellPlannedBadge": "Planned",
+  "setShellStubTitle": "Under construction",
+  "setShellStubDesc": "This settings pane is being migrated to the new design",
+  "shellActTitle": "Activity Center",
+  "shellActNoTasks": "No tasks",
+  "shellActInProgressCount": "{count} in progress",
+  "@shellActInProgressCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shellActAggregationHint": "Progress for all transfers, downloads, scans, scraping, face recognition, and sync converges here.",
+  "shellActEmptyTitle": "No tasks in progress",
+  "shellActEmptyHint": "Uploads, downloads, scans, scraping, and sync will appear here automatically once they start.",
+  "shellApprThemeMode": "Theme",
+  "shellApprThemeLight": "Light",
+  "shellApprThemeDark": "Dark",
+  "shellApprThemeSystem": "System",
+  "shellApprUiStyle": "UI Style",
+  "shellApprAccentColor": "Accent Color",
+  "shellApprDynamicAmbient": "Dynamic Ambient Light",
+  "shellCmdkSearchPlaceholder": "Search media, files, tasks, or type a command…",
+  "shellCmdkNoResults": "No matching commands.",
+  "shellNavCmdOpenSettings": "Open Settings",
+  "shellNavCmdFilmsLibrary": "Film Library",
+  "shellNavCmdMusic": "Music",
+  "shellNavCmdPhotos": "Photos",
+  "shellNavCmdFiles": "Files",
+  "shellNavCmdFilesKeywordBrowse": "Browse",
+  "shellNavCmdOpsOverview": "Operations Overview",
+  "shellNavCmdDownloader": "Downloader",
+  "shellNavCmdTransferQueue": "Transfer Queue",
+  "shellNavCmdSources": "Sources",
+  "shellNavCmdPtSites": "PT Sites",
+  "shellNavCmdPtKeywordTorrent": "torrent",
+  "shellNavCmdPtKeywordResourceSite": "tracker",
+  "shellNavCmdMediaAutomation": "Media Automation",
+  "shellNavCmdNastoolKeywordSubscribe": "subscribe",
+  "shellNavCmdNastoolKeywordFollowShow": "follow show",
+  "shellNavGroupFilms": "Films",
+  "shellNavEntryHome": "Overview",
+  "shellNavEntryFilms": "Films",
+  "shellNavEntryLive": "Live",
+  "shellNavEntryMusic": "Music",
+  "shellNavEntryPhotos": "Photos",
+  "shellNavEntryReading": "Reading",
+  "shellNavEntryFiles": "Files",
+  "shellNavEntryOpsOverview": "Operations Overview",
+  "shellNavEntryDownloader": "Downloader",
+  "shellNavEntryTransferQueue": "Transfer Queue",
+  "shellNavEntryPtSites": "PT Sites",
+  "shellNavEntryMediaAutomation": "Media Automation",
+  "shellNavEntrySources": "Sources",
+  "shellNavGroupMyMedia": "My Media",
+  "shellNavGroupFoundation": "Foundation",
+  "shellNavGroupTransferDownload": "Transfers & Downloads",
+  "shellNavGroupResourceAutomation": "Resources & Automation",
+  "shellNavCrumbMedia": "Media",
+  "shellNavCrumbConsole": "Console",
+  "shellNavCrumbSettings": "Settings",
+  "shellNavToastDownloadComplete": "{name} download complete",
+  "@shellNavToastDownloadComplete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shellSidebarSpaceMedia": "Media",
+  "shellSidebarSpaceOps": "Console",
+  "shellSidebarSettings": "Settings",
+  "shellTopbarToggleSidebar": "Collapse sidebar",
+  "shellTopbarActivity": "Activity",
+  "shellTopbarAppearance": "Appearance",
+  "shellTopbarSearchPlaceholder": "Search media, files, tasks…",
+  "addDlTitle": "New Download",
+  "addDlLinksLabel": "Link · Magnet · Torrent",
+  "addDlLinksHint": "Paste HTTP links or magnet: URIs (one per line)",
+  "addDlClientLabel": "Download to client",
+  "addDlNoClientHint": "No download client configured yet. Add qBittorrent / aria2 / Transmission under Sources first.",
+  "addDlCategoryLabel": "Category",
+  "addDlCategoryMovie": "Movies",
+  "addDlCategorySeries": "TV Shows",
+  "addDlCategoryAnime": "Anime",
+  "addDlCategoryMusic": "Music",
+  "addDlCategoryOther": "Other",
+  "addDlSavePathLabel": "Save location (optional)",
+  "addDlSavePathHint": "Leave empty to use the downloader's default directory",
+  "addDlPausedTitle": "Add paused",
+  "addDlPausedSubtitle": "Add the task without starting it immediately",
+  "addDlFooterHint": "{count} links → {name}",
+  "@addDlFooterHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addDlCancel": "Cancel",
+  "addDlSubmit": "Add Task",
+  "addDlSuccessToast": "Added {count} tasks to {name}",
+  "@addDlSuccessToast": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addDlFailToast": "Failed to add: {error}",
+  "@addDlFailToast": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "detailPanelPlay": "Play",
+  "detailPanelResume": "Resume {percent}%",
+  "@detailPanelResume": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "detailPanelWatched": "Watched",
+  "detailPanelUnwatched": "Unwatched",
+  "detailPanelFavorited": "Favorited",
+  "detailPanelFavorite": "Favorite",
+  "detailPanelScrape": "Scrape",
+  "dlPageTitle": "Downloader",
+  "dlPageSubtitle": "qBittorrent · aria2 · Transmission — unified task console across clients",
+  "dlPageNewTask": "New Task",
+  "dlPageBatchOpFailed": "Batch operation failed: {error}",
+  "@dlPageBatchOpFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dlPageDeleteSelectedTitle": "Delete Selected Tasks",
+  "dlPageDeleteSelectedConfirm": "Delete the {count} selected task(s)? (Downloaded files are kept.)",
+  "@dlPageDeleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dlPageCancel": "Cancel",
+  "dlPageDelete": "Delete",
+  "dlPageTotalDown": "Total Down",
+  "dlPageTotalUp": "Total Up",
+  "dlPageActiveTasks": "Active Tasks",
+  "dlPageOnlineClients": "Online Clients",
+  "dlPageGlobalRateLimit": "Global Rate Limit",
+  "dlPageConfigureQb": "Configure (qBittorrent)",
+  "dlPageManagedInClient": "Managed in client settings",
+  "dlPageRateLimitHint": "Categories · tags · alternative rate limits can be managed in client settings",
+  "dlPageColName": "Name",
+  "dlPageColClient": "Client",
+  "dlPageColStatus": "Status",
+  "dlPageColProgress": "Progress",
+  "dlPageColSpeed": "Speed",
+  "dlPageColSize": "Size",
+  "dlPageRatio": "Ratio {ratio}",
+  "@dlPageRatio": {
+    "placeholders": {
+      "ratio": {
+        "type": "String"
+      }
+    }
+  },
+  "dlPageEmptyClientsHint": "No download client connected yet.\nAdd qBittorrent / aria2 / Transmission under \"Sources\" and all tasks will be aggregated here (including one-click PT sending).",
+  "dlPageNoTasksUnderFilter": "No tasks match the current filter.",
+  "dlPageGlobalLimitUpdated": "Global rate limit updated",
+  "dlPageSaveFailed": "Failed to save: {error}",
+  "@dlPageSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dlPageRateLimitUnitHint": "Unit: KB/s. 0 means unlimited.",
+  "dlPageDownloadLimitLabel": "Download limit (KB/s)",
+  "dlPageUploadLimitLabel": "Upload limit (KB/s)",
+  "dlPageApply": "Apply",
+  "dlPageSelectedCount": "{count} selected",
+  "@dlPageSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dlPageResume": "Resume",
+  "dlPagePause": "Pause",
+  "dlPageClearSelection": "Clear selection",
+  "filesTitle": "Files",
+  "filesConnectedSources": "Connections",
+  "filesBack": "Back",
+  "filesBackToParent": "Up one level",
+  "filesListView": "List view",
+  "filesGridView": "Grid view",
+  "filesSort": "Sort",
+  "filesDownloadManager": "Downloads",
+  "filesMore": "More",
+  "filesCancel": "Cancel",
+  "filesSelectedCount": "{n} selected",
+  "@filesSelectedCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "filesDeselectAll": "Deselect all",
+  "filesSelectAll": "Select all",
+  "filesDelete": "Delete",
+  "filesMoreActions": "More actions",
+  "filesRoot": "Root",
+  "filesEmptyTitle": "Folder is empty",
+  "filesEmptyMessage": "This folder has no files or subfolders",
+  "filesNotConnectedTitle": "Not connected to NAS",
+  "filesNotConnectedMessage": "Configure and connect to a NAS server in Settings first",
+  "filesAddConnection": "Add connection",
+  "filesCannotAccessDir": "Cannot access this directory",
+  "filesLoadFailed": "Failed to load",
+  "filesDirNotExistOrNoPermission": "Directory \"{path}\" may not exist or you lack permission",
+  "@filesDirNotExistOrNoPermission": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "filesRetry": "Retry",
+  "filesBrowseAllShares": "Browse all shares",
+  "filesSortBy": "Sort by",
+  "filesSortByName": "Name",
+  "filesSortBySize": "Size",
+  "filesSortByDate": "Date modified",
+  "filesSortByType": "Type",
+  "filesAscending": "Ascending order",
+  "filesMoreOptions": "More options",
+  "filesRefresh": "Refresh",
+  "filesMultiSelect": "Multi-select",
+  "filesCreate": "New",
+  "filesNewFolder": "New folder",
+  "filesUploadFile": "Upload file",
+  "filesFolderNameHint": "Folder name",
+  "filesCreateAction": "Create",
+  "filesDownload": "Download",
+  "filesShare": "Share",
+  "filesCopyTo": "Copy to...",
+  "filesMoveTo": "Move to...",
+  "filesRename": "Rename",
+  "filesNewNameHint": "New name",
+  "filesConfirm": "OK",
+  "filesConfirmDelete": "Confirm deletion",
+  "filesDeleteConfirmMessage": "Delete \"{name}\"? This cannot be undone.",
+  "@filesDeleteConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesBatchDeleteConfirmMessage": "Delete the {count} selected items? This cannot be undone.",
+  "@filesBatchDeleteConfirmMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesDeletedCount": "Deleted {count} items",
+  "@filesDeletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesDeleteResult": "Deletion done: {success} succeeded, {fail} failed",
+  "@filesDeleteResult": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "fail": {
+        "type": "int"
+      }
+    }
+  },
+  "filesBatchOperations": "Batch operations",
+  "filesCopyToTitle": "Copy to",
+  "filesMoveToTitle": "Move to",
+  "filesCopyHere": "Copy here",
+  "filesMoveHere": "Move here",
+  "filesCopiedCount": "Copied {count} items to {dest}",
+  "@filesCopiedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "filesCopyResult": "Copy done: {success} succeeded, {fail} failed",
+  "@filesCopyResult": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "fail": {
+        "type": "int"
+      }
+    }
+  },
+  "filesMovedCount": "Moved {count} items to {dest}",
+  "@filesMovedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "filesMoveResult": "Move done: {success} succeeded, {fail} failed",
+  "@filesMoveResult": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "fail": {
+        "type": "int"
+      }
+    }
+  },
+  "filesNoDownloadableFiles": "No downloadable files (folders can't be downloaded directly)",
+  "filesDownloadTasksAdded": "Added {count} download tasks",
+  "@filesDownloadTasksAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesView": "View",
+  "filesDownloadTasksResult": "Download tasks queued: {success} succeeded, {fail} failed",
+  "@filesDownloadTasksResult": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "fail": {
+        "type": "int"
+      }
+    }
+  },
+  "filesPreparingShare": "Preparing to share: {name}",
+  "@filesPreparingShare": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesShareNotSupported": "System sharing is not supported on this platform",
+  "filesShareFailed": "Share failed",
+  "filesDownloadStarted": "Download started: {name}",
+  "@filesDownloadStarted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesDownloadFailed": "Download failed",
+  "filesUploading": "Uploading: {name}",
+  "@filesUploading": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "filesUploadComplete": "Upload complete: {count} files",
+  "@filesUploadComplete": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filesUploadFailed": "Upload failed",
+  "filesCopiedTo": "Copied to {dest}",
+  "@filesCopiedTo": {
+    "placeholders": {
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "filesMovedTo": "Moved to {dest}",
+  "@filesMovedTo": {
+    "placeholders": {
+      "dest": {
+        "type": "String"
+      }
+    }
+  },
+  "filesOperationFailed": "Operation failed: {message}",
+  "@filesOperationFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "filesNotConnected": "Not connected",
+  "filesNoSubfolders": "No subfolders",
+  "filmDetailTabSeasons": "Episodes",
+  "filmDetailTabVersions": "Versions",
+  "filmDetailTabCast": "Cast & Crew",
+  "filmDetailTabRelated": "Related",
+  "filmDetailRuntimeMinutes": "{n} min",
+  "@filmDetailRuntimeMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "filmDetailContinuePlay": "Resume",
+  "filmDetailPlay": "Play",
+  "filmDetailMarkedWatched": "Marked as watched",
+  "filmDetailMarkedUnwatched": "Marked as unwatched",
+  "filmDetailMarkUnwatched": "Mark unwatched",
+  "filmDetailMarkWatched": "Mark watched",
+  "filmDetailCast": "Cast",
+  "filmDetailSearchPt": "Search on PT",
+  "filmDetailSourceNotConnected": "The source for this title is not connected",
+  "filmDetailPlayFailed": "Playback failed: {error}",
+  "@filmDetailPlayFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "filmDetailDefault": "Default",
+  "filmDetailNoCast": "No cast or crew information available.",
+  "filmDetailRelatedHint": "Related recommendations are powered by TMDB / Douban; enable them in Media settings.",
+  "filmDetailSeasonsNoLocator": "Unable to locate this show's episodes (missing TMDB ID and show directory).",
+  "filmDetailSeasonsLoadFailed": "Failed to load episodes: {error}",
+  "@filmDetailSeasonsLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "filmDetailSeasonsEmpty": "No local episode files found for this show.",
+  "filmDetailSeasonLabel": "Season {n}",
+  "@filmDetailSeasonLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "filmDetailEpisodeLabel": "Episode {n}",
+  "@filmDetailEpisodeLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSectionContinue": "Continue",
+  "homeSectionContinueSub": "Watch · Read · Listen — local merged with Trakt, local first",
+  "homeSectionQuickActions": "Quick actions",
+  "homeSectionRecentlyAdded": "Recently added",
+  "homeSectionRecentlyAddedSub": "Across all sources",
+  "homeGreetEarlyMorning": "Good early morning",
+  "homeGreetMorning": "Good morning",
+  "homeGreetNoon": "Good afternoon",
+  "homeGreetAfternoon": "Good afternoon",
+  "homeGreetEvening": "Good evening",
+  "homeWelcomeBack": "{greet}, welcome back",
+  "@homeWelcomeBack": {
+    "placeholders": {
+      "greet": {
+        "type": "String"
+      }
+    }
+  },
+  "homeNowDateLine": "{month}/{day} · {weekday} · {sources} sources online",
+  "@homeNowDateLine": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      },
+      "sources": {
+        "type": "int"
+      }
+    }
+  },
+  "homeWeekdayMon": "Mon",
+  "homeWeekdayTue": "Tue",
+  "homeWeekdayWed": "Wed",
+  "homeWeekdayThu": "Thu",
+  "homeWeekdayFri": "Fri",
+  "homeWeekdaySat": "Sat",
+  "homeWeekdaySun": "Sun",
+  "homeTagContinueWatching": "Continue watching",
+  "homeTagLocalFirst": "Local first",
+  "homeTagTraktSync": "Trakt sync",
+  "homeSpotlightEmptyTitle": "Map a Movies & TV library to activate this",
+  "homeSpotlightContinueProgress": "Continue watching · {percent}%",
+  "@homeSpotlightContinueProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeSpotlightContinueHint": "Continue watching will appear here automatically",
+  "homePulseTitle": "System pulse",
+  "homePulseRealtime": "Live",
+  "homePulseDownloadActive": "{speed} · {count} tasks",
+  "@homePulseDownloadActive": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePulseDownloadIdle": "Idle · {count} clients",
+  "@homePulseDownloadIdle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homePulseDownloadDisconnected": "No downloader connected",
+  "homePulseDownloadTitle": "Download throughput",
+  "homePulsePhotoScanTitle": "Photo scan",
+  "homePulsePhotoScanIdle": "Idle",
+  "homePulseLiveTitle": "Live now",
+  "homePulseLiveHint": "Activates after mapping an M3U8 source",
+  "homePulseLiveWatch": "Watch",
+  "homeWatchedPercent": "{percent}% watched",
+  "@homeWatchedPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "homeEmptyContinueHint": "Watch, read, or listen to any media and your progress shows up here.",
+  "homeQuickNewDownloadTitle": "New download",
+  "homeQuickNewDownloadDesc": "Send a magnet or direct link",
+  "homeQuickPtSearchTitle": "PT search",
+  "homeQuickPtSearchDesc": "Find releases across sites",
+  "homeQuickUploadTitle": "Upload to NAS",
+  "homeQuickUploadDesc": "Back up photos and files",
+  "homeQuickAddSourceTitle": "Add a source",
+  "homeQuickAddSourceDesc": "Connect a new device",
+  "homeEmptyRecentlyAddedHint": "Once you map a Movies & TV library, recently added items appear here across all sources.",
+  "infuseTitle": "Playback Settings",
+  "infuseSubtitle": "Subtitles",
+  "infuseSubtitleOff": "Off",
+  "infuseSearchSubtitle": "Search Subtitles",
+  "infuseSubtitleStyle": "Subtitle Style",
+  "infuseAudioTrack": "Audio Track",
+  "infuseAudioTrackCount": "{n} available",
+  "@infuseAudioTrackCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "infuseAspectRatio": "Aspect Ratio",
+  "infusePlaybackSpeed": "Playback Speed",
+  "infuseSeek": "Seek",
+  "infuseSeekSeconds": "{n} sec",
+  "@infuseSeekSeconds": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "infuseSeekChipSeconds": "{n}s",
+  "@infuseSeekChipSeconds": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "infuseTrackName": "Track {id}",
+  "@infuseTrackName": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "livePageCategoryAll": "All",
+  "livePageUncategorized": "Uncategorized",
+  "livePageTitle": "Live",
+  "livePageSubtitle": "M3U8 / HLS channels · Adaptive quality · Electronic Program Guide (EPG)",
+  "livePageManageM3u8Source": "Manage M3U8 sources",
+  "livePageProgramGuide": "Program guide",
+  "livePageEpgSubtitle": "Electronic Program Guide (EPG)",
+  "livePageEpgNowSubtitle": "Program guide · {time} now",
+  "@livePageEpgNowSubtitle": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "livePageRedLineHint": "Red line marks the current time",
+  "livePageEpgFromXmltv": "The program timeline comes from the XMLTV source; tap a channel row to play.",
+  "livePageEpgNoData": "The current source provides no XMLTV program data; only channels and the timeline are shown. Tap a channel row to play.",
+  "livePageOnAir": "On air",
+  "livePageNowPlaying": "Now playing",
+  "livePageUpNext": "Up next {time} · {title}",
+  "@livePageUpNext": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "livePageHlsAdaptive": "M3U8 / HLS · Adaptive quality",
+  "livePageWatchNow": "Watch now",
+  "livePageFullGuide": "Full guide",
+  "livePageChannelColumn": "Channel",
+  "livePageComingSoon": "Coming soon",
+  "livePageEmptyHeroTitle": "Import an M3U8 channel source to get started",
+  "livePageEmptyHeroDesc": "Add an M3U8 / HLS live source under \"Manage sources\" to see featured channels and the program guide here.",
+  "livePageManageSources": "Manage sources",
+  "livePageNoSourceTitle": "No live source configured yet",
+  "livePageNoSourceDesc": "Add an M3U8 / HLS source to automatically generate the program guide (pxPerMin=4, sticky channel column).",
+  "lyricContentEmptyHint": "No lyrics",
+  "lyricContentUnlockPosition": "Unlock position",
+  "lyricContentLockPosition": "Lock position",
+  "lyricContentClose": "Close",
+  "musicPageTitle": "Music",
+  "musicPageSubtitleLoaded": "{count} tracks · {albumCount} albums · Gapless · NCM decryption",
+  "@musicPageSubtitleLoaded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "albumCount": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPageSubtitleDefault": "Gapless · NCM decryption · MusicBrainz / AcoustID scraping",
+  "musicPageTabSongs": "Songs",
+  "musicPageTabAlbums": "Albums",
+  "musicPageTabArtists": "Artists",
+  "musicPageTabFolders": "Folders",
+  "musicPageUnitHours": "h",
+  "musicPageUnitMinutes": "min",
+  "musicPageUnitTracks": "tracks",
+  "musicPageUnitArtists": "artists",
+  "musicPageStatTracks": "Tracks",
+  "musicPageStatTotalDuration": "Total duration",
+  "musicPageStatArtists": "Artists",
+  "musicPageStatAnnualReport": "Annual report",
+  "musicPageComingSoon": "Coming soon",
+  "musicPageEmptyHint": "Your library is empty. Tracks appear here after scanning the Music library.",
+  "musicPageHeaderAlbums": "Albums",
+  "musicPageHeaderArtists": "Artists",
+  "musicPageHeaderFolders": "Folders",
+  "musicPageHeaderAllSongs": "All songs",
+  "musicPagePlayAll": "Play all",
+  "musicPageShuffle": "Shuffle",
+  "musicPageTrackCount": "{count} tracks",
+  "@musicPageTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPagePlaylists": "Playlists",
+  "musicPageFavorites": "My favorite music",
+  "musicPagePlaylistHint": "Your playlists and favorites will appear here.",
+  "musicPageEqualizer": "Equalizer",
+  "musicPlaylistEmpty": "No playlists yet",
+  "musicPlaylistCreateTitle": "New playlist",
+  "musicPlaylistNameHint": "Playlist name",
+  "musicPlaylistCreateAction": "Create",
+  "musicPlaylistRename": "Rename",
+  "musicPlaylistRenameTitle": "Rename playlist",
+  "musicPlaylistDelete": "Delete",
+  "musicPlaylistDeleteTitle": "Delete playlist",
+  "musicPlaylistDeleteMessage": "Delete \"{name}\"? Tracks are not removed from your library.",
+  "@musicPlaylistDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "musicPlaylistTrackCount": "{count} tracks",
+  "@musicPlaylistTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPageStatListeningStats": "Listening stats",
+  "nastoolPageTitle": "Media Automation",
+  "nastoolPageSubtitle": "NAStool subscriptions — auto-track shows / complete movies",
+  "nastoolPageNotConfigured": "NAStool is not configured yet. Add NAStool under Sources to manage subscriptions and auto-track shows here.",
+  "nastoolPageFilterAll": "All",
+  "nastoolPageFilterMovie": "Movies",
+  "nastoolPageFilterTv": "TV Shows",
+  "nastoolPageAddSubscription": "Add Subscription",
+  "nastoolPageLoadSubscriptionsFailed": "Failed to load subscriptions: {error}",
+  "@nastoolPageLoadSubscriptionsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nastoolPageEmptyHint": "No subscriptions yet. Click Add Subscription in the top right to search and add the titles you want to track.",
+  "nastoolPageEmptyFiltered": "No subscriptions match the current filter.",
+  "nastoolPageAutomationTools": "Automation Tools",
+  "nastoolPageToolPluginStore": "Plugin Store",
+  "nastoolPageToolPlugins": "Plugins",
+  "nastoolPageToolSyncDirs": "Directory Sync",
+  "nastoolPageToolTransferHistory": "Transfer History",
+  "nastoolPageToolSystemInfo": "System Info",
+  "nastoolPageTagPlan": "Planned",
+  "nastoolPageLoadFailed": "Failed to load: {error}",
+  "@nastoolPageLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nastoolPagePluginsEmpty": "No plugins installed.",
+  "nastoolPageSyncDirsEmpty": "No directory sync configured.",
+  "nastoolPageSyncNow": "Sync Now",
+  "nastoolPageTransferHistoryEmpty": "No transfer history yet.",
+  "nastoolPageInfoVersion": "Version",
+  "nastoolPageInfoLatestVersion": "Latest Version",
+  "nastoolPageInfoUpdateChannel": "Update Channel",
+  "nastoolPageInfoTotalSpace": "Total Space",
+  "nastoolPageInfoFreeSpace": "Free Space",
+  "nastoolPageInfoMemory": "Memory",
+  "nastoolPageStatSubscribing": "Subscribed",
+  "nastoolPageStatMovies": "Movies",
+  "nastoolPageStatTv": "TV Shows",
+  "nastoolPageStatChasing": "Tracking",
+  "nowPlayTitle": "Now Playing",
+  "nowPlayNotPlaying": "Not Playing",
+  "nowPlayDesktopLyricOn": "Desktop Lyrics",
+  "nowPlayDesktopLyricOff": "Turn Off Desktop Lyrics",
+  "nowPlayCast": "Cast",
+  "nowPlayNoLyrics": "No lyrics",
+  "nowPlayShuffleOn": "Shuffle",
+  "nowPlayShuffleOff": "Turn Off Shuffle",
+  "nowPlayRepeatOne": "Repeat One",
+  "nowPlayRepeatAll": "Repeat All",
+  "opsTitle": "Operations Overview",
+  "opsSubtitle": "Downloaders · Transfers · PT · Automation · Sources — all in one place",
+  "opsLiveThroughput": "Live Throughput",
+  "opsLiveClientsRealtime": "Aggregating {n} clients · live",
+  "@opsLiveClientsRealtime": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "opsNoOnlineClients": "No download clients online",
+  "opsStatActiveTasks": "Active Tasks",
+  "opsStatSourcesOnline": "Sources online · {n} total",
+  "@opsStatSourcesOnline": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "opsStatPtAvgRatio": "PT Avg Ratio",
+  "opsStatSubscribing": "Subscriptions Tracking",
+  "opsClientTaskCount": "{n} tasks",
+  "@opsClientTaskCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "opsClientNotConnected": "Not connected",
+  "opsDownloadingTitle": "Downloading",
+  "opsDownloaderChip": "Downloader",
+  "opsNoDownloadingTasks": "No tasks are currently downloading.",
+  "opsPtOverviewTitle": "PT Overview",
+  "opsSitesChip": "Sites",
+  "opsNoPtSites": "No PT sites configured yet.",
+  "opsRatioLabel": "Ratio",
+  "photoPageTitle": "Photos",
+  "photoPagePhotoCount": "{n} photos",
+  "@photoPagePhotoCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "photoPageSubtitleFeatures": "Face recognition · EXIF · Duplicate detection · Auto incremental scan",
+  "photoPageTabTimeline": "Timeline",
+  "photoPageTabAlbums": "Albums",
+  "photoPageTabMap": "Map",
+  "photoPagePeopleTitle": "People",
+  "photoPagePeopleSubtitle": "{n} people · Face clustering",
+  "@photoPagePeopleSubtitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "photoPageAllPeople": "All people",
+  "photoPagePersonPhotoCount": "{n} photos",
+  "@photoPagePersonPhotoCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "photoPageMapComingSoon": "Cluster photo locations on a map by GPS EXIF (coming soon).",
+  "photoPageSourceFilterTooltip": "Filter by source",
+  "photoPageNoLibraryHint": "Once a Photos library is mapped, a responsive grid with time grouping appears here.",
+  "photoPageNoFilteredPhotos": "No photos match the current filter.",
+  "photoPageUnknownDate": "Unknown date",
+  "photoPageAlbumRoot": "Root",
+  "photoPageYearMonth": "{month}/{year}",
+  "@photoPageYearMonth": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "photoPageTimelineCount": "  · {n} photos",
+  "@photoPageTimelineCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "photoViewerBarrierLabel": "Photo viewer",
+  "ptCardDownload": "Download",
+  "ptCardMinutesAgo": "{n} min ago",
+  "@ptCardMinutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ptCardHoursAgo": "{n} hr ago",
+  "@ptCardHoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ptCardDaysAgo": "{n} days ago",
+  "@ptCardDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ptCardMonthDay": "{month}/{day}",
+  "@ptCardMonthDay": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "ptDetailStatSize": "Size",
+  "ptDetailStatSeeders": "Seeders",
+  "ptDetailStatLeechers": "Leechers",
+  "ptDetailStatSnatched": "Snatched",
+  "ptDetailMetaUploadTime": "Uploaded",
+  "ptDetailMetaDouban": "Douban",
+  "ptDetailMetaTorrentId": "Torrent ID",
+  "ptDetailLinkCopied": "Detail link copied",
+  "ptDetailCopyLink": "Copy link",
+  "ptDetailSendToDownloader": "Send to downloader",
+  "ptPageTitle": "PT Sites",
+  "ptPageSubtitle": "Torrent search · One-tap send to downloader",
+  "ptPageEmptyHint": "No PT sites configured yet. Add a source site under Sources to browse torrents and send them to a downloader with one tap.",
+  "ptPageConnectFailed": "Connection failed: {error}",
+  "@ptPageConnectFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "ptPageConnectFailedFallback": "Please check the site configuration",
+  "ptPageNoMatch": "No matching torrents.",
+  "ptPageLoadMore": "Load more",
+  "ptPageCheckIn": "Check-in",
+  "ptPageRatio": "Ratio",
+  "ptPageBonus": "Bonus",
+  "ptPageUploaded": "Uploaded",
+  "ptPageSearchHint": "Search torrents on this site…",
+  "ptPageCategoryMovie": "Movies",
+  "ptPageCategoryTv": "TV Series",
+  "ptPageCategoryMusic": "Music",
+  "ptPageResultCount": "This site · {count} found",
+  "@ptPageResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ptPageColTitle": "Title",
+  "ptPageColSize": "Size",
+  "ptPageColSeeders": "Seeders",
+  "ptPageColLeechers": "Leechers",
+  "ptPageColRating": "Rating",
+  "ptPageColPromo": "Promotion",
+  "ptPageColActions": "Actions",
+  "ptPageSendToDownloader": "Send to downloader",
+  "ptPageDetail": "Details",
+  "ptPageRatingDouban": "Douban",
+  "readingPageTitle": "Reading",
+  "readingPageSubtitle": "{comicCount} comics · {bookCount} books · {noteCount} notes — unified reading progress (shared bookmarks)",
+  "@readingPageSubtitle": {
+    "placeholders": {
+      "comicCount": {
+        "type": "int"
+      },
+      "bookCount": {
+        "type": "int"
+      },
+      "noteCount": {
+        "type": "int"
+      }
+    }
+  },
+  "readingPageOnlineSources": "Online Sources",
+  "readingPageTabAll": "All",
+  "readingPageTabComic": "Comics",
+  "readingPageTabBook": "Books",
+  "readingPageTabNote": "Notes",
+  "readingPageSectionComic": "Comics",
+  "readingPageSectionBook": "Books",
+  "readingPageSectionNote": "Notes",
+  "readingPageLoadPartialFailed": "Some reading libraries failed to load",
+  "readingPageRetry": "Retry",
+  "readingPageEmptyNote": "Once a Notes folder is mapped, the Markdown note tree appears here.",
+  "readingPageEmptyComic": "Once a Comics library is mapped, the comic shelf (covers + page counts) appears here.",
+  "readingPageEmptyBook": "Once a Books library is mapped, the book shelf appears here with EPUB / PDF / TXT.",
+  "readingPageEmptyAll": "Unified view: comics, books, and notes together. Map the libraries under Sources first.",
+  "readingPageSourceNotConnected": "The source for this book is not connected",
+  "readingPageOpenBookFailed": "Failed to open book: {error}",
+  "@readingPageOpenBookFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "readingPageComicPageCount": "{count} pages",
+  "@readingPageComicPageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "readingPageMarkdownNotes": "Markdown Notes",
+  "readingPageCreate": "New",
+  "readingPageNoteItemCount": "{count} items",
+  "@readingPageNoteItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "readingPageNoteTaskList": "Task List",
+  "sourcesPageTitle": "Sources",
+  "sourcesPageSubtitle": "Add a source → map library folders → scan → libraries. Deleting a source cascades to remove its media and mappings.",
+  "sourcesPageAddSource": "Add Source",
+  "sourcesPageLoadError": "Failed to load sources: {error}",
+  "@sourcesPageLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageEmptyHint": "Tap “Add Source” at the top right to connect your first NAS / media server / downloader.\nSupports 20+ types including Synology, QNAP, SMB, WebDAV, SFTP, FTP, UPnP, Jellyfin / Emby / Plex, aria2 / qBittorrent / Transmission, Trakt, NAStool / MoviePilot.",
+  "sourcesPageConnecting": "Connecting to “{name}”…",
+  "@sourcesPageConnecting": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageConnectSuccess": "Connected to “{name}”",
+  "@sourcesPageConnectSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageConnectNeeds2FA": "“{name}” requires two-factor authentication",
+  "@sourcesPageConnectNeeds2FA": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageConnectFailed": "Failed to connect to “{name}”{detail}",
+  "@sourcesPageConnectFailed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageErrorSuffix": ": {message}",
+  "@sourcesPageErrorSuffix": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageDeleteTitle": "Delete Source",
+  "sourcesPageDeleteConfirm": "Deleting “{name}” will cascade to remove its library mappings and scanned media. This cannot be undone. Continue?",
+  "@sourcesPageDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageCancel": "Cancel",
+  "sourcesPageDelete": "Delete",
+  "sourcesPageComingSoon": "Coming Soon",
+  "sourcesPageTestConnection": "Test Connection",
+  "sourcesPageLibraryTag": "{name}",
+  "@sourcesPageLibraryTag": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageStatusConnected": "Connected",
+  "sourcesPageStatusNeeds2FA": "2FA required",
+  "sourcesPageStatusConnecting": "Connecting",
+  "sourcesPageStatusError": "Error",
+  "sourcesPageStatusDisconnected": "Not connected",
+  "sourcesPageMore": "More",
+  "sourcesPageMenuEdit": "Edit",
+  "sourcesPageMenuReconnect": "Reconnect",
+  "sourcesPageMenuDelete": "Delete",
+  "srcWizardTitle": "Add Source",
+  "srcWizardSubtitle": "Choose a source type to connect, then continue to configure and test the connection.",
+  "srcWizardStepType": "Select Type",
+  "srcWizardStepConnection": "Connection",
+  "srcWizardStepTest": "Test Connection",
+  "srcWizardStepMapping": "Library Mapping",
+  "srcWizardNext": "Next",
+  "srcWizardPlanTag": "Planned",
+  "transferPageClearCompletedDownloads": "Clear completed downloads",
+  "transferPageClearCompletedUploads": "Clear completed uploads",
+  "transferPageClearAllCache": "Clear all cache",
+  "transferPageQueueTitle": "Transfer queue",
+  "transferPageQueueSubtitle": "Uploads · Downloads · Cache — manage task progress in one place",
+  "transferPageNoDownloadTasks": "No download tasks",
+  "transferPageNoUploadTasks": "No upload tasks",
+  "transferPageTitle": "Transfers",
+  "transferPageTabDownload": "Downloads",
+  "transferPageTabUpload": "Uploads",
+  "transferPageTabCache": "Cache",
+  "transferPageClearCacheTitle": "Clear cache",
+  "transferPageClearCacheMessage": "Clear all cached files? This action cannot be undone.",
+  "transferPageCancel": "Cancel",
+  "transferPageConfirm": "Confirm",
+  "transferPageRetry": "Retry",
+  "videoPageTitle": "Movies & TV",
+  "videoPageSubtitle": "Trakt sync · Multi-version · Smart resume · TMDB / Douban scraping",
+  "videoPageViewGrid": "Grid",
+  "videoPageViewList": "List",
+  "videoPageEmptyLibraryHint": "After mapping a Movies & TV library, the poster grid and Continue Watching strip appear here.\nClicking a poster opens the title detail overlay (versions / episodes / cast & crew / related).",
+  "videoPageScanningHint": "Scanning library…",
+  "videoPageTabAll": "All",
+  "videoPageTabMovies": "Movies",
+  "videoPageTabTvShows": "TV Shows",
+  "videoPageTabOther": "Other",
+  "videoPageTabRecent": "Recently Added",
+  "videoPageSortRating": "Rating",
+  "videoPageSortYear": "Year",
+  "videoSearchHint": "Search films",
+  "videoSearchNoResults": "No results for \"{query}\"",
+  "@videoSearchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "videoFilterTitle": "Filter",
+  "videoFilterWatchStatus": "Watch status",
+  "videoFilterWatched": "Watched",
+  "videoFilterUnwatched": "Unwatched",
+  "videoFilterGenre": "Genre",
+  "videoFilterSource": "Source",
+  "videoFilterNoGenres": "No genre data available",
+  "videoFilterReset": "Reset",
+  "videoFilterApply": "Apply",
+  "videoPageActionReplay": "Replay",
+  "videoPageActionResume": "Resume · {pct}%",
+  "@videoPageActionResume": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "videoPageActionPlay": "Play",
+  "videoPageActionDetails": "Details",
+  "videoPageCategoryEmpty": "No items in this category.",
+  "videoPageRuntimeMinutes": "{minutes} min",
+  "@videoPageRuntimeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadFilterAll": "All",
+  "downloadStatusDownloading": "Downloading",
+  "downloadStatusSeeding": "Seeding",
+  "downloadStatusPaused": "Paused",
+  "downloadStatusCompleted": "Completed",
+  "downloadStatusWaiting": "Waiting",
+  "downloadStatusError": "Error",
+  "dlDetailBarrierLabel": "Download details",
+  "dlDetailDownSpeed": "↓ Down",
+  "dlDetailUpSpeed": "↑ Up",
+  "dlDetailRemaining": "Remaining",
+  "dlDetailRatio": "Ratio",
+  "dlDetailSavePath": "Save location",
+  "dlDetailTaskId": "Task ID",
+  "dlDetailDeleteTask": "Delete task",
+  "dlDetailDeleteWithFiles": "Delete with files",
+  "dlDetailResume": "Resume",
+  "dlDetailPause": "Pause",
+  "dlDetailOpFailed": "Operation failed: {error}",
+  "@dlDetailOpFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dlDetailDeleteFailed": "Delete failed: {error}",
+  "@dlDetailDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dlDetailGone": "This task has finished or been removed.",
+  "dlDetailClose": "Close",
+  "dlDetailFilesTitle": "Files",
+  "dlDetailFilesLoadError": "Failed to load file list",
+  "dlDetailNoFiles": "No file information",
+  "actAggGroupUpload": "Upload",
+  "actAggGroupDownload": "Download",
+  "actAggGroupCache": "Cache",
+  "actAggGroupScrape": "Scraping",
+  "actAggGroupScan": "Scanning",
+  "actAggMediaMusic": "Music",
+  "actAggMediaPhoto": "Photos",
+  "actAggMediaComic": "Comics",
+  "actAggMediaBook": "Books",
+  "actAggMediaGeneric": "Media",
+  "actAggVideoLibraryLabel": "Film library · {desc}",
+  "@actAggVideoLibraryLabel": {
+    "placeholders": {
+      "desc": {
+        "type": "String"
+      }
+    }
+  },
+  "actAggMediaLibraryLabel": "{name} library · {scanned}/{total}",
+  "@actAggMediaLibraryLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggStatusTransferring": "Transferring",
+  "actAggStatusQueued": "Queued",
+  "actAggStatusPaused": "Paused",
+  "actAggStatusPending": "Pending",
+  "actAggStatusFailed": "Failed",
+  "actAggStatusCompleted": "Completed",
+  "actAggStatusCancelled": "Cancelled",
+  "actAggGroupFaceRecognition": "Faces",
+  "actAggGroupCloudSync": "Sync",
+  "actAggFaceLabel": "Face recognition · {processed}/{total}",
+  "@actAggFaceLabel": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggMusicScrapeLabel": "Music scraping · {processed}/{total}",
+  "@actAggMusicScrapeLabel": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggCloudSyncLabel": "Cloud sync · {processed}/{total}",
+  "@actAggCloudSyncLabel": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "actAggCloudSyncPreparing": "Cloud sync · preparing",
+  "detailPanelRuntimeMinutes": "{minutes} min",
+  "@detailPanelRuntimeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "libmapEditTypeTooltip": "Change library type",
+  "libmapEditConfirmTitle": "Change library type?",
+  "libmapEditConfirmBody": "Changing “{path}” from {from} to {to} will delete its indexed data under {from}; you will need to rescan in {to} afterward. Continue?",
+  "@libmapEditConfirmBody": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "libmapEditCancel": "Cancel",
+  "libmapEditConfirmOk": "Switch & clear",
+  "libmapEditChanged": "Switched to {to} library — please rescan",
+  "@libmapEditChanged": {
+    "placeholders": {
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "dedupPageTitle": "Duplicate Photos",
+  "dedupRetry": "Retry",
+  "dedupCancel": "Cancel",
+  "dedupDelete": "Delete",
+  "dedupStartScan": "Start scan",
+  "dedupDeleteSelected": "Delete selected",
+  "dedupSelectAllRecommended": "Select all recommended",
+  "dedupClearSelection": "Deselect ({n})",
+  "@dedupClearSelection": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupConnectNasFirst": "Please connect to NAS first",
+  "dedupLoadFailed": "Failed to load: {error}",
+  "@dedupLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dedupFindSimilarFailed": "Failed to find similar photos: {error}",
+  "@dedupFindSimilarFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dedupDeleteFailed": "Failed to delete: {error}",
+  "@dedupDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dedupDeleteConfirmTitle": "Confirm deletion",
+  "dedupDeleteConfirmMessage": "Delete the {n} selected photos?\n\nNote: this permanently removes the files from the NAS and cannot be undone.",
+  "@dedupDeleteConfirmMessage": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupDeleteResult": "Deleted {n} photos",
+  "@dedupDeleteResult": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupDeleteResultWithFailed": "Deleted {n} photos, {failed} failed",
+  "@dedupDeleteResultWithFailed": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupModeQuick": "Quick",
+  "dedupModeQuickSubtitle": "Name + size",
+  "dedupModeExact": "Exact",
+  "dedupModeExactSubtitle": "MD5 hash",
+  "dedupModeSimilar": "Similar",
+  "dedupModeSimilarSubtitle": "Visual match",
+  "dedupModeSameName": "Same name",
+  "dedupModeSameNameSubtitle": "Same file name",
+  "dedupStatDuplicateGroups": "Duplicate groups",
+  "dedupStatAffectedPhotos": "Affected photos",
+  "dedupStatSimilarGroups": "Similar groups",
+  "dedupSimilarityThreshold": "Similarity threshold: ",
+  "dedupSimilarInfo": "Visual similarity detection finds the same photo after compression, cropping, or color adjustment. A lower threshold is stricter; a higher one matches more loosely.",
+  "dedupQuickInfo": "Quick detection relies on matching file name and size and may yield false positives. Use deep detection to confirm.",
+  "dedupSameNameInfo": "Same-name detection groups by file name only, ignoring size, to find photos with the same name across sources and folders.",
+  "dedupThresholdStrict": "Strict",
+  "dedupThresholdRather": "Rather strict",
+  "dedupThresholdModerate": "Moderate",
+  "dedupThresholdLoose": "Loose",
+  "dedupScanning": "Scanning...",
+  "dedupScanCompleted": "Scan complete",
+  "dedupScanCancelled": "Cancelled",
+  "dedupScanError": "Scan error",
+  "dedupProcessed": "Processed {processed} / {total}",
+  "@dedupProcessed": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupProcessedWithFailed": "Processed {processed} / {total}, {failed} failed",
+  "@dedupProcessedWithFailed": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupScannedProgress": "Scanned {hashed}/{total}",
+  "@dedupScannedProgress": {
+    "placeholders": {
+      "hashed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupScanPendingSuffix": ", {n} pending",
+  "@dedupScanPendingSuffix": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupScanFailedSuffix": ", {n} failed",
+  "@dedupScanFailedSuffix": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupScanAllCompleted": "All {total} photos scanned",
+  "@dedupScanAllCompleted": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupAnalyzingSimilarity": "Analyzing photo similarity...",
+  "dedupAnalyzedGroups": "Analyzed {processed} / {total} groups",
+  "@dedupAnalyzedGroups": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupSimilarCount": "{n} similar",
+  "@dedupSimilarCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupSameCount": "{n} identical",
+  "@dedupSameCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dedupSelectOthers": "Select others",
+  "dedupKeepRecommended": "Keep",
+  "dedupReanalyze": "Re-analyze",
+  "dedupEmptyQuickTitle": "No suspected duplicates found",
+  "dedupEmptyQuickSubtitle": "Quick detection found no photos with the same name and size",
+  "dedupEmptyExactTitle": "No duplicate photos found",
+  "dedupEmptyExactSubtitle": "Tap the refresh button at the top right to scan photo hashes",
+  "dedupEmptySimilarTitle": "No similar photos found",
+  "dedupEmptySimilarSubtitle": "Try raising the similarity threshold, or tap refresh to re-analyze",
+  "dedupEmptySameNameTitle": "No same-name photos found",
+  "dedupEmptySameNameSubtitle": "No photos with the same file name were found",
+  "dedupEmptyNoData": "No data",
+  "filesAlignSubtitle": "Browse and manage files across your connected sources",
+  "maintPhotoTitle": "Duplicate photos",
+  "maintPhotoDesc": "Filename / MD5 across sources / visual pHash similarity · adjustable confidence",
+  "maintPhotoButton": "Scan settings"
 }

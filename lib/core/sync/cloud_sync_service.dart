@@ -51,15 +51,15 @@ class CloudSyncSettings {
       (password?.isNotEmpty ?? false);
 
   Map<String, dynamic> toMap() => {
-        if (endpoint != null) 'endpoint': endpoint,
-        if (username != null) 'username': username,
-        if (password != null) 'password': password,
-        'rootPath': rootPath,
-        'enabledModuleKeys': enabledModuleKeys.toList(),
-        'seenModuleKeys': seenModuleKeys.toList(),
-        if (lastSyncedAt != null)
-          'lastSyncedAt': lastSyncedAt!.millisecondsSinceEpoch,
-      };
+    if (endpoint != null) 'endpoint': endpoint,
+    if (username != null) 'username': username,
+    if (password != null) 'password': password,
+    'rootPath': rootPath,
+    'enabledModuleKeys': enabledModuleKeys.toList(),
+    'seenModuleKeys': seenModuleKeys.toList(),
+    if (lastSyncedAt != null)
+      'lastSyncedAt': lastSyncedAt!.millisecondsSinceEpoch,
+  };
 
   CloudSyncSettings copyWith({
     Object? endpoint = const Object(),
@@ -69,33 +69,28 @@ class CloudSyncSettings {
     Set<String>? enabledModuleKeys,
     Set<String>? seenModuleKeys,
     Object? lastSyncedAt = const Object(),
-  }) =>
-      CloudSyncSettings(
-        endpoint: identical(endpoint, const Object())
-            ? this.endpoint
-            : endpoint as String?,
-        username: identical(username, const Object())
-            ? this.username
-            : username as String?,
-        password: identical(password, const Object())
-            ? this.password
-            : password as String?,
-        rootPath: rootPath ?? this.rootPath,
-        enabledModuleKeys: enabledModuleKeys ?? this.enabledModuleKeys,
-        seenModuleKeys: seenModuleKeys ?? this.seenModuleKeys,
-        lastSyncedAt: identical(lastSyncedAt, const Object())
-            ? this.lastSyncedAt
-            : lastSyncedAt as DateTime?,
-      );
+  }) => CloudSyncSettings(
+    endpoint: identical(endpoint, const Object())
+        ? this.endpoint
+        : endpoint as String?,
+    username: identical(username, const Object())
+        ? this.username
+        : username as String?,
+    password: identical(password, const Object())
+        ? this.password
+        : password as String?,
+    rootPath: rootPath ?? this.rootPath,
+    enabledModuleKeys: enabledModuleKeys ?? this.enabledModuleKeys,
+    seenModuleKeys: seenModuleKeys ?? this.seenModuleKeys,
+    lastSyncedAt: identical(lastSyncedAt, const Object())
+        ? this.lastSyncedAt
+        : lastSyncedAt as DateTime?,
+  );
 }
 
 /// 同步结果（每模块）
 class CloudSyncReport {
-  CloudSyncReport({
-    required this.moduleKey,
-    required this.outcome,
-    this.error,
-  });
+  CloudSyncReport({required this.moduleKey, required this.outcome, this.error});
   final String moduleKey;
   final CloudSyncOutcome outcome;
   final String? error;
@@ -106,6 +101,33 @@ enum CloudSyncOutcome {
   pushed, // 本地更新，已上传
   skipped, // 双方一致或本地无变更
   failed,
+}
+
+/// 云同步阶段。供活动中心订阅进度用。
+enum CloudSyncPhase { idle, preparing, syncing, completed, error }
+
+/// 云同步进度事件（订阅 [CloudSyncService.progressStream]）。
+class CloudSyncProgress {
+  const CloudSyncProgress({
+    required this.phase,
+    this.processed = 0,
+    this.total = 0,
+    this.currentModule,
+  });
+
+  final CloudSyncPhase phase;
+
+  /// 已处理模块数。
+  final int processed;
+
+  /// 启用的模块总数。
+  final int total;
+
+  /// 当前正在同步的模块 key。
+  final String? currentModule;
+
+  /// 0..1。准备阶段或总数未知时为 0。
+  double get progress => total > 0 ? processed / total : 0;
 }
 
 /// 中心同步服务。当前实现 WebDAV 后端。
@@ -167,8 +189,9 @@ class CloudSyncService {
   /// 把任何首次出现的已注册模块加入 enabledModuleKeys（默认开启），
   /// 并刷新 seenModuleKeys。已被用户主动取消的不会被恢复。
   Future<void> _autoEnableNewModules() async {
-    final registered =
-        CloudSyncRegistry.instance.modules.map((m) => m.key).toSet();
+    final registered = CloudSyncRegistry.instance.modules
+        .map((m) => m.key)
+        .toSet();
     if (registered.isEmpty) return;
     final unseen = registered.difference(_settings.seenModuleKeys);
     if (unseen.isEmpty) return;
@@ -182,6 +205,14 @@ class CloudSyncService {
   CloudSyncSettings get settings => _settings;
 
   bool get isSyncing => _syncing;
+
+  /// 同步进度流（活动中心订阅）。单例，应用生命周期内常驻，不主动 close。
+  final _progressController = StreamController<CloudSyncProgress>.broadcast();
+  Stream<CloudSyncProgress> get progressStream => _progressController.stream;
+
+  void _emitProgress(CloudSyncProgress p) {
+    if (!_progressController.isClosed) _progressController.add(p);
+  }
 
   Future<void> applySettings(CloudSyncSettings next) async {
     await init();
@@ -204,10 +235,12 @@ class CloudSyncService {
     await init();
     if (_syncing) return const [];
     _syncing = true;
+    _emitProgress(const CloudSyncProgress(phase: CloudSyncPhase.preparing));
     final reports = <CloudSyncReport>[];
     try {
       final backend = _buildBackend();
       if (backend == null) {
+        _emitProgress(const CloudSyncProgress(phase: CloudSyncPhase.error));
         return [
           CloudSyncReport(
             moduleKey: '*',
@@ -218,6 +251,7 @@ class CloudSyncService {
       }
       final ok = await backend.healthCheck();
       if (!ok) {
+        _emitProgress(const CloudSyncProgress(phase: CloudSyncPhase.error));
         return [
           CloudSyncReport(
             moduleKey: '*',
@@ -229,14 +263,38 @@ class CloudSyncService {
       final manifest = await backend.readManifest();
       final newManifest = Map<String, dynamic>.from(manifest);
 
-      for (final module in CloudSyncRegistry.instance.modules) {
-        if (!_settings.enabledModuleKeys.contains(module.key)) continue;
-        final report = await _syncModule(module, backend, manifest, newManifest);
+      final modules = CloudSyncRegistry.instance.modules
+          .where((m) => _settings.enabledModuleKeys.contains(m.key))
+          .toList();
+      var processed = 0;
+      for (final module in modules) {
+        _emitProgress(
+          CloudSyncProgress(
+            phase: CloudSyncPhase.syncing,
+            processed: processed,
+            total: modules.length,
+            currentModule: module.key,
+          ),
+        );
+        final report = await _syncModule(
+          module,
+          backend,
+          manifest,
+          newManifest,
+        );
         reports.add(report);
+        processed++;
       }
 
       await backend.writeManifest(newManifest);
       await applySettings(_settings.copyWith(lastSyncedAt: DateTime.now()));
+      _emitProgress(
+        CloudSyncProgress(
+          phase: CloudSyncPhase.completed,
+          processed: processed,
+          total: modules.length,
+        ),
+      );
     } finally {
       _syncing = false;
     }
@@ -309,9 +367,7 @@ class CloudSyncService {
       // 本地更新 → 推送
       final data = await module.exportData();
       await backend.writeModule(module.key, data);
-      newManifest[module.key] = {
-        'updatedAt': localAt.millisecondsSinceEpoch,
-      };
+      newManifest[module.key] = {'updatedAt': localAt.millisecondsSinceEpoch};
       return CloudSyncReport(
         moduleKey: module.key,
         outcome: CloudSyncOutcome.pushed,
@@ -320,9 +376,7 @@ class CloudSyncService {
 
     // 一致 → 保留 manifest
     if (remoteAt != null) {
-      newManifest[module.key] = {
-        'updatedAt': remoteAt.millisecondsSinceEpoch,
-      };
+      newManifest[module.key] = {'updatedAt': remoteAt.millisecondsSinceEpoch};
     }
     return CloudSyncReport(
       moduleKey: module.key,

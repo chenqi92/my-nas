@@ -7,10 +7,12 @@ import 'package:my_nas/app/router/app_router.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_theme.dart';
 import 'package:my_nas/app/theme/color_scheme_preset.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/platform/jump_list_controller.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_deep_link_handler.dart';
 import 'package:my_nas/core/services/background_task_service.dart';
+import 'package:my_nas/core/services/background_transfer_guard.dart';
 import 'package:my_nas/core/services/deep_link_service.dart';
 import 'package:my_nas/core/services/toast_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -22,10 +24,14 @@ import 'package:my_nas/features/photo/data/services/photo_database_service.dart'
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/data/services/video_scanner_service.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
+import 'package:my_nas/shared/providers/glass_material_provider.dart';
+import 'package:my_nas/shared/providers/interface_locale_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
+import 'package:my_nas/shared/providers/transfer_background_provider.dart';
+import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/services/widget_data_service.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
-import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/toast_overlay.dart';
 
 class MyNasApp extends ConsumerStatefulWidget {
@@ -103,6 +109,11 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       AppError.handle(e, stackTrace, 'initDeepLinkService');
       // 不抛出异常，允许应用继续运行
     }
+  }
+
+  /// 初始化「后台传输」窗口守卫（桌面）。是否暂停由设置控制，默认不改变现状。
+  void _initBackgroundTransferGuard() {
+    BackgroundTransferGuard.instance.ensureStarted();
   }
 
   /// 初始化 Windows 任务栏 Jump List
@@ -261,8 +272,22 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
     // 初始化 Windows JumpList（任务栏图标右键的快捷操作 / 最近播放）
     _initJumpList();
 
+    // 注册「后台传输」窗口守卫（桌面）；同时 read 两个设置 provider，
+    // 让其在启动时把持久化值写回 TransferService 静态字段。
+    _initBackgroundTransferGuard();
+    ref
+      ..read(resumeOnStartupProvider)
+      ..read(backgroundTransferProvider);
+
     final themeMode = ref.watch(themeModeProvider);
     final colorPreset = ref.watch(colorSchemePresetProvider);
+    final uiStyle = ref.watch(uiStyleProvider);
+    // 玻璃材质参数（仅 glass 风格生效，默认值保持现状）。
+    final glassBlurScale = ref.watch(glassBlurScaleProvider);
+    final glassOpacityScale = ref.watch(glassOpacityScaleProvider);
+    final glassBlurEnabled = ref.watch(glassBlurEnabledProvider);
+    // 界面语言（null=跟随系统）。
+    final interfaceLocale = ref.watch(interfaceLocaleProvider);
 
     // 同步更新 AppColors 的静态配色方案
     AppColors.setPreset(colorPreset);
@@ -274,12 +299,35 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       }
     });
 
+    // 桌面端重设计：注入 DesignTokens 到 ThemeData.extensions，所有新外壳
+    // 和 atom widget 通过 `DesignTokens.of(context)` 取色，避免每个 widget
+    // 都订阅 uiStyle / colorPreset / themeMode 三个 provider。
+    final lightTokens = DesignTokens.build(
+      brightness: Brightness.light,
+      uiStyle: uiStyle,
+      preset: colorPreset,
+      blurScale: glassBlurScale,
+      opacityScale: glassOpacityScale,
+      blurEnabled: glassBlurEnabled,
+    );
+    final darkTokens = DesignTokens.build(
+      brightness: Brightness.dark,
+      uiStyle: uiStyle,
+      preset: colorPreset,
+      blurScale: glassBlurScale,
+      opacityScale: glassOpacityScale,
+      blurEnabled: glassBlurEnabled,
+    );
+
     return MaterialApp.router(
       title: 'MyNAS',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightFromPreset(colorPreset),
-      darkTheme: AppTheme.darkFromPreset(colorPreset),
+      theme: AppTheme.lightFromPreset(colorPreset)
+          .copyWith(extensions: [lightTokens]),
+      darkTheme: AppTheme.darkFromPreset(colorPreset)
+          .copyWith(extensions: [darkTokens]),
       themeMode: themeMode,
+      locale: interfaceLocale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: appRouter,

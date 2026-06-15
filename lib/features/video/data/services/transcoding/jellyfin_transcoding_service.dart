@@ -69,8 +69,9 @@ class JellyfinTranscodingService implements NasTranscodingService {
       );
 
       final url = '$_serverUrl/Videos/$itemId/stream?$params';
-      logger.i('JellyfinTranscoding: 转码流 URL 已生成');
-      logger.d('JellyfinTranscoding: URL => $url');
+      logger
+        ..i('JellyfinTranscoding: 转码流 URL 已生成')
+        ..d('JellyfinTranscoding: URL => $url');
 
       return url;
     } catch (e, st) {

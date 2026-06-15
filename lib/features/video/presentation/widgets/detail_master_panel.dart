@@ -4,6 +4,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/widgets/media_info_badges.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 
 /// 桌面端详情页左侧的 Master 面板
@@ -60,6 +61,7 @@ class DetailMasterPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     final colorScheme = theme.colorScheme;
     final poster = metadata.displayPosterUrl;
     final hasPoster = poster != null && poster.isNotEmpty;
@@ -133,7 +135,7 @@ class DetailMasterPanel extends StatelessWidget {
 
           // 元数据行
           const SizedBox(height: 12),
-          _buildMetaText(theme),
+          _buildMetaText(theme, l),
 
           // 媒体技术标签（4K / HDR / Atmos）
           const SizedBox(height: 8),
@@ -174,11 +176,11 @@ class DetailMasterPanel extends StatelessWidget {
       (metacriticRating != null && metacriticRating! > 0) ||
       (metadata.rating != null && metadata.rating! > 0);
 
-  Widget _buildMetaText(ThemeData theme) {
+  Widget _buildMetaText(ThemeData theme, AppLocalizations l) {
     final parts = <String>[];
     if (metadata.year != null) parts.add('${metadata.year}');
     if (metadata.runtime != null && metadata.runtime! > 0) {
-      parts.add(_formatRuntime(metadata.runtime!));
+      parts.add(_formatRuntime(metadata.runtime!, l));
     }
     if (metadata.genres != null && metadata.genres!.isNotEmpty) {
       parts.add(metadata.genres!);
@@ -285,6 +287,7 @@ class DetailMasterPanel extends StatelessWidget {
   }
 
   Widget _buildActions(BuildContext context, ColorScheme cs) {
+    final l = AppLocalizations.of(context);
     final progress = watchProgress;
     final hasProgress = progress != null && progress > 0.05;
 
@@ -297,7 +300,9 @@ class DetailMasterPanel extends StatelessWidget {
             onPressed: onPlay,
             icon: const Icon(Icons.play_arrow_rounded, size: 22),
             label: Text(
-              hasProgress ? '继续播放 ${(progress * 100).toInt()}%' : '播放',
+              hasProgress
+                  ? l.detailPanelResume((progress * 100).toInt())
+                  : l.detailPanelPlay,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
@@ -322,7 +327,9 @@ class DetailMasterPanel extends StatelessWidget {
                   icon: isWatched
                       ? Icons.check_circle_rounded
                       : Icons.check_circle_outline_rounded,
-                  label: isWatched ? '已看' : '未看',
+                  label: isWatched
+                      ? l.detailPanelWatched
+                      : l.detailPanelUnwatched,
                   active: isWatched,
                   onTap: onToggleWatched!,
                 ),
@@ -335,7 +342,9 @@ class DetailMasterPanel extends StatelessWidget {
                   icon: isFavorite
                       ? Icons.favorite_rounded
                       : Icons.favorite_border_rounded,
-                  label: isFavorite ? '已收藏' : '收藏',
+                  label: isFavorite
+                      ? l.detailPanelFavorited
+                      : l.detailPanelFavorite,
                   active: isFavorite,
                   activeColor: AppColors.error,
                   onTap: onFavorite!,
@@ -347,7 +356,7 @@ class DetailMasterPanel extends StatelessWidget {
               Expanded(
                 child: _SecondaryActionButton(
                   icon: Icons.auto_fix_high_rounded,
-                  label: '刮削',
+                  label: l.detailPanelScrape,
                   onTap: onScrape!,
                 ),
               ),
@@ -388,8 +397,8 @@ class DetailMasterPanel extends StatelessWidget {
         ),
       );
 
-  String _formatRuntime(int minutes) {
-    if (minutes < 60) return '$minutes分钟';
+  String _formatRuntime(int minutes, AppLocalizations l) {
+    if (minutes < 60) return l.detailPanelRuntimeMinutes(minutes);
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
     return mins > 0 ? '${hours}h ${mins}m' : '${hours}h';

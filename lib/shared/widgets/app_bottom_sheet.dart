@@ -240,7 +240,7 @@ class _ScrollableBottomSheet extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter!,
+          filter: glassStyle.blurFilter,
           child: content,
         ),
       );
@@ -414,7 +414,7 @@ class _FixedBottomSheet extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter!,
+          filter: glassStyle.blurFilter,
           child: content,
         ),
       );
@@ -1274,8 +1274,9 @@ Future<SectionedSheetResult<T>?> _showNativeSectionedSheet<T>({
     final selectedValueKey = await completer.future.timeout(
       const Duration(minutes: 5),
       onTimeout: () {
-        _callbackManager.removeCompleter(sheetId);
-        _callbackManager.removeActionCallback(sheetId);
+        _callbackManager
+          ..removeCompleter(sheetId)
+          ..removeActionCallback(sheetId);
         return null;
       },
     );

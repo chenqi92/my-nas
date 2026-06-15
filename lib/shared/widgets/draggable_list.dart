@@ -144,10 +144,11 @@ class _DraggableListState<T> extends State<DraggableList<T>> {
   }
 
   void _handleReorder(int oldIndex, int newIndex) {
+    var adjustedNewIndex = newIndex;
     if (oldIndex < newIndex) {
-      newIndex -= 1;
+      adjustedNewIndex -= 1;
     }
-    widget.onReorder(oldIndex, newIndex);
+    widget.onReorder(oldIndex, adjustedNewIndex);
   }
 
   Widget _defaultProxyDecorator(

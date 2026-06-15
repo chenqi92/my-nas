@@ -114,6 +114,9 @@ class TransferTask {
   /// 已传输字节数
   int transferredBytes;
 
+  /// 实时传输速度（字节/秒，运行期采样计算，不持久化）。
+  int speed = 0;
+
   /// 错误信息
   String? error;
 

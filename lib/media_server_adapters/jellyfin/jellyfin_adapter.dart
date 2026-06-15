@@ -44,9 +44,10 @@ class JellyfinAdapter extends MediaServerAdapter {
 
   @override
   Future<ServiceConnectionResult> connect(ServiceConnectionConfig config) async {
-    logger.i('JellyfinAdapter: 开始连接');
-    logger.i('JellyfinAdapter: 目标地址 => ${config.baseUrl}');
-    logger.i('JellyfinAdapter: 用户名 => ${config.username}');
+    logger
+      ..i('JellyfinAdapter: 开始连接')
+      ..i('JellyfinAdapter: 目标地址 => ${config.baseUrl}')
+      ..i('JellyfinAdapter: 用户名 => ${config.username}');
 
     _connection = config;
     _api.setBaseUrl(config.baseUrl);
@@ -54,8 +55,9 @@ class JellyfinAdapter extends MediaServerAdapter {
     try {
       // 先获取服务器信息
       await _api.getPublicServerInfo();
-      logger.i('JellyfinAdapter: 服务器名称 => ${_api.serverName}');
-      logger.i('JellyfinAdapter: 服务器版本 => ${_api.serverVersion}');
+      logger
+        ..i('JellyfinAdapter: 服务器名称 => ${_api.serverName}')
+        ..i('JellyfinAdapter: 服务器版本 => ${_api.serverVersion}');
 
       // 检查服务器版本兼容性
       if (_api.serverVersion != null) {
@@ -313,10 +315,9 @@ class JellyfinAdapter extends MediaServerAdapter {
   }
 
   @override
-  Future<MediaItemsResult> getRecommendations({int limit = 20}) async {
-    // Jellyfin 没有专门的推荐 API，返回最新添加的内容
-    return getLatestMedia(limit: limit);
-  }
+  Future<MediaItemsResult> getRecommendations({int limit = 20}) =>
+      // Jellyfin 没有专门的推荐 API，返回最新添加的内容
+      getLatestMedia(limit: limit);
 
   @override
   Future<MediaItemsResult> getLatestMedia({

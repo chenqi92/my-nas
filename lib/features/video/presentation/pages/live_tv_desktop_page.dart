@@ -1,0 +1,1099 @@
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/video/data/services/xmltv_parser.dart';
+import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
+import 'package:my_nas/features/video/presentation/pages/live_player_page.dart';
+import 'package:my_nas/features/video/presentation/pages/live_stream_settings_page.dart';
+import 'package:my_nas/features/video/presentation/providers/epg_provider.dart';
+import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
+import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
+import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
+import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
+
+/// 桌面端「直播 / EPG」页面。
+///
+/// 对齐设计稿 `live.jsx` LiveTV：精选频道 hero + 电子节目单时间轴。
+/// 数据取自真实 M3U/HLS 频道（[allLiveChannelsProvider]）。节目单的「节目」
+/// 数据需 XMLTV/EPG 源解析，当前数据层未提供，故时间轴只渲染频道与当前时间
+/// 红线，节目轨道留空（不伪造节目），点击频道行即可直接播放。
+class LiveTvDesktopPage extends ConsumerStatefulWidget {
+  const LiveTvDesktopPage({super.key});
+
+  @override
+  ConsumerState<LiveTvDesktopPage> createState() => _LiveTvDesktopPageState();
+}
+
+// 「全部」分类的内部哨兵值（不展示给用户，展示时用 l.livePageCategoryAll）。
+const String _kAllCategory = '__all__';
+
+class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
+  String _cat = _kAllCategory;
+  Timer? _clockTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // 每分钟刷新，让 EPG 的「当前时间红线」与时钟随真实时间走，
+    // 而非只在 build 时算一次后静止。
+    _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    super.dispose();
+  }
+
+  void _play(LiveChannel channel) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => LivePlayerPage(channel: channel)),
+    );
+  }
+
+  void _manageSources() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const LiveStreamSettingsPage()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
+    final allChannels = ref.watch(allLiveChannelsProvider);
+    final sources = ref.watch(enabledLiveSourcesProvider);
+    final cats = <String>[
+      _kAllCategory,
+      ...(ref.watch(liveChannelCategoriesProvider).toList()..sort()),
+    ];
+    final active = cats.contains(_cat) ? _cat : _kAllCategory;
+    final channels = active == _kAllCategory
+        ? allChannels
+        : allChannels
+            .where((c) => (c.category ?? l.livePageUncategorized) == active)
+            .toList();
+    final featured = channels.isNotEmpty ? channels.first : null;
+
+    // EPG（XMLTV）：取首个带 epgUrl 的频道地址，拉取并按 tvgId 匹配节目。
+    final epgUrl = channels
+        .map((c) => c.epgUrl)
+        .firstWhere((u) => u != null && u.isNotEmpty, orElse: () => null);
+    final epg = epgUrl != null
+        ? (ref.watch(liveEpgProvider(epgUrl)).valueOrNull ??
+            const <String, List<EpgProgramme>>{})
+        : const <String, List<EpgProgramme>>{};
+    final hasEpg = epg.isNotEmpty;
+    final featuredProgs = (featured?.tvgId != null)
+        ? (epg[featured!.tvgId] ?? const <EpgProgramme>[])
+        : const <EpgProgramme>[];
+    final nowDt = DateTime.now();
+    EpgProgramme? nowProg;
+    EpgProgramme? nextProg;
+    for (final p in featuredProgs) {
+      if (p.isLiveAt(nowDt)) nowProg = p;
+      if (nextProg == null && p.start.isAfter(nowDt)) nextProg = p;
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(30, 26, 30, 120),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1340),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(t, l, cats, active),
+              const SizedBox(height: 22),
+              if (featured == null) ...[
+                _EmptyHero(onManage: _manageSources),
+                const SizedBox(height: 26),
+                _sectionHead(t, l, sub: l.livePageEpgSubtitle),
+                const SizedBox(height: 14),
+                const _EpgEmpty(),
+              ] else ...[
+                _Hero(
+                  channel: featured,
+                  sourceName: _sourceNameFor(featured, sources),
+                  nowProgramme: nowProg,
+                  nextProgramme: nextProg,
+                  onPlay: () => _play(featured),
+                ),
+                const SizedBox(height: 26),
+                _sectionHead(
+                  t,
+                  l,
+                  sub: l.livePageEpgNowSubtitle(_fmtClock(_nowMin())),
+                  right: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _PulseDot(color: t.hot, size: 8),
+                      const SizedBox(width: 6),
+                      Text(l.livePageRedLineHint,
+                          style: TextStyle(fontSize: 12, color: t.text2)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  hasEpg
+                      ? l.livePageEpgFromXmltv
+                      : l.livePageEpgNoData,
+                  style: TextStyle(fontSize: 12, color: t.text3, height: 1.4),
+                ),
+                const SizedBox(height: 12),
+                _EpgGuide(channels: channels, epg: epg, onPlay: _play),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── header ────────────────────────────────────────────────────────────
+  Widget _buildHeader(
+      DesignTokens t, AppLocalizations l, List<String> cats, String active) => Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  l.livePageTitle,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: t.text0,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const _LiveBadge('LIVE'),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l.livePageSubtitle,
+              style: TextStyle(fontSize: 13, color: t.text2),
+            ),
+          ],
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (final c in cats)
+                AppChip(
+                  label: c == _kAllCategory ? l.livePageCategoryAll : c,
+                  active: c == active,
+                  onTap: () => setState(() => _cat = c),
+                  compact: true,
+                ),
+              AppChip(
+                label: l.livePageManageM3u8Source,
+                icon: Icons.add_rounded,
+                compact: true,
+                onTap: _manageSources,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+  Widget _sectionHead(DesignTokens t, AppLocalizations l,
+      {required String sub, Widget? right}) => Row(
+      children: [
+        Text(
+          l.livePageProgramGuide,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: t.text0,
+            letterSpacing: -0.3,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(sub, style: TextStyle(fontSize: 12.5, color: t.text2)),
+        if (right != null) ...[const Spacer(), right],
+      ],
+    );
+
+  String? _sourceNameFor(LiveChannel ch, List<LiveStreamSource> sources) {
+    for (final s in sources) {
+      if (s.channels.any((c) => c.id == ch.id)) return s.name;
+    }
+    return null;
+  }
+}
+
+// ── time helpers ──────────────────────────────────────────────────────────
+const double _pxPerMin = 4;
+const double _channelColW = 184;
+const double _epgRowH = 62;
+const double _epgHeaderH = 42;
+const int _epgMaxRows = 50;
+const int _epgSpanMin = 360; // EPG 时间窗：6 小时
+
+int _nowMin() {
+  final n = DateTime.now();
+  return n.hour * 60 + n.minute;
+}
+
+String _fmtClock(int minutes) {
+  final m = minutes % 1440;
+  final h = (m ~/ 60).toString().padLeft(2, '0');
+  final mm = (m % 60).toString().padLeft(2, '0');
+  return '$h:$mm';
+}
+
+// ── hero ────────────────────────────────────────────────────────────────
+class _Hero extends StatelessWidget {
+  const _Hero({
+    required this.channel,
+    required this.sourceName,
+    required this.onPlay,
+    this.nowProgramme,
+    this.nextProgramme,
+  });
+
+  final LiveChannel channel;
+  final String? sourceName;
+  final VoidCallback onPlay;
+  final EpgProgramme? nowProgramme;
+  final EpgProgramme? nextProgramme;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+      child: SizedBox(
+        height: 300,
+        width: double.infinity,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // 背景：品牌渐变 + 频道 logo 水印（频道无整图，只有小 logo）
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    t.accentDeep.withValues(alpha: 0.55),
+                    const Color(0xFF0B0D12),
+                  ],
+                ),
+              ),
+            ),
+            if (channel.logoUrl != null)
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 340,
+                child: Opacity(
+                  opacity: 0.16,
+                  child: CachedNetworkImage(
+                    imageUrl: channel.logoUrl!,
+                    fit: BoxFit.contain,
+                    alignment: Alignment.centerRight,
+                    errorWidget: (_, _, _) => const SizedBox.shrink(),
+                    placeholder: (_, _) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+            // scrim：左深右浅 + 底深
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Color(0xF208090C),
+                    Color(0xBD08090C),
+                    Color(0x5708090C),
+                    Color(0x2E08090C),
+                  ],
+                  stops: [0.0, 0.42, 0.72, 1.0],
+                ),
+              ),
+            ),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Color(0xEB08090C), Color(0x0008090C)],
+                  stops: [0.0, 0.64],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(44, 40, 44, 40),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _LiveBadge(l.livePageOnAir),
+                        if (channel.category != null &&
+                            channel.category!.isNotEmpty)
+                          _whiteTag(channel.category!),
+                        const AppTag('M3U8', variant: TagVariant.accent),
+                        if (sourceName != null) _whiteTag(sourceName!),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      channel.displayName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.6,
+                        height: 1.05,
+                      ),
+                    ),
+                    if (nowProgramme != null) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _LiveBadge(l.livePageNowPlaying),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              nowProgramme!.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (nextProgramme != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          l.livePageUpNext(
+                            _fmtClock(nextProgramme!.start.hour * 60 +
+                                nextProgramme!.start.minute),
+                            nextProgramme!.title,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Colors.white.withValues(alpha: 0.72),
+                          ),
+                        ),
+                      ],
+                    ],
+                    const SizedBox(height: 14),
+                    Text(
+                      [
+                        if (channel.category != null &&
+                            channel.category!.isNotEmpty)
+                          channel.category,
+                        if (sourceName != null) sourceName,
+                        l.livePageHlsAdaptive,
+                      ].whereType<String>().join('  ·  '),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.82),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        _HeroBtn(
+                          label: l.livePageWatchNow,
+                          icon: Icons.play_arrow_rounded,
+                          variant: _HeroBtnVariant.primary,
+                          onTap: onPlay,
+                        ),
+                        const SizedBox(width: 12),
+                        _HeroBtn(
+                          label: l.livePageFullGuide,
+                          icon: Icons.view_agenda_outlined,
+                          variant: _HeroBtnVariant.outline,
+                          onTap: onPlay,
+                        ),
+                        const SizedBox(width: 12),
+                        _HeroBtn(
+                          icon: Icons.cast_rounded,
+                          variant: _HeroBtnVariant.ghost,
+                          onTap: onPlay,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _whiteTag(String label) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.13),
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      );
+}
+
+enum _HeroBtnVariant { primary, outline, ghost }
+
+class _HeroBtn extends StatelessWidget {
+  const _HeroBtn({
+    required this.icon,
+    required this.variant,
+    required this.onTap,
+    this.label,
+  });
+
+  final IconData icon;
+  final _HeroBtnVariant variant;
+  final VoidCallback onTap;
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final Color bg;
+    final Color fg;
+    final Border? border;
+    final FontWeight weight;
+    switch (variant) {
+      case _HeroBtnVariant.primary:
+        bg = t.accent;
+        fg = t.accentContrast;
+        border = null;
+        weight = FontWeight.w600;
+      case _HeroBtnVariant.outline:
+        bg = Colors.white.withValues(alpha: 0.12);
+        fg = Colors.white;
+        border = Border.all(color: Colors.white.withValues(alpha: 0.18));
+        weight = FontWeight.w500;
+      case _HeroBtnVariant.ghost:
+        bg = Colors.transparent;
+        fg = Colors.white;
+        border = null;
+        weight = FontWeight.w500;
+    }
+    final iconOnly = label == null;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+        child: Container(
+          padding: iconOnly
+              ? const EdgeInsets.all(9)
+              : const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+            border: border,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: fg),
+              if (!iconOnly) ...[
+                const SizedBox(width: 7),
+                Text(
+                  label!,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: weight,
+                    color: fg,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── EPG guide ─────────────────────────────────────────────────────────────
+class _EpgGuide extends StatelessWidget {
+  const _EpgGuide({
+    required this.channels,
+    required this.epg,
+    required this.onPlay,
+  });
+
+  final List<LiveChannel> channels;
+  final Map<String, List<EpgProgramme>> epg;
+  final void Function(LiveChannel) onPlay;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
+    final shown = channels.length > _epgMaxRows
+        ? channels.sublist(0, _epgMaxRows)
+        : channels;
+
+    final now = _nowMin();
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
+    // 时间窗：当前时刻向前对齐到半点的前一格，向后展开约 6 小时。
+    final base = ((now - 30) ~/ 30) * 30;
+    const span = _epgSpanMin;
+    final end = base + span;
+    final timelineW = span * _pxPerMin;
+    final gridW = _channelColW + timelineW;
+    final playX = _channelColW + (now - base) * _pxPerMin;
+
+    final slots = <int>[for (var m = base; m <= end; m += 30) m];
+    final contentH = _epgHeaderH + shown.length * _epgRowH;
+
+    final grid = SizedBox(
+      width: gridW,
+      height: contentH,
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _header(t, l, slots, base, timelineW),
+              for (final ch in shown)
+                _row(
+                  context,
+                  t,
+                  ch,
+                  timelineW,
+                  ch.tvgId != null ? (epg[ch.tvgId] ?? const []) : const [],
+                  base,
+                  end,
+                  todayMidnight,
+                ),
+            ],
+          ),
+          // 当前时间红线（节目区，从表头下方开始）
+          Positioned(
+            left: playX,
+            top: _epgHeaderH,
+            bottom: 0,
+            child: Container(
+              width: 2,
+              decoration: BoxDecoration(
+                color: t.hot,
+                boxShadow: [
+                  BoxShadow(
+                    color: t.hot.withValues(alpha: 0.6),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // now-pill（表头内）；FractionalTranslation(-0.5) = 设计稿 translateX(-50%)，
+          // 居中于红线，与 pill 实际宽度无关。
+          Positioned(
+            left: playX,
+            top: 9,
+            child: FractionalTranslation(
+              translation: const Offset(-0.5, 0),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: t.hot,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  _fmtClock(now),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    Widget body = SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: grid,
+    );
+    // 仅在内容超高时套竖向滚动，避免短列表抢占整页滚动手势。
+    if (contentH > 540) {
+      body = SizedBox(
+        height: 540,
+        child: SingleChildScrollView(child: body),
+      );
+    }
+
+    return GlassPanel(
+      padding: EdgeInsets.zero,
+      radius: DesignTokens.radiusLg,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+        child: body,
+      ),
+    );
+  }
+
+  Widget _header(DesignTokens t, AppLocalizations l, List<int> slots, int base,
+      double timelineW) {
+    TextStyle cornerStyle() => TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.88,
+          color: t.text3,
+        );
+    return Container(
+      height: _epgHeaderH,
+      decoration: BoxDecoration(
+        color: t.panelBgStrong,
+        border: Border(bottom: BorderSide(color: t.hairline)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: _channelColW,
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(l.livePageChannelColumn, style: cornerStyle()),
+          ),
+          SizedBox(
+            width: timelineW,
+            height: _epgHeaderH,
+            child: Stack(
+              children: [
+                for (final m in slots)
+                  Positioned(
+                    left: (m - base) * _pxPerMin,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.only(left: 10),
+                      decoration: BoxDecoration(
+                        border: Border(left: BorderSide(color: t.hairline)),
+                      ),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        _fmtClock(m),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: t.text2,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _row(
+    BuildContext context,
+    DesignTokens t,
+    LiveChannel ch,
+    double timelineW,
+    List<EpgProgramme> programmes,
+    int base,
+    int end,
+    DateTime todayMidnight,
+  ) => Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => onPlay(ch),
+        hoverColor: t.cardBgHover,
+        child: Container(
+          height: _epgRowH,
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: t.hairline)),
+          ),
+          child: Row(
+            children: [
+              // 频道列
+              Container(
+                width: _channelColW,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Row(
+                  children: [
+                    _ChannelLogo(channel: ch),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  ch.displayName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: t.text0,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            ch.categoryDisplayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 10.5, color: t.text2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 节目轨道：把命中本时间窗的 EPG 节目按起止时间定位为块。
+              SizedBox(
+                width: timelineW,
+                height: _epgRowH,
+                child: Stack(
+                  children: [
+                    for (final p in programmes)
+                      ..._programmeBlock(t, p, base, end, todayMidnight),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+  /// 把单个节目按起止时间（相对今日 0 点的分钟）定位为时间轴上的块；
+  /// 与时间窗 [base, end] 无交集则不渲染。当前正在播放的节目高亮。
+  List<Widget> _programmeBlock(
+    DesignTokens t,
+    EpgProgramme p,
+    int base,
+    int end,
+    DateTime todayMidnight,
+  ) {
+    final startMin = p.start.difference(todayMidnight).inMinutes;
+    final stopMin = p.stop.difference(todayMidnight).inMinutes;
+    if (stopMin <= base || startMin >= end) return const [];
+    final s = startMin < base ? base : startMin;
+    final e = stopMin > end ? end : stopMin;
+    final w = (e - s) * _pxPerMin;
+    if (w < 2) return const [];
+    final live = p.isLiveAt(DateTime.now());
+    return [
+      Positioned(
+        left: (s - base) * _pxPerMin,
+        top: 6,
+        bottom: 6,
+        width: w,
+        child: Container(
+          margin: const EdgeInsets.only(right: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+          decoration: BoxDecoration(
+            color: live ? t.chipBgActive : t.insetBg,
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(
+                color: live ? t.accent.withValues(alpha: 0.4) : t.hairline),
+          ),
+          alignment: Alignment.centerLeft,
+          child: Text(
+            p.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: live ? FontWeight.w700 : FontWeight.w500,
+              color: live ? t.accentBright : t.text2,
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+}
+
+class _ChannelLogo extends StatelessWidget {
+  const _ChannelLogo({required this.channel});
+  final LiveChannel channel;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final name = channel.displayName.trim();
+    final initials = name.length <= 2 ? name : name.substring(0, 2);
+    final fallback = Container(
+      alignment: Alignment.center,
+      color: t.chipBgActive,
+      child: Text(
+        initials,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: t.accentBright,
+        ),
+      ),
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        width: 34,
+        height: 34,
+        child: channel.logoUrl != null
+            ? CachedNetworkImage(
+                imageUrl: channel.logoUrl!,
+                fit: BoxFit.cover,
+                errorWidget: (_, _, _) => fallback,
+                placeholder: (_, _) => fallback,
+              )
+            : fallback,
+      ),
+    );
+  }
+}
+
+// ── live badge / pulse dot ──────────────────────────────────────────────
+class _LiveBadge extends StatelessWidget {
+  const _LiveBadge(this.label);
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      decoration: BoxDecoration(
+        color: t.hot,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _PulseDot(color: Colors.white, size: 7),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: 0.55,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 设计稿 `.live-pulse` / `.live-dot`：1.6s 呼吸点。
+class _PulseDot extends StatefulWidget {
+  const _PulseDot({required this.color, this.size = 8});
+  final Color color;
+  final double size;
+
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+      opacity: Tween<double>(begin: 1, end: 0.35).animate(
+        CurvedAnimation(parent: _c, curve: DesignTokens.ease),
+      ),
+      child: Container(
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          color: widget.color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: widget.color.withValues(alpha: 0.7),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+      ),
+    );
+}
+
+// ── empty states ──────────────────────────────────────────────────────────
+class _EmptyHero extends StatelessWidget {
+  const _EmptyHero({required this.onManage});
+
+  final VoidCallback onManage;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+      child: Container(
+        height: 260,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              t.accentDeep.withValues(alpha: 0.4),
+              const Color(0xFF0B0D12),
+            ],
+          ),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Color(0xEB08090C), Color(0x0D08090C)],
+                  stops: [0.0, 0.7],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(44, 40, 44, 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _LiveBadge(l.livePageComingSoon),
+                  const SizedBox(height: 14),
+                  Text(
+                    l.livePageEmptyHeroTitle,
+                    style: const TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -0.6,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l.livePageEmptyHeroDesc,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withValues(alpha: 0.78),
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  FilledButton.icon(
+                    onPressed: onManage,
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: Text(l.livePageManageSources),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EpgEmpty extends StatelessWidget {
+  const _EpgEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    final l = AppLocalizations.of(context);
+    return GlassPanel(
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 38),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(Icons.live_tv_outlined, size: 40, color: t.text3),
+            const SizedBox(height: 12),
+            Text(
+              l.livePageNoSourceTitle,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: t.text1,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l.livePageNoSourceDesc,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12.5, color: t.text2, height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

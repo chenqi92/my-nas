@@ -146,17 +146,16 @@ class ToastOverlayWrapper extends StatelessWidget {
   final Widget? child;
 
   @override
-  Widget build(BuildContext context) {
-    // ToastService 应该通过 Provider 或 GetIt 获取
-    // 这里暂时直接创建，后续改为依赖注入
-    return ListenableBuilder(
-      listenable: ToastServiceProvider.of(context),
-      builder: (context, _) => ToastOverlay(
+  Widget build(BuildContext context) =>
+      // ToastService 应该通过 Provider 或 GetIt 获取
+      // 这里暂时直接创建，后续改为依赖注入
+      ListenableBuilder(
+        listenable: ToastServiceProvider.of(context),
+        builder: (context, _) => ToastOverlay(
           toastService: ToastServiceProvider.of(context),
           child: child ?? const SizedBox.shrink(),
         ),
-    );
-  }
+      );
 }
 
 /// Toast 服务提供者

@@ -15,6 +15,7 @@ import 'package:my_nas/app/app.dart';
 import 'package:my_nas/core/di/injection.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/network/hosts_resolver_service.dart';
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/platform/jump_list_service.dart';
 import 'package:my_nas/core/services/desktop_window_service.dart';
 import 'package:my_nas/core/services/performance_mode_service.dart';
@@ -176,6 +177,9 @@ Future<void> _initApp() async {
   // 初始化性能模式服务（需要 SharedPreferences，会打开 settings box）
   await PerformanceModeService().init();
   logger.i('PerformanceMode: ${PerformanceModeService.isPerformanceMode ? "enabled" : "disabled"}');
+
+  // 恢复「信任自签名证书」开关（settings box 已打开），在首次 HTTPS 请求前生效。
+  await InsecureHttpClient.loadTrustSetting();
 
   // 加载应用内 hosts 映射（绕过 DNS 污染，影响所有走 ResolvedHttpClient 的请求）
   await HostsResolverService.instance.init();

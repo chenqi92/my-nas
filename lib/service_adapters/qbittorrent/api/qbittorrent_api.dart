@@ -184,6 +184,17 @@ class QBittorrentApi {
     return QBTorrentProperties.fromJson(data);
   }
 
+  /// 获取 Torrent 的文件列表
+  Future<List<QBTorrentFile>> getTorrentFiles(String hash) async {
+    final url = Uri.parse('$baseUrl$apiPrefix/torrents/files')
+        .replace(queryParameters: {'hash': hash});
+    final response = await _makeRequest('GET', url);
+    final data = jsonDecode(response.body) as List<dynamic>;
+    return data
+        .map((e) => QBTorrentFile.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// 添加 Torrent（通过 URL 或 Magnet 链接）
   Future<void> addTorrentByUrl(
     String url, {
@@ -685,6 +696,25 @@ class QBCategory {
 }
 
 /// 应用偏好设置
+/// qBittorrent 单个 Torrent 内的文件。
+class QBTorrentFile {
+  const QBTorrentFile({
+    required this.name,
+    required this.size,
+    required this.progress,
+  });
+
+  factory QBTorrentFile.fromJson(Map<String, dynamic> json) => QBTorrentFile(
+        name: json['name'] as String? ?? '',
+        size: (json['size'] as num?)?.toInt() ?? 0,
+        progress: (json['progress'] as num?)?.toDouble() ?? 0,
+      );
+
+  final String name;
+  final int size;
+  final double progress; // 0..1
+}
+
 class QBPreferences {
   const QBPreferences({
     this.dlLimit = 0,

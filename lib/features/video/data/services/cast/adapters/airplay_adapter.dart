@@ -169,8 +169,9 @@ class AirPlayAdapter {
       _currentDevice = device;
       _httpClient = HttpClient()..connectionTimeout = const Duration(seconds: 10);
 
-      logger.i('开始 AirPlay 投屏到 ${device.name}');
-      logger.i('视频URL: $videoUrl');
+      logger
+        ..i('开始 AirPlay 投屏到 ${device.name}')
+        ..i('视频URL: $videoUrl');
 
       // 构建播放请求
       final startPositionSeconds = (startPosition?.inMilliseconds ?? 0) / 1000.0;

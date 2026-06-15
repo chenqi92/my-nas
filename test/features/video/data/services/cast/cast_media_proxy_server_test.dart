@@ -15,7 +15,9 @@ void main() {
     late MockNasFileSystem mockFileSystem;
 
     setUp(() {
-      server = CastMediaProxyServer(port: 18899); // Use different port for testing
+      server = CastMediaProxyServer(
+        port: 18899,
+      ); // Use different port for testing
       mockFileSystem = MockNasFileSystem();
     });
 
@@ -138,7 +140,9 @@ void main() {
       test('should respond to health check', () async {
         await server.start();
 
-        final response = await http.get(Uri.parse('http://localhost:18899/health'));
+        final response = await http.get(
+          Uri.parse('http://localhost:18899/health'),
+        );
         expect(response.statusCode, equals(200));
         expect(response.body, equals('OK'));
       });
@@ -149,8 +153,9 @@ void main() {
         await server.start();
 
         // Setup mock file system
-        when(() => mockFileSystem.getFileStream(any(), range: any(named: 'range')))
-            .thenAnswer((_) async => Stream.empty());
+        when(
+          () => mockFileSystem.getFileStream(any(), range: any(named: 'range')),
+        ).thenAnswer((_) async => Stream.empty());
 
         final token = server.registerStream(
           path: '/test/video.mp4',
@@ -188,7 +193,9 @@ void main() {
       test('should include CORS headers in response', () async {
         await server.start();
 
-        final response = await http.get(Uri.parse('http://localhost:18899/health'));
+        final response = await http.get(
+          Uri.parse('http://localhost:18899/health'),
+        );
 
         expect(response.headers['access-control-allow-origin'], equals('*'));
       });
@@ -203,7 +210,10 @@ void main() {
         final response = await request.close();
 
         expect(response.statusCode, equals(200));
-        expect(response.headers.value('access-control-allow-methods'), isNotNull);
+        expect(
+          response.headers.value('access-control-allow-methods'),
+          isNotNull,
+        );
       });
     });
   });

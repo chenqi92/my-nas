@@ -76,6 +76,29 @@ class TransferTaskTile extends StatelessWidget {
                   backgroundColor: colorScheme.surfaceContainerHighest,
                 ),
               ),
+              const SizedBox(height: 6),
+              // 实时速度 + 预计剩余时间。
+              if (task.isTransferring && task.speed > 0)
+                Row(
+                  children: [
+                    Text(
+                      '↓ ${_fmtSpeed(task.speed)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (_etaText(task) != null)
+                      Text(
+                        '剩余 ${_etaText(task)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
               const SizedBox(height: 8),
             ],
 
@@ -206,4 +229,32 @@ class TransferTaskTile extends StatelessWidget {
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
+}
+
+String _fmtSpeed(int bytesPerSec) {
+  if (bytesPerSec <= 0) return '0 KB/s';
+  const units = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+  var v = bytesPerSec.toDouble();
+  var i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return '${v.toStringAsFixed(v >= 100 || i == 0 ? 0 : 1)} ${units[i]}';
+}
+
+/// 预计剩余时间（剩余字节 / 当前速度）；信息不足时返回 null。
+String? _etaText(TransferTask task) {
+  if (task.speed <= 0 || task.fileSize <= 0) return null;
+  final remaining = task.fileSize - task.transferredBytes;
+  if (remaining <= 0) return null;
+  final secs = (remaining / task.speed).round();
+  if (secs >= 3600) {
+    final h = secs ~/ 3600;
+    final m = (secs % 3600) ~/ 60;
+    return '${h}h${m.toString().padLeft(2, '0')}m';
+  }
+  final m = secs ~/ 60;
+  final s = secs % 60;
+  return '$m:${s.toString().padLeft(2, '0')}';
 }

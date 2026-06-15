@@ -366,6 +366,7 @@ class MusicListNotConnected extends MusicListState {}
 class MusicListLoaded extends MusicListState {
   MusicListLoaded({
     required this.totalCount,
+    this.totalDurationMs = 0,
     this.artistCount = 0,
     this.albumCount = 0,
     this.genreCount = 0,
@@ -398,6 +399,9 @@ class MusicListLoaded extends MusicListState {
   });
 
   final int totalCount;
+
+  /// 全库总时长（毫秒），来自 SQLite getStats 全量统计，不受分页影响。
+  final int totalDurationMs;
   final int artistCount;
   final int albumCount;
   final int genreCount;
@@ -540,6 +544,7 @@ class MusicListLoaded extends MusicListState {
 
   MusicListLoaded copyWith({
     int? totalCount,
+    int? totalDurationMs,
     int? artistCount,
     int? albumCount,
     int? genreCount,
@@ -564,6 +569,7 @@ class MusicListLoaded extends MusicListState {
   }) =>
       MusicListLoaded(
         totalCount: totalCount ?? this.totalCount,
+        totalDurationMs: totalDurationMs ?? this.totalDurationMs,
         artistCount: artistCount ?? this.artistCount,
         albumCount: albumCount ?? this.albumCount,
         genreCount: genreCount ?? this.genreCount,
@@ -657,17 +663,17 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       await _loadCategorizedData();
 
       // 监听连接状态变化
-      _ref.listen<Map<String, SourceConnection>>(activeConnectionsProvider, (previous, next) {
-        final prevConnected = previous?.values.where((c) => c.status == SourceStatus.connected).length ?? 0;
-        final nextConnected = next.values.where((c) => c.status == SourceStatus.connected).length;
+      _ref
+        ..listen<Map<String, SourceConnection>>(activeConnectionsProvider, (previous, next) {
+          final prevConnected = previous?.values.where((c) => c.status == SourceStatus.connected).length ?? 0;
+          final nextConnected = next.values.where((c) => c.status == SourceStatus.connected).length;
 
-        if (nextConnected > prevConnected && state is MusicListNotConnected) {
-          loadMusic();
-        }
-      });
-
-      // 监听媒体库配置变化（启用/停用/移除路径）
-      _ref.listen<AsyncValue<MediaLibraryConfig>>(mediaLibraryConfigProvider, (previous, next) {
+          if (nextConnected > prevConnected && state is MusicListNotConnected) {
+            loadMusic();
+          }
+        })
+        // 监听媒体库配置变化（启用/停用/移除路径）
+        ..listen<AsyncValue<MediaLibraryConfig>>(mediaLibraryConfigProvider, (previous, next) {
         final prevPaths = previous?.valueOrNull?.getEnabledPathsForType(MediaType.music) ?? [];
         final nextPaths = next.valueOrNull?.getEnabledPathsForType(MediaType.music) ?? [];
 
@@ -744,6 +750,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
 
     state = MusicListLoaded(
       totalCount: total,
+      totalDurationMs: stats['totalDuration'] as int? ?? 0,
       artistCount: stats['artists'] as int? ?? 0,
       albumCount: stats['albums'] as int? ?? 0,
       genreCount: stats['genres'] as int? ?? 0,
@@ -5710,7 +5717,7 @@ class _ArtistCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    Navigator.push(
+    unawaited(Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
@@ -5721,7 +5728,7 @@ class _ArtistCardFromDb extends ConsumerWidget {
           color: AppColors.primary,
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -6062,7 +6069,7 @@ class _AlbumCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    showAdaptiveModalSheet<void>(
+    unawaited(showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
@@ -6140,7 +6147,7 @@ class _AlbumCardFromDb extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -6397,7 +6404,7 @@ class _FolderCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    Navigator.push(
+    unawaited(Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
@@ -6408,7 +6415,7 @@ class _FolderCardFromDb extends ConsumerWidget {
           color: AppColors.fileAudio,
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -6681,7 +6688,7 @@ class _GenreCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    Navigator.push(
+    unawaited(Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
@@ -6692,7 +6699,7 @@ class _GenreCardFromDb extends ConsumerWidget {
           color: color,
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -7016,7 +7023,7 @@ class _YearCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    Navigator.push(
+    unawaited(Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
@@ -7027,7 +7034,7 @@ class _YearCardFromDb extends ConsumerWidget {
           color: color,
         ),
       ),
-    );
+    ));
   }
 }
 

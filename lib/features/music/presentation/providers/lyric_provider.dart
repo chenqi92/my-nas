@@ -17,6 +17,10 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 /// 当前歌词
 final currentLyricProvider = StateNotifierProvider<LyricNotifier, LyricState>(LyricNotifier.new);
 
+/// 桌面端「应用内歌词浮窗(.dlyric)」开关。由 NowPlaying 顶部按钮切换，
+/// 桌面外壳据此在底部居中显示玻璃药丸歌词条。
+final desktopLyricFloatProvider = StateProvider<bool>((ref) => false);
+
 /// 歌词状态
 class LyricState {
   const LyricState({
@@ -44,27 +48,27 @@ class LyricState {
 class LyricNotifier extends StateNotifier<LyricState> {
   LyricNotifier(this._ref) : super(const LyricState()) {
     // 监听当前音乐变化
-    _ref.listen<MusicItem?>(currentMusicProvider, (previous, next) {
-      if (next != null && next != previous) {
-        loadLyrics(next);
-      } else if (next == null) {
-        state = const LyricState();
-      }
-    });
-
-    // 监听翻译开关 / 目标语言变化 → 即时重翻当前歌词
-    _ref.listen<MusicSettings>(musicSettingsProvider, (prev, next) {
-      final toggled = prev?.lyricsTranslateEnabled !=
-          next.lyricsTranslateEnabled;
-      final langChanged =
-          prev?.lyricsTranslateLang != next.lyricsTranslateLang;
-      if (toggled || langChanged) {
-        AppError.fireAndForget(
-          retranslate(),
-          action: 'lyric.retranslateOnSettingsChange',
-        );
-      }
-    });
+    _ref
+      ..listen<MusicItem?>(currentMusicProvider, (previous, next) {
+        if (next != null && next != previous) {
+          loadLyrics(next);
+        } else if (next == null) {
+          state = const LyricState();
+        }
+      })
+      // 监听翻译开关 / 目标语言变化 → 即时重翻当前歌词
+      ..listen<MusicSettings>(musicSettingsProvider, (prev, next) {
+        final toggled = prev?.lyricsTranslateEnabled !=
+            next.lyricsTranslateEnabled;
+        final langChanged =
+            prev?.lyricsTranslateLang != next.lyricsTranslateLang;
+        if (toggled || langChanged) {
+          AppError.fireAndForget(
+            retranslate(),
+            action: 'lyric.retranslateOnSettingsChange',
+          );
+        }
+      });
 
     // 初始化时检查是否已有音乐在播放
     final currentMusic = _ref.read(currentMusicProvider);

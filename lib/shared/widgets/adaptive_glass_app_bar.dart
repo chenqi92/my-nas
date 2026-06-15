@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
@@ -1079,6 +1080,7 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
               (onSelectedCallback as Function)(parsedValue);
             }
           } catch (e) {
+            // 回调解析/执行失败时忽略，不影响其他按钮的遍历
           }
         }
         return;
@@ -2336,8 +2338,9 @@ class _GlassSearchBarState extends State<GlassSearchBar>
 
   @override
   void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
+    _focusNode
+      ..removeListener(_onFocusChange)
+      ..dispose();
     _controller.removeListener(_onTextChange);
     if (widget.controller == null) {
       _controller.dispose();
@@ -2410,9 +2413,9 @@ class _GlassSearchBarState extends State<GlassSearchBar>
           _isFocused = focused;
         });
         if (focused) {
-          _animationController.forward();
+          unawaited(_animationController.forward());
         } else {
-          _animationController.reverse();
+          unawaited(_animationController.reverse());
         }
     }
     return null;

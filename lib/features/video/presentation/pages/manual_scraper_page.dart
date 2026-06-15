@@ -10,6 +10,7 @@ import 'package:my_nas/features/video/data/services/video_metadata_service.dart'
 import 'package:my_nas/features/video/domain/entities/scraper_result.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
+import 'package:my_nas/features/video/presentation/providers/scrape_defaults_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
@@ -64,6 +65,10 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
   void initState() {
     super.initState();
     hideTabBar();
+    final defaults = ref.read(scrapeDefaultsProvider);
+    _generateNfo = defaults.generateNfo;
+    _downloadPoster = defaults.downloadPoster;
+    _downloadFanart = defaults.downloadFanart;
     _initSearchFromFileName();
   }
 

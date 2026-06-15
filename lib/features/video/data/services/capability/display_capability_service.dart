@@ -73,15 +73,14 @@ class DisplayCapabilityService {
   /// 获取桌面端回退能力
   ///
   /// Windows/Linux 暂时无法检测，返回保守估计
-  HdrCapability _getDesktopFallbackCapability() {
-    // 桌面端假设可能支持 HDR，让用户手动选择
-    // 这样用户可以选择直通或色调映射
-    return const HdrCapability(
-      isSupported: true,
-      supportedTypes: [HdrType.hdr10, HdrType.hlg],
-      maxLuminance: 0, // 未知
-    );
-  }
+  HdrCapability _getDesktopFallbackCapability() =>
+      // 桌面端假设可能支持 HDR，让用户手动选择
+      // 这样用户可以选择直通或色调映射
+      const HdrCapability(
+        isSupported: true,
+        supportedTypes: [HdrType.hdr10, HdrType.hlg],
+        maxLuminance: 0, // 未知
+      );
 
   /// 清除缓存
   void clearCache() {

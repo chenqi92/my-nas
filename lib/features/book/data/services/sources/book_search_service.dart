@@ -297,9 +297,10 @@ class BookSearchService {
         
         // 调试日志：追踪作者解析
         if (books.length < 5) { // 只记录前5本以避免日志过多
-          logger.d('📖 [${source.displayName}] 书名: "$name"');
-          logger.d('   作者规则: "${rule.author}"');
-          logger.d('   原始作者: "$rawAuthor" → 智能提取: "$author"');
+          logger
+            ..d('📖 [${source.displayName}] 书名: "$name"')
+            ..d('   作者规则: "${rule.author}"')
+            ..d('   原始作者: "$rawAuthor" → 智能提取: "$author"');
         }
         
         final isRelevant = _isRelevantResult(name, author, keyword);
@@ -318,12 +319,13 @@ class BookSearchService {
         
         // 详细日志：记录完整解析数据（前3本书）
         if (books.length < 3) {
-          logger.i('📚 [${source.displayName}] 解析完成:');
-          logger.i('   📖 书名: "$name" | 作者: "$author"');
-          logger.i('   🔗 bookUrl: $bookUrl');
-          logger.i('   🖼️ coverUrl规则: "${rule.coverUrl}" → 原始: "$rawCoverUrl" → 智能提取: "$coverUrl"');
-          logger.i('   📝 intro: "${intro.length > 50 ? '${intro.substring(0, 50)}...' : intro}"');
-          logger.i('   🏷️ kind: "$kind" | lastChapter: "$lastChapter" | wordCount: "$wordCount"');
+          logger
+            ..i('📚 [${source.displayName}] 解析完成:')
+            ..i('   📖 书名: "$name" | 作者: "$author"')
+            ..i('   🔗 bookUrl: $bookUrl')
+            ..i('   🖼️ coverUrl规则: "${rule.coverUrl}" → 原始: "$rawCoverUrl" → 智能提取: "$coverUrl"')
+            ..i('   📝 intro: "${intro.length > 50 ? '${intro.substring(0, 50)}...' : intro}"')
+            ..i('   🏷️ kind: "$kind" | lastChapter: "$lastChapter" | wordCount: "$wordCount"');
         }
 
         books.add(OnlineBook(

@@ -51,17 +51,20 @@ void main() {
       expect(device.description, equals('Test Corp · Model X'));
     });
 
-    test('description should return protocol label when no manufacturer/model', () {
-      const device = CastDevice(
-        id: 'test-id',
-        name: 'Test Device',
-        protocol: CastProtocol.dlna,
-        address: '192.168.1.100',
-        port: 1234,
-      );
+    test(
+      'description should return protocol label when no manufacturer/model',
+      () {
+        const device = CastDevice(
+          id: 'test-id',
+          name: 'Test Device',
+          protocol: CastProtocol.dlna,
+          address: '192.168.1.100',
+          port: 1234,
+        );
 
-      expect(device.description, equals('DLNA'));
-    });
+        expect(device.description, equals('DLNA'));
+      },
+    );
 
     test('equality should be based on id', () {
       const device1 = CastDevice(

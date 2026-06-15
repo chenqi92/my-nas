@@ -76,18 +76,15 @@ class CastMediaProxyServer {
       return;
     }
 
-    final router = Router();
-
-    // 媒体流路由
-    router.get('/stream/<token>', _handleStreamRequest);
-    router.head('/stream/<token>', _handleStreamHeadRequest);
-
-    // 字幕路由
-    router.get('/subtitle/<token>', _handleSubtitleRequest);
-    router.head('/subtitle/<token>', _handleSubtitleHeadRequest);
-
-    // 健康检查
-    router.get('/health', (shelf.Request request) => shelf.Response.ok('OK'));
+    final router = Router()
+      // 媒体流路由
+      ..get('/stream/<token>', _handleStreamRequest)
+      ..head('/stream/<token>', _handleStreamHeadRequest)
+      // 字幕路由
+      ..get('/subtitle/<token>', _handleSubtitleRequest)
+      ..head('/subtitle/<token>', _handleSubtitleHeadRequest)
+      // 健康检查
+      ..get('/health', (shelf.Request request) => shelf.Response.ok('OK'));
 
     // CORS 中间件
     shelf.Handler corsHandler(shelf.Handler innerHandler) => (request) async {

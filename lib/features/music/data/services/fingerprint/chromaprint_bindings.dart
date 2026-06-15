@@ -1,3 +1,5 @@
+// 以下字段名沿用 Chromaprint C API 原始函数名（如 chromaprint_get_version），保持与官方头文件一致便于对照
+// ignore_for_file: non_constant_identifier_names
 // ignore_for_file: unused_field
 
 import 'dart:ffi';

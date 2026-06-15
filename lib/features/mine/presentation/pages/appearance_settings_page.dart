@@ -3,11 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/color_scheme_preset.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/providers/dynamic_ambient_provider.dart';
+import 'package:my_nas/shared/providers/glass_material_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
+import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
+import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 外观设置页面
@@ -49,48 +55,247 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
           color: isDark ? AppColors.darkOnSurface : null,
         ),
       ),
-      body: ListView(
-        padding: AppSpacing.paddingMd,
+      body: context.isDesktopLayout
+          ? _buildDesktopBody(context, themeMode, uiStyle, colorPreset)
+          : ListView(
+              padding: AppSpacing.paddingMd,
+              children: [
+                // 主题模式
+                _buildSectionHeader(context, '主题模式', Icons.brightness_6_rounded, isDark),
+                const SizedBox(height: AppSpacing.sm),
+                _buildSettingsCard(
+                  context,
+                  isDark,
+                  children: [
+                    for (var i = 0; i < ThemeMode.values.length; i++) ...[
+                      if (i > 0) _buildDivider(isDark),
+                      _buildThemeOption(context, ThemeMode.values[i], themeMode, isDark),
+                    ],
+                  ],
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
+
+                // UI 风格
+                _buildSectionHeader(context, 'UI 风格', Icons.dashboard_customize_rounded, isDark),
+                const SizedBox(height: AppSpacing.sm),
+                _buildSettingsCard(
+                  context,
+                  isDark,
+                  children: [
+                    for (var i = 0; i < UIStyle.values.length; i++) ...[
+                      if (i > 0) _buildDivider(isDark),
+                      _buildUIStyleOption(context, UIStyle.values[i], uiStyle, isDark),
+                    ],
+                  ],
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
+
+                // 配色方案
+                _buildSectionHeader(context, '配色方案', Icons.color_lens_rounded, isDark),
+                const SizedBox(height: AppSpacing.sm),
+                _buildColorSchemeGrid(context, colorPreset, isDark),
+
+                const SizedBox(height: AppSpacing.xxxl),
+              ],
+            ),
+    );
+  }
+
+  // ─── 桌面端设计语言分支 ───────────────────────────────────
+
+  Widget _buildDesktopBody(
+    BuildContext context,
+    ThemeMode themeMode,
+    UIStyle uiStyle,
+    ColorSchemePreset colorPreset,
+  ) {
+    final t = DesignTokens.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(38, 32, 38, 96),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 780),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SetHead(
+                icon: Icons.palette_outlined,
+                title: '外观',
+                subtitle: '主题、配色与 UI 风格。Glass / Classic 为实时全局开关。',
+              ),
+              SetSection(
+                title: '主题与配色',
+                hint: 'theme_mode · color_scheme_preset',
+                children: [
+                  SetRow(
+                    title: '主题模式',
+                    desc: '浅色 / 深色 / 跟随系统',
+                    trailing: AppSegmented<ThemeMode>(
+                      value: themeMode,
+                      onChanged: ref.read(themeModeProvider.notifier).setThemeMode,
+                      options: const [
+                        AppSegmentedOption(value: ThemeMode.light, label: '浅色'),
+                        AppSegmentedOption(value: ThemeMode.dark, label: '深色'),
+                        AppSegmentedOption(value: ThemeMode.system, label: '系统'),
+                      ],
+                    ),
+                  ),
+                  SetRow(
+                    title: 'UI 风格',
+                    desc: '玻璃材质 / 经典卡片 — 实时切换',
+                    trailing: AppSegmented<UIStyle>(
+                      value: uiStyle,
+                      onChanged: ref.read(uiStyleProvider.notifier).setStyle,
+                      options: [
+                        for (final style in UIStyle.values)
+                          AppSegmentedOption(
+                            value: style,
+                            label: style.isGlass ? 'Glass' : 'Classic',
+                          ),
+                      ],
+                    ),
+                  ),
+                  SetRow(
+                    title: '强调色',
+                    desc: '预设方案，可被封面动态取色临时覆盖',
+                    trailing: Wrap(
+                      spacing: 9,
+                      runSpacing: 9,
+                      children: [
+                        for (final preset in ColorSchemePresets.all)
+                          _buildDesktopAccentDot(t, preset, colorPreset),
+                      ],
+                    ),
+                  ),
+                  SetRow(
+                    title: '动态取色氛围光',
+                    desc: '播放时外壳氛围光随封面 / 台标取色',
+                    last: true,
+                    trailing: AppSwitch(
+                      value: ref.watch(dynamicAmbientProvider),
+                      onChanged: (v) => ref
+                          .read(dynamicAmbientProvider.notifier)
+                          .setEnabled(enabled: v),
+                    ),
+                  ),
+                ],
+              ),
+              _buildGlassSection(t, uiStyle),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── 玻璃材质参数（仅 Glass 风格可调）──────────────────────
+
+  Widget _buildGlassSection(DesignTokens t, UIStyle uiStyle) {
+    if (!uiStyle.isGlass) {
+      return SetSection(
+        title: '玻璃材质参数',
+        hint: 'glass_blur_scale · glass_opacity_scale · glass_blur_enabled',
         children: [
-          // 主题模式
-          _buildSectionHeader(context, '主题模式', Icons.brightness_6_rounded, isDark),
-          const SizedBox(height: AppSpacing.sm),
-          _buildSettingsCard(
-            context,
-            isDark,
-            children: [
-              for (var i = 0; i < ThemeMode.values.length; i++) ...[
-                if (i > 0) _buildDivider(isDark),
-                _buildThemeOption(context, ThemeMode.values[i], themeMode, isDark),
-              ],
-            ],
+          SetRow(
+            title: '已停用',
+            desc: 'Classic 风格下玻璃参数已停用，切换到 Glass 风格后可调。',
+            last: true,
           ),
-
-          const SizedBox(height: AppSpacing.xl),
-
-          // UI 风格
-          _buildSectionHeader(context, 'UI 风格', Icons.dashboard_customize_rounded, isDark),
-          const SizedBox(height: AppSpacing.sm),
-          _buildSettingsCard(
-            context,
-            isDark,
-            children: [
-              for (var i = 0; i < UIStyle.values.length; i++) ...[
-                if (i > 0) _buildDivider(isDark),
-                _buildUIStyleOption(context, UIStyle.values[i], uiStyle, isDark),
-              ],
-            ],
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-
-          // 配色方案
-          _buildSectionHeader(context, '配色方案', Icons.color_lens_rounded, isDark),
-          const SizedBox(height: AppSpacing.sm),
-          _buildColorSchemeGrid(context, colorPreset, isDark),
-
-          const SizedBox(height: AppSpacing.xxxl),
         ],
+      );
+    }
+
+    final blurScale = ref.watch(glassBlurScaleProvider);
+    final opacityScale = ref.watch(glassOpacityScaleProvider);
+    final blurEnabled = ref.watch(glassBlurEnabledProvider);
+
+    return SetSection(
+      title: '玻璃材质参数',
+      hint: 'glass_blur_scale · glass_opacity_scale · glass_blur_enabled',
+      children: [
+        SetRow(
+          title: '模糊强度',
+          desc: '玻璃面板高斯模糊半径缩放（${blurScale.toStringAsFixed(2)}×）',
+          trailing: _buildGlassSlider(
+            t,
+            value: blurScale,
+            enabled: blurEnabled,
+            onChanged: (v) =>
+                ref.read(glassBlurScaleProvider.notifier).setValue(v),
+          ),
+        ),
+        SetRow(
+          title: '材质不透明度',
+          desc: '玻璃面板背景不透明度缩放（${opacityScale.toStringAsFixed(2)}×）',
+          trailing: _buildGlassSlider(
+            t,
+            value: opacityScale,
+            onChanged: (v) =>
+                ref.read(glassOpacityScaleProvider.notifier).setValue(v),
+          ),
+        ),
+        SetRow(
+          title: '平台玻璃优化',
+          desc: '关闭后玻璃面板不再做模糊，仅保留半透明材质',
+          last: true,
+          trailing: AppSwitch(
+            value: blurEnabled,
+            onChanged: (v) => ref
+                .read(glassBlurEnabledProvider.notifier)
+                .setEnabled(enabled: v),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGlassSlider(
+    DesignTokens t, {
+    required double value,
+    required ValueChanged<double> onChanged,
+    bool enabled = true,
+  }) =>
+      SizedBox(
+        width: 140,
+        child: SliderTheme(
+          data: SliderThemeData(
+            trackHeight: 3,
+            activeTrackColor: enabled ? t.accent : t.text3,
+            inactiveTrackColor: t.insetBg,
+            thumbColor: enabled ? t.accentBright : t.text3,
+            overlayColor: t.accent.withValues(alpha: 0.12),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+          ),
+          child: Slider(
+            value: value,
+            min: 0.5,
+            max: 1.5,
+            divisions: 10,
+            onChanged: enabled ? onChanged : null,
+          ),
+        ),
+      );
+
+  Widget _buildDesktopAccentDot(
+    DesignTokens t,
+    ColorSchemePreset preset,
+    ColorSchemePreset current,
+  ) {
+    final isSelected = preset.id == current.id;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => ref.read(colorSchemePresetProvider.notifier).setPreset(preset),
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: preset.primary,
+          borderRadius: BorderRadius.circular(8),
+          border: isSelected ? Border.all(color: t.text0, width: 2) : null,
+        ),
       ),
     );
   }

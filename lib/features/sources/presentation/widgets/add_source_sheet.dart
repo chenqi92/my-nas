@@ -9,6 +9,7 @@ import 'package:my_nas/features/sources/data/services/source_manager_service.dar
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/sources/presentation/widgets/two_fa_sheet.dart';
+import 'package:my_nas/shared/providers/source_defaults_provider.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 class AddSourceSheet extends ConsumerStatefulWidget {
@@ -60,8 +61,10 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
 
     _sourceType = source?.type ?? SourceType.synology;
     _useSsl = source?.useSsl ?? true;
-    _autoConnect = source?.autoConnect ?? true;
-    _rememberDevice = source?.rememberDevice ?? false;
+    // 新建源套用全局「新建源默认」开关；编辑时沿用源自身字段。
+    _autoConnect = source?.autoConnect ?? ref.read(defaultAutoConnectProvider);
+    _rememberDevice =
+        source?.rememberDevice ?? ref.read(defaultRememberDeviceProvider);
   }
 
   @override

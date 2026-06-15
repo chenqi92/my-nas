@@ -163,6 +163,8 @@ class EdgeTTSVoices {
   static EdgeVoice? getVoiceById(String id) {
     try {
       return chineseVoices.firstWhere((v) => v.id == id);
+      // firstWhere 在无匹配时抛 StateError，用于表示“未找到”
+      // ignore: avoid_catching_errors
     } on StateError {
       return null;
     }

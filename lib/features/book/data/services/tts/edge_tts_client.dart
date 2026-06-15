@@ -130,6 +130,7 @@ class EdgeTTSClient {
       final ssml = _buildSSML(text);
       final requestId = _generateRequestId();
 
+      // ignore: leading_newlines_in_multiline_strings 协议帧首行不能有前导换行
       final message = '''X-RequestId:$requestId\r
 Content-Type:application/ssml+xml\r
 Path:ssml\r
@@ -272,6 +273,7 @@ Path:speech.config\r
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&apos;');
 
+    // ignore: leading_newlines_in_multiline_strings SSML 内容不应有前导换行
     return '''<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${_currentVoice.locale}">
   <voice name="${_currentVoice.id}">
     <prosody rate="$rateStr" pitch="$pitchStr" volume="$volumeStr">

@@ -85,10 +85,7 @@ Future<(SubtitleTranslationSession, SubtitleTranslationProgress)> _drive(
 }
 
 void main() {
-  setUp(() {
-    // 防止上一条 case 残留
-    SubtitleTranslationService.instance.cancelActive();
-  });
+  setUp(SubtitleTranslationService.instance.cancelActive);
 
   group('SubtitleTranslationService.start', () {
     test('能够把全部 cue 都翻译完成并写入 session.translations', () async {

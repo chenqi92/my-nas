@@ -144,10 +144,9 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async {
-    // 使用 URL 方式，不直接提供数据
-    return null;
-  }
+  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async =>
+      // 使用 URL 方式，不直接提供数据
+      null;
 
   // === 不支持的写操作 ===
 
@@ -317,7 +316,7 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
 
     // 逐级查找
     var currentId = library.id;
-    var currentPath = '/${segments.first}';
+    final currentPath = StringBuffer('/${segments.first}');
 
     for (var i = 1; i < segments.length; i++) {
       final segment = segments[i];
@@ -328,8 +327,8 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
       }
 
       currentId = item.id;
-      currentPath = '$currentPath/$segment';
-      _pathToIdCache[currentPath] = currentId;
+      currentPath.write('/$segment');
+      _pathToIdCache[currentPath.toString()] = currentId;
       _itemCache[currentId] = item;
     }
 

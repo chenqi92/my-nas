@@ -86,52 +86,47 @@ class TTSService {
       await _applySetting();
 
       // 设置回调
-      _tts.setStartHandler(() {
-        _state = TTSPlayState.playing;
-        _stateController.add(_state);
-        logger.d('TTS: 开始朗读');
-      });
-
-      _tts.setCompletionHandler(() {
-        _state = TTSPlayState.completed;
-        _stateController.add(_state);
-        _completionController.add(null);
-        logger.d('TTS: 朗读完成');
-      });
-
-      _tts.setPauseHandler(() {
-        _state = TTSPlayState.paused;
-        _stateController.add(_state);
-        logger.d('TTS: 已暂停');
-      });
-
-      _tts.setContinueHandler(() {
-        _state = TTSPlayState.playing;
-        _stateController.add(_state);
-        logger.d('TTS: 继续朗读');
-      });
-
-      _tts.setCancelHandler(() {
-        _state = TTSPlayState.idle;
-        _stateController.add(_state);
-        logger.d('TTS: 已取消');
-      });
-
-      _tts.setErrorHandler((msg) {
-        logger.e('TTS 错误: $msg');
-        _state = TTSPlayState.idle;
-        _stateController.add(_state);
-      });
-
-      // 进度回调 - 关键，用于高亮同步
-      _tts.setProgressHandler((text, start, end, word) {
-        _progressController.add(TTSProgress(
-          text: text,
-          start: start,
-          end: end,
-          word: word,
-        ));
-      });
+      _tts
+        ..setStartHandler(() {
+          _state = TTSPlayState.playing;
+          _stateController.add(_state);
+          logger.d('TTS: 开始朗读');
+        })
+        ..setCompletionHandler(() {
+          _state = TTSPlayState.completed;
+          _stateController.add(_state);
+          _completionController.add(null);
+          logger.d('TTS: 朗读完成');
+        })
+        ..setPauseHandler(() {
+          _state = TTSPlayState.paused;
+          _stateController.add(_state);
+          logger.d('TTS: 已暂停');
+        })
+        ..setContinueHandler(() {
+          _state = TTSPlayState.playing;
+          _stateController.add(_state);
+          logger.d('TTS: 继续朗读');
+        })
+        ..setCancelHandler(() {
+          _state = TTSPlayState.idle;
+          _stateController.add(_state);
+          logger.d('TTS: 已取消');
+        })
+        ..setErrorHandler((msg) {
+          logger.e('TTS 错误: $msg');
+          _state = TTSPlayState.idle;
+          _stateController.add(_state);
+        })
+        // 进度回调 - 关键，用于高亮同步
+        ..setProgressHandler((text, start, end, word) {
+          _progressController.add(TTSProgress(
+            text: text,
+            start: start,
+            end: end,
+            word: word,
+          ));
+        });
 
       // 获取可用音色
       await _loadVoices();
@@ -276,32 +271,30 @@ class TTSService {
       }
 
       // 设置语速/音调/音量 (转换为 Edge TTS 范围)
-      _edgeTts.setRate(_settings.speechRate - 1.0); // 0.5-2.0 -> -0.5-1.0
-      _edgeTts.setPitch(_settings.pitch - 1.0); // 0.5-2.0 -> -0.5-1.0
-      _edgeTts.setVolume(_settings.volume);
-
-      // 设置回调
-      _edgeTts.onStart = () {
-        _state = TTSPlayState.playing;
-        _stateController.add(_state);
-        // ignore: avoid_print
-        print('🔊 EdgeTTS: onStart 回调');
-      };
-
-      _edgeTts.onComplete = () {
-        _state = TTSPlayState.completed;
-        _stateController.add(_state);
-        _completionController.add(null);
-        // ignore: avoid_print
-        print('🔊 EdgeTTS: onComplete 回调');
-      };
-
-      _edgeTts.onError = (error) {
-        // ignore: avoid_print
-        print('🔊 EdgeTTS: onError 回调 - $error');
-        // 降级到系统 TTS
-        _tts.speak(text);
-      };
+      _edgeTts
+        ..setRate(_settings.speechRate - 1.0) // 0.5-2.0 -> -0.5-1.0
+        ..setPitch(_settings.pitch - 1.0) // 0.5-2.0 -> -0.5-1.0
+        ..setVolume(_settings.volume)
+        // 设置回调
+        ..onStart = () {
+          _state = TTSPlayState.playing;
+          _stateController.add(_state);
+          // ignore: avoid_print
+          print('🔊 EdgeTTS: onStart 回调');
+        }
+        ..onComplete = () {
+          _state = TTSPlayState.completed;
+          _stateController.add(_state);
+          _completionController.add(null);
+          // ignore: avoid_print
+          print('🔊 EdgeTTS: onComplete 回调');
+        }
+        ..onError = (error) {
+          // ignore: avoid_print
+          print('🔊 EdgeTTS: onError 回调 - $error');
+          // 降级到系统 TTS
+          _tts.speak(text);
+        };
 
       // ignore: avoid_print
       print('🔊 _speakWithEdgeTTS: 调用 _edgeTts.speak()');
@@ -312,6 +305,7 @@ class TTSService {
       // 捕获所有错误，包括 Error 和 Exception
       // ignore: avoid_print
       print('🔊 _speakWithEdgeTTS: 捕获错误 - $e');
+      // ignore: avoid_print
       print('🔊 Stack trace: $st');
       // 网络错误时降级到系统 TTS
       await _tts.speak(text);
@@ -375,11 +369,10 @@ class TTSService {
   /// 用户设置 1.0 = iOS 0.5 (正常速度)
   /// 用户设置 0.5 = iOS 0.25 (慢速)
   /// 用户设置 2.0 = iOS 1.0 (快速)
-  double _convertRateForIOS(double userRate) {
-    // 线性映射: userRate 0.5->0.25, 1.0->0.5, 2.0->1.0
-    // 公式: (userRate - 0.5) / 1.5 * 0.75 + 0.25
-    return ((userRate - 0.5) / 1.5 * 0.75 + 0.25).clamp(0.0, 1.0);
-  }
+  // 线性映射: userRate 0.5->0.25, 1.0->0.5, 2.0->1.0
+  // 公式: (userRate - 0.5) / 1.5 * 0.75 + 0.25
+  double _convertRateForIOS(double userRate) =>
+      ((userRate - 0.5) / 1.5 * 0.75 + 0.25).clamp(0.0, 1.0);
 
   /// 设置音调
   Future<void> setPitch(double pitch) async {

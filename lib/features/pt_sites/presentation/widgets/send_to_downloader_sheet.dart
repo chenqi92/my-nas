@@ -45,13 +45,15 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
   Future<void> _loadDownloadUrl() async {
     try {
       final api = ref.read(ptSiteConnectionProvider(widget.sourceId)).api;
-      if (api != null) {
-        _downloadUrl = await api.getDownloadUrl(widget.torrent.id);
-        if (mounted) setState(() {});
-      }
+      // api 不可用时回退到种子自带链接，确保按钮可用。
+      final url = api != null
+          ? await api.getDownloadUrl(widget.torrent.id)
+          : widget.torrent.downloadUrl;
+      if (mounted) setState(() => _downloadUrl = url);
     } on Exception catch (e, st) {
       AppError.ignore(e, st, '获取专属下载链接失败，回退使用 torrent.downloadUrl');
-      _downloadUrl = widget.torrent.downloadUrl;
+      // 关键：回退后也要 setState，否则发送/复制按钮永久禁用。
+      if (mounted) setState(() => _downloadUrl = widget.torrent.downloadUrl);
     }
   }
 

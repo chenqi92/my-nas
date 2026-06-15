@@ -182,12 +182,10 @@ class QualityMonitorService {
 
   /// 估算当前下载速度
   /// 返回 bps（位每秒）
-  Future<int?> estimateDownloadSpeed() async {
-    // 这里需要根据实际的播放器API获取下载速度
-    // media_kit 目前不直接提供下载速度，需要通过其他方式估算
-    // 可以通过监控缓冲区变化来估算
-    return null;
-  }
+  // 这里需要根据实际的播放器API获取下载速度
+  // media_kit 目前不直接提供下载速度，需要通过其他方式估算
+  // 可以通过监控缓冲区变化来估算
+  Future<int?> estimateDownloadSpeed() async => null;
 
   /// 释放资源
   void dispose() {

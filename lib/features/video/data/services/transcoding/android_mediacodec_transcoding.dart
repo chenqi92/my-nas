@@ -143,6 +143,8 @@ class AndroidMediaCodecTranscoding {
       final outputPath = '${tempDir.path}/mediacodec_$taskId.mp4';
 
       // 创建进度控制器
+      // 由 _progressControllers 持有，在任务结束的回调及 dispose() 中统一 close
+      // ignore: close_sinks
       final progressController = StreamController<TranscodeProgress>.broadcast();
       _progressControllers[taskId] = progressController;
 
@@ -161,9 +163,10 @@ class AndroidMediaCodecTranscoding {
         },
       );
 
-      logger.i('MediaCodecTranscoding: 开始转码任务 $taskId');
-      logger.d('MediaCodecTranscoding: $inputPath -> $outputPath');
-      logger.d('MediaCodecTranscoding: 目标分辨率 ${quality.maxWidth}x${quality.maxHeight}');
+      logger
+        ..i('MediaCodecTranscoding: 开始转码任务 $taskId')
+        ..d('MediaCodecTranscoding: $inputPath -> $outputPath')
+        ..d('MediaCodecTranscoding: 目标分辨率 ${quality.maxWidth}x${quality.maxHeight}');
 
       return TranscodeSession(
         taskId: taskId,

@@ -87,9 +87,9 @@ class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
 
           // 设置回调
           if (_service is DesktopLyricServiceMacOSImpl) {
-            final macService = _service! as DesktopLyricServiceMacOSImpl;
-            macService.onPositionChanged = _onPositionChanged;
-            macService.onControlAction = _onControlAction;
+            (_service! as DesktopLyricServiceMacOSImpl)
+              ..onPositionChanged = _onPositionChanged
+              ..onControlAction = _onControlAction;
           } else if (_service is DesktopLyricServiceWindowsImpl) {
             (_service! as DesktopLyricServiceWindowsImpl).onPositionChanged =
                 _onPositionChanged;
@@ -181,22 +181,22 @@ class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
   }
 
   void _startListening() {
-    // 监听歌词变化
-    _ref.listen<LyricState>(currentLyricProvider, (previous, next) {
-      _syncLyric();
-    });
-
-    // 监听播放状态变化
-    _ref.listen<MusicPlayerState>(musicPlayerControllerProvider,
-        (previous, next) {
-      // 播放状态变化时处理自动显示/隐藏
-      if (previous?.isPlaying != next.isPlaying) {
-        _syncPlayingState(next.isPlaying);
-        _handlePlayingStateChange(next.isPlaying);
-      }
-      // 定期同步歌词
-      _syncLyric();
-    });
+    _ref
+      // 监听歌词变化
+      ..listen<LyricState>(currentLyricProvider, (previous, next) {
+        _syncLyric();
+      })
+      // 监听播放状态变化
+      ..listen<MusicPlayerState>(musicPlayerControllerProvider,
+          (previous, next) {
+        // 播放状态变化时处理自动显示/隐藏
+        if (previous?.isPlaying != next.isPlaying) {
+          _syncPlayingState(next.isPlaying);
+          _handlePlayingStateChange(next.isPlaying);
+        }
+        // 定期同步歌词
+        _syncLyric();
+      });
 
     // 启动同步定时器（50ms 间隔以获得流畅的卡拉OK效果）
     _syncTimer?.cancel();
@@ -622,16 +622,16 @@ class MenuBarNotifier extends StateNotifier<MenuBarState> {
   }
 
   void _startListening() {
-    // 监听播放器状态
-    _ref.listen<MusicPlayerState>(musicPlayerControllerProvider,
-        (previous, next) {
-      _syncMusicInfo();
-    });
-
-    // 监听歌词
-    _ref.listen<LyricState>(currentLyricProvider, (previous, next) {
-      _syncLyric();
-    });
+    _ref
+      // 监听播放器状态
+      ..listen<MusicPlayerState>(musicPlayerControllerProvider,
+          (previous, next) {
+        _syncMusicInfo();
+      })
+      // 监听歌词
+      ..listen<LyricState>(currentLyricProvider, (previous, next) {
+        _syncLyric();
+      });
 
     // 启动同步定时器
     _syncTimer?.cancel();

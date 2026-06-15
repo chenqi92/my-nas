@@ -12,6 +12,7 @@ import 'package:my_nas/features/video/presentation/widgets/audio_track_selector.
 import 'package:my_nas/features/video/presentation/widgets/subtitle_download_dialog.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_selector.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_style_sheet.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 
 /// Infuse 风格的设置面板
 ///
@@ -80,6 +81,7 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final playerNotifier = ref.read(videoPlayerControllerProvider.notifier);
     final playerState = ref.watch(videoPlayerControllerProvider);
     final settings = ref.watch(playbackSettingsProvider);
@@ -97,13 +99,13 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
         subtitles.isNotEmpty || embeddedSubtitles.isNotEmpty || currentSubtitle != null;
 
     // 当前字幕名称
-    var currentSubtitleName = '关闭';
+    var currentSubtitleName = l.infuseSubtitleOff;
     if (currentSubtitle != null) {
       currentSubtitleName = currentSubtitle.language ?? currentSubtitle.name;
     } else if (currentEmbeddedId != null) {
       final track = embeddedSubtitles.where((s) => s.id == currentEmbeddedId).firstOrNull;
       if (track != null) {
-        currentSubtitleName = track.title ?? track.language ?? '轨道 ${track.id}';
+        currentSubtitleName = track.title ?? track.language ?? l.infuseTrackName(track.id);
       }
     }
 
@@ -147,9 +149,9 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  '播放设置',
-                                  style: TextStyle(
+                                Text(
+                                  l.infuseTitle,
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -175,7 +177,7 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
                                 // === 字幕 ===
                                 _SettingItem(
                                   icon: Icons.closed_caption_rounded,
-                                  title: '字幕',
+                                  title: l.infuseSubtitle,
                                   value: currentSubtitleName,
                                   onTap: () {
                                     _close();
@@ -195,7 +197,7 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
                                 if (hasSubtitleConfig && widget.videoPath != null)
                                   _SettingItem(
                                     icon: Icons.search_rounded,
-                                    title: '搜索字幕',
+                                    title: l.infuseSearchSubtitle,
                                     onTap: () {
                                       _close();
                                       _showSubtitleDownloadDialog();
@@ -206,7 +208,7 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
                                 if (hasSubtitles || currentSubtitle != null)
                                   _SettingItem(
                                     icon: Icons.text_format_rounded,
-                                    title: '字幕样式',
+                                    title: l.infuseSubtitleStyle,
                                     onTap: () {
                                       _close();
                                       showSubtitleStyleSheet(context);
@@ -219,8 +221,8 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
                                 if (audioTracks.isNotEmpty)
                                   _SettingItem(
                                     icon: Icons.audiotrack_rounded,
-                                    title: '音轨',
-                                    value: '${audioTracks.length} 个可用',
+                                    title: l.infuseAudioTrack,
+                                    value: l.infuseAudioTrackCount(audioTracks.length),
                                     onTap: () {
                                       _close();
                                       showAudioTrackSelector(context);
@@ -278,6 +280,7 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
   }
 
   void _showAspectRatioPicker(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final currentMode = ref.read(aspectRatioModeProvider);
 
     showDialog<void>(
@@ -291,13 +294,13 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.aspect_ratio_rounded, color: Colors.white70, size: 20),
-                  SizedBox(width: 8),
+                  const Icon(Icons.aspect_ratio_rounded, color: Colors.white70, size: 20),
+                  const SizedBox(width: 8),
                   Text(
-                    '画面比例',
-                    style: TextStyle(
+                    l.infuseAspectRatio,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -402,7 +405,9 @@ class _SpeedSection extends StatelessWidget {
   final ValueChanged<double> onSpeedChange;
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,9 +416,9 @@ class _SpeedSection extends StatelessWidget {
               children: [
                 const Icon(Icons.speed_rounded, color: Colors.white60, size: 20),
                 const SizedBox(width: 12),
-                const Text(
-                  '播放速度',
-                  style: TextStyle(
+                Text(
+                  l.infusePlaybackSpeed,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     decoration: TextDecoration.none,
@@ -451,6 +456,7 @@ class _SpeedSection extends StatelessWidget {
           ],
         ),
       );
+  }
 }
 
 /// 快进快退秒数选择
@@ -464,7 +470,9 @@ class _SeekIntervalSection extends StatelessWidget {
   final ValueChanged<int> onIntervalChange;
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -473,9 +481,9 @@ class _SeekIntervalSection extends StatelessWidget {
               children: [
                 const Icon(Icons.fast_forward_rounded, color: Colors.white60, size: 20),
                 const SizedBox(width: 12),
-                const Text(
-                  '快进快退',
-                  style: TextStyle(
+                Text(
+                  l.infuseSeek,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     decoration: TextDecoration.none,
@@ -483,7 +491,7 @@ class _SeekIntervalSection extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '$currentInterval 秒',
+                  l.infuseSeekSeconds(currentInterval),
                   style: TextStyle(
                     color: AppColors.primary,
                     fontSize: 13,
@@ -502,7 +510,7 @@ class _SeekIntervalSection extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: _ChipButton(
-                      label: '$interval秒',
+                      label: l.infuseSeekChipSeconds(interval),
                       isSelected: isSelected,
                       onTap: () => onIntervalChange(interval),
                     ),
@@ -513,6 +521,7 @@ class _SeekIntervalSection extends StatelessWidget {
           ],
         ),
       );
+  }
 }
 
 /// 统一的选择按钮样式

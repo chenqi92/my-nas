@@ -313,10 +313,9 @@ class PlexAdapter extends MediaServerAdapter {
   }
 
   @override
-  Future<MediaItemsResult> getRecommendations({int limit = 20}) async {
-    // Plex 没有直接的推荐 API，使用最近添加
-    return getRecentlyAdded(limit: limit);
-  }
+  // Plex 没有直接的推荐 API，使用最近添加
+  Future<MediaItemsResult> getRecommendations({int limit = 20}) =>
+      getRecentlyAdded(limit: limit);
 
   @override
   Future<MediaItemsResult> getLatestMedia({

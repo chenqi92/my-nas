@@ -5,7 +5,8 @@ import 'package:my_nas/features/video/data/services/subtitle_translation/subtitl
 void main() {
   group('SubtitleParser.srt', () {
     test('解析标准 SRT', () {
-      const content = '''1
+      const content = '''
+1
 00:00:01,000 --> 00:00:03,500
 Hello world
 
@@ -26,7 +27,8 @@ line
     });
 
     test('SRT 缺少编号行也能解析', () {
-      const content = '''00:00:01,000 --> 00:00:02,000
+      const content = '''
+00:00:01,000 --> 00:00:02,000
 No index line
 ''';
       final parsed = SubtitleParser.parse(content, SubtitleFormat.srt);
@@ -35,7 +37,8 @@ No index line
     });
 
     test('SRT 时间码同时支持 . 和 , 分隔毫秒', () {
-      const content = '''1
+      const content = '''
+1
 00:00:01.000 --> 00:00:02.500
 Dot separator
 ''';
@@ -50,7 +53,8 @@ Dot separator
 
   group('SubtitleParser.vtt', () {
     test('解析标准 VTT', () {
-      const content = '''WEBVTT
+      const content = '''
+WEBVTT
 
 00:00:01.000 --> 00:00:02.500
 Subtitle one
@@ -65,7 +69,8 @@ Subtitle two
     });
 
     test('VTT 允许 cue identifier', () {
-      const content = '''WEBVTT
+      const content = '''
+WEBVTT
 
 cue-1
 00:00:01.000 --> 00:00:02.000
@@ -78,7 +83,8 @@ Has identifier
   });
 
   group('SubtitleParser.ass', () {
-    const sample = '''[Script Info]
+    const sample = r'''
+[Script Info]
 Title: Sample
 ScriptType: v4.00+
 
@@ -89,7 +95,7 @@ Style: Default,Arial,20
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 Dialogue: 0,0:00:01.00,0:00:03.50,Default,,0,0,0,,Hello, world
-Dialogue: 0,0:00:04.00,0:00:05.00,Default,,0,0,0,,{\\b1}Bold{\\b0} text, with comma
+Dialogue: 0,0:00:04.00,0:00:05.00,Default,,0,0,0,,{\b1}Bold{\b0} text, with comma
 ''';
 
     test('保留 header / Format 行', () {
@@ -106,10 +112,7 @@ Dialogue: 0,0:00:04.00,0:00:05.00,Default,,0,0,0,,{\\b1}Bold{\\b0} text, with co
       expect(parsed.cues, hasLength(2));
       final c0 = parsed.cues[0];
       expect(c0.start, equals(const Duration(seconds: 1)));
-      expect(
-        c0.end,
-        equals(const Duration(seconds: 3, milliseconds: 500)),
-      );
+      expect(c0.end, equals(const Duration(seconds: 3, milliseconds: 500)));
       expect(c0.originalText, equals('Hello, world'));
 
       final c1 = parsed.cues[1];

@@ -106,9 +106,10 @@ class CastService {
 
   /// 获取当前发现的设备列表
   List<CastDevice> getDiscoveredDevices() {
-    final devices = <CastDevice>[];
-    devices.addAll(_dlnaAdapter.getDiscoveredDevices());
-    devices.addAll(_airplayAdapter.getDiscoveredDevices());
+    final devices = <CastDevice>[
+      ..._dlnaAdapter.getDiscoveredDevices(),
+      ..._airplayAdapter.getDiscoveredDevices(),
+    ];
     return devices;
   }
 

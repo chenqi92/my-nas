@@ -6,17 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/file_browser/presentation/providers/file_browser_provider.dart';
 import 'package:my_nas/features/file_browser/presentation/widgets/file_item_widget.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/animated_list_item.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/download_manager_sheet.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -73,10 +76,20 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     final isMultiSelectMode = ref.watch(multiSelectModeProvider);
     final selectedFiles = ref.watch(selectedFilesProvider);
 
-    // 桌面下若有多个连接源，把 source 选择器从顶部水平条搬到左侧 sidebar。
+    // 桌面布局统一套标准外壳 DesktopPageScaffold，左侧「数据源」侧栏常驻。
     final isDesktop = context.isDesktopLayout;
-    final showDesktopSourceSidebar =
-        isDesktop && browsableSources.length > 1 && !isMultiSelectMode;
+    if (isDesktop) {
+      return _buildDesktopLayout(
+        fileState: fileState,
+        currentPath: currentPath,
+        isGridView: isGridView,
+        isDark: isDark,
+        browsableSources: browsableSources,
+        selectedSourceId: selectedSourceId,
+        isMultiSelectMode: isMultiSelectMode,
+        selectedFiles: selectedFiles,
+      );
+    }
 
     final mainColumn = Column(
       children: [
@@ -84,10 +97,8 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           _buildMultiSelectAppBar(context, selectedFiles, isDark)
         else
           _buildAppBar(context, currentPath, isGridView, isDark),
-        // 顶部源选择器：仅移动端 / 桌面但只有 1 个源时显示
-        if (!showDesktopSourceSidebar &&
-            browsableSources.length > 1 &&
-            !isMultiSelectMode)
+        // 顶部源选择器：移动端多源时显示
+        if (browsableSources.length > 1 && !isMultiSelectMode)
           _buildSourceSelector(browsableSources, selectedSourceId, isDark),
         if (!isMultiSelectMode) _buildBreadcrumb(currentPath, isDark),
         Expanded(
@@ -103,8 +114,75 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : null,
-      body: showDesktopSourceSidebar
-          ? Row(
+      body: mainColumn,
+      floatingActionButton: isMultiSelectMode ? null : _buildFab(isDark),
+    );
+  }
+
+  /// 桌面分支：标准 [DesktopPageScaffold] 外壳 + 常驻左侧数据源侧栏。
+  ///
+  /// body 给固定高度的卡片容器（左 200px 源侧栏 + 分隔线 + 右侧面包屑/网格），
+  /// 上传/新建等入口从移动端 FAB 改为页眉 actions 区，多选时右侧改用工具条。
+  Widget _buildDesktopLayout({
+    required FileListState fileState,
+    required String currentPath,
+    required bool isGridView,
+    required bool isDark,
+    required List<(SourceEntity, BrowsableConnection)> browsableSources,
+    required String? selectedSourceId,
+    required bool isMultiSelectMode,
+    required Set<String> selectedFiles,
+  }) {
+    final l = AppLocalizations.of(context);
+    final t = DesignTokens.of(context);
+
+    // 副标题优先显示当前源名，回落到通用描述。
+    String? selectedSourceName;
+    for (final (source, _) in browsableSources) {
+      if (source.id == selectedSourceId) {
+        selectedSourceName = source.name;
+        break;
+      }
+    }
+    final subtitle = selectedSourceName ?? l.filesAlignSubtitle;
+
+    // 右侧主体（面包屑 + 内容），原 mainColumn 内容迁移到此。
+    final rightPanel = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (isMultiSelectMode)
+          _buildMultiSelectAppBar(context, selectedFiles, isDark)
+        else
+          _buildBreadcrumb(currentPath, isDark),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () => ref.read(fileListProvider.notifier).refresh(),
+            color: AppColors.primary,
+            backgroundColor: isDark ? AppColors.darkSurface : null,
+            child: _buildContent(fileState, isGridView, isDark),
+          ),
+        ),
+      ],
+    );
+
+    // SingleChildScrollView 内需要有界高度：用视口高度减去页眉/留白的估值。
+    final bodyHeight = (context.screenHeight - 220).clamp(360.0, 1200.0);
+
+    return DesktopPageScaffold(
+      title: l.filesTitle,
+      subtitle: subtitle,
+      actions: _buildDesktopHeaderActions(isGridView, isDark, l),
+      body: SizedBox(
+        height: bodyHeight,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: t.panelBg,
+            border: Border.all(color: t.panelBorder),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
@@ -118,24 +196,70 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 VerticalDivider(
                   width: 1,
                   thickness: 1,
-                  color: isDark
-                      ? AppColors.darkOutline.withValues(alpha: 0.3)
-                      : context.colorScheme.outlineVariant,
+                  color: t.panelBorder,
                 ),
-                Expanded(child: mainColumn),
+                Expanded(child: rightPanel),
               ],
-            )
-          : mainColumn,
-      floatingActionButton: isMultiSelectMode ? null : _buildFab(isDark),
+            ),
+          ),
+        ),
+      ),
     );
   }
+
+  /// 桌面页眉右侧操作区：视图切换 / 排序 / 下载中心 / 新建 / 上传。
+  Widget _buildDesktopHeaderActions(
+    bool isGridView,
+    bool isDark,
+    AppLocalizations l,
+  ) =>
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildIconButton(
+            icon: isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
+            onTap: () {
+              ref.read(viewModeProvider.notifier).state =
+                  isGridView ? ViewMode.list : ViewMode.grid;
+            },
+            isDark: isDark,
+            tooltip: isGridView ? l.filesListView : l.filesGridView,
+          ),
+          _buildIconButton(
+            icon: Icons.swap_vert_rounded,
+            onTap: () => _showSortOptions(context, isDark),
+            isDark: isDark,
+            tooltip: l.filesSort,
+          ),
+          _buildIconButton(
+            icon: Icons.download_rounded,
+            onTap: () => showDownloadManager(context),
+            isDark: isDark,
+            tooltip: l.filesDownloadManager,
+          ),
+          _buildIconButton(
+            icon: Icons.create_new_folder_rounded,
+            onTap: () => _showCreateFolderDialog(isDark),
+            isDark: isDark,
+            tooltip: l.filesNewFolder,
+          ),
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            onPressed: _pickAndUploadFiles,
+            icon: const Icon(Icons.upload_file_rounded, size: 16),
+            label: Text(l.filesUploadFile),
+          ),
+        ],
+      );
 
   /// 桌面端左侧 source sidebar：每个已连接源一个 entry，点击切换当前源。
   Widget _buildDesktopSourceSidebar(
     List<(SourceEntity, BrowsableConnection)> browsableSources,
     String? selectedSourceId,
     bool isDark,
-  ) => ColoredBox(
+  ) {
+    final l = AppLocalizations.of(context);
+    return ColoredBox(
       color: isDark ? AppColors.darkSurface : context.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -143,7 +267,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             child: Text(
-              '连接源',
+              l.filesConnectedSources,
               style: context.textTheme.labelSmall?.copyWith(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant
@@ -246,10 +370,12 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         ],
       ),
     );
+  }
 
   Widget _buildAppBar(BuildContext context, String currentPath, bool isGridView, bool isDark) {
+    final l = AppLocalizations.of(context);
     // 确定标题文本
-    final title = widget.sourceName ?? '文件';
+    final title = widget.sourceName ?? l.filesTitle;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -275,7 +401,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   icon: Icons.arrow_back_rounded,
                   onTap: () => Navigator.of(context).pop(),
                   isDark: isDark,
-                  tooltip: '返回',
+                  tooltip: l.filesBack,
                 )
               else if (currentPath != '/')
                 // 在子目录中：返回上级目录
@@ -283,7 +409,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   icon: Icons.arrow_back_rounded,
                   onTap: () => ref.read(fileListProvider.notifier).navigateUp(),
                   isDark: isDark,
-                  tooltip: '返回上级',
+                  tooltip: l.filesBackToParent,
                 )
               else
                 const SizedBox(width: 40),
@@ -306,25 +432,25 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                       isGridView ? ViewMode.list : ViewMode.grid;
                 },
                 isDark: isDark,
-                tooltip: isGridView ? '列表视图' : '网格视图',
+                tooltip: isGridView ? l.filesListView : l.filesGridView,
               ),
               _buildIconButton(
                 icon: Icons.swap_vert_rounded,
                 onTap: () => _showSortOptions(context, isDark),
                 isDark: isDark,
-                tooltip: '排序',
+                tooltip: l.filesSort,
               ),
               _buildIconButton(
                 icon: Icons.download_rounded,
                 onTap: () => showDownloadManager(context),
                 isDark: isDark,
-                tooltip: '下载管理',
+                tooltip: l.filesDownloadManager,
               ),
               _buildIconButton(
                 icon: Icons.more_vert_rounded,
                 onTap: () => _showMoreOptions(context, isDark),
                 isDark: isDark,
-                tooltip: '更多',
+                tooltip: l.filesMore,
               ),
             ],
           ),
@@ -334,6 +460,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   Widget _buildMultiSelectAppBar(BuildContext context, Set<String> selectedFiles, bool isDark) {
+    final l = AppLocalizations.of(context);
     final fileState = ref.watch(fileListProvider);
     final allFiles = fileState is FileListLoaded ? fileState.files : <FileItem>[];
     final selectedCount = selectedFiles.length;
@@ -361,13 +488,13 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 icon: Icons.close_rounded,
                 onTap: _exitMultiSelectMode,
                 isDark: isDark,
-                tooltip: '取消',
+                tooltip: l.filesCancel,
               ),
               const SizedBox(width: 8),
               // 已选数量
               Expanded(
                 child: Text(
-                  '已选择 $selectedCount 项',
+                  l.filesSelectedCount(selectedCount),
                   style: context.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDark ? AppColors.darkOnSurface : null,
@@ -379,7 +506,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 icon: allSelected ? Icons.deselect_rounded : Icons.select_all_rounded,
                 onTap: () => _toggleSelectAll(allFiles),
                 isDark: isDark,
-                tooltip: allSelected ? '取消全选' : '全选',
+                tooltip: allSelected ? l.filesDeselectAll : l.filesSelectAll,
               ),
               // 删除按钮
               if (selectedCount > 0)
@@ -387,7 +514,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   icon: Icons.delete_rounded,
                   onTap: () => _showBatchDeleteConfirm(selectedFiles, isDark),
                   isDark: isDark,
-                  tooltip: '删除',
+                  tooltip: l.filesDelete,
                 ),
               // 更多操作
               if (selectedCount > 0)
@@ -395,7 +522,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   icon: Icons.more_vert_rounded,
                   onTap: () => _showBatchOperations(context, selectedFiles, isDark),
                   isDark: isDark,
-                  tooltip: '更多操作',
+                  tooltip: l.filesMoreActions,
                 ),
             ],
           ),
@@ -626,6 +753,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       };
 
   Widget _buildBreadcrumb(String currentPath, bool isDark) {
+    final l = AppLocalizations.of(context);
     // 构建面包屑路径列表：[(显示名称, 完整路径), ...]
     final breadcrumbs = _buildBreadcrumbPaths(currentPath);
 
@@ -642,7 +770,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         children: [
           _buildBreadcrumbItem(
             context: context,
-            label: '根目录',
+            label: l.filesRoot,
             icon: Icons.home_rounded,
             isFirst: true,
             isDark: isDark,
@@ -750,6 +878,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     );
 
   Widget _buildContent(FileListState state, bool isGridView, bool isDark) {
+    final l = AppLocalizations.of(context);
     final content = switch (state) {
       FileListLoading() => KeyedSubtree(
           key: const ValueKey('loading'),
@@ -763,12 +892,12 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           key: const ValueKey('error'),
           child: _buildErrorContent(message, hasCustomPath, failedPath, isDark),
         ),
-      FileListLoaded(:final files) when files.isEmpty => const KeyedSubtree(
-          key: ValueKey('empty'),
+      FileListLoaded(:final files) when files.isEmpty => KeyedSubtree(
+          key: const ValueKey('empty'),
           child: EmptyWidget(
             icon: Icons.folder_open_outlined,
-            title: '文件夹为空',
-            message: '此文件夹中没有文件或子文件夹',
+            title: l.filesEmptyTitle,
+            message: l.filesEmptyMessage,
           ),
         ),
       FileListLoaded(:final files) => KeyedSubtree(
@@ -780,7 +909,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     return AnimatedContentSwitcher(child: content);
   }
 
-  Widget _buildNotConnectedPrompt(bool isDark) => Center(
+  Widget _buildNotConnectedPrompt(bool isDark) {
+    final l = AppLocalizations.of(context);
+    return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -801,7 +932,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             ),
             const SizedBox(height: 24),
             Text(
-              '未连接到 NAS',
+              l.filesNotConnectedTitle,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? AppColors.darkOnSurface : null,
@@ -809,7 +940,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             ),
             const SizedBox(height: 12),
             Text(
-              '请先在设置中配置并连接到 NAS 服务器',
+              l.filesNotConnectedMessage,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -836,16 +967,16 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                     MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
                   ),
                   borderRadius: BorderRadius.circular(16),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.add_rounded, color: Colors.white),
-                        SizedBox(width: 8),
+                        const Icon(Icons.add_rounded, color: Colors.white),
+                        const SizedBox(width: 8),
                         Text(
-                          '添加连接',
-                          style: TextStyle(
+                          l.filesAddConnection,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
@@ -861,9 +992,12 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         ),
       ),
     );
+  }
 
   /// 构建错误内容，支持自定义路径失败时返回根目录
-  Widget _buildErrorContent(String message, bool hasCustomPath, String? failedPath, bool isDark) => Center(
+  Widget _buildErrorContent(String message, bool hasCustomPath, String? failedPath, bool isDark) {
+    final l = AppLocalizations.of(context);
+    return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -884,7 +1018,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             ),
             const SizedBox(height: 24),
             Text(
-              hasCustomPath ? '无法访问指定目录' : '加载失败',
+              hasCustomPath ? l.filesCannotAccessDir : l.filesLoadFailed,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? AppColors.darkOnSurface : null,
@@ -893,7 +1027,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             const SizedBox(height: 12),
             if (hasCustomPath && failedPath != null) ...[
               Text(
-                '目录 "$failedPath" 可能不存在或无权访问',
+                l.filesDirNotExistOrNoPermission(failedPath),
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                 ),
@@ -920,7 +1054,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 OutlinedButton.icon(
                   onPressed: () => ref.read(fileListProvider.notifier).refresh(),
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('重试'),
+                  label: Text(l.filesRetry),
                 ),
                 // 如果有自定义路径，显示返回根目录按钮
                 if (hasCustomPath) ...[
@@ -928,7 +1062,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   FilledButton.icon(
                     onPressed: () => ref.read(fileListProvider.notifier).loadRootDirectory(),
                     icon: const Icon(Icons.folder_rounded),
-                    label: const Text('浏览所有共享'),
+                    label: Text(l.filesBrowseAllShares),
                   ),
                 ],
               ],
@@ -937,6 +1071,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         ),
       ),
     );
+  }
 
   Widget _buildList(List<FileItem> files, bool isDark) {
     final isMultiSelectMode = ref.watch(multiSelectModeProvider);
@@ -1061,6 +1196,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showSortOptions(BuildContext context, bool isDark) {
+    final l = AppLocalizations.of(context);
     final sortMode = ref.read(sortModeProvider);
     final ascending = ref.read(sortAscendingProvider);
 
@@ -1071,14 +1207,14 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       builder: (context) => _buildBottomSheet(
         context,
         isDark,
-        title: '排序方式',
+        title: l.filesSortBy,
         children: [
           for (final mode in SortMode.values)
             _buildOptionTile(
               context,
               isDark,
               icon: _getSortModeIcon(mode),
-              title: _getSortModeName(mode),
+              title: _getSortModeName(l, mode),
               isSelected: sortMode == mode,
               onTap: () {
                 ref.read(sortModeProvider.notifier).state = mode;
@@ -1097,7 +1233,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           _buildSwitchTile(
             context,
             isDark,
-            title: '升序排列',
+            title: l.filesAscending,
             value: ascending,
             onChanged: (v) {
               ref.read(sortAscendingProvider.notifier).state = v;
@@ -1116,14 +1252,15 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         SortMode.type => Icons.category_rounded,
       };
 
-  String _getSortModeName(SortMode mode) => switch (mode) {
-        SortMode.name => '名称',
-        SortMode.size => '大小',
-        SortMode.date => '修改日期',
-        SortMode.type => '类型',
+  String _getSortModeName(AppLocalizations l, SortMode mode) => switch (mode) {
+        SortMode.name => l.filesSortByName,
+        SortMode.size => l.filesSortBySize,
+        SortMode.date => l.filesSortByDate,
+        SortMode.type => l.filesSortByType,
       };
 
   void _showMoreOptions(BuildContext context, bool isDark) {
+    final l = AppLocalizations.of(context);
     showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1131,14 +1268,14 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       builder: (context) => _buildBottomSheet(
         context,
         isDark,
-        title: '更多选项',
+        title: l.filesMoreOptions,
         children: [
           _buildActionTile(
             context,
             isDark,
             icon: Icons.refresh_rounded,
             iconColor: AppColors.info,
-            title: '刷新',
+            title: l.filesRefresh,
             onTap: () {
               Navigator.pop(context);
               ref.read(fileListProvider.notifier).refresh();
@@ -1149,7 +1286,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             isDark,
             icon: Icons.select_all_rounded,
             iconColor: AppColors.secondary,
-            title: '多选',
+            title: l.filesMultiSelect,
             onTap: () {
               Navigator.pop(context);
               _enterMultiSelectMode();
@@ -1161,6 +1298,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showCreateOptions(BuildContext context, bool isDark) {
+    final l = AppLocalizations.of(context);
     showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1168,14 +1306,14 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       builder: (context) => _buildBottomSheet(
         context,
         isDark,
-        title: '新建',
+        title: l.filesCreate,
         children: [
           _buildActionTile(
             context,
             isDark,
             icon: Icons.create_new_folder_rounded,
             iconColor: AppColors.fileFolder,
-            title: '新建文件夹',
+            title: l.filesNewFolder,
             onTap: () {
               Navigator.pop(context);
               _showCreateFolderDialog(isDark);
@@ -1186,7 +1324,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             isDark,
             icon: Icons.upload_file_rounded,
             iconColor: AppColors.primary,
-            title: '上传文件',
+            title: l.filesUploadFile,
             onTap: () {
               Navigator.pop(context);
               _pickAndUploadFiles();
@@ -1198,6 +1336,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showCreateFolderDialog(bool isDark) {
+    final l = AppLocalizations.of(context);
     final controller = TextEditingController();
 
     showDialog<void>(
@@ -1206,7 +1345,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         backgroundColor: isDark ? AppColors.darkSurface : null,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          '新建文件夹',
+          l.filesNewFolder,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
@@ -1217,7 +1356,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           autofocus: true,
           style: TextStyle(color: isDark ? AppColors.darkOnSurface : null),
           decoration: InputDecoration(
-            hintText: '文件夹名称',
+            hintText: l.filesFolderNameHint,
             hintStyle: TextStyle(
               color: isDark ? AppColors.darkOnSurfaceVariant : null,
             ),
@@ -1239,7 +1378,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '取消',
+              l.filesCancel,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : null,
               ),
@@ -1260,11 +1399,11 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   }
                 },
                 borderRadius: BorderRadius.circular(12),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: Text(
-                    '创建',
-                    style: TextStyle(
+                    l.filesCreateAction,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1279,6 +1418,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showFileOptions(BuildContext context, FileItem file, bool isDark) {
+    final l = AppLocalizations.of(context);
     showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1342,7 +1482,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               isDark,
               icon: Icons.download_rounded,
               iconColor: AppColors.primary,
-              title: '下载',
+              title: l.filesDownload,
               onTap: () {
                 Navigator.pop(context);
                 _downloadFile(file);
@@ -1353,7 +1493,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               isDark,
               icon: Icons.share_rounded,
               iconColor: AppColors.accent,
-              title: '分享',
+              title: l.filesShare,
               onTap: () {
                 Navigator.pop(context);
                 _shareFile(file);
@@ -1365,7 +1505,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             isDark,
             icon: Icons.content_copy_rounded,
             iconColor: AppColors.info,
-            title: '复制到...',
+            title: l.filesCopyTo,
             onTap: () {
               Navigator.pop(context);
               _showDestinationPicker(file, isDark, isCopy: true);
@@ -1376,7 +1516,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             isDark,
             icon: Icons.drive_file_move_rounded,
             iconColor: AppColors.accent,
-            title: '移动到...',
+            title: l.filesMoveTo,
             onTap: () {
               Navigator.pop(context);
               _showDestinationPicker(file, isDark, isCopy: false);
@@ -1387,7 +1527,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             isDark,
             icon: Icons.edit_rounded,
             iconColor: AppColors.secondary,
-            title: '重命名',
+            title: l.filesRename,
             onTap: () {
               Navigator.pop(context);
               _showRenameDialog(file, isDark);
@@ -1398,7 +1538,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             isDark,
             icon: Icons.delete_rounded,
             iconColor: AppColors.error,
-            title: '删除',
+            title: l.filesDelete,
             titleColor: AppColors.error,
             onTap: () {
               Navigator.pop(context);
@@ -1456,6 +1596,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       };
 
   void _showRenameDialog(FileItem file, bool isDark) {
+    final l = AppLocalizations.of(context);
     final controller = TextEditingController(text: file.name);
 
     showDialog<void>(
@@ -1464,7 +1605,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         backgroundColor: isDark ? AppColors.darkSurface : null,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          '重命名',
+          l.filesRename,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
@@ -1475,7 +1616,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           autofocus: true,
           style: TextStyle(color: isDark ? AppColors.darkOnSurface : null),
           decoration: InputDecoration(
-            hintText: '新名称',
+            hintText: l.filesNewNameHint,
             hintStyle: TextStyle(
               color: isDark ? AppColors.darkOnSurfaceVariant : null,
             ),
@@ -1497,7 +1638,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '取消',
+              l.filesCancel,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : null,
               ),
@@ -1518,11 +1659,11 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   }
                 },
                 borderRadius: BorderRadius.circular(12),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: Text(
-                    '确定',
-                    style: TextStyle(
+                    l.filesConfirm,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1537,20 +1678,21 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showDeleteConfirm(FileItem file, bool isDark) {
+    final l = AppLocalizations.of(context);
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? AppColors.darkSurface : null,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          '确认删除',
+          l.filesConfirmDelete,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
-          '确定要删除 "${file.name}" 吗？此操作无法撤销。',
+          l.filesDeleteConfirmMessage(file.name),
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurfaceVariant : null,
           ),
@@ -1559,7 +1701,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '取消',
+              l.filesCancel,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : null,
               ),
@@ -1580,11 +1722,11 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   Navigator.pop(context);
                 },
                 borderRadius: BorderRadius.circular(12),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: Text(
-                    '删除',
-                    style: TextStyle(
+                    l.filesDelete,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1599,6 +1741,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showBatchDeleteConfirm(Set<String> selectedFiles, bool isDark) {
+    final l = AppLocalizations.of(context);
     final count = selectedFiles.length;
 
     showDialog<void>(
@@ -1607,14 +1750,14 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         backgroundColor: isDark ? AppColors.darkSurface : null,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
-          '确认删除',
+          l.filesConfirmDelete,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
-          '确定要删除选中的 $count 个项目吗？此操作无法撤销。',
+          l.filesBatchDeleteConfirmMessage(count),
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurfaceVariant : null,
           ),
@@ -1623,7 +1766,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '取消',
+              l.filesCancel,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : null,
               ),
@@ -1644,11 +1787,11 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   await _batchDelete(selectedFiles);
                 },
                 borderRadius: BorderRadius.circular(12),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: Text(
-                    '删除',
-                    style: TextStyle(
+                    l.filesDelete,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1663,6 +1806,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   Future<void> _batchDelete(Set<String> paths) async {
+    final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final fileNotifier = ref.read(fileListProvider.notifier);
@@ -1687,14 +1831,14 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     if (failCount == 0) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('已删除 $successCount 个项目'),
+          content: Text(l.filesDeletedCount(successCount)),
           backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
         ),
       );
     } else {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('删除完成：成功 $successCount 个，失败 $failCount 个'),
+          content: Text(l.filesDeleteResult(successCount, failCount)),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -1702,6 +1846,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showBatchOperations(BuildContext context, Set<String> selectedFiles, bool isDark) {
+    final l = AppLocalizations.of(context);
     showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -1709,14 +1854,14 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       builder: (context) => _buildBottomSheet(
         context,
         isDark,
-        title: '批量操作',
+        title: l.filesBatchOperations,
         children: [
           _buildActionTile(
             context,
             isDark,
             icon: Icons.content_copy_rounded,
             iconColor: AppColors.info,
-            title: '复制到...',
+            title: l.filesCopyTo,
             onTap: () {
               Navigator.pop(context);
               _showBatchDestinationPicker(selectedFiles, isDark, isCopy: true);
@@ -1727,7 +1872,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             isDark,
             icon: Icons.drive_file_move_rounded,
             iconColor: AppColors.accent,
-            title: '移动到...',
+            title: l.filesMoveTo,
             onTap: () {
               Navigator.pop(context);
               _showBatchDestinationPicker(selectedFiles, isDark, isCopy: false);
@@ -1738,7 +1883,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             isDark,
             icon: Icons.download_rounded,
             iconColor: AppColors.primary,
-            title: '下载',
+            title: l.filesDownload,
             onTap: () {
               Navigator.pop(context);
               _batchDownload(selectedFiles);
@@ -1749,7 +1894,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             isDark,
             icon: Icons.delete_rounded,
             iconColor: AppColors.error,
-            title: '删除',
+            title: l.filesDelete,
             titleColor: AppColors.error,
             onTap: () {
               Navigator.pop(context);
@@ -1762,6 +1907,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   void _showBatchDestinationPicker(Set<String> selectedFiles, bool isDark, {required bool isCopy}) {
+    final l = AppLocalizations.of(context);
     var selectedPath = '/';
 
     showDialog<void>(
@@ -1771,7 +1917,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           backgroundColor: isDark ? AppColors.darkSurface : null,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
-            isCopy ? '复制到' : '移动到',
+            isCopy ? l.filesCopyToTitle : l.filesMoveToTitle,
             style: TextStyle(
               color: isDark ? AppColors.darkOnSurface : null,
               fontWeight: FontWeight.bold,
@@ -1790,7 +1936,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                '取消',
+                l.filesCancel,
                 style: TextStyle(
                   color: isDark ? AppColors.darkOnSurfaceVariant : null,
                 ),
@@ -1816,7 +1962,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: Text(
-                      isCopy ? '复制到此处' : '移动到此处',
+                      isCopy ? l.filesCopyHere : l.filesMoveHere,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -1833,6 +1979,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   Future<void> _batchCopy(Set<String> paths, String destPath) async {
+    final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final fileNotifier = ref.read(fileListProvider.notifier);
@@ -1857,14 +2004,14 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     if (failCount == 0) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('已复制 $successCount 个项目到 $destPath'),
+          content: Text(l.filesCopiedCount(successCount, destPath)),
           backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
         ),
       );
     } else {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('复制完成：成功 $successCount 个，失败 $failCount 个'),
+          content: Text(l.filesCopyResult(successCount, failCount)),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -1872,6 +2019,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   Future<void> _batchMove(Set<String> paths, String destPath) async {
+    final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final fileNotifier = ref.read(fileListProvider.notifier);
@@ -1896,14 +2044,14 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     if (failCount == 0) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('已移动 $successCount 个项目到 $destPath'),
+          content: Text(l.filesMovedCount(successCount, destPath)),
           backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
         ),
       );
     } else {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('移动完成：成功 $successCount 个，失败 $failCount 个'),
+          content: Text(l.filesMoveResult(successCount, failCount)),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -1914,6 +2062,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     final connection = ref.read(selectedBrowsableConnectionProvider);
     if (connection == null || connection.status != SourceStatus.connected) return;
 
+    final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final fileState = ref.read(fileListProvider);
@@ -1926,7 +2075,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     if (files.isEmpty) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: const Text('没有可下载的文件（文件夹不支持直接下载）'),
+          content: Text(l.filesNoDownloadableFiles),
           backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
         ),
       );
@@ -1955,10 +2104,10 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     if (failCount == 0) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('已添加 $successCount 个下载任务'),
+          content: Text(l.filesDownloadTasksAdded(successCount)),
           backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
           action: SnackBarAction(
-            label: '查看',
+            label: l.filesView,
             textColor: AppColors.primary,
             onPressed: () => showDownloadManager(context),
           ),
@@ -1967,7 +2116,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     } else {
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('下载任务添加完成：成功 $successCount 个，失败 $failCount 个'),
+          content: Text(l.filesDownloadTasksResult(successCount, failCount)),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -1985,6 +2134,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       return;
     }
 
+    final l = AppLocalizations.of(context);
     File? tempFile;
     final messenger = ScaffoldMessenger.of(context);
     final loadingController = messenger.showSnackBar(
@@ -1997,7 +2147,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Text('准备分享: ${file.name}')),
+            Expanded(child: Text(l.filesPreparingShare(file.name))),
           ],
         ),
         duration: const Duration(minutes: 30),
@@ -2037,13 +2187,13 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       // 用户取消分享时也属正常路径
       if (result.status == ShareResultStatus.unavailable && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('当前平台不支持系统分享')),
+          SnackBar(content: Text(l.filesShareNotSupported)),
         );
       }
     } on Exception catch (e, st) {
       loadingController.close();
       if (mounted) {
-        AppError.handleWithUI(context, e, st, '分享失败', 'shareFile');
+        AppError.handleWithUI(context, e, st, l.filesShareFailed, 'shareFile');
       } else {
         AppError.handle(e, st, 'shareFile');
       }
@@ -2068,6 +2218,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     final connection = ref.read(selectedBrowsableConnectionProvider);
     if (connection == null || connection.status != SourceStatus.connected) return;
 
+    final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     try {
@@ -2080,10 +2231,10 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('开始下载: ${file.name}'),
+          content: Text(l.filesDownloadStarted(file.name)),
           backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
           action: SnackBarAction(
-            label: '查看',
+            label: l.filesView,
             textColor: AppColors.primary,
             onPressed: () => showDownloadManager(context),
           ),
@@ -2091,11 +2242,12 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       );
     } on Exception catch (e, st) {
       if (!mounted) return;
-      AppError.handleWithUI(context, e, st, '下载失败', 'downloadFile');
+      AppError.handleWithUI(context, e, st, l.filesDownloadFailed, 'downloadFile');
     }
   }
 
   Future<void> _pickAndUploadFiles() async {
+    final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     try {
@@ -2112,7 +2264,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('正在上传: ${file.name}'),
+            content: Text(l.filesUploading(file.name)),
             backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
             duration: const Duration(seconds: 1),
           ),
@@ -2128,17 +2280,18 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('上传完成: ${result.files.length} 个文件'),
+          content: Text(l.filesUploadComplete(result.files.length)),
           backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
         ),
       );
     } on Exception catch (e, st) {
       if (!mounted) return;
-      AppError.handleWithUI(context, e, st, '上传失败', 'uploadFile');
+      AppError.handleWithUI(context, e, st, l.filesUploadFailed, 'uploadFile');
     }
   }
 
   void _showDestinationPicker(FileItem file, bool isDark, {required bool isCopy}) {
+    final l = AppLocalizations.of(context);
     var selectedPath = '/';
 
     showDialog<void>(
@@ -2148,7 +2301,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           backgroundColor: isDark ? AppColors.darkSurface : null,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
-            isCopy ? '复制到' : '移动到',
+            isCopy ? l.filesCopyToTitle : l.filesMoveToTitle,
             style: TextStyle(
               color: isDark ? AppColors.darkOnSurface : null,
               fontWeight: FontWeight.bold,
@@ -2167,7 +2320,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                '取消',
+                l.filesCancel,
                 style: TextStyle(
                   color: isDark ? AppColors.darkOnSurfaceVariant : null,
                 ),
@@ -2189,7 +2342,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                         await ref.read(fileListProvider.notifier).copyTo(file.path, selectedPath);
                         scaffoldMessenger.showSnackBar(
                           SnackBar(
-                            content: Text('已复制到 $selectedPath'),
+                            content: Text(l.filesCopiedTo(selectedPath)),
                             backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
                           ),
                         );
@@ -2197,7 +2350,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                         await ref.read(fileListProvider.notifier).moveTo(file.path, selectedPath);
                         scaffoldMessenger.showSnackBar(
                           SnackBar(
-                            content: Text('已移动到 $selectedPath'),
+                            content: Text(l.filesMovedTo(selectedPath)),
                             backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
                           ),
                         );
@@ -2206,7 +2359,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                       AppError.handle(e, st, isCopy ? 'copyFile' : 'moveFile');
                       scaffoldMessenger.showSnackBar(
                         SnackBar(
-                          content: Text('操作失败: ${AppError.getUserFriendlyMessage(e)}'),
+                          content: Text(l.filesOperationFailed(AppError.getUserFriendlyMessage(e))),
                           backgroundColor: AppColors.error,
                         ),
                       );
@@ -2216,7 +2369,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     child: Text(
-                      isCopy ? '复制到此处' : '移动到此处',
+                      isCopy ? l.filesCopyHere : l.filesMoveHere,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -2489,10 +2642,11 @@ class _DestinationBrowserState extends ConsumerState<_DestinationBrowser> {
     });
 
     try {
+      final l = AppLocalizations.of(context);
       final connection = ref.read(selectedBrowsableConnectionProvider);
       if (connection == null || connection.status != SourceStatus.connected) {
         setState(() {
-          _error = '未连接';
+          _error = l.filesNotConnected;
           _isLoading = false;
         });
         return;
@@ -2529,7 +2683,9 @@ class _DestinationBrowserState extends ConsumerState<_DestinationBrowser> {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 当前路径和返回按钮
@@ -2553,7 +2709,7 @@ class _DestinationBrowserState extends ConsumerState<_DestinationBrowser> {
                 ),
               Expanded(
                 child: Text(
-                  _currentPath == '/' ? '根目录' : _currentPath,
+                  _currentPath == '/' ? l.filesRoot : _currentPath,
                   style: TextStyle(
                     color: widget.isDark ? AppColors.darkOnSurface : null,
                     fontWeight: FontWeight.w500,
@@ -2581,7 +2737,7 @@ class _DestinationBrowserState extends ConsumerState<_DestinationBrowser> {
                   : _directories == null || _directories!.isEmpty
                       ? Center(
                           child: Text(
-                            '没有子文件夹',
+                            l.filesNoSubfolders,
                             style: TextStyle(
                               color: widget.isDark ? AppColors.darkOnSurfaceVariant : null,
                             ),
@@ -2622,4 +2778,5 @@ class _DestinationBrowserState extends ConsumerState<_DestinationBrowser> {
         ),
       ],
     );
+  }
 }

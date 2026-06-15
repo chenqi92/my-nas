@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 
 /// PT 种子卡片
 class PTTorrentCard extends StatelessWidget {
@@ -18,6 +19,7 @@ class PTTorrentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l = AppLocalizations.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Card(
@@ -99,7 +101,7 @@ class PTTorrentCard extends StatelessWidget {
                   Expanded(
                     child: _buildInfoChip(
                       Icons.access_time,
-                      _formatTime(torrent.uploadTime),
+                      _formatTime(l, torrent.uploadTime),
                       isDark,
                     ),
                   ),
@@ -137,7 +139,7 @@ class PTTorrentCard extends StatelessWidget {
                     onPressed: onDownload,
                     icon: const Icon(Icons.download_rounded),
                     color: theme.colorScheme.primary,
-                    tooltip: '下载',
+                    tooltip: l.ptCardDownload,
                     style: IconButton.styleFrom(
                       backgroundColor: theme.colorScheme.primaryContainer,
                     ),
@@ -254,18 +256,18 @@ class PTTorrentCard extends StatelessWidget {
       ],
     );
 
-  String _formatTime(DateTime dateTime) {
+  String _formatTime(AppLocalizations l, DateTime dateTime) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
     if (diff.inMinutes < 60) {
-      return '${diff.inMinutes}分钟前';
+      return l.ptCardMinutesAgo(diff.inMinutes);
     } else if (diff.inHours < 24) {
-      return '${diff.inHours}小时前';
+      return l.ptCardHoursAgo(diff.inHours);
     } else if (diff.inDays < 30) {
-      return '${diff.inDays}天前';
+      return l.ptCardDaysAgo(diff.inDays);
     } else {
-      return '${dateTime.month}月${dateTime.day}日';
+      return l.ptCardMonthDay(dateTime.month, dateTime.day);
     }
   }
 }

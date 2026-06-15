@@ -249,10 +249,8 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
   int get currentSubtitleTrackIndex => _currentSubtitleTrackIndex;
 
   @override
-  Future<bool> get isPipSupported async {
-    // iOS 9+ 和 macOS 12+ 支持画中画
-    return Platform.isIOS || Platform.isMacOS;
-  }
+  // iOS 9+ 和 macOS 12+ 支持画中画
+  Future<bool> get isPipSupported async => Platform.isIOS || Platform.isMacOS;
 
   @override
   Future<bool> enterPictureInPicture() async => _channel.enterPiP(_playerId);

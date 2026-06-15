@@ -403,8 +403,9 @@ class ClientTranscodingService implements NasTranscodingService {
       if (task.inputPath.startsWith('http://') || task.inputPath.startsWith('https://')) {
         final isAccessible = await _checkUrlAccessible(task.inputPath);
         if (!isAccessible) {
-          task.isRunning = false;
-          task.error = '无法访问输入 URL';
+          task
+            ..isRunning = false
+            ..error = '无法访问输入 URL';
           return;
         }
       }
@@ -428,8 +429,9 @@ class ClientTranscodingService implements NasTranscodingService {
         await _runDesktopTranscoding(task, args, waitForComplete: waitForComplete);
       }
     } catch (e, st) {
-      task.isRunning = false;
-      task.error = e.toString();
+      task
+        ..isRunning = false
+        ..error = e.toString();
       AppError.handle(e, st, 'clientStartTranscoding');
     }
   }
@@ -439,8 +441,9 @@ class ClientTranscodingService implements NasTranscodingService {
     final mediaCodec = AndroidMediaCodecTranscoding.instance;
 
     if (!mediaCodec.isAvailable) {
-      task.isRunning = false;
-      task.error = 'MediaCodec 不可用';
+      task
+        ..isRunning = false
+        ..error = 'MediaCodec 不可用';
       return;
     }
 
@@ -452,15 +455,17 @@ class ClientTranscodingService implements NasTranscodingService {
       );
 
       if (session == null) {
-        task.isRunning = false;
-        task.error = '无法启动 MediaCodec 转码';
+        task
+          ..isRunning = false
+          ..error = '无法启动 MediaCodec 转码';
         return;
       }
 
       // 监听进度
       session.progressStream.listen((progress) {
-        task.progress = progress.progress;
-        task.speed = progress.speed;
+        task
+          ..progress = progress.progress
+          ..speed = progress.speed;
 
         if (progress.status == TranscodeStatus.transcoding) {
           // 每隔一段时间输出日志
@@ -492,8 +497,9 @@ class ClientTranscodingService implements NasTranscodingService {
           logger.e('ClientTranscoding: MediaCodec 转码失败: $message');
       }
     } catch (e, st) {
-      task.isRunning = false;
-      task.error = e.toString();
+      task
+        ..isRunning = false
+        ..error = e.toString();
       AppError.handle(e, st, 'mediacodecTranscoding');
     }
   }
@@ -501,8 +507,8 @@ class ClientTranscodingService implements NasTranscodingService {
   /// 检查 URL 是否可访问
   Future<bool> _checkUrlAccessible(String url) async {
     try {
-      final client = HttpClient();
-      client.connectionTimeout = const Duration(seconds: 5);
+      final client = HttpClient()
+        ..connectionTimeout = const Duration(seconds: 5);
 
       final request = await client.headUrl(Uri.parse(url));
       final response = await request.close();
@@ -545,8 +551,9 @@ class ClientTranscodingService implements NasTranscodingService {
           final returnCode = await session.getReturnCode();
 
           if (ReturnCode.isSuccess(returnCode)) {
-            task.isRunning = false;
-            task.isCompleted = true;
+            task
+              ..isRunning = false
+              ..isCompleted = true;
             logger.i('ClientTranscoding: 后台转码完成 ${task.outputPath}');
           } else if (ReturnCode.isCancel(returnCode)) {
             task.isRunning = false;
@@ -562,8 +569,9 @@ class ClientTranscodingService implements NasTranscodingService {
                 : logs ?? '';
             hasError = true;
             task.error = '转码失败';
-            logger.e('ClientTranscoding: 转码失败 returnCode=$returnCode');
-            logger.e('ClientTranscoding: FFmpeg 输出:\n$errorSnippet');
+            logger
+              ..e('ClientTranscoding: 转码失败 returnCode=$returnCode')
+              ..e('ClientTranscoding: FFmpeg 输出:\n$errorSnippet');
 
             // 检测是否是编码器相关错误，标记硬件编码失败以便回退
             if (_isEncoderError(logs ?? '')) {
@@ -633,8 +641,9 @@ class ClientTranscodingService implements NasTranscodingService {
         if (timeSinceLastLog > readTimeout) {
           logger.e('ClientTranscoding: FFmpeg 超时，${readTimeout.inSeconds}秒无输出');
           hasError = true;
-          task.cancel();
-          task.error = '转码超时：输入源无响应';
+          task
+            ..cancel()
+            ..error = '转码超时：输入源无响应';
           timer.cancel();
           if (!readyCompleter.isCompleted) {
             readyCompleter.complete();
@@ -672,9 +681,10 @@ class ClientTranscodingService implements NasTranscodingService {
       } else if (!readyCompleter.isCompleted) {
         // 等待超时且没有错误
         hasError = true;
-        task.isRunning = false;
-        task.error = '等待转码输出超时';
-        task.cancel();
+        task
+          ..isRunning = false
+          ..error = '等待转码输出超时'
+          ..cancel();
         logger.e('ClientTranscoding: 等待转码输出超时');
       }
 
@@ -683,8 +693,9 @@ class ClientTranscodingService implements NasTranscodingService {
         readyCompleter.complete();
       }
     } catch (e, st) {
-      task.isRunning = false;
-      task.error = e.toString();
+      task
+        ..isRunning = false
+        ..error = e.toString();
       AppError.handle(e, st, 'mobileTranscoding');
       if (!readyCompleter.isCompleted) {
         readyCompleter.complete();
@@ -701,8 +712,9 @@ class ClientTranscodingService implements NasTranscodingService {
     bool waitForComplete = false,
   }) async {
     if (_ffmpegPath == null) {
-      task.isRunning = false;
-      task.error = 'FFmpeg 不可用';
+      task
+        ..isRunning = false
+        ..error = 'FFmpeg 不可用';
       return;
     }
 
@@ -787,16 +799,19 @@ class ClientTranscodingService implements NasTranscodingService {
           );
         } else {
           // 等待超时，检查当前状态
-          task.isRunning = false;
-          task.error = '等待转码输出超时';
-          logger.e('ClientTranscoding: 等待转码输出超时');
-          logger.e('ClientTranscoding: FFmpeg 输出:\n${stderrBuffer.toString().length > 1000 ? stderrBuffer.toString().substring(stderrBuffer.toString().length - 1000) : stderrBuffer.toString()}');
+          task
+            ..isRunning = false
+            ..error = '等待转码输出超时';
+          logger
+            ..e('ClientTranscoding: 等待转码输出超时')
+            ..e('ClientTranscoding: FFmpeg 输出:\n${stderrBuffer.toString().length > 1000 ? stderrBuffer.toString().substring(stderrBuffer.toString().length - 1000) : stderrBuffer.toString()}');
           process.kill();
         }
       }
     } catch (e, st) {
-      task.isRunning = false;
-      task.error = e.toString();
+      task
+        ..isRunning = false
+        ..error = e.toString();
       AppError.handle(e, st, 'desktopTranscoding');
     }
   }
@@ -804,8 +819,9 @@ class ClientTranscodingService implements NasTranscodingService {
   /// 处理 FFmpeg 退出码
   void _handleExitCode(_TranscodingTask task, int exitCode, StringBuffer stderrBuffer) {
     if (exitCode == 0) {
-      task.isRunning = false;
-      task.isCompleted = true;
+      task
+        ..isRunning = false
+        ..isCompleted = true;
       logger.i('ClientTranscoding: 转码完成 ${task.outputPath}');
     } else {
       task.isRunning = false;
@@ -815,8 +831,9 @@ class ClientTranscodingService implements NasTranscodingService {
           ? stderrOutput.substring(stderrOutput.length - 500)
           : stderrOutput;
       task.error = '转码失败，退出码: $exitCode';
-      logger.e('ClientTranscoding: 转码失败 $exitCode');
-      logger.e('ClientTranscoding: FFmpeg 错误输出:\n$errorSnippet');
+      logger
+        ..e('ClientTranscoding: 转码失败 $exitCode')
+        ..e('ClientTranscoding: FFmpeg 错误输出:\n$errorSnippet');
     }
   }
 
@@ -831,12 +848,13 @@ class ClientTranscodingService implements NasTranscodingService {
     if (Platform.isMacOS || Platform.isIOS) {
       // Apple 平台：VideoToolbox 硬件编码
       // macOS 使用打包的 FFmpeg，iOS 使用 FFmpegKit，都支持 VideoToolbox
-      args.addAll(['-c:v', 'h264_videotoolbox']);
-      args.addAll(['-profile:v', 'high']);
-      args.addAll(['-level', '4.1']); // Level 4.1 支持 1080p
-      // VideoToolbox 特定优化
-      args.addAll(['-realtime', '1']); // 实时编码模式
-      args.addAll(['-allow_sw', '1']); // 允许软件回退
+      args
+        ..addAll(['-c:v', 'h264_videotoolbox'])
+        ..addAll(['-profile:v', 'high'])
+        ..addAll(['-level', '4.1']) // Level 4.1 支持 1080p
+        // VideoToolbox 特定优化
+        ..addAll(['-realtime', '1']) // 实时编码模式
+        ..addAll(['-allow_sw', '1']); // 允许软件回退
       logger.d('ClientTranscoding: 使用 VideoToolbox 硬件编码');
     } else if (Platform.isAndroid) {
       // Android：MediaCodec 硬件编码
@@ -872,9 +890,10 @@ class ClientTranscodingService implements NasTranscodingService {
 
   /// 添加软件编码器参数
   void _addSoftwareEncoderArgs(List<String> args) {
-    args.addAll(['-c:v', 'libx264']);
-    args.addAll(['-preset', 'ultrafast']); // 最快速度
-    args.addAll(['-tune', 'zerolatency']); // 低延迟
+    args
+      ..addAll(['-c:v', 'libx264'])
+      ..addAll(['-preset', 'ultrafast']) // 最快速度
+      ..addAll(['-tune', 'zerolatency']); // 低延迟
     logger.d('ClientTranscoding: 使用 libx264 软件编码');
   }
 
@@ -882,17 +901,20 @@ class ClientTranscodingService implements NasTranscodingService {
   void _addHwEncoderOptions(List<String> args, String encoder) {
     if (encoder.contains('nvenc')) {
       // NVIDIA NVENC 选项
-      args.addAll(['-preset', 'p1']); // 最快预设
-      args.addAll(['-tune', 'll']); // 低延迟
-      args.addAll(['-rc', 'vbr']); // 可变码率
+      args
+        ..addAll(['-preset', 'p1']) // 最快预设
+        ..addAll(['-tune', 'll']) // 低延迟
+        ..addAll(['-rc', 'vbr']); // 可变码率
     } else if (encoder.contains('qsv')) {
       // Intel Quick Sync 选项
-      args.addAll(['-preset', 'veryfast']);
-      args.addAll(['-look_ahead', '0']); // 禁用前瞻减少延迟
+      args
+        ..addAll(['-preset', 'veryfast'])
+        ..addAll(['-look_ahead', '0']); // 禁用前瞻减少延迟
     } else if (encoder.contains('amf')) {
       // AMD AMF 选项
-      args.addAll(['-quality', 'speed']);
-      args.addAll(['-rc', 'vbr_latency']);
+      args
+        ..addAll(['-quality', 'speed'])
+        ..addAll(['-rc', 'vbr_latency']);
     } else if (encoder.contains('vaapi')) {
       // VAAPI 选项
       args.addAll(['-vaapi_device', '/dev/dri/renderD128']);
@@ -1025,8 +1047,9 @@ class ClientTranscodingService implements NasTranscodingService {
     }
 
     // 音频编码
-    args.addAll(['-c:a', 'aac']); // AAC 编码
-    args.addAll(['-b:a', '128k']); // 128kbps 音频
+    args
+      ..addAll(['-c:a', 'aac']) // AAC 编码
+      ..addAll(['-b:a', '128k']); // 128kbps 音频
 
     // 选择音轨
     if (task.audioStreamIndex != null) {
@@ -1043,10 +1066,10 @@ class ClientTranscodingService implements NasTranscodingService {
 
     // 输出格式 - 使用 MKV 格式支持流式播放（边转边播）
     // MKV 格式可以在转码过程中被播放，且 MPV 能正确处理增长中的文件
-    args.addAll(['-f', 'matroska']);
-
-    // 输出文件
-    args.add(task.outputPath);
+    args
+      ..addAll(['-f', 'matroska'])
+      // 输出文件
+      ..add(task.outputPath);
 
     return args;
   }

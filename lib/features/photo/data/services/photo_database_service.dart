@@ -522,6 +522,60 @@ class PhotoDatabaseService {
     return (duplicateGroups: groupCount, totalDuplicatePhotos: totalPhotos);
   }
 
+  /// 仅按文件名获取重复照片（忽略大小，跨数据源/跨文件夹聚合同名照片）
+  /// 返回 `Map<fileName, List<PhotoEntity>>`，key = 文件名
+  Future<Map<String, List<PhotoEntity>>> getDuplicatesByFileName() async {
+    if (!_initialized) await init();
+
+    // 找出文件名相同（count>1）的分组
+    final duplicateNames = await _db!.rawQuery('''
+      SELECT $_colFileName, COUNT(*) as cnt
+      FROM $_tablePhotos
+      GROUP BY $_colFileName
+      HAVING cnt > 1
+      ORDER BY cnt DESC
+    ''');
+
+    if (duplicateNames.isEmpty) return {};
+
+    final result = <String, List<PhotoEntity>>{};
+    for (final row in duplicateNames) {
+      final fileName = row[_colFileName]! as String;
+
+      final photos = await _db!.query(
+        _tablePhotos,
+        where: '$_colFileName = ?',
+        whereArgs: [fileName],
+        orderBy: '$_colModifiedTime DESC',
+      );
+      result[fileName] = photos.map(_fromRow).toList();
+    }
+
+    return result;
+  }
+
+  /// 获取基于文件名的重复统计
+  Future<({int duplicateGroups, int totalDuplicatePhotos})> getNameDuplicateStats() async {
+    if (!_initialized) await init();
+
+    final groupCount = Sqflite.firstIntValue(await _db!.rawQuery('''
+      SELECT COUNT(*) FROM (
+        SELECT $_colFileName FROM $_tablePhotos
+        GROUP BY $_colFileName HAVING COUNT(*) > 1
+      )
+    ''')) ?? 0;
+
+    final totalPhotos = Sqflite.firstIntValue(await _db!.rawQuery('''
+      SELECT COUNT(*) FROM $_tablePhotos
+      WHERE $_colFileName IN (
+        SELECT $_colFileName FROM $_tablePhotos
+        GROUP BY $_colFileName HAVING COUNT(*) > 1
+      )
+    ''')) ?? 0;
+
+    return (duplicateGroups: groupCount, totalDuplicatePhotos: totalPhotos);
+  }
+
   /// 获取统计信息
   Future<Map<String, dynamic>> getStats() async {
     if (!_initialized) await init();

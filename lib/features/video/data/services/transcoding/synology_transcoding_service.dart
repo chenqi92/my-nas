@@ -247,11 +247,15 @@ class SynologyTranscodingService implements NasTranscodingService {
 
       final data = response.data;
       if (data?['success'] == true) {
-        final movies = (data?['data']?['movies'] as List<dynamic>?) ?? [];
+        final dataMap = data?['data'] as Map<String, dynamic>?;
+        final movies = (dataMap?['movies'] as List<dynamic>?) ?? [];
         for (final movie in movies) {
-          final filePath = movie['additional']?['file']?['path'] as String?;
+          final movieMap = movie as Map<String, dynamic>;
+          final additional = movieMap['additional'] as Map<String, dynamic>?;
+          final file = additional?['file'] as Map<String, dynamic>?;
+          final filePath = file?['path'] as String?;
           if (filePath == path) {
-            return movie['id'] as int?;
+            return movieMap['id'] as int?;
           }
         }
       }
@@ -298,7 +302,8 @@ class SynologyTranscodingService implements NasTranscodingService {
 
       final data = response.data;
       if (data?['success'] == true) {
-        return data?['data']?['stream_id'] as String?;
+        final dataMap = data?['data'] as Map<String, dynamic>?;
+        return dataMap?['stream_id'] as String?;
       }
 
       return null;
@@ -330,18 +335,16 @@ class SynologyTranscodingService implements NasTranscodingService {
   }
 
   /// 获取转码格式字符串
-  String _getTranscodeFormat(VideoQuality quality) {
-    // Synology Video Station 使用 format 参数指定转码质量
-    // high, medium, low, mobile, raw
-    return switch (quality) {
-      VideoQuality.original => 'raw',
-      VideoQuality.quality4K => 'high',
-      VideoQuality.quality1080p => 'high',
-      VideoQuality.quality720p => 'medium',
-      VideoQuality.quality480p => 'low',
-      VideoQuality.quality360p => 'mobile',
-    };
-  }
+  // Synology Video Station 使用 format 参数指定转码质量
+  // high, medium, low, mobile, raw
+  String _getTranscodeFormat(VideoQuality quality) => switch (quality) {
+        VideoQuality.original => 'raw',
+        VideoQuality.quality4K => 'high',
+        VideoQuality.quality1080p => 'high',
+        VideoQuality.quality720p => 'medium',
+        VideoQuality.quality480p => 'low',
+        VideoQuality.quality360p => 'mobile',
+      };
 }
 
 /// Synology 会话内部类
