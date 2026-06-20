@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
+import 'package:enough_convert/enough_convert.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/xmltv_parser.dart';
@@ -15,8 +16,8 @@ import 'package:my_nas/features/video/data/services/xmltv_parser.dart';
 final liveEpgProvider = FutureProvider.autoDispose
     .family<Map<String, List<EpgProgramme>>, String>((ref, epgUrl) async {
   if (epgUrl.isEmpty) return const {};
+  final dio = Dio();
   try {
-    final dio = Dio();
     final resp = await dio.get<List<int>>(
       epgUrl,
       options: Options(
@@ -31,12 +32,35 @@ final liveEpgProvider = FutureProvider.autoDispose
     if (isGzip) {
       bytes = GZipDecoder().decodeBytes(bytes);
     }
-    final xmlString = utf8.decode(bytes, allowMalformed: true);
+    final xmlString = _decodeXmlBytes(bytes);
     final map = XmltvParser.parse(xmlString);
     ref.keepAlive();
     return map;
   } on Object catch (e, st) {
     logger.e('EPG: 拉取/解析失败 $epgUrl', e, st);
     return const {};
+  } finally {
+    dio.close();
   }
 });
+
+/// 解码 XMLTV 字节：优先严格 UTF-8，失败时回退 GBK / Big5（中文 IPTV
+/// EPG 源常见编码），最后才宽松 UTF-8 兜底，避免把整篇内容变成乱码。
+String _decodeXmlBytes(List<int> bytes) {
+  try {
+    return utf8.decode(bytes);
+  } on FormatException {
+    // 非合法 UTF-8，尝试其它中文编码
+  }
+  try {
+    return const GbkCodec(allowInvalid: false).decode(bytes);
+  } on Object {
+    // 非 GBK
+  }
+  try {
+    return const Big5Codec(allowInvalid: false).decode(bytes);
+  } on Object {
+    // 非 Big5
+  }
+  return utf8.decode(bytes, allowMalformed: true);
+}

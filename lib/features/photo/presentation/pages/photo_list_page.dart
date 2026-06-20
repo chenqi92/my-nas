@@ -543,6 +543,9 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
   final PhotoDatabaseService _db = PhotoDatabaseService();
   Timer? _debounceTimer;
 
+  /// 最近一次搜索词，用于丢弃乱序返回的旧搜索结果
+  String? _lastSearchQuery;
+
   /// 延迟刷新，避免频繁触发
   void _scheduleRefresh() {
     _debounceTimer?.cancel();
@@ -632,10 +635,10 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
     final allPhotos = results[1] as List<PhotoEntity>;
     final dateGroups = results[2] as List<({DateTime date, int count})>;
 
-    // 构建快速查找 Map
+    // 构建快速查找 Map（键格式需与查找处 `${sourceId}:${path}` 保持一致）
     final photoByPath = <String, PhotoEntity>{};
     for (final p in allPhotos) {
-      photoByPath[p.uniqueKey] = p;
+      photoByPath['${p.sourceId}:${p.filePath}'] = p;
     }
 
     // 预构建路径到索引的 Map，避免惰性构建的首次访问开销
@@ -1134,23 +1137,25 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
 
   void setSearchQuery(String query) {
     final current = state;
-    if (current is PhotoListLoaded) {
-      if (query.isEmpty) {
-        state = current.copyWith(searchQuery: '', searchResults: []);
-      } else {
-        // 使用 SQLite 搜索
-        _db.search(query).then((results) {
-          if (state is PhotoListLoaded) {
-            state = (state as PhotoListLoaded).copyWith(
-              searchQuery: query,
-              searchResults: results,
-            );
-          }
-        });
-        // 先更新搜索词，结果异步返回
-        state = current.copyWith(searchQuery: query);
-      }
+    if (current is! PhotoListLoaded) return;
+    if (query.isEmpty) {
+      _lastSearchQuery = '';
+      state = current.copyWith(searchQuery: '', searchResults: []);
+      return;
     }
+    // 记录当前搜索词；先更新搜索词，结果异步返回
+    _lastSearchQuery = query;
+    state = current.copyWith(searchQuery: query);
+    // 使用 SQLite 搜索
+    _db.search(query).then((results) {
+      // 仅当结果仍对应最新搜索词时才应用，避免乱序覆盖
+      final s = state;
+      if (s is PhotoListLoaded && _lastSearchQuery == query) {
+        state = s.copyWith(searchQuery: query, searchResults: results);
+      }
+    }).catchError((Object e, StackTrace st) {
+      logger.e('PhotoList: 搜索失败 "$query"', e, st);
+    });
   }
 
   void setSortType(PhotoSortType sortType) {

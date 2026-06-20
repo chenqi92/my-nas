@@ -15,7 +15,10 @@ import 'package:my_nas/shared/widgets/stream_image.dart';
 
 /// 人物分组页面
 class PhotoPeoplePage extends ConsumerStatefulWidget {
-  const PhotoPeoplePage({super.key});
+  const PhotoPeoplePage({super.key, this.initialPerson});
+
+  /// 若指定，进入页面后自动打开该人物的照片（用于桌面端人物头像直达）。
+  final PersonEntity? initialPerson;
 
   @override
   ConsumerState<PhotoPeoplePage> createState() => _PhotoPeoplePageState();
@@ -43,6 +46,13 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
     super.initState();
     hideTabBar();
     _loadData();
+    // 桌面端从人物头像直达：进入后自动打开该人物的照片
+    final initial = widget.initialPerson;
+    if (initial != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showPersonPhotos(initial);
+      });
+    }
   }
 
   @override

@@ -183,7 +183,7 @@ class _DesktopLyricWindowState extends State<DesktopLyricWindow> {
     if (_dragStartPosition == null || _windowStartPosition == null) return;
 
     // 计算最终位置
-    final delta = details.localPosition - _dragStartPosition!;
+    final delta = details.globalPosition - _dragStartPosition!;
     final finalPosition = _windowStartPosition! + delta;
 
     // 更新本地缓存的位置

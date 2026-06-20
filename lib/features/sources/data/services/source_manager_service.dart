@@ -422,39 +422,41 @@ class SourceManagerService {
     try {
       final result = await adapter.connect(config);
 
-      final connection = switch (result) {
-        ConnectionSuccess(:final deviceId) => () {
-            // 总是保存凭证（包括新的 deviceId）
-            if (saveCredential) {
-              // 如果连接返回了新的 deviceId，使用新的；否则保留旧的
-              final newDeviceId = deviceId ?? savedCredential?.deviceId;
-              this.saveCredential(
-                source.id,
-                SourceCredential(password: password, deviceId: newDeviceId),
-              );
-            }
-
-            // 更新最后连接时间
-            updateSource(source.copyWith(lastConnected: DateTime.now()));
-
-            return SourceConnection(
-              source: source,
-              adapter: adapter,
-              status: SourceStatus.connected,
+      final SourceConnection connection;
+      switch (result) {
+        case ConnectionSuccess(:final deviceId):
+          // 总是保存凭证（包括新的 deviceId）
+          if (saveCredential) {
+            // 如果连接返回了新的 deviceId，使用新的；否则保留旧的
+            final newDeviceId = deviceId ?? savedCredential?.deviceId;
+            await this.saveCredential(
+              source.id,
+              SourceCredential(password: password, deviceId: newDeviceId),
             );
-          }(),
-        ConnectionFailure(:final error) => SourceConnection(
+          }
+
+          // 更新最后连接时间
+          await updateSource(source.copyWith(lastConnected: DateTime.now()));
+
+          connection = SourceConnection(
+            source: source,
+            adapter: adapter,
+            status: SourceStatus.connected,
+          );
+        case ConnectionFailure(:final error):
+          connection = SourceConnection(
             source: source,
             adapter: adapter,
             status: SourceStatus.error,
             errorMessage: error,
-          ),
-        ConnectionRequires2FA() => SourceConnection(
+          );
+        case ConnectionRequires2FA():
+          connection = SourceConnection(
             source: source,
             adapter: adapter,
             status: SourceStatus.requires2FA,
-          ),
-      };
+          );
+      }
 
       _connections[source.id] = connection;
       return connection;
@@ -639,24 +641,11 @@ class SourceManagerService {
       final result = await adapter.connect(config);
 
       final connection = result.when(
-        success: (_) {
-          // 保存凭证
-          if (saveCredential && password != null) {
-            this.saveCredential(
-              source.id,
-              SourceCredential(password: password),
-            );
-          }
-
-          // 更新最后连接时间
-          updateSource(source.copyWith(lastConnected: DateTime.now()));
-
-          return MediaServerConnection(
-            source: source,
-            adapter: adapter,
-            status: SourceStatus.connected,
-          );
-        },
+        success: (_) => MediaServerConnection(
+          source: source,
+          adapter: adapter,
+          status: SourceStatus.connected,
+        ),
         failure: (error) => MediaServerConnection(
           source: source,
           adapter: adapter,
@@ -664,6 +653,18 @@ class SourceManagerService {
           errorMessage: error,
         ),
       );
+
+      if (connection.status == SourceStatus.connected) {
+        // 保存凭证
+        if (saveCredential && password != null) {
+          await this.saveCredential(
+            source.id,
+            SourceCredential(password: password),
+          );
+        }
+        // 更新最后连接时间
+        await updateSource(source.copyWith(lastConnected: DateTime.now()));
+      }
 
       _mediaServerConnections[source.id] = connection;
       return connection;

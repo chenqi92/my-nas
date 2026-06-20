@@ -348,7 +348,7 @@ class MusicScrapeService {
       final hasTitle = track.title != null && track.title!.isNotEmpty;
       final hasArtist = track.artist != null && track.artist!.isNotEmpty;
       final hasAlbum = track.album != null && track.album!.isNotEmpty;
-      final hasYear = track.year != null;
+      final hasYear = track.year != null && track.year! > 0;
       final hasGenre = track.genre != null && track.genre!.isNotEmpty;
 
       // 缺封面时先尝试 NAS sidecar 文件（<basename>-cover.jpg 等）

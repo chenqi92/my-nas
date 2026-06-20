@@ -228,37 +228,37 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
         deviceName: shouldRememberDevice ? authStorage.deviceName : null,
       );
 
-      state = switch (result) {
-        ConnectionSuccess(:final serverInfo, :final deviceId) => () {
-            _ref.read(activeAdapterProvider.notifier).state = adapter;
+      switch (result) {
+        case ConnectionSuccess(:final serverInfo, :final deviceId):
+          _ref.read(activeAdapterProvider.notifier).state = adapter;
 
-            // 保存设备ID（二次验证成功后）
-            if (shouldRememberDevice &&
-                deviceId != null &&
-                _currentConnectionId != null) {
-              authStorage..saveDeviceId(_currentConnectionId!, deviceId)
-              ..setRememberDevice(value: true);
-            }
+          // 保存设备ID（二次验证成功后）
+          if (shouldRememberDevice &&
+              deviceId != null &&
+              _currentConnectionId != null) {
+            await authStorage.saveDeviceId(_currentConnectionId!, deviceId);
+            await authStorage.setRememberDevice(value: true);
+          }
 
-            // 如果记住登录，也需要在 2FA 成功后保存凭证
-            if (_rememberLogin && adapter.connection != null) {
-              authStorage..saveCredentials(
-                connectionId: _currentConnectionId!,
-                username: adapter.connection!.username,
-                password: adapter.connection!.password,
-              )
-              ..setRememberLogin(value: true);
-            }
-
-            return ConnectionConnected(
-              adapter: adapter,
-              serverInfo: serverInfo,
+          // 如果记住登录，也需要在 2FA 成功后保存凭证
+          if (_rememberLogin && adapter.connection != null) {
+            await authStorage.saveCredentials(
+              connectionId: _currentConnectionId!,
+              username: adapter.connection!.username,
+              password: adapter.connection!.password,
             );
-          }(),
-        ConnectionFailure(:final error) => ConnectionError(message: error),
-        ConnectionRequires2FA() =>
-          const ConnectionError(message: '二次验证失败'),
-      };
+            await authStorage.setRememberLogin(value: true);
+          }
+
+          state = ConnectionConnected(
+            adapter: adapter,
+            serverInfo: serverInfo,
+          );
+        case ConnectionFailure(:final error):
+          state = ConnectionError(message: error);
+        case ConnectionRequires2FA():
+          state = const ConnectionError(message: '二次验证失败');
+      }
     }
   }
 

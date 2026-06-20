@@ -218,11 +218,16 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
 
     // 如果没有指定 sourceId 或连接不可用，使用第一个已连接的源
     if (connection == null || connection.status != SourceStatus.connected) {
-      final connectedEntry = connections.entries.firstWhere(
-        (e) => e.value.status == SourceStatus.connected,
-        orElse: () => throw Exception('No connected source'),
-      );
-      connection = connectedEntry.value;
+      SourceConnection? connectedEntry;
+      for (final c in connections.values) {
+        if (c.status == SourceStatus.connected) {
+          connectedEntry = c;
+          break;
+        }
+      }
+      // 没有任何已连接的源时静默返回，避免抛出未捕获异常
+      if (connectedEntry == null) return;
+      connection = connectedEntry;
     }
 
     final adapter = connection.adapter;
@@ -258,11 +263,13 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
         if (!mounted) return;
         try {
           final currentSubtitle = ref.read(currentSubtitleProvider);
-          if (currentSubtitle == null) {
+          final currentTranslated =
+              ref.read(currentTranslatedSubtitleIdProvider);
+          if (currentSubtitle == null && currentTranslated == null) {
             await _playerNotifier?.setSubtitle(subtitles.first);
             logger.i('VideoPlayerPage: 自动加载字幕 ${subtitles.first.name}');
           } else {
-            logger.d('VideoPlayerPage: 用户已选择字幕，跳过自动加载');
+            logger.d('VideoPlayerPage: 已有字幕/翻译，跳过自动加载');
           }
         }
         // ignore: avoid_catching_errors

@@ -29,7 +29,9 @@ class QnapAdapter implements NasAdapter {
         type: NasAdapterType.qnap,
         name: 'QNAP NAS',
         version: AppConstants.appVersion,
-        supportsMediaService: true,
+        // QNAP Media Library 尚未实现（mediaService 返回 null），
+        // 暂不声明支持，避免上层调用空服务
+        supportsMediaService: false,
       );
 
   @override

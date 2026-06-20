@@ -134,6 +134,7 @@ class JellyfinAdapter extends MediaServerAdapter {
   Future<void> dispose() async {
     logger.i('JellyfinAdapter: 释放资源');
     await disconnect();
+    _api.dispose();
   }
 
   // === MediaServerAdapter 特有功能 ===

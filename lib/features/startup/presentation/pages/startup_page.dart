@@ -33,18 +33,19 @@ class _StartupPageState extends ConsumerState<StartupPage> {
   }
 
   Future<void> _initializeApp() async {
-    // 记录开始时间
-    final startTime = DateTime.now();
-
-    // 在后台初始化服务，不阻塞 UI
-    _initServicesInBackground();
-
-    // 等待最小显示时间，让启动画面有足够展示
-    final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-    final remaining = _minSplashDurationMs - elapsed;
-    if (remaining > 0) {
-      await Future<void>.delayed(Duration(milliseconds: remaining));
-    }
+    // 同时等待「核心服务初始化（带超时上限）」与「最小展示时间」，
+    // 取较长者：既保证进入主界面前服务已就绪，又不会因慢初始化无限阻塞。
+    await Future.wait([
+      _initCoreServices().timeout(
+        const Duration(seconds: 8),
+        onTimeout: () {
+          logger.w('StartupPage: 服务初始化超时，仍进入主界面');
+        },
+      ),
+      Future<void>.delayed(
+        const Duration(milliseconds: _minSplashDurationMs),
+      ),
+    ]);
 
     // 跳转到主界面
     if (mounted) {
@@ -53,23 +54,23 @@ class _StartupPageState extends ConsumerState<StartupPage> {
     }
   }
 
-  /// 在后台初始化服务，不阻塞UI
+  /// 初始化核心服务。
   ///
   /// 注意：SourceManagerService.init() 有锁机制，
-  /// 即使被多个地方调用也只会初始化一次
-  void _initServicesInBackground() {
-    // 使用 Future.wait 但不 await，让初始化在后台进行
-    Future.wait([
-      // 初始化源管理服务（Hive 存储）
-      ref.read(sourceManagerProvider).init(),
-      // 预初始化视频相关服务
-      VideoLibraryCacheService().init(),
-      VideoMetadataService().init(),
-    ]).then((_) {
-      logger.i('StartupPage: 后台服务初始化完成');
-    }).catchError((Object e) {
-      logger.e('StartupPage: 后台服务初始化异常', e);
-    });
+  /// 即使被多个地方调用也只会初始化一次。
+  Future<void> _initCoreServices() async {
+    try {
+      await Future.wait([
+        // 初始化源管理服务（Hive 存储）
+        ref.read(sourceManagerProvider).init(),
+        // 预初始化视频相关服务
+        VideoLibraryCacheService().init(),
+        VideoMetadataService().init(),
+      ]);
+      logger.i('StartupPage: 核心服务初始化完成');
+    } on Object catch (e) {
+      logger.e('StartupPage: 核心服务初始化异常', e);
+    }
   }
 
   @override

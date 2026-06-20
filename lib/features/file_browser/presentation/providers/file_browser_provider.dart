@@ -338,14 +338,14 @@ class FileListNotifier extends StateNotifier<FileListState> {
     await refresh();
   }
 
-  Future<void> delete(String path) async {
+  Future<void> delete(String path, {bool skipRefresh = false}) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
       throw UnsupportedError('当前连接不支持删除操作');
     }
 
     await connection.adapter.fileSystem.delete(path);
-    await refresh();
+    if (!skipRefresh) await refresh();
   }
 
   Future<void> rename(String oldPath, String newName) async {
@@ -393,24 +393,26 @@ class FileListNotifier extends StateNotifier<FileListState> {
     await refresh();
   }
 
-  Future<void> copyTo(String sourcePath, String destPath) async {
+  Future<void> copyTo(String sourcePath, String destPath,
+      {bool skipRefresh = false}) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
       throw UnsupportedError('当前连接不支持复制操作');
     }
 
     await connection.adapter.fileSystem.copy(sourcePath, destPath);
-    await refresh();
+    if (!skipRefresh) await refresh();
   }
 
-  Future<void> moveTo(String sourcePath, String destPath) async {
+  Future<void> moveTo(String sourcePath, String destPath,
+      {bool skipRefresh = false}) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
       throw UnsupportedError('当前连接不支持移动操作');
     }
 
     await connection.adapter.fileSystem.move(sourcePath, destPath);
-    await refresh();
+    if (!skipRefresh) await refresh();
   }
 
   List<FileItem> _sortFiles(

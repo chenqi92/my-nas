@@ -142,7 +142,7 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                 itemBuilder: (_, i) {
                   final p = persons[i];
                   return InkWell(
-                    onTap: () => _openPeople(context),
+                    onTap: () => _openPerson(context, p),
                     child: SizedBox(
                       width: 84,
                       child: Column(
@@ -215,6 +215,14 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const PhotoPeoplePage()));
+  }
+
+  void _openPerson(BuildContext context, PersonEntity person) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PhotoPeoplePage(initialPerson: person),
+      ),
+    );
   }
 }
 

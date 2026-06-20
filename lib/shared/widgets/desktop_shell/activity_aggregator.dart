@@ -218,7 +218,7 @@ List<ActivityItem> buildActivityItems(WidgetRef ref, AppLocalizations l) {
           mediaScan.totalCount,
         ),
         detail: mediaScan.currentFile ?? mediaScan.currentPath ?? '',
-        progress: mediaScan.totalCount > 0
+        progress: mediaScan.totalCount > 0 && mediaScan.scannedCount > 0
             ? mediaScan.scannedCount / mediaScan.totalCount
             : null,
       ),

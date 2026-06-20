@@ -229,10 +229,9 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     if (progress != null && progress.position > 0) {
       final state = ref.read(nativeEbookReaderProvider(widget.book));
       if (state is NativeEbookLoaded) {
-        final pageIndex = _paginator.getPageIndexFromProgress(
-          progress.position,
-          state.pages.length,
-        );
+        // position 存的是绝对页码（与其它阅读器一致），直接还原
+        final pageIndex =
+            progress.position.toInt().clamp(0, state.pages.length - 1);
         setState(() => _currentPage = pageIndex);
         _pageController.jumpToPage(pageIndex);
       }
@@ -280,9 +279,9 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
       widget.book.path,
     );
 
-    final progress = state.pages.isNotEmpty
-        ? (_currentPage + 1) / state.pages.length
-        : 0.0;
+    // position 存绝对页码（0 基），阅读列表按 position/totalPositions 算百分比，
+    // 与 comic/epub/pdf 等阅读器保持一致
+    final progress = state.pages.isNotEmpty ? _currentPage.toDouble() : 0.0;
 
     await _progressService.saveProgress(
       ReadingProgress(

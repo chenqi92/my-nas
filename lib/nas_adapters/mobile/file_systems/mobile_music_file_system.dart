@@ -355,8 +355,9 @@ class MobileMusicFileSystem implements NasFileSystem {
 
     if (range != null) {
       final length = await file.length();
-      final end = range.end ?? length - 1;
-      return file.openRead(range.start, end + 1);
+      // FileRange.end 为排他边界（同 openRead 的 end），null 表示读到文件结尾
+      final end = range.end ?? length;
+      return file.openRead(range.start, end);
     }
 
     return file.openRead();

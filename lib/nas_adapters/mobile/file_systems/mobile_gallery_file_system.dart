@@ -462,9 +462,10 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
   Future<Stream<List<int>>> _getFileStreamWithRange(File file, FileRange range) async {
     final length = await file.length();
-    final end = range.end ?? length - 1;
+    // FileRange.end 为排他边界（同 openRead 的 end），null 表示读到文件结尾
+    final end = range.end ?? length;
 
-    return file.openRead(range.start, end + 1);
+    return file.openRead(range.start, end);
   }
 
   @override

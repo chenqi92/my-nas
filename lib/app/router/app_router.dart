@@ -72,17 +72,6 @@ final branchNavigatorKeys = <GlobalKey<NavigatorState>>[
   _filesNavigatorKey,
 ];
 
-/// 待处理的 deep link 路径
-/// 当应用尚未完全初始化时，保存 deep link 路径稍后处理
-String? _pendingDeepLink;
-
-/// 获取并清除待处理的 deep link
-String? consumePendingDeepLink() {
-  final link = _pendingDeepLink;
-  _pendingDeepLink = null;
-  return link;
-}
-
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: Routes.startup,

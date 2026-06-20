@@ -704,4 +704,8 @@ class JellyfinApi {
       );
     }
   }
+
+  void dispose() {
+    _dio.close();
+  }
 }

@@ -1816,7 +1816,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
     for (final path in paths) {
       try {
-        await fileNotifier.delete(path);
+        await fileNotifier.delete(path, skipRefresh: true);
         successCount++;
       } on Exception {
         failCount++;
@@ -1989,7 +1989,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
     for (final path in paths) {
       try {
-        await fileNotifier.copyTo(path, destPath);
+        await fileNotifier.copyTo(path, destPath, skipRefresh: true);
         successCount++;
       } on Exception {
         failCount++;
@@ -2029,7 +2029,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
     for (final path in paths) {
       try {
-        await fileNotifier.moveTo(path, destPath);
+        await fileNotifier.moveTo(path, destPath, skipRefresh: true);
         successCount++;
       } on Exception {
         failCount++;
@@ -2663,7 +2663,7 @@ class _DestinationBrowserState extends ConsumerState<_DestinationBrowser> {
       widget.onPathChanged(_currentPath);
     } on Exception catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = AppError.getUserFriendlyMessage(e);
         _isLoading = false;
       });
     }

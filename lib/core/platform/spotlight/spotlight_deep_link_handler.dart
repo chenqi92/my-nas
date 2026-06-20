@@ -170,8 +170,8 @@ class SpotlightDeepLinkHandler {
       logger.w('SpotlightDeepLink: video not found $key');
       return;
     }
-    // video branch index = 0
-    final nav = branchNavigatorKeys[0].currentState;
+    // video branch index = 1
+    final nav = branchNavigatorKeys[1].currentState;
     if (nav == null) return;
     await nav.push(MaterialPageRoute<void>(
       builder: (_) =>
@@ -225,8 +225,8 @@ class SpotlightDeepLinkHandler {
       return;
     }
     final comic = ComicItem.fromCacheEntry(entry);
-    // reading branch index = 3
-    final nav = branchNavigatorKeys[3].currentState;
+    // reading branch index = 5
+    final nav = branchNavigatorKeys[5].currentState;
     if (nav == null) return;
     await nav.push(MaterialPageRoute<void>(
       builder: (_) => ComicReaderPage(comic: comic),
