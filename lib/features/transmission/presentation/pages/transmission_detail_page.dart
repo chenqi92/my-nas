@@ -7,6 +7,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/transmission/presentation/providers/transmission_provider.dart';
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -1066,7 +1067,7 @@ class _SortOptionsSheet extends ConsumerWidget {
 
                   return ListTile(
                     leading: Icon(_getSortIcon(mode), color: isSelected ? AppColors.primary : null),
-                    title: Text(mode.label),
+                    title: Text(localizeFormText(context, mode.label)),
                     trailing: isSelected ? Icon(Icons.check_rounded, color: AppColors.primary) : null,
                     selected: isSelected,
                     onTap: () {

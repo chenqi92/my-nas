@@ -8,6 +8,7 @@ import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_p
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/qbittorrent/api/qbittorrent_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -1687,7 +1688,7 @@ class _SortOptionsSheet extends ConsumerWidget {
                       color: settings.sortMode == mode ? AppColors.primary : null,
                     ),
                     title: Text(
-                      mode.label,
+                      localizeFormText(context, mode.label),
                       style: TextStyle(
                         fontWeight: settings.sortMode == mode ? FontWeight.w600 : null,
                         color: settings.sortMode == mode ? AppColors.primary : null,

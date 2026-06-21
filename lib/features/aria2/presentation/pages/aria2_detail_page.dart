@@ -8,6 +8,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/service_adapters/aria2/api/aria2_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -960,7 +961,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                           (settings.filterStatus == null && status == Aria2StatusFilter.all);
 
                       return FilterChip(
-                        label: Text(status.label),
+                        label: Text(localizeFormText(context, status.label)),
                         selected: isSelected,
                         onSelected: (_) {
                           ref.read(aria2SortSettingsProvider(sourceId).notifier).setFilterStatus(status);
@@ -1030,7 +1031,7 @@ class _SortOptionsSheet extends ConsumerWidget {
 
                   return ListTile(
                     leading: Icon(_getSortIcon(mode), color: isSelected ? AppColors.primary : null),
-                    title: Text(mode.label),
+                    title: Text(localizeFormText(context, mode.label)),
                     trailing: isSelected ? Icon(Icons.check_rounded, color: AppColors.primary) : null,
                     selected: isSelected,
                     onTap: () {

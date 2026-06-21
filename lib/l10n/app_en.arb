@@ -13015,5 +13015,56 @@
   },
   "localFileApiPersonalName": "Personal",
   "localFileApiHomeName": "Home",
-  "fnosAdapterName": "FlyNAS fnOS"
+  "fnosAdapterName": "FlyNAS fnOS",
+  "dll_f997df9b": "Upload Speed",
+  "dll_2d455ce5": "Downloading",
+  "dll_a08434f4": "Download Speed",
+  "dll_22054661": "Albums",
+  "dll_a8b0c204": "All",
+  "dll_16f7a164": "All Songs",
+  "dll_52594855": "Ratio",
+  "dll_0445c1b8": "ETA",
+  "dll_58f96667": "Size",
+  "dll_fad5222c": "Completed",
+  "dll_a2d930fd": "Paused",
+  "dll_359860aa": "Decade",
+  "dll_e4b4bc84": "Total Uploaded",
+  "dll_44e56145": "Favorites",
+  "dll_1f4c1042": "Folders",
+  "dll_f1579e89": "Recently Played",
+  "dll_51573f0c": "Genres",
+  "dll_ffc7ed1c": "Added",
+  "dll_3fea7ca7": "Status",
+  "dll_65dd9ef1": "Waiting",
+  "dll_dbf5a551": "Artists",
+  "dll_c7bff79d": "Progress",
+  "dll_7030ff64": "Error",
+  "musicSongCountLabel": "{count} songs",
+  "@musicSongCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicTotalSongCountLabel": "{count} songs total",
+  "@musicTotalSongCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicListCancel": "Cancel",
+  "musicArtistSourceDisconnected": "{artist} • Source disconnected",
+  "@musicArtistSourceDisconnected": {
+    "placeholders": {
+      "artist": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicPreparingMetadata": "Preparing to extract metadata…",
+  "musicExtractingMetadata": "Extracting metadata",
+  "musicUpdateMetadataFailed": "Failed to update track metadata"
 }

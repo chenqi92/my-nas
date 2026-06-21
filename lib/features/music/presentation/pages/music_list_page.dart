@@ -1424,7 +1424,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       pathPrefix: pathPrefix,
       scannedCount: 0,
       totalCount: totalTracks,
-      currentFile: '准备提取元数据...',
+      currentFile: appL10n.musicPreparingMetadata,
     ));
 
     for (var i = 0; i < tracks.length; i++) {
@@ -1490,7 +1490,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
         pathPrefix: pathPrefix,
         scannedCount: processedCount,
         totalCount: totalTracks,
-        currentFile: '提取元数据',
+        currentFile: appL10n.musicExtractingMetadata,
       ));
 
       // 批量保存数据库（保持 10 条一批以优化 I/O）
@@ -1666,7 +1666,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       );
       logger.d('MusicListNotifier: 已更新曲目元数据 $filePath');
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '更新曲目元数据失败');
+      AppError.ignore(e, st, appL10n.musicUpdateMetadataFailed);
     }
   }
 
@@ -3987,7 +3987,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
             children: [
               // 歌曲数量 - 使用数据库总数而不是当前加载的数量
               Text(
-                '共 $totalCount 首歌曲',
+                context.l10n.musicTotalSongCountLabel(totalCount),
                 style: TextStyle(
                   fontSize: 13,
                   color: widget.isDark ? Colors.white60 : Colors.black54,
@@ -4885,7 +4885,7 @@ class _MusicListTile extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '取消',
+              context.l10n.musicListCancel,
               style: TextStyle(color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
             ),
           ),
@@ -5681,7 +5681,7 @@ class _ArtistCardFromDb extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        '$count 首歌曲',
+                        context.l10n.musicSongCountLabel(count),
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -5865,7 +5865,7 @@ class _AlbumCard extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      '${tracks.length} 首歌曲',
+                      context.l10n.musicSongCountLabel(tracks.length),
                       style: TextStyle(
                         fontSize: 11,
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -6034,7 +6034,7 @@ class _AlbumCardFromDb extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      '$count 首歌曲',
+                      context.l10n.musicSongCountLabel(count),
                       style: TextStyle(
                         fontSize: 11,
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -6122,7 +6122,7 @@ class _AlbumCardFromDb extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              '$count 首歌曲',
+                              context.l10n.musicSongCountLabel(count),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -6362,7 +6362,7 @@ class _FolderCardFromDb extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '$count 首歌曲',
+                        context.l10n.musicSongCountLabel(count),
                         style: TextStyle(
                           fontSize: 13,
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -6575,7 +6575,7 @@ class _GenreCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${tracks.length} 首歌曲',
+                    context.l10n.musicSongCountLabel(tracks.length),
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.8),
@@ -6654,7 +6654,7 @@ class _GenreCardFromDb extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$count 首歌曲',
+                    context.l10n.musicSongCountLabel(count),
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.8),
@@ -6888,7 +6888,7 @@ class _YearCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${tracks.length} 首歌曲',
+                    context.l10n.musicSongCountLabel(tracks.length),
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.8),
@@ -6979,7 +6979,7 @@ class _YearCardFromDb extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '$count 首歌曲',
+                    context.l10n.musicSongCountLabel(count),
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.8),
@@ -7413,7 +7413,7 @@ class _PlaylistsView extends ConsumerWidget {
         // 歌单列表
         Expanded(
           child: playlists.isEmpty
-              ? _buildEmptyView('暂无歌单', Icons.playlist_play_rounded, isDark)
+              ? _buildEmptyView(context.l10n.musicPlaylistEmpty, Icons.playlist_play_rounded, isDark)
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: playlists.length,
@@ -7642,7 +7642,7 @@ class _PlaylistTile extends ConsumerWidget {
             ),
           ),
           subtitle: Text(
-            '${playlist.trackCount} 首歌曲',
+            context.l10n.musicSongCountLabel(playlist.trackCount),
             style: TextStyle(
               fontSize: 12,
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -9017,7 +9017,7 @@ class _CompactMusicTile extends ConsumerWidget {
       subtitle: Text(
         isConnected
             ? '$artist${track.duration != null ? ' · ${track.durationText}' : ''}'
-            : '$artist • 源未连接',
+            : context.l10n.musicArtistSourceDisconnected(artist),
         style: TextStyle(
           fontSize: 11,
           color: isConnected

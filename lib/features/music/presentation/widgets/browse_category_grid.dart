@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/presentation/widgets/animated_components.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// 音乐分类
 enum MusicBrowseCategory {
@@ -72,7 +73,7 @@ class BrowseCategoryGrid extends StatelessWidget {
           final category = categories[index];
           final count = counts[category] ?? 0;
           return GradientChip(
-            label: category.label,
+            label: localizeFormText(context, category.label),
             count: count > 0 ? count : null,
             icon: category.icon,
             gradientColors: [
@@ -173,7 +174,7 @@ class _DesktopCategoryCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    category.label,
+                    localizeFormText(context, category.label),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -427,7 +428,7 @@ class _GlassQuickCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              data.label,
+                              localizeFormText(context, data.label),
                               style: TextStyle(
                                 fontSize: isDesktop ? 15 : 14,
                                 fontWeight: FontWeight.w600,
