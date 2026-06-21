@@ -6,6 +6,7 @@ import 'package:my_nas/features/music/data/services/music_scraper_factory.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_form_config.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/presentation/providers/music_scraper_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
@@ -505,9 +506,10 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
 
       if (!mounted) return;
 
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? '连接成功' : '连接失败'),
+          content: Text(success ? l.musicScraperConnectionSuccessful : l.musicScraperConnectionFailed),
           backgroundColor: success ? AppColors.success : AppColors.error,
         ),
       );

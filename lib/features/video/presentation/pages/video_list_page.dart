@@ -44,6 +44,7 @@ import 'package:my_nas/features/video/presentation/widgets/hero_banner.dart';
 import 'package:my_nas/features/video/presentation/widgets/live_stream_section.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_category_settings_sheet.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
@@ -3602,6 +3603,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
     WidgetRef ref,
     VideoMetadata metadata,
   ) async {
+    final l = AppLocalizations.of(context);
     final favService = ref.read(mediaFavoritesServiceProvider);
     await favService.init();
     final isFav = favService.isFavoriteSync(
@@ -3660,7 +3662,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(success ? '已删除源文件' : '删除失败，请检查连接状态'),
+                content: Text(success ? l.videoDeleteSourceFileSuccess : l.videoDeleteSourceFileFailed),
                 behavior: SnackBarBehavior.floating,
               ),
             );

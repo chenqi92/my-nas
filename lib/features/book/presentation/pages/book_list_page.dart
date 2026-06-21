@@ -26,6 +26,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
@@ -1931,8 +1932,9 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
     final connections = ref.read(activeConnectionsProvider);
     final connection = connections[book.sourceId];
     if (connection == null) {
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+        SnackBar(content: Text(l.bookShareSourceNotConnected)),
       );
       return;
     }
@@ -1951,8 +1953,9 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
     );
     if (!context.mounted) return;
     if (result.isFailure) {
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('分享失败：${result.error ?? "未知原因"}')),
+        SnackBar(content: Text(l.bookShareFailure(result.error ?? '未知原因'))),
       );
     }
   }
@@ -1966,8 +1969,9 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
     final connections = ref.read(activeConnectionsProvider);
     final connection = connections[book.sourceId];
     if (connection == null) {
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+        SnackBar(content: Text(l.bookDownloadSourceNotConnected)),
       );
       return;
     }
@@ -1977,13 +1981,15 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
       final task = await service.addTask(url: url, fileName: book.fileName);
       unawaited(service.startDownload(task.id));
       if (!context.mounted) return;
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已加入下载：${book.fileName}')),
+        SnackBar(content: Text(l.bookDownloadAdded(book.fileName))),
       );
     } on Exception catch (e) {
       if (!context.mounted) return;
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('加入下载失败：$e')),
+        SnackBar(content: Text(l.bookDownloadFailure(e))),
       );
     }
   }

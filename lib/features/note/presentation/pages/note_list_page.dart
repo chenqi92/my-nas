@@ -22,6 +22,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
@@ -737,12 +738,12 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
       unawaited(service.startDownload(task.id));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已加入下载：${node.name}')),
+        SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAdded(node.name))),
       );
     } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('加入下载失败：$e')),
+        SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAddFailed(e))),
       );
     }
   }
@@ -2079,12 +2080,12 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
       unawaited(service.startDownload(task.id));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已加入下载：${node.name}')),
+        SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAdded(node.name))),
       );
     } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('加入下载失败：$e')),
+        SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAddFailed(e))),
       );
     }
   }

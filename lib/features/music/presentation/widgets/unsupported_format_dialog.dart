@@ -6,6 +6,7 @@ import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_audio_handler_interface.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_settings_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 
 /// iOS 不支持音频格式时的引擎切换提示对话框
 ///
@@ -145,11 +146,12 @@ class UnsupportedFormatDialog extends ConsumerWidget {
               Navigator.of(context).pop(true);
 
               // 显示重启提示
+              final l = AppLocalizations.of(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('已切换到 FFmpeg 解码器，重启应用后生效'),
+                  content: Text(l.musicEngineDecoderSwitched),
                   action: SnackBarAction(
-                    label: '知道了',
+                    label: l.musicEngineConfirmed,
                     onPressed: () {},
                   ),
                   duration: const Duration(seconds: 5),

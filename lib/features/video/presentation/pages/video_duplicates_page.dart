@@ -8,6 +8,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
@@ -161,9 +162,12 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
       await _loadDuplicates();
 
       if (mounted) {
+        final l = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('已删除 $deleted 个视频${failed > 0 ? '，$failed 个失败' : ''}'),
+            content: Text(failed > 0
+                ? l.videoDuplicatesDeleteWithFailure(deleted, failed)
+                : l.videoDuplicatesDeleteSuccess(deleted)),
           ),
         );
       }

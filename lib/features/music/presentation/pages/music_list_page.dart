@@ -42,6 +42,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
@@ -4894,9 +4895,10 @@ class _MusicListTile extends ConsumerWidget {
                     .createPlaylist(name: name, initialTracks: [trackPath]);
                 if (context.mounted && playlist != null) {
                   Navigator.pop(context);
+                  final l = AppLocalizations.of(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('已添加到新歌单"$name"'),
+                      content: Text(l.musicPlaylistAddedNewToast(name)),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -8175,8 +8177,9 @@ class _MusicTableRow extends ConsumerWidget {
         case 'queue':
           ref.read(playQueueProvider.notifier).addToQueue(track.toMusicItem());
           if (context.mounted) {
+            final l = AppLocalizations.of(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('已添加到播放队列'), duration: Duration(seconds: 1)),
+              SnackBar(content: Text(l.musicQueueAddedToast), duration: const Duration(seconds: 1)),
             );
           }
         // 其他操作...
@@ -9357,9 +9360,10 @@ class _CompactMusicTile extends ConsumerWidget {
                     );
                 if (dialogContext.mounted) {
                   Navigator.pop(dialogContext);
+                  final l = AppLocalizations.of(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('已添加到新歌单"$name"'),
+                      content: Text(l.musicPlaylistAddedNewToast(name)),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );

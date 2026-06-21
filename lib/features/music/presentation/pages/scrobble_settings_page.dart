@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/features/music/data/services/scrobble/music_scrobble_service.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -74,8 +75,9 @@ class _ScrobbleSettingsPageState
     );
     await _service.applySettings(next);
     if (mounted) {
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已保存')),
+        SnackBar(content: Text(l.musicScrobbleSettingsSaved)),
       );
     }
   }
@@ -256,8 +258,9 @@ class _ScrobbleSettingsPageState
               onPressed: () {
                 final key = _lfApiKey.text.trim();
                 if (key.isEmpty) {
+                  final l = AppLocalizations.of(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请先填写 API key')),
+                    SnackBar(content: Text(l.musicScrobbleLastfmApiKeyRequired)),
                   );
                   return;
                 }

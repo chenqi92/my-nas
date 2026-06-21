@@ -11,6 +11,7 @@ import 'package:my_nas/features/book/presentation/pages/epub_comic_reader_page.d
 import 'package:my_nas/features/book/presentation/pages/native_ebook_reader_page.dart';
 import 'package:my_nas/features/book/presentation/pages/pdf_reader_page.dart';
 import 'package:my_nas/features/reading/data/services/reader_settings_service.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 
 /// 图书导航工具
 ///
@@ -119,10 +120,11 @@ class BookNavigator {
       // 使用 EbookReaderPage 下载后再跳转
       // 或者显示提示
       if (!context.mounted) return;
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('正在下载漫画文件，请稍候...'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(l.bookDownloadingMangaFile),
+          duration: const Duration(seconds: 2),
         ),
       );
       // 回退到普通 EPUB 阅读器处理下载

@@ -10,6 +10,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/network/doh_resolver.dart';
 import 'package:my_nas/core/network/host_mapping_entry.dart';
 import 'package:my_nas/core/network/hosts_resolver_service.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
@@ -608,11 +609,12 @@ class _HostMappingEditSheetState extends State<_HostMappingEditSheet> {
   }
 
   Future<void> _handleSave() async {
+    final l = AppLocalizations.of(context);
     final host = _hostCtrl.text.trim();
     final ip = _ipCtrl.text.trim();
     if (host.isEmpty || ip.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('域名和 IP 都必填'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l.hostsMappingDomainAndIpRequired), behavior: SnackBarBehavior.floating),
       );
       return;
     }

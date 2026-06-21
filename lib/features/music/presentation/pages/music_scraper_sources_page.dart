@@ -7,6 +7,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/music_scraper_factory.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/presentation/providers/music_scraper_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
@@ -426,9 +427,10 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
 
       if (!mounted) return;
 
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? '连接成功' : '连接失败'),
+          content: Text(success ? l.musicScraperTestConnectionSuccess : l.musicScraperTestConnectionFailed),
           backgroundColor: success ? AppColors.success : AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -436,9 +438,10 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
     } on Exception catch (e) {
       if (!mounted) return;
 
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('连接失败: $e'),
+          content: Text(l.musicScraperTestConnectionError(e)),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -1024,15 +1027,16 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
 
   void _handleSave() {
     // 验证必填项
+    final l = AppLocalizations.of(context);
     if (widget.type.requiresApiKey && _apiKeyController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写 API Key'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l.musicScraperConfigApiKeyRequired), behavior: SnackBarBehavior.floating),
       );
       return;
     }
     if (widget.type.requiresServerUrl && _serverUrlController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写服务器地址'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l.musicScraperConfigServerUrlRequired), behavior: SnackBarBehavior.floating),
       );
       return;
     }

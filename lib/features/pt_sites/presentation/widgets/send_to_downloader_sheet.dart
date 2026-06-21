@@ -10,6 +10,7 @@ import 'package:my_nas/features/sources/data/services/source_manager_service.dar
 import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/service_adapters/aria2/api/aria2_api.dart';
 import 'package:my_nas/service_adapters/qbittorrent/api/qbittorrent_api.dart';
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
@@ -343,9 +344,10 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
       context.showSuccessToast('已发送到 ${downloader.name.isEmpty ? downloader.type.displayName : downloader.name}');
     } on Exception catch (e) {
       if (!mounted) return;
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('发送失败: $e'),
+          content: Text(l.ptSendToDownloaderFailToast(e)),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.error,
         ),

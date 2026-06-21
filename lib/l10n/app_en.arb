@@ -2629,5 +2629,181 @@
   "filesAlignSubtitle": "Browse and manage files across your connected sources",
   "maintPhotoTitle": "Duplicate photos",
   "maintPhotoDesc": "Filename / MD5 across sources / visual pHash similarity · adjustable confidence",
-  "maintPhotoButton": "Scan settings"
+  "maintPhotoButton": "Scan settings",
+  "musicScraperTestConnectionSuccess": "Connection successful",
+  "musicScraperTestConnectionFailed": "Connection failed",
+  "musicScraperTestConnectionError": "Connection failed: {error}",
+  "@musicScraperTestConnectionError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicScraperConfigApiKeyRequired": "Please enter API Key",
+  "musicScraperConfigServerUrlRequired": "Please enter server address",
+  "videoScraperConfigValidateApiKeyEmpty": "Please enter API Key",
+  "videoScraperConfigValidateCookieEmpty": "Please enter Cookie",
+  "musicScraperConnectionSuccessful": "Connection successful",
+  "musicScraperConnectionFailed": "Connection failed",
+  "musicPlaylistAddedNewToast": "Added to new playlist \"{name}\"",
+  "@musicPlaylistAddedNewToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "musicQueueAddedToast": "Added to playback queue",
+  "musicScrobbleSettingsSaved": "Saved",
+  "musicScrobbleLastfmApiKeyRequired": "Please enter API key first",
+  "musicEngineDecoderSwitched": "Switched to FFmpeg decoder, will take effect after restart",
+  "musicEngineConfirmed": "Got it",
+  "ptSendToDownloaderFailToast": "Failed to send: {error}",
+  "@ptSendToDownloaderFailToast": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoDuplicatesDeleteSuccess": "Deleted {count} videos",
+  "@videoDuplicatesDeleteSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoDuplicatesDeleteWithFailure": "Deleted {deleted} videos, {failed} failed",
+  "@videoDuplicatesDeleteWithFailure": {
+    "placeholders": {
+      "deleted": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "videoDeleteSourceFileSuccess": "Source file deleted",
+  "videoDeleteSourceFileFailed": "Failed to delete file. Check your connection.",
+  "hostsMappingDomainAndIpRequired": "Domain and IP are both required",
+  "bookDownloadingMangaFile": "Downloading manga file, please wait...",
+  "ebookReaderParserSwitchToNative": "Switch the parser to \"native\" in reading settings",
+  "bookReaderAddBookmarkSuccess": "Bookmark added",
+  "sourceFormQuickConnectAuthSuccess": "Quick Connect authorization successful",
+  "sourceFormPlexAccountAuthSuccess": "Plex account authorization successful",
+  "sourceFormPlexAuthFailed": "Plex authorization failed",
+  "sourceFormConnectionTestSuccess": "Connection test succeeded",
+  "sourceFormConnectionTestFailed": "Connection test failed: {error}",
+  "@sourceFormConnectionTestFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "sourceFormConnectionStatusError": "Connection status abnormal",
+  "bookShareSourceNotConnected": "Not connected to the source. Please establish a connection first.",
+  "bookShareFailure": "Share failed: {error}",
+  "@bookShareFailure": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "bookDownloadSourceNotConnected": "Not connected to the source. Please establish a connection first.",
+  "bookDownloadAdded": "Added to downloads: {fileName}",
+  "@bookDownloadAdded": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "bookDownloadFailure": "Failed to add to downloads: {error}",
+  "@bookDownloadFailure": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "comicSharePlatformNotSupported": "Current platform does not support system sharing",
+  "comicDownloadQueueAdded": "Added to downloads: {name}",
+  "@comicDownloadQueueAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noteDownloadAddFailed": "Failed to add download: {error}",
+  "@noteDownloadAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoDownloadAdded": "Added to downloads: {fileName}",
+  "@photoDownloadAdded": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSourceNotConnected": "Not connected to the source, please establish connection first",
+  "photoShareUnsupported": "System sharing is not supported on this platform",
+  "photoShareFailed": "Share failed: {reason}",
+  "@photoShareFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "scraperFormTestFailed": "Test failed: {error}",
+  "@scraperFormTestFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoScraperTestConnectionFailed": "Connection failed: {error}",
+  "@videoScraperTestConnectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoDownloadAddFailed": "Failed to add to downloads: {error}",
+  "@photoDownloadAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "comicDownloadAddFailed": "Failed to add to downloads: {error}",
+  "@comicDownloadAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "noteDownloadAdded": "Added to downloads: {name}",
+  "@noteDownloadAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

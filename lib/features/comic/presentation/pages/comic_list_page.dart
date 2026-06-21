@@ -18,6 +18,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
@@ -1163,8 +1164,9 @@ class _ComicCard extends ConsumerWidget {
       return;
     }
     if (!NasFileShareService.canShare) {
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('当前平台不支持系统分享')),
+        SnackBar(content: Text(l.comicSharePlatformNotSupported)),
       );
       return;
     }
@@ -1201,13 +1203,14 @@ class _ComicCard extends ConsumerWidget {
       );
       unawaited(service.startDownload(task.id));
       if (!context.mounted) return;
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已加入下载：${comic.folderName}')),
+        SnackBar(content: Text(l.comicDownloadQueueAdded(comic.folderName))),
       );
     } on Exception catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('加入下载失败：$e')),
+        SnackBar(content: Text(AppLocalizations.of(context).comicDownloadAddFailed(e))),
       );
     }
   }

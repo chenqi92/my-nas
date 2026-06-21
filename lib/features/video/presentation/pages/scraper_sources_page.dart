@@ -6,6 +6,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
@@ -307,7 +308,7 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('连接失败: $e'),
+          content: Text(AppLocalizations.of(context).videoScraperTestConnectionFailed(e)),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -764,9 +765,10 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
 
   void _handleSave() {
     // 验证必填项
+    final l = AppLocalizations.of(context);
     if (widget.type.requiresApiKey && _apiKeyController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写 API Key'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l.videoScraperConfigValidateApiKeyEmpty), behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -778,7 +780,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
     }
     if (widget.type.requiresCookie && _cookieController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写 Cookie'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(l.videoScraperConfigValidateCookieEmpty), behavior: SnackBarBehavior.floating),
       );
       return;
     }

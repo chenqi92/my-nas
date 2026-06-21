@@ -12,6 +12,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/sources/presentation/widgets/plex_auth_widget.dart';
 import 'package:my_nas/features/sources/presentation/widgets/quick_connect_widget.dart';
 import 'package:my_nas/features/sources/presentation/widgets/two_fa_sheet.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/media_server_adapters/emby/emby_adapter.dart';
 import 'package:my_nas/media_server_adapters/jellyfin/jellyfin_adapter.dart';
 import 'package:my_nas/media_server_adapters/plex/plex_adapter.dart';
@@ -844,7 +845,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         _quickConnectAccessToken = result.accessToken;
         _quickConnectUserId = result.userId;
       });
-      _showSuccessSnackBar('Quick Connect 认证成功');
+      final l = AppLocalizations.of(context);
+      _showSuccessSnackBar(l.sourceFormQuickConnectAuthSuccess);
     } else {
       _showErrorSnackBar(result.errorMessage ?? 'Quick Connect 认证失败');
     }
@@ -921,9 +923,11 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         _plexAuthAuthorized = true;
         _plexAuthToken = result.authToken;
       });
-      _showSuccessSnackBar('Plex 账号授权成功');
+      final l = AppLocalizations.of(context);
+      _showSuccessSnackBar(l.sourceFormPlexAccountAuthSuccess);
     } else {
-      _showErrorSnackBar(result.errorMessage ?? 'Plex 授权失败');
+      final l = AppLocalizations.of(context);
+      _showErrorSnackBar(result.errorMessage ?? l.sourceFormPlexAuthFailed);
     }
   }
 
@@ -1019,7 +1023,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
 
       switch (connection.status) {
         case SourceStatus.connected:
-          _showSuccessSnackBar('连接测试成功');
+          final l = AppLocalizations.of(context);
+          _showSuccessSnackBar(l.sourceFormConnectionTestSuccess);
           // 断开测试连接
           await sourceManager.disconnect(source.id);
         case SourceStatus.requires2FA:
@@ -1027,11 +1032,12 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         case SourceStatus.error:
           _showErrorSnackBar('连接失败: ${connection.errorMessage ?? "未知错误"}');
         default:
-          _showErrorSnackBar('连接状态异常');
+          final l = AppLocalizations.of(context);
+          _showErrorSnackBar(l.sourceFormConnectionStatusError);
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar('测试失败: $e');
+      _showErrorSnackBar(AppLocalizations.of(context).sourceFormConnectionTestFailed(e));
     } finally {
       if (mounted) {
         setState(() {
@@ -1058,7 +1064,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar('测试失败: $e');
+      _showErrorSnackBar(AppLocalizations.of(context).sourceFormConnectionTestFailed(e));
     } finally {
       if (mounted) {
         setState(() {
@@ -1082,7 +1088,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar('测试失败: $e');
+      _showErrorSnackBar(AppLocalizations.of(context).sourceFormConnectionTestFailed(e));
     } finally {
       if (mounted) {
         setState(() {

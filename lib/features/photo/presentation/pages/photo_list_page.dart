@@ -27,6 +27,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
 import 'package:my_nas/features/transfer/presentation/widgets/target_picker_sheet.dart';
 import 'package:my_nas/features/transfer/presentation/widgets/transfer_sheet.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
@@ -3175,11 +3176,12 @@ class _PhotoGridItem extends ConsumerWidget {
 
   /// 远程照片加入下载队列：通过 fileSystem.getFileUrl 拿到下载 URL
   Future<void> _downloadPhoto(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
     final connections = ref.read(activeConnectionsProvider);
     final connection = connections[photo.sourceId];
     if (connection == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+        SnackBar(content: Text(l.photoSourceNotConnected)),
       );
       return;
     }
@@ -3190,23 +3192,24 @@ class _PhotoGridItem extends ConsumerWidget {
       unawaited(service.startDownload(task.id));
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已加入下载：${photo.name}')),
+        SnackBar(content: Text(l.photoDownloadAdded(photo.name))),
       );
     } on Exception catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('加入下载失败：$e')),
+        SnackBar(content: Text(AppLocalizations.of(context).photoDownloadAddFailed(e))),
       );
     }
   }
 
   /// 分享照片：把 NAS 上的原图流式下载到临时目录后调用系统分享面板
   Future<void> _sharePhoto(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
     final connections = ref.read(activeConnectionsProvider);
     final connection = connections[photo.sourceId];
     if (connection == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+        SnackBar(content: Text(l.photoSourceNotConnected)),
       );
       return;
     }
@@ -3214,7 +3217,7 @@ class _PhotoGridItem extends ConsumerWidget {
     final saveService = PhotoSaveService();
     if (!saveService.canShare) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('当前平台不支持系统分享')),
+        SnackBar(content: Text(l.photoShareUnsupported)),
       );
       return;
     }
@@ -3228,7 +3231,7 @@ class _PhotoGridItem extends ConsumerWidget {
     if (!context.mounted) return;
     if (result.isFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('分享失败：${result.error ?? "未知原因"}')),
+        SnackBar(content: Text(l.photoShareFailed(result.error ?? '未知原因'))),
       );
     }
   }

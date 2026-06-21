@@ -19,6 +19,7 @@ import 'package:my_nas/features/reading/presentation/providers/reader_settings_p
 import 'package:my_nas/features/reading/presentation/widgets/page_flip_effect.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
@@ -365,10 +366,11 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
 
     if ((useNative ?? false) && mounted) {
       // 返回并提示用户在设置中切换阅读器
+      final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请在阅读设置中将解析器切换为"原生"'),
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: Text(l.ebookReaderParserSwitchToNative),
+          duration: const Duration(seconds: 3),
         ),
       );
     }

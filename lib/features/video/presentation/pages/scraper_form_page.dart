@@ -5,6 +5,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_form_config.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
@@ -470,7 +471,8 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
     } on Exception catch (e) {
       if (!mounted) return;
 
-      context.showErrorToast('测试失败: $e');
+      final l = AppLocalizations.of(context);
+      context.showErrorToast(l.scraperFormTestFailed(e));
     } finally {
       if (mounted) {
         setState(() {

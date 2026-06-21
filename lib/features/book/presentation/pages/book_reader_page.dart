@@ -26,6 +26,7 @@ import 'package:my_nas/features/reading/data/services/reading_progress_service.d
 import 'package:my_nas/features/reading/presentation/providers/reader_settings_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
@@ -869,10 +870,11 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                             await ReadingProgressService().addBookmark(bookmark);
                             setSheetState(() {});
                             if (sheetContext.mounted) {
+                              final l = AppLocalizations.of(sheetContext);
                               ScaffoldMessenger.of(sheetContext).showSnackBar(
-                                const SnackBar(
-                                  content: Text('已添加书签'),
-                                  duration: Duration(seconds: 1),
+                                SnackBar(
+                                  content: Text(l.bookReaderAddBookmarkSuccess),
+                                  duration: const Duration(seconds: 1),
                                 ),
                               );
                             }
