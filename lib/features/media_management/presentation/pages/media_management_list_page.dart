@@ -9,7 +9,7 @@ class MediaManagementListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ServiceSourcesPage(
-        title: '媒体管理',
+        title: context.l10n.mediaManagementTitle,
         category: SourceCategory.mediaManagement,
         emptyIcon: Icons.construction_rounded,
         emptyTitle: context.l10n.mediaManagementEmptyTitle,
