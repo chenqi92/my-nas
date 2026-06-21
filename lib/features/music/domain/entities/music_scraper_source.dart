@@ -135,11 +135,9 @@ enum MusicScraperType {
   String? get riskNotice => switch (riskLevel) {
         MusicScraperRiskLevel.open => null,
         MusicScraperRiskLevel.tosViolation =>
-            '该刮削源使用未公开 API，可能违反平台服务条款。仅获取公开元数据/封面/歌词写入你本地的音频文件； '
-                '请仅用于管理你合法获取的音乐，并自行承担合规责任。',
+            appL10n.musicScraperRiskNoticeTosviol,
         MusicScraperRiskLevel.antiCircumvention =>
-            '该刮削源通过加密请求绕过平台限制，存在不正当竞争争议（参见网易诉酷我案等先例）。 '
-                '建议优先使用开放数据源（MusicBrainz / AcoustID）。如需启用，请仅用于管理你合法获取的音乐，并自行承担合规责任。',
+            appL10n.musicScraperRiskNoticeAnticircum,
       };
 
   /// 是否需要在启用前显式确认（高风险源）

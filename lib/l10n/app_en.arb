@@ -12597,5 +12597,108 @@
   "musicBrainzAuthError": "Authentication failed",
   "musicBrainzRateLimitError": "Requests too frequent, please try again later",
   "musicBrainzNetworkError": "Network connection failed",
-  "musicBrainzGenericError": "Unknown error"
+  "musicBrainzGenericError": "Unknown error",
+  "neteaseScraperAuthExpiredError": "Cookie is invalid or expired",
+  "neteaseScraperRateLimitError": "Request too frequent, please try again later",
+  "neteaseScraperNetworkError": "Network connection failed",
+  "neteaseScraperUnknownError": "Unknown error",
+  "musicTagWebScraperAuthFailed": "Authentication failed, please check username and password",
+  "musicTagWebScraperRateLimited": "Requests are too frequent, please try again later",
+  "musicTagWebScraperConnectionFailed": "Unable to connect to Music Tag Web server: {serverUrl}",
+  "@musicTagWebScraperConnectionFailed": {
+    "placeholders": {
+      "serverUrl": {
+        "type": "String"
+      }
+    }
+  },
+  "musicTagWebScraperUnknownError": "Unknown error",
+  "musicScraperRiskNoticeTosviol": "This scraper uses undisclosed APIs and may violate platform terms of service. Only public metadata/cover/lyrics are written to your local audio files; please use only for managing music you have legally obtained, and assume compliance responsibility.",
+  "musicScraperRiskNoticeAnticircum": "This scraper bypasses platform restrictions through encrypted requests, raising unfair competition concerns (see precedents like NetEase v.s. Kuwo case). We recommend prioritizing open data sources (MusicBrainz / AcoustID). If you must enable it, please use only for managing music you have legally obtained, and assume compliance responsibility.",
+  "musicLoadingData": "Loading data...",
+  "musicMigratingData": "Migrating data...",
+  "musicLoadingConfig": "Loading config...",
+  "musicLoadConfigFailed": "Failed to load media library config",
+  "musicScanning": "Scanning...",
+  "musicPlaylistDetailLoadFailed": "Load failed: {error}",
+  "@musicPlaylistDetailLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "noteListLoadTreeFailed": "Failed to load notes: {error}",
+  "@noteListLoadTreeFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoScanProgressDiscoveringCount": "Discovered {count} directories...",
+  "@videoScanProgressDiscoveringCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoScanProgressDirectoriesCount": "Discovered {count} directories...",
+  "@videoScanProgressDirectoriesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoScanProgressDirectoriesScanned": "{completed}/{total} directories",
+  "@videoScanProgressDirectoriesScanned": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "tmdbCountryCodeUS": "United States",
+  "tmdbCountryCodeCN": "China",
+  "tmdbCountryCodeJP": "Japan",
+  "tmdbCountryCodeKR": "South Korea",
+  "tmdbCountryCodeGB": "United Kingdom",
+  "tmdbCountryCodeFR": "France",
+  "tmdbCountryCodeDE": "Germany",
+  "tmdbCountryCodeIT": "Italy",
+  "tmdbCountryCodeES": "Spain",
+  "tmdbCountryCodeCA": "Canada",
+  "tmdbCountryCodeAU": "Australia",
+  "tmdbCountryCodeIN": "India",
+  "tmdbCountryCodeTW": "Taiwan",
+  "tmdbCountryCodeHK": "Hong Kong",
+  "tmdbCountryCodeTH": "Thailand",
+  "tmdbCountryCodeRU": "Russia",
+  "tmdbCountryCodeBR": "Brazil",
+  "tmdbCountryCodeMX": "Mexico",
+  "tmdbCountryCodeNL": "Netherlands",
+  "tmdbCountryCodeSE": "Sweden",
+  "tmdbCountryCodeDK": "Denmark",
+  "tmdbCountryCodeNO": "Norway",
+  "tmdbCountryCodeFI": "Finland",
+  "tmdbCountryCodeBE": "Belgium",
+  "tmdbCountryCodeAT": "Austria",
+  "tmdbCountryCodeCH": "Switzerland",
+  "tmdbCountryCodeNZ": "New Zealand",
+  "tmdbCountryCodeIE": "Ireland",
+  "tmdbCountryCodePL": "Poland",
+  "tmdbCountryCodeTR": "Turkey",
+  "tmdbCountryCodeAR": "Argentina",
+  "tmdbCountryCodeZA": "South Africa",
+  "tmdbCountryCodeSG": "Singapore",
+  "tmdbCountryCodeMY": "Malaysia",
+  "tmdbCountryCodeID": "Indonesia",
+  "tmdbCountryCodePH": "Philippines",
+  "tmdbCountryCodeVN": "Vietnam",
+  "videoCollectionNameFallback": "Unknown Collection"
 }

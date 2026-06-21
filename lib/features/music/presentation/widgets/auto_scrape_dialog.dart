@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 import 'package:my_nas/features/music/data/services/live_activity_service.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
@@ -61,7 +62,7 @@ class AutoScrapeDialog extends ConsumerStatefulWidget {
 class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
   // 状态
   _ScrapeStatus _status = _ScrapeStatus.searching;
-  String _statusMessage = '正在搜索...';
+  String _statusMessage = appL10n.musicAutoScrapeSearching;
   double? _progress;
 
   // 结果

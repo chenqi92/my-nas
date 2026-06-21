@@ -1555,7 +1555,7 @@ VideoScannerService: 增量同步完成
             phase: VideoScanPhase.scanning,
             sourceId: sourceId,
             pathPrefix: rootPath,
-            currentPath: '发现 $count 个目录...',
+            currentPath: appL10n.videoScanProgressDiscoveringCount(count),
           ));
         },
       );
@@ -1583,7 +1583,7 @@ VideoScannerService: 增量同步完成
             phase: VideoScanPhase.scanning,
             sourceId: sourceId,
             pathPrefix: rootPath,
-            currentPath: '发现 ${directories.length} 个目录...',
+            currentPath: appL10n.videoScanProgressDiscoveringCount(directories.length),
           ));
         }
       } on Exception catch (e) {
@@ -1731,7 +1731,7 @@ VideoScannerService: 增量同步完成
       phase: VideoScanPhase.scanning,
       sourceId: sourceId,
       pathPrefix: rootPath,
-      currentPath: '${currentStats.completedDirectories}/$totalDirectories 目录',
+      currentPath: appL10n.videoScanProgressDirectoriesScanned(currentStats.completedDirectories, totalDirectories),
       scannedCount: videos.length,
     ));
   }

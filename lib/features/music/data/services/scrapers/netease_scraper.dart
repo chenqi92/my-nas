@@ -9,6 +9,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -452,14 +453,14 @@ class NeteaseScraper implements MusicScraper {
   MusicScraperException _handleDioError(DioException e) {
     if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
       return MusicScraperAuthException(
-        'Cookie 无效或已过期',
+        appL10n.neteaseScraperAuthExpiredError,
         source: type,
         cause: e,
       );
     }
     if (e.response?.statusCode == 429) {
       return MusicScraperRateLimitException(
-        '请求过于频繁，请稍后再试',
+        appL10n.neteaseScraperRateLimitError,
         source: type,
         cause: e,
       );
@@ -468,13 +469,13 @@ class NeteaseScraper implements MusicScraper {
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {
       return MusicScraperNetworkException(
-        '网络连接失败',
+        appL10n.neteaseScraperNetworkError,
         source: type,
         cause: e,
       );
     }
     return MusicScraperException(
-      e.message ?? '未知错误',
+      (e.message?.isNotEmpty ?? false) ? e.message! : appL10n.neteaseScraperUnknownError,
       source: type,
       cause: e,
     );

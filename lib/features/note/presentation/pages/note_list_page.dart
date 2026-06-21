@@ -234,7 +234,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
       _searchQuery = '';
       state = NotePageLoaded(treeNodes: rootNodes);
     } on Exception catch (e) {
-      state = NotePageError(e.toString());
+      state = NotePageError(appL10n.noteListLoadTreeFailed(e));
     }
   }
 

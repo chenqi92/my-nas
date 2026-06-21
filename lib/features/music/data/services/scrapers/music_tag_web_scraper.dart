@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -395,14 +396,14 @@ class MusicTagWebScraper implements MusicScraper {
   MusicScraperException _handleDioError(DioException e) {
     if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
       return MusicScraperAuthException(
-        '认证失败，请检查用户名密码',
+        appL10n.musicTagWebScraperAuthFailed,
         source: type,
         cause: e,
       );
     }
     if (e.response?.statusCode == 429) {
       return MusicScraperRateLimitException(
-        '请求过于频繁，请稍后再试',
+        appL10n.musicTagWebScraperRateLimited,
         source: type,
         cause: e,
       );
@@ -411,13 +412,13 @@ class MusicTagWebScraper implements MusicScraper {
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {
       return MusicScraperNetworkException(
-        '无法连接到 Music Tag Web 服务器: $serverUrl',
+        appL10n.musicTagWebScraperConnectionFailed(serverUrl),
         source: type,
         cause: e,
       );
     }
     return MusicScraperException(
-      e.message ?? '未知错误',
+      e.message ?? appL10n.musicTagWebScraperUnknownError,
       source: type,
       cause: e,
     );

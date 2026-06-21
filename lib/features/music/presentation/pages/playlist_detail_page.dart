@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
 import 'package:my_nas/features/music/data/services/playlist_io_service.dart';
@@ -136,7 +137,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage>
       logger.e('PlaylistDetail: 加载歌单失败', e, stackTrace);
       setState(() {
         _isLoading = false;
-        _error = '加载失败: $e';
+        _error = appL10n.musicPlaylistDetailLoadFailed(e);
       });
     }
   }

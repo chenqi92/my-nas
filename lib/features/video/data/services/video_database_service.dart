@@ -4892,7 +4892,7 @@ class VideoDatabaseService {
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
       ''', [
         collectionId,
-        row['name'] as String? ?? '未知系列',
+        row['name'] as String? ?? appL10n.videoCollectionNameFallback,
         row['poster_url'] as String?,
         row['backdrop_url'] as String?,
         row['overview'] as String?,

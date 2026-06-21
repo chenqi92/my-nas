@@ -1108,48 +1108,86 @@ class TmdbTvDetail {
     return originCountry.map(_countryCodeToName).join(', ');
   }
 
-  /// ISO 国家代码转换为中文名称
+  /// ISO 国家代码转换为显示名称（已本地化）
   static String _countryCodeToName(String code) {
-    const countryNames = {
-      'US': '美国',
-      'CN': '中国',
-      'JP': '日本',
-      'KR': '韩国',
-      'GB': '英国',
-      'FR': '法国',
-      'DE': '德国',
-      'IT': '意大利',
-      'ES': '西班牙',
-      'CA': '加拿大',
-      'AU': '澳大利亚',
-      'IN': '印度',
-      'TW': '中国台湾',
-      'HK': '中国香港',
-      'TH': '泰国',
-      'RU': '俄罗斯',
-      'BR': '巴西',
-      'MX': '墨西哥',
-      'NL': '荷兰',
-      'SE': '瑞典',
-      'DK': '丹麦',
-      'NO': '挪威',
-      'FI': '芬兰',
-      'BE': '比利时',
-      'AT': '奥地利',
-      'CH': '瑞士',
-      'NZ': '新西兰',
-      'IE': '爱尔兰',
-      'PL': '波兰',
-      'TR': '土耳其',
-      'AR': '阿根廷',
-      'ZA': '南非',
-      'SG': '新加坡',
-      'MY': '马来西亚',
-      'ID': '印度尼西亚',
-      'PH': '菲律宾',
-      'VN': '越南',
-    };
-    return countryNames[code] ?? code;
+    switch (code) {
+      case 'US':
+        return appL10n.tmdbCountryCodeUS;
+      case 'CN':
+        return appL10n.tmdbCountryCodeCN;
+      case 'JP':
+        return appL10n.tmdbCountryCodeJP;
+      case 'KR':
+        return appL10n.tmdbCountryCodeKR;
+      case 'GB':
+        return appL10n.tmdbCountryCodeGB;
+      case 'FR':
+        return appL10n.tmdbCountryCodeFR;
+      case 'DE':
+        return appL10n.tmdbCountryCodeDE;
+      case 'IT':
+        return appL10n.tmdbCountryCodeIT;
+      case 'ES':
+        return appL10n.tmdbCountryCodeES;
+      case 'CA':
+        return appL10n.tmdbCountryCodeCA;
+      case 'AU':
+        return appL10n.tmdbCountryCodeAU;
+      case 'IN':
+        return appL10n.tmdbCountryCodeIN;
+      case 'TW':
+        return appL10n.tmdbCountryCodeTW;
+      case 'HK':
+        return appL10n.tmdbCountryCodeHK;
+      case 'TH':
+        return appL10n.tmdbCountryCodeTH;
+      case 'RU':
+        return appL10n.tmdbCountryCodeRU;
+      case 'BR':
+        return appL10n.tmdbCountryCodeBR;
+      case 'MX':
+        return appL10n.tmdbCountryCodeMX;
+      case 'NL':
+        return appL10n.tmdbCountryCodeNL;
+      case 'SE':
+        return appL10n.tmdbCountryCodeSE;
+      case 'DK':
+        return appL10n.tmdbCountryCodeDK;
+      case 'NO':
+        return appL10n.tmdbCountryCodeNO;
+      case 'FI':
+        return appL10n.tmdbCountryCodeFI;
+      case 'BE':
+        return appL10n.tmdbCountryCodeBE;
+      case 'AT':
+        return appL10n.tmdbCountryCodeAT;
+      case 'CH':
+        return appL10n.tmdbCountryCodeCH;
+      case 'NZ':
+        return appL10n.tmdbCountryCodeNZ;
+      case 'IE':
+        return appL10n.tmdbCountryCodeIE;
+      case 'PL':
+        return appL10n.tmdbCountryCodePL;
+      case 'TR':
+        return appL10n.tmdbCountryCodeTR;
+      case 'AR':
+        return appL10n.tmdbCountryCodeAR;
+      case 'ZA':
+        return appL10n.tmdbCountryCodeZA;
+      case 'SG':
+        return appL10n.tmdbCountryCodeSG;
+      case 'MY':
+        return appL10n.tmdbCountryCodeMY;
+      case 'ID':
+        return appL10n.tmdbCountryCodeID;
+      case 'PH':
+        return appL10n.tmdbCountryCodePH;
+      case 'VN':
+        return appL10n.tmdbCountryCodeVN;
+      default:
+        return code;
+    }
   }
 }
 

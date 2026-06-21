@@ -14,6 +14,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/media_scan_progress_service.dart';
 import 'package:my_nas/core/utils/background_task_pool.dart';
 import 'package:my_nas/core/utils/grid_helper.dart';
@@ -135,7 +136,7 @@ class MusicFileWithSource {
     // 尝试从文件名解析
     final nameWithoutExt = name.replaceAll(RegExp(r'\.[^.]+$'), '');
     final match = RegExp(r'^(.+?)\s*[-–—]\s*.+$').firstMatch(nameWithoutExt);
-    return match?.group(1)?.trim() ?? '未知艺术家';
+    return match?.group(1)?.trim() ?? appL10n.musicUnknownArtist;
   }
 
   /// 显示的专辑
@@ -699,7 +700,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
 
   /// 从 SQLite 加载分类数据（高性能）
   Future<void> _loadCategorizedData() async {
-    state = MusicListLoading(fromCache: true, currentFolder: '加载数据...');
+    state = MusicListLoading(fromCache: true, currentFolder: appL10n.musicLoadingData);
 
     // 获取启用的路径
     final enabledPaths = _getEnabledPaths();
@@ -926,7 +927,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
     }
 
     logger.i('MusicListNotifier: 开始从 Hive 缓存迁移 ${cache.tracks.length} 首音乐');
-    state = MusicListLoading(currentFolder: '正在迁移数据...', fromCache: true);
+    state = MusicListLoading(currentFolder: appL10n.musicMigratingData, fromCache: true);
 
     final metadataList = <MusicTrackEntity>[];
     for (final entry in cache.tracks) {
@@ -976,14 +977,14 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
 
     var config = configAsync.valueOrNull;
     if (config == null) {
-      state = MusicListLoading(currentFolder: '正在加载配置...');
+      state = MusicListLoading(currentFolder: appL10n.musicLoadingConfig);
       for (var i = 0; i < 10; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 500));
         final updated = _ref.read(mediaLibraryConfigProvider);
         config = updated.valueOrNull;
         if (config != null) break;
         if (updated.hasError) {
-          state = MusicListError('加载媒体库配置失败');
+          state = MusicListError(appL10n.musicLoadConfigFailed);
           return;
         }
       }
@@ -1022,7 +1023,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
     }
 
     // 渐进式加载：扫描时边扫边保存，立即切换到可用状态
-    state = MusicListLoading(currentFolder: '正在扫描...');
+    state = MusicListLoading(currentFolder: appL10n.musicScanning);
     final allTracks = <MusicFileWithSource>[];
     var scannedFolders = 0;
     final totalFolders = connectedPaths.length;
