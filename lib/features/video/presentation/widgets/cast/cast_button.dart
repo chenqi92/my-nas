@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/cast_device.dart';
 import 'package:my_nas/features/video/presentation/providers/cast_provider.dart';
 import 'package:my_nas/features/video/presentation/theme/video_player_colors.dart';
@@ -52,7 +53,7 @@ class _CastButtonState extends ConsumerState<CastButton> {
       offset: const Offset(0, -280),
       color: Colors.black87,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      tooltip: isCasting ? '投屏中' : '投屏',
+      tooltip: isCasting ? context.l10n.videoCastCasting : context.l10n.videoCastIdle,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
@@ -78,7 +79,7 @@ class _CastButtonState extends ConsumerState<CastButton> {
             if (isCasting) ...[
               const SizedBox(width: 4),
               Text(
-                castState.session?.device.name ?? '投屏中',
+                castState.session?.device.name ?? context.l10n.videoCastCasting,
                 style: const TextStyle(color: Colors.white, fontSize: 12),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -102,9 +103,9 @@ class _CastButtonState extends ConsumerState<CastButton> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('正在投屏到', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                        Text(context.l10n.videoCastCastingTo, style: const TextStyle(color: Colors.white54, fontSize: 12)),
                         Text(
-                          castState.session?.device.name ?? '未知设备',
+                          castState.session?.device.name ?? context.l10n.videoCastUnknownDevice,
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -117,10 +118,10 @@ class _CastButtonState extends ConsumerState<CastButton> {
             PopupMenuItem<_CastAction>(
               value: _CastAction.stop,
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.stop_rounded, size: 18, color: Colors.redAccent),
                   SizedBox(width: 12),
-                  Text('停止投屏', style: TextStyle(color: Colors.redAccent)),
+                  Text(context.l10n.videoCastStopCasting, style: TextStyle(color: Colors.redAccent)),
                 ],
               ),
             ),
@@ -137,8 +138,8 @@ class _CastButtonState extends ConsumerState<CastButton> {
                 children: [
                   const Icon(Icons.cast, size: 18, color: Colors.white70),
                   const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text('选择投屏设备', style: TextStyle(color: Colors.white70)),
+                  Expanded(
+                    child: Text(context.l10n.videoCastSelectDevice, style: TextStyle(color: Colors.white70)),
                   ),
                   if (isDiscovering)
                     const SizedBox(
@@ -177,12 +178,12 @@ class _CastButtonState extends ConsumerState<CastButton> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      isDiscovering ? '正在搜索设备...' : '未发现投屏设备',
+                      isDiscovering ? context.l10n.videoCastSearching : context.l10n.videoCastNotFound,
                       style: const TextStyle(color: Colors.white54),
                     ),
                     if (!isDiscovering)
-                      const Text(
-                        '请确保设备在同一网络',
+                      Text(
+                        context.l10n.videoCastNetworkHint,
                         style: TextStyle(color: Colors.white38, fontSize: 11),
                       ),
                   ],
@@ -283,7 +284,7 @@ class CastButtonOutlined extends ConsumerWidget {
     return OutlinedButton.icon(
       onPressed: () => _handleTap(context, ref, isCasting),
       icon: _buildIcon(isCasting, isDiscovering),
-      label: Text(isCasting ? '投屏中' : '投屏'),
+      label: Text(isCasting ? context.l10n.videoCastCasting : context.l10n.videoCastIdle),
       style: OutlinedButton.styleFrom(
         foregroundColor: VideoPlayerColors.primary,
         side: VideoPlayerColors.buttonBorder,
@@ -385,11 +386,11 @@ class _CastControlSheet extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '正在投屏到',
+                        context.l10n.videoCastCastingTo,
                         style: VideoPlayerColors.subtitleTextStyle,
                       ),
                       Text(
-                        session?.device.name ?? '未知设备',
+                        session?.device.name ?? context.l10n.videoCastUnknownDevice,
                         style: const TextStyle(
                           color: VideoPlayerColors.primary,
                           fontSize: 16,
@@ -466,7 +467,7 @@ class _CastControlSheet extends ConsumerWidget {
               child: OutlinedButton.icon(
                 onPressed: onStop,
                 icon: const Icon(Icons.stop_rounded),
-                label: const Text('停止投屏'),
+                label: Text(context.l10n.videoCastStopCasting),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: VideoPlayerColors.primary,
                   side: VideoPlayerColors.buttonBorder,

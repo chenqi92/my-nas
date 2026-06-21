@@ -7643,5 +7643,387 @@
       }
     }
   },
-  "videoVolumeBoostNormal": "Normal"
+  "videoVolumeBoostNormal": "Normal",
+  "videoScraperSourcesPageTitle": "Video Scraper Sources",
+  "videoScraperReorderModeDone": "Done sorting",
+  "videoScraperReorderModeAdjust": "Adjust order",
+  "videoScraperLoadFailed": "Failed to load: {error}",
+  "@videoScraperLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoScraperRetry": "Retry",
+  "videoScraperConfigSaved": "{source} configuration saved",
+  "@videoScraperConfigSaved": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "videoScraperConnectionSuccess": "Connection successful",
+  "videoScraperConnectionFailed": "Connection failed",
+  "videoScraperCardConfigured": "Configured",
+  "videoScraperCardConfigure": "Configure",
+  "videoScraperCardBuiltIn": "Built-in service, no configuration needed",
+  "videoScraperCardRequiresApiKey": "API Key required",
+  "videoScraperCardRequiresApiUrl": "API URL required",
+  "videoScraperCardRequiresCookie": "Login Cookie required",
+  "videoScraperApiKeyLabel": "API Key",
+  "videoScraperApiKeyTmdbHint": "Get from themoviedb.org",
+  "videoScraperApiKeyOptionalHint": "Optional",
+  "videoScraperImageProxyLabel": "Image Proxy",
+  "videoScraperImageProxyHint": "Leave blank to use official source image.tmdb.org",
+  "videoScraperApiUrlLabel": "API URL",
+  "videoScraperApiUrlHint": "Third-party Douban API service URL",
+  "videoScraperCookieLabel": "Cookie",
+  "videoScraperCookieHint": "Copy the Cookie from browser after logging in",
+  "videoScraperTestConnectionTesting": "Testing...",
+  "videoScraperTestConnectionButton": "Test Connection",
+  "videoScraperSaveButton": "Save",
+  "videoScraperApiUrlRequired": "Please fill in API URL",
+  "videoScraperCustomApiUrlRequired": "Please fill in custom API URL",
+  "videoScraperTmdbApiServerLabel": "API Server",
+  "videoScraperTmdbOfficialLabel": "TMDB Official",
+  "videoScraperTmdbOfficialDesc": "api.themoviedb.org (default)",
+  "videoScraperTmdbBackupLabel": "TMDB Backup",
+  "videoScraperNastoolLabel": "NasTool Proxy",
+  "videoScraperNastoolDesc": "tmdb.nastool.cn (recommended for domestic)",
+  "videoScraperWorkersLabel": "Workers Proxy",
+  "videoScraperCubRedLabel": "Cub.red Proxy",
+  "videoScraperCustomLabel": "Custom",
+  "videoScraperCustomDesc": "Manually enter proxy or mirror URL",
+  "videoScraperCustomApiUrlLabel": "Custom API URL",
+  "videoScraperCustomApiUrlExample": "e.g. https://your-proxy.example.com/3",
+  "videoTmdbPreviewLocalUnavailable": "Locally Unavailable",
+  "videoTmdbPreviewSectionOverview": "Overview",
+  "videoTmdbPreviewSectionRecommended": "Recommended",
+  "videoTmdbPreviewSectionSimilar": "Similar",
+  "videoTmdbPreviewMovieRuntime": "{runtime} mins",
+  "@videoTmdbPreviewMovieRuntime": {
+    "placeholders": {
+      "runtime": {
+        "type": "int"
+      }
+    }
+  },
+  "videoTmdbPreviewTvSeasons": "{seasons} seasons",
+  "@videoTmdbPreviewTvSeasons": {
+    "placeholders": {
+      "seasons": {
+        "type": "int"
+      }
+    }
+  },
+  "videoTmdbPreviewActionPtSearch": "PT Search",
+  "videoTmdbPreviewActionAddSubscribe": "Add Subscription",
+  "videoTmdbPreviewSelectPtSite": "Select PT Site",
+  "videoTmdbPreviewSelectPtSiteSearch": "Search: {keyword}",
+  "@videoTmdbPreviewSelectPtSiteSearch": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "videoTmdbPreviewSelectNastool": "Select NASTool",
+  "videoTmdbPreviewSelectNastoolSubscribe": "Subscribe: {title}",
+  "@videoTmdbPreviewSelectNastoolSubscribe": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoTmdbPreviewNastoolNotConnected": "{sourceName} not connected",
+  "@videoTmdbPreviewNastoolNotConnected": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "videoTmdbPreviewSubscribeAdded": "Subscription added: {title}",
+  "@videoTmdbPreviewSubscribeAdded": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoTmdbPreviewSubscribeAddFailed": "Failed to add subscription: {error}",
+  "@videoTmdbPreviewSubscribeAddFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoLiveChannelListSearchTooltip": "Search channels",
+  "videoLiveChannelListListViewTooltip": "List view",
+  "videoLiveChannelListGridViewTooltip": "Grid view",
+  "videoLiveChannelListSettingsTooltip": "Live stream settings",
+  "videoLiveChannelListTitle": "Live Channels",
+  "videoLiveChannelListSearchHint": "Search channels...",
+  "videoLiveChannelListEmptyTitle": "No live streams",
+  "videoLiveChannelListEmptyDesc": "Add live stream source configuration first",
+  "videoLiveChannelListAddButton": "Add Live Stream",
+  "videoLiveChannelListNoResultsTitle": "No matching channels found",
+  "videoEpisodeTitle": "Episodes",
+  "videoSeasonSpecial": "Special",
+  "videoSeasonNumber": "Season {number}",
+  "@videoSeasonNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeCountWithLocal": "({local}/{total} episodes)",
+  "@videoEpisodeCountWithLocal": {
+    "placeholders": {
+      "local": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeLoadFailed": "Failed to load episodes",
+  "videoEpisodeNoInfo": "No episode information",
+  "videoEpisodeEmpty": "No episodes",
+  "videoEpisodeNumber": "Episode {number}",
+  "@videoEpisodeNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeShowAllLabel": "Show all {count} episodes",
+  "@videoEpisodeShowAllLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeCollapse": "Collapse",
+  "livePlayerPlaybackFailed": "Playback failed",
+  "livePlayerRetry": "Retry",
+  "livePlayerVolume": "Volume",
+  "livePlayerBrightness": "Brightness",
+  "livePlayerFavorite": "Favorite",
+  "livePlayerChannelList": "Channel List",
+  "livePlayerEmptyChannels": "No channels",
+  "livePlayerPlayingBadge": "Playing",
+  "livePlayerSwitchChannel": "Switched to: {channelName}",
+  "@livePlayerSwitchChannel": {
+    "placeholders": {
+      "channelName": {
+        "type": "String"
+      }
+    }
+  },
+  "livePlayerAspectRatio": "Aspect ratio: {mode}",
+  "@livePlayerAspectRatio": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "videoQualitySwitchDialogTitle": "Playback stuttering detected",
+  "videoQualitySwitchDialogDescription": "Your network is unstable. We recommend switching to a lower quality for smooth playback.",
+  "videoQualitySwitchCurrentLabel": "Current",
+  "videoQualitySwitchSuggestedLabel": "Suggested",
+  "videoQualitySwitchDontAskAgain": "Don't ask again for this video",
+  "videoQualitySwitchKeepQuality": "Keep {quality}",
+  "@videoQualitySwitchKeepQuality": {
+    "placeholders": {
+      "quality": {
+        "type": "String"
+      }
+    }
+  },
+  "videoQualitySwitchSwitchQuality": "Switch to {quality}",
+  "@videoQualitySwitchSwitchQuality": {
+    "placeholders": {
+      "quality": {
+        "type": "String"
+      }
+    }
+  },
+  "videoCastDeviceSheetTitle": "Select Cast Device",
+  "videoCastDeviceSheetRefresh": "Refresh",
+  "videoCastDeviceSheetNetworkHint": "Ensure your cast device and phone are on the same network",
+  "videoCastDeviceSheetSearching": "Searching for devices...",
+  "videoCastDeviceSheetNotFound": "No cast devices found",
+  "videoCastDeviceSheetEmptyHint": "Ensure the device is powered on and connected to the same network",
+  "videoCastDeviceSheetResearch": "Search Again",
+  "videoPlayerPipExit": "Exit Picture in Picture",
+  "videoPlayerPipEnter": "Picture in Picture",
+  "videoPlayerUnlock": "Unlock Screen",
+  "videoPlayerLock": "Lock Screen",
+  "videoPlayerScreenLocked": "Screen locked. Tap the lock icon to unlock.",
+  "videoPlayerPlaybackFailed": "Playback Failed",
+  "videoPlayerRetry": "Retry",
+  "videoPlayerKeyboardHelpTitle": "Video Playback Shortcuts",
+  "videoPlayerShortcutPlayPause": "Play/Pause",
+  "videoPlayerShortcutSeekBackward": "Rewind",
+  "videoPlayerShortcutSeekForward": "Forward",
+  "videoPlayerShortcutVolumeUp": "Increase Volume",
+  "videoPlayerShortcutVolumeDown": "Decrease Volume",
+  "videoPlayerShortcutMute": "Mute/Unmute",
+  "videoPlayerShortcutToggleFullscreen": "Toggle Fullscreen",
+  "videoPlayerShortcutToggleControls": "Show/Hide Controls",
+  "videoPlayerShortcutSpeedDown": "Slow Down Playback",
+  "videoPlayerShortcutSpeedUp": "Speed Up Playback",
+  "videoPlayerShortcutSpeedNormal": "Normal Speed",
+  "videoPlayerShortcutJumpToPercent": "Jump to 0%-90%",
+  "videoPlayerShortcutExit": "Exit Fullscreen/Back",
+  "videoPlayerShortcutHelp": "Show This Help",
+  "videoPlayerCacheCached": "Cached",
+  "videoPlayerCacheVideo": "Cache Video",
+  "videoPlayerCacheAdded": "Added to cache queue",
+  "videoPlayerCacheView": "View",
+  "videoCastCasting": "Casting",
+  "videoCastIdle": "Cast",
+  "videoCastCastingTo": "Casting to",
+  "videoCastUnknownDevice": "Unknown device",
+  "videoCastStopCasting": "Stop casting",
+  "videoCastSelectDevice": "Select cast device",
+  "videoCastSearching": "Searching for devices...",
+  "videoCastNotFound": "No cast devices found",
+  "videoCastNetworkHint": "Make sure devices are on the same network",
+  "videoControlsBookmarkTooltip": "Bookmark",
+  "videoControlsPlaylistTooltip": "Playlist",
+  "videoControlsPipTooltip": "Picture in Picture",
+  "videoControlsPipExitTooltip": "Exit Picture in Picture",
+  "videoControlsSettingsTooltip": "Settings",
+  "videoControlsFullscreenTooltip": "Fullscreen",
+  "videoControlsFullscreenExitTooltip": "Exit Fullscreen",
+  "videoControlsAspectRatioTooltip": "Aspect Ratio",
+  "videoEpisodeCardNoResource": "No resource",
+  "videoEpisodeCardRuntimeMinutes": "{minutes} minutes",
+  "@videoEpisodeCardRuntimeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeCardRuntimeHoursMinutes": "{hours} hours {minutes} minutes",
+  "@videoEpisodeCardRuntimeHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeCardRuntimeHours": "{hours} hours",
+  "@videoEpisodeCardRuntimeHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCompactEpisodeCardEpisodeNumber": "Ep. {number}",
+  "@videoCompactEpisodeCardEpisodeNumber": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "videoRecommendationsTitle": "Recommended",
+  "videoSimilarContentTitle": "Similar Content",
+  "videoSeriesLabel": "Series",
+  "videoSearchOnPtWithYear": "Search on PT \"{title}\"",
+  "@videoSearchOnPtWithYear": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSearchIncludeYear": "Include year {year}",
+  "@videoSearchIncludeYear": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSearchOnPtNoYear": "Search on PT \"{title}\" (without year)",
+  "@videoSearchOnPtNoYear": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoPlaylistSheetBarrierLabel": "Close playlist",
+  "videoPlaylistPanelTitle": "Playlist",
+  "videoPlaylistItemCount": "{count} videos",
+  "@videoPlaylistItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoPlaylistShuffleOn": "Turn off shuffle",
+  "videoPlaylistShuffleOff": "Shuffle playback",
+  "videoPlaylistRepeatNone": "Repeat list",
+  "videoPlaylistRepeatAll": "Repeat one",
+  "videoPlaylistRepeatOne": "Turn off repeat",
+  "videoPlaylistEmptyTitle": "Playlist is empty",
+  "videoPlaylistEmptySubtitle": "Select videos from the video list to play",
+  "videoPlaylistItemSizeUnknown": "Unknown size",
+  "videoCategorySettingsTitle": "Category Display Settings",
+  "videoCategorySettingsReset": "Reset",
+  "videoCategorySettingsBasicSection": "Basic Categories",
+  "videoCategorySettingsBasicSubtitle": "Drag to adjust order, toggle to control visibility",
+  "videoCategorySettingsDynamicSection": "Dynamic Categories",
+  "videoCategorySettingsDynamicSubtitle": "Select specific types/regions to display on home",
+  "videoCategorySettingsMovieGenre": "Movie Genre",
+  "videoCategorySettingsMovieRegion": "Movie Region",
+  "videoCategorySettingsTvGenre": "TV Genre",
+  "videoCategorySettingsTvRegion": "TV Region",
+  "videoCategorySettingsSelectedCount": "Selected {count} items",
+  "@videoCategorySettingsSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCategorySettingsNoneSelected": "Not selected",
+  "videoCategorySettingsNoAvailable": "No available {type}",
+  "@videoCategorySettingsNoAvailable": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "videoCategorySettingsDeselect": "Deselect All",
+  "videoCategorySettingsSelectAll": "Select All",
+  "videoCategorySettingsClear": "Clear",
+  "videoQualitySelectorTitle": "Quality",
+  "videoQualitySelectorServerTranscoding": "Server-Side Transcoding",
+  "videoQualitySelectorClientTranscoding": "Client-Side Transcoding",
+  "videoQualitySelectorUnsupportedTitle": "This source doesn't support quality switching",
+  "videoQualitySelectorUnsupportedDesc": "Can only play original quality",
+  "videoQualitySelectorHintServerTranscoding": "Real-time server-side transcoding, switching may take a few seconds",
+  "videoQualitySelectorHintClientTranscoding": "Using client-side transcoding, may increase device load"
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/cast_device.dart';
 import 'package:my_nas/features/video/presentation/providers/cast_provider.dart';
 import 'package:my_nas/features/video/presentation/theme/video_player_colors.dart';
@@ -62,9 +63,9 @@ class _CastDeviceSheetState extends ConsumerState<CastDeviceSheet> {
                     size: 24,
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      '选择投屏设备',
+                      context.l10n.videoCastDeviceSheetTitle,
                       style: TextStyle(
                         color: VideoPlayerColors.primary,
                         fontSize: 18,
@@ -85,7 +86,7 @@ class _CastDeviceSheetState extends ConsumerState<CastDeviceSheet> {
                             ),
                           )
                         : const Icon(Icons.refresh_rounded, color: VideoPlayerColors.primary),
-                    tooltip: '刷新',
+                    tooltip: context.l10n.videoCastDeviceSheetRefresh,
                   ),
                 ],
               ),
@@ -121,14 +122,14 @@ class _CastDeviceSheetState extends ConsumerState<CastDeviceSheet> {
 
             // 设备列表
             Flexible(
-              child: _buildDeviceList(devices, isDiscovering),
+              child: _buildDeviceList(context, devices, isDiscovering),
             ),
 
             // 提示文字
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                '请确保投屏设备与手机在同一网络',
+                context.l10n.videoCastDeviceSheetNetworkHint,
                 style: VideoPlayerColors.subtitleTextStyle,
               ),
             ),
@@ -138,18 +139,18 @@ class _CastDeviceSheetState extends ConsumerState<CastDeviceSheet> {
     );
   }
 
-  Widget _buildDeviceList(List<CastDevice> devices, bool isDiscovering) {
+  Widget _buildDeviceList(BuildContext context, List<CastDevice> devices, bool isDiscovering) {
     if (devices.isEmpty && isDiscovering) {
-      return const Padding(
-        padding: EdgeInsets.all(40),
+      return Padding(
+        padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(color: VideoPlayerColors.primary),
-            SizedBox(height: 16),
+            const CircularProgressIndicator(color: VideoPlayerColors.primary),
+            const SizedBox(height: 16),
             Text(
-              '正在搜索设备...',
-              style: TextStyle(color: VideoPlayerColors.secondary),
+              context.l10n.videoCastDeviceSheetSearching,
+              style: const TextStyle(color: VideoPlayerColors.secondary),
             ),
           ],
         ),
@@ -168,23 +169,23 @@ class _CastDeviceSheetState extends ConsumerState<CastDeviceSheet> {
               color: VideoPlayerColors.disabled,
             ),
             const SizedBox(height: 16),
-            const Text(
-              '未发现投屏设备',
-              style: TextStyle(
+            Text(
+              context.l10n.videoCastDeviceSheetNotFound,
+              style: const TextStyle(
                 color: VideoPlayerColors.secondary,
                 fontSize: 16,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '请确保设备已开启并连接到同一网络',
+              context.l10n.videoCastDeviceSheetEmptyHint,
               style: VideoPlayerColors.subtitleTextStyle,
             ),
             const SizedBox(height: 20),
             OutlinedButton.icon(
               onPressed: () => ref.read(castProvider.notifier).refreshDevices(),
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重新搜索'),
+              label: Text(context.l10n.videoCastDeviceSheetResearch),
               style: OutlinedButton.styleFrom(
                 foregroundColor: VideoPlayerColors.primary,
                 side: VideoPlayerColors.buttonBorder,

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/domain/entities/video_category_config.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
@@ -184,7 +185,7 @@ class _VideoCategorySettingsSheetState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '分类显示设置',
+                      context.l10n.videoCategorySettingsTitle,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -196,7 +197,7 @@ class _VideoCategorySettingsSheetState
                     onPressed: () => ref
                         .read(videoCategorySettingsProvider.notifier)
                         .resetToDefaults(),
-                    child: const Text('重置'),
+                    child: Text(context.l10n.videoCategorySettingsReset),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
@@ -213,15 +214,15 @@ class _VideoCategorySettingsSheetState
                 padding: EdgeInsets.only(bottom: 24 + classicBottomPadding),
                 children: [
                   // 基础分类区域
-                  _buildSectionHeader(isDark, '基础分类', '拖动调整顺序，开关控制显示'),
+                  _buildSectionHeader(isDark, context.l10n.videoCategorySettingsBasicSection, context.l10n.videoCategorySettingsBasicSubtitle),
                   _buildBasicCategoriesList(isDark, basicSections),
                   const SizedBox(height: 16),
                   // 动态分类区域
-                  _buildSectionHeader(isDark, '动态分类', '选择要在首页展示的具体类型/地区'),
+                  _buildSectionHeader(isDark, context.l10n.videoCategorySettingsDynamicSection, context.l10n.videoCategorySettingsDynamicSubtitle),
                   _buildDynamicCategoryExpansion(
                     isDark,
                     VideoHomeCategory.byMovieGenre,
-                    '电影类型',
+                    context.l10n.videoCategorySettingsMovieGenre,
                     Icons.theater_comedy_rounded,
                     AppColors.downloadColor,
                     settings,
@@ -229,7 +230,7 @@ class _VideoCategorySettingsSheetState
                   _buildDynamicCategoryExpansion(
                     isDark,
                     VideoHomeCategory.byMovieRegion,
-                    '电影地区',
+                    context.l10n.videoCategorySettingsMovieRegion,
                     Icons.language_rounded,
                     AppColors.photoColor,
                     settings,
@@ -237,7 +238,7 @@ class _VideoCategorySettingsSheetState
                   _buildDynamicCategoryExpansion(
                     isDark,
                     VideoHomeCategory.byTvGenre,
-                    '剧集类型',
+                    context.l10n.videoCategorySettingsTvGenre,
                     Icons.theaters_rounded,
                     AppColors.warning,
                     settings,
@@ -245,7 +246,7 @@ class _VideoCategorySettingsSheetState
                   _buildDynamicCategoryExpansion(
                     isDark,
                     VideoHomeCategory.byTvRegion,
-                    '剧集地区',
+                    context.l10n.videoCategorySettingsTvRegion,
                     Icons.flag_rounded,
                     AppColors.musicColor,
                     settings,
@@ -375,7 +376,7 @@ class _VideoCategorySettingsSheetState
             ),
           ),
           subtitle: Text(
-            selectedCount > 0 ? '已选 $selectedCount 项' : '未选择',
+            selectedCount > 0 ? context.l10n.videoCategorySettingsSelectedCount(selectedCount) : context.l10n.videoCategorySettingsNoneSelected,
             style: TextStyle(
               fontSize: 12,
               color: selectedCount > 0
@@ -399,7 +400,7 @@ class _VideoCategorySettingsSheetState
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  '暂无可用${category.isGenreCategory ? '类型' : '地区'}',
+                  context.l10n.videoCategorySettingsNoAvailable(category.isGenreCategory ? '类型' : '地区'),
                   style: TextStyle(
                     color: isDark ? Colors.grey[600] : Colors.grey[500],
                   ),
@@ -439,7 +440,7 @@ class _VideoCategorySettingsSheetState
             children: [
               _buildActionButton(
                 isDark,
-                allSelected ? '取消全选' : '全选',
+                allSelected ? context.l10n.videoCategorySettingsDeselect : context.l10n.videoCategorySettingsSelectAll,
                 allSelected ? Icons.deselect : Icons.select_all,
                 color,
                 () {
@@ -458,7 +459,7 @@ class _VideoCategorySettingsSheetState
                 const SizedBox(width: 8),
                 _buildActionButton(
                   isDark,
-                  '清空',
+                  context.l10n.videoCategorySettingsClear,
                   Icons.clear_all,
                   Colors.red,
                   () => ref

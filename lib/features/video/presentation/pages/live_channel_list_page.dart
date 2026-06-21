@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/pages/live_player_page.dart';
 import 'package:my_nas/features/video/presentation/pages/live_stream_settings_page.dart';
@@ -75,17 +76,17 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
                       children: [
                         GlassGroupIconButton(
                           icon: Icons.search_rounded,
-                          tooltip: '搜索频道',
+                          tooltip: context.l10n.videoLiveChannelListSearchTooltip,
                           onPressed: () => setState(() => _showSearch = true),
                         ),
                         GlassGroupIconButton(
                           icon: _isGridView ? Icons.list_rounded : Icons.grid_view_rounded,
-                          tooltip: _isGridView ? '列表视图' : '网格视图',
+                          tooltip: _isGridView ? context.l10n.videoLiveChannelListListViewTooltip : context.l10n.videoLiveChannelListGridViewTooltip,
                           onPressed: () => setState(() => _isGridView = !_isGridView),
                         ),
                         GlassGroupIconButton(
                           icon: Icons.settings_rounded,
-                          tooltip: '直播源管理',
+                          tooltip: context.l10n.videoLiveChannelListSettingsTooltip,
                           onPressed: () => _openSettings(context),
                         ),
                       ],
@@ -100,7 +101,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('直播频道'),
+        title: Text(context.l10n.videoLiveChannelListTitle),
         actions: [
           IconButton(
             icon: Icon(_showSearch ? Icons.close_rounded : Icons.search_rounded),
@@ -111,17 +112,17 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
                 ref.read(liveChannelSearchQueryProvider.notifier).state = '';
               }
             }),
-            tooltip: '搜索频道',
+            tooltip: context.l10n.videoLiveChannelListSearchTooltip,
           ),
           IconButton(
             icon: Icon(_isGridView ? Icons.list_rounded : Icons.grid_view_rounded),
             onPressed: () => setState(() => _isGridView = !_isGridView),
-            tooltip: _isGridView ? '列表视图' : '网格视图',
+            tooltip: _isGridView ? context.l10n.videoLiveChannelListListViewTooltip : context.l10n.videoLiveChannelListGridViewTooltip,
           ),
           IconButton(
             icon: const Icon(Icons.settings_rounded),
             onPressed: () => _openSettings(context),
-            tooltip: '直播源管理',
+            tooltip: context.l10n.videoLiveChannelListSettingsTooltip,
           ),
         ],
       ),
@@ -151,7 +152,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
       controller: _searchController,
       autofocus: true,
       decoration: InputDecoration(
-        hintText: '搜索频道...',
+        hintText: context.l10n.videoLiveChannelListSearchHint,
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: _searchController.text.isNotEmpty
             ? IconButton(
@@ -184,7 +185,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
 
     return GlassFloatingSearchBar(
       controller: _searchController,
-      hintText: '搜索频道...',
+      hintText: context.l10n.videoLiveChannelListSearchHint,
       width: searchWidth,
       onChanged: (query) {
         ref.read(liveChannelSearchQueryProvider.notifier).state = query;
@@ -208,7 +209,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无直播源',
+              context.l10n.videoLiveChannelListEmptyTitle,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -216,7 +217,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
             ),
             const SizedBox(height: 8),
             Text(
-              '请先添加直播源配置',
+              context.l10n.videoLiveChannelListEmptyDesc,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[500],
@@ -226,7 +227,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
             ElevatedButton.icon(
               onPressed: () => _openSettings(context),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('添加直播源'),
+              label: Text(context.l10n.videoLiveChannelListAddButton),
             ),
           ],
         ),
@@ -243,7 +244,7 @@ class _LiveChannelListPageState extends ConsumerState<LiveChannelListPage>
             ),
             const SizedBox(height: 16),
             Text(
-              '未找到匹配的频道',
+              context.l10n.videoLiveChannelListNoResultsTitle,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],

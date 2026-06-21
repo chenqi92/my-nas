@@ -205,7 +205,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
   }
 
   void _switchChannel(LiveChannel channel) {
-    context.showToast('切换到: ${channel.displayName}');
+    context.showToast(context.l10n.livePlayerSwitchChannel(channel.displayName));
     _playChannel(channel);
     if (_scaffoldKey.currentState?.isEndDrawerOpen ?? false) {
       Navigator.pop(context);
@@ -223,7 +223,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
     final currentIndex = modes.indexOf(_aspectRatioMode);
     final nextIndex = (currentIndex + 1) % modes.length;
     setState(() => _aspectRatioMode = modes[nextIndex]);
-    context.showToast('画面比例: ${_aspectRatioMode.label}');
+    context.showToast(context.l10n.livePlayerAspectRatio(_aspectRatioMode.label));
   }
 
   void _onVerticalDragStart(DragStartDetails details) {
@@ -302,7 +302,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
           children: [
             const Icon(Icons.error_outline_rounded, color: Colors.red, size: 48),
             const SizedBox(height: 16),
-            const Text('播放失败', style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text(context.l10n.livePlayerPlaybackFailed, style: const TextStyle(color: Colors.white, fontSize: 18)),
             if (_errorMessage != null)
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -312,7 +312,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
             ElevatedButton.icon(
               onPressed: () => _playChannel(_currentChannel!),
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重试'),
+              label: Text(context.l10n.livePlayerRetry),
             ),
           ],
         ),
@@ -322,7 +322,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
     final icon = _isVolumeGesture
         ? (_currentGestureValue > 0 ? Icons.volume_up_rounded : Icons.volume_off_rounded)
         : (_currentGestureValue > 0.5 ? Icons.brightness_high_rounded : Icons.brightness_low_rounded);
-    final label = _isVolumeGesture ? '音量' : '亮度';
+    final label = _isVolumeGesture ? context.l10n.livePlayerVolume : context.l10n.livePlayerBrightness;
     return Center(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -414,7 +414,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
 
   Widget _buildChannelDrawer(Map<String, List<LiveChannel>> channelsByCategory, Set<String> favorites) {
     final favoriteChannels = ref.watch(allLiveChannelsProvider).where((c) => favorites.contains(c.id)).toList();
-    final categories = ['收藏', ...channelsByCategory.keys];
+    final categories = [context.l10n.livePlayerFavorite, ...channelsByCategory.keys];
     final selectedCat = _selectedCategory ?? categories.first;
 
     return Drawer(
@@ -429,7 +429,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
                 children: [
                   const Icon(Icons.live_tv_rounded, color: Colors.white),
                   const SizedBox(width: 8),
-                  const Text('频道列表', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(context.l10n.livePlayerChannelList, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                   const Spacer(),
                   IconButton(icon: const Icon(Icons.close_rounded), color: Colors.white54, onPressed: () => Navigator.pop(context)),
                 ],
@@ -461,7 +461,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
               ),
             ),
             const Divider(color: Colors.white24, height: 1),
-            Expanded(child: _buildChannelList(selectedCat == '收藏' ? favoriteChannels : (channelsByCategory[selectedCat] ?? []), favorites)),
+            Expanded(child: _buildChannelList(selectedCat == context.l10n.livePlayerFavorite ? favoriteChannels : (channelsByCategory[selectedCat] ?? []), favorites)),
           ],
         ),
       ),
@@ -473,7 +473,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [Icon(Icons.tv_off_rounded, color: Colors.grey[600], size: 48), const SizedBox(height: 8), Text('暂无频道', style: TextStyle(color: Colors.grey[600]))],
+          children: [Icon(Icons.tv_off_rounded, color: Colors.grey[600], size: 48), const SizedBox(height: 8), Text(context.l10n.livePlayerEmptyChannels, style: TextStyle(color: Colors.grey[600]))],
         ),
       );
     }
@@ -505,7 +505,7 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (isPlaying) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(4)), child: const Text('播放中', style: TextStyle(color: Colors.white, fontSize: 10))),
+              if (isPlaying) Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(4)), child: Text(context.l10n.livePlayerPlayingBadge, style: const TextStyle(color: Colors.white, fontSize: 10))),
               IconButton(icon: Icon(isFav ? Icons.star_rounded : Icons.star_border_rounded, size: 20), color: isFav ? Colors.amber : Colors.grey[600], onPressed: () => ref.read(favoriteChannelsProvider.notifier).toggle(channel.id)),
             ],
           ),

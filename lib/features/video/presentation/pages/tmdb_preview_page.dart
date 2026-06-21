@@ -201,7 +201,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                                               Icon(Icons.cloud_outlined, size: 16, color: AppColors.warning),
                                               const SizedBox(width: 6),
                                               Text(
-                                                '本地不可用',
+                                                context.l10n.videoTmdbPreviewLocalUnavailable,
                                                 style: TextStyle(
                                                   fontSize: 12,
                                                   color: AppColors.warning,
@@ -223,7 +223,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                               // 简介
                               if (_getOverview().isNotEmpty) ...[
                                 Text(
-                                  '简介',
+                                  context.l10n.videoTmdbPreviewSectionOverview,
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -243,10 +243,10 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                               ],
                               // 推荐内容
                               if (_recommendedItems.isNotEmpty)
-                                _buildMediaSection('推荐内容', _recommendedItems, isDark),
+                                _buildMediaSection(context.l10n.videoTmdbPreviewSectionRecommended, _recommendedItems, isDark),
                               // 相似内容
                               if (_similarItems.isNotEmpty)
-                                _buildMediaSection('相似内容', _similarItems, isDark),
+                                _buildMediaSection(context.l10n.videoTmdbPreviewSectionSimilar, _similarItems, isDark),
                             ],
                           ),
                         ),
@@ -364,7 +364,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                                         Icon(Icons.cloud_outlined, size: 16, color: AppColors.warning),
                                         const SizedBox(width: 6),
                                         Text(
-                                          '本地不可用',
+                                          context.l10n.videoTmdbPreviewLocalUnavailable,
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: AppColors.warning,
@@ -386,7 +386,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                         // 简介
                         if (_getOverview().isNotEmpty) ...[
                           Text(
-                            '简介',
+                            context.l10n.videoTmdbPreviewSectionOverview,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -406,10 +406,10 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                         ],
                         // 推荐内容
                         if (_recommendedItems.isNotEmpty)
-                          _buildMediaSection('推荐内容', _recommendedItems, isDark),
+                          _buildMediaSection(context.l10n.videoTmdbPreviewSectionRecommended, _recommendedItems, isDark),
                         // 相似内容
                         if (_similarItems.isNotEmpty)
-                          _buildMediaSection('相似内容', _similarItems, isDark),
+                          _buildMediaSection(context.l10n.videoTmdbPreviewSectionSimilar, _similarItems, isDark),
                       ],
                     ),
                   ),
@@ -425,12 +425,12 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
     if (_detail is TmdbMovieDetail) {
       final movie = _detail! as TmdbMovieDetail;
       if (movie.year != null) items.add('${movie.year}');
-      if (movie.runtime > 0) items.add('${movie.runtime}分钟');
+      if (movie.runtime > 0) items.add(context.l10n.videoTmdbPreviewMovieRuntime(movie.runtime));
       if (movie.voteAverage > 0) items.add('⭐ ${movie.voteAverage.toStringAsFixed(1)}');
     } else if (_detail is TmdbTvDetail) {
       final tv = _detail! as TmdbTvDetail;
       if (tv.year != null) items.add('${tv.year}');
-      items.add('${tv.numberOfSeasons}季');
+      items.add(context.l10n.videoTmdbPreviewTvSeasons(tv.numberOfSeasons));
       if (tv.voteAverage > 0) items.add('⭐ ${tv.voteAverage.toStringAsFixed(1)}');
     }
 
@@ -569,7 +569,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
           FilledButton.icon(
             onPressed: () => _onPtSearchPressed(ptSites),
             icon: const Icon(Icons.search_rounded, size: 18),
-            label: const Text('PT 搜索'),
+            label: Text(context.l10n.videoTmdbPreviewActionPtSearch),
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -584,7 +584,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
           FilledButton.icon(
             onPressed: () => _onNastoolSubscribePressed(nastoolSources),
             icon: const Icon(Icons.add_alert, size: 18),
-            label: const Text('添加订阅'),
+            label: Text(context.l10n.videoTmdbPreviewActionAddSubscribe),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF673AB7),
               foregroundColor: Colors.white,
@@ -666,13 +666,13 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '选择 PT 站',
+                            context.l10n.videoTmdbPreviewSelectPtSite,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '搜索: $keyword',
+                            context.l10n.videoTmdbPreviewSelectPtSiteSearch(keyword),
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -750,7 +750,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
       final connection = ref.read(nastoolConnectionProvider(source.id));
       if (connection == null || connection.status != NasToolConnectionStatus.connected) {
         if (!mounted) return;
-        context.showWarningToast('${source.name} 未连接');
+        context.showWarningToast(context.l10n.videoTmdbPreviewNastoolNotConnected(source.name));
         return;
       }
 
@@ -763,11 +763,11 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
       );
 
       if (!mounted) return;
-      context.showSuccessToast('已添加订阅: $title');
+      context.showSuccessToast(context.l10n.videoTmdbPreviewSubscribeAdded(title));
     } catch (e, st) {
       AppError.handle(e, st, 'addNastoolSubscribe');
       if (!mounted) return;
-      context.showErrorToast('添加订阅失败: $e');
+      context.showErrorToast(context.l10n.videoTmdbPreviewSubscribeAddFailed(e));
     }
   }
 
@@ -826,13 +826,13 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '选择 NASTool',
+                            context.l10n.videoTmdbPreviewSelectNastool,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '订阅: $title',
+                            context.l10n.videoTmdbPreviewSelectNastoolSubscribe(title),
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,

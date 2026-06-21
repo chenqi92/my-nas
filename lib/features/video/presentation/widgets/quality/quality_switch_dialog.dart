@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 
@@ -52,9 +53,9 @@ class _QualitySwitchDialogState extends ConsumerState<QualitySwitchDialog> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    const Text(
-                      '检测到播放卡顿',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.videoQualitySwitchDialogTitle,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -66,11 +67,11 @@ class _QualitySwitchDialogState extends ConsumerState<QualitySwitchDialog> {
               ),
 
               // 描述
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  '当前网络不稳定，建议切换到较低清晰度以获得流畅的播放体验',
-                  style: TextStyle(
+                  context.l10n.videoQualitySwitchDialogDescription,
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                     height: 1.5,
@@ -93,7 +94,7 @@ class _QualitySwitchDialogState extends ConsumerState<QualitySwitchDialog> {
                   child: Column(
                     children: [
                       _QualityCompareRow(
-                        label: '当前',
+                        label: context.l10n.videoQualitySwitchCurrentLabel,
                         quality: widget.currentQuality,
                         isHighlighted: false,
                       ),
@@ -106,7 +107,7 @@ class _QualitySwitchDialogState extends ConsumerState<QualitySwitchDialog> {
                         ),
                       ),
                       _QualityCompareRow(
-                        label: '建议',
+                        label: context.l10n.videoQualitySwitchSuggestedLabel,
                         quality: widget.suggestedQuality,
                         isHighlighted: true,
                       ),
@@ -140,9 +141,9 @@ class _QualitySwitchDialogState extends ConsumerState<QualitySwitchDialog> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
-                          '本视频不再询问',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.videoQualitySwitchDontAskAgain,
+                          style: const TextStyle(
                             color: Colors.white54,
                             fontSize: 13,
                             decoration: TextDecoration.none,
@@ -178,7 +179,7 @@ class _QualitySwitchDialogState extends ConsumerState<QualitySwitchDialog> {
                           ),
                         ),
                         child: Text(
-                          '保持${widget.currentQuality.label}',
+                          context.l10n.videoQualitySwitchKeepQuality(widget.currentQuality.label),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -203,7 +204,7 @@ class _QualitySwitchDialogState extends ConsumerState<QualitySwitchDialog> {
                           ),
                         ),
                         child: Text(
-                          '切换到${widget.suggestedQuality.label}',
+                          context.l10n.videoQualitySwitchSwitchQuality(widget.suggestedQuality.label),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

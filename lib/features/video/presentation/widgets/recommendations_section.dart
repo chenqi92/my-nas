@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/pt_sites/presentation/utils/pt_search_launcher.dart';
 import 'package:my_nas/features/video/data/services/tmdb_service.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
@@ -15,7 +16,7 @@ class RecommendationsSection extends ConsumerWidget {
     required this.tmdbId,
     required this.isMovie,
     required this.onItemTap,
-    this.title = '推荐内容',
+    this.title,
     this.maxCount = 20,
     super.key,
   });
@@ -23,12 +24,13 @@ class RecommendationsSection extends ConsumerWidget {
   final int tmdbId;
   final bool isMovie;
   final void Function(TmdbMediaItem item) onItemTap;
-  final String title;
+  final String? title;
   final int maxCount;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final displayTitle = title ?? context.l10n.videoRecommendationsTitle;
 
     // 获取推荐内容
     final recommendationsAsync = isMovie
@@ -38,7 +40,8 @@ class RecommendationsSection extends ConsumerWidget {
     return recommendationsAsync.when(
       loading: () => _buildSection(
         isDark,
-        child: const SizedBox(
+        displayTitle,
+        child: SizedBox(
           height: 180,
           child: Center(child: CircularProgressIndicator()),
         ),
@@ -51,6 +54,7 @@ class RecommendationsSection extends ConsumerWidget {
 
         return _buildSection(
           isDark,
+          displayTitle,
           child: SizedBox(
             height: 200,
             child: ListView.builder(
@@ -73,13 +77,13 @@ class RecommendationsSection extends ConsumerWidget {
     );
   }
 
-  Widget _buildSection(bool isDark, {required Widget child}) => Column(
+  Widget _buildSection(bool isDark, String sectionTitle, {required Widget child}) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            title,
+            sectionTitle,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -99,7 +103,7 @@ class SimilarContentSection extends ConsumerWidget {
     required this.tmdbId,
     required this.isMovie,
     required this.onItemTap,
-    this.title = '相似内容',
+    this.title,
     this.maxCount = 20,
     super.key,
   });
@@ -107,12 +111,13 @@ class SimilarContentSection extends ConsumerWidget {
   final int tmdbId;
   final bool isMovie;
   final void Function(TmdbMediaItem item) onItemTap;
-  final String title;
+  final String? title;
   final int maxCount;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final displayTitle = title ?? context.l10n.videoSimilarContentTitle;
 
     final similarAsync = isMovie
         ? ref.watch(similarMoviesProvider(tmdbId))
@@ -132,7 +137,7 @@ class SimilarContentSection extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                title,
+                displayTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -303,9 +308,9 @@ class _RecommendationCardState extends ConsumerState<_RecommendationCard> {
                                   color: AppColors.accent.withValues(alpha: 0.9),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text(
-                                  '剧集',
-                                  style: TextStyle(
+                                child: Text(
+                                  context.l10n.videoSeriesLabel,
+                                  style: const TextStyle(
                                     fontSize: 9,
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -423,13 +428,13 @@ class _RecommendationCardState extends ConsumerState<_RecommendationCard> {
           children: [
             ListTile(
               leading: const Icon(Icons.cloud_download_outlined),
-              title: Text('在 PT 站搜索 "$title"'),
-              subtitle: year != null ? Text('包含年份 $year') : null,
+              title: Text(context.l10n.videoSearchOnPtWithYear(title)),
+              subtitle: year != null ? Text(context.l10n.videoSearchIncludeYear(year)) : null,
               onTap: () => Navigator.pop(sheetContext, 'searchWithYear'),
             ),
             ListTile(
               leading: const Icon(Icons.search_rounded),
-              title: Text('在 PT 站搜索 "$title"（不含年份）'),
+              title: Text(context.l10n.videoSearchOnPtNoYear(title)),
               onTap: () => Navigator.pop(sheetContext, 'searchTitleOnly'),
             ),
             const SizedBox(height: 8),

@@ -141,7 +141,7 @@ class VideoControls extends ConsumerWidget {
               IconButton(
                 onPressed: onShowBookmarks,
                 icon: const Icon(Icons.bookmark_outline_rounded, color: Colors.white),
-                tooltip: '书签',
+                tooltip: context.l10n.videoControlsBookmarkTooltip,
               ),
             // 倍速（移到右上角）
             _SpeedButton(
@@ -264,7 +264,7 @@ class VideoControls extends ConsumerWidget {
                       Icons.playlist_play_rounded,
                       color: Colors.white,
                     ),
-                    tooltip: '播放列表',
+                    tooltip: context.l10n.videoControlsPlaylistTooltip,
                   ),
                 // 画中画（移到原倍速位置）
                 if (isPipSupported)
@@ -276,7 +276,7 @@ class VideoControls extends ConsumerWidget {
                           : Icons.picture_in_picture,
                       color: Colors.white,
                     ),
-                    tooltip: state.isPictureInPicture ? '退出画中画' : '画中画',
+                    tooltip: state.isPictureInPicture ? context.l10n.videoControlsPipExitTooltip : context.l10n.videoControlsPipTooltip,
                   ),
                 // 投屏按钮
                 const CastButton(),
@@ -299,7 +299,7 @@ class VideoControls extends ConsumerWidget {
                     Icons.tune_rounded,
                     color: Colors.white,
                   ),
-                  tooltip: '设置',
+                  tooltip: context.l10n.videoControlsSettingsTooltip,
                 ),
                 // 全屏
                 IconButton(
@@ -310,7 +310,7 @@ class VideoControls extends ConsumerWidget {
                         : Icons.fullscreen_rounded,
                     color: Colors.white,
                   ),
-                  tooltip: state.isFullscreen ? '退出全屏' : '全屏',
+                  tooltip: state.isFullscreen ? context.l10n.videoControlsFullscreenExitTooltip : context.l10n.videoControlsFullscreenTooltip,
                 ),
               ],
             ),
@@ -484,7 +484,7 @@ class _AspectRatioButton extends ConsumerWidget {
       offset: const Offset(0, -280),
       color: Colors.black87,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      tooltip: '画面比例',
+      tooltip: context.l10n.videoControlsAspectRatioTooltip,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(

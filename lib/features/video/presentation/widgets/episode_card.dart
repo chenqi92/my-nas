@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/data/services/tmdb_service.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 
@@ -135,9 +136,9 @@ class _EpisodeCardState extends State<EpisodeCard> {
                             color: Colors.black.withValues(alpha: 0.7),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
-                            '无资源',
-                            style: TextStyle(
+                          child: Text(
+                            context.l10n.videoEpisodeCardNoResource,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 10,
                             ),
@@ -261,11 +262,13 @@ class _EpisodeCardState extends State<EpisodeCard> {
 
   String _formatRuntime(int minutes) {
     if (minutes < 60) {
-      return '$minutes分钟';
+      return context.l10n.videoEpisodeCardRuntimeMinutes(minutes);
     }
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
-    return mins > 0 ? '$hours小时$mins分钟' : '$hours小时';
+    return mins > 0
+        ? context.l10n.videoEpisodeCardRuntimeHoursMinutes(hours, mins)
+        : context.l10n.videoEpisodeCardRuntimeHours(hours);
   }
 }
 
@@ -350,7 +353,7 @@ class CompactEpisodeCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          '第${episode.episodeNumber}集',
+                          context.l10n.videoCompactEpisodeCardEpisodeNumber(episode.episodeNumber),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -371,7 +374,7 @@ class CompactEpisodeCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(3),
                             ),
                             child: Text(
-                              '无资源',
+                              context.l10n.videoEpisodeCardNoResource,
                               style: TextStyle(
                                 fontSize: 9,
                                 color: isDark
@@ -402,7 +405,7 @@ class CompactEpisodeCard extends StatelessWidget {
                       children: [
                         if (episode.runtime > 0)
                           Text(
-                            '${episode.runtime}分钟',
+                            context.l10n.videoEpisodeCardRuntimeMinutes(episode.runtime),
                             style: TextStyle(
                               fontSize: 11,
                               color: isDark

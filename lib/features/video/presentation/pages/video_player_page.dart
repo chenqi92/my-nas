@@ -815,8 +815,8 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                                       size: 24,
                                     ),
                                     tooltip: playerState.isPictureInPicture
-                                        ? '退出画中画'
-                                        : '画中画',
+                                        ? context.l10n.videoPlayerPipExit
+                                        : context.l10n.videoPlayerPipEnter,
                                   ),
                                 ),
                               ),
@@ -843,7 +843,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                                   color: Colors.white,
                                   size: 24,
                                 ),
-                                tooltip: _isLocked ? '解锁屏幕' : '锁定屏幕',
+                                tooltip: _isLocked ? context.l10n.videoPlayerUnlock : context.l10n.videoPlayerLock,
                               ),
                             ),
                           ],
@@ -866,9 +866,9 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                               color: Colors.black.withValues(alpha: 0.6),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text(
-                              '屏幕已锁定，点击锁图标解锁',
-                              style: TextStyle(
+                            child: Text(
+                              context.l10n.videoPlayerScreenLocked,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                               ),
@@ -897,7 +897,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                '播放失败',
+                                context.l10n.videoPlayerPlaybackFailed,
                                 style: context.textTheme.titleMedium?.copyWith(
                                   color: Colors.white,
                                 ),
@@ -914,7 +914,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                               FilledButton(
                                 onPressed: () =>
                                     playerNotifier.play(widget.video),
-                                child: const Text('重试'),
+                                child: Text(context.l10n.videoPlayerRetry),
                               ),
                             ],
                           ),
@@ -1074,22 +1074,22 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
   void _showKeyboardHelp() {
     KeyboardShortcutsHelpDialog.show(
       context,
-      title: '视频播放快捷键',
+      title: context.l10n.videoPlayerKeyboardHelpTitle,
       shortcuts: [
-        (key: 'Space / K', description: '播放/暂停'),
-        (key: '← / J', description: '快退'),
-        (key: '→ / L', description: '快进'),
-        (key: '↑', description: '增加音量'),
-        (key: '↓', description: '减少音量'),
-        (key: 'M', description: '静音/取消静音'),
-        (key: 'F / F11', description: '切换全屏'),
-        (key: 'C', description: '显示/隐藏控制栏'),
-        (key: '[', description: '减慢播放速度'),
-        (key: ']', description: '加快播放速度'),
-        (key: r'\', description: '恢复正常速度'),
-        (key: '0-9', description: '跳转到 0%-90%'),
-        (key: 'Esc', description: '退出全屏/返回'),
-        (key: '?', description: '显示此帮助'),
+        (key: 'Space / K', description: context.l10n.videoPlayerShortcutPlayPause),
+        (key: '← / J', description: context.l10n.videoPlayerShortcutSeekBackward),
+        (key: '→ / L', description: context.l10n.videoPlayerShortcutSeekForward),
+        (key: '↑', description: context.l10n.videoPlayerShortcutVolumeUp),
+        (key: '↓', description: context.l10n.videoPlayerShortcutVolumeDown),
+        (key: 'M', description: context.l10n.videoPlayerShortcutMute),
+        (key: 'F / F11', description: context.l10n.videoPlayerShortcutToggleFullscreen),
+        (key: 'C', description: context.l10n.videoPlayerShortcutToggleControls),
+        (key: '[', description: context.l10n.videoPlayerShortcutSpeedDown),
+        (key: ']', description: context.l10n.videoPlayerShortcutSpeedUp),
+        (key: r'\', description: context.l10n.videoPlayerShortcutSpeedNormal),
+        (key: '0-9', description: context.l10n.videoPlayerShortcutJumpToPercent),
+        (key: 'Esc', description: context.l10n.videoPlayerShortcutExit),
+        (key: '?', description: context.l10n.videoPlayerShortcutHelp),
       ],
     );
   }
@@ -1120,7 +1120,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
             color: isCached ? AppColors.success : Colors.white,
             size: 24,
           ),
-          tooltip: isCached ? '已缓存' : '缓存视频',
+          tooltip: isCached ? context.l10n.videoPlayerCacheCached : context.l10n.videoPlayerCacheVideo,
         ),
       ),
       loading: () => DecoratedBox(
@@ -1152,7 +1152,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
             color: Colors.white,
             size: 24,
           ),
-          tooltip: '缓存视频',
+          tooltip: context.l10n.videoPlayerCacheVideo,
         ),
       ),
     );
@@ -1178,9 +1178,9 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
 
     if (task != null && mounted) {
       context.showSnackBar(
-        '已添加到缓存队列',
+        context.l10n.videoPlayerCacheAdded,
         action: SnackBarAction(
-          label: '查看',
+          label: context.l10n.videoPlayerCacheView,
           onPressed: () => showTransferCache(context),
         ),
       );

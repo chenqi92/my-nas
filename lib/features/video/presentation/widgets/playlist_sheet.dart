@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
 import 'package:my_nas/features/video/presentation/providers/playlist_provider.dart';
 
@@ -9,7 +10,7 @@ void showPlaylistSheet(BuildContext context) {
   showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: '关闭播放列表',
+    barrierLabel: context.l10n.videoPlaylistSheetBarrierLabel,
     barrierColor: Colors.transparent,
     transitionDuration: const Duration(milliseconds: 250),
     pageBuilder: (context, animation, secondaryAnimation) =>
@@ -109,9 +110,9 @@ class _PlaylistPanelState extends ConsumerState<_PlaylistPanel>
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        '播放列表',
-                                        style: TextStyle(
+                                      Text(
+                                        context.l10n.videoPlaylistPanelTitle,
+                                        style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 16,
                                           fontWeight: FontWeight.w600,
@@ -119,7 +120,7 @@ class _PlaylistPanelState extends ConsumerState<_PlaylistPanel>
                                         ),
                                       ),
                                       Text(
-                                        '${playlist.length} 个视频',
+                                        context.l10n.videoPlaylistItemCount(playlist.length),
                                         style: const TextStyle(
                                           color: Colors.white54,
                                           fontSize: 12,
@@ -139,7 +140,7 @@ class _PlaylistPanelState extends ConsumerState<_PlaylistPanel>
                                         ? Colors.white
                                         : Colors.white54,
                                   ),
-                                  tooltip: _getRepeatTooltip(playlist.repeatMode),
+                                  tooltip: _getRepeatTooltip(playlist.repeatMode, context),
                                 ),
                                 // 随机播放
                                 IconButton(
@@ -150,8 +151,9 @@ class _PlaylistPanelState extends ConsumerState<_PlaylistPanel>
                                         ? Colors.white
                                         : Colors.white54,
                                   ),
-                                  tooltip:
-                                      playlist.shuffleEnabled ? '关闭随机' : '随机播放',
+                                  tooltip: playlist.shuffleEnabled
+                                      ? context.l10n.videoPlaylistShuffleOn
+                                      : context.l10n.videoPlaylistShuffleOff,
                                 ),
                                 IconButton(
                                   onPressed: _close,
@@ -204,29 +206,29 @@ class _PlaylistPanelState extends ConsumerState<_PlaylistPanel>
     );
   }
 
-  Widget _buildEmptyState() => const Center(
+  Widget _buildEmptyState() => Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.queue_music_rounded,
               size: 64,
               color: Colors.white24,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
-              '播放列表为空',
-              style: TextStyle(
+              context.l10n.videoPlaylistEmptyTitle,
+              style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 decoration: TextDecoration.none,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
-              '从视频列表中选择视频播放',
-              style: TextStyle(
+              context.l10n.videoPlaylistEmptySubtitle,
+              style: const TextStyle(
                 color: Colors.white38,
                 fontSize: 14,
                 fontWeight: FontWeight.normal,
@@ -243,10 +245,10 @@ class _PlaylistPanelState extends ConsumerState<_PlaylistPanel>
         VideoRepeatMode.one => Icons.repeat_one_rounded,
       };
 
-  String _getRepeatTooltip(VideoRepeatMode mode) => switch (mode) {
-        VideoRepeatMode.none => '列表循环',
-        VideoRepeatMode.all => '单曲循环',
-        VideoRepeatMode.one => '关闭循环',
+  String _getRepeatTooltip(VideoRepeatMode mode, BuildContext context) => switch (mode) {
+        VideoRepeatMode.none => context.l10n.videoPlaylistRepeatNone,
+        VideoRepeatMode.all => context.l10n.videoPlaylistRepeatAll,
+        VideoRepeatMode.one => context.l10n.videoPlaylistRepeatOne,
       };
 }
 
@@ -330,7 +332,7 @@ class _PlaylistItem extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _formatSize(item.size),
+                          _formatSize(item.size, context),
                           style: const TextStyle(
                             color: Colors.white38,
                             fontSize: 12,
@@ -358,8 +360,8 @@ class _PlaylistItem extends StatelessWidget {
         ),
       );
 
-  String _formatSize(int bytes) {
-    if (bytes <= 0) return '未知大小';
+  String _formatSize(int bytes, BuildContext context) {
+    if (bytes <= 0) return context.l10n.videoPlaylistItemSizeUnknown;
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     if (bytes < 1024 * 1024 * 1024) {

@@ -42,7 +42,7 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('视频刮削源'),
+        title: Text(context.l10n.videoScraperSourcesPageTitle),
         centerTitle: false,
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
@@ -54,7 +54,7 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
                 _isReorderMode = !_isReorderMode;
               });
             },
-            tooltip: _isReorderMode ? '完成排序' : '调整顺序',
+            tooltip: _isReorderMode ? context.l10n.videoScraperReorderModeDone : context.l10n.videoScraperReorderModeAdjust,
           ),
         ],
       ),
@@ -66,11 +66,11 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
             children: [
               const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
               const SizedBox(height: 16),
-              Text('加载失败: $e'),
+              Text(context.l10n.videoScraperLoadFailed(e)),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => ref.read(scraperSourcesProvider.notifier).refresh(),
-                child: const Text('重试'),
+                child: Text(context.l10n.videoScraperRetry),
               ),
             ],
           ),
@@ -284,7 +284,7 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
 
     if (mounted) {
       Navigator.pop(context);
-      context.showSuccessToast('${type.displayName} 配置已保存');
+      context.showSuccessToast(context.l10n.videoScraperConfigSaved(type.displayName));
     }
   }
 
@@ -299,7 +299,7 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? '连接成功' : '连接失败'),
+          content: Text(success ? context.l10n.videoScraperConnectionSuccess : context.l10n.videoScraperConnectionFailed),
           backgroundColor: success ? AppColors.success : AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -422,8 +422,8 @@ class _ScraperTypeCard extends StatelessWidget {
                                 color: AppColors.success.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: const Text(
-                                '已配置',
+                              child: Text(
+                                context.l10n.videoScraperCardConfigured,
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: AppColors.success,
@@ -436,7 +436,7 @@ class _ScraperTypeCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _getDescription(),
+                        _getDescription(context),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: isDark ? Colors.grey[500] : Colors.grey[600],
                         ),
@@ -454,7 +454,7 @@ class _ScraperTypeCard extends StatelessWidget {
                       color: isDark ? Colors.grey[500] : Colors.grey[400],
                       size: 22,
                     ),
-                    tooltip: '配置',
+                    tooltip: context.l10n.videoScraperCardConfigure,
                     visualDensity: VisualDensity.compact,
                   ),
 
@@ -474,11 +474,11 @@ class _ScraperTypeCard extends StatelessWidget {
     );
   }
 
-  String _getDescription() {
-    if (!_needsConfig) return '内置服务，无需配置';
-    if (type.requiresApiKey) return '需要 API Key';
-    if (type.requiresApiUrl) return '需要 API 地址';
-    if (type.requiresCookie) return '需要登录 Cookie';
+  String _getDescription(BuildContext context) {
+    if (!_needsConfig) return context.l10n.videoScraperCardBuiltIn;
+    if (type.requiresApiKey) return context.l10n.videoScraperCardRequiresApiKey;
+    if (type.requiresApiUrl) return context.l10n.videoScraperCardRequiresApiUrl;
+    if (type.requiresCookie) return context.l10n.videoScraperCardRequiresCookie;
     return type.description;
   }
 }
@@ -656,8 +656,8 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                       // API Key
                       if (widget.type.requiresApiKey || widget.type == ScraperType.doubanApi) ...[
                         _buildTextField(
-                          label: 'API Key',
-                          hint: widget.type == ScraperType.tmdb ? '从 themoviedb.org 获取' : '可选',
+                          label: context.l10n.videoScraperApiKeyLabel,
+                          hint: widget.type == ScraperType.tmdb ? context.l10n.videoScraperApiKeyTmdbHint : context.l10n.videoScraperApiKeyOptionalHint,
                           controller: _apiKeyController,
                           isRequired: widget.type.requiresApiKey,
                           isObscure: _obscureApiKey,
@@ -672,8 +672,8 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                         _buildTmdbApiUrlDropdown(isDark),
                         const SizedBox(height: 16),
                         _buildTextField(
-                          label: '图片代理',
-                          hint: '留空使用官方源 image.tmdb.org',
+                          label: context.l10n.videoScraperImageProxyLabel,
+                          hint: context.l10n.videoScraperImageProxyHint,
                           controller: _imageProxyController,
                           isRequired: false,
                           isUrl: true,
@@ -685,8 +685,8 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                       // API URL
                       if (widget.type.requiresApiUrl) ...[
                         _buildTextField(
-                          label: 'API 地址',
-                          hint: '第三方豆瓣 API 服务地址',
+                          label: context.l10n.videoScraperApiUrlLabel,
+                          hint: context.l10n.videoScraperApiUrlHint,
                           controller: _apiUrlController,
                           isRequired: true,
                           isUrl: true,
@@ -698,8 +698,8 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                       // Cookie
                       if (widget.type.requiresCookie) ...[
                         _buildTextField(
-                          label: 'Cookie',
-                          hint: '从浏览器复制登录后的 Cookie',
+                          label: context.l10n.videoScraperCookieLabel,
+                          hint: context.l10n.videoScraperCookieHint,
                           controller: _cookieController,
                           isRequired: true,
                           isObscure: _obscureCookie,
@@ -738,7 +738,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                                     child: CircularProgressIndicator(strokeWidth: 2),
                                   )
                                 : const Icon(Icons.wifi_tethering_rounded, size: 18),
-                            label: Text(widget.isTesting ? '测试中...' : '测试连接'),
+                            label: Text(widget.isTesting ? context.l10n.videoScraperTestConnectionTesting : context.l10n.videoScraperTestConnectionButton),
                           ),
                         ),
                       if (widget.onTest != null) const SizedBox(width: 12),
@@ -746,7 +746,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                         child: FilledButton.icon(
                           onPressed: _handleSave,
                           icon: const Icon(Icons.check_rounded, size: 18),
-                          label: const Text('保存'),
+                          label: Text(context.l10n.videoScraperSaveButton),
                           style: FilledButton.styleFrom(
                             backgroundColor: widget.type.themeColor,
                           ),
@@ -774,7 +774,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
     }
     if (widget.type.requiresApiUrl && _apiUrlController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写 API 地址'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(context.l10n.videoScraperApiUrlRequired), behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -790,7 +790,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
         _tmdbApiUrlSelection == _tmdbCustomSentinel &&
         _tmdbCustomUrlController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请填写自定义 API URL'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(context.l10n.videoScraperCustomApiUrlRequired), behavior: SnackBarBehavior.floating),
       );
       return;
     }
@@ -804,21 +804,21 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
   }
 
   Widget _buildTmdbApiUrlDropdown(bool isDark) {
-    const options = [
-      ('https://api.themoviedb.org/3', 'TMDB 官方', 'api.themoviedb.org（默认）'),
-      ('https://api.tmdb.org/3', 'TMDB 备用', 'api.tmdb.org'),
-      ('https://tmdb.nastool.cn/3', 'NasTool 代理', 'tmdb.nastool.cn（国内推荐）'),
-      ('https://tmdb.nastool.workers.dev/3', 'Workers 代理', 'tmdb.nastool.workers.dev'),
-      ('https://tmdb.cub.red/3', 'Cub.red 代理', 'tmdb.cub.red'),
+    final options = [
+      ('https://api.themoviedb.org/3', context.l10n.videoScraperTmdbOfficialLabel, context.l10n.videoScraperTmdbOfficialDesc),
+      ('https://api.tmdb.org/3', context.l10n.videoScraperTmdbBackupLabel, 'api.tmdb.org'),
+      ('https://tmdb.nastool.cn/3', context.l10n.videoScraperNastoolLabel, context.l10n.videoScraperNastoolDesc),
+      ('https://tmdb.nastool.workers.dev/3', context.l10n.videoScraperWorkersLabel, 'tmdb.nastool.workers.dev'),
+      ('https://tmdb.cub.red/3', context.l10n.videoScraperCubRedLabel, 'tmdb.cub.red'),
       ('https://api.tmdb.cdn.kvxd.workers.dev/3', 'KVXD Workers', 'api.tmdb.cdn.kvxd.workers.dev'),
-      (_tmdbCustomSentinel, '自定义', '手动填写代理或镜像 URL'),
+      (_tmdbCustomSentinel, context.l10n.videoScraperCustomLabel, context.l10n.videoScraperCustomDesc),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'API 服务器',
+          context.l10n.videoScraperTmdbApiServerLabel,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
@@ -868,8 +868,8 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
         if (_tmdbApiUrlSelection == _tmdbCustomSentinel) ...[
           const SizedBox(height: 12),
           _buildTextField(
-            label: '自定义 API URL',
-            hint: '例如 https://your-proxy.example.com/3',
+            label: context.l10n.videoScraperCustomApiUrlLabel,
+            hint: context.l10n.videoScraperCustomApiUrlExample,
             controller: _tmdbCustomUrlController,
             isRequired: true,
             isUrl: true,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
@@ -47,9 +48,9 @@ class QualitySelectorSheet extends ConsumerWidget {
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '画质',
-                  style: TextStyle(
+                Text(
+                  context.l10n.videoQualitySelectorTitle,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -66,7 +67,7 @@ class QualitySelectorSheet extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      qualityState.isServerSideTranscoding ? '服务端转码' : '本地转码',
+                      qualityState.isServerSideTranscoding ? context.l10n.videoQualitySelectorServerTranscoding : context.l10n.videoQualitySelectorClientTranscoding,
                       style: const TextStyle(
                         color: Colors.white54,
                         fontSize: 10,
@@ -89,25 +90,25 @@ class QualitySelectorSheet extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.all(32),
               child: Column(
-                children: const [
-                  Icon(
+                children: [
+                  const Icon(
                     Icons.info_outline_rounded,
                     size: 48,
                     color: Colors.white38,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Text(
-                    '当前源不支持清晰度切换',
-                    style: TextStyle(
+                    context.l10n.videoQualitySelectorUnsupportedTitle,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 16,
                       decoration: TextDecoration.none,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    '只能播放原画',
-                    style: TextStyle(
+                    context.l10n.videoQualitySelectorUnsupportedDesc,
+                    style: const TextStyle(
                       color: Colors.white38,
                       fontSize: 12,
                       decoration: TextDecoration.none,
@@ -157,8 +158,8 @@ class QualitySelectorSheet extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       qualityState.isServerSideTranscoding
-                          ? '由服务端实时转码，切换可能需要几秒'
-                          : '使用本地转码，可能增加设备负载',
+                          ? context.l10n.videoQualitySelectorHintServerTranscoding
+                          : context.l10n.videoQualitySelectorHintClientTranscoding,
                       style: const TextStyle(
                         color: Colors.white38,
                         fontSize: 11,
