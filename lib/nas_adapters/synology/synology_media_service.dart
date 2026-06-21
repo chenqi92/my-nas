@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/synology/api/synology_api.dart';
@@ -108,9 +109,9 @@ class SynologyMediaService implements MediaService {
       // 给一个固定的"音乐资源库"入口；如果服务器有"个人文件夹"再追加一项。
       final libraries = <MediaLibrary>[];
       if (response['success'] == true) {
-        libraries.add(const MediaLibrary(
+        libraries.add(MediaLibrary(
           id: 'audio_station_shared',
-          name: '共享音乐文件夹',
+          name: appL10n.synologyMusicLibraryShared,
           type: MediaLibraryType.music,
         ));
       }
@@ -127,9 +128,9 @@ class SynologyMediaService implements MediaService {
           },
         );
         if (personal['success'] == true) {
-          libraries.add(const MediaLibrary(
+          libraries.add(MediaLibrary(
             id: 'audio_station_personal',
-            name: '个人音乐文件夹',
+            name: appL10n.synologyMusicLibraryPersonal,
             type: MediaLibraryType.music,
           ));
         }

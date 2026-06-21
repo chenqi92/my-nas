@@ -186,7 +186,7 @@ class LocalFileApi {
 
     // 根目录
     roots.add(LocalRootDirectory(
-      name: '根目录',
+      name: appL10n.localFileApiSystemRootName,
       path: '/',
       type: RootDirectoryType.system,
     ));

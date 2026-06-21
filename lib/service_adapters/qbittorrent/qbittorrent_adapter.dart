@@ -22,7 +22,7 @@ class QBittorrentAdapter implements ServiceAdapter {
     version: _appVersion != null && _apiVersion != null
         ? '$_appVersion (API: $_apiVersion)'
         : _appVersion,
-    description: '开源远程下载客户端',
+    description: appL10n.qbittorrentAdapterDescription,
   );
 
   @override

@@ -35,7 +35,7 @@ class SynologyAdapter implements NasAdapter {
   @override
   NasAdapterInfo get info => NasAdapterInfo(
         type: NasAdapterType.synology,
-        name: '群晖 Synology',
+        name: appL10n.synologyAdapterName,
         version: AppConstants.appVersion,
         supportsMediaService: true,
       );

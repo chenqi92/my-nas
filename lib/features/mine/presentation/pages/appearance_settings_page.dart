@@ -153,7 +153,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                         for (final style in UIStyle.values)
                           AppSegmentedOption(
                             value: style,
-                            label: style.isGlass ? 'Glass' : 'Classic',
+                            label: localizeFormText(context, style.label),
                           ),
                       ],
                     ),
@@ -507,7 +507,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
-                  style.label,
+                  localizeFormText(context, style.label),
                   style: context.textTheme.bodyLarge?.copyWith(
                     color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -599,7 +599,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  preset.name,
+                  localizeFormText(context, preset.name),
                   style: context.textTheme.titleSmall?.copyWith(
                     color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,

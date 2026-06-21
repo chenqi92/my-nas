@@ -20,7 +20,7 @@ class NasToolAdapter implements ServiceAdapter {
         name: 'NASTool',
         type: SourceType.nastool,
         version: _systemVersion?.version,
-        description: 'NAS 媒体库管理工具',
+        description: appL10n.nastoolAdapterDescription,
       );
 
   @override

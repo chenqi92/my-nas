@@ -226,6 +226,14 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
   }
 }
 
+/// 来源筛选枚举的本地化展示文案（避免把通用词「全部」放进全局 form 映射）。
+String _localizedSourceFilter(AppLocalizations l, PhotoSourceFilter f) =>
+    switch (f) {
+      PhotoSourceFilter.all => l.photoSourceFilterAll,
+      PhotoSourceFilter.local => l.photoSourceFilterLocal,
+      PhotoSourceFilter.remote => l.photoSourceFilterRemote,
+    };
+
 /// 来源筛选（全部 / 本机 / NAS）紧凑下拉。
 class _SourceFilterButton extends StatelessWidget {
   const _SourceFilterButton({required this.value, required this.onChanged});
@@ -242,7 +250,7 @@ class _SourceFilterButton extends StatelessWidget {
       onSelected: onChanged,
       itemBuilder: (_) => [
         for (final f in PhotoSourceFilter.values)
-          PopupMenuItem(value: f, child: Text(f.label)),
+          PopupMenuItem(value: f, child: Text(_localizedSourceFilter(l, f))),
       ],
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -255,7 +263,10 @@ class _SourceFilterButton extends StatelessWidget {
           children: [
             Icon(Icons.filter_list_rounded, size: 14, color: t.text2),
             const SizedBox(width: 6),
-            Text(value.label, style: TextStyle(fontSize: 12.5, color: t.text1)),
+            Text(
+              _localizedSourceFilter(l, value),
+              style: TextStyle(fontSize: 12.5, color: t.text1),
+            ),
           ],
         ),
       ),

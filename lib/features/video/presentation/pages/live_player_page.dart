@@ -11,6 +11,7 @@ import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/providers/live_stream_provider.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 
 /// 收藏频道 Provider
@@ -223,7 +224,11 @@ class _LivePlayerPageState extends ConsumerState<LivePlayerPage> {
     final currentIndex = modes.indexOf(_aspectRatioMode);
     final nextIndex = (currentIndex + 1) % modes.length;
     setState(() => _aspectRatioMode = modes[nextIndex]);
-    context.showToast(context.l10n.livePlayerAspectRatio(_aspectRatioMode.label));
+    context.showToast(
+      context.l10n.livePlayerAspectRatio(
+        localizeFormText(context, _aspectRatioMode.label),
+      ),
+    );
   }
 
   void _onVerticalDragStart(DragStartDetails details) {
