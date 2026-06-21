@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
@@ -336,7 +337,7 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
         case SourceType.aria2:
           await _sendToAria2(downloader);
         default:
-          throw Exception('不支持的下载器类型');
+          throw Exception(appL10n.ptSendToDownloaderUnsupportedType);
       }
 
       if (!mounted) return;
@@ -379,7 +380,7 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
     try {
       final loggedIn = await api.login();
       if (!loggedIn) {
-        throw Exception('登录失败');
+        throw Exception(appL10n.ptSendToDownloaderQbittorrentLoginFailed);
       }
 
       await api.addTorrentByUrl(

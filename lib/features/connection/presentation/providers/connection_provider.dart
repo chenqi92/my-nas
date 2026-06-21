@@ -93,7 +93,7 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
     bool rememberDevice = false,
     String? connectionId,
   }) async {
-    state = ConnectionLoading(message: '正在连接...');
+    state = ConnectionLoading(message: appL10n.connectionLoadingConnecting);
 
     // 保存记住设置
     _rememberLogin = rememberLogin;
@@ -215,7 +215,7 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
     final currentState = state;
     if (currentState is! ConnectionRequires2FAState) return;
 
-    state = const ConnectionLoading(message: '正在验证...');
+    state = ConnectionLoading(message: appL10n.connectionLoadingVerifying);
 
     // 使用传入的 rememberDevice 或者之前保存的设置
     final shouldRememberDevice = rememberDevice ?? _rememberDevice;
@@ -301,7 +301,7 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
         (c) =>
             c.username == credentials.username &&
             '${c.host}_${c.port}_${c.username}' == credentials.connectionId,
-        orElse: () => throw StateError('未找到保存的连接'),
+        orElse: () => throw StateError(appL10n.connectionErrorNotFound),
       ),
     );
 

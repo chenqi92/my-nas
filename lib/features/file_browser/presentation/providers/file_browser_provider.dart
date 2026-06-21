@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
@@ -239,7 +240,7 @@ class FileListNotifier extends StateNotifier<FileListState> {
           .timeout(
             const Duration(seconds: 30),
             onTimeout: () => throw TimeoutException(
-              '加载目录超时 (30秒)',
+              appL10n.fileBrowserLoadTimeoutException,
               const Duration(seconds: 30),
             ),
           );
@@ -251,11 +252,11 @@ class FileListNotifier extends StateNotifier<FileListState> {
 
       _ref.read(currentPathProvider.notifier).state = path;
       state = FileListLoaded(files: sortedFiles, path: path);
-    } on Exception catch (e, stack) {
+    } on Exception catch (e) {
       // 捕获所有类型的错误(包括Error和Exception)
       final errorMessage = e is TimeoutException
-          ? '加载目录超时，请检查网络连接或目录访问权限'
-          : '加载目录失败: $e $stack';
+          ? appL10n.fileBrowserLoadTimeoutError
+          : appL10n.fileBrowserLoadFailedError(e);
 
       // 检查当前源是否配置了自定义路径
       final source = _ref.read(selectedSourceEntityProvider);
@@ -328,7 +329,7 @@ class FileListNotifier extends StateNotifier<FileListState> {
   Future<void> createFolder(String name) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
-      throw UnsupportedError('当前连接不支持创建文件夹');
+      throw UnsupportedError(appL10n.fileBrowserCreateFolderUnsupported);
     }
 
     final currentPath = _ref.read(currentPathProvider);
@@ -341,7 +342,7 @@ class FileListNotifier extends StateNotifier<FileListState> {
   Future<void> delete(String path, {bool skipRefresh = false}) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
-      throw UnsupportedError('当前连接不支持删除操作');
+      throw UnsupportedError(appL10n.fileBrowserDeleteUnsupported);
     }
 
     await connection.adapter.fileSystem.delete(path);
@@ -351,7 +352,7 @@ class FileListNotifier extends StateNotifier<FileListState> {
   Future<void> rename(String oldPath, String newName) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
-      throw UnsupportedError('当前连接不支持重命名操作');
+      throw UnsupportedError(appL10n.fileBrowserRenameUnsupported);
     }
 
     // 检测是否是 Windows 路径
@@ -397,7 +398,7 @@ class FileListNotifier extends StateNotifier<FileListState> {
       {bool skipRefresh = false}) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
-      throw UnsupportedError('当前连接不支持复制操作');
+      throw UnsupportedError(appL10n.fileBrowserCopyUnsupported);
     }
 
     await connection.adapter.fileSystem.copy(sourcePath, destPath);
@@ -408,7 +409,7 @@ class FileListNotifier extends StateNotifier<FileListState> {
       {bool skipRefresh = false}) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
-      throw UnsupportedError('当前连接不支持移动操作');
+      throw UnsupportedError(appL10n.fileBrowserMoveUnsupported);
     }
 
     await connection.adapter.fileSystem.move(sourcePath, destPath);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 
 class FileItemWidget extends StatelessWidget {
@@ -297,13 +298,13 @@ class FileItemWidget extends StatelessWidget {
       };
 
   String _getSubtitle() {
-    if (file.isDirectory) return '文件夹';
+    if (file.isDirectory) return appL10n.fileBrowserItemTypeFolder;
 
     final parts = <String>[];
     if (file.modifiedTime != null) {
       parts.add(_formatDate(file.modifiedTime!));
     }
-    return parts.isEmpty ? '文件' : parts.join(' · ');
+    return parts.isEmpty ? appL10n.fileBrowserItemTypeFile : parts.join(' · ');
   }
 
   String _formatDate(DateTime date) {

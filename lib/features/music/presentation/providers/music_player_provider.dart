@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/media_proxy_server.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/android_dynamic_island_service.dart';
@@ -63,7 +64,7 @@ enum PlayMode {
   final MusicItem music;
 
   @override
-  String toString() => 'FlacRepairedNeedRetryException: FLAC 文件已修复，需要重试播放';
+  String toString() => 'FlacRepairedNeedRetryException: ${appL10n.musicPlayerFlacRepairedNeedRetry}';
 }
 
 /// 播放器状态
@@ -240,7 +241,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     if (audioHandler is MusicAudioHandler) {
       return (audioHandler as MusicAudioHandler).player;
     }
-    throw UnsupportedError('当前播放引擎不支持直接访问 AudioPlayer');
+    throw UnsupportedError(appL10n.musicPlayerUnsupportedEngine);
   }
 
   // 媒体代理服务器（用于流式播放 NAS 文件）
@@ -1228,7 +1229,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       // 验证 URL 格式
       final uri = Uri.tryParse(music.url);
       if (uri == null || !uri.hasScheme) {
-        throw Exception('无效的音频 URL: ${music.url}');
+        throw Exception(appL10n.musicPlayerInvalidAudioUrl(music.url));
       }
       logger.d('MusicPlayer: URI 解析成功 - scheme: ${uri.scheme}, host: ${uri.host}');
 
@@ -1242,7 +1243,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         logger.i('MusicPlayer: 检测到 NCM 文件，开始解密...');
         final decryptedFile = await _getDecryptedNcmFile(music);
         if (decryptedFile == null) {
-          throw Exception('NCM 文件解密失败');
+          throw Exception(appL10n.musicPlayerNcmDecryptFailed);
         }
         logger.i('MusicPlayer: 使用解密后的文件播放: ${decryptedFile.path}');
         audioSourceUrl = Uri.file(decryptedFile.path).toString();
@@ -1314,7 +1315,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
           final connection = connections[music.sourceId];
 
           if (connection == null) {
-            throw Exception('源未连接，请先连接到 NAS: ${music.sourceId}');
+            throw Exception(appL10n.musicPlayerSourceNotConnected(music.sourceId ?? ''));
           }
 
           // 获取文件大小
@@ -1358,7 +1359,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         // ignore: experimental_member_use
         audioSource = LockCachingAudioSource(uri);
       } else {
-        throw Exception('不支持的音频协议: ${uri.scheme}');
+        throw Exception(appL10n.musicPlayerUnsupportedAudioProtocol(uri.scheme));
       }
 
       // 设置音频源
@@ -1540,11 +1541,11 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       } else {
         // 已经是重试了，不再继续
         logger.e('MusicPlayer: FLAC 修复后仍然无法播放');
-        state = state.copyWith(errorMessage: '播放失败: FLAC 文件兼容性问题', isBuffering: false);
+        state = state.copyWith(errorMessage: appL10n.musicPlayerFlacCompatibilityError, isBuffering: false);
       }
     } on Exception catch (e, stackTrace) {
       logger.e('MusicPlayer: 播放失败', e, stackTrace);
-      state = state.copyWith(errorMessage: '播放失败: $e', isBuffering: false);
+      state = state.copyWith(errorMessage: appL10n.musicPlayerPlaybackError(e), isBuffering: false);
     } finally {
       // 重置播放操作标志
       _isPlayOperationInProgress = false;

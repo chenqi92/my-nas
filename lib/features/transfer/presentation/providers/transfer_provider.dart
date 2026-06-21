@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
 import 'package:my_nas/features/music/data/services/music_audio_cache_service.dart';
@@ -292,7 +293,7 @@ class TransferTasksNotifier extends StateNotifier<TransferTasksState> {
       AppError.handle(e, st, 'TransferTasksNotifier._init');
       state = state.copyWith(
         isLoading: false,
-        error: '初始化传输服务失败',
+        error: appL10n.transferInitFailedError,
       );
     }
   }

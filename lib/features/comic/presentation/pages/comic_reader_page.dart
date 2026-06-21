@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/comic/data/services/archive_extract_service.dart';
@@ -117,7 +118,7 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
       }
     } on Exception catch (e) {
       logger.e('加载漫画页面失败', e);
-      state = state.copyWith(isLoading: false, error: '加载失败: $e');
+      state = state.copyWith(isLoading: false, error: appL10n.comicReaderLoadFailedWithError(e));
     }
   }
 
@@ -125,7 +126,7 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
     final connections = _ref.read(activeConnectionsProvider);
     final conn = connections[_comic.sourceId];
     if (conn == null) {
-      state = state.copyWith(isLoading: false, error: '连接不可用');
+      state = state.copyWith(isLoading: false, error: appL10n.comicReaderConnectionUnavailable);
       return;
     }
 
@@ -159,7 +160,7 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
     final connections = _ref.read(activeConnectionsProvider);
     final conn = connections[_comic.sourceId];
     if (conn == null) {
-      state = state.copyWith(isLoading: false, error: '连接不可用');
+      state = state.copyWith(isLoading: false, error: appL10n.comicReaderConnectionUnavailable);
       return;
     }
 

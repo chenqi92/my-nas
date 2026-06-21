@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/features/note/data/services/markdown_parser.dart';
 import 'package:my_nas/features/note/data/services/note_state_service.dart';
@@ -74,7 +75,7 @@ class NoteEditorNotifier extends StateNotifier<NoteEditorState> {
         // 本地文件直接读取
         final file = File(uri.toFilePath());
         if (!await file.exists()) {
-          throw Exception('文件不存在');
+          throw Exception(appL10n.noteEditorFileNotFound);
         }
         final bytes = await file.readAsBytes();
         try {
@@ -86,7 +87,7 @@ class NoteEditorNotifier extends StateNotifier<NoteEditorState> {
         // 远程文件通过 HTTP 获取
         final response = await InsecureHttpClient.get(uri);
         if (response.statusCode != 200) {
-          throw Exception('加载失败: ${response.statusCode}');
+          throw Exception(appL10n.noteEditorLoadFailed(response.statusCode));
         }
         try {
           content = utf8.decode(response.bodyBytes);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// 音乐库统计卡片
 class MusicStatsCard extends StatelessWidget {
@@ -217,9 +218,9 @@ class MusicStatsCard extends StatelessWidget {
 
   String _formatNumber(int number) {
     if (number >= 10000) {
-      return '${(number / 10000).toStringAsFixed(1)}万';
+      return '${(number / 10000).toStringAsFixed(1)}${appL10n.musicStatsCardNumberSuffixTenThousand}';
     } else if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(1)}k';
+      return '${(number / 1000).toStringAsFixed(1)}${appL10n.musicStatsCardNumberSuffixThousand}';
     }
     return number.toString();
   }

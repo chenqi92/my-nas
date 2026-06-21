@@ -12068,5 +12068,179 @@
         "type": "Object"
       }
     }
+  },
+  "ttsInitFailedWithError": "TTS initialization failed: {error}",
+  "@ttsInitFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "comicReaderLoadFailedWithError": "Load failed: {error}",
+  "@comicReaderLoadFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "comicReaderConnectionUnavailable": "Connection unavailable",
+  "connectionLoadingConnecting": "Connecting...",
+  "connectionLoadingVerifying": "Verifying...",
+  "connectionErrorNotFound": "No saved connection found",
+  "fileBrowserLoadTimeoutException": "Directory load timeout (30s)",
+  "fileBrowserLoadTimeoutError": "Directory load timeout, please check network connection or directory access permissions",
+  "fileBrowserLoadFailedError": "Failed to load directory: {error}",
+  "@fileBrowserLoadFailedError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "fileBrowserCreateFolderUnsupported": "Current connection does not support creating folders",
+  "fileBrowserDeleteUnsupported": "Current connection does not support delete operations",
+  "fileBrowserRenameUnsupported": "Current connection does not support rename operations",
+  "fileBrowserCopyUnsupported": "Current connection does not support copy operations",
+  "fileBrowserMoveUnsupported": "Current connection does not support move operations",
+  "fileBrowserItemTypeFolder": "Folder",
+  "fileBrowserItemTypeFile": "File",
+  "traktProviderAuthorizationTimeout": "Authorization timed out, please try again",
+  "traktProviderMissingCredentials": "Client ID and Client Secret are required",
+  "traktProviderNoPendingOAuth": "No pending OAuth request",
+  "traktProviderTokenRefreshFailed": "Token refresh failed, please log in again",
+  "musicScraperFormPageValidationFieldRequired": "{label} cannot be empty",
+  "@musicScraperFormPageValidationFieldRequired": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "musicHomeSectionHeroPlayer": "Start exploring your music",
+  "musicHomeSectionQuickAccess": "Quick access",
+  "musicHomeSectionRecommended": "Recommended for you",
+  "musicHomeSectionPlaylists": "Playlists",
+  "musicHomeSectionRecentPlays": "Recently played",
+  "musicHomeSectionBrowseLibrary": "Browse music library",
+  "musicPlayerUnsupportedEngine": "Current playback engine does not support direct AudioPlayer access",
+  "musicPlayerInvalidAudioUrl": "Invalid audio URL: {url}",
+  "@musicPlayerInvalidAudioUrl": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "musicPlayerNcmDecryptFailed": "NCM file decryption failed",
+  "musicPlayerSourceNotConnected": "Source not connected, please connect to NAS first: {sourceId}",
+  "@musicPlayerSourceNotConnected": {
+    "placeholders": {
+      "sourceId": {
+        "type": "String"
+      }
+    }
+  },
+  "musicPlayerUnsupportedAudioProtocol": "Unsupported audio protocol: {scheme}",
+  "@musicPlayerUnsupportedAudioProtocol": {
+    "placeholders": {
+      "scheme": {
+        "type": "String"
+      }
+    }
+  },
+  "musicPlayerFlacCompatibilityError": "Playback failed: FLAC file compatibility issue",
+  "musicPlayerPlaybackError": "Playback failed: {error}",
+  "@musicPlayerPlaybackError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicPlayerFlacRepairedNeedRetry": "FLAC file repaired, need to retry playback",
+  "musicStatsCardNumberSuffixTenThousand": "W",
+  "musicStatsCardNumberSuffixThousand": "K",
+  "noteEditorFileNotFound": "File not found",
+  "noteEditorLoadFailed": "Load failed: {statusCode}",
+  "@noteEditorLoadFailed": {
+    "placeholders": {
+      "statusCode": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSendToDownloaderUnsupportedType": "Unsupported downloader type",
+  "ptSendToDownloaderQbittorrentLoginFailed": "Login failed",
+  "transferInitFailedError": "Failed to initialize transfer service",
+  "transmissionProviderNotConnectedError": "Not connected to Transmission",
+  "castStartDiscoveryFailed": "Device search failed",
+  "castFailedNull": "Casting failed",
+  "castFailedWithError": "Casting failed: {error}",
+  "@castFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "castReconnectFailed": "Connection recovery failed",
+  "castReconnectFailedWithError": "Connection recovery failed: {error}",
+  "@castReconnectFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoEpisodeSelectorRuntimeMinutes": "{minutes}min",
+  "@videoEpisodeSelectorRuntimeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorRuntimeHoursMinutes": "{hours}h{mins}m",
+  "@videoEpisodeSelectorRuntimeHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "mins": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorRuntimeHours": "{hours}h",
+  "@videoEpisodeSelectorRuntimeHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorDisplayTitleFull": "{show} S{season}E{episode}",
+  "@videoEpisodeSelectorDisplayTitleFull": {
+    "placeholders": {
+      "show": {
+        "type": "String"
+      },
+      "season": {
+        "type": "int"
+      },
+      "episode": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorDisplayTitleEpisodeOnly": "E{episode}",
+  "@videoEpisodeSelectorDisplayTitleEpisodeOnly": {
+    "placeholders": {
+      "episode": {
+        "type": "int"
+      }
+    }
   }
 }

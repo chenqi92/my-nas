@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 首页区块类型
@@ -175,12 +176,12 @@ final homeLayoutProvider =
 
 /// 获取区块显示名称
 String getHomeSectionName(HomeSection section) => switch (section) {
-      HomeSection.heroPlayer => '开始探索你的音乐',
-      HomeSection.quickAccess => '快捷访问',
-      HomeSection.recommended => '为你推荐',
-      HomeSection.playlists => '歌单',
-      HomeSection.recentPlays => '最近播放',
-      HomeSection.browseLibrary => '浏览音乐库',
+      HomeSection.heroPlayer => appL10n.musicHomeSectionHeroPlayer,
+      HomeSection.quickAccess => appL10n.musicHomeSectionQuickAccess,
+      HomeSection.recommended => appL10n.musicHomeSectionRecommended,
+      HomeSection.playlists => appL10n.musicHomeSectionPlaylists,
+      HomeSection.recentPlays => appL10n.musicHomeSectionRecentPlays,
+      HomeSection.browseLibrary => appL10n.musicHomeSectionBrowseLibrary,
     };
 
 /// 获取区块图标

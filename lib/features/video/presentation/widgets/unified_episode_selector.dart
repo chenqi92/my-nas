@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.dart';
 import 'package:my_nas/features/pt_sites/presentation/pages/pt_site_detail_page.dart';
 import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
@@ -733,10 +734,10 @@ class _UnifiedEpisodeCardState extends State<_UnifiedEpisodeCard> {
       );
 
   String _formatRuntime(int minutes) {
-    if (minutes < 60) return '$minutes分钟';
+    if (minutes < 60) return appL10n.videoEpisodeSelectorRuntimeMinutes(minutes);
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
-    return mins > 0 ? '$hours小时$mins分钟' : '$hours小时';
+    return mins > 0 ? appL10n.videoEpisodeSelectorRuntimeHoursMinutes(hours, mins) : appL10n.videoEpisodeSelectorRuntimeHours(hours);
   }
 }
 
@@ -767,8 +768,8 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
       : episodeName;
 
   String get _displayTitle => showName.isNotEmpty
-      ? '$showName 第$seasonNumber季第$episodeNumber集'
-      : '第$episodeNumber集';
+      ? appL10n.videoEpisodeSelectorDisplayTitleFull(showName, seasonNumber, episodeNumber)
+      : appL10n.videoEpisodeSelectorDisplayTitleEpisodeOnly(episodeNumber);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

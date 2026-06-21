@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/cast/cast_service.dart';
 import 'package:my_nas/features/video/domain/entities/cast_device.dart';
@@ -98,7 +99,7 @@ class CastNotifier extends StateNotifier<CastState> {
       await _castService.startDiscovery(timeout: timeout);
     } catch (e, st) {
       AppError.handle(e, st, 'castStartDiscovery');
-      state = state.copyWith(error: '设备搜索失败');
+      state = state.copyWith(error: appL10n.castStartDiscoveryFailed);
     } finally {
       state = state.copyWith(isDiscovering: false);
     }
@@ -142,7 +143,7 @@ class CastNotifier extends StateNotifier<CastState> {
       );
 
       if (session == null) {
-        state = state.copyWith(error: '投屏失败');
+        state = state.copyWith(error: appL10n.castFailedNull);
         return false;
       }
 
@@ -152,7 +153,7 @@ class CastNotifier extends StateNotifier<CastState> {
         'device': device.name,
         'video': videoPath,
       });
-      state = state.copyWith(error: '投屏失败: $e');
+      state = state.copyWith(error: appL10n.castFailedWithError(e));
       return false;
     }
   }
@@ -226,12 +227,12 @@ class CastNotifier extends StateNotifier<CastState> {
     try {
       final success = await _castService.tryReconnect();
       if (!success) {
-        state = state.copyWith(error: '连接恢复失败');
+        state = state.copyWith(error: appL10n.castReconnectFailed);
       }
       return success;
     } catch (e, st) {
       AppError.handle(e, st, 'castTryReconnect');
-      state = state.copyWith(error: '连接恢复失败: $e');
+      state = state.copyWith(error: appL10n.castReconnectFailedWithError(e));
       return false;
     }
   }

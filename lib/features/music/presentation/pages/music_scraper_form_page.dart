@@ -310,7 +310,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
           ),
           validator: (value) {
             if (field.required && (value == null || value.isEmpty)) {
-              return '${localizeFormText(context, field.label)}不能为空';
+              return context.l10n.musicScraperFormPageValidationFieldRequired(localizeFormText(context, field.label));
             }
             return field.validator?.call(value);
           },
@@ -340,7 +340,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
           ),
           validator: (value) {
             if (field.required && (value == null || value.isEmpty)) {
-              return '${localizeFormText(context, field.label)}不能为空';
+              return context.l10n.musicScraperFormPageValidationFieldRequired(localizeFormText(context, field.label));
             }
             return field.validator?.call(value);
           },
@@ -362,7 +362,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
           ),
           validator: (value) {
             if (field.required && (value == null || value.isEmpty)) {
-              return '${localizeFormText(context, field.label)}不能为空';
+              return context.l10n.musicScraperFormPageValidationFieldRequired(localizeFormText(context, field.label));
             }
             if (value != null && value.isNotEmpty && int.tryParse(value) == null) {
               return context.l10n.musicScraperFormPageValidationNumberInvalid;
@@ -387,7 +387,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
           ),
           validator: (value) {
             if (field.required && (value == null || value.isEmpty)) {
-              return '${localizeFormText(context, field.label)}不能为空';
+              return context.l10n.musicScraperFormPageValidationFieldRequired(localizeFormText(context, field.label));
             }
             if (value != null && value.isNotEmpty) {
               final uri = Uri.tryParse(value);

@@ -3,9 +3,9 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_service.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_voice.dart';
@@ -131,7 +131,7 @@ class TTSNotifier extends StateNotifier<TTSState> {
       );
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'tts_init');
-      state = state.copyWith(error: '初始化 TTS 失败: $e');
+      state = state.copyWith(error: appL10n.ttsInitFailedWithError(e));
     }
   }
 

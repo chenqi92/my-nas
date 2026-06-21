@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/service_adapters/trakt/api/trakt_api.dart';
 import 'package:my_nas/service_adapters/trakt/trakt_config.dart';
@@ -296,7 +297,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
         _isPolling = false;
         state = state.copyWith(
           status: TraktConnectionStatus.error,
-          errorMessage: '授权超时，请重试',
+          errorMessage: appL10n.traktProviderAuthorizationTimeout,
           clearDeviceCode: true,
         );
       }
@@ -361,7 +362,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
         : clientSecret ?? '';
 
     if (effectiveClientId.isEmpty || effectiveClientSecret.isEmpty) {
-      throw Exception('需要提供 Client ID 和 Client Secret');
+      throw Exception(appL10n.traktProviderMissingCredentials);
     }
 
     // 选择重定向 URI：移动端使用深度链接，桌面端使用 OOB
@@ -397,7 +398,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
       // 读取待处理的 OAuth 状态
       final pendingJson = await _storage.read(key: _pendingOAuthKey);
       if (pendingJson == null) {
-        throw Exception('没有待处理的 OAuth 请求');
+        throw Exception(appL10n.traktProviderNoPendingOAuth);
       }
 
       final pending = jsonDecode(pendingJson) as Map<String, dynamic>;
@@ -536,7 +537,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
       logger.e('TraktConnectionNotifier: Token 刷新失败', e, st);
       state = state.copyWith(
         status: TraktConnectionStatus.error,
-        errorMessage: 'Token 刷新失败，请重新登录',
+        errorMessage: appL10n.traktProviderTokenRefreshFailed,
       );
     }
   }

@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/note/data/services/markdown_parser.dart';
@@ -158,7 +159,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
 
   /// 加载目录树
   Future<void> loadTree() async {
-    state = NotePageLoading(message: '加载目录结构...');
+    state = NotePageLoading(message: appL10n.noteListLoadingTreeMessage);
 
     final connections = _ref.read(activeConnectionsProvider);
     final configAsync = _ref.read(mediaLibraryConfigProvider);
@@ -173,7 +174,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
         if (config != null) break;
 
         if (updated.hasError) {
-          state = NotePageError('加载媒体库配置失败');
+          state = NotePageError(appL10n.noteListLoadMediaLibraryConfigFailed);
           return;
         }
       }
@@ -435,7 +436,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
       );
     } on Exception catch (e) {
       state = (state as NotePageLoaded).copyWith(
-        content: '加载失败: $e',
+        content: appL10n.noteListLoadContentFailed(e),
         isLoadingContent: false,
       );
     }
@@ -446,7 +447,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
   /// 失败时抛出异常，由调用方处理。供 selectFile 与"分享笔记"等只读场景复用。
   Future<String> readNodeText(NoteTreeNode node) async {
     if (node.type != NoteTreeNodeType.file) {
-      throw Exception('只能读取文件节点');
+      throw Exception(appL10n.noteListReadNodeError);
     }
 
     var url = node.url;
@@ -454,7 +455,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
       final connections = _ref.read(activeConnectionsProvider);
       final connection = connections[node.sourceId];
       if (connection == null || connection.status != SourceStatus.connected) {
-        throw Exception('连接已断开');
+        throw Exception(appL10n.noteListConnectionDisconnected);
       }
       url = await connection.adapter.fileSystem.getFileUrl(node.path);
     }
@@ -464,7 +465,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
     if (uri.scheme == 'file') {
       final file = File(uri.toFilePath());
       if (!await file.exists()) {
-        throw Exception('文件不存在');
+        throw Exception(appL10n.noteListFileNotFound);
       }
       final bytes = await file.readAsBytes();
       try {
@@ -476,7 +477,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
 
     final response = await InsecureHttpClient.get(uri);
     if (response.statusCode != 200) {
-      throw Exception('加载失败: ${response.statusCode}');
+      throw Exception(appL10n.noteListLoadContentHttpError(response.statusCode));
     }
     try {
       return utf8.decode(response.bodyBytes);
