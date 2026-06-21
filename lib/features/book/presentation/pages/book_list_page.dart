@@ -1146,7 +1146,7 @@ class _BookCacheInfoBar extends ConsumerWidget {
             ),
             const SizedBox(width: 2),
             Text(
-              '本图书',
+              context.l10n.bookCacheBarBooks,
               style: TextStyle(
                 fontSize: 11,
                 color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -1258,7 +1258,7 @@ class _BookListContentState extends ConsumerState<BookListContent> {
             ),
             const SizedBox(height: 24),
             Text(
-              '图书库为空',
+              context.l10n.bookEmptyStateTitle,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : null,
@@ -1266,7 +1266,7 @@ class _BookListContentState extends ConsumerState<BookListContent> {
             ),
             const SizedBox(height: 12),
             Text(
-              '请在媒体库设置中配置图书目录并扫描\n支持 EPUB、PDF、TXT 格式',
+              context.l10n.bookEmptyStateDescription,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark ? Colors.grey[400] : Colors.grey,
               ),
@@ -1306,7 +1306,7 @@ class _BookListContentState extends ConsumerState<BookListContent> {
                 MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
               ),
               icon: const Icon(Icons.folder_open_rounded),
-              label: const Text('媒体库设置'),
+              label: Text(context.l10n.bookEmptyStateMediaLibraryButton),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -1320,7 +1320,7 @@ class _BookListContentState extends ConsumerState<BookListContent> {
                 MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
               ),
               icon: const Icon(Icons.cloud_rounded),
-              label: const Text('连接管理'),
+              label: Text(context.l10n.bookEmptyStateConnectionButton),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,
               ),
@@ -1351,7 +1351,7 @@ class _BookListContentState extends ConsumerState<BookListContent> {
           ),
           const SizedBox(height: 16),
           Text(
-            fromCache ? '加载缓存...' : '扫描图书中...',
+            fromCache ? context.l10n.bookLoadingCached : context.l10n.bookLoadingScanning,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
@@ -1634,7 +1634,7 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    author?.isNotEmpty ?? false ? author! : '佚名',
+                    author?.isNotEmpty ?? false ? author! : context.l10n.bookAuthorUnknown,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -1864,9 +1864,9 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
       case MediaFileAction.removeFromLibrary:
         final confirmed = await showDeleteConfirmDialog(
           context: context,
-          title: '从媒体库移除',
-          content: '确定要将"$displayName"从媒体库中移除吗？这只会删除缓存数据，不会影响源文件。',
-          confirmText: '移除',
+          title: context.l10n.bookRemoveFromLibraryTitle,
+          content: context.l10n.bookRemoveFromLibraryContent(displayName),
+          confirmText: context.l10n.bookRemoveFromLibraryConfirm,
           isDestructive: false,
         );
         if (confirmed && context.mounted) {
@@ -1879,8 +1879,8 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
       case MediaFileAction.deleteFromSource:
         final confirmed = await showDeleteConfirmDialog(
           context: context,
-          title: '删除源文件',
-          content: '确定要删除"$displayName"吗？此操作将同时删除源文件，无法恢复！',
+          title: context.l10n.bookDeleteSourceTitle,
+          content: context.l10n.bookDeleteSourceContent(displayName),
         );
         if (confirmed && context.mounted) {
           await ref.read(bookListProvider.notifier).deleteFromSource(
@@ -1903,18 +1903,18 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
         await MediaInfoSheet.show(
           context: context,
           title: displayName,
-          subtitle: '图书',
+          subtitle: context.l10n.bookMediaInfoSubtitle,
           entries: [
-            MediaInfoEntry(label: '文件名', value: book.fileName),
-            MediaInfoEntry(label: '格式', value: book.format.name.toUpperCase()),
-            MediaInfoEntry(label: '作者', value: book.displayAuthor),
-            MediaInfoEntry(label: '文件大小', value: book.displaySize),
+            MediaInfoEntry(label: context.l10n.bookMediaInfoFileName, value: book.fileName),
+            MediaInfoEntry(label: context.l10n.bookMediaInfoFormat, value: book.format.name.toUpperCase()),
+            MediaInfoEntry(label: context.l10n.bookMediaInfoAuthor, value: book.displayAuthor),
+            MediaInfoEntry(label: context.l10n.bookMediaInfoFileSize, value: book.displaySize),
             MediaInfoEntry(
-              label: '修改时间',
+              label: context.l10n.bookMediaInfoModifiedTime,
               value: book.modifiedTime?.toLocal().toString() ?? '',
             ),
-            MediaInfoEntry(label: '来源 ID', value: book.sourceId, copyable: true),
-            MediaInfoEntry(label: '路径', value: book.filePath, copyable: true),
+            MediaInfoEntry(label: context.l10n.bookMediaInfoSourceId, value: book.sourceId, copyable: true),
+            MediaInfoEntry(label: context.l10n.bookMediaInfoPath, value: book.filePath, copyable: true),
           ],
         );
       case MediaFileAction.download:
@@ -1940,7 +1940,7 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
     }
     if (!NasFileShareService.canShare) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('当前平台不支持系统分享')),
+        SnackBar(content: Text(context.l10n.bookSharePlatformNotSupported)),
       );
       return;
     }

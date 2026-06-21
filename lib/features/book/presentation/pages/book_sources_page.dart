@@ -44,7 +44,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
       backgroundColor: isDark ? AppColors.darkBackground : null,
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('书源管理'),
+        title: Text(context.l10n.bookSourcesPageTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -54,13 +54,13 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
               _isReorderMode ? Icons.done_rounded : Icons.swap_vert_rounded,
             ),
             onPressed: () => setState(() => _isReorderMode = !_isReorderMode),
-            tooltip: _isReorderMode ? '完成' : '排序',
+            tooltip: _isReorderMode ? context.l10n.bookSourcesPageReorderMode : context.l10n.bookSourcesPageSortMode,
           ),
           // 导入按钮
           IconButton(
             icon: const Icon(Icons.add_rounded),
             onPressed: _showImportSheet,
-            tooltip: '导入书源',
+            tooltip: context.l10n.bookSourcesPageImportTooltip,
           ),
         ],
       ),
@@ -73,11 +73,11 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
             children: [
               Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
               const SizedBox(height: 16),
-              Text('加载失败: $e'),
+              Text(context.l10n.bookSourcesPageLoadingError(e)),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => ref.invalidate(bookSourcesProvider),
-                child: const Text('重试'),
+                child: Text(context.l10n.bookSourcesPageRetry),
               ),
             ],
           ),
@@ -109,14 +109,14 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无书源',
+            context.l10n.bookSourcesEmptyNoSources,
             style: context.textTheme.titleMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '点击右上角 + 导入书源',
+            context.l10n.bookSourcesEmptyHint,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -125,7 +125,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
           FilledButton.icon(
             onPressed: _showImportSheet,
             icon: const Icon(Icons.add_rounded),
-            label: const Text('导入书源'),
+            label: Text(context.l10n.bookSourcesEmptyImport),
           ),
         ],
       ),
@@ -213,7 +213,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
 
       if (sources.isEmpty) {
         if (mounted) {
-          context.showToast('未找到有效书源');
+          context.showToast(context.l10n.bookSourcesImportNotFound);
         }
         return;
       }
@@ -222,10 +222,10 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
 
       if (mounted) {
         Navigator.pop(context);
-        context.showToast('成功导入 $count 个书源');
+        context.showToast(context.l10n.bookSourcesImportSuccess(count));
       }
     } catch (e, st) {
-      AppError.handleWithUI(context, e, st, '导入失败', 'importBookSources');
+      AppError.handleWithUI(context, e, st, context.l10n.bookSourcesImportFailed, 'importBookSources');
     }
   }
 
@@ -243,15 +243,15 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Text('编辑书源 · ${source.displayName}'),
+          title: Text(context.l10n.bookSourcesEditTitle(source.displayName)),
           content: SizedBox(
             width: 600,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  '直接编辑书源 JSON。修改后将以新内容覆盖原书源（保留原 ID）。',
+                Text(
+                  context.l10n.bookSourcesEditHint,
                   style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(height: 12),
@@ -276,7 +276,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('取消'),
+              child: Text(context.l10n.bookSourcesEditCancel),
             ),
             FilledButton(
               onPressed: () {
@@ -287,10 +287,10 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
                   final parsed = BookSource.fromJson(raw);
                   Navigator.pop(dialogContext, parsed);
                 } on Exception catch (e) {
-                  setDialogState(() => errorText = 'JSON 解析失败: $e');
+                  setDialogState(() => errorText = context.l10n.bookSourcesEditJsonError(e));
                 }
               },
-              child: const Text('保存'),
+              child: Text(context.l10n.bookSourcesEditSave),
             ),
           ],
         ),
@@ -304,11 +304,11 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
     try {
       await ref.read(bookSourcesProvider.notifier).updateSource(updated);
       if (mounted) {
-        context.showToast('书源已更新');
+        context.showToast(context.l10n.bookSourcesEditSuccess);
       }
     } on Exception catch (e, st) {
       if (mounted) {
-        AppError.handleWithUI(context, e, st, '保存书源失败', 'updateBookSource');
+        AppError.handleWithUI(context, e, st, context.l10n.bookSourcesEditUpdateFailed, 'updateBookSource');
       } else {
         AppError.handle(e, st, 'updateBookSource');
       }
@@ -319,17 +319,17 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除书源'),
-        content: Text('确定要删除 "${source.displayName}" 吗？'),
+        title: Text(context.l10n.bookSourcesDeleteTitle),
+        content: Text(context.l10n.bookSourcesDeleteConfirm(source.displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.bookSourcesDeleteCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(context.l10n.bookSourcesDeleteConfirmBtn),
           ),
         ],
       ),
@@ -338,7 +338,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
     if (confirmed ?? false) {
       await ref.read(bookSourcesProvider.notifier).removeSource(source.id);
       if (mounted) {
-        context.showToast('已删除');
+        context.showToast(context.l10n.bookSourcesDeleteSuccess);
       }
     }
   }
@@ -532,7 +532,7 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Text(
-                    '导入书源',
+                    context.l10n.bookSourcesImportSheetTitle,
                     style: context.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -562,9 +562,7 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
-                            '本应用仅提供书源解析与浏览能力，不内置、不分发任何书源。'
-                            '导入的书源由用户自行选择，您应确保来源合法、'
-                            '内容不侵犯第三方著作权。本应用不对所导入书源的内容负责。',
+                            context.l10n.bookSourcesImportDisclaimer,
                             style: context.textTheme.bodySmall?.copyWith(
                               color: isDark
                                   ? AppColors.darkOnSurfaceVariant
@@ -586,7 +584,7 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
                       Expanded(
                         child: _buildOption(
                           context,
-                          '粘贴 JSON',
+                          context.l10n.bookSourcesImportPasteJson,
                           Icons.content_paste_rounded,
                           !_isUrl,
                           () => setState(() => _isUrl = false),
@@ -597,7 +595,7 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
                       Expanded(
                         child: _buildOption(
                           context,
-                          '网络链接',
+                          context.l10n.bookSourcesImportNetworkLink,
                           Icons.link_rounded,
                           _isUrl,
                           () => setState(() => _isUrl = true),
@@ -616,8 +614,8 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
                     maxLines: _isUrl ? 1 : 5,
                     decoration: InputDecoration(
                       hintText: _isUrl
-                          ? '输入第三方书源订阅地址（用户对内容来源负责）'
-                          : '粘贴书源 JSON 内容（用户对内容来源负责）',
+                          ? context.l10n.bookSourcesImportUrlHint
+                          : context.l10n.bookSourcesImportJsonHint,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -645,7 +643,7 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text('导入'),
+                          : Text(context.l10n.bookSourcesImportButton),
                     ),
                   ),
                 ),
@@ -709,7 +707,7 @@ class _BookSourceImportSheetState extends State<_BookSourceImportSheet> {
   Future<void> _handleImport() async {
     final content = _controller.text.trim();
     if (content.isEmpty) {
-      context.showToast(_isUrl ? '请输入书源网址' : '请粘贴书源内容');
+      context.showToast(_isUrl ? context.l10n.bookSourcesImportEmptyUrl : context.l10n.bookSourcesImportEmptyJson);
       return;
     }
 

@@ -8,6 +8,7 @@ import 'package:flutter_foliate_viewer/flutter_foliate_viewer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
@@ -31,7 +32,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 sealed class EbookReaderState {}
 
 class EbookReaderLoading extends EbookReaderState {
-  EbookReaderLoading({this.message = '加载中...'});
+  EbookReaderLoading({this.message = 'Loading...'});
 
   final String message;
 }
@@ -88,11 +89,11 @@ class EbookReaderNotifier extends StateNotifier<EbookReaderState> {
           state = EbookReaderLoaded(filePath: localPath);
           return;
         }
-        throw Exception('文件不存在');
+        throw Exception('File not found');
       }
 
       // 网络文件 - 需要下载并缓存（流式写入避免内存问题）
-      state = EbookReaderLoading(message: '下载中...');
+      state = EbookReaderLoading(message: 'Downloading...');
 
       final fileSystem = _getFileSystem();
       if (fileSystem != null) {
@@ -103,15 +104,15 @@ class EbookReaderNotifier extends StateNotifier<EbookReaderState> {
           () => fileSystem.getFileStream(book.path),
         );
         if (savedFile == null) {
-          throw Exception('无法保存缓存文件');
+          throw Exception('Unable to save cache file');
         }
         state = EbookReaderLoaded(filePath: savedFile.path);
       } else {
-        throw Exception('无法获取文件系统');
+        throw Exception('Unable to access file system');
       }
     } on Exception catch (e, st) {
       logger.e('加载电子书失败', e, st);
-      state = EbookReaderError('加载失败: $e');
+      state = EbookReaderError('Load failed: $e');
     }
   }
 
@@ -345,20 +346,16 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
     final useNative = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('朗读功能'),
-        content: const Text(
-          '为获得最佳朗读体验（包括实时高亮、段落跟踪等功能），'
-          '建议切换到原生阅读器。\n\n'
-          '是否切换到原生阅读器？',
-        ),
+        title: Text(context.l10n.ebookReaderTtsDialogTitle),
+        content: Text(context.l10n.ebookReaderTtsDialogContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.ebookReaderTtsDialogCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('切换阅读器'),
+            child: Text(context.l10n.ebookReaderTtsDialogSwitch),
           ),
         ],
       ),
@@ -400,7 +397,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   void _showSettingsSheet() {
     showReaderSettingsSheet(
       context,
-      title: '阅读设置',
+      title: context.l10n.ebookReaderSettingsTitle,
       icon: Icons.settings_rounded,
       contentBuilder: (context) => Consumer(
           builder: (context, ref, _) {
@@ -455,7 +452,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 翻页方式
-        const SettingSectionTitle(title: '翻页方式'),
+        SettingSectionTitle(title: context.l10n.ebookReaderSettingPageTurnMode),
         SettingPageTurnModePicker(
           modes: _allPageTurnModes
               .map((m) => (icon: m.icon, label: m.label))
@@ -472,7 +469,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
 
         // 字体选择（注意：Foliate 仅支持系统字体）
         SettingSectionTitle(
-          title: '字体',
+          title: context.l10n.ebookReaderSettingFont,
           trailing: AvailableFonts.getDisplayName(settings.fontFamily),
         ),
         SettingFontPicker(
@@ -488,7 +485,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
 
         // 字体大小
         SettingSliderRow(
-          label: '字体大小',
+          label: context.l10n.ebookReaderSettingFontSize,
           value: settings.fontSize,
           min: 12,
           max: 36,
@@ -503,7 +500,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
 
         // 行高
         SettingSliderRow(
-          label: '行高',
+          label: context.l10n.ebookReaderSettingLineHeight,
           value: settings.lineHeight,
           min: 1,
           max: 3,
@@ -517,7 +514,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
 
         // 段落间距
         SettingSliderRow(
-          label: '段落间距',
+          label: context.l10n.ebookReaderSettingParagraphSpacing,
           value: settings.paragraphSpacing,
           max: 3,
           divisions: 15,
@@ -530,7 +527,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
 
         // 页边距
         SettingSliderRow(
-          label: '页边距',
+          label: context.l10n.ebookReaderSettingPageMargin,
           value: settings.horizontalPadding,
           min: 8,
           max: 64,
@@ -544,7 +541,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         const SizedBox(height: 24),
 
         // 阅读主题
-        const SettingSectionTitle(title: '阅读主题'),
+        SettingSectionTitle(title: context.l10n.ebookReaderSettingTheme),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -568,9 +565,9 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         const SizedBox(height: 24),
 
         // 其他设置
-        const SettingSectionTitle(title: '其他设置'),
+        SettingSectionTitle(title: context.l10n.ebookReaderSettingOther),
         SettingSwitchRow(
-          title: '屏幕常亮',
+          title: context.l10n.ebookReaderSettingKeepScreenOn,
           value: settings.keepScreenOn,
           onChanged: (value) {
             settingsNotifier.setKeepScreenOn(value: value);
@@ -582,7 +579,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
           },
         ),
         SettingSwitchRow(
-          title: '显示进度',
+          title: context.l10n.ebookReaderSettingShowProgress,
           value: settings.showProgress,
           onChanged: (value) => settingsNotifier.setShowProgress(value: value),
         ),
@@ -689,19 +686,19 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   void _showKeyboardHelp() {
     KeyboardShortcutsHelpDialog.show(
       context,
-      title: 'MOBI 阅读快捷键',
+      title: context.l10n.ebookReaderKeyboardHelpTitle,
       shortcuts: [
-        (key: '←', description: '上一页'),
-        (key: '→', description: '下一页'),
-        (key: 'Page Up', description: '上一页'),
-        (key: 'Page Down', description: '下一页'),
-        (key: 'Home', description: '跳到开头'),
-        (key: 'End', description: '跳到结尾'),
-        (key: 'Space', description: '显示/隐藏控制栏'),
-        (key: 'M', description: '切换夜间模式'),
-        (key: ',', description: '打开设置'),
-        (key: 'Esc', description: '返回'),
-        (key: '?', description: '显示此帮助'),
+        (key: '←', description: context.l10n.ebookReaderKeyboardPrevPage),
+        (key: '→', description: context.l10n.ebookReaderKeyboardNextPage),
+        (key: 'Page Up', description: context.l10n.ebookReaderKeyboardPrevPage),
+        (key: 'Page Down', description: context.l10n.ebookReaderKeyboardNextPage),
+        (key: 'Home', description: context.l10n.ebookReaderKeyboardHome),
+        (key: 'End', description: context.l10n.ebookReaderKeyboardEnd),
+        (key: 'Space', description: context.l10n.ebookReaderKeyboardToggleControls),
+        (key: 'M', description: context.l10n.ebookReaderKeyboardToggleDarkMode),
+        (key: ',', description: context.l10n.ebookReaderKeyboardOpenSettings),
+        (key: 'Esc', description: context.l10n.ebookReaderKeyboardExit),
+        (key: '?', description: context.l10n.ebookReaderKeyboardHelp),
       ],
     );
   }
@@ -729,8 +726,8 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
       // 显示加载提示
       return Scaffold(
         backgroundColor: settings.theme.backgroundColor,
-        body: const LottieLoading.book(
-          message: '正在打开漫画阅读器...',
+        body: LottieLoading.book(
+          message: context.l10n.ebookReaderOpeningComicReader,
         ),
       );
     }
@@ -767,7 +764,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('返回'),
+            child: Text(context.l10n.ebookReaderErrorButtonReturn),
           ),
         ],
       ),
@@ -1184,7 +1181,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                                 color: isDark ? Colors.white : Colors.black87,
                               ),
                               Text(
-                                '上一章',
+                                context.l10n.ebookReaderButtonPreviousChapter,
                                 style: TextStyle(
                                   color: isDark ? Colors.white : Colors.black87,
                                   fontSize: 14,
@@ -1240,7 +1237,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '下一章',
+                                context.l10n.ebookReaderButtonNextChapter,
                                 style: TextStyle(
                                   color: isDark ? Colors.white : Colors.black87,
                                   fontSize: 14,
@@ -1268,7 +1265,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                   children: [
                     _BottomBarButton(
                       icon: Icons.menu_book,
-                      label: '目录',
+                      label: context.l10n.ebookReaderButtonTableOfContents,
                       isDark: isDark,
                       onPressed: () {
                         setState(() {
@@ -1278,13 +1275,13 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                     ),
                     _BottomBarButton(
                       icon: Icons.headphones,
-                      label: '朗读',
+                      label: context.l10n.ebookReaderButtonTextToSpeech,
                       isDark: isDark,
                       onPressed: _startTTS,
                     ),
                     _BottomBarButton(
                       icon: isDark ? Icons.light_mode : Icons.dark_mode,
-                      label: isDark ? '日间' : '夜间',
+                      label: isDark ? context.l10n.ebookReaderButtonDayMode : context.l10n.ebookReaderButtonNightMode,
                       isDark: isDark,
                       onPressed: () {
                         final notifier = ref.read(bookReaderSettingsProvider.notifier);
@@ -1297,7 +1294,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                     ),
                     _BottomBarButton(
                       icon: Icons.settings_rounded,
-                      label: '设置',
+                      label: context.l10n.ebookReaderButtonSettings,
                       isDark: isDark,
                       onPressed: _showSettingsSheet,
                     ),
@@ -1339,7 +1336,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '目录',
+                        context.l10n.ebookReaderTocTitle,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1366,7 +1363,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                   child: _tocItems.isEmpty
                       ? Center(
                           child: Text(
-                            '暂无目录',
+                            context.l10n.ebookReaderTocEmpty,
                             style: TextStyle(
                               color: isDark ? Colors.white54 : Colors.black45,
                             ),

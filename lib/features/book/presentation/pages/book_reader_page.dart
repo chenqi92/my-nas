@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
@@ -764,7 +765,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
   void _showSettingsSheet() {
     showReaderSettingsSheet(
       context,
-      title: '阅读设置',
+      title: context.l10n.bookReaderSettingsTitle,
       icon: Icons.auto_stories_rounded,
       iconColor: AppColors.info,
       contentBuilder: (context) => Consumer(
@@ -846,14 +847,14 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                     children: [
                       const Icon(Icons.bookmark_rounded),
                       const SizedBox(width: 8),
-                      const Text(
-                        '书签',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      Text(
+                        context.l10n.bookReaderBookmarks,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                       ),
                       const Spacer(),
                       TextButton.icon(
                         icon: const Icon(Icons.add_rounded, size: 18),
-                        label: const Text('添加当前位置'),
+                        label: Text(context.l10n.bookReaderAddCurrentPosition),
                         onPressed: () async {
                           final position = _currentReadPosition();
                           final title = _currentChapterTitle.isNotEmpty
@@ -889,11 +890,11 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                 const Divider(height: 1),
                 Expanded(
                   child: bookmarks.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Padding(
                             padding: EdgeInsets.all(24),
                             child: Text(
-                              '暂无书签\n点击右上角"添加当前位置"创建第一个书签',
+                              context.l10n.bookReaderNoBookmarks,
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.grey),
                             ),
@@ -1009,19 +1010,19 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
   void _showKeyboardHelp() {
     KeyboardShortcutsHelpDialog.show(
       context,
-      title: '阅读快捷键',
+      title: context.l10n.bookReaderKeyboardHelpTitle,
       shortcuts: [
-        (key: '←', description: '上一页'),
-        (key: '→', description: '下一页'),
-        (key: 'Page Up', description: '上一页'),
-        (key: 'Page Down', description: '下一页'),
-        (key: 'Home', description: '跳到开头'),
-        (key: 'End', description: '跳到结尾'),
-        (key: 'Space', description: '显示/隐藏控制栏'),
-        (key: 'M', description: '切换夜间模式'),
-        (key: ',', description: '打开设置'),
-        (key: 'Esc', description: '返回'),
-        (key: '?', description: '显示此帮助'),
+        (key: '←', description: context.l10n.bookReaderKeyboardPreviousPage),
+        (key: '→', description: context.l10n.bookReaderKeyboardNextPage),
+        (key: 'Page Up', description: context.l10n.bookReaderKeyboardPreviousPage),
+        (key: 'Page Down', description: context.l10n.bookReaderKeyboardNextPage),
+        (key: 'Home', description: context.l10n.bookReaderKeyboardHome),
+        (key: 'End', description: context.l10n.bookReaderKeyboardEnd),
+        (key: 'Space', description: context.l10n.bookReaderKeyboardToggleControls),
+        (key: 'M', description: context.l10n.bookReaderKeyboardToggleNightMode),
+        (key: ',', description: context.l10n.bookReaderKeyboardOpenSettings),
+        (key: 'Esc', description: context.l10n.bookReaderKeyboardBack),
+        (key: '?', description: context.l10n.bookReaderKeyboardShowHelp),
       ],
     );
   }
@@ -1102,7 +1103,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
         state.hasHtml &&
         _isContentProcessed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _paginateContentAsync(state.htmlContent!, settings);
+        _paginateContentAsync(state.htmlContent!, settings, context);
       });
     }
 
@@ -1337,7 +1338,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
     // 如果分页尚未完成，显示加载中
     if (!_isPaginationReady || _pages.isEmpty) {
       return LottieLoading.book(
-        message: '正在分页...',
+        message: context.l10n.bookReaderPaginating,
       );
     }
 
@@ -1477,6 +1478,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
   Future<void> _paginateContentAsync(
     String htmlContent,
     BookReaderSettings settings,
+    BuildContext context,
   ) async {
     if (_isPaginationReady) return;
 
@@ -1788,7 +1790,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                   child: _chapters.isEmpty
                       ? Center(
                           child: Text(
-                            '暂无目录',
+                            context.l10n.bookReaderNoTableOfContents,
                             style: TextStyle(
                               color: isDark
                                   ? Colors.grey[500]
@@ -2354,7 +2356,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
             IconButton(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-              tooltip: '返回',
+              tooltip: context.l10n.bookReaderTooltipBack,
             ),
             Expanded(
               child: Text(
@@ -2374,7 +2376,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
               onPressed: _chapters.isNotEmpty
                   ? () => setState(() => _showToc = !_showToc)
                   : null,
-              tooltip: '目录',
+              tooltip: context.l10n.bookReaderTooltipTableOfContents,
             ),
           ],
         ),
@@ -2424,7 +2426,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                   IconButton(
                     icon: const Icon(Icons.skip_previous_rounded, color: Colors.white),
                     onPressed: _chapters.isNotEmpty ? () => _jumpToChapter(_getCurrentChapterIndex() - 1) : null,
-                    tooltip: '上一章',
+                    tooltip: context.l10n.bookReaderTooltipPreviousChapter,
                     iconSize: 28,
                   ),
                   Expanded(
@@ -2480,7 +2482,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                   IconButton(
                     icon: const Icon(Icons.skip_next_rounded, color: Colors.white),
                     onPressed: _chapters.isNotEmpty ? () => _jumpToChapter(_getCurrentChapterIndex() + 1) : null,
-                    tooltip: '下一章',
+                    tooltip: context.l10n.bookReaderTooltipNextChapter,
                     iconSize: 28,
                   ),
                 ],
@@ -2492,7 +2494,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                   // 目录
                   _buildBottomActionButton(
                     icon: Icons.list_rounded,
-                    label: '目录',
+                    label: context.l10n.bookReaderButtonTableOfContents,
                     enabled: _chapters.isNotEmpty,
                     onPressed: _chapters.isNotEmpty
                         ? () => setState(() {
@@ -2509,26 +2511,26 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                         : Icons.dark_mode_rounded,
                     label: settings.theme == BookReaderTheme.dark ||
                             settings.theme == BookReaderTheme.black
-                        ? '日间'
-                        : '夜间',
+                        ? context.l10n.bookReaderButtonLightMode
+                        : context.l10n.bookReaderButtonDarkMode,
                     onPressed: _toggleNightMode,
                   ),
                   // 阅读设置
                   _buildBottomActionButton(
                     icon: Icons.settings_rounded,
-                    label: '设置',
+                    label: context.l10n.bookReaderButtonSettings,
                     onPressed: _showSettingsSheet,
                   ),
                   // 书签
                   _buildBottomActionButton(
                     icon: Icons.bookmark_outline_rounded,
-                    label: '书签',
+                    label: context.l10n.bookReaderButtonBookmark,
                     onPressed: _showBookmarksSheet,
                   ),
                   // 更多菜单
                   _buildBottomActionButton(
                     icon: Icons.more_horiz_rounded,
-                    label: '更多',
+                    label: context.l10n.bookReaderButtonMore,
                     onPressed: () => setState(() {
                       _showMoreMenu = !_showMoreMenu;
                       _showToc = false;
@@ -2547,19 +2549,19 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
     final settingsNotifier = ref.read(bookReaderSettingsProvider.notifier);
 
     // 翻页方式选项
-    const pageTurnModes = [
-      (icon: Icons.swap_vert_rounded, label: '滚动'),
-      (icon: Icons.swipe_rounded, label: '滑动'),
-      (icon: Icons.auto_stories_rounded, label: '仿真'),
-      (icon: Icons.layers_rounded, label: '覆盖'),
-      (icon: Icons.article_rounded, label: '无动画'),
+    final pageTurnModes = [
+      (icon: Icons.swap_vert_rounded, label: context.l10n.bookReaderPageTurnModeScroll),
+      (icon: Icons.swipe_rounded, label: context.l10n.bookReaderPageTurnModeSlide),
+      (icon: Icons.auto_stories_rounded, label: context.l10n.bookReaderPageTurnModeSimulation),
+      (icon: Icons.layers_rounded, label: context.l10n.bookReaderPageTurnModeCover),
+      (icon: Icons.article_rounded, label: context.l10n.bookReaderPageTurnModeNone),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 翻页方式
-        const SettingSectionTitle(title: '翻页方式'),
+        SettingSectionTitle(title: context.l10n.bookReaderSettingPageTurnMode),
         SettingPageTurnModePicker(
           modes: pageTurnModes,
           selectedIndex: settings.pageTurnMode.index,
@@ -2583,7 +2585,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
 
         // 字体选择 - 横向滑动
         SettingSectionTitle(
-          title: '字体',
+          title: context.l10n.bookReaderSettingFont,
           trailing: AvailableFonts.getDisplayName(settings.fontFamily),
         ),
         SettingFontPicker(
@@ -2594,7 +2596,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
 
         // 字体大小
         SettingSliderRow(
-          label: '字体大小',
+          label: context.l10n.bookReaderSettingFontSize,
           value: settings.fontSize,
           min: 12,
           max: 36,
@@ -2606,7 +2608,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
 
         // 行高
         SettingSliderRow(
-          label: '行高',
+          label: context.l10n.bookReaderSettingLineHeight,
           value: settings.lineHeight,
           min: 1,
           max: 3,
@@ -2617,7 +2619,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
 
         // 段落间距
         SettingSliderRow(
-          label: '段落间距',
+          label: context.l10n.bookReaderSettingParagraphSpacing,
           value: settings.paragraphSpacing,
           max: 3,
           divisions: 15,
@@ -2627,7 +2629,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
 
         // 页边距
         SettingSliderRow(
-          label: '页边距',
+          label: context.l10n.bookReaderSettingPageMargin,
           value: settings.horizontalPadding,
           min: 8,
           max: 64,
@@ -2638,7 +2640,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
         const SizedBox(height: 24),
 
         // 主题
-        const SettingSectionTitle(title: '阅读主题'),
+        SettingSectionTitle(title: context.l10n.bookReaderSettingReadingTheme),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -2659,9 +2661,9 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
         const SizedBox(height: 24),
 
         // 其他设置
-        const SettingSectionTitle(title: '其他设置'),
+        SettingSectionTitle(title: context.l10n.bookReaderSettingOther),
         SettingSwitchRow(
-          title: '屏幕常亮',
+          title: context.l10n.bookReaderSettingKeepScreenOn,
           value: settings.keepScreenOn,
           onChanged: (value) {
             settingsNotifier.setKeepScreenOn(value: value);
@@ -2673,7 +2675,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
           },
         ),
         SettingSwitchRow(
-          title: '显示进度',
+          title: context.l10n.bookReaderSettingShowProgress,
           value: settings.showProgress,
           onChanged: (value) => settingsNotifier.setShowProgress(value: value),
         ),
@@ -2780,7 +2782,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '更多功能',
+                  context.l10n.bookReaderMoreMenuTitle,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -2801,7 +2803,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
             // 功能列表
             _buildMoreMenuItem(
               icon: Icons.first_page_rounded,
-              label: '跳转到开头',
+              label: context.l10n.bookReaderMoreMenuJumpToBeginning,
               isDark: isDark,
               onTap: () {
                 if (useWebView) {
@@ -2827,7 +2829,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
             ),
             _buildMoreMenuItem(
               icon: Icons.last_page_rounded,
-              label: '跳转到结尾',
+              label: context.l10n.bookReaderMoreMenuJumpToEnd,
               isDark: isDark,
               onTap: () {
                 if (useWebView) {
@@ -2855,7 +2857,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
             ),
             _buildMoreMenuItem(
               icon: Icons.info_outline_rounded,
-              label: '图书信息',
+              label: context.l10n.bookReaderMoreMenuBookInfo,
               isDark: isDark,
               onTap: () {
                 setState(() => _showMoreMenu = false);
@@ -2864,16 +2866,16 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
             ),
             _buildMoreMenuItem(
               icon: Icons.refresh_rounded,
-              label: '刷新内容',
+              label: context.l10n.bookReaderMoreMenuRefreshContent,
               isDark: isDark,
               onTap: () {
                 setState(() => _showMoreMenu = false);
                 // 重新加载图书 - 通过重新初始化 notifier
                 ref.invalidate(txtReaderProvider(widget.book));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('正在重新加载...'),
-                    duration: Duration(seconds: 1),
+                  SnackBar(
+                    content: Text(context.l10n.bookReaderReloading),
+                    duration: const Duration(seconds: 1),
                   ),
                 );
               },
@@ -2927,7 +2929,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
-          '图书信息',
+          context.l10n.bookReaderBookInfoTitle,
           style: TextStyle(
             color: isDark ? Colors.white : Colors.black87,
           ),
@@ -2936,37 +2938,37 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow('书名', widget.book.displayName, isDark),
+            _buildInfoRow(context.l10n.bookReaderInfoBookName, widget.book.displayName, isDark),
             _buildInfoRow(
-              '格式',
+              context.l10n.bookReaderInfoFormat,
               widget.book.path.split('.').last.toUpperCase(),
               isDark,
             ),
             _buildInfoRow(
-              '大小',
+              context.l10n.bookReaderInfoSize,
               '${(widget.book.size / 1024 / 1024).toStringAsFixed(2)} MB',
               isDark,
             ),
             if (state is TxtReaderLoaded)
               _buildInfoRow(
-                '字符数',
+                context.l10n.bookReaderInfoCharacterCount,
                 NumberFormat('#,###').format(state.content.length),
                 isDark,
               ),
             if (_chapters.isNotEmpty)
-              _buildInfoRow('章节数', '${_chapters.length}', isDark),
+              _buildInfoRow(context.l10n.bookReaderInfoChapterCount, '${_chapters.length}', isDark),
             // 显示总页数 - 支持 WebView 和传统分页模式
             if (_webViewPaginationReady && _totalPages > 0)
-              _buildInfoRow('总页数', '$_totalPages', isDark)
+              _buildInfoRow(context.l10n.bookReaderInfoTotalPages, '$_totalPages', isDark)
             else if (_pages.isNotEmpty)
-              _buildInfoRow('总页数', '${_pages.length}', isDark),
+              _buildInfoRow(context.l10n.bookReaderInfoTotalPages, '${_pages.length}', isDark),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '关闭',
+              context.l10n.bookReaderInfoClose,
               style: TextStyle(color: AppColors.primary),
             ),
           ),

@@ -5310,5 +5310,409 @@
   "mineEmptySubtitleTitle": "No Subtitle Sources",
   "mineEmptySubtitleDesc": "Add subtitle sources like OpenSubtitles to download subtitles",
   "appearanceSettingsThemeModeTitle": "Theme Mode",
-  "appearanceSettingsUiStyleTitle": "UI Style"
+  "appearanceSettingsUiStyleTitle": "UI Style",
+  "bookReaderLoadingMessage": "Loading...",
+  "bookReaderLoadingStreaming": "Streaming...",
+  "bookReaderLoadingCache": "Using cache...",
+  "bookReaderLoadingFile": "Loading file...",
+  "bookReaderLoadingDownload": "Downloading...",
+  "bookReaderLoadingCachingFile": "Caching file...",
+  "bookReaderLoadingParsing": "Parsing...",
+  "bookReaderErrorUseEbookReader": "Please use the e-book reader",
+  "bookReaderErrorUsePdfReader": "Please use the PDF reader",
+  "bookReaderErrorUnknownFormat": "Unknown e-book format",
+  "bookReaderErrorEmptyContent": "File content is empty or cannot be parsed",
+  "bookReaderErrorMemoryInsufficient": "Insufficient memory, file may be too large. Please try loading a smaller file",
+  "bookReaderSettingsTitle": "Reading Settings",
+  "bookReaderAddCurrentPosition": "Add current position",
+  "bookReaderBookmarks": "Bookmarks",
+  "bookReaderNoBookmarks": "No bookmarks yet. Click \"Add current position\" in the upper right to create your first bookmark",
+  "bookReaderKeyboardHelpTitle": "Reading Keyboard Shortcuts",
+  "bookReaderKeyboardPreviousPage": "Previous page",
+  "bookReaderKeyboardNextPage": "Next page",
+  "bookReaderKeyboardHome": "Jump to beginning",
+  "bookReaderKeyboardEnd": "Jump to end",
+  "bookReaderKeyboardToggleControls": "Show/hide controls",
+  "bookReaderKeyboardToggleNightMode": "Toggle night mode",
+  "bookReaderKeyboardOpenSettings": "Open settings",
+  "bookReaderKeyboardBack": "Back",
+  "bookReaderKeyboardShowHelp": "Show this help",
+  "bookReaderOpeningEbookReader": "Opening e-book reader...",
+  "bookReaderPaginating": "Paginating...",
+  "bookReaderTableOfContents": "Table of Contents",
+  "bookReaderNoTableOfContents": "No table of contents",
+  "bookReaderTooltipBack": "Back",
+  "bookReaderTooltipTableOfContents": "Table of Contents",
+  "bookReaderButtonTableOfContents": "Contents",
+  "bookReaderButtonLightMode": "Light",
+  "bookReaderButtonDarkMode": "Dark",
+  "bookReaderButtonSettings": "Settings",
+  "bookReaderButtonBookmark": "Bookmark",
+  "bookReaderButtonMore": "More",
+  "bookReaderPageTurnModeScroll": "Scroll",
+  "bookReaderPageTurnModeSlide": "Slide",
+  "bookReaderPageTurnModeSimulation": "Simulation",
+  "bookReaderPageTurnModeCover": "Cover",
+  "bookReaderPageTurnModeNone": "No animation",
+  "bookReaderSettingPageTurnMode": "Page Turn Mode",
+  "bookReaderSettingFont": "Font",
+  "bookReaderSettingFontSize": "Font size",
+  "bookReaderSettingLineHeight": "Line height",
+  "bookReaderSettingParagraphSpacing": "Paragraph spacing",
+  "bookReaderSettingPageMargin": "Page margin",
+  "bookReaderSettingReadingTheme": "Reading Theme",
+  "bookReaderSettingOther": "Other settings",
+  "bookReaderSettingKeepScreenOn": "Keep screen on",
+  "bookReaderSettingShowProgress": "Show progress",
+  "bookReaderMoreMenuTitle": "More features",
+  "bookReaderMoreMenuJumpToBeginning": "Jump to beginning",
+  "bookReaderMoreMenuJumpToEnd": "Jump to end",
+  "bookReaderMoreMenuBookInfo": "Book information",
+  "bookReaderMoreMenuRefreshContent": "Refresh content",
+  "bookReaderReloading": "Reloading...",
+  "bookReaderBookInfoTitle": "Book Information",
+  "bookReaderInfoBookName": "Book name",
+  "bookReaderInfoFormat": "Format",
+  "bookReaderInfoSize": "Size",
+  "bookReaderInfoCharacterCount": "Character count",
+  "bookReaderInfoChapterCount": "Chapter count",
+  "bookReaderInfoTotalPages": "Total pages",
+  "bookReaderInfoClose": "Close",
+  "bookReaderTooltipPreviousChapter": "Previous chapter",
+  "bookReaderTooltipNextChapter": "Next chapter",
+  "ebookReaderLoadingDefault": "Loading...",
+  "ebookReaderDownloading": "Downloading...",
+  "ebookReaderErrorFileNotFound": "File not found",
+  "ebookReaderErrorCacheSaveFailed": "Unable to save cache file",
+  "ebookReaderErrorFilesystemUnavailable": "Unable to access file system",
+  "ebookReaderErrorLoadFailed": "Load failed: {error}",
+  "@ebookReaderErrorLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "ebookReaderTtsDialogTitle": "Text-to-Speech",
+  "ebookReaderTtsDialogContent": "For the best TTS experience (including real-time highlighting and paragraph tracking), we recommend switching to the native reader.\\n\\nSwitch to native reader?",
+  "ebookReaderTtsDialogCancel": "Cancel",
+  "ebookReaderTtsDialogSwitch": "Switch Reader",
+  "ebookReaderSettingsTitle": "Reading Settings",
+  "ebookReaderSettingPageTurnMode": "Page Turn Mode",
+  "ebookReaderPageTurnModeHorizontal": "Flip",
+  "ebookReaderPageTurnModeScroll": "Scroll",
+  "ebookReaderPageTurnModeSimulation": "Simulation",
+  "ebookReaderPageTurnModeCover": "Cover",
+  "ebookReaderPageTurnModeNone": "No Animation",
+  "ebookReaderSettingFont": "Font",
+  "ebookReaderSettingFontSize": "Font Size",
+  "ebookReaderSettingLineHeight": "Line Height",
+  "ebookReaderSettingParagraphSpacing": "Paragraph Spacing",
+  "ebookReaderSettingPageMargin": "Page Margin",
+  "ebookReaderSettingTheme": "Reading Theme",
+  "ebookReaderSettingOther": "Other Settings",
+  "ebookReaderSettingKeepScreenOn": "Keep Screen On",
+  "ebookReaderSettingShowProgress": "Show Progress",
+  "ebookReaderKeyboardHelpTitle": "MOBI Reading Keyboard Shortcuts",
+  "ebookReaderKeyboardPrevPage": "Previous Page",
+  "ebookReaderKeyboardNextPage": "Next Page",
+  "ebookReaderKeyboardHome": "Jump to Beginning",
+  "ebookReaderKeyboardEnd": "Jump to End",
+  "ebookReaderKeyboardToggleControls": "Show/Hide Controls",
+  "ebookReaderKeyboardToggleDarkMode": "Toggle Dark Mode",
+  "ebookReaderKeyboardOpenSettings": "Open Settings",
+  "ebookReaderKeyboardExit": "Exit",
+  "ebookReaderKeyboardHelp": "Show Help",
+  "ebookReaderOpeningComicReader": "Opening comic reader...",
+  "ebookReaderDefaultLoadingMessage": "Loading...",
+  "ebookReaderErrorButtonReturn": "Return",
+  "ebookReaderButtonPreviousChapter": "Previous Chapter",
+  "ebookReaderButtonNextChapter": "Next Chapter",
+  "ebookReaderButtonTableOfContents": "Contents",
+  "ebookReaderButtonTextToSpeech": "Read Aloud",
+  "ebookReaderButtonDayMode": "Day Mode",
+  "ebookReaderButtonNightMode": "Night Mode",
+  "ebookReaderButtonSettings": "Settings",
+  "ebookReaderTocTitle": "Contents",
+  "ebookReaderTocEmpty": "No contents available",
+  "bookSourcesPageTitle": "Book Sources",
+  "bookSourcesPageReorderMode": "Done",
+  "bookSourcesPageSortMode": "Reorder",
+  "bookSourcesPageImportTooltip": "Import book sources",
+  "bookSourcesPageLoadingError": "Failed to load: {error}",
+  "@bookSourcesPageLoadingError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "bookSourcesPageRetry": "Retry",
+  "bookSourcesEmptyNoSources": "No book sources",
+  "bookSourcesEmptyHint": "Tap + at top right to import sources",
+  "bookSourcesEmptyImport": "Import sources",
+  "bookSourcesImportNotFound": "No valid book sources found",
+  "bookSourcesImportSuccess": "Successfully imported {count} sources",
+  "@bookSourcesImportSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookSourcesImportFailed": "Import failed",
+  "bookSourcesEditTitle": "Edit source · {name}",
+  "@bookSourcesEditTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bookSourcesEditHint": "Edit source JSON directly. After modification, the new content will replace the original source (keeping original ID).",
+  "bookSourcesEditCancel": "Cancel",
+  "bookSourcesEditSave": "Save",
+  "bookSourcesEditJsonError": "JSON parse error: {error}",
+  "@bookSourcesEditJsonError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "bookSourcesEditSuccess": "Source updated",
+  "bookSourcesEditUpdateFailed": "Failed to save source",
+  "bookSourcesDeleteTitle": "Delete source",
+  "bookSourcesDeleteConfirm": "Are you sure you want to delete \"{name}\"?",
+  "@bookSourcesDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bookSourcesDeleteCancel": "Cancel",
+  "bookSourcesDeleteConfirmBtn": "Delete",
+  "bookSourcesDeleteSuccess": "Deleted",
+  "bookSourcesImportSheetTitle": "Import book sources",
+  "bookSourcesImportDisclaimer": "This app only provides book source parsing and browsing capabilities, and does not include or distribute any book sources. Imported sources are selected by you. You are responsible for ensuring that sources are legal and do not infringe on third-party copyrights. This app is not responsible for the content of imported sources.",
+  "bookSourcesImportPasteJson": "Paste JSON",
+  "bookSourcesImportNetworkLink": "Network link",
+  "bookSourcesImportJsonHint": "Paste book source JSON content (you are responsible for the source)",
+  "bookSourcesImportUrlHint": "Enter third-party book source subscription URL (you are responsible for the source)",
+  "bookSourcesImportButton": "Import",
+  "bookSourcesImportEmptyJson": "Please paste source content",
+  "bookSourcesImportEmptyUrl": "Please enter source URL",
+  "bookReaderErrorFailedLoadContent": "Failed to load chapter content",
+  "bookReaderLoadingState": "Loading...",
+  "bookReaderLoadFailedState": "Failed to load",
+  "bookReaderButtonBack": "Back",
+  "bookReaderButtonRetry": "Retry",
+  "bookReaderEmptyContent": "No content",
+  "bookReaderPageDisplay": "Page {pageNum}",
+  "@bookReaderPageDisplay": {
+    "placeholders": {
+      "pageNum": {
+        "type": "int"
+      }
+    }
+  },
+  "bookReaderTableOfContentsTooltip": "Table of Contents",
+  "bookReaderTableOfContentsButton": "Contents",
+  "bookReaderReadAloudButton": "Read Aloud",
+  "bookReaderDayModeButton": "Day",
+  "bookReaderNightModeButton": "Night",
+  "bookReaderSettingsButton": "Settings",
+  "bookReaderFontSizeLabel": "Font Size",
+  "bookReaderLineHeightLabel": "Line Height",
+  "bookReaderHorizontalPaddingLabel": "Page Margin",
+  "bookReaderThemeSectionTitle": "Reading Theme",
+  "bookReaderPageTurnModeSectionTitle": "Page Turn Mode",
+  "bookReaderOtherSettingsSectionTitle": "Other Settings",
+  "bookReaderKeepScreenOnToggle": "Keep Screen On",
+  "bookReaderShowProgressToggle": "Show Progress",
+  "bookReaderChapterListTitle": "Table of Contents",
+  "bookReaderTocLabel": "Contents",
+  "bookReaderTtsLabel": "Read Aloud",
+  "bookReaderThemeDayLabel": "Day",
+  "bookReaderThemeNightLabel": "Night",
+  "bookReaderSettingsLabel": "Settings",
+  "bookReaderTocTitle": "Contents",
+  "bookReaderThemesSectionTitle": "Reading Theme",
+  "bookReaderKeepScreenOnLabel": "Keep Screen On",
+  "bookReaderShowProgressLabel": "Show Progress",
+  "bookReaderCurrentPageIndicator": "Page {page}",
+  "@bookReaderCurrentPageIndicator": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "bookSourceFilterAll": "All",
+  "bookSourceFilterLocal": "Local",
+  "bookReadingCategoryBook": "Book",
+  "bookReadingCategoryComic": "Comic",
+  "bookReadingCategoryNote": "Note",
+  "bookReadingCategoryOnline": "Online",
+  "bookCacheBarBooks": "Books",
+  "bookEmptyStateTitle": "No Books",
+  "bookEmptyStateDescription": "Configure a book directory in Media Library and scan\nSupports EPUB, PDF, TXT formats",
+  "bookEmptyStateMediaLibraryButton": "Media Library",
+  "bookEmptyStateConnectionButton": "Connection Management",
+  "bookLoadingCached": "Loading cache...",
+  "bookLoadingScanning": "Scanning books...",
+  "bookAuthorUnknown": "Anonymous",
+  "bookRemoveFromLibraryTitle": "Remove from Library",
+  "bookRemoveFromLibraryContent": "Remove \\\"{displayName}\\\" from media library? This only deletes cached data and does not affect source files.",
+  "@bookRemoveFromLibraryContent": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "bookRemoveFromLibraryConfirm": "Remove",
+  "bookDeleteSourceTitle": "Delete Source File",
+  "bookDeleteSourceContent": "Delete \\\"{displayName}\\\"? This will also delete the source file and cannot be undone!",
+  "@bookDeleteSourceContent": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "bookMediaInfoSubtitle": "Book",
+  "bookMediaInfoFileName": "File Name",
+  "bookMediaInfoFormat": "Format",
+  "bookMediaInfoAuthor": "Author",
+  "bookMediaInfoFileSize": "File Size",
+  "bookMediaInfoModifiedTime": "Modified Time",
+  "bookMediaInfoSourceId": "Source ID",
+  "bookMediaInfoPath": "Path",
+  "bookSharePlatformNotSupported": "This platform does not support system sharing",
+  "pdfReaderLoadingMessage": "Loading...",
+  "pdfReaderUsingCache": "Using cache...",
+  "pdfReaderFileNotFound": "File not found",
+  "pdfReaderUnsupportedProtocol": "Unsupported protocol: {scheme}",
+  "@pdfReaderUnsupportedProtocol": {
+    "placeholders": {
+      "scheme": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfReaderLoadFailedMessage": "Failed to load: {error}",
+  "@pdfReaderLoadFailedMessage": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "pdfReaderParsingMessage": "Parsing...",
+  "pdfReaderParseTimeoutMessage": "PDF parsing timeout, please retry",
+  "pdfReaderParseFailedMessage": "PDF parsing failed: {error}",
+  "@pdfReaderParseFailedMessage": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "pdfReaderConnectingMessage": "Connecting...",
+  "pdfReaderDownloadingMessage": "Loading... {sizeMB} MB",
+  "@pdfReaderDownloadingMessage": {
+    "placeholders": {
+      "sizeMB": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfReaderStreamingMessage": "Streaming load...",
+  "pdfReaderTimeoutMessage": "PDF load timeout, please retry",
+  "pdfReaderTimeoutExceptionMessage": "PDF parsing timeout, please retry",
+  "pdfReaderLoadErrorUnknown": "PDF load failed: unknown error",
+  "pdfReaderKeyboardHelpTitle": "PDF Reader Keyboard Shortcuts",
+  "pdfReaderKeyboardPrevious": "Previous page",
+  "pdfReaderKeyboardNext": "Next page",
+  "pdfReaderKeyboardFirst": "Jump to first page",
+  "pdfReaderKeyboardLast": "Jump to last page",
+  "pdfReaderKeyboardToggleControls": "Show/hide controls",
+  "pdfReaderKeyboardToggleDarkMode": "Toggle night mode",
+  "pdfReaderKeyboardZoomIn": "Zoom in",
+  "pdfReaderKeyboardZoomOut": "Zoom out",
+  "pdfReaderKeyboardExit": "Exit",
+  "pdfReaderKeyboardHelp": "Show this help",
+  "pdfReaderErrorButtonBack": "Back",
+  "pdfReaderStreamingIndicator": "Streaming load",
+  "pdfReaderLightMode": "Light mode",
+  "pdfReaderDarkMode": "Dark mode",
+  "pdfReaderThumbnailsTooltip": "Page thumbnails",
+  "pdfReaderThumbnailsTitle": "Pages",
+  "pdfReaderFirstPageButton": "First",
+  "pdfReaderZoomOutButton": "Zoom out",
+  "pdfReaderZoomInButton": "Zoom in",
+  "pdfReaderLastPageButton": "Last",
+  "pdfReaderPageLabel": "Page {pageNumber}",
+  "@pdfReaderPageLabel": {
+    "placeholders": {
+      "pageNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "bookTtsSettingsTitle": "TTS Settings",
+  "bookTtsEngineLabel": "Voice Engine",
+  "bookTtsSystemTitle": "System TTS",
+  "bookTtsSystemSubtitle": "Offline available",
+  "bookTtsEdgeTtsSubtitle": "Online high quality",
+  "bookTtsSpeechRateLabel": "Speech Rate",
+  "bookTtsPitchLabel": "Pitch",
+  "bookTtsVolumeLabel": "Volume",
+  "bookTtsAutoScrollFollowLabel": "Auto Scroll Follow",
+  "bookTtsAutoScrollFollowSubtitle": "Auto scroll to current paragraph during reading",
+  "bookTtsHighlightLabel": "Reading Highlight",
+  "bookTtsHighlightSubtitle": "Highlight the current reading position",
+  "bookTtsAutoPlayNextLabel": "Auto Play Next Chapter",
+  "bookTtsAutoPlayNextSubtitle": "Automatically play next chapter after current chapter ends",
+  "bookTtsRecommendedBadge": "Recommended",
+  "bookDetailStartReading": "Start Reading",
+  "bookDetailRemoveFromShelf": "Remove from shelf",
+  "bookDetailAddToShelf": "Add to shelf",
+  "bookDetailAlreadyInShelf": "Already in shelf",
+  "bookDetailAddedToShelf": "Added to shelf: {name}",
+  "@bookDetailAddedToShelf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "bookDetailAddToShelfFailed": "Failed to add to shelf",
+  "bookDetailNoChaptersToRead": "No chapters available to read",
+  "bookDetailLoadChaptersFailed": "Failed to load table of contents",
+  "bookDetailRetry": "Retry",
+  "bookDetailNoChapters": "No chapters",
+  "bookDetailTableOfContents": "Table of Contents",
+  "bookDetailChapterCount": "({count} chapters)",
+  "@bookDetailChapterCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookDetailReverseOrder": "Reverse",
+  "bookDetailNormalOrder": "Normal",
+  "bookDetailSource": "Source: {source}",
+  "@bookDetailSource": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "bookDetailIntroduction": "Introduction",
+  "bookDetailRemovedFromShelf": "Removed from shelf"
 }

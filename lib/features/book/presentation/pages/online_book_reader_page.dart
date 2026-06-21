@@ -108,7 +108,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
 
       if (content == null || content.isEmpty) {
         setState(() {
-          _error = '无法获取章节内容';
+          _error = context.l10n.bookReaderErrorFailedLoadContent;
           _isLoading = false;
         });
         return;
@@ -267,7 +267,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
   void _showSettingsSheet() {
     showReaderSettingsSheet(
       context,
-      title: '阅读设置',
+      title: context.l10n.bookReaderSettingsTitle,
       icon: Icons.settings_rounded,
       contentBuilder: (context) => Consumer(
         builder: (context, ref, _) {
@@ -330,7 +330,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
             CircularProgressIndicator(color: settings.theme.textColor),
             const SizedBox(height: 16),
             Text(
-              '加载中...',
+              context.l10n.bookReaderLoadingState,
               style: TextStyle(color: settings.theme.textColor),
             ),
           ],
@@ -345,7 +345,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
           children: [
             Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('加载失败', style: TextStyle(color: settings.theme.textColor)),
+            Text(context.l10n.bookReaderLoadFailedState, style: TextStyle(color: settings.theme.textColor)),
             const SizedBox(height: 8),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -353,12 +353,12 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
                 OutlinedButton.icon(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.arrow_back_rounded),
-                  label: const Text('返回'),
+                  label: Text(context.l10n.bookReaderButtonBack),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: _loadContent,
-                  child: const Text('重试'),
+                  child: Text(context.l10n.bookReaderButtonRetry),
                 ),
               ],
             ),
@@ -370,7 +370,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
     if (_pages.isEmpty) {
       return Center(
         child: Text(
-          '暂无内容',
+          context.l10n.bookReaderEmptyContent,
           style: TextStyle(color: settings.theme.textColor.withValues(alpha: 0.7)),
         ),
       );
@@ -468,7 +468,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('第 ${_currentPageIndex + 1} 页', style: TextStyle(color: textColor, fontSize: 11)),
+          Text(context.l10n.bookReaderPageDisplay(_currentPageIndex + 1), style: TextStyle(color: textColor, fontSize: 11)),
           Text('$progress%', style: TextStyle(color: textColor, fontSize: 11)),
         ],
       ),
@@ -504,7 +504,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
           IconButton(
             icon: const Icon(Icons.list_rounded, color: Colors.white),
             onPressed: _showChapterList,
-            tooltip: '目录',
+            tooltip: context.l10n.bookReaderTableOfContentsTooltip,
           ),
         ],
       ),
@@ -561,19 +561,19 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
                 children: [
                   _BottomBarButton(
                     icon: Icons.menu_book_rounded,
-                    label: '目录',
+                    label: context.l10n.bookReaderTableOfContentsButton,
                     isDark: isDark,
                     onPressed: _showChapterList,
                   ),
                   _BottomBarButton(
                     icon: Icons.headphones_rounded,
-                    label: '朗读',
+                    label: context.l10n.bookReaderReadAloudButton,
                     isDark: isDark,
                     onPressed: _startTTS,
                   ),
                   _BottomBarButton(
                     icon: isDark ? Icons.light_mode : Icons.dark_mode,
-                    label: isDark ? '日间' : '夜间',
+                    label: isDark ? context.l10n.bookReaderDayModeButton : context.l10n.bookReaderNightModeButton,
                     isDark: isDark,
                     onPressed: () {
                       final notifier = ref.read(bookReaderSettingsProvider.notifier);
@@ -586,7 +586,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
                   ),
                   _BottomBarButton(
                     icon: Icons.settings_rounded,
-                    label: '设置',
+                    label: context.l10n.bookReaderSettingsButton,
                     isDark: isDark,
                     onPressed: _showSettingsSheet,
                   ),
@@ -607,7 +607,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
       children: [
         // 字体大小
         SettingSliderRow(
-          label: '字体大小',
+          label: context.l10n.bookReaderFontSizeLabel,
           value: settings.fontSize,
           min: 12,
           max: 36,
@@ -624,7 +624,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
 
         // 行高
         SettingSliderRow(
-          label: '行高',
+          label: context.l10n.bookReaderLineHeightLabel,
           value: settings.lineHeight,
           min: 1,
           max: 3,
@@ -640,7 +640,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
 
         // 页边距
         SettingSliderRow(
-          label: '页边距',
+          label: context.l10n.bookReaderHorizontalPaddingLabel,
           value: settings.horizontalPadding,
           min: 8,
           max: 64,
@@ -656,7 +656,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
         const SizedBox(height: 24),
 
         // 阅读主题
-        const SettingSectionTitle(title: '阅读主题'),
+        SettingSectionTitle(title: context.l10n.bookReaderThemeSectionTitle),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -682,23 +682,23 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
         const SizedBox(height: 24),
 
         // 翻页模式
-        const SettingSectionTitle(title: '翻页模式'),
+        SettingSectionTitle(title: context.l10n.bookReaderPageTurnModeSectionTitle),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildPageModeChip('滑动', BookPageTurnMode.slide, settings, settingsNotifier),
-            _buildPageModeChip('覆盖', BookPageTurnMode.cover, settings, settingsNotifier),
-            _buildPageModeChip('仿真', BookPageTurnMode.simulation, settings, settingsNotifier),
-            _buildPageModeChip('无动画', BookPageTurnMode.none, settings, settingsNotifier),
+            _buildPageModeChip(context.l10n.bookReaderPageTurnModeSlide, BookPageTurnMode.slide, settings, settingsNotifier),
+            _buildPageModeChip(context.l10n.bookReaderPageTurnModeCover, BookPageTurnMode.cover, settings, settingsNotifier),
+            _buildPageModeChip(context.l10n.bookReaderPageTurnModeSimulation, BookPageTurnMode.simulation, settings, settingsNotifier),
+            _buildPageModeChip(context.l10n.bookReaderPageTurnModeNone, BookPageTurnMode.none, settings, settingsNotifier),
           ],
         ),
         const SizedBox(height: 24),
 
         // 其他设置
-        const SettingSectionTitle(title: '其他设置'),
+        SettingSectionTitle(title: context.l10n.bookReaderOtherSettingsSectionTitle),
         SettingSwitchRow(
-          title: '屏幕常亮',
+          title: context.l10n.bookReaderKeepScreenOnToggle,
           value: settings.keepScreenOn,
           onChanged: (value) {
             settingsNotifier.setKeepScreenOn(value: value);
@@ -710,7 +710,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
           },
         ),
         SettingSwitchRow(
-          title: '显示进度',
+          title: context.l10n.bookReaderShowProgressToggle,
           value: settings.showProgress,
           onChanged: (value) {
             settingsNotifier.setShowProgress(value: value);
@@ -837,7 +837,7 @@ class _ChapterListSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
-              '目录',
+              context.l10n.bookReaderChapterListTitle,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,

@@ -338,7 +338,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
           foregroundColor: _isInShelf 
               ? Colors.white 
               : AppColors.primary,
-          tooltip: _isInShelf ? '从书架移除' : '加入书架',
+          tooltip: _isInShelf ? context.l10n.bookDetailRemoveFromShelf : context.l10n.bookDetailAddToShelf,
           child: Icon(_isInShelf ? Icons.bookmark_remove_outlined : Icons.bookmark_add_outlined),
         ),
         const SizedBox(height: 12),
@@ -349,7 +349,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           icon: const Icon(Icons.play_arrow_rounded),
-          label: const Text('开始阅读'),
+          label: Text(context.l10n.bookDetailStartReading),
         ),
       ],
     );
@@ -358,7 +358,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     debugPrint('[在线书架] _addToShelf 被调用, 书名: ${widget.book.name}');
     if (_isInShelf) {
       debugPrint('[在线书架] 已在书架中, 跳过');
-      context.showToast('已在书架中');
+      context.showToast(context.l10n.bookDetailAlreadyInShelf);
       return;
     }
     
@@ -370,14 +370,14 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
         setState(() => _isInShelf = true);
         // 刷新书架 Provider 状态
         unawaited(ref.read(onlineBookShelfProvider.notifier).onBookAdded());
-        context.showToast('已加入书架: $_displayName');
+        context.showToast(context.l10n.bookDetailAddedToShelf(_displayName));
         debugPrint('[在线书架] 已刷新 Provider 并显示 toast');
       }
     } catch (e, st) {
       debugPrint('[在线书架] addBook 异常: $e');
       debugPrint('[在线书架] 堆栈: $st');
       if (mounted) {
-        context.showToast('加入书架失败');
+        context.showToast(context.l10n.bookDetailAddToShelfFailed);
       }
     }
   }
@@ -394,7 +394,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
       setState(() => _isInShelf = false);
       // 刷新书架 Provider 状态
       unawaited(ref.read(onlineBookShelfProvider.notifier).onBookRemoved());
-      context.showToast('已从书架移除');
+      context.showToast(context.l10n.bookDetailRemovedFromShelf);
     }
   }
 
@@ -415,7 +415,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     if (_chapters != null && _chapters!.isNotEmpty) {
       _openReader(_chapters!.first);
     } else {
-      context.showToast('暂无章节可阅读');
+      context.showToast(context.l10n.bookDetailNoChaptersToRead);
     }
   }
 
@@ -480,7 +480,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '来源: ${widget.book.source.displayName}',
+                    context.l10n.bookDetailSource(widget.book.source.displayName),
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                       fontSize: 12,
@@ -494,7 +494,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
                 const Divider(height: 1),
                 const SizedBox(height: 12),
                 Text(
-                  '简介',
+                  context.l10n.bookDetailIntroduction,
                   style: context.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -543,7 +543,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
       child: Row(
         children: [
           Text(
-            '目录',
+            context.l10n.bookDetailTableOfContents,
             style: context.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -552,7 +552,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
           if (_chapters != null) ...[
             const SizedBox(width: 8),
             Text(
-              '(${_chapters!.length}章)',
+              context.l10n.bookDetailChapterCount(_chapters!.length),
               style: context.textTheme.bodySmall?.copyWith(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -566,7 +566,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
               _isReversed ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
               size: 16,
             ),
-            label: Text(_isReversed ? '倒序' : '正序'),
+            label: Text(_isReversed ? context.l10n.bookDetailReverseOrder : context.l10n.bookDetailNormalOrder),
             style: TextButton.styleFrom(
               foregroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -607,7 +607,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
       return SliverFillRemaining(
         child: Center(
           child: Text(
-            '暂无章节',
+            context.l10n.bookDetailNoChapters,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),

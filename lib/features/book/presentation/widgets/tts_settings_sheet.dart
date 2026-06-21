@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -41,7 +42,7 @@ class TTSSettingsSheet extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '朗读设置',
+                    context.l10n.bookTtsSettingsTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -53,7 +54,7 @@ class TTSSettingsSheet extends ConsumerWidget {
 
               // 引擎选择
               Text(
-                '语音引擎',
+                context.l10n.bookTtsEngineLabel,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -63,8 +64,8 @@ class TTSSettingsSheet extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _EngineCard(
-                      title: '系统 TTS',
-                      subtitle: '离线可用',
+                      title: context.l10n.bookTtsSystemTitle,
+                      subtitle: context.l10n.bookTtsSystemSubtitle,
                       icon: Icons.smartphone,
                       isSelected: settings.engine == TTSEngine.system,
                       onTap: () => ttsNotifier.setEngine(TTSEngine.system),
@@ -74,7 +75,7 @@ class TTSSettingsSheet extends ConsumerWidget {
                   Expanded(
                     child: _EngineCard(
                       title: 'Edge TTS',
-                      subtitle: '在线高品质',
+                      subtitle: context.l10n.bookTtsEdgeTtsSubtitle,
                       icon: Icons.cloud,
                       isSelected: settings.engine == TTSEngine.edge,
                       isRecommended: true,
@@ -89,7 +90,7 @@ class TTSSettingsSheet extends ConsumerWidget {
               // 语速
               _buildSliderSetting(
                 context,
-                label: '语速',
+                label: context.l10n.bookTtsSpeechRateLabel,
                 value: settings.speechRate,
                 min: 0.5,
                 max: 2.0,
@@ -103,7 +104,7 @@ class TTSSettingsSheet extends ConsumerWidget {
               // 音调
               _buildSliderSetting(
                 context,
-                label: '音调',
+                label: context.l10n.bookTtsPitchLabel,
                 value: settings.pitch,
                 min: 0.5,
                 max: 2.0,
@@ -117,7 +118,7 @@ class TTSSettingsSheet extends ConsumerWidget {
               // 音量
               _buildSliderSetting(
                 context,
-                label: '音量',
+                label: context.l10n.bookTtsVolumeLabel,
                 value: settings.volume,
                 min: 0.0,
                 max: 1.0,
@@ -132,8 +133,8 @@ class TTSSettingsSheet extends ConsumerWidget {
               _buildSwitchSetting(
                 context,
                 icon: Icons.format_line_spacing,
-                label: '自动滚动跟随',
-                subtitle: '朗读时自动滚动到当前段落',
+                label: context.l10n.bookTtsAutoScrollFollowLabel,
+                subtitle: context.l10n.bookTtsAutoScrollFollowSubtitle,
                 value: settings.autoScrollFollow,
                 onChanged: (value) {
                   ttsNotifier.updateSettings(
@@ -145,8 +146,8 @@ class TTSSettingsSheet extends ConsumerWidget {
               _buildSwitchSetting(
                 context,
                 icon: Icons.highlight,
-                label: '朗读高亮',
-                subtitle: '高亮显示当前朗读位置',
+                label: context.l10n.bookTtsHighlightLabel,
+                subtitle: context.l10n.bookTtsHighlightSubtitle,
                 value: settings.highlightEnabled,
                 onChanged: (value) {
                   ttsNotifier.updateSettings(
@@ -158,8 +159,8 @@ class TTSSettingsSheet extends ConsumerWidget {
               _buildSwitchSetting(
                 context,
                 icon: Icons.skip_next_rounded,
-                label: '自动播放下一章',
-                subtitle: '当前章节结束后自动播放下一章',
+                label: context.l10n.bookTtsAutoPlayNextLabel,
+                subtitle: context.l10n.bookTtsAutoPlayNextSubtitle,
                 value: settings.autoPlayNextChapter,
                 onChanged: (value) {
                   ttsNotifier.updateSettings(
@@ -346,7 +347,7 @@ class _EngineCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        '推荐',
+                        context.l10n.bookTtsRecommendedBadge,
                         style: TextStyle(
                           fontSize: 8,
                           color: theme.colorScheme.onTertiary,

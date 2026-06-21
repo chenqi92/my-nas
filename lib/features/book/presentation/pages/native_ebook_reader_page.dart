@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
@@ -416,7 +417,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('返回'),
+              child: Text(context.l10n.bookReaderButtonBack),
             ),
           ],
         ),
@@ -586,7 +587,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            '第 ${_currentPage + 1} 页',
+            context.l10n.bookReaderCurrentPageIndicator(_currentPage + 1),
             style: TextStyle(color: textColor, fontSize: 11),
           ),
           Text(
@@ -688,19 +689,19 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
                 children: [
                   _BottomBarButton(
                     icon: Icons.menu_book_rounded,
-                    label: '目录',
+                    label: context.l10n.bookReaderTocLabel,
                     isDark: isDark,
                     onPressed: () => setState(() => _showToc = !_showToc),
                   ),
                   _BottomBarButton(
                     icon: Icons.headphones_rounded,
-                    label: '朗读',
+                    label: context.l10n.bookReaderTtsLabel,
                     isDark: isDark,
                     onPressed: _startTTS,
                   ),
                   _BottomBarButton(
                     icon: isDark ? Icons.light_mode : Icons.dark_mode,
-                    label: isDark ? '日间' : '夜间',
+                    label: isDark ? context.l10n.bookReaderThemeDayLabel : context.l10n.bookReaderThemeNightLabel,
                     isDark: isDark,
                     onPressed: () {
                       final notifier = ref.read(bookReaderSettingsProvider.notifier);
@@ -712,7 +713,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
                   ),
                   _BottomBarButton(
                     icon: Icons.settings_rounded,
-                    label: '设置',
+                    label: context.l10n.bookReaderSettingsLabel,
                     isDark: isDark,
                     onPressed: _showSettingsSheet,
                   ),
@@ -753,7 +754,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              '目录',
+                              context.l10n.bookReaderTocTitle,
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -809,7 +810,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
   void _showSettingsSheet() {
     showReaderSettingsSheet(
       context,
-      title: '阅读设置',
+      title: context.l10n.bookReaderSettingsTitle,
       icon: Icons.settings_rounded,
       contentBuilder: (context) => Consumer(
         builder: (context, ref, _) {
@@ -828,7 +829,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
       children: [
         // 字体大小
         SettingSliderRow(
-          label: '字体大小',
+          label: context.l10n.bookReaderFontSizeLabel,
           value: settings.fontSize,
           min: 12,
           max: 36,
@@ -840,7 +841,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
 
         // 行高
         SettingSliderRow(
-          label: '行高',
+          label: context.l10n.bookReaderLineHeightLabel,
           value: settings.lineHeight,
           min: 1,
           max: 3,
@@ -851,7 +852,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
 
         // 页边距
         SettingSliderRow(
-          label: '页边距',
+          label: context.l10n.bookReaderHorizontalPaddingLabel,
           value: settings.horizontalPadding,
           min: 8,
           max: 64,
@@ -862,7 +863,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         const SizedBox(height: 24),
 
         // 阅读主题
-        const SettingSectionTitle(title: '阅读主题'),
+        SettingSectionTitle(title: context.l10n.bookReaderThemesSectionTitle),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -883,9 +884,9 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         const SizedBox(height: 24),
 
         // 其他设置
-        const SettingSectionTitle(title: '其他设置'),
+        SettingSectionTitle(title: context.l10n.bookReaderOtherSettingsSectionTitle),
         SettingSwitchRow(
-          title: '屏幕常亮',
+          title: context.l10n.bookReaderKeepScreenOnLabel,
           value: settings.keepScreenOn,
           onChanged: (value) {
             settingsNotifier.setKeepScreenOn(value: value);
@@ -897,7 +898,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
           },
         ),
         SettingSwitchRow(
-          title: '显示进度',
+          title: context.l10n.bookReaderShowProgressLabel,
           value: settings.showProgress,
           onChanged: (value) => settingsNotifier.setShowProgress(value: value),
         ),
