@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -184,7 +185,7 @@ class WebDavFileSystem implements NasFileSystem {
 
           final stream = response.data?.stream;
           if (stream == null) {
-            throw Exception('无法获取文件流');
+            throw Exception(appL10n.webdavFileStreamNotAvailable);
           }
 
           return stream;
@@ -221,7 +222,7 @@ class WebDavFileSystem implements NasFileSystem {
 
     final stream = response.data?.stream;
     if (stream == null) {
-      throw Exception('无法获取 URL 数据流');
+      throw Exception(appL10n.webdavUrlStreamNotAvailable);
     }
 
     return stream;

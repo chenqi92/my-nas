@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:my_nas/core/constants/app_constants.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -39,7 +40,7 @@ class LocalAdapter implements NasAdapter {
   @override
   NasAdapterInfo get info => NasAdapterInfo(
         type: NasAdapterType.local,
-        name: '本地存储',
+        name: appL10n.localAdapterName,
         version: AppConstants.appVersion,
       );
 
@@ -140,7 +141,7 @@ class LocalAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected) {
-      throw StateError('未连接');
+      throw StateError(appL10n.localAdapterErrorNotConnected);
     }
     return _fileSystem;
   }

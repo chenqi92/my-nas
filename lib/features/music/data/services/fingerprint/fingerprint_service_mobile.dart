@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 
 /// 移动端指纹服务实现
@@ -44,12 +45,12 @@ class FingerprintServiceMobile implements FingerprintService {
     int maxDuration = 120,
   }) async {
     if (!_available) {
-      throw const FingerprintUnavailableException('移动端指纹服务不可用');
+      throw FingerprintUnavailableException(appL10n.fingerprintMobileServiceUnavailable);
     }
 
     // 检查文件是否存在
     if (!await File(filePath).exists()) {
-      throw FingerprintGenerationException('音频文件不存在: $filePath');
+      throw FingerprintGenerationException(appL10n.fingerprintAudioFileNotFound(filePath));
     }
 
     try {
@@ -62,7 +63,7 @@ class FingerprintServiceMobile implements FingerprintService {
       );
 
       if (result == null) {
-        throw const FingerprintGenerationException('生成指纹失败: 返回结果为空');
+        throw FingerprintGenerationException(appL10n.fingerprintEmptyResult);
       }
 
       final fingerprint = result['fingerprint'] as String?;
@@ -70,7 +71,7 @@ class FingerprintServiceMobile implements FingerprintService {
 
       if (fingerprint == null || fingerprint.isEmpty) {
         final error = result['error'] as String?;
-        throw FingerprintGenerationException(error ?? '未能生成有效指纹');
+        throw FingerprintGenerationException(error ?? appL10n.fingerprintInvalid);
       }
 
       return FingerprintData(
@@ -79,7 +80,7 @@ class FingerprintServiceMobile implements FingerprintService {
       );
     } on PlatformException catch (e) {
       throw FingerprintGenerationException(
-        '平台调用失败: ${e.message}',
+        appL10n.fingerprintPlatformCallFailed(e.message ?? ''),
         cause: e,
       );
     }
@@ -92,7 +93,7 @@ class FingerprintServiceMobile implements FingerprintService {
     required int channels,
   }) async {
     if (!_available) {
-      throw const FingerprintUnavailableException('移动端指纹服务不可用');
+      throw FingerprintUnavailableException(appL10n.fingerprintMobileServiceUnavailable);
     }
 
     // 收集所有音频数据
@@ -116,7 +117,7 @@ class FingerprintServiceMobile implements FingerprintService {
       );
 
       if (result == null) {
-        throw const FingerprintGenerationException('生成指纹失败: 返回结果为空');
+        throw FingerprintGenerationException(appL10n.fingerprintEmptyResult);
       }
 
       final fingerprint = result['fingerprint'] as String?;
@@ -124,7 +125,7 @@ class FingerprintServiceMobile implements FingerprintService {
 
       if (fingerprint == null || fingerprint.isEmpty) {
         final error = result['error'] as String?;
-        throw FingerprintGenerationException(error ?? '未能生成有效指纹');
+        throw FingerprintGenerationException(error ?? appL10n.fingerprintInvalid);
       }
 
       return FingerprintData(
@@ -133,7 +134,7 @@ class FingerprintServiceMobile implements FingerprintService {
       );
     } on PlatformException catch (e) {
       throw FingerprintGenerationException(
-        '平台调用失败: ${e.message}',
+        appL10n.fingerprintPlatformCallFailed(e.message ?? ''),
         cause: e,
       );
     }

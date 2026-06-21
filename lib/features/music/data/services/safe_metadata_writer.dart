@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_metadata_writer.dart';
 import 'package:my_nas/features/music/data/services/unified_metadata_writer.dart';
@@ -57,7 +58,7 @@ class SafeMetadataWriter {
     return SafeWriteResult(
       success: success,
       wasPlaying: false,
-      error: success ? null : '写入失败',
+      error: success ? null : appL10n.musicMetadataWriteFailedSimple,
     );
   }
 
@@ -95,7 +96,7 @@ class SafeMetadataWriter {
     }
 
     try {
-      onProgress?.call(0.0, '准备写入');
+      onProgress?.call(0.0, appL10n.musicMetadataProgressPreparing);
 
       final result = await _writer.writeToNasFile(
         fileSystem,
@@ -114,7 +115,7 @@ class SafeMetadataWriter {
 
       // 恢复播放
       if (wasPlaying && savedPosition != null) {
-        onProgress?.call(1.0, '恢复播放');
+        onProgress?.call(1.0, appL10n.musicMetadataProgressResuming);
         await _resumePlayback(savedPosition);
       }
 
@@ -174,7 +175,7 @@ class SafeMetadataWriter {
         return SafeWriteResult(
           success: false,
           wasPlaying: wasPlaying,
-          error: '写入失败，可能文件仍被占用',
+          error: appL10n.musicMetadataWriteFailedFileInUse,
         );
       }
 

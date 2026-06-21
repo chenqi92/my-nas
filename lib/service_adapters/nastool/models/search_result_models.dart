@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 /// 媒体搜索结果（包含种子分组）
 class NtMediaSearchResult {
   const NtMediaSearchResult({
@@ -244,11 +245,11 @@ class NtTorrentItem {
   bool get is2xUpload => uploadFactor == 2;
 
   /// 显示站点名
-  String get displaySite => siteName ?? site ?? '未知';
+  String get displaySite => siteName ?? site ?? appL10n.nastoolTorrentUnknownSite;
 
   /// 格式化大小
   String get formattedSize {
-    if (size == null) return '未知';
+    if (size == null) return appL10n.nastoolTorrentUnknownSize;
     final s = size!;
     if (s < 1024) return '$s B';
     if (s < 1024 * 1024) return '${(s / 1024).toStringAsFixed(1)} KB';

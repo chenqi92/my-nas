@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:my_nas/core/constants/app_constants.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -128,7 +129,7 @@ class SftpAdapter implements NasAdapter {
       // listdir('/') 是最轻的探活——失败说明会话已挂
       await _fileSystem!.listDirectory('/').timeout(
             const Duration(seconds: 5),
-            onTimeout: () => throw Exception('健康检查超时'),
+            onTimeout: () => throw Exception(appL10n.sftpAdapterHealthCheckTimeoutError),
           );
       return true;
     } on Exception catch (e) {
@@ -141,7 +142,7 @@ class SftpAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected || _fileSystem == null) {
-      throw StateError('未连接到 SFTP 服务器');
+      throw StateError(appL10n.sftpAdapterNotConnectedError);
     }
     return _fileSystem!;
   }

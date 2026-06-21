@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/smb/smb_connection_pool.dart';
@@ -447,7 +448,7 @@ class SmbFileSystem implements NasFileSystem {
       final path = firstSlash >= 0 ? withoutScheme.substring(firstSlash) : '/';
       return getFileStream(path);
     }
-    throw UnsupportedError('SMB 仅支持 smb:// 占位 URL，收到: $url');
+    throw UnsupportedError(appL10n.smbFileSystemUnsupportedUrlScheme(url));
   }
 
   @override
@@ -539,7 +540,7 @@ class SmbFileSystem implements NasFileSystem {
   }) async {
     final file = File(localPath);
     if (!await file.exists()) {
-      throw FileSystemException('本地文件不存在', localPath);
+      throw FileSystemException(appL10n.smbFileSystemLocalFileNotExists, localPath);
     }
 
     final name = fileName ?? p.basename(localPath);

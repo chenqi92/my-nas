@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dartssh2/dartssh2.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -93,7 +94,7 @@ class SftpFileSystem implements NasFileSystem {
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) =>
-      throw UnimplementedError('SFTP 不支持通过 URL 获取数据流');
+      throw UnimplementedError(appL10n.sftpFileSystemUrlNotSupported);
 
   /// SFTP 没有可分享的 HTTP URL；返回 sftp:// 形式作占位
   @override
@@ -138,7 +139,7 @@ class SftpFileSystem implements NasFileSystem {
 
   @override
   Future<void> copy(String sourcePath, String destPath) =>
-      throw UnimplementedError('SFTP 协议不支持服务端拷贝');
+      throw UnimplementedError(appL10n.sftpFileSystemServerSideCopyNotSupported);
 
   @override
   Future<void> move(String sourcePath, String destPath) =>

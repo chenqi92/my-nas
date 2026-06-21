@@ -11554,5 +11554,84 @@
     }
   },
   "ftpAdapterConnectionAuthFailed": "FTP connection failed: authentication failed or network unreachable",
-  "ftpAdapterNotConnected": "Not connected to FTP server"
+  "ftpAdapterNotConnected": "Not connected to FTP server",
+  "upnpAdapterHealthCheckTimeout": "Health check timeout",
+  "upnpAdapterNotConnected": "Not connected to UPnP MediaServer",
+  "sftpFileSystemUrlNotSupported": "SFTP does not support obtaining data streams by URL",
+  "sftpFileSystemServerSideCopyNotSupported": "SFTP protocol itself does not support server-side copy",
+  "sftpAdapterHealthCheckTimeoutError": "Health check timeout",
+  "sftpAdapterNotConnectedError": "Not connected to SFTP server",
+  "localAdapterName": "Local Storage",
+  "localAdapterErrorNotConnected": "Not connected",
+  "smbFileSystemUnsupportedUrlScheme": "SMB only supports smb:// placeholder URLs, received: {url}",
+  "@smbFileSystemUnsupportedUrlScheme": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "smbFileSystemLocalFileNotExists": "Local file does not exist",
+  "webdavFileStreamNotAvailable": "Unable to get file stream",
+  "webdavUrlStreamNotAvailable": "Unable to get URL stream",
+  "webdavAdapterHealthCheckTimeout": "WebDAV connection health check timeout",
+  "webdavAdapterNotConnected": "Not connected to WebDAV server",
+  "nastoolTorrentUnknownSite": "Unknown",
+  "nastoolTorrentUnknownSize": "Unknown",
+  "ntSubscribeSeasonDisplay": "Season {season}",
+  "@ntSubscribeSeasonDisplay": {
+    "placeholders": {
+      "season": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicTagWriteQueueInitFailure": "Failed to initialize write queue persistence",
+  "musicTagWriteQueueFileSystemNotAvailable": "Unable to get file system, sourceId: {sourceId}",
+  "@musicTagWriteQueueFileSystemNotAvailable": {
+    "placeholders": {
+      "sourceId": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicTagWriteQueueWriteError": "Write failed",
+  "musicUnknownAlbum": "Unknown Album",
+  "musicRootFolder": "Root",
+  "musicMetadataWriteFailedSimple": "Write failed",
+  "musicMetadataWriteFailedFileInUse": "Write failed, file may still be in use",
+  "musicMetadataProgressPreparing": "Preparing to write",
+  "musicMetadataProgressResuming": "Resuming playback",
+  "metadataWriteLockTimeoutError": "Timeout waiting for file lock: {path}",
+  "@metadataWriteLockTimeoutError": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "fingerprintMobileServiceUnavailable": "Fingerprint service unavailable on mobile",
+  "fingerprintPlatformCallFailed": "Platform call failed: {error}",
+  "@fingerprintPlatformCallFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "fingerprintEmptyResult": "Failed to generate fingerprint: empty result",
+  "acoustidScraperUnknownError": "Unknown error",
+  "acoustidScraperGenerationFailed": "Failed to generate fingerprint",
+  "acoustidScraperInvalidApiKey": "Invalid API Key: {message}",
+  "@acoustidScraperInvalidApiKey": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "acoustidScraperRateLimited": "Requests are too frequent, please try again later",
+  "acoustidScraperNetworkError": "Network connection failed",
+  "m3uParserUnknownChannel": "Unknown channel",
+  "m3uParserUncategorized": "Uncategorized"
 }

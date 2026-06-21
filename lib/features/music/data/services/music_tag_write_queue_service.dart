@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_tag_writer_service.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -126,7 +127,7 @@ class MusicTagWriteQueueService {
       // 恢复未完成的任务
       await _restorePendingTasks();
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '初始化写入队列持久化失败');
+      AppError.ignore(e, st, appL10n.musicTagWriteQueueInitFailure);
     }
 
     logger.i('MusicTagWriteQueueService: 初始化完成');
@@ -229,7 +230,7 @@ class MusicTagWriteQueueService {
       // 获取文件系统
       final fileSystem = _fileSystemProvider?.call(task.sourceId);
       if (fileSystem == null) {
-        throw Exception('无法获取文件系统，sourceId: ${task.sourceId}');
+        throw Exception(appL10n.musicTagWriteQueueFileSystemNotAvailable(task.sourceId ?? ''));
       }
 
       // 构建标签数据（包含封面）
@@ -256,7 +257,7 @@ class MusicTagWriteQueueService {
       );
 
       if (!result.success) {
-        throw Exception(result.error ?? '写入失败');
+        throw Exception(result.error ?? appL10n.musicTagWriteQueueWriteError);
       }
 
       // 成功

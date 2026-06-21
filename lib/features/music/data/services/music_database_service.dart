@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
 import 'package:path/path.dart';
@@ -56,11 +57,11 @@ class MusicTrackEntity {
     if (artist != null && artist!.isNotEmpty) return artist!;
     final nameWithoutExt = fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
     final match = RegExp(r'^(.+?)\s*[-–—]\s*.+$').firstMatch(nameWithoutExt);
-    return match?.group(1)?.trim() ?? '未知艺术家';
+    return match?.group(1)?.trim() ?? appL10n.musicUnknownArtist;
   }
 
   /// 显示的专辑
-  String get displayAlbum => album?.isNotEmpty ?? false ? album! : '未知专辑';
+  String get displayAlbum => album?.isNotEmpty ?? false ? album! : appL10n.musicUnknownAlbum;
 
   /// 格式化时长
   String get durationText {
@@ -88,7 +89,7 @@ class MusicTrackEntity {
     if (parts.length > 1) {
       return parts[parts.length - 2];
     }
-    return '根目录';
+    return appL10n.musicRootFolder;
   }
 
   /// 显示封面路径

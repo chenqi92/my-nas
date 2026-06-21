@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// 元数据写入锁管理器
 ///
@@ -91,7 +92,7 @@ class MetadataWriteLock {
       await existingLock.future.timeout(
         timeout,
         onTimeout: () {
-          throw TimeoutException('等待文件锁超时: $path', timeout);
+          throw TimeoutException(appL10n.metadataWriteLockTimeoutError(path), timeout);
         },
       );
 

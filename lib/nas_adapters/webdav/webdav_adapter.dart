@@ -1,4 +1,5 @@
 import 'package:my_nas/core/constants/app_constants.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -103,7 +104,7 @@ class WebDavAdapter implements NasAdapter {
       await _client!.ping().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          throw Exception('连接健康检查超时');
+          throw Exception(appL10n.webdavAdapterHealthCheckTimeout);
         },
       );
       logger.d('WebDavAdapter: 连接健康检查 - 正常');
@@ -118,7 +119,7 @@ class WebDavAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected || _fileSystem == null) {
-      throw StateError('未连接到 WebDAV 服务器');
+      throw StateError(appL10n.webdavAdapterNotConnected);
     }
     return _fileSystem!;
   }

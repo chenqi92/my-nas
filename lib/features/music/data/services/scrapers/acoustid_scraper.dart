@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
@@ -127,7 +128,7 @@ class AcoustIdScraper implements FingerprintScraper {
       if (status != 'ok') {
         final error = data['error'] as Map<String, dynamic>?;
         throw MusicScraperException(
-          error?['message'] as String? ?? '未知错误',
+          error?['message'] as String? ?? appL10n.acoustidScraperUnknownError,
           source: type,
         );
       }
@@ -182,7 +183,7 @@ class AcoustIdScraper implements FingerprintScraper {
     } on FingerprintException {
       rethrow;
     } on Exception catch (e) {
-      throw FingerprintGenerationException('生成指纹失败', cause: e);
+      throw FingerprintGenerationException(appL10n.acoustidScraperGenerationFailed, cause: e);
     }
   }
 
@@ -273,14 +274,14 @@ class AcoustIdScraper implements FingerprintScraper {
 
       if (code == 4) {
         return MusicScraperAuthException(
-          'API Key 无效: $message',
+          appL10n.acoustidScraperInvalidApiKey(message ?? ''),
           source: type,
           cause: e,
         );
       }
       if (code == 5) {
         return MusicScraperRateLimitException(
-          '请求过于频繁，请稍后再试',
+          appL10n.acoustidScraperRateLimited,
           source: type,
           cause: e,
         );
@@ -291,13 +292,13 @@ class AcoustIdScraper implements FingerprintScraper {
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {
       return MusicScraperNetworkException(
-        '网络连接失败',
+        appL10n.acoustidScraperNetworkError,
         source: type,
         cause: e,
       );
     }
     return MusicScraperException(
-      e.message ?? '未知错误',
+      e.message ?? appL10n.acoustidScraperUnknownError,
       source: type,
       cause: e,
     );

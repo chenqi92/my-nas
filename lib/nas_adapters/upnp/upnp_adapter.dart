@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:my_nas/core/constants/app_constants.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -121,7 +122,7 @@ class UpnpAdapter implements NasAdapter {
     try {
       await _client!.browse('0', requestedCount: 1).timeout(
             const Duration(seconds: 5),
-            onTimeout: () => throw Exception('健康检查超时'),
+            onTimeout: () => throw Exception(appL10n.upnpAdapterHealthCheckTimeout),
           );
       return true;
     } on Exception catch (e) {
@@ -134,7 +135,7 @@ class UpnpAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected || _fileSystem == null) {
-      throw StateError('未连接到 UPnP MediaServer');
+      throw StateError(appL10n.upnpAdapterNotConnected);
     }
     return _fileSystem!;
   }

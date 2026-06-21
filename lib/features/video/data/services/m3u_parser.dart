@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:uuid/uuid.dart';
@@ -85,7 +86,7 @@ class M3UParser {
     if (commaIndex != -1 && commaIndex < line.length - 1) {
       return line.substring(commaIndex + 1).trim();
     }
-    return '未知频道';
+    return appL10n.m3uParserUnknownChannel;
   }
 
   /// 提取属性值
@@ -143,7 +144,7 @@ class M3UParser {
   ) {
     final result = <String, List<LiveChannel>>{};
     for (final channel in channels) {
-      final category = channel.category ?? '未分类';
+      final category = channel.category ?? appL10n.m3uParserUncategorized;
       result.putIfAbsent(category, () => []).add(channel);
     }
     return result;

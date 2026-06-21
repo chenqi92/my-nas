@@ -1,6 +1,8 @@
 /// 订阅相关数据模型
 library;
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
+
 /// 订阅信息
 class NtSubscribe {
   const NtSubscribe({
@@ -70,7 +72,7 @@ class NtSubscribe {
   /// 季度显示文本
   String? get seasonDisplay {
     if (isMovie || season == null) return null;
-    return '第$season季';
+    return appL10n.ntSubscribeSeasonDisplay(season ?? 0);
   }
 
   /// 是否已完成
