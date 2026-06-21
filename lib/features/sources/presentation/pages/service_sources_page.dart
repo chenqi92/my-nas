@@ -13,6 +13,7 @@ import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/transmission/presentation/pages/transmission_detail_page.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -778,7 +779,7 @@ class _SourceTypeBottomSheet extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          type.description,
+          localizeFormText(context, type.description),
           style: theme.textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,
           ),

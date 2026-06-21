@@ -7,6 +7,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 源类型选择页面
@@ -234,7 +235,7 @@ class SourceTypeSelectionPage extends ConsumerWidget {
         ],
       ),
       subtitle: Text(
-        type.description,
+        localizeFormText(context, type.description),
         style: theme.textTheme.bodySmall?.copyWith(
           color: colorScheme.onSurfaceVariant,
         ),

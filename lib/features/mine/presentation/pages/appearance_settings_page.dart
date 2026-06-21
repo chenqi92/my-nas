@@ -11,6 +11,7 @@ import 'package:my_nas/shared/providers/dynamic_ambient_provider.dart';
 import 'package:my_nas/shared/providers/glass_material_provider.dart';
 import 'package:my_nas/shared/providers/theme_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
@@ -608,7 +609,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                   child: Text(
-                    preset.description,
+                    localizeFormText(context, preset.description),
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark
                           ? AppColors.darkOnSurfaceVariant

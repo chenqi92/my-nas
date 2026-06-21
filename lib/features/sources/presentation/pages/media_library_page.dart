@@ -32,6 +32,7 @@ import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/nas_adapters/mobile/services/file_import_service.dart';
 import 'package:my_nas/nas_adapters/smb/smb_pool_config.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
@@ -563,7 +564,7 @@ class _MediaTypeTab extends ConsumerWidget {
                     color: localSource.type.themeColor,
                   ),
                   title: Text(localSource.displayName),
-                  subtitle: Text(localSource.type.description),
+                  subtitle: Text(localizeFormText(context, localSource.type.description)),
                   trailing: alreadyAdded
                       ? Chip(label: Text(context.l10n.mediaLibrarySourceSelectionChip))
                       : const Icon(Icons.chevron_right),
