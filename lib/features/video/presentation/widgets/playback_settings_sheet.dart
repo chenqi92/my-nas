@@ -60,7 +60,7 @@ class PlaybackSettingsSheet extends ConsumerWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '播放设置',
+                    context.l10n.videoPlaybackSettingsTitle,
                     style: context.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -82,8 +82,8 @@ class PlaybackSettingsSheet extends ConsumerWidget {
                 children: [
                   // 自动播放下一个
                   SwitchListTile(
-                    title: const Text('自动播放下一个'),
-                    subtitle: const Text('播放完成后自动播放列表中的下一个视频'),
+                    title: Text(context.l10n.videoAutoPlayNextTitle),
+                    subtitle: Text(context.l10n.videoAutoPlayNextSubtitle),
                     value: settings.autoPlayNext,
                     onChanged: (value) {
                       notifier.setAutoPlayNext(enabled: value);
@@ -95,8 +95,8 @@ class PlaybackSettingsSheet extends ConsumerWidget {
 
                   // 记住播放位置
                   SwitchListTile(
-                    title: const Text('记住播放位置'),
-                    subtitle: const Text('下次打开时从上次位置继续播放'),
+                    title: Text(context.l10n.videoRememberPositionTitle),
+                    subtitle: Text(context.l10n.videoRememberPositionSubtitle),
                     value: settings.rememberPosition,
                     onChanged: (value) {
                       notifier.setRememberPosition(enabled: value); // 这里的名字要和你定义的一样
@@ -109,14 +109,14 @@ class PlaybackSettingsSheet extends ConsumerWidget {
                   // 快进快退秒数
                   _buildSection(
                     context,
-                    title: '快进/快退秒数',
-                    subtitle: '双击或点击按钮时跳过的秒数',
+                    title: context.l10n.videoSeekIntervalTitle,
+                    subtitle: context.l10n.videoSeekIntervalSubtitle,
                     child: SegmentedButton<int>(
                       segments: availableSeekIntervals
                           .map(
                             (s) => ButtonSegment(
                               value: s,
-                              label: Text('$s秒'),
+                              label: Text(context.l10n.videoSeekIntervalSeconds(s)),
                             ),
                           )
                           .toList(),
@@ -132,8 +132,8 @@ class PlaybackSettingsSheet extends ConsumerWidget {
                   // 默认音量
                   _buildSection(
                     context,
-                    title: '默认音量',
-                    subtitle: '新视频的初始音量',
+                    title: context.l10n.videoDefaultVolumeTitle,
+                    subtitle: context.l10n.videoDefaultVolumeSubtitle,
                     child: Row(
                       children: [
                         Icon(
@@ -155,7 +155,7 @@ class PlaybackSettingsSheet extends ConsumerWidget {
                         SizedBox(
                           width: 48,
                           child: Text(
-                            '${(settings.volume * 100).round()}%',
+                            context.l10n.videoVolumePercent((settings.volume * 100).round()),
                             textAlign: TextAlign.center,
                             style: context.textTheme.bodyMedium,
                           ),
@@ -169,15 +169,15 @@ class PlaybackSettingsSheet extends ConsumerWidget {
                   // 默认播放速度
                   _buildSection(
                     context,
-                    title: '默认播放速度',
-                    subtitle: '新视频的初始播放速度',
+                    title: context.l10n.videoDefaultPlaybackSpeedTitle,
+                    subtitle: context.l10n.videoDefaultPlaybackSpeedSubtitle,
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: availableSpeeds.map((s) {
                         final isSelected = s == settings.speed;
                         return ChoiceChip(
-                          label: Text('${s}x'),
+                          label: Text(context.l10n.videoPlaybackSpeedRate(s.toString())),
                           selected: isSelected,
                           onSelected: (_) => notifier.setSpeed(s),
                         );
@@ -202,8 +202,8 @@ class PlaybackSettingsSheet extends ConsumerWidget {
                         size: 22,
                       ),
                     ),
-                    title: const Text('清除播放位置记录'),
-                    subtitle: const Text('删除所有视频的播放进度'),
+                    title: Text(context.l10n.videoClearPlaybackHistoryTitle),
+                    subtitle: Text(context.l10n.videoClearPlaybackHistorySubtitle),
                     onTap: () => _showClearConfirmation(context, ref),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -255,23 +255,23 @@ class PlaybackSettingsSheet extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('清除播放记录'),
-        content: const Text('确定要清除所有视频的播放位置记录吗？此操作无法撤销。'),
+        title: Text(context.l10n.videoClearConfirmTitle),
+        content: Text(context.l10n.videoClearConfirmContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.videoClearConfirmCancel),
           ),
           FilledButton(
             onPressed: () {
               ref.read(playbackSettingsProvider.notifier).clearAllPositions();
               Navigator.pop(context);
-              context.showSuccessToast('播放位置记录已清除');
+              context.showSuccessToast(context.l10n.videoClearSuccessToast);
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: const Text('清除'),
+            child: Text(context.l10n.videoClearConfirmAction),
           ),
         ],
       ),

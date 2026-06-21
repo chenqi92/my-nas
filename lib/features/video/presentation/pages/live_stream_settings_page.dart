@@ -37,7 +37,7 @@ class _LiveStreamSettingsPageState
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('直播源管理'),
+        title: Text(context.l10n.liveStreamSourceManagementTitle),
         actions: [
           // 排序模式切换按钮
           if (sources.isNotEmpty)
@@ -48,12 +48,12 @@ class _LiveStreamSettingsPageState
                   _isReorderMode = !_isReorderMode;
                 });
               },
-              tooltip: _isReorderMode ? '完成排序' : '调整顺序',
+              tooltip: _isReorderMode ? context.l10n.liveStreamSortingFinish : context.l10n.liveStreamAdjustOrder,
             ),
           IconButton(
             icon: const Icon(Icons.add_rounded),
             onPressed: () => _showAddSourceDialog(context),
-            tooltip: '添加直播源',
+            tooltip: context.l10n.liveStreamAddSource,
           ),
         ],
       ),
@@ -143,7 +143,7 @@ class _LiveStreamSettingsPageState
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无直播源',
+              context.l10n.liveStreamEmptyTitle,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -151,7 +151,7 @@ class _LiveStreamSettingsPageState
             ),
             const SizedBox(height: 8),
             Text(
-              '添加 M3U 播放列表开始观看直播',
+              context.l10n.liveStreamEmptyHint,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[500],
@@ -161,7 +161,7 @@ class _LiveStreamSettingsPageState
             ElevatedButton.icon(
               onPressed: () => _showAddSourceDialog(context),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('添加直播源'),
+              label: Text(context.l10n.liveStreamAddSource),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -181,7 +181,7 @@ class _LiveStreamSettingsPageState
     );
 
     if (result != null && mounted) {
-      context.showToast('已添加: ${result.name}');
+      context.showToast(context.l10n.liveStreamAddedToast(result.name));
     }
   }
 
@@ -198,21 +198,21 @@ class _LiveStreamSettingsPageState
     );
 
     if (result != null && mounted) {
-      context.showToast('已更新: ${result.name}');
+      context.showToast(context.l10n.liveStreamUpdatedToast(result.name));
     }
   }
 
   Future<void> _refreshSource(String sourceId) async {
     try {
-      context.showToast('正在刷新...');
+      context.showToast(context.l10n.liveStreamRefreshingToast);
       final source = await ref
           .read(liveStreamSettingsProvider.notifier)
           .refreshSource(sourceId);
       if (mounted) {
-        context.showToast('已刷新: ${source.channelCount} 个频道');
+        context.showToast(context.l10n.liveStreamRefreshedToast(source.channelCount));
       }
     } catch (e, st) {
-      AppError.handleWithUI(context, e, st, '刷新失败');
+      AppError.handleWithUI(context, e, st, context.l10n.liveStreamRefreshFailedError);
     }
   }
 
@@ -220,17 +220,17 @@ class _LiveStreamSettingsPageState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除直播源'),
-        content: Text('确定要删除 "${source.name}" 吗？'),
+        title: Text(context.l10n.liveStreamDeleteSourceTitle),
+        content: Text(context.l10n.liveStreamDeleteSourceConfirmation(source.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(context.l10n.commonDelete),
           ),
         ],
       ),
@@ -241,7 +241,7 @@ class _LiveStreamSettingsPageState
           .read(liveStreamSettingsProvider.notifier)
           .removeSource(source.id);
       if (mounted) {
-        context.showToast('已删除: ${source.name}');
+        context.showToast(context.l10n.liveStreamDeletedToast(source.name));
       }
     }
   }
@@ -303,7 +303,7 @@ class _SourceTile extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            '${source.channelCount} 个频道',
+            context.l10n.liveStreamChannelsCount(source.channelCount),
             style: TextStyle(
               color: source.isEnabled ? null : Colors.grey,
             ),
@@ -320,17 +320,17 @@ class _SourceTile extends StatelessWidget {
                     IconButton(
                       icon: const Icon(Icons.refresh_rounded),
                       onPressed: onRefresh,
-                      tooltip: '刷新频道',
+                      tooltip: context.l10n.liveStreamRefreshChannelsTooltip,
                     ),
                     IconButton(
                       icon: const Icon(Icons.edit_rounded),
                       onPressed: onEdit,
-                      tooltip: '编辑',
+                      tooltip: context.l10n.commonEdit,
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_rounded),
                       onPressed: onDelete,
-                      tooltip: '删除',
+                      tooltip: context.l10n.commonDelete,
                       color: Colors.red,
                     ),
                   ],
@@ -374,7 +374,7 @@ class _AddSourceDialogState extends State<_AddSourceDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return AlertDialog(
-      title: const Text('添加直播源'),
+      title: Text(context.l10n.liveStreamAddSource),
       content: SizedBox(
         width: 400,
         child: SingleChildScrollView(
@@ -384,16 +384,16 @@ class _AddSourceDialogState extends State<_AddSourceDialog> {
             children: [
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: '名称',
-                  hintText: '如: IPTV 直播源',
+                decoration: InputDecoration(
+                  labelText: context.l10n.liveStreamSourceNameLabel,
+                  hintText: context.l10n.liveStreamSourceNameHint,
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _urlController,
-                decoration: const InputDecoration(
-                  labelText: 'M3U 播放列表 URL',
+                decoration: InputDecoration(
+                  labelText: context.l10n.liveStreamPlaylistUrlLabel,
                   hintText: 'https://example.com/playlist.m3u',
                 ),
                 maxLines: 2,
@@ -406,7 +406,7 @@ class _AddSourceDialogState extends State<_AddSourceDialog> {
                   child: OutlinedButton.icon(
                     onPressed: _previewSource,
                     icon: const Icon(Icons.preview_rounded),
-                    label: const Text('预览频道'),
+                    label: Text(context.l10n.liveStreamPreviewChannelsButton),
                   ),
                 ),
               if (_error != null)
@@ -420,7 +420,7 @@ class _AddSourceDialogState extends State<_AddSourceDialog> {
               if (_previewChannels != null) ...[
                 const SizedBox(height: 16),
                 Text(
-                  '预览 (${_previewChannels!.length} 个频道)',
+                  context.l10n.liveStreamPreviewChannelsTitle(_previewChannels!.length),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
@@ -452,7 +452,7 @@ class _AddSourceDialogState extends State<_AddSourceDialog> {
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      '... 还有 ${_previewChannels!.length - 20} 个频道',
+                      context.l10n.liveStreamMoreChannelsHint(_previewChannels!.length - 20),
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 12,
@@ -467,13 +467,13 @@ class _AddSourceDialogState extends State<_AddSourceDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(context.l10n.commonCancel),
         ),
         ElevatedButton(
           onPressed: _previewChannels != null && _nameController.text.isNotEmpty
               ? _save
               : null,
-          child: const Text('保存'),
+          child: Text(context.l10n.commonSave),
         ),
       ],
     );
@@ -481,7 +481,7 @@ class _AddSourceDialogState extends State<_AddSourceDialog> {
 
   Future<void> _previewSource() async {
     if (_urlController.text.isEmpty) {
-      setState(() => _error = '请输入 M3U URL');
+      setState(() => _error = context.l10n.liveStreamUrlRequiredError);
       return;
     }
 
@@ -573,7 +573,7 @@ class _EditSourceDialogState extends State<_EditSourceDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text('编辑直播源'),
+        title: Text(context.l10n.liveStreamAddSource),
         content: SizedBox(
           width: 400,
           child: Column(
@@ -581,15 +581,15 @@ class _EditSourceDialogState extends State<_EditSourceDialog> {
             children: [
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: '名称',
+                decoration: InputDecoration(
+                  labelText: context.l10n.liveStreamSourceNameLabel,
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _urlController,
-                decoration: const InputDecoration(
-                  labelText: 'M3U 播放列表 URL',
+                decoration: InputDecoration(
+                  labelText: context.l10n.liveStreamPlaylistUrlLabel,
                 ),
                 maxLines: 2,
               ),
@@ -607,7 +607,7 @@ class _EditSourceDialogState extends State<_EditSourceDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.commonCancel),
           ),
           if (_isLoading)
             const Padding(
@@ -621,14 +621,14 @@ class _EditSourceDialogState extends State<_EditSourceDialog> {
           else
             ElevatedButton(
               onPressed: _save,
-              child: const Text('保存'),
+              child: Text(context.l10n.commonSave),
             ),
         ],
       );
 
   Future<void> _save() async {
     if (_nameController.text.isEmpty) {
-      setState(() => _error = '请输入名称');
+      setState(() => _error = context.l10n.liveStreamSourceNameRequiredError);
       return;
     }
 

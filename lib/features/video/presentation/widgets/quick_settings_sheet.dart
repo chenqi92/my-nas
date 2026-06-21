@@ -89,20 +89,20 @@ class QuickSettingsSheet extends ConsumerWidget {
         subtitles.isNotEmpty || embeddedSubtitles.isNotEmpty || currentSubtitle != null;
 
     // 当前字幕名称
-    var currentSubtitleName = '关闭';
+    var currentSubtitleName = context.l10n.videoSubtitleOff;
     if (currentSubtitle != null) {
       currentSubtitleName = currentSubtitle.language ?? currentSubtitle.name;
     } else if (currentEmbeddedId != null) {
       final track = embeddedSubtitles.where((s) => s.id == currentEmbeddedId).firstOrNull;
       if (track != null) {
-        currentSubtitleName = track.title ?? track.language ?? '轨道 ${track.id}';
+        currentSubtitleName = track.title ?? track.language ?? context.l10n.videoSubtitleTrackLabel(track.id);
       }
     }
 
     // 当前音轨名称
-    var currentAudioName = '默认';
+    var currentAudioName = context.l10n.videoAudioTrackDefault;
     if (currentAudioTrack != null) {
-      currentAudioName = currentAudioTrack.title ?? '音轨 ${currentAudioTrack.id}';
+      currentAudioName = currentAudioTrack.title ?? context.l10n.videoAudioTrackLabel(currentAudioTrack.id);
     }
 
     return Container(
@@ -139,7 +139,7 @@ class QuickSettingsSheet extends ConsumerWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '设置',
+                  context.l10n.videoQuickSettingsTitle,
                   style: context.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -165,8 +165,8 @@ class QuickSettingsSheet extends ConsumerWidget {
                 _SettingsTile(
                   icon: Icons.tune_rounded,
                   iconColor: AppColors.musicColor,
-                  title: '高级功能',
-                  subtitle: '更多播放设置选项',
+                  title: context.l10n.videoAdvancedFeaturesTitle,
+                  subtitle: context.l10n.videoAdvancedFeaturesSubtitle,
                   onTap: () {
                     Navigator.pop(context);
                     showAdvancedSettingsSheet(context);
@@ -179,13 +179,13 @@ class QuickSettingsSheet extends ConsumerWidget {
                 _SettingsTile(
                   icon: hasSubtitles ? Icons.closed_caption : Icons.closed_caption_off,
                   iconColor: AppColors.downloadColor,
-                  title: '字幕',
+                  title: context.l10n.videoSubtitleTitle,
                   subtitle: currentSubtitleName,
                   trailing: hasSubtitles
                       ? null
-                      : const Text(
-                          '无可用字幕',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                      : Text(
+                          context.l10n.videoNoSubtitlesAvailable,
+                          style: const TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                   onTap: () {
                     Navigator.pop(context);
@@ -206,8 +206,8 @@ class QuickSettingsSheet extends ConsumerWidget {
                   _SettingsTile(
                     icon: Icons.search_rounded,
                     iconColor: AppColors.controlColor,
-                    title: '在线搜索字幕',
-                    subtitle: '从 OpenSubtitles 搜索',
+                    title: context.l10n.videoSearchSubtitlesOnline,
+                    subtitle: context.l10n.videoSearchSubtitlesSubtitle,
                     onTap: () {
                       Navigator.pop(context);
                       _showSubtitleDownloadDialog(context, ref);
@@ -219,11 +219,11 @@ class QuickSettingsSheet extends ConsumerWidget {
                 _SettingsTile(
                   icon: Icons.audiotrack_rounded,
                   iconColor: AppColors.warning,
-                  title: '音轨',
+                  title: context.l10n.videoAudioTrackTitle,
                   subtitle: currentAudioName,
                   trailing: audioTracks.length > 1
                       ? Text(
-                          '${audioTracks.length} 个可用',
+                          context.l10n.videoAudioTracksAvailable(audioTracks.length),
                           style: const TextStyle(color: Colors.grey, fontSize: 12),
                         )
                       : null,
@@ -378,12 +378,12 @@ class _SpeedSelector extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '播放速度',
-                    style: TextStyle(fontWeight: FontWeight.w500),
+                  Text(
+                    context.l10n.videoPlaybackSpeedTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                   Text(
-                    '当前: ${currentSpeed}x',
+                    context.l10n.videoPlaybackSpeedCurrent(currentSpeed),
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark
                           ? AppColors.darkOnSurfaceVariant
@@ -438,8 +438,8 @@ class _VolumeBoostSelector extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // 声音增强等级
-    const boostLevels = [
-      (value: 1.0, label: '正常'),
+    final boostLevels = [
+      (value: 1.0, label: context.l10n.videoVolumeBoostNormal),
       (value: 1.25, label: '125%'),
       (value: 1.5, label: '150%'),
       (value: 2.0, label: '200%'),
@@ -473,12 +473,12 @@ class _VolumeBoostSelector extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '声音增强',
-                    style: TextStyle(fontWeight: FontWeight.w500),
+                  Text(
+                    context.l10n.videoVolumeBoostTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                   Text(
-                    '当前: ${currentLevel.label}',
+                    context.l10n.videoVolumeBoostCurrent(currentLevel.label),
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark
                           ? AppColors.darkOnSurfaceVariant

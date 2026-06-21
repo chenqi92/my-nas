@@ -98,13 +98,13 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '书签',
+                          context.l10n.videoBookmarkTitle,
                           style: context.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          '当前位置: ${_formatDuration(widget.currentPosition)}',
+                          context.l10n.videoBookmarkCurrentPosition(_formatDuration(widget.currentPosition)),
                           style: context.textTheme.bodySmall?.copyWith(
                             color: isDark
                                 ? AppColors.darkOnSurfaceVariant
@@ -118,7 +118,7 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
                   FilledButton.icon(
                     onPressed: () => _showAddBookmarkDialog(context),
                     icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('添加'),
+                    label: Text(context.l10n.videoBookmarkAddButton),
                   ),
                 ],
               ),
@@ -161,7 +161,7 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
                 ),
                 error: (_, _) => Center(
                   child: Text(
-                    '加载失败',
+                    context.l10n.videoBookmarkLoadError,
                     style: TextStyle(
                       color: isDark
                           ? AppColors.darkOnSurfaceVariant
@@ -190,7 +190,7 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无书签',
+              context.l10n.videoBookmarkEmptyTitle,
               style: context.textTheme.titleMedium?.copyWith(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant
@@ -199,7 +199,7 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              '点击右上角添加书签',
+              context.l10n.videoBookmarkEmptyHint,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.7)
@@ -216,13 +216,13 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('添加书签'),
+        title: Text(context.l10n.videoBookmarkAddDialogTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '位置: ${_formatDuration(widget.currentPosition)}',
+              context.l10n.videoBookmarkPositionLabel(_formatDuration(widget.currentPosition)),
               style: context.textTheme.bodyMedium?.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w500,
@@ -231,10 +231,10 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
             const SizedBox(height: 16),
             TextField(
               controller: _noteController,
-              decoration: const InputDecoration(
-                labelText: '备注 (可选)',
-                hintText: '输入书签备注...',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n.videoBookmarkNoteLabel,
+                hintText: context.l10n.videoBookmarkNoteHint,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 2,
             ),
@@ -243,7 +243,7 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.videoBookmarkCancelButton),
           ),
           FilledButton(
             onPressed: () {
@@ -257,7 +257,7 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
                   );
               Navigator.pop(context);
             },
-            child: const Text('添加'),
+            child: Text(context.l10n.videoBookmarkAddButton),
           ),
         ],
       ),
@@ -270,7 +270,7 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('编辑备注'),
+        title: Text(context.l10n.videoBookmarkEditDialogTitle),
         content: TextField(
           controller: _noteController,
           decoration: const InputDecoration(
@@ -283,7 +283,7 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.videoBookmarkCancelButton),
           ),
           FilledButton(
             onPressed: () {
@@ -293,7 +293,7 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
                   );
               Navigator.pop(context);
             },
-            child: const Text('保存'),
+            child: Text(context.l10n.videoBookmarkSaveButton),
           ),
         ],
       ),
@@ -358,7 +358,7 @@ class _BookmarkItem extends StatelessWidget {
             ),
           ),
           title: Text(
-            bookmark.note ?? '未命名书签',
+            bookmark.note ?? context.l10n.videoBookmarkUnnamedTitle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -371,7 +371,7 @@ class _BookmarkItem extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            _formatDate(bookmark.createdAt),
+            _formatDate(context, bookmark.createdAt),
             style: TextStyle(
               fontSize: 12,
               color: isDark
@@ -382,20 +382,20 @@ class _BookmarkItem extends StatelessWidget {
           trailing: IconButton(
             icon: const Icon(Icons.edit_note_rounded),
             onPressed: onEditNote,
-            tooltip: '编辑备注',
+            tooltip: context.l10n.videoBookmarkEditNoteTooltip,
           ),
           onTap: onTap,
         ),
       );
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
 
-    if (diff.inMinutes < 1) return '刚刚';
-    if (diff.inHours < 1) return '${diff.inMinutes}分钟前';
-    if (diff.inDays < 1) return '${diff.inHours}小时前';
-    if (diff.inDays < 7) return '${diff.inDays}天前';
+    if (diff.inMinutes < 1) return context.l10n.videoBookmarkTimeJustNow;
+    if (diff.inHours < 1) return context.l10n.videoBookmarkTimeMinutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return context.l10n.videoBookmarkTimeHoursAgo(diff.inHours);
+    if (diff.inDays < 7) return context.l10n.videoBookmarkTimeDaysAgo(diff.inDays);
 
     return '${date.month}/${date.day}';
   }

@@ -321,7 +321,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
 
     return IconButton(
       icon: const Icon(Icons.cloud_download_outlined),
-      tooltip: '在 PT 站搜索本片',
+      tooltip: context.l10n.videoPtSearchTooltip,
       onPressed: () => launchPtSearchForMedia(context, ref, query: query),
     );
   }
@@ -373,8 +373,8 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
               isScraping
                   ? '${task.progress}/${task.total}'
                   : (task.status == ScrapingStatus.completed
-                      ? '完成 ${task.successCount}集'
-                      : '失败'),
+                      ? context.l10n.videoScrapingCompleted(task.successCount)
+                      : context.l10n.videoScrapingFailed),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -411,7 +411,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
               child: _DesktopSection(
-                title: '简介',
+                title: context.l10n.videoOverviewLabel,
                 child: Text(
                   overview,
                   style: theme.textTheme.bodyMedium?.copyWith(
@@ -532,7 +532,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         ),
         child: IconButton(
           icon: const Icon(Icons.cloud_download_outlined, color: Colors.white),
-          tooltip: '在 PT 站搜索本片',
+          tooltip: context.l10n.videoPtSearchTooltip,
           onPressed: () => launchPtSearchForMedia(context, ref, query: query),
         ),
       ),
@@ -933,7 +933,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '演职人员',
+            context.l10n.videoCastCrewLabel,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -943,7 +943,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
           const SizedBox(height: 12),
           // 导演
           if (director != null && director.isNotEmpty) ...[
-            _buildSimpleCastItem('导演', director, isDark),
+            _buildSimpleCastItem(context.l10n.videoDirectorLabel, director, isDark),
             const SizedBox(height: 8),
           ],
           // 演员
@@ -1065,7 +1065,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '共 ${sortedParts.length} 部电影',
+                              context.l10n.videoMovieCollectionCount(sortedParts.length),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: isDark
@@ -1089,7 +1089,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                           color: AppColors.primary,
                         ),
                         label: Text(
-                          '查看全部',
+                          context.l10n.videoViewAll,
                           style: TextStyle(
                             fontSize: 13,
                             color: AppColors.primary,
@@ -1169,8 +1169,8 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
-                            '当前',
+                          child: Text(
+                            context.l10n.videoCurrent,
                             style: TextStyle(
                               fontSize: 10,
                               color: Colors.white,
@@ -1376,7 +1376,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
           Row(
             children: [
               Text(
-                '文件信息',
+                context.l10n.videoFileInfoLabel,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -1393,7 +1393,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                     savePath: _getVideoDirectory(_selectedMetadata.filePath),
                   ),
                   icon: const Icon(Icons.subtitles, size: 20),
-                  tooltip: '下载字幕',
+                  tooltip: context.l10n.videoSubtitleDownloadTooltip,
                   visualDensity: VisualDensity.compact,
                 ),
               // 质量选择器（仅电影）
@@ -1401,13 +1401,13 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
             ],
           ),
           const SizedBox(height: 12),
-          _buildInfoRow('文件名', _selectedMetadata.fileName, isDark),
-          _buildInfoRow('路径', _selectedMetadata.filePath, isDark),
-          _buildInfoRow('来源', widget.sourceId, isDark),
+          _buildInfoRow(context.l10n.videoFileName, _selectedMetadata.fileName, isDark),
+          _buildInfoRow(context.l10n.videoFilePath, _selectedMetadata.filePath, isDark),
+          _buildInfoRow(context.l10n.videoSource, widget.sourceId, isDark),
           if (_selectedMetadata.resolution != null)
-            _buildInfoRow('分辨率', _selectedMetadata.resolution!, isDark),
+            _buildInfoRow(context.l10n.videoResolution, _selectedMetadata.resolution!, isDark),
           if (_selectedMetadata.fileSizeText.isNotEmpty)
-            _buildInfoRow('文件大小', _selectedMetadata.fileSizeText, isDark),
+            _buildInfoRow(context.l10n.videoFileSize, _selectedMetadata.fileSizeText, isDark),
         ],
       ),
     );
@@ -1430,7 +1430,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '本地剧集',
+            context.l10n.videoLocalEpisodesLabel,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -1446,7 +1446,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
               ),
             ),
             error: (_, _) => Text(
-              '加载失败',
+              context.l10n.videoLoadingFailed,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -1454,7 +1454,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
             data: (episodes) {
               if (episodes.isEmpty) {
                 return Text(
-                  '无本地剧集',
+                  context.l10n.videoNoLocalEpisodes,
                   style: TextStyle(
                     color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                   ),
@@ -1475,19 +1475,19 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow('剧集数量', '${episodes.length} 集', isDark),
+                  _buildInfoRow(context.l10n.videoEpisodeCount, '${episodes.length} 集', isDark),
                   if (seasonNumbers.isNotEmpty)
                     _buildInfoRow(
-                      '季数',
+                      context.l10n.videoSeasonCount,
                       seasonNumbers.length == 1
-                          ? '第 ${seasonNumbers.first} 季'
-                          : '${seasonNumbers.length} 季 (${seasonNumbers.first}-${seasonNumbers.last})',
+                          ? context.l10n.videoSeasonLabel(seasonNumbers.first)
+                          : context.l10n.videoSeasonRangeLabel(seasonNumbers.length, seasonNumbers.first, seasonNumbers.last),
                       isDark,
                     ),
-                  _buildInfoRow('总大小', totalSizeText, isDark),
+                  _buildInfoRow(context.l10n.videoTotalSize, totalSizeText, isDark),
                   if (showDirectory.isNotEmpty)
-                    _buildInfoRow('目录', showDirectory, isDark),
-                  _buildInfoRow('来源', widget.sourceId, isDark),
+                    _buildInfoRow(context.l10n.videoDirectory, showDirectory, isDark),
+                  _buildInfoRow(context.l10n.videoSource, widget.sourceId, isDark),
                 ],
               );
             },
@@ -1524,7 +1524,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '本地剧集',
+            context.l10n.videoLocalEpisodesLabel,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -1540,7 +1540,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
               ),
             ),
             error: (_, _) => Text(
-              '加载失败',
+              context.l10n.videoLoadingFailed,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -1558,7 +1558,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
 
               if (totalEpisodes == 0) {
                 return Text(
-                  '无本地剧集',
+                  context.l10n.videoNoLocalEpisodes,
                   style: TextStyle(
                     color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                   ),
@@ -1571,18 +1571,18 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow('剧集数量', '$totalEpisodes 集', isDark),
+                  _buildInfoRow(context.l10n.videoEpisodeCount, '$totalEpisodes 集', isDark),
                   if (seasonNumbers.isNotEmpty)
                     _buildInfoRow(
-                      '季数',
+                      context.l10n.videoSeasonCount,
                       seasonNumbers.length == 1
-                          ? '第 ${seasonNumbers.first} 季'
-                          : '${seasonNumbers.length} 季 (${seasonNumbers.first}-${seasonNumbers.last})',
+                          ? context.l10n.videoSeasonLabel(seasonNumbers.first)
+                          : context.l10n.videoSeasonRangeLabel(seasonNumbers.length, seasonNumbers.first, seasonNumbers.last),
                       isDark,
                     ),
-                  _buildInfoRow('总大小', totalSizeText, isDark),
+                  _buildInfoRow(context.l10n.videoTotalSize, totalSizeText, isDark),
                   _buildInfoRow('目录', showDirectory!, isDark),
-                  _buildInfoRow('来源', widget.sourceId, isDark),
+                  _buildInfoRow(context.l10n.videoSource, widget.sourceId, isDark),
                 ],
               );
             },
@@ -1650,7 +1650,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
           child: IconButton(
             icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
-            tooltip: '返回（长按/右键返回主页）',
+            tooltip: context.l10n.videoBackButtonTooltip,
           ),
         ),
       ),
@@ -1705,7 +1705,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  _selectedMetadata.resolution ?? '原始',
+                  _selectedMetadata.resolution ?? context.l10n.videoResolutionOriginal,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -1733,7 +1733,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                     const SizedBox(width: 18),
                   const SizedBox(width: 8),
                   Text(
-                    v.resolution ?? '原始',
+                    v.resolution ?? context.l10n.videoResolutionOriginal,
                     style: TextStyle(
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -1922,11 +1922,11 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.cloud_off_rounded, color: Colors.white),
-                SizedBox(width: 12),
-                Text('未连接到 NAS，请先在设置中连接'),
+                const Icon(Icons.cloud_off_rounded, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(context.l10n.videoNotConnected),
               ],
             ),
             backgroundColor: AppColors.error,
@@ -1954,7 +1954,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
               children: [
                 const Icon(Icons.error_outline_rounded, color: Colors.white),
                 const SizedBox(width: 12),
-                Expanded(child: Text('获取视频信息失败: $e')),
+                Expanded(child: Text(context.l10n.videoGetInfoFailed(e.toString()))),
               ],
             ),
             backgroundColor: AppColors.error,
@@ -2156,7 +2156,7 @@ class MovieCollectionListPage extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Text(
-                      '共 ${sortedParts.length} 部电影',
+                      context.l10n.videoMovieCollectionCount(sortedParts.length),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -2285,7 +2285,7 @@ class MovieCollectionListPage extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
-                '共 ${sortedParts.length} 部电影',
+                context.l10n.videoMovieCollectionCount(sortedParts.length),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -2395,8 +2395,8 @@ class _CollectionMovieGridItem extends ConsumerWidget {
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text(
-                            '当前',
+                          child: Text(
+                            context.l10n.videoCurrent,
                             style: TextStyle(
                               fontSize: 10,
                               color: Colors.white,
@@ -2624,7 +2624,7 @@ class _MissingMovieActionSheet extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '本地不可用',
+                          context.l10n.videoLocalUnavailable,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -2661,12 +2661,12 @@ class _MissingMovieActionSheet extends ConsumerWidget {
                     size: 20,
                   ),
                 ),
-                title: const Text(
-                  '在 PT 站搜索',
+                title: Text(
+                  context.l10n.videoSearchOnPtSites,
                   style: TextStyle(fontWeight: FontWeight.w500),
                 ),
                 subtitle: Text(
-                  '搜索 "$title"',
+                  context.l10n.videoSearchQuery(title),
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -2695,12 +2695,12 @@ class _MissingMovieActionSheet extends ConsumerWidget {
                     size: 20,
                   ),
                 ),
-                title: const Text(
-                  '添加 NASTool 订阅',
+                title: Text(
+                  context.l10n.videoAddNastoolSubscribe,
                   style: TextStyle(fontWeight: FontWeight.w500),
                 ),
                 subtitle: Text(
-                  '订阅 "$title"',
+                  context.l10n.videoSubscribeQuery(title),
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -2729,12 +2729,12 @@ class _MissingMovieActionSheet extends ConsumerWidget {
                   size: 20,
                 ),
               ),
-              title: const Text(
-                '查看详情',
+              title: Text(
+                context.l10n.videoViewDetails,
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
               subtitle: Text(
-                '查看 TMDB 信息',
+                context.l10n.videoViewTmdbInfo,
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -2824,13 +2824,13 @@ class _MissingMovieActionSheet extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '选择 PT 站',
+                            context.l10n.videoSelectPtSite,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '搜索: $title',
+                            context.l10n.videoSearching(title),
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -2896,7 +2896,7 @@ class _MissingMovieActionSheet extends ConsumerWidget {
     try {
       final connection = ref.read(nastoolConnectionProvider(source.id));
       if (connection == null || connection.status != NasToolConnectionStatus.connected) {
-        context.showWarningToast('${source.name} 未连接');
+        context.showWarningToast(context.l10n.videoNastoolNotConnected(source.name));
         return;
       }
 
@@ -2908,12 +2908,12 @@ class _MissingMovieActionSheet extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        context.showSuccessToast('已添加订阅: $title');
+        context.showSuccessToast(context.l10n.videoSubscribeSuccess(title));
       }
     } catch (e, st) {
       AppError.handle(e, st, 'addNastoolSubscribeFromCollection');
       if (context.mounted) {
-        context.showErrorToast('添加订阅失败: $e');
+        context.showErrorToast(context.l10n.videoSubscribeFailed(e.toString()));
       }
     }
   }
@@ -2957,13 +2957,13 @@ class _MissingMovieActionSheet extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '选择 NASTool',
+                            context.l10n.videoSelectNastool,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '订阅: $title',
+                            context.l10n.videoSubscribing(title),
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,

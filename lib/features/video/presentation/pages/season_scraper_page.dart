@@ -151,7 +151,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'SeasonScraperPage._loadTvDetailByTmdbId');
       setState(() {
-        _errorMessage = '获取详情失败: $e';
+        _errorMessage = context.l10n.videoSeasonScraperLoadDetailError(e.toString());
         _isLoadingDetail = false;
       });
     }
@@ -184,7 +184,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'SeasonScraperPage._search');
       setState(() {
-        _errorMessage = '搜索失败: $e';
+        _errorMessage = context.l10n.videoSeasonScraperSearchError(e.toString());
         _isSearching = false;
       });
     }
@@ -210,7 +210,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'SeasonScraperPage._selectItem');
       setState(() {
-        _errorMessage = '获取详情失败: $e';
+        _errorMessage = context.l10n.videoSeasonScraperLoadDetailError(e.toString());
         _isLoadingDetail = false;
       });
     }
@@ -285,7 +285,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
 
     final totalEpisodes = _totalSelectedEpisodes;
     if (totalEpisodes == 0) {
-      context.showInfoToast('没有本地剧集可刮削');
+      context.showInfoToast(context.l10n.videoSeasonScraperNoLocalEpisodesToast);
       return;
     }
 
@@ -319,7 +319,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text('正在后台刮削 $totalEpisodes 集...')),
+              Expanded(child: Text(context.l10n.videoSeasonScraperScrapingInProgressSnackbar(totalEpisodes))),
             ],
           ),
           duration: const Duration(seconds: 2),
@@ -339,7 +339,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: Text(hasSelection ? '整剧刮削' : '选择电视剧'),
+        title: Text(hasSelection ? context.l10n.videoSeasonScraperPageTitle : context.l10n.videoSeasonScraperSelectShowTitle),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
           if (hasSelection)
@@ -350,7 +350,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                   _seasonDetails.clear();
                 });
               },
-              child: const Text('重新搜索'),
+              child: Text(context.l10n.videoSeasonScraperReloadButton),
             ),
         ],
       ),
@@ -405,14 +405,14 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '本地剧集',
+                  context.l10n.videoSeasonScraperLocalEpisodesLabel,
                   style: context.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '共 ${_localEpisodes.length} 季，$totalEpisodes 集',
+                  context.l10n.videoSeasonScraperLocalEpisodesSummary(_localEpisodes.length, totalEpisodes),
                   style: context.textTheme.bodySmall?.copyWith(
                     color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                   ),
@@ -436,7 +436,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: '搜索电视剧',
+                  hintText: context.l10n.videoSeasonScraperSearchHint,
                   prefixIcon: const Icon(Icons.search_rounded),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -459,7 +459,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                         color: Colors.white,
                       ),
                     )
-                  : const Text('搜索'),
+                  : Text(context.l10n.videoSeasonScraperSearchButton),
             ),
           ],
         ),
@@ -491,7 +491,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
             Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              '搜索电视剧以开始刮削',
+              context.l10n.videoSeasonScraperSearchEmptyPlaceholder,
               style: context.textTheme.titleMedium?.copyWith(
                 color: Colors.grey[600],
               ),
@@ -539,7 +539,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${items.length} 个结果',
+                  context.l10n.videoSeasonScraperSearchResultsCount(items.length),
                   style: context.textTheme.bodySmall?.copyWith(
                     color: Colors.grey[500],
                   ),
@@ -726,7 +726,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '选择要刮削的季',
+                context.l10n.videoSeasonScraperSelectSeasonsLabel,
                 style: context.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -741,7 +741,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                       });
                       _loadAllSeasonDetails();
                     },
-                    child: const Text('全选'),
+                    child: Text(context.l10n.videoSeasonScraperSelectAllButton),
                   ),
                   TextButton(
                     onPressed: () {
@@ -750,7 +750,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                         _seasonDetails.clear();
                       });
                     },
-                    child: const Text('全不选'),
+                    child: Text(context.l10n.videoSeasonScraperDeselectAllButton),
                   ),
                 ],
               ),
@@ -765,7 +765,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
               final isSelected = _selectedSeasons.contains(season);
 
               return FilterChip(
-                label: Text('第 $season 季 ($episodeCount 集)'),
+                label: Text(context.l10n.videoSeasonScraperSeasonChipLabel(season, episodeCount)),
                 selected: isSelected,
                 onSelected: (selected) {
                   setState(() {
@@ -801,9 +801,9 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
     if (_selectedSeasons.isEmpty) {
       return Card(
         color: isDark ? AppColors.darkSurfaceElevated : null,
-        child: const Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('请选择要刮削的季'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(context.l10n.videoSeasonScraperEpisodeMatchPreviewEmpty),
         ),
       );
     }
@@ -822,14 +822,14 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                 const Icon(Icons.compare_arrows, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  '剧集匹配预览',
+                  context.l10n.videoSeasonScraperEpisodeMatchPreviewTitle,
                   style: context.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const Spacer(),
                 Text(
-                  '共 $_totalSelectedEpisodes 集',
+                  context.l10n.videoSeasonScraperEpisodeMatchPreviewTotal(_totalSelectedEpisodes),
                   style: context.textTheme.bodySmall?.copyWith(
                     color: AppColors.primary,
                   ),
@@ -856,7 +856,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                   Padding(
                     padding: const EdgeInsets.only(top: 8, bottom: 4),
                     child: Text(
-                      '第 $seasonNumber 季 (${localSeasonEpisodes.length} 集)',
+                      context.l10n.videoSeasonScraperSeasonChipLabel(seasonNumber, localSeasonEpisodes.length),
                       style: context.textTheme.labelLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppColors.primary,
@@ -908,39 +908,39 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '刮削选项',
+                context.l10n.videoSeasonScraperScrapeOptionsTitle,
                 style: context.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 12),
               SwitchListTile(
-                title: const Text('更新元数据'),
-                subtitle: const Text('保存到本地数据库'),
+                title: Text(context.l10n.videoSeasonScraperUpdateMetadataTitle),
+                subtitle: Text(context.l10n.videoSeasonScraperUpdateMetadataSubtitle),
                 value: _updateMetadata,
                 onChanged: (v) => setState(() => _updateMetadata = v),
                 dense: true,
                 contentPadding: EdgeInsets.zero,
               ),
               SwitchListTile(
-                title: const Text('下载海报'),
-                subtitle: const Text('保存到视频目录'),
+                title: Text(context.l10n.videoSeasonScraperDownloadPosterTitle),
+                subtitle: Text(context.l10n.videoSeasonScraperDownloadPosterSubtitle),
                 value: _downloadPoster,
                 onChanged: (v) => setState(() => _downloadPoster = v),
                 dense: true,
                 contentPadding: EdgeInsets.zero,
               ),
               SwitchListTile(
-                title: const Text('下载背景图'),
-                subtitle: const Text('保存到视频目录'),
+                title: Text(context.l10n.videoSeasonScraperDownloadFanartTitle),
+                subtitle: Text(context.l10n.videoSeasonScraperDownloadFanartSubtitle),
                 value: _downloadFanart,
                 onChanged: (v) => setState(() => _downloadFanart = v),
                 dense: true,
                 contentPadding: EdgeInsets.zero,
               ),
               SwitchListTile(
-                title: const Text('生成 NFO 文件'),
-                subtitle: const Text('Kodi/Jellyfin 兼容格式'),
+                title: Text(context.l10n.videoSeasonScraperGenerateNfoTitle),
+                subtitle: Text(context.l10n.videoSeasonScraperGenerateNfoSubtitle),
                 value: _generateNfo,
                 onChanged: (v) => setState(() => _generateNfo = v),
                 dense: true,
@@ -988,7 +988,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                   });
                 },
                 icon: const Icon(Icons.arrow_back_rounded),
-                tooltip: '返回搜索',
+                tooltip: context.l10n.videoSeasonScraperBackToSearchTooltip,
               ),
             ),
             const SizedBox(width: 16),
@@ -1010,8 +1010,8 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
                       const SizedBox(width: 8),
                       Text(
                         seasonCount > 1
-                            ? '刮削 $seasonCount 季共 $totalEpisodes 集'
-                            : '刮削 $totalEpisodes 集',
+                            ? context.l10n.videoSeasonScraperConfirmButtonMultiSeason(seasonCount, totalEpisodes)
+                            : context.l10n.videoSeasonScraperConfirmButton(totalEpisodes),
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,

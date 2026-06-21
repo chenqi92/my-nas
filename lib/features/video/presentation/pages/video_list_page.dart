@@ -1788,11 +1788,11 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
   /// 获取问候语
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 6) return '夜深了';
-    if (hour < 12) return '早上好';
-    if (hour < 14) return '中午好';
-    if (hour < 18) return '下午好';
-    return '晚上好';
+    if (hour < 6) return context.l10n.videoListGreetingNight;
+    if (hour < 12) return context.l10n.videoListGreetingMorning;
+    if (hour < 14) return context.l10n.videoListGreetingNoon;
+    if (hour < 18) return context.l10n.videoListGreetingAfternoon;
+    return context.l10n.videoListGreetingEvening;
   }
 
   @override
@@ -1914,44 +1914,44 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         GlassGroupIconButton(
           icon: Icons.search_rounded,
           onPressed: () => setState(() => _showSearch = true),
-          tooltip: '搜索',
+          tooltip: context.l10n.videoListTooltipSearch,
         ),
         GlassGroupIconButton(
           icon: Icons.tune_rounded,
           onPressed: () => VideoCategorySettingsSheet.show(context),
-          tooltip: '分类设置',
+          tooltip: context.l10n.videoListTooltipCategorySettings,
         ),
         GlassGroupPopupMenuButton<String>(
           icon: Icons.more_vert_rounded,
-          tooltip: '更多',
+          tooltip: context.l10n.videoListTooltipMore,
           itemBuilder: (context) => [
             PopupMenuItem(
               value: 'library',
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.settings_rounded, size: 20),
                   SizedBox(width: 12),
-                  Text('媒体库设置'),
+                  Text(context.l10n.videoListMenuLibrarySettings),
                 ],
               ),
             ),
             PopupMenuItem(
               value: 'sources',
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.cloud_rounded, size: 20),
                   SizedBox(width: 12),
-                  Text('连接源管理'),
+                  Text(context.l10n.videoListMenuSourceManagement),
                 ],
               ),
             ),
             PopupMenuItem(
               value: 'duplicates',
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.content_copy_rounded, size: 20),
                   SizedBox(width: 12),
-                  Text('查找重复'),
+                  Text(context.l10n.videoListMenuFindDuplicates),
                 ],
               ),
             ),
@@ -1999,7 +1999,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
 
     return GlassFloatingSearchBar(
       controller: _searchController,
-      hintText: '搜索视频...',
+      hintText: context.l10n.videoListSearchHint,
       width: searchWidth,
       onChanged: (query) {
         ref.read(videoListProvider.notifier).setSearchQuery(query);
@@ -2280,30 +2280,30 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
                 PopupMenuItem(
                   value: 'library',
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.settings_rounded, size: 20),
                       SizedBox(width: 12),
-                      Text('媒体库设置'),
+                      Text(context.l10n.videoListMenuLibrarySettings),
                     ],
                   ),
                 ),
                 PopupMenuItem(
                   value: 'sources',
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.cloud_rounded, size: 20),
                       SizedBox(width: 12),
-                      Text('连接源管理'),
+                      Text(context.l10n.videoListMenuSourceManagement),
                     ],
                   ),
                 ),
                 PopupMenuItem(
                   value: 'duplicates',
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.content_copy_rounded, size: 20),
                       SizedBox(width: 12),
-                      Text('查找重复'),
+                      Text(context.l10n.videoListMenuFindDuplicates),
                     ],
                   ),
                 ),
@@ -2485,7 +2485,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '正在扫描... 已找到 $scannedCount 个视频',
+                        context.l10n.videoListScanningStatus(scannedCount),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -2546,7 +2546,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            fromCache ? '加载缓存...' : '扫描视频中...',
+            fromCache ? context.l10n.videoListLoadingCacheState : context.l10n.videoListScanningState,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -2633,7 +2633,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            '媒体库路径未匹配',
+            context.l10n.videoListPathMismatchTitle,
             style: context.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : null,
@@ -2641,7 +2641,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            '数据库中有 ${state.databaseTotalCount} 个影视，但当前媒体库配置的路径没有匹配到这些数据。',
+            context.l10n.videoListPathMismatchMessage(state.databaseTotalCount),
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? Colors.grey[400] : Colors.grey,
             ),
@@ -2649,7 +2649,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '请检查媒体库设置中的目录配置是否正确。',
+            context.l10n.videoListPathMismatchHint,
             style: context.textTheme.bodySmall?.copyWith(
               color: isDark ? Colors.grey[500] : Colors.grey[600],
             ),
@@ -2662,7 +2662,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
             ),
             icon: const Icon(Icons.folder_open_rounded),
-            label: const Text('媒体库设置'),
+            label: Text(context.l10n.videoListMenuLibrarySettings),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -2684,7 +2684,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
       FutureBuilder<String>(
         future: VideoDatabaseService().getStatsInfo(),
         builder: (context, snapshot) {
-          final cacheInfo = snapshot.data ?? '加载中...';
+          final cacheInfo = snapshot.data ?? context.l10n.videoListLoadingInfo;
           return _buildEmptyStateContent(context, ref, isDark, cacheInfo);
         },
       );
@@ -2715,7 +2715,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            '视频库为空',
+            context.l10n.videoListEmptyTitle,
             style: context.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : null,
@@ -2723,7 +2723,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            '请在媒体库设置中配置视频目录并扫描',
+            context.l10n.videoListEmptyMessage,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? Colors.grey[400] : Colors.grey,
             ),
@@ -2769,7 +2769,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
             ),
             icon: const Icon(Icons.folder_open_rounded),
-            label: const Text('媒体库设置'),
+            label: Text(context.l10n.videoListMenuLibrarySettings),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -2983,7 +2983,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           return [
             SliverToBoxAdapter(
               child: _SkeletonCategoryRow(
-                title: '最近添加',
+                title: context.l10n.videoListCategoryRecentlyAdded,
                 isDark: isDark,
                 icon: Icons.fiber_new_rounded,
                 iconColor: Colors.blue,
@@ -2995,7 +2995,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         return [
           SliverToBoxAdapter(
             child: _CategoryRow(
-              title: '最近添加',
+              title: context.l10n.videoListCategoryRecentlyAdded,
               items: recentVideos,
               onItemTap: (m) => _openVideoDetail(context, ref, m),
               onItemContextMenu: (m) => _showVideoContextMenu(context, ref, m),
@@ -3003,7 +3003,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               icon: Icons.fiber_new_rounded,
               iconColor: Colors.blue,
               onViewAll: allRecentVideos.length > 20
-                  ? () => _showCategoryPage(context, '最近添加', allRecentVideos)
+                  ? () => _showCategoryPage(context, context.l10n.videoListCategoryRecentlyAdded, allRecentVideos)
                   : null,
             ),
           ),
@@ -3015,7 +3015,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           return [
             SliverToBoxAdapter(
               child: _SkeletonCategoryRow(
-                title: '电影',
+                title: context.l10n.videoListCategoryMovies,
                 isDark: isDark,
                 icon: Icons.movie_filter_rounded,
                 iconColor: AppColors.primary,
@@ -3027,7 +3027,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         return [
           SliverToBoxAdapter(
             child: _CategoryRow(
-              title: '电影',
+              title: context.l10n.videoListCategoryMovies,
               items: movies,
               onItemTap: (m) => _openVideoDetail(context, ref, m),
               onItemContextMenu: (m) => _showVideoContextMenu(context, ref, m),
@@ -3036,7 +3036,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               iconColor: AppColors.primary,
               totalCount: state.movieCount,
               onViewAll: state.movieCount > 10
-                  ? () => _showMoviesPage(context, ref, '电影')
+                  ? () => _showMoviesPage(context, ref, context.l10n.videoListCategoryMovies)
                   : null,
             ),
           ),
@@ -3048,7 +3048,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           return [
             SliverToBoxAdapter(
               child: _SkeletonCategoryRow(
-                title: '剧集',
+                title: context.l10n.videoListCategoryTvShows,
                 isDark: isDark,
                 icon: Icons.tv_rounded,
                 iconColor: AppColors.accent,
@@ -3060,7 +3060,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         return [
           SliverToBoxAdapter(
             child: _TvShowRow(
-              title: '剧集',
+              title: context.l10n.videoListCategoryTvShows,
               groups: tvShowGroups,
               onGroupTap: (group) => _openTvShowDetail(context, ref, group),
               isDark: isDark,
@@ -3068,7 +3068,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               iconColor: AppColors.accent,
               totalCount: state.tvShowGroupCount,
               onViewAll: state.tvShowGroupCount > 10
-                  ? () => _showTvShowsFullPage(context, ref, '剧集')
+                  ? () => _showTvShowsFullPage(context, ref, context.l10n.videoListCategoryTvShows)
                   : null,
             ),
           ),
@@ -3080,7 +3080,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           return [
             SliverToBoxAdapter(
               child: _SkeletonCategoryRow(
-                title: '电影系列',
+                title: context.l10n.videoListCategoryMovieCollections,
                 isDark: isDark,
                 icon: Icons.video_library_rounded,
                 iconColor: Colors.purple,
@@ -3092,7 +3092,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         return [
           SliverToBoxAdapter(
             child: _MovieCollectionRow(
-              title: '电影系列',
+              title: context.l10n.videoListCategoryMovieCollections,
               collections: movieCollections,
               onCollectionTap: (collection) =>
                   _showCollectionPage(context, ref, collection),
@@ -3116,7 +3116,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           return [
             SliverToBoxAdapter(
               child: _SkeletonCategoryRow(
-                title: '每日推荐',
+                title: context.l10n.videoListCategoryTopRated,
                 isDark: isDark,
                 icon: Icons.auto_awesome_rounded,
                 iconColor: Colors.amber,
@@ -3132,7 +3132,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         return [
           SliverToBoxAdapter(
             child: _CategoryRow(
-              title: '每日推荐',
+              title: context.l10n.videoListCategoryTopRated,
               items: remainingItems,
               onItemTap: (m) => _openVideoDetail(context, ref, m),
               onItemContextMenu: (m) => _showVideoContextMenu(context, ref, m),
@@ -3140,7 +3140,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               icon: Icons.auto_awesome_rounded,
               iconColor: Colors.amber,
               onViewAll: remainingItems.length > 10
-                  ? () => _showCategoryPage(context, '每日推荐', remainingItems)
+                  ? () => _showCategoryPage(context, context.l10n.videoListCategoryTopRated, remainingItems)
                   : null,
             ),
           ),
@@ -3162,7 +3162,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           return [
             SliverToBoxAdapter(
               child: _SkeletonCategoryRow(
-                title: '其他',
+                title: context.l10n.videoListCategoryOthers,
                 isDark: isDark,
                 icon: Icons.folder_special_rounded,
                 iconColor: Colors.grey,
@@ -3174,7 +3174,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         return [
           SliverToBoxAdapter(
             child: _CategoryRow(
-              title: '其他',
+              title: context.l10n.videoListCategoryOthers,
               items: state.others,
               onItemTap: (m) => _openVideoDetail(context, ref, m),
               onItemContextMenu: (m) => _showVideoContextMenu(context, ref, m),
@@ -3183,7 +3183,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               iconColor: Colors.grey,
               totalCount: state.otherCount,
               onViewAll: state.otherCount > 10
-                  ? () => _showOthersPage(context, ref, '其他')
+                  ? () => _showOthersPage(context, ref, context.l10n.videoListCategoryOthers)
                   : null,
             ),
           ),
@@ -3475,7 +3475,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              '未找到 "${state.searchQuery}" 的相关结果',
+              context.l10n.videoListSearchNoResults(state.searchQuery),
               style: TextStyle(
                 fontSize: 16,
                 color: isDark
@@ -3508,7 +3508,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         ),
         SliverToBoxAdapter(
           child: _CategoryRow(
-            title: '搜索结果',
+            title: context.l10n.videoListSearchResultsTitle,
             items: results,
             onItemTap: (m) => _openVideoDetail(context, ref, m),
             isDark: isDark,
@@ -3629,10 +3629,10 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
       case MediaFileAction.removeFromLibrary:
         final confirmed = await showDeleteConfirmDialog(
           context: context,
-          title: '从媒体库移除',
+          title: context.l10n.videoDetailRemoveFromLibraryTitle,
           content:
-              '确定要从媒体库移除「${metadata.displayTitle}」吗？\n\n这只会移除索引记录，源文件不会被删除。',
-          confirmText: '移除',
+              context.l10n.videoDetailRemoveFromLibraryMessage(metadata.displayTitle),
+          confirmText: context.l10n.videoDetailRemoveConfirmButton,
           isDestructive: false,
         );
         if (confirmed && context.mounted) {
@@ -3642,7 +3642,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(success ? '已从媒体库移除' : '移除失败'),
+                content: Text(success ? context.l10n.videoDetailRemoveSuccess : context.l10n.videoDetailRemoveFailed),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -3651,9 +3651,9 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
       case MediaFileAction.deleteFromSource:
         final confirmed = await showDeleteConfirmDialog(
           context: context,
-          title: '删除源文件',
+          title: context.l10n.videoDetailDeleteSourceTitle,
           content:
-              '确定要删除「${metadata.displayTitle}」的源文件吗？\n\n⚠️ 此操作不可恢复！文件将从 NAS 中永久删除。',
+              context.l10n.videoDetailDeleteSourceMessage(metadata.displayTitle),
         );
         if (confirmed && context.mounted) {
           final success = await ref
@@ -3680,17 +3680,17 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
         await MediaInfoSheet.show(
           context: context,
           title: metadata.displayTitle,
-          subtitle: '视频',
+          subtitle: context.l10n.videoDetailInfoSubtitleVideo,
           entries: [
-            MediaInfoEntry(label: '文件大小', value: metadata.fileSizeText),
-            MediaInfoEntry(label: '分辨率', value: metadata.resolution ?? ''),
-            MediaInfoEntry(label: '编码', value: metadata.videoCodec ?? ''),
+            MediaInfoEntry(label: context.l10n.videoDetailInfoFileSize, value: metadata.fileSizeText),
+            MediaInfoEntry(label: context.l10n.videoDetailInfoResolution, value: metadata.resolution ?? ''),
+            MediaInfoEntry(label: context.l10n.videoDetailInfoCodec, value: metadata.videoCodec ?? ''),
             MediaInfoEntry(
-              label: '修改时间',
+              label: context.l10n.videoDetailInfoModifiedTime,
               value: metadata.fileModifiedTime?.toLocal().toString() ?? '',
             ),
-            MediaInfoEntry(label: '来源 ID', value: metadata.sourceId, copyable: true),
-            MediaInfoEntry(label: '路径', value: metadata.filePath, copyable: true),
+            MediaInfoEntry(label: context.l10n.videoDetailInfoSourceId, value: metadata.sourceId, copyable: true),
+            MediaInfoEntry(label: context.l10n.videoDetailInfoPath, value: metadata.filePath, copyable: true),
           ],
         );
       case MediaFileAction.share:
@@ -3743,7 +3743,7 @@ class _ContinueWatchingSection extends ConsumerWidget {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      '继续观看',
+                      context.l10n.videoDetailContinueWatching,
                       style: context.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: isDark ? Colors.white : null,
@@ -4333,8 +4333,8 @@ class _PartialVideoCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Text(
-                          '扫描中',
+                        Text(
+                          context.l10n.videoPosterCardScanning,
                           style: TextStyle(color: Colors.white, fontSize: 9),
                         ),
                       ],
@@ -4569,7 +4569,7 @@ class _PosterCardState extends ConsumerState<_PosterCard> {
                                 child: Text(
                                   widget.metadata.seasonNumber != null
                                       ? 'S${widget.metadata.seasonNumber}'
-                                      : '剧集',
+                                      : context.l10n.videoPosterCardTvShow,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 9,
@@ -4620,8 +4620,8 @@ class _PosterCardState extends ConsumerState<_PosterCard> {
                                     const SizedBox(width: 3),
                                     Text(
                                       widget.metadata.isScraping
-                                          ? '刮削中'
-                                          : '待刮削',
+                                          ? context.l10n.videoPosterCardScraping
+                                          : context.l10n.videoPosterCardPendingScrape,
                                       style: TextStyle(
                                         color: Colors.grey[300],
                                         fontSize: 8,
@@ -5016,7 +5016,7 @@ class _CategoryRow extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '查看全部 ($actualTotalCount)',
+                        '${context.l10n.videoViewMoreTitle} ($actualTotalCount)',
                         style: TextStyle(
                           color: AppColors.primary,
                           fontSize: 13,
@@ -5206,7 +5206,7 @@ class _ViewMoreCardState extends State<_ViewMoreCard> {
                         const SizedBox(height: 12),
                         // 文字
                         Text(
-                          '查看全部',
+                          context.l10n.videoViewMoreTitle,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -5221,8 +5221,8 @@ class _ViewMoreCardState extends State<_ViewMoreCard> {
                         // 数量
                         Text(
                           widget.remainingCount > 0
-                              ? '还有 ${widget.remainingCount} 部'
-                              : '共 ${widget.totalCount} 部',
+                              ? context.l10n.videoViewMoreRemaining(widget.remainingCount)
+                              : context.l10n.videoViewMoreTotal(widget.totalCount),
                           style: TextStyle(
                             fontSize: 11,
                             color: widget.isDark
@@ -5359,8 +5359,8 @@ class _ViewMoreCardState extends State<_ViewMoreCard> {
                       const SizedBox(height: 2),
                       Text(
                         widget.remainingCount > 0
-                            ? '还有 ${widget.remainingCount} 部'
-                            : '共 ${widget.totalCount} 部',
+                            ? context.l10n.videoViewMoreRemaining(widget.remainingCount)
+                            : context.l10n.videoViewMoreTotal(widget.totalCount),
                         style: TextStyle(
                           fontSize: 11,
                           color: widget.isDark
@@ -6020,7 +6020,7 @@ class _HorizontalVideoCardState extends ConsumerState<_HorizontalVideoCard> {
                                 child: Text(
                                   widget.metadata.seasonNumber != null
                                       ? 'S${widget.metadata.seasonNumber}'
-                                      : '剧集',
+                                      : context.l10n.videoPosterCardTvShow,
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 9,
@@ -6218,7 +6218,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
               color: isDark ? Colors.white : Colors.black87,
             ),
             onPressed: () => _showSortOptions(context, isDark),
-            tooltip: '排序',
+            tooltip: context.l10n.videoTooltipSort,
           ),
           // 筛选按钮（如果有类型可选）
           if (_availableGenres.isNotEmpty)
@@ -6451,7 +6451,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
       final result = await showNativeListSheet<_SortType>(
         context: context,
         items: items,
-        title: '排序方式',
+        title: context.l10n.videoSortMethodsTitle,
       );
 
       if (result != null) {
@@ -6502,21 +6502,21 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
             _buildSortOption(
               context,
               icon: Icons.calendar_today_rounded,
-              label: '按年份',
+              label: context.l10n.videoFilterYearLabel,
               type: _SortType.year,
               isDark: isDark,
             ),
             _buildSortOption(
               context,
               icon: Icons.sort_by_alpha_rounded,
-              label: '按名称',
+              label: context.l10n.videoSortByName,
               type: _SortType.name,
               isDark: isDark,
             ),
             _buildSortOption(
               context,
               icon: Icons.schedule_rounded,
-              label: '按添加时间',
+              label: context.l10n.videoSortByAddedTime,
               type: _SortType.recent,
               isDark: isDark,
             ),
@@ -6613,7 +6613,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
         items.insert(
           0,
           ListSheetItem<String>(
-            title: '清除筛选',
+            title: context.l10n.videoSortClearFilters,
             icon: Icons.clear_all_rounded,
             value: '',
             isSelected: false,
@@ -6624,7 +6624,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
       final result = await showNativeListSheet<String>(
         context: context,
         items: items,
-        title: '按类型筛选',
+        title: context.l10n.videoSortFilterByType,
       );
 
       if (result != null) {
@@ -6671,7 +6671,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
                           setState(() => _selectedGenre = null);
                           Navigator.pop(context);
                         },
-                        child: const Text('清除'),
+                        child: Text(context.l10n.videoSortClearButton),
                       ),
                   ],
                 ),
@@ -6849,7 +6849,7 @@ class _TvShowRow extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '查看全部 ($actualTotalCount)',
+                        '${context.l10n.videoViewMoreTitle} ($actualTotalCount)',
                         style: TextStyle(
                           color: AppColors.primary,
                           fontSize: 13,
@@ -7489,7 +7489,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
                 children: [
                   GlassGroupIconButton(
                     icon: Icons.swap_vert_rounded,
-                    tooltip: '排序',
+                    tooltip: context.l10n.videoTooltipSort,
                     onPressed: () => _showSortMenu(context, isDark),
                   ),
                   GlassGroupIconButton(
@@ -7536,7 +7536,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
               Icons.swap_vert_rounded,
               color: isDark ? Colors.white : Colors.black87,
             ),
-            tooltip: '排序',
+            tooltip: context.l10n.videoTooltipSort,
             onPressed: () => _showSortMenu(context, isDark),
           ),
           // 筛选按钮
@@ -7601,7 +7601,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '没有找到匹配的电影',
+                    context.l10n.videoMovieEmptyState,
                     style: TextStyle(
                       color: isDark ? Colors.white54 : Colors.black45,
                     ),
@@ -7666,7 +7666,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
                           _resetAndReload();
                         },
                         child: Text(
-                          '清除全部',
+                          context.l10n.videoSortClearFilters,
                           style: TextStyle(fontSize: 12, color: Colors.blue),
                         ),
                       ),
@@ -7689,7 +7689,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '按${_sortOption.displayName}排序',
+                        context.l10n.videoSortDisplayFormat(_sortOption.displayName),
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.white54 : Colors.black45,
@@ -7752,7 +7752,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
       final selected = await showNativeListSheet<VideoSortOption>(
         context: context,
         items: items,
-        title: '排序方式',
+        title: context.l10n.videoSortMethodsTitle,
         titleIcon: Icons.sort_rounded,
       );
 
@@ -7952,7 +7952,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                     _year = null;
                   });
                 },
-                child: const Text('重置'),
+                child: Text(context.l10n.videoFilterResetButton),
               ),
             ],
           ),
@@ -7967,7 +7967,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
               children: [
                 // 类型筛选
                 Text(
-                  '类型',
+                  context.l10n.videoFilterTypeLabel,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -8024,7 +8024,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                 const SizedBox(height: 24),
                 // 年份筛选
                 Text(
-                  '年份',
+                  context.l10n.videoFilterYearLabel,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -8110,8 +8110,8 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                '应用筛选',
+              child: Text(
+                context.l10n.videoFilterApplyButton,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
@@ -8349,7 +8349,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
       final selected = await showNativeListSheet<VideoSortOption>(
         context: context,
         items: items,
-        title: '排序方式',
+        title: context.l10n.videoSortMethodsTitle,
         titleIcon: Icons.sort_rounded,
       );
 
@@ -8452,7 +8452,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
                 children: [
                   GlassGroupIconButton(
                     icon: Icons.swap_vert_rounded,
-                    tooltip: '排序',
+                    tooltip: context.l10n.videoTooltipSort,
                     onPressed: () => _showSortMenu(context, isDark),
                   ),
                   GlassGroupIconButton(
@@ -8497,7 +8497,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
               Icons.swap_vert_rounded,
               color: isDark ? Colors.white : Colors.black87,
             ),
-            tooltip: '排序',
+            tooltip: context.l10n.videoTooltipSort,
             onPressed: () => _showSortMenu(context, isDark),
           ),
           Stack(
@@ -8561,7 +8561,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '没有找到匹配的剧集',
+                    context.l10n.videoTvShowEmptyState,
                     style: TextStyle(
                       color: isDark ? Colors.white54 : Colors.black45,
                     ),
@@ -8626,7 +8626,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
                           _resetAndReload();
                         },
                         child: Text(
-                          '清除全部',
+                          context.l10n.videoSortClearFilters,
                           style: TextStyle(fontSize: 12, color: Colors.blue),
                         ),
                       ),
@@ -8800,7 +8800,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
       final result = await showNativeListSheet<VideoSortOption>(
         context: context,
         items: items,
-        title: '排序方式',
+        title: context.l10n.videoSortMethodsTitle,
       );
 
       if (result != null && result != _sortOption) {
@@ -8915,7 +8915,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                '没有其他视频',
+                                context.l10n.videoOthersEmptyState,
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -8967,7 +8967,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
                 children: [
                   GlassGroupIconButton(
                     icon: Icons.swap_vert_rounded,
-                    tooltip: '排序',
+                    tooltip: context.l10n.videoTooltipSort,
                     onPressed: () => _showSortSheet(context, isDark),
                   ),
                 ],
@@ -8997,7 +8997,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
               Icons.swap_vert_rounded,
               color: isDark ? Colors.white : Colors.black87,
             ),
-            tooltip: '排序',
+            tooltip: context.l10n.videoTooltipSort,
           ),
         ],
       ),
@@ -9417,7 +9417,7 @@ class _MovieCollectionsFullPage extends ConsumerWidget {
       backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: Text('电影系列 (${collections.length})'),
+        title: Text(context.l10n.videoCollectionTitle(collections.length)),
         backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
         elevation: 0,
       ),
@@ -9585,7 +9585,7 @@ class _MovieCollectionPage extends ConsumerWidget {
           // 顶部 AppBar 带背景图
           _buildAppBar(isDark, tmdbCollectionAsync),
           // 电影数量标签
-          _buildMovieCountLabel(isDark, tmdbCollectionAsync),
+          _buildMovieCountLabel(context, isDark, tmdbCollectionAsync),
           // 电影列表
           _buildMovieGrid(context, isDark, localMovies, tmdbCollectionAsync),
           // 底部留白 - 使用动态 padding 支持悬浮导航栏
@@ -9657,6 +9657,7 @@ class _MovieCollectionPage extends ConsumerWidget {
   }
 
   Widget _buildMovieCountLabel(
+    BuildContext context,
     bool isDark,
     AsyncValue<TmdbCollection?> tmdbAsync,
   ) {
@@ -9666,9 +9667,9 @@ class _MovieCollectionPage extends ConsumerWidget {
 
     String countText;
     if (tmdbCount != null && tmdbCount > localCount) {
-      countText = '已收藏 $localCount / $tmdbCount 部';
+      countText = context.l10n.videoCollectionCollectedStatus(localCount, tmdbCount);
     } else {
-      countText = '$localCount 部电影';
+      countText = context.l10n.videoCollectionMovieCount(localCount);
     }
 
     return SliverToBoxAdapter(
@@ -10002,7 +10003,7 @@ class _UnwatchedSectionState extends State<_UnwatchedSection> {
 
     return SliverToBoxAdapter(
       child: _CategoryRow(
-        title: '未观看',
+        title: context.l10n.videoUnwatchedTitle,
         items: _unwatchedVideos!,
         onItemTap: widget.onItemTap,
         onItemContextMenu: widget.onItemContextMenu,
@@ -10312,7 +10313,7 @@ class _FilteredVideosPaginatedPageState
       final selected = await showNativeListSheet<VideoSortOption>(
         context: context,
         items: items,
-        title: '排序方式',
+        title: context.l10n.videoSortMethodsTitle,
         titleIcon: Icons.sort_rounded,
       );
 
@@ -10413,7 +10414,7 @@ class _FilteredVideosPaginatedPageState
                 children: [
                   GlassGroupIconButton(
                     icon: Icons.swap_vert_rounded,
-                    tooltip: '排序',
+                    tooltip: context.l10n.videoTooltipSort,
                     onPressed: () => _showSortMenu(context, isDark),
                   ),
                 ],
@@ -10441,7 +10442,7 @@ class _FilteredVideosPaginatedPageState
                   ? Colors.blue
                   : null,
             ),
-            tooltip: '排序: ${_sortOption.displayName}',
+            tooltip: context.l10n.videoTooltipSortFormat(_sortOption.displayName),
             onPressed: () => _showSortMenu(context, isDark),
           ),
           const SizedBox(width: 8),
@@ -10552,7 +10553,7 @@ class _FilteredVideosPaginatedPageState
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无视频',
+              context.l10n.videoDynamicCategoryEmpty,
               style: TextStyle(
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontSize: 16,

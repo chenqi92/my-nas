@@ -98,7 +98,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
     final service = ref.read(openSubtitlesServiceProvider);
     if (service == null) {
       setState(() {
-        _error = '未配置 OpenSubtitles，请先在设置中添加字幕站点';
+        _error = context.l10n.videoSubtitleDownloadDialogNotConfigured;
       });
       return;
     }
@@ -130,7 +130,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
         _results = results;
         _isLoading = false;
         if (results.isEmpty) {
-          _error = '未找到匹配的字幕';
+          _error = context.l10n.videoSubtitleDownloadDialogNoMatches;
         }
       });
     } catch (e) {
@@ -160,11 +160,11 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
       if (!mounted) return;
 
       if (savedPath != null) {
-        context.showSuccessToast('字幕下载成功');
+        context.showSuccessToast(context.l10n.videoSubtitleDownloadSuccess);
         widget.onDownloaded?.call(savedPath);
         Navigator.of(context).pop();
       } else {
-        context.showErrorToast('字幕下载失败');
+        context.showErrorToast(context.l10n.videoSubtitleDownloadFailed);
         setState(() {
           _isDownloading = false;
           _downloadingFileId = null;
@@ -212,7 +212,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '在线字幕',
+                        context.l10n.videoSubtitleDownloadDialogTitle,
                         style: theme.textTheme.titleMedium,
                       ),
                       if (widget.title != null)
@@ -244,7 +244,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
                       );
                     },
                     icon: const Icon(Icons.settings_rounded, size: 18),
-                    label: const Text('配置'),
+                    label: Text(context.l10n.videoSubtitleConfigureButton),
                   )
                 else if (_isLoading)
                   const SizedBox(
@@ -256,7 +256,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
                   IconButton(
                     onPressed: _search,
                     icon: const Icon(Icons.refresh_rounded),
-                    tooltip: '刷新',
+                    tooltip: context.l10n.videoSubtitleRefreshButton,
                   ),
               ],
             ),
@@ -276,19 +276,19 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
       return _buildEmptyState(
         theme,
         icon: Icons.settings_rounded,
-        title: '未配置字幕站点',
-        message: '请先在设置中添加 OpenSubtitles 配置',
+        title: context.l10n.videoSubtitleSourcesNotSetup,
+        message: context.l10n.videoSubtitleSourcesSetupHint,
       );
     }
 
     if (_isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('正在搜索字幕...'),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(context.l10n.videoSubtitleDownloadDialogSearching),
           ],
         ),
       );
@@ -298,12 +298,12 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
       return _buildEmptyState(
         theme,
         icon: Icons.search_off,
-        title: '搜索失败',
+        title: context.l10n.videoSubtitleDownloadDialogSearchFailed,
         message: _error!,
         action: TextButton.icon(
           onPressed: _search,
           icon: const Icon(Icons.refresh_rounded),
-          label: const Text('重试'),
+          label: Text(context.l10n.videoSubtitleDownloadDialogRetryButton),
         ),
       );
     }
@@ -312,8 +312,8 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
       return _buildEmptyState(
         theme,
         icon: Icons.subtitles_off,
-        title: '未找到字幕',
-        message: '尝试使用其他搜索条件',
+        title: context.l10n.videoSubtitleDownloadDialogNoResults,
+        message: context.l10n.videoSubtitleDownloadDialogNoResultsHint,
       );
     }
 
@@ -400,7 +400,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
               : IconButton(
                   onPressed: _isDownloading ? null : () => _download(subtitle),
                   icon: const Icon(Icons.download_rounded),
-                  tooltip: '下载',
+                  tooltip: context.l10n.videoSubtitleDownloadButton,
                 ),
           onTap: _isDownloading ? null : () => _download(subtitle),
         );

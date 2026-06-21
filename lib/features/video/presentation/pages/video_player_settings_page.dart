@@ -37,7 +37,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
           leading: const RoundedBackButton(),
           backgroundColor: isDark ? AppColors.darkSurface : null,
           title: Text(
-            '播放器设置',
+            context.l10n.videoPlayerSettingsPageTitle,
             style: TextStyle(
               color: isDark ? AppColors.darkOnSurface : null,
               fontWeight: FontWeight.bold,
@@ -51,7 +51,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
           padding: AppSpacing.paddingMd,
           children: [
           // 清晰度设置
-          _buildSectionHeader(context, '清晰度', Icons.high_quality_rounded, isDark),
+          _buildSectionHeader(context, context.l10n.videoPlayerSettingsSectionQuality, Icons.high_quality_rounded, isDark),
           const SizedBox(height: AppSpacing.sm),
           _buildSettingsCard(
             context,
@@ -63,7 +63,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.hd_rounded,
                 iconColor: AppColors.primary,
-                title: '默认清晰度',
+                title: context.l10n.videoPlayerSettingsDefaultQuality,
                 subtitle: settings.defaultQuality.label,
                 onTap: () => _showQualityPicker(context, ref, settings.defaultQuality, isDark),
               ),
@@ -74,8 +74,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.auto_awesome_rounded,
                 iconColor: AppColors.accent,
-                title: '自适应清晰度建议',
-                subtitle: '根据网络状况智能推荐清晰度',
+                title: context.l10n.videoPlayerSettingsAdaptiveSuggestion,
+                subtitle: context.l10n.videoPlayerSettingsAdaptiveSuggestionDesc,
                 value: settings.enableAdaptiveSuggestion,
                 onChanged: (value) {
                   ref.read(qualitySettingsProvider.notifier).setEnableAdaptiveSuggestion(enabled: value);
@@ -88,8 +88,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.history_rounded,
                 iconColor: AppColors.info,
-                title: '记住清晰度选择',
-                subtitle: '下次播放同一视频时自动应用',
+                title: context.l10n.videoPlayerSettingsRememberQuality,
+                subtitle: context.l10n.videoPlayerSettingsRememberQualityDesc,
                 value: settings.rememberPerVideo,
                 onChanged: (value) {
                   ref.read(qualitySettingsProvider.notifier).setRememberPerVideo(enabled: value);
@@ -102,8 +102,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.timer_rounded,
                 iconColor: AppColors.warning,
-                title: '缓冲检测阈值',
-                subtitle: '${settings.bufferThresholdSeconds} 秒',
+                title: context.l10n.videoPlayerSettingsBufferThreshold,
+                subtitle: context.l10n.videoPlayerSettingsBufferThresholdValue(settings.bufferThresholdSeconds),
                 onTap: () => _showBufferThresholdPicker(context, ref, settings.bufferThresholdSeconds, isDark),
               ),
             ],
@@ -112,7 +112,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
 
           // 投屏设置
-          _buildSectionHeader(context, '投屏', Icons.cast_rounded, isDark),
+          _buildSectionHeader(context, context.l10n.videoPlayerSettingsSectionCasting, Icons.cast_rounded, isDark),
           const SizedBox(height: AppSpacing.sm),
           _buildSettingsCard(
             context,
@@ -123,8 +123,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.devices_rounded,
                 iconColor: AppColors.secondary,
-                title: '支持的投屏协议',
-                subtitle: 'DLNA / AirPlay',
+                title: context.l10n.videoPlayerSettingsSupportedCastingProtocols,
+                subtitle: context.l10n.videoPlayerSettingsCastingProtocols,
               ),
               _buildDivider(isDark),
               _buildInfoTile(
@@ -132,8 +132,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.info_outline_rounded,
                 iconColor: AppColors.tertiary,
-                title: '使用说明',
-                subtitle: '播放视频时点击投屏按钮选择设备',
+                title: context.l10n.videoPlayerSettingsCastingUsage,
+                subtitle: context.l10n.videoPlayerSettingsCastingUsageDesc,
               ),
             ],
           ),
@@ -141,7 +141,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
 
           // 转码设置
-          _buildSectionHeader(context, '转码', Icons.settings_applications_rounded, isDark),
+          _buildSectionHeader(context, context.l10n.videoPlayerSettingsSectionTranscoding, Icons.settings_applications_rounded, isDark),
           const SizedBox(height: AppSpacing.sm),
           _buildSettingsCard(
             context,
@@ -152,8 +152,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.cloud_rounded,
                 iconColor: AppColors.primary,
-                title: '服务端转码',
-                subtitle: 'Synology Video Station / Jellyfin',
+                title: context.l10n.videoPlayerSettingsServerTranscoding,
+                subtitle: context.l10n.videoPlayerSettingsServerTranscodingDesc,
               ),
               _buildDivider(isDark),
               _buildInfoTile(
@@ -161,8 +161,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.phone_android_rounded,
                 iconColor: AppColors.accent,
-                title: '客户端转码',
-                subtitle: '需要设备安装 FFmpeg',
+                title: context.l10n.videoPlayerSettingsClientTranscoding,
+                subtitle: context.l10n.videoPlayerSettingsClientTranscodingDesc,
               ),
               _buildDivider(isDark),
               _buildSwitchTile(
@@ -170,8 +170,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.notifications_rounded,
                 iconColor: AppColors.warning,
-                title: '不支持转码提示',
-                subtitle: '当数据源不支持转码时显示提示',
+                title: context.l10n.videoPlayerSettingsUnsupportedTranscodingHint,
+                subtitle: context.l10n.videoPlayerSettingsUnsupportedTranscodingHintDesc,
                 value: settings.showUnsupportedHint,
                 onChanged: (value) {
                   ref.read(qualitySettingsProvider.notifier).setShowUnsupportedHint(enabled: value);
@@ -183,7 +183,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
 
           // HDR 设置
-          _buildSectionHeader(context, 'HDR', Icons.hdr_on_rounded, isDark),
+          _buildSectionHeader(context, context.l10n.videoPlayerSettingsSectionHdr, Icons.hdr_on_rounded, isDark),
           const SizedBox(height: AppSpacing.sm),
           _buildSettingsCard(
             context,
@@ -195,8 +195,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.auto_awesome_rounded,
                 iconColor: AppColors.primary,
-                title: 'HDR 模式',
-                subtitle: _getHdrModeLabel(hdrAudioSettings.settings.hdrMode),
+                title: context.l10n.videoPlayerSettingsHdrMode,
+                subtitle: _getHdrModeLabel(hdrAudioSettings.settings.hdrMode, context),
                 onTap: () => _showHdrModePicker(context, ref, hdrAudioSettings, isDark),
               ),
               _buildDivider(isDark),
@@ -206,8 +206,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.tune_rounded,
                 iconColor: AppColors.accent,
-                title: '色调映射算法',
-                subtitle: _getToneMappingLabel(hdrAudioSettings.settings.toneMappingMode),
+                title: context.l10n.videoPlayerSettingsToneMapping,
+                subtitle: _getToneMappingLabel(hdrAudioSettings.settings.toneMappingMode, context),
                 onTap: () => _showToneMappingPicker(context, ref, hdrAudioSettings, isDark),
               ),
               _buildDivider(isDark),
@@ -217,8 +217,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.monitor_rounded,
                 iconColor: AppColors.info,
-                title: '设备 HDR 能力',
-                subtitle: _getHdrCapabilityText(hdrAudioSettings.hdrCapability),
+                title: context.l10n.videoPlayerSettingsDeviceHdrCapability,
+                subtitle: _getHdrCapabilityText(hdrAudioSettings.hdrCapability, context),
               ),
             ],
           ),
@@ -226,7 +226,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
 
           // 音频直通设置
-          _buildSectionHeader(context, '音频直通', Icons.surround_sound_rounded, isDark),
+          _buildSectionHeader(context, context.l10n.videoPlayerSettingsSectionAudioPassthrough, Icons.surround_sound_rounded, isDark),
           const SizedBox(height: AppSpacing.sm),
           _buildSettingsCard(
             context,
@@ -238,8 +238,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.speaker_rounded,
                 iconColor: AppColors.secondary,
-                title: '音频直通模式',
-                subtitle: _getAudioPassthroughLabel(hdrAudioSettings.settings.audioPassthroughMode),
+                title: context.l10n.videoPlayerSettingsAudioPassthroughMode,
+                subtitle: _getAudioPassthroughLabel(hdrAudioSettings.settings.audioPassthroughMode, context),
                 onTap: () => _showAudioPassthroughPicker(context, ref, hdrAudioSettings, isDark),
               ),
               _buildDivider(isDark),
@@ -249,8 +249,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.output_rounded,
                 iconColor: AppColors.tertiary,
-                title: '当前输出设备',
-                subtitle: _getOutputDeviceText(hdrAudioSettings.audioCapability),
+                title: context.l10n.videoPlayerSettingsCurrentOutputDevice,
+                subtitle: _getOutputDeviceText(hdrAudioSettings.audioCapability, context),
               ),
               _buildDivider(isDark),
               // 支持的编码
@@ -259,8 +259,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.audiotrack_rounded,
                 iconColor: AppColors.warning,
-                title: '支持的编码',
-                subtitle: _getSupportedCodecsText(hdrAudioSettings.audioCapability),
+                title: context.l10n.videoPlayerSettingsSupportedCodecs,
+                subtitle: _getSupportedCodecsText(hdrAudioSettings.audioCapability, context),
               ),
             ],
           ),
@@ -268,7 +268,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
 
           // 字幕翻译
-          _buildSectionHeader(context, '字幕翻译', Icons.translate_rounded, isDark),
+          _buildSectionHeader(context, context.l10n.videoPlayerSettingsSectionSubtitleTranslation, Icons.translate_rounded, isDark),
           const SizedBox(height: AppSpacing.sm),
           _buildSettingsCard(
             context,
@@ -279,7 +279,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.language_rounded,
                 iconColor: AppColors.primary,
-                title: '默认目标语言',
+                title: context.l10n.videoPlayerSettingsDefaultTargetLanguage,
                 subtitle: translation.targetLangEnum.displayName,
                 onTap: () => _showTranslationLangPicker(
                   context,
@@ -294,7 +294,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.cloud_queue_rounded,
                 iconColor: AppColors.accent,
-                title: '翻译服务',
+                title: context.l10n.videoPlayerSettingsTranslationService,
                 subtitle: TranslationProviders.byId(translation.providerId).displayName,
                 onTap: () => _showTranslationProviderPicker(
                   context,
@@ -309,8 +309,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.layers_rounded,
                 iconColor: AppColors.info,
-                title: '双语显示',
-                subtitle: '译文上方 + 原文下方',
+                title: context.l10n.videoPlayerSettingsBilingualDisplay,
+                subtitle: context.l10n.videoPlayerSettingsBilingualDisplayDesc,
                 value: translation.bilingual,
                 onChanged: (value) {
                   ref
@@ -324,8 +324,8 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.save_alt_rounded,
                 iconColor: AppColors.success,
-                title: '启用翻译缓存',
-                subtitle: '相同字幕再次播放时秒出',
+                title: context.l10n.videoPlayerSettingsEnableTranslationCache,
+                subtitle: context.l10n.videoPlayerSettingsEnableTranslationCacheDesc,
                 value: translation.useCache,
                 onChanged: (value) {
                   ref
@@ -339,12 +339,12 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 isDark,
                 icon: Icons.delete_outline_rounded,
                 iconColor: AppColors.warning,
-                title: '清除翻译缓存',
-                subtitle: '不影响原字幕，仅清掉译文存档',
+                title: context.l10n.videoPlayerSettingsClearTranslationCache,
+                subtitle: context.l10n.videoPlayerSettingsClearTranslationCacheDesc,
                 onTap: () async {
                   await SubtitleTranslationService.instance.clearCache();
                   if (!context.mounted) return;
-                  context.showSuccessSnackBar('翻译缓存已清除');
+                  context.showSuccessSnackBar(context.l10n.videoPlayerSettingsClearTranslationCacheSuccess);
                 },
               ),
             ],
@@ -367,7 +367,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => SimpleDialog(
         backgroundColor: isDark ? AppColors.darkSurface : null,
-        title: const Text('默认翻译目标语言'),
+        title: Text(context.l10n.videoPlayerSettingsTranslationLangPickerTitle),
         children: [
           RadioGroup<TranslationLang>(
             groupValue: current,
@@ -404,7 +404,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => SimpleDialog(
         backgroundColor: isDark ? AppColors.darkSurface : null,
-        title: const Text('翻译服务'),
+        title: Text(context.l10n.videoPlayerSettingsTranslationServicePickerTitle),
         children: [
           RadioGroup<String>(
             groupValue: currentId,
@@ -428,15 +428,15 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
     }
   }
 
-  String _getHdrModeLabel(HdrMode mode) => switch (mode) {
-        HdrMode.auto => '自动',
-        HdrMode.passthrough => 'HDR 直通',
-        HdrMode.tonemapping => '色调映射',
-        HdrMode.disabled => '禁用',
+  String _getHdrModeLabel(HdrMode mode, BuildContext context) => switch (mode) {
+        HdrMode.auto => context.l10n.videoPlayerSettingsHdrModeAuto,
+        HdrMode.passthrough => context.l10n.videoPlayerSettingsHdrModePassthrough,
+        HdrMode.tonemapping => context.l10n.videoPlayerSettingsHdrModeToneMapping,
+        HdrMode.disabled => context.l10n.videoPlayerSettingsHdrModeDisabled,
       };
 
-  String _getToneMappingLabel(ToneMappingMode mode) => switch (mode) {
-        ToneMappingMode.auto => '自动',
+  String _getToneMappingLabel(ToneMappingMode mode, BuildContext context) => switch (mode) {
+        ToneMappingMode.auto => context.l10n.videoPlayerSettingsToneMappingModeAuto,
         ToneMappingMode.mobius => 'Mobius',
         ToneMappingMode.reinhard => 'Reinhard',
         ToneMappingMode.hable => 'Hable',
@@ -444,15 +444,15 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
         ToneMappingMode.clip => 'Clip',
       };
 
-  String _getAudioPassthroughLabel(AudioPassthroughMode mode) => switch (mode) {
-        AudioPassthroughMode.auto => '自动',
-        AudioPassthroughMode.enabled => '启用',
-        AudioPassthroughMode.disabled => '禁用',
+  String _getAudioPassthroughLabel(AudioPassthroughMode mode, BuildContext context) => switch (mode) {
+        AudioPassthroughMode.auto => context.l10n.videoPlayerSettingsAudioPassthroughModeAuto,
+        AudioPassthroughMode.enabled => context.l10n.videoPlayerSettingsAudioPassthroughModeEnabled,
+        AudioPassthroughMode.disabled => context.l10n.videoPlayerSettingsAudioPassthroughModeDisabled,
       };
 
-  String _getHdrCapabilityText(HdrCapability? capability) {
-    if (capability == null) return '检测中...';
-    if (!capability.isSupported) return '不支持';
+  String _getHdrCapabilityText(HdrCapability? capability, BuildContext context) {
+    if (capability == null) return context.l10n.videoPlayerSettingsHdrCapabilityDetecting;
+    if (!capability.isSupported) return context.l10n.videoPlayerSettingsHdrCapabilityUnsupported;
     final types = capability.supportedTypes.map((t) => switch (t) {
           HdrType.hdr10 => 'HDR10',
           HdrType.hdr10Plus => 'HDR10+',
@@ -460,30 +460,30 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
           HdrType.dolbyVision => 'Dolby Vision',
           HdrType.none => '',
         }).where((s) => s.isNotEmpty).join(', ');
-    return types.isEmpty ? '支持 HDR' : '支持 $types';
+    return types.isEmpty ? context.l10n.videoPlayerSettingsHdrCapabilitySupportedAny : context.l10n.videoPlayerSettingsHdrCapabilitySupported(types);
   }
 
-  String _getOutputDeviceText(AudioPassthroughCapability? capability) {
-    if (capability == null) return '检测中...';
+  String _getOutputDeviceText(AudioPassthroughCapability? capability, BuildContext context) {
+    if (capability == null) return context.l10n.videoPlayerSettingsOutputDeviceDetecting;
     final device = switch (capability.outputDevice) {
-      AudioOutputDevice.hdmi => 'HDMI',
-      AudioOutputDevice.spdif => 'S/PDIF 光纤',
-      AudioOutputDevice.arc => 'HDMI ARC/eARC',
-      AudioOutputDevice.bluetooth => '蓝牙',
-      AudioOutputDevice.speaker => '内置扬声器',
-      AudioOutputDevice.headphones => '耳机',
-      AudioOutputDevice.unknown => '未知',
+      AudioOutputDevice.hdmi => context.l10n.videoPlayerSettingsOutputDeviceHdmi,
+      AudioOutputDevice.spdif => context.l10n.videoPlayerSettingsOutputDeviceSpdif,
+      AudioOutputDevice.arc => context.l10n.videoPlayerSettingsOutputDeviceArc,
+      AudioOutputDevice.bluetooth => context.l10n.videoPlayerSettingsOutputDeviceBluetooth,
+      AudioOutputDevice.speaker => context.l10n.videoPlayerSettingsOutputDeviceSpeaker,
+      AudioOutputDevice.headphones => context.l10n.videoPlayerSettingsOutputDeviceHeadphones,
+      AudioOutputDevice.unknown => context.l10n.videoPlayerSettingsOutputDeviceUnknown,
     };
     if (capability.deviceName != null && capability.deviceName!.isNotEmpty) {
-      return '$device (${capability.deviceName})';
+      return context.l10n.videoPlayerSettingsOutputDeviceWithName(device, capability.deviceName!);
     }
     return device;
   }
 
-  String _getSupportedCodecsText(AudioPassthroughCapability? capability) {
-    if (capability == null) return '检测中...';
+  String _getSupportedCodecsText(AudioPassthroughCapability? capability, BuildContext context) {
+    if (capability == null) return context.l10n.videoPlayerSettingsOutputDeviceDetecting;
     if (!capability.isSupported || capability.supportedCodecs.isEmpty) {
-      return '不支持直通';
+      return context.l10n.videoPlayerSettingsSupportedCodecsUnsupported;
     }
     return capability.supportedCodecs.map((c) => switch (c) {
           AudioCodec.pcm => 'PCM',
@@ -801,7 +801,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Text(
-                      '选择默认清晰度',
+                      context.l10n.videoPlayerSettingsQualityPickerTitle,
                       style: context.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -879,7 +879,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        _getQualityDescription(quality),
+                        _getQualityDescription(quality, context),
                         style: context.textTheme.bodySmall?.copyWith(
                           color: isDark
                               ? AppColors.darkOnSurfaceVariant
@@ -918,13 +918,13 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
         VideoQuality.quality360p => Icons.sd_outlined,
       };
 
-  String _getQualityDescription(VideoQuality quality) => switch (quality) {
-        VideoQuality.original => '保持原始画质，不进行转码',
-        VideoQuality.quality4K => '3840×2160 • 超高清',
-        VideoQuality.quality1080p => '1920×1080 • 全高清',
-        VideoQuality.quality720p => '1280×720 • 高清',
-        VideoQuality.quality480p => '854×480 • 标清',
-        VideoQuality.quality360p => '640×360 • 流畅',
+  String _getQualityDescription(VideoQuality quality, BuildContext context) => switch (quality) {
+        VideoQuality.original => context.l10n.videoPlayerSettingsQualityLabelOriginal,
+        VideoQuality.quality4K => context.l10n.videoPlayerSettingsQualityLabel4K,
+        VideoQuality.quality1080p => context.l10n.videoPlayerSettingsQualityLabel1080p,
+        VideoQuality.quality720p => context.l10n.videoPlayerSettingsQualityLabel720p,
+        VideoQuality.quality480p => context.l10n.videoPlayerSettingsQualityLabel480p,
+        VideoQuality.quality360p => context.l10n.videoPlayerSettingsQualityLabel360p,
       };
 
   void _showBufferThresholdPicker(
@@ -963,7 +963,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Text(
-                      '缓冲检测阈值',
+                      context.l10n.videoPlayerSettingsBufferThresholdPickerTitle,
                       style: context.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -973,7 +973,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                     child: Text(
-                      '当视频缓冲超过此时间时，将建议降低清晰度',
+                      context.l10n.videoPlayerSettingsBufferThresholdPickerDesc,
                       style: context.textTheme.bodySmall?.copyWith(
                         color: isDark
                             ? AppColors.darkOnSurfaceVariant
@@ -1083,16 +1083,16 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
     bool isDark,
   ) {
     final modes = [
-      (HdrMode.auto, '自动', '根据设备和视频自动选择最佳模式'),
-      (HdrMode.passthrough, 'HDR 直通', '直接输出 HDR 信号到支持的显示器'),
-      (HdrMode.tonemapping, '色调映射', '将 HDR 转换为 SDR 显示'),
-      (HdrMode.disabled, '禁用', '不进行任何 HDR 处理'),
+      (HdrMode.auto, context.l10n.videoPlayerSettingsHdrModeAuto, context.l10n.videoPlayerSettingsHdrModeAutoDesc),
+      (HdrMode.passthrough, context.l10n.videoPlayerSettingsHdrModePassthrough, context.l10n.videoPlayerSettingsHdrModePassthroughDesc),
+      (HdrMode.tonemapping, context.l10n.videoPlayerSettingsHdrModeToneMapping, context.l10n.videoPlayerSettingsHdrModeToneMappingDesc),
+      (HdrMode.disabled, context.l10n.videoPlayerSettingsHdrModeDisabled, context.l10n.videoPlayerSettingsHdrModeDisabledDesc),
     ];
 
     _showOptionPicker(
       context: context,
       ref: ref,
-      title: 'HDR 模式',
+      title: context.l10n.videoPlayerSettingsHdrMode,
       isDark: isDark,
       options: modes.map((m) => (
             value: m.$1,
@@ -1113,18 +1113,18 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
     bool isDark,
   ) {
     final modes = [
-      (ToneMappingMode.auto, '自动', '由 MPV 自动选择算法'),
-      (ToneMappingMode.mobius, 'Mobius', '平滑过渡，适合大多数内容'),
-      (ToneMappingMode.reinhard, 'Reinhard', '经典算法，保留更多细节'),
-      (ToneMappingMode.hable, 'Hable', '电影感更强，对比度更高'),
-      (ToneMappingMode.bt2390, 'BT.2390', 'ITU 标准算法'),
-      (ToneMappingMode.clip, 'Clip', '简单裁剪，高性能'),
+      (ToneMappingMode.auto, context.l10n.videoPlayerSettingsToneMappingModeAuto, context.l10n.videoPlayerSettingsToneMappingModeAutoDesc),
+      (ToneMappingMode.mobius, 'Mobius', context.l10n.videoPlayerSettingsToneMappingModeMobiusDesc),
+      (ToneMappingMode.reinhard, 'Reinhard', context.l10n.videoPlayerSettingsToneMappingModeReinhardDesc),
+      (ToneMappingMode.hable, 'Hable', context.l10n.videoPlayerSettingsToneMappingModeHableDesc),
+      (ToneMappingMode.bt2390, 'BT.2390', context.l10n.videoPlayerSettingsToneMappingModeBt2390Desc),
+      (ToneMappingMode.clip, 'Clip', context.l10n.videoPlayerSettingsToneMappingModeClipDesc),
     ];
 
     _showOptionPicker(
       context: context,
       ref: ref,
-      title: '色调映射算法',
+      title: context.l10n.videoPlayerSettingsToneMapping,
       isDark: isDark,
       options: modes.map((m) => (
             value: m.$1,
@@ -1145,15 +1145,15 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
     bool isDark,
   ) {
     final modes = [
-      (AudioPassthroughMode.auto, '自动', '根据输出设备和音频格式自动选择'),
-      (AudioPassthroughMode.enabled, '启用', '尝试直通所有支持的音频格式'),
-      (AudioPassthroughMode.disabled, '禁用', '始终解码音频后输出'),
+      (AudioPassthroughMode.auto, context.l10n.videoPlayerSettingsAudioPassthroughModeAuto, context.l10n.videoPlayerSettingsAudioPassthroughModeAutoDesc),
+      (AudioPassthroughMode.enabled, context.l10n.videoPlayerSettingsAudioPassthroughModeEnabled, context.l10n.videoPlayerSettingsAudioPassthroughModeEnabledDesc),
+      (AudioPassthroughMode.disabled, context.l10n.videoPlayerSettingsAudioPassthroughModeDisabled, context.l10n.videoPlayerSettingsAudioPassthroughModeDisabledDesc),
     ];
 
     _showOptionPicker(
       context: context,
       ref: ref,
-      title: '音频直通模式',
+      title: context.l10n.videoPlayerSettingsAudioPassthroughMode,
       isDark: isDark,
       options: modes.map((m) => (
             value: m.$1,

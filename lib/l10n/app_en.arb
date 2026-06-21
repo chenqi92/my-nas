@@ -6515,5 +6515,1133 @@
   "musicPlayerControlsVolume": "Volume",
   "musicRecentTracksTitle": "Recently Played",
   "musicViewAll": "View all",
-  "musicPopularTracksTitle": "Recommended for you"
+  "musicPopularTracksTitle": "Recommended for you",
+  "videoListGreetingNight": "It's getting late",
+  "videoListGreetingMorning": "Good morning",
+  "videoListGreetingNoon": "Good afternoon",
+  "videoListGreetingAfternoon": "Good afternoon",
+  "videoListGreetingEvening": "Good evening",
+  "videoListTooltipSearch": "Search",
+  "videoListTooltipCategorySettings": "Category Settings",
+  "videoListTooltipMore": "More",
+  "videoListMenuLibrarySettings": "Media Library Settings",
+  "videoListMenuSourceManagement": "Connection Source Management",
+  "videoListMenuFindDuplicates": "Find Duplicates",
+  "videoListSearchHint": "Search videos...",
+  "videoListScanningStatus": "Scanning... Found {count} videos",
+  "@videoListScanningStatus": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoListLoadingCacheState": "Loading cache...",
+  "videoListScanningState": "Scanning videos...",
+  "videoListPathMismatchTitle": "Media Library Path Mismatch",
+  "videoListPathMismatchMessage": "Database contains {count} videos, but current media library paths don't match these data.",
+  "@videoListPathMismatchMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoListPathMismatchHint": "Please check if the directory configuration in media library settings is correct.",
+  "videoListEmptyTitle": "Video Library is Empty",
+  "videoListEmptyMessage": "Please configure video directories and scan in media library settings",
+  "videoListLoadingInfo": "Loading...",
+  "videoListCategoryRecentlyAdded": "Recently Added",
+  "videoListCategoryMovies": "Movies",
+  "videoListCategoryTvShows": "TV Shows",
+  "videoListCategoryMovieCollections": "Movie Collections",
+  "videoListCategoryTopRated": "Daily Recommendations",
+  "videoListCategoryOthers": "Others",
+  "videoListSearchNoResults": "No results found for \"{query}\"",
+  "@videoListSearchNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "videoListSearchResultCount": "Found {count} results",
+  "@videoListSearchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoListSearchResultsTitle": "Search Results",
+  "videoDetailRemoveFromLibraryTitle": "Remove from Media Library",
+  "videoDetailRemoveFromLibraryMessage": "Are you sure you want to remove \"{title}\" from media library?\n\nThis will only remove the index record, the source file will not be deleted.",
+  "@videoDetailRemoveFromLibraryMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoDetailRemoveConfirmButton": "Remove",
+  "videoDetailRemoveSuccess": "Removed from media library",
+  "videoDetailRemoveFailed": "Failed to remove",
+  "videoDetailDeleteSourceTitle": "Delete Source File",
+  "videoDetailDeleteSourceMessage": "Are you sure you want to delete the source file of \"{title}\"?\n\n⚠️ This action cannot be undone! Files will be permanently deleted from NAS.",
+  "@videoDetailDeleteSourceMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoDetailInfoSubtitleVideo": "Video",
+  "videoDetailInfoFileSize": "File Size",
+  "videoDetailInfoResolution": "Resolution",
+  "videoDetailInfoCodec": "Codec",
+  "videoDetailInfoModifiedTime": "Modified Time",
+  "videoDetailInfoSourceId": "Source ID",
+  "videoDetailInfoPath": "Path",
+  "videoDetailContinueWatching": "Continue Watching",
+  "videoPosterCardScanning": "Scanning",
+  "videoPosterCardTvShow": "TV Show",
+  "videoPosterCardScraping": "Scraping",
+  "videoPosterCardPendingScrape": "Pending Scrape",
+  "videoViewMoreTitle": "View All",
+  "videoViewMoreRemaining": "More {count} items",
+  "@videoViewMoreRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoViewMoreTotal": "Total {count} items",
+  "@videoViewMoreTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoMoreContentTitle": "More Content",
+  "videoMovieEmptyState": "No matching movies found",
+  "videoSortClearFilters": "Clear Filters",
+  "videoSortFilterByType": "Filter by Type",
+  "videoSortClearButton": "Clear",
+  "videoSortByName": "By Name",
+  "videoSortByAddedTime": "By Added Time",
+  "videoSortDisplayFormat": "Sort by {sortName}",
+  "@videoSortDisplayFormat": {
+    "placeholders": {
+      "sortName": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSortMethodsTitle": "Sort By",
+  "videoFilterTypeLabel": "Type",
+  "videoFilterYearLabel": "Year",
+  "videoFilterResetButton": "Reset",
+  "videoFilterApplyButton": "Apply Filter",
+  "videoTvShowEmptyState": "No matching TV shows found",
+  "videoOthersEmptyState": "No other videos",
+  "videoCollectionViewAllCount": "View All ({count})",
+  "@videoCollectionViewAllCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCollectionTitle": "Movie Collections ({count})",
+  "@videoCollectionTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCollectionCollectedStatus": "Collected {collected} / {total} items",
+  "@videoCollectionCollectedStatus": {
+    "placeholders": {
+      "collected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCollectionMovieCount": "{count} movies",
+  "@videoCollectionMovieCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCollectionNotCollected": "Not Collected",
+  "videoUnwatchedTitle": "Unwatched",
+  "videoDynamicCategoryEmpty": "No videos available",
+  "videoTooltipSort": "Sort",
+  "videoTooltipFilter": "Filter",
+  "videoTooltipSortFormat": "Sort: {sortName}",
+  "@videoTooltipSortFormat": {
+    "placeholders": {
+      "sortName": {
+        "type": "String"
+      }
+    }
+  },
+  "videoPlayerSettingsPageTitle": "Playback Settings",
+  "videoPlayerSettingsSectionQuality": "Video Quality",
+  "videoPlayerSettingsDefaultQuality": "Default Quality",
+  "videoPlayerSettingsAdaptiveSuggestion": "Adaptive Quality Suggestion",
+  "videoPlayerSettingsAdaptiveSuggestionDesc": "Intelligently recommend quality based on network conditions",
+  "videoPlayerSettingsRememberQuality": "Remember Quality Selection",
+  "videoPlayerSettingsRememberQualityDesc": "Automatically apply when playing the same video",
+  "videoPlayerSettingsBufferThreshold": "Buffer Detection Threshold",
+  "videoPlayerSettingsBufferThresholdValue": "{seconds} seconds",
+  "@videoPlayerSettingsBufferThresholdValue": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "videoPlayerSettingsSectionCasting": "Casting",
+  "videoPlayerSettingsSupportedCastingProtocols": "Supported Casting Protocols",
+  "videoPlayerSettingsCastingProtocols": "DLNA / AirPlay",
+  "videoPlayerSettingsCastingUsage": "How to Use",
+  "videoPlayerSettingsCastingUsageDesc": "Click the casting button when playing to select a device",
+  "videoPlayerSettingsSectionTranscoding": "Transcoding",
+  "videoPlayerSettingsServerTranscoding": "Server-Side Transcoding",
+  "videoPlayerSettingsServerTranscodingDesc": "Synology Video Station / Jellyfin",
+  "videoPlayerSettingsClientTranscoding": "Client-Side Transcoding",
+  "videoPlayerSettingsClientTranscodingDesc": "Requires FFmpeg installed on device",
+  "videoPlayerSettingsUnsupportedTranscodingHint": "Unsupported Transcoding Alert",
+  "videoPlayerSettingsUnsupportedTranscodingHintDesc": "Show alert when data source doesn't support transcoding",
+  "videoPlayerSettingsSectionHdr": "HDR",
+  "videoPlayerSettingsHdrMode": "HDR Mode",
+  "videoPlayerSettingsToneMapping": "Tone Mapping Algorithm",
+  "videoPlayerSettingsDeviceHdrCapability": "Device HDR Capability",
+  "videoPlayerSettingsSectionAudioPassthrough": "Audio Passthrough",
+  "videoPlayerSettingsAudioPassthroughMode": "Audio Passthrough Mode",
+  "videoPlayerSettingsCurrentOutputDevice": "Current Output Device",
+  "videoPlayerSettingsSupportedCodecs": "Supported Codecs",
+  "videoPlayerSettingsSectionSubtitleTranslation": "Subtitle Translation",
+  "videoPlayerSettingsDefaultTargetLanguage": "Default Target Language",
+  "videoPlayerSettingsTranslationService": "Translation Service",
+  "videoPlayerSettingsBilingualDisplay": "Bilingual Display",
+  "videoPlayerSettingsBilingualDisplayDesc": "Translation on top + original below",
+  "videoPlayerSettingsEnableTranslationCache": "Enable Translation Cache",
+  "videoPlayerSettingsEnableTranslationCacheDesc": "Display instantly when playing the same subtitle again",
+  "videoPlayerSettingsClearTranslationCache": "Clear Translation Cache",
+  "videoPlayerSettingsClearTranslationCacheDesc": "Doesn't affect original subtitles, only removes translation archive",
+  "videoPlayerSettingsClearTranslationCacheSuccess": "Translation cache cleared",
+  "videoPlayerSettingsQualityPickerTitle": "Select Default Quality",
+  "videoPlayerSettingsQualityLabelOriginal": "Keep original quality, no transcoding",
+  "videoPlayerSettingsQualityLabel4K": "3840×2160 • Ultra High Definition",
+  "videoPlayerSettingsQualityLabel1080p": "1920×1080 • Full High Definition",
+  "videoPlayerSettingsQualityLabel720p": "1280×720 • High Definition",
+  "videoPlayerSettingsQualityLabel480p": "854×480 • Standard Definition",
+  "videoPlayerSettingsQualityLabel360p": "640×360 • Smooth",
+  "videoPlayerSettingsBufferThresholdPickerTitle": "Buffer Detection Threshold",
+  "videoPlayerSettingsBufferThresholdPickerDesc": "When video buffering exceeds this time, quality reduction will be suggested",
+  "videoPlayerSettingsThresholdSeconds": "{threshold} seconds",
+  "@videoPlayerSettingsThresholdSeconds": {
+    "placeholders": {
+      "threshold": {
+        "type": "int"
+      }
+    }
+  },
+  "videoPlayerSettingsTranslationLangPickerTitle": "Default Subtitle Target Language",
+  "videoPlayerSettingsTranslationServicePickerTitle": "Translation Service",
+  "videoPlayerSettingsHdrModeAuto": "Automatic",
+  "videoPlayerSettingsHdrModeAutoDesc": "Automatically select the best mode based on device and video",
+  "videoPlayerSettingsHdrModePassthrough": "HDR Passthrough",
+  "videoPlayerSettingsHdrModePassthroughDesc": "Output HDR signal directly to supported displays",
+  "videoPlayerSettingsHdrModeToneMapping": "Tone Mapping",
+  "videoPlayerSettingsHdrModeToneMappingDesc": "Convert HDR to SDR display",
+  "videoPlayerSettingsHdrModeDisabled": "Disabled",
+  "videoPlayerSettingsHdrModeDisabledDesc": "No HDR processing",
+  "videoPlayerSettingsToneMappingModeAuto": "Automatic",
+  "videoPlayerSettingsToneMappingModeAutoDesc": "MPV automatically selects the algorithm",
+  "videoPlayerSettingsToneMappingModeMobiusDesc": "Smooth transition, suitable for most content",
+  "videoPlayerSettingsToneMappingModeReinhardDesc": "Classic algorithm, retains more details",
+  "videoPlayerSettingsToneMappingModeHableDesc": "More cinematic feel, higher contrast",
+  "videoPlayerSettingsToneMappingModeBt2390Desc": "ITU standard algorithm",
+  "videoPlayerSettingsToneMappingModeClipDesc": "Simple clipping, high performance",
+  "videoPlayerSettingsAudioPassthroughModeAuto": "Automatic",
+  "videoPlayerSettingsAudioPassthroughModeAutoDesc": "Automatically select based on output device and audio format",
+  "videoPlayerSettingsAudioPassthroughModeEnabled": "Enabled",
+  "videoPlayerSettingsAudioPassthroughModeEnabledDesc": "Try to passthrough all supported audio formats",
+  "videoPlayerSettingsAudioPassthroughModeDisabled": "Disabled",
+  "videoPlayerSettingsAudioPassthroughModeDisabledDesc": "Always decode audio then output",
+  "videoPlayerSettingsHdrCapabilityDetecting": "Detecting...",
+  "videoPlayerSettingsHdrCapabilityUnsupported": "Not Supported",
+  "videoPlayerSettingsHdrCapabilitySupported": "Support {types}",
+  "@videoPlayerSettingsHdrCapabilitySupported": {
+    "placeholders": {
+      "types": {
+        "type": "String"
+      }
+    }
+  },
+  "videoPlayerSettingsHdrCapabilitySupportedAny": "Supports HDR",
+  "videoPlayerSettingsOutputDeviceDetecting": "Detecting...",
+  "videoPlayerSettingsOutputDeviceHdmi": "HDMI",
+  "videoPlayerSettingsOutputDeviceSpdif": "S/PDIF Optical",
+  "videoPlayerSettingsOutputDeviceArc": "HDMI ARC/eARC",
+  "videoPlayerSettingsOutputDeviceBluetooth": "Bluetooth",
+  "videoPlayerSettingsOutputDeviceSpeaker": "Built-in Speaker",
+  "videoPlayerSettingsOutputDeviceHeadphones": "Headphones",
+  "videoPlayerSettingsOutputDeviceUnknown": "Unknown",
+  "videoPlayerSettingsOutputDeviceWithName": "{device} ({name})",
+  "@videoPlayerSettingsOutputDeviceWithName": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "videoPlayerSettingsSupportedCodecsUnsupported": "Passthrough not supported",
+  "videoPtSearchTooltip": "Search on PT sites",
+  "videoOverviewLabel": "Overview",
+  "videoSubtitleDownloadTooltip": "Download subtitles",
+  "videoBackButtonTooltip": "Back (long press/right-click to home)",
+  "videoScrapingCompleted": "Completed {count} episodes",
+  "@videoScrapingCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoScrapingFailed": "Failed",
+  "videoCastCrewLabel": "Cast & Crew",
+  "videoDirectorLabel": "Director",
+  "videoMovieCollectionCount": "Total {count} movies",
+  "@videoMovieCollectionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoViewAll": "View All",
+  "videoCurrent": "Current",
+  "videoFileInfoLabel": "File Information",
+  "videoLocalEpisodesLabel": "Local Episodes",
+  "videoLoadingFailed": "Loading failed",
+  "videoNoLocalEpisodes": "No local episodes",
+  "videoEpisodeCount": "Episodes",
+  "videoSeasonCount": "Seasons",
+  "videoSeasonLabel": "Season {number}",
+  "@videoSeasonLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSeasonRangeLabel": "{count} seasons ({from}-{to})",
+  "@videoSeasonRangeLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      }
+    }
+  },
+  "videoTotalSize": "Total size",
+  "videoDirectory": "Directory",
+  "videoSource": "Source",
+  "videoFileName": "File name",
+  "videoFilePath": "Path",
+  "videoResolution": "Resolution",
+  "videoFileSize": "File size",
+  "videoResolutionOriginal": "Original",
+  "videoNotConnected": "Not connected to NAS. Please connect in Settings.",
+  "videoGetInfoFailed": "Failed to get video information: {error}",
+  "@videoGetInfoFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoLocalUnavailable": "Unavailable locally",
+  "videoSearchOnPtSites": "Search on PT sites",
+  "videoSearchQuery": "Search \"{title}\"",
+  "@videoSearchQuery": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoAddNastoolSubscribe": "Add NASTool Subscription",
+  "videoSubscribeQuery": "Subscribe to \"{title}\"",
+  "@videoSubscribeQuery": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoViewDetails": "View details",
+  "videoViewTmdbInfo": "View TMDB information",
+  "videoSelectPtSite": "Select PT site",
+  "videoSearching": "Searching: {title}",
+  "@videoSearching": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSelectNastool": "Select NASTool",
+  "videoSubscribing": "Subscribe to: {title}",
+  "@videoSubscribing": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoNastoolNotConnected": "{source} not connected",
+  "@videoNastoolNotConnected": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSubscribeSuccess": "Subscription added: {title}",
+  "@videoSubscribeSuccess": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSubscribeFailed": "Failed to add subscription: {error}",
+  "@videoSubscribeFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "liveStreamSourceManagementTitle": "Live Stream Source Management",
+  "liveStreamSortingFinish": "Done Sorting",
+  "liveStreamAdjustOrder": "Adjust Order",
+  "liveStreamAddSource": "Add Live Stream Source",
+  "liveStreamEmptyTitle": "No Live Stream Sources",
+  "liveStreamEmptyHint": "Add M3U Playlist to Start Watching",
+  "liveStreamAddedToast": "Added: {name}",
+  "@liveStreamAddedToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "liveStreamUpdatedToast": "Updated: {name}",
+  "@liveStreamUpdatedToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "liveStreamRefreshingToast": "Refreshing...",
+  "liveStreamRefreshedToast": "Refreshed: {count} channels",
+  "@liveStreamRefreshedToast": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveStreamRefreshFailedError": "Refresh Failed",
+  "liveStreamDeleteSourceTitle": "Delete Live Stream Source",
+  "liveStreamDeleteSourceConfirmation": "Are you sure you want to delete \"{name}\"?",
+  "@liveStreamDeleteSourceConfirmation": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "commonDelete": "Delete",
+  "liveStreamDeletedToast": "Deleted: {name}",
+  "@liveStreamDeletedToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "liveStreamChannelsCount": "{count} channels",
+  "@liveStreamChannelsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveStreamRefreshChannelsTooltip": "Refresh Channels",
+  "commonEdit": "Edit",
+  "liveStreamSourceNameLabel": "Name",
+  "liveStreamSourceNameHint": "e.g., IPTV Live Stream",
+  "liveStreamPlaylistUrlLabel": "M3U Playlist URL",
+  "liveStreamPreviewChannelsButton": "Preview Channels",
+  "liveStreamPreviewChannelsTitle": "Preview ({count} channels)",
+  "@liveStreamPreviewChannelsTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveStreamMoreChannelsHint": "... and {count} more channels",
+  "@liveStreamMoreChannelsHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "commonSave": "Save",
+  "liveStreamUrlRequiredError": "Please enter M3U URL",
+  "liveStreamSourceNameRequiredError": "Please enter name",
+  "videoManualScraperTitle": "Manual Scraper",
+  "videoManualScraperConfirmTitle": "Confirm Scraping",
+  "videoManualScraperResearch": "Re-search",
+  "videoManualScraperInputHint": "Enter search keyword",
+  "videoManualScraperSearchButton": "Search",
+  "videoManualScraperTypeMovie": "Movie",
+  "videoManualScraperTypeTV": "TV Series",
+  "videoManualScraperSeasonLabel": "Season",
+  "videoManualScraperEpisodeLabel": "Episode",
+  "videoManualScraperSearchFailed": "Search failed: {error}",
+  "@videoManualScraperSearchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoManualScraperNoResults": "No search results",
+  "videoManualScraperTryOtherKeywords": "Try modifying keywords or switching between movie/TV series",
+  "videoManualScraperResultCount": "{count} results",
+  "@videoManualScraperResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoManualScraperDetailFailed": "Failed to load details: {error}",
+  "@videoManualScraperDetailFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoManualScraperSummary": "Summary",
+  "videoManualScraperDirector": "Director: {name}",
+  "@videoManualScraperDirector": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "videoManualScraperCast": "Cast: {names}",
+  "@videoManualScraperCast": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "videoManualScraperRuntime": "{minutes} minutes",
+  "@videoManualScraperRuntime": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoManualScraperOptions": "Scrape Options",
+  "videoManualScraperUpdateMetadata": "Update Metadata",
+  "videoManualScraperUpdateMetadataDesc": "Save to local database",
+  "videoManualScraperDownloadPoster": "Download Poster",
+  "videoManualScraperDownloadPosterDesc": "Save to video directory",
+  "videoManualScraperDownloadFanart": "Download Fanart",
+  "videoManualScraperDownloadFanartDesc": "Save to video directory",
+  "videoManualScraperGenerateNfo": "Generate NFO File",
+  "videoManualScraperGenerateNfoDesc": "Kodi/Jellyfin compatible format",
+  "videoManualScraperScraping": "Scraping...",
+  "videoManualScraperConfirm": "Confirm Scrape",
+  "videoManualScraperBackToSearch": "Back to Search",
+  "videoManualScraperSuccess": "Scraping successful",
+  "videoManualScraperError": "Scraping failed: {error}",
+  "@videoManualScraperError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoAdvancedSettingsTitle": "Advanced Features",
+  "videoAdvancedDisplaySection": "Display Settings",
+  "videoAdvancedSubtitleStyleTitle": "Subtitle Style",
+  "videoAdvancedSubtitleStyleSubtitle": "Adjust subtitle font, color, position, etc.",
+  "videoAdvancedAspectRatioTitle": "Aspect Ratio",
+  "videoAdvancedAspectRatioSubtitle": "Adjust video display ratio",
+  "videoAdvancedPlaybackSection": "Playback Settings",
+  "videoAdvancedAutoPlayNextTitle": "Auto Play Next",
+  "videoAdvancedAutoPlayNextSubtitle": "Automatically play the next video in the list after playback completes",
+  "videoAdvancedRememberPositionTitle": "Remember Position",
+  "videoAdvancedRememberPositionSubtitle": "Resume from the last position when opening next time",
+  "videoAdvancedControlSection": "Control Settings",
+  "videoAdvancedSeekIntervalTitle": "Seek Interval",
+  "videoAdvancedSeekIntervalSubtitle": "Seconds to skip when double-tapping or tapping the button",
+  "videoAdvancedSeekIntervalSuffix": "s",
+  "videoAdvancedDefaultSection": "Default Settings",
+  "videoAdvancedDefaultVolumeTitle": "Default Volume",
+  "videoAdvancedDefaultVolumeSubtitle": "Initial volume for new videos",
+  "videoAdvancedDefaultSpeedTitle": "Default Playback Speed",
+  "videoAdvancedDefaultSpeedSubtitle": "Initial playback speed for new videos",
+  "videoAdvancedDefaultSpeedSuffix": "x",
+  "videoAdvancedDataSection": "Data Management",
+  "videoAdvancedClearPositionTitle": "Clear Playback Position",
+  "videoAdvancedClearPositionSubtitle": "Delete playback progress for all videos",
+  "videoAdvancedClearDialogTitle": "Clear Playback History",
+  "videoAdvancedClearDialogContent": "Clear playback position records for all videos? This action cannot be undone.",
+  "videoAdvancedClearCancel": "Cancel",
+  "videoAdvancedClearConfirm": "Clear",
+  "videoAdvancedClearSuccess": "Playback position records cleared",
+  "videoSeasonScraperPageTitle": "Season Scraper",
+  "videoSeasonScraperSelectShowTitle": "Select TV Show",
+  "videoSeasonScraperReloadButton": "Search Again",
+  "videoSeasonScraperLocalEpisodesLabel": "Local Episodes",
+  "videoSeasonScraperLocalEpisodesSummary": "{seasonCount} seasons, {episodeCount} episodes total",
+  "@videoSeasonScraperLocalEpisodesSummary": {
+    "placeholders": {
+      "seasonCount": {
+        "type": "int"
+      },
+      "episodeCount": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSeasonScraperSearchHint": "Search TV shows",
+  "videoSeasonScraperSearchButton": "Search",
+  "videoSeasonScraperSearchEmptyPlaceholder": "Search for TV shows to start scraping",
+  "videoSeasonScraperSearchResultsCount": "{count} results",
+  "@videoSeasonScraperSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSeasonScraperSelectSeasonsLabel": "Select seasons to scrape",
+  "videoSeasonScraperSelectAllButton": "Select All",
+  "videoSeasonScraperDeselectAllButton": "Deselect All",
+  "videoSeasonScraperSeasonChipLabel": "Season {number} ({count} episodes)",
+  "@videoSeasonScraperSeasonChipLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSeasonScraperEpisodeMatchPreviewTitle": "Episode Match Preview",
+  "videoSeasonScraperEpisodeMatchPreviewEmpty": "Select seasons to scrape",
+  "videoSeasonScraperEpisodeMatchPreviewTotal": "{count} episodes total",
+  "@videoSeasonScraperEpisodeMatchPreviewTotal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSeasonScraperScrapeOptionsTitle": "Scrape Options",
+  "videoSeasonScraperUpdateMetadataTitle": "Update Metadata",
+  "videoSeasonScraperUpdateMetadataSubtitle": "Save to local database",
+  "videoSeasonScraperDownloadPosterTitle": "Download Poster",
+  "videoSeasonScraperDownloadPosterSubtitle": "Save to video folder",
+  "videoSeasonScraperDownloadFanartTitle": "Download Fanart",
+  "videoSeasonScraperDownloadFanartSubtitle": "Save to video folder",
+  "videoSeasonScraperGenerateNfoTitle": "Generate NFO File",
+  "videoSeasonScraperGenerateNfoSubtitle": "Kodi/Jellyfin compatible format",
+  "videoSeasonScraperBackToSearchTooltip": "Back to search",
+  "videoSeasonScraperConfirmButton": "Scrape {count} episodes",
+  "@videoSeasonScraperConfirmButton": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSeasonScraperConfirmButtonMultiSeason": "Scrape {seasonCount} seasons, {totalCount} episodes",
+  "@videoSeasonScraperConfirmButtonMultiSeason": {
+    "placeholders": {
+      "seasonCount": {
+        "type": "int"
+      },
+      "totalCount": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSeasonScraperNoLocalEpisodesToast": "No local episodes to scrape",
+  "videoSeasonScraperScrapingInProgressSnackbar": "Scraping {count} episodes in background...",
+  "@videoSeasonScraperScrapingInProgressSnackbar": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoSeasonScraperLoadDetailError": "Failed to load details: {error}",
+  "@videoSeasonScraperLoadDetailError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSeasonScraperSearchError": "Search failed: {error}",
+  "@videoSeasonScraperSearchError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSubtitleStyleTitle": "Subtitle Style",
+  "videoSubtitleResetButton": "Reset",
+  "videoSubtitleFontSize": "Font Size",
+  "videoSubtitleFontColor": "Font Color",
+  "videoSubtitleBackground": "Subtitle Background",
+  "videoSubtitleShowBackground": "Show Background",
+  "videoSubtitleBackgroundColor": "Background Color",
+  "videoSubtitlePosition": "Subtitle Position",
+  "videoSubtitlePositionTop": "Top",
+  "videoSubtitlePositionCenter": "Center",
+  "videoSubtitlePositionBottom": "Bottom",
+  "videoSubtitleFontWeight": "Font Weight",
+  "videoSubtitleFontWeightNormal": "Normal",
+  "videoSubtitleFontWeightMedium": "Medium",
+  "videoSubtitleFontWeightBold": "Bold",
+  "videoSubtitleOutlineEffect": "Outline Effect",
+  "videoSubtitleEnableOutline": "Enable Outline",
+  "videoSubtitleOutlineWidth": "Outline Width",
+  "videoSubtitleDelay": "Subtitle Delay",
+  "videoSubtitleDelayHint": "Positive value delays subtitle, negative value advances subtitle",
+  "videoSubtitleMargin": "Subtitle Margin",
+  "videoSubtitleMarginHint": "Adjust subtitle distance from video edge",
+  "videoSubtitlePreview": "This is subtitle preview effect",
+  "videoPlaybackSettingsTitle": "Playback Settings",
+  "videoAutoPlayNextTitle": "Auto-play Next",
+  "videoAutoPlayNextSubtitle": "Automatically play the next video in the playlist when finished",
+  "videoRememberPositionTitle": "Remember Playback Position",
+  "videoRememberPositionSubtitle": "Resume from where you left off next time",
+  "videoSeekIntervalTitle": "Seek Interval",
+  "videoSeekIntervalSubtitle": "Seconds to skip when double-tapping or clicking buttons",
+  "videoSeekIntervalSeconds": "{n}s",
+  "@videoSeekIntervalSeconds": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "videoDefaultVolumeTitle": "Default Volume",
+  "videoDefaultVolumeSubtitle": "Initial volume for new videos",
+  "videoVolumePercent": "{percent}%",
+  "@videoVolumePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "videoDefaultPlaybackSpeedTitle": "Default Playback Speed",
+  "videoDefaultPlaybackSpeedSubtitle": "Initial playback speed for new videos",
+  "videoPlaybackSpeedRate": "{speed}x",
+  "@videoPlaybackSpeedRate": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "videoClearPlaybackHistoryTitle": "Clear Playback History",
+  "videoClearPlaybackHistorySubtitle": "Delete playback progress for all videos",
+  "videoClearConfirmTitle": "Clear Playback History",
+  "videoClearConfirmContent": "Clear playback position history for all videos? This cannot be undone.",
+  "videoClearConfirmCancel": "Cancel",
+  "videoClearConfirmAction": "Clear",
+  "videoClearSuccessToast": "Playback history cleared",
+  "videoBookmarkTitle": "Bookmarks",
+  "videoBookmarkCurrentPosition": "Current position: {position}",
+  "@videoBookmarkCurrentPosition": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "videoBookmarkAddButton": "Add",
+  "videoBookmarkLoadError": "Failed to load",
+  "videoBookmarkEmptyTitle": "No bookmarks yet",
+  "videoBookmarkEmptyHint": "Tap the button in the top-right to add a bookmark",
+  "videoBookmarkAddDialogTitle": "Add Bookmark",
+  "videoBookmarkPositionLabel": "Position: {position}",
+  "@videoBookmarkPositionLabel": {
+    "placeholders": {
+      "position": {
+        "type": "String"
+      }
+    }
+  },
+  "videoBookmarkNoteLabel": "Note (optional)",
+  "videoBookmarkNoteHint": "Enter a note for this bookmark",
+  "videoBookmarkCancelButton": "Cancel",
+  "videoBookmarkEditDialogTitle": "Edit Note",
+  "videoBookmarkUnnamedTitle": "Unnamed bookmark",
+  "videoBookmarkEditNoteTooltip": "Edit note",
+  "videoBookmarkSaveButton": "Save",
+  "videoBookmarkTimeJustNow": "Just now",
+  "videoBookmarkTimeMinutesAgo": "{minutes} minutes ago",
+  "@videoBookmarkTimeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoBookmarkTimeHoursAgo": "{hours} hours ago",
+  "@videoBookmarkTimeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "videoBookmarkTimeDaysAgo": "{days} days ago",
+  "@videoBookmarkTimeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorTitle": "Episodes",
+  "videoEpisodeSelectorSpecialSeason": "Specials",
+  "videoEpisodeSelectorCountBoth": "({local}/{tmdb} episodes)",
+  "@videoEpisodeSelectorCountBoth": {
+    "placeholders": {
+      "local": {
+        "type": "int"
+      },
+      "tmdb": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorCountLocal": "({count} episodes)",
+  "@videoEpisodeSelectorCountLocal": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorSeasonLabel": "Season {season}",
+  "@videoEpisodeSelectorSeasonLabel": {
+    "placeholders": {
+      "season": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorEmpty": "No episodes",
+  "videoEpisodeSelectorConfigPrompt": "Please configure PT sites or NASTool services first",
+  "videoEpisodeSelectorNoResource": "No resource",
+  "videoEpisodeSelectorMissingTitle": "Missing episode",
+  "videoEpisodeSelectorPtSearch": "Search on PT site",
+  "videoEpisodeSelectorPtSearchHint": "Search: {keyword}",
+  "@videoEpisodeSelectorPtSearchHint": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "videoEpisodeSelectorNastoolSubscribe": "Add NASTool subscription",
+  "videoEpisodeSelectorNastoolSubscribeHint": "Subscribe to season: {show} Season {season}",
+  "@videoEpisodeSelectorNastoolSubscribeHint": {
+    "placeholders": {
+      "show": {
+        "type": "String"
+      },
+      "season": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorSelectPtSite": "Select PT site",
+  "videoEpisodeSelectorSearchHint": "Search: {keyword}",
+  "@videoEpisodeSelectorSearchHint": {
+    "placeholders": {
+      "keyword": {
+        "type": "String"
+      }
+    }
+  },
+  "videoEpisodeSelectorSelectNastool": "Select NASTool",
+  "videoEpisodeSelectorSubscribeHint": "Subscribe: {show} Season {season}",
+  "@videoEpisodeSelectorSubscribeHint": {
+    "placeholders": {
+      "show": {
+        "type": "String"
+      },
+      "season": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorSourceNotConnected": "{source} is not connected",
+  "@videoEpisodeSelectorSourceNotConnected": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "videoEpisodeSelectorSubscribeSuccess": "Subscription added: {show} Season {season}",
+  "@videoEpisodeSelectorSubscribeSuccess": {
+    "placeholders": {
+      "show": {
+        "type": "String"
+      },
+      "season": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorSubscribeFailed": "Failed to add subscription: {error}",
+  "@videoEpisodeSelectorSubscribeFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoSubtitleSelectorTitle": "Subtitles",
+  "videoSubtitleTranslateTooltip": "Translate subtitles to...",
+  "videoSubtitleDownloadOnlineTooltip": "Download online subtitles",
+  "videoSubtitleStyleTooltip": "Subtitle style",
+  "videoSubtitleOffTitle": "Turn off subtitles",
+  "videoSubtitleOffSubtitle": "No subtitles",
+  "videoSubtitleTranslatedSection": "Translated Subtitles",
+  "videoSubtitleTranslatedTitle": "{language} (Translated)",
+  "@videoSubtitleTranslatedTitle": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSubtitleExternalSection": "External Subtitles",
+  "videoSubtitleEmbeddedSection": "Embedded Subtitles",
+  "videoSubtitleNotFoundTitle": "No subtitle files found",
+  "videoSubtitleNotFoundDescription": "Place .srt, .ass, .vtt subtitle files\nin the same directory as the video",
+  "videoSubtitleDownloadButton": "Download Online Subtitles",
+  "videoSubtitleTranslateError": "Failed to translate subtitle, please try again",
+  "videoSubtitleTranslateStarted": "Started translating to {language}",
+  "@videoSubtitleTranslateStarted": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSubtitleProgressText": "Translating to {language} · {percentage}%",
+  "@videoSubtitleProgressText": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      },
+      "percentage": {
+        "type": "String"
+      }
+    }
+  },
+  "videoSubtitleCancelTooltip": "Cancel translation",
+  "videoDuplicatesPageTitle": "Duplicate Videos",
+  "videoDuplicatesConfirmDeleteTitle": "Confirm Delete",
+  "videoDuplicatesConfirmDeleteContent": "Are you sure you want to delete the selected {count} videos?\n\nWarning: This operation will permanently delete files from the NAS and cannot be recovered.",
+  "@videoDuplicatesConfirmDeleteContent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoDuplicatesCancel": "Cancel",
+  "videoDuplicatesDelete": "Delete",
+  "videoDuplicatesClearSelection": "Deselect All ({count})",
+  "@videoDuplicatesClearSelection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoDuplicatesDeleteTooltip": "Delete Selected",
+  "videoDuplicatesRefreshTooltip": "Refresh",
+  "videoDuplicatesModeTabTmdbId": "TMDB ID",
+  "videoDuplicatesModeTabTmdbSubtitle": "Exact Match",
+  "videoDuplicatesModeTabTitleYear": "Title + Year",
+  "videoDuplicatesModeTabTitleYearSubtitle": "No Metadata",
+  "videoDuplicatesStatsGroups": "Duplicate Groups",
+  "videoDuplicatesStatsFiles": "Files Involved",
+  "videoDuplicatesStatsTmdbDesc": "Based on TMDB ID exact match, these videos are different versions of the same film.",
+  "videoDuplicatesStatsTitleYearDesc": "Based on title and year match, only for unscraped videos. Mismatches may occur.",
+  "videoDuplicatesEmptyTmdbTitle": "No TMDB ID Duplicates Found",
+  "videoDuplicatesEmptyTmdbSubtitle": "All scraped videos are unique",
+  "videoDuplicatesEmptyTitleYearTitle": "No Title + Year Duplicates Found",
+  "videoDuplicatesEmptyTitleYearSubtitle": "No duplicates among unscraped videos",
+  "videoDuplicatesEmptyDefaultTitle": "No Data",
+  "videoDuplicatesGroupFileCount": "{count} files",
+  "@videoDuplicatesGroupFileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoDuplicatesSelectOthers": "Select Others",
+  "videoDuplicatesKeepRecommended": "Recommended to Keep",
+  "videoDuplicatesRetry": "Retry",
+  "videoDuplicatesLoadFailed": "Load failed: {error}",
+  "@videoDuplicatesLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoDuplicatesDeleteFailed": "Delete failed: {error}",
+  "@videoDuplicatesDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoDuplicatesGroupSubtitleTmdb": "TMDB ID: {id}",
+  "@videoDuplicatesGroupSubtitleTmdb": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "videoDuplicatesGroupSubtitleTitleYear": "Based on title + year match",
+  "videoSubtitleDownloadDialogNotConfigured": "OpenSubtitles not configured. Please add subtitle sources in settings first.",
+  "videoSubtitleDownloadDialogNoMatches": "No matching subtitles found",
+  "videoSubtitleDownloadSuccess": "Subtitle downloaded successfully",
+  "videoSubtitleDownloadFailed": "Subtitle download failed",
+  "videoSubtitleDownloadDialogTitle": "Online Subtitles",
+  "videoSubtitleSourcesLabel": "Subtitle Sources",
+  "videoSubtitleSourceNotConfigured": "Subtitle sources not configured yet",
+  "videoSubtitleSourceConfigHint": "Add OpenSubtitles and other subtitle services\nfor online search and subtitle downloads",
+  "videoSubtitleConfigureButton": "Configure",
+  "videoSubtitleRefreshButton": "Refresh",
+  "videoSubtitleSourcesNotSetup": "Subtitle sources not set up",
+  "videoSubtitleSourcesSetupHint": "Please configure OpenSubtitles in settings first",
+  "videoSubtitleDownloadDialogSearching": "Searching for subtitles...",
+  "videoSubtitleDownloadDialogSearchFailed": "Search failed",
+  "videoSubtitleDownloadDialogRetryButton": "Retry",
+  "videoSubtitleDownloadDialogNoResults": "No subtitles found",
+  "videoSubtitleDownloadDialogNoResultsHint": "Try using other search conditions",
+  "videoQuickSettingsTitle": "Settings",
+  "videoAdvancedFeaturesTitle": "Advanced Settings",
+  "videoAdvancedFeaturesSubtitle": "More playback options",
+  "videoSubtitleTitle": "Subtitle",
+  "videoSubtitleOff": "Off",
+  "videoSubtitleTrackLabel": "Track {id}",
+  "@videoSubtitleTrackLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "videoAudioTrackDefault": "Default",
+  "videoAudioTrackLabel": "Track {id}",
+  "@videoAudioTrackLabel": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "videoNoSubtitlesAvailable": "No subtitles available",
+  "videoSearchSubtitlesOnline": "Search Subtitles Online",
+  "videoSearchSubtitlesSubtitle": "Search from OpenSubtitles",
+  "videoAudioTrackTitle": "Audio Track",
+  "videoAudioTracksAvailable": "{count} available",
+  "@videoAudioTracksAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoPlaybackSpeedTitle": "Playback Speed",
+  "videoPlaybackSpeedCurrent": "Current: {speed}x",
+  "@videoPlaybackSpeedCurrent": {
+    "placeholders": {
+      "speed": {
+        "type": "double"
+      }
+    }
+  },
+  "videoVolumeBoostTitle": "Volume Boost",
+  "videoVolumeBoostCurrent": "Current: {level}",
+  "@videoVolumeBoostCurrent": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "videoVolumeBoostNormal": "Normal"
 }

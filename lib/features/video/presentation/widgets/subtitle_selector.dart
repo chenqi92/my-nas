@@ -88,9 +88,9 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '字幕选择',
-                  style: TextStyle(
+                Text(
+                  context.l10n.videoSubtitleSelectorTitle,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -110,7 +110,7 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                       );
                     },
                     icon: const Icon(Icons.translate_rounded, color: Colors.white70),
-                    tooltip: '翻译字幕到...',
+                    tooltip: context.l10n.videoSubtitleTranslateTooltip,
                   ),
                 // 在线字幕下载按钮
                 if (hasSubtitleConfig && videoPath != null)
@@ -120,7 +120,7 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                       _showSubtitleDownloadDialog(context, ref);
                     },
                     icon: const Icon(Icons.download_rounded, color: Colors.white70),
-                    tooltip: '下载在线字幕',
+                    tooltip: context.l10n.videoSubtitleDownloadOnlineTooltip,
                   ),
                 // 字幕样式按钮
                 IconButton(
@@ -129,7 +129,7 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                     showSubtitleStyleSheet(context);
                   },
                   icon: const Icon(Icons.text_format_rounded, color: Colors.white70),
-                  tooltip: '字幕样式',
+                  tooltip: context.l10n.videoSubtitleStyleTooltip,
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
@@ -159,8 +159,8 @@ class SubtitleSelectorSheet extends ConsumerWidget {
               children: [
                 // 关闭字幕选项
                 _SubtitleTile(
-                  title: '关闭字幕',
-                  subtitle: '不显示任何字幕',
+                  title: context.l10n.videoSubtitleOffTitle,
+                  subtitle: context.l10n.videoSubtitleOffSubtitle,
                   isSelected: isSubtitleOff,
                   icon: Icons.subtitles_off_rounded,
                   onTap: () {
@@ -176,15 +176,16 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                   },
                 ),
 
-                // 翻译字幕
+                // Translated subtitles section
                 if (currentTranslatedId != null) ...[
                   _SectionHeader(
-                    title: '翻译字幕',
+                    title: context.l10n.videoSubtitleTranslatedSection,
                     count: 1,
                   ),
                   _SubtitleTile(
-                    title:
-                        '${translationSettings.targetLangEnum.displayName} (翻译)',
+                    title: context.l10n.videoSubtitleTranslatedTitle(
+                      translationSettings.targetLangEnum.displayName,
+                    ),
                     subtitle: currentSubtitle?.name ?? '',
                     isSelected: true,
                     icon: Icons.translate_rounded,
@@ -192,10 +193,10 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                   ),
                 ],
 
-                // 外部字幕
+                // External subtitles section
                 if (externalSubtitles.isNotEmpty) ...[
                   _SectionHeader(
-                    title: '外部字幕',
+                    title: context.l10n.videoSubtitleExternalSection,
                     count: externalSubtitles.length,
                   ),
                   ...externalSubtitles.map(
@@ -216,10 +217,10 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                   ),
                 ],
 
-                // 内嵌字幕
+                // Embedded subtitles section
                 if (validEmbedded.isNotEmpty) ...[
                   _SectionHeader(
-                    title: '内嵌字幕',
+                    title: context.l10n.videoSubtitleEmbeddedSection,
                     count: validEmbedded.length,
                   ),
                   ...validEmbedded.map(
@@ -236,7 +237,7 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                   ),
                 ],
 
-                // 无字幕提示
+                // No subtitles found notice
                 if (externalSubtitles.isEmpty && validEmbedded.isEmpty)
                   Padding(
                     padding: const EdgeInsets.all(32),
@@ -248,19 +249,19 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                           color: Colors.white38,
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          '未找到字幕文件',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.videoSubtitleNotFoundTitle,
+                          style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 16,
                             decoration: TextDecoration.none,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          '请将 .srt, .ass, .vtt 字幕文件\n放在视频同目录下',
+                        Text(
+                          context.l10n.videoSubtitleNotFoundDescription,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white38,
                             fontSize: 12,
                             decoration: TextDecoration.none,
@@ -274,9 +275,9 @@ class SubtitleSelectorSheet extends ConsumerWidget {
                               _showSubtitleDownloadDialog(context, ref);
                             },
                             icon: const Icon(Icons.download_rounded, color: Colors.white70),
-                            label: const Text(
-                              '下载在线字幕',
-                              style: TextStyle(color: Colors.white),
+                            label: Text(
+                              context.l10n.videoSubtitleDownloadButton,
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ),
                         ],
@@ -312,9 +313,11 @@ class SubtitleSelectorSheet extends ConsumerWidget {
           final started = await controller.translateCurrent(targetLang: lang);
           if (!context.mounted) return;
           if (!started) {
-            context.showErrorToast('翻译字幕失败，请重试');
+            context.showErrorToast(context.l10n.videoSubtitleTranslateError);
           } else {
-            context.showInfoToast('已开始翻译为 ${lang.displayName}');
+            context.showInfoToast(
+              context.l10n.videoSubtitleTranslateStarted(lang.displayName),
+            );
           }
         },
       ),
@@ -478,18 +481,18 @@ class _EmbeddedSubtitleTile extends StatelessWidget {
     if (track.language != null && track.language!.isNotEmpty) {
       return _languageToName(track.language!);
     }
-    return '轨道 ${track.id}';
+    return 'Track ${track.id}';
   }
 
   String _languageToName(String code) {
     const map = {
-      'chi': '中文',
-      'chs': '简体中文',
-      'cht': '繁体中文',
-      'zho': '中文',
+      'chi': 'Chinese',
+      'chs': 'Simplified Chinese',
+      'cht': 'Traditional Chinese',
+      'zho': 'Chinese',
       'eng': 'English',
-      'jpn': '日本語',
-      'kor': '한국어',
+      'jpn': 'Japanese',
+      'kor': 'Korean',
     };
     return map[code.toLowerCase()] ?? code;
   }
@@ -598,7 +601,10 @@ class _TranslationProgressBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '翻译为 ${targetLang.displayName} · $pct%',
+                  context.l10n.videoSubtitleProgressText(
+                    targetLang.displayName,
+                    pct,
+                  ),
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -620,7 +626,7 @@ class _TranslationProgressBar extends StatelessWidget {
           IconButton(
             onPressed: onCancel,
             icon: const Icon(Icons.close_rounded, size: 18, color: Colors.white54),
-            tooltip: '取消翻译',
+            tooltip: context.l10n.videoSubtitleCancelTooltip,
           ),
         ],
       ),
@@ -663,15 +669,15 @@ class _TranslateLanguageSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SheetDragHandle(bottomPadding: 0),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 16, 8, 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
               child: Row(
                 children: [
-                  Icon(Icons.translate_rounded, color: Colors.white70, size: 20),
-                  SizedBox(width: 8),
+                  const Icon(Icons.translate_rounded, color: Colors.white70, size: 20),
+                  const SizedBox(width: 8),
                   Text(
-                    '翻译字幕到...',
-                    style: TextStyle(
+                    context.l10n.videoSubtitleTranslateTooltip,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

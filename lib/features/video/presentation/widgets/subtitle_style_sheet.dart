@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/presentation/providers/subtitle_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -49,9 +50,9 @@ class SubtitleStyleSheet extends ConsumerWidget {
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      '字幕样式',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.videoSubtitleStyleTitle,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -61,9 +62,9 @@ class SubtitleStyleSheet extends ConsumerWidget {
                     const Spacer(),
                     TextButton(
                       onPressed: notifier.reset,
-                      child: const Text(
-                        '重置',
-                        style: TextStyle(color: Colors.white70),
+                      child: Text(
+                        context.l10n.videoSubtitleResetButton,
+                        style: const TextStyle(color: Colors.white70),
                       ),
                     ),
                     IconButton(
@@ -119,10 +120,10 @@ class SubtitleStyleSheet extends ConsumerWidget {
                       child: style.position == SubtitlePosition.center
                           ? Positioned.fill(
                               child: Center(
-                                child: _buildSubtitlePreview(style),
+                                child: _buildSubtitlePreview(context, style),
                               ),
                             )
-                          : _buildSubtitlePreview(style),
+                          : _buildSubtitlePreview(context, style),
                     ),
                   ],
                 ),
@@ -136,7 +137,7 @@ class SubtitleStyleSheet extends ConsumerWidget {
                 delegate: SliverChildListDelegate([
                   // 字体大小
                   _buildSection(
-                    title: '字体大小',
+                    title: context.l10n.videoSubtitleFontSize,
                     child: Row(
                       children: [
                         _DarkIconButton(
@@ -178,7 +179,7 @@ class SubtitleStyleSheet extends ConsumerWidget {
 
                   // 字体颜色
                   _buildSection(
-                    title: '字体颜色',
+                    title: context.l10n.videoSubtitleFontColor,
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -196,14 +197,14 @@ class SubtitleStyleSheet extends ConsumerWidget {
 
                   // 字幕背景开关
                   _buildSection(
-                    title: '字幕背景',
+                    title: context.l10n.videoSubtitleBackground,
                     child: Column(
                       children: [
                         Row(
                           children: [
-                            const Text(
-                              '显示背景',
-                              style: TextStyle(
+                            Text(
+                              context.l10n.videoSubtitleShowBackground,
+                              style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 14,
                               ),
@@ -222,11 +223,11 @@ class SubtitleStyleSheet extends ConsumerWidget {
                         // 只有开启背景时才显示背景颜色选择
                         if (style.showBackground) ...[
                           const SizedBox(height: 8),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              '背景颜色',
-                              style: TextStyle(
+                              context.l10n.videoSubtitleBackgroundColor,
+                              style: const TextStyle(
                                 color: Colors.white54,
                                 fontSize: 12,
                               ),
@@ -255,11 +256,11 @@ class SubtitleStyleSheet extends ConsumerWidget {
 
                   // 字幕位置
                   _buildSection(
-                    title: '字幕位置',
+                    title: context.l10n.videoSubtitlePosition,
                     child: Row(
                       children: [
                         _PositionChip(
-                          label: '顶部',
+                          label: context.l10n.videoSubtitlePositionTop,
                           icon: Icons.vertical_align_top_rounded,
                           isSelected: style.position == SubtitlePosition.top,
                           onTap: () =>
@@ -267,7 +268,7 @@ class SubtitleStyleSheet extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         _PositionChip(
-                          label: '居中',
+                          label: context.l10n.videoSubtitlePositionCenter,
                           icon: Icons.vertical_align_center_rounded,
                           isSelected: style.position == SubtitlePosition.center,
                           onTap: () =>
@@ -275,7 +276,7 @@ class SubtitleStyleSheet extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         _PositionChip(
-                          label: '底部',
+                          label: context.l10n.videoSubtitlePositionBottom,
                           icon: Icons.vertical_align_bottom_rounded,
                           isSelected: style.position == SubtitlePosition.bottom,
                           onTap: () =>
@@ -287,24 +288,24 @@ class SubtitleStyleSheet extends ConsumerWidget {
 
                   // 字体粗细
                   _buildSection(
-                    title: '字体粗细',
+                    title: context.l10n.videoSubtitleFontWeight,
                     child: Row(
                       children: [
                         _PositionChip(
-                          label: '正常',
+                          label: context.l10n.videoSubtitleFontWeightNormal,
                           isSelected: style.fontWeight == FontWeight.normal,
                           onTap: () =>
                               notifier.setFontWeight(FontWeight.normal),
                         ),
                         const SizedBox(width: 8),
                         _PositionChip(
-                          label: '中等',
+                          label: context.l10n.videoSubtitleFontWeightMedium,
                           isSelected: style.fontWeight == FontWeight.w500,
                           onTap: () => notifier.setFontWeight(FontWeight.w500),
                         ),
                         const SizedBox(width: 8),
                         _PositionChip(
-                          label: '粗体',
+                          label: context.l10n.videoSubtitleFontWeightBold,
                           isSelected: style.fontWeight == FontWeight.bold,
                           onTap: () => notifier.setFontWeight(FontWeight.bold),
                         ),
@@ -314,14 +315,14 @@ class SubtitleStyleSheet extends ConsumerWidget {
 
                   // 描边设置
                   _buildSection(
-                    title: '描边效果',
+                    title: context.l10n.videoSubtitleOutlineEffect,
                     child: Column(
                       children: [
                         Row(
                           children: [
-                            const Text(
-                              '启用描边',
-                              style: TextStyle(
+                            Text(
+                              context.l10n.videoSubtitleEnableOutline,
+                              style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 14,
                               ),
@@ -340,9 +341,9 @@ class SubtitleStyleSheet extends ConsumerWidget {
                         if (style.hasOutline)
                           Row(
                             children: [
-                              const Text(
-                                '描边宽度',
-                                style: TextStyle(
+                              Text(
+                                context.l10n.videoSubtitleOutlineWidth,
+                                style: const TextStyle(
                                   color: Colors.white54,
                                   fontSize: 12,
                                 ),
@@ -378,13 +379,13 @@ class SubtitleStyleSheet extends ConsumerWidget {
 
                   // 字幕延时
                   _buildSection(
-                    title: '字幕延时',
+                    title: context.l10n.videoSubtitleDelay,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '正值延后字幕，负值提前字幕',
-                          style: TextStyle(color: Colors.white38, fontSize: 11),
+                        Text(
+                          context.l10n.videoSubtitleDelayHint,
+                          style: const TextStyle(color: Colors.white38, fontSize: 11),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -440,7 +441,7 @@ class SubtitleStyleSheet extends ConsumerWidget {
                               onTap: () => notifier.setDelay(style.delay - 0.5),
                             ),
                             _QuickChip(
-                              label: '重置',
+                              label: context.l10n.videoSubtitleResetButton,
                               onTap: () => notifier.setDelay(0),
                             ),
                             _QuickChip(
@@ -459,13 +460,13 @@ class SubtitleStyleSheet extends ConsumerWidget {
 
                   // 字幕底部距离
                   _buildSection(
-                    title: '字幕边距',
+                    title: context.l10n.videoSubtitleMargin,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          '调整字幕距离视频边缘的距离',
-                          style: TextStyle(color: Colors.white38, fontSize: 11),
+                        Text(
+                          context.l10n.videoSubtitleMarginHint,
+                          style: const TextStyle(color: Colors.white38, fontSize: 11),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -530,7 +531,7 @@ class SubtitleStyleSheet extends ConsumerWidget {
     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
   );
 
-  Widget _buildSubtitlePreview(SubtitleStyle style) => Center(
+  Widget _buildSubtitlePreview(BuildContext context, SubtitleStyle style) => Center(
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -541,7 +542,7 @@ class SubtitleStyleSheet extends ConsumerWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        '这是字幕预览效果',
+        context.l10n.videoSubtitlePreview,
         style: TextStyle(
           fontSize: style.fontSize * 0.5,
           color: style.fontColor,

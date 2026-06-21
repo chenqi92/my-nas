@@ -130,7 +130,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'ManualScraperPage._search');
       setState(() {
-        _errorMessage = '搜索失败: $e';
+        _errorMessage = context.l10n.videoManualScraperSearchFailed(e);
         _isSearching = false;
       });
     }
@@ -167,7 +167,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'ManualScraperPage._selectItem');
       setState(() {
-        _errorMessage = '获取详情失败: $e';
+        _errorMessage = context.l10n.videoManualScraperDetailFailed(e);
         _isLoadingDetail = false;
       });
     }
@@ -214,7 +214,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
       );
 
       if (mounted) {
-        context.showSuccessToast('刮削成功');
+        context.showSuccessToast(context.l10n.videoManualScraperSuccess);
         Navigator.pop(context, true); // 返回 true 表示已刮削
       }
     // 使用通用 catch 捕获所有类型的异常（包括 SMB 库抛出的 String 异常）
@@ -223,7 +223,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
       AppError.handle(e, st, 'ManualScraperPage._confirmAndScrape');
       setState(() => _isScraping = false);
       if (mounted) {
-        context.showErrorToast('刮削失败: $e');
+        context.showErrorToast(context.l10n.videoManualScraperError(e));
       }
     }
   }
@@ -237,7 +237,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: Text(hasSelection ? '确认刮削' : '手动刮削'),
+        title: Text(hasSelection ? context.l10n.videoManualScraperConfirmTitle : context.l10n.videoManualScraperTitle),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
           if (hasSelection)
@@ -248,7 +248,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                   _selectedTvDetail = null;
                 });
               },
-              child: const Text('重新搜索'),
+              child: Text(context.l10n.videoManualScraperResearch),
             ),
         ],
       ),
@@ -328,7 +328,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: '输入搜索关键词',
+                      hintText: context.l10n.videoManualScraperInputHint,
                       prefixIcon: const Icon(Icons.search_rounded),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -351,7 +351,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                             color: Colors.white,
                           ),
                         )
-                      : const Text('搜索'),
+                      : Text(context.l10n.videoManualScraperSearchButton),
                 ),
               ],
             ),
@@ -362,9 +362,9 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
               children: [
                 Expanded(
                   child: SegmentedButton<bool>(
-                    segments: const [
-                      ButtonSegment(value: true, label: Text('电影')),
-                      ButtonSegment(value: false, label: Text('电视剧')),
+                    segments: [
+                      ButtonSegment(value: true, label: Text(context.l10n.videoManualScraperTypeMovie)),
+                      ButtonSegment(value: false, label: Text(context.l10n.videoManualScraperTypeTV)),
                     ],
                     selected: {_isMovie},
                     onSelectionChanged: (value) {
@@ -384,8 +384,8 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                   Expanded(
                     child: TextField(
                       controller: _seasonController,
-                      decoration: const InputDecoration(
-                        labelText: '季',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.videoManualScraperSeasonLabel,
                         prefixIcon: Icon(Icons.folder_outlined),
                         border: OutlineInputBorder(),
                         isDense: true,
@@ -397,8 +397,8 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                   Expanded(
                     child: TextField(
                       controller: _episodeController,
-                      decoration: const InputDecoration(
-                        labelText: '集',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.videoManualScraperEpisodeLabel,
                         prefixIcon: Icon(Icons.play_circle_outline),
                         border: OutlineInputBorder(),
                         isDense: true,
@@ -439,14 +439,14 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
             Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              '没有搜索结果',
+              context.l10n.videoManualScraperNoResults,
               style: context.textTheme.titleMedium?.copyWith(
                 color: Colors.grey[600],
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '尝试修改关键词或切换电影/电视剧',
+              context.l10n.videoManualScraperTryOtherKeywords,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[500],
               ),
@@ -495,7 +495,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${items.length} 个结果',
+                  context.l10n.videoManualScraperResultCount(items.length),
                   style: context.textTheme.bodySmall?.copyWith(
                     color: Colors.grey[500],
                   ),
@@ -689,7 +689,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                         ],
                         if (runtime != null && runtime > 0) ...[
                           Text(
-                            '$runtime分钟',
+                            context.l10n.videoManualScraperRuntime(runtime),
                             style: context.textTheme.bodyMedium,
                           ),
                         ],
@@ -742,7 +742,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
           // 简介
           if (overview != null && overview.isNotEmpty) ...[
             Text(
-              '简介',
+              context.l10n.videoManualScraperSummary,
               style: context.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -760,14 +760,14 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
           // 导演/演员
           if (director != null && director.isNotEmpty) ...[
             Text(
-              '导演: $director',
+              context.l10n.videoManualScraperDirector(director),
               style: context.textTheme.bodyMedium,
             ),
             const SizedBox(height: 8),
           ],
           if (cast != null && cast.isNotEmpty) ...[
             Text(
-              '演员: ${cast.take(5).join(', ')}',
+              context.l10n.videoManualScraperCast(cast.take(5).join(', ')),
               style: context.textTheme.bodyMedium,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -784,39 +784,39 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '刮削选项',
+                    context.l10n.videoManualScraperOptions,
                     style: context.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
-                    title: const Text('更新元数据'),
-                    subtitle: const Text('保存到本地数据库'),
+                    title: Text(context.l10n.videoManualScraperUpdateMetadata),
+                    subtitle: Text(context.l10n.videoManualScraperUpdateMetadataDesc),
                     value: _updateMetadata,
                     onChanged: (v) => setState(() => _updateMetadata = v),
                     dense: true,
                     contentPadding: EdgeInsets.zero,
                   ),
                   SwitchListTile(
-                    title: const Text('下载海报'),
-                    subtitle: const Text('保存到视频目录'),
+                    title: Text(context.l10n.videoManualScraperDownloadPoster),
+                    subtitle: Text(context.l10n.videoManualScraperDownloadPosterDesc),
                     value: _downloadPoster,
                     onChanged: (v) => setState(() => _downloadPoster = v),
                     dense: true,
                     contentPadding: EdgeInsets.zero,
                   ),
                   SwitchListTile(
-                    title: const Text('下载背景图'),
-                    subtitle: const Text('保存到视频目录'),
+                    title: Text(context.l10n.videoManualScraperDownloadFanart),
+                    subtitle: Text(context.l10n.videoManualScraperDownloadFanartDesc),
                     value: _downloadFanart,
                     onChanged: (v) => setState(() => _downloadFanart = v),
                     dense: true,
                     contentPadding: EdgeInsets.zero,
                   ),
                   SwitchListTile(
-                    title: const Text('生成 NFO 文件'),
-                    subtitle: const Text('Kodi/Jellyfin 兼容格式'),
+                    title: Text(context.l10n.videoManualScraperGenerateNfo),
+                    subtitle: Text(context.l10n.videoManualScraperGenerateNfoDesc),
                     value: _generateNfo,
                     onChanged: (v) => setState(() => _generateNfo = v),
                     dense: true,
@@ -869,7 +869,7 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                           });
                         },
                   icon: const Icon(Icons.arrow_back_rounded),
-                  tooltip: '返回搜索',
+                  tooltip: context.l10n.videoManualScraperBackToSearch,
                 ),
               ),
               const SizedBox(width: 16),
@@ -885,10 +885,10 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                       ),
                     ),
                     child: _isScraping
-                        ? const Row(
+                        ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              SizedBox(
+                              const SizedBox(
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
@@ -896,18 +896,18 @@ class _ManualScraperPageState extends ConsumerState<ManualScraperPage>
                                   color: Colors.white,
                                 ),
                               ),
-                              SizedBox(width: 12),
-                              Text('正在刮削...'),
+                              const SizedBox(width: 12),
+                              Text(context.l10n.videoManualScraperScraping),
                             ],
                           )
-                        : const Row(
+                        : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.check_rounded, size: 22),
-                              SizedBox(width: 8),
+                              const Icon(Icons.check_rounded, size: 22),
+                              const SizedBox(width: 8),
                               Text(
-                                '确认刮削',
-                                style: TextStyle(
+                                context.l10n.videoManualScraperConfirm,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),

@@ -117,7 +117,7 @@ class _UnifiedEpisodeSelectorState extends ConsumerState<UnifiedEpisodeSelector>
           child: Row(
             children: [
               Text(
-                '剧集',
+                context.l10n.videoEpisodeSelectorTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -193,10 +193,11 @@ class _UnifiedEpisodeSelectorState extends ConsumerState<UnifiedEpisodeSelector>
             ),
             dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
             items: seasons.map((season) {
-              final label = season.seasonNumber == 0 ? '特别篇' : '第${season.seasonNumber}季';
+              final label = season.seasonNumber == 0 ? context.l10n.videoEpisodeSelectorSpecialSeason : context.l10n.videoEpisodeSelectorSeasonLabel(season.seasonNumber);
               final countText = _hasTmdb
-                  ? '(${season.localEpisodeCount}/${season.tmdbEpisodeCount}集)'
-                  : '(${season.localEpisodeCount}集)';
+                  ? '(${context.l10n.videoEpisodeSelectorCountBoth(season.localEpisodeCount, season.tmdbEpisodeCount).substring(1)})'
+                  : '(${context.l10n.videoEpisodeSelectorCountLocal(season.localEpisodeCount).substring(1)})';
+              // Note: substring(1) removes leading '(' from template
 
               return DropdownMenuItem(
                 value: season.seasonNumber,
@@ -264,7 +265,7 @@ class _UnifiedEpisodeSelectorState extends ConsumerState<UnifiedEpisodeSelector>
           height: 100,
           child: Center(
             child: Text(
-              '暂无剧集',
+              context.l10n.videoEpisodeSelectorEmpty,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -277,7 +278,7 @@ class _UnifiedEpisodeSelectorState extends ConsumerState<UnifiedEpisodeSelector>
               height: 100,
               child: Center(
                 child: Text(
-                  '暂无剧集',
+                  context.l10n.videoEpisodeSelectorEmpty,
                   style: TextStyle(
                     color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                   ),
@@ -415,8 +416,8 @@ class _UnifiedEpisodeSelectorState extends ConsumerState<UnifiedEpisodeSelector>
     // 如果没有配置任何服务，显示提示
     if (ptSites.isEmpty && nastoolSources.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请先配置 PT 站点或 NASTool 服务'),
+        SnackBar(
+          content: Text(context.l10n.videoEpisodeSelectorConfigPrompt),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -447,7 +448,7 @@ class _UnifiedEpisodeSelectorState extends ConsumerState<UnifiedEpisodeSelector>
         height: 100,
         child: Center(
           child: Text(
-            '暂无剧集',
+            context.l10n.videoEpisodeSelectorEmpty,
             style: TextStyle(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -653,9 +654,9 @@ class _UnifiedEpisodeCardState extends State<_UnifiedEpisodeCard> {
                             color: Colors.black.withValues(alpha: 0.7),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
-                            '无资源',
-                            style: TextStyle(color: Colors.white70, fontSize: 10),
+                          child: Text(
+                            context.l10n.videoEpisodeSelectorNoResource,
+                            style: const TextStyle(color: Colors.white70, fontSize: 10),
                           ),
                         ),
                       ),
@@ -808,7 +809,7 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '缺失剧集',
+                          context.l10n.videoEpisodeSelectorMissingTitle,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -845,12 +846,12 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
                     size: 20,
                   ),
                 ),
-                title: const Text(
-                  '在 PT 站搜索',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                title: Text(
+                  context.l10n.videoEpisodeSelectorPtSearch,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 subtitle: Text(
-                  '搜索 "$_searchKeyword"',
+                  context.l10n.videoEpisodeSelectorPtSearchHint(_searchKeyword),
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -879,12 +880,12 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
                     size: 20,
                   ),
                 ),
-                title: const Text(
-                  '添加 NASTool 订阅',
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                title: Text(
+                  context.l10n.videoEpisodeSelectorNastoolSubscribe,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 subtitle: Text(
-                  '订阅整季: $showName 第$seasonNumber季',
+                  context.l10n.videoEpisodeSelectorNastoolSubscribeHint(showName, seasonNumber),
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -961,13 +962,13 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '选择 PT 站',
+                            context.l10n.videoEpisodeSelectorSelectPtSite,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '搜索: $_searchKeyword',
+                            context.l10n.videoEpisodeSelectorSearchHint(_searchKeyword),
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -1033,7 +1034,7 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
     try {
       final connection = ref.read(nastoolConnectionProvider(source.id));
       if (connection == null || connection.status != NasToolConnectionStatus.connected) {
-        context.showWarningToast('${source.name} 未连接');
+        context.showWarningToast(context.l10n.videoEpisodeSelectorSourceNotConnected(source.name));
         return;
       }
 
@@ -1047,12 +1048,12 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        context.showSuccessToast('已添加订阅: $showName 第$seasonNumber季');
+        context.showSuccessToast(context.l10n.videoEpisodeSelectorSubscribeSuccess(showName, seasonNumber));
       }
     } catch (e, st) {
       AppError.handle(e, st, 'addNastoolSubscribeForEpisode');
       if (context.mounted) {
-        context.showErrorToast('添加订阅失败: $e');
+        context.showErrorToast(context.l10n.videoEpisodeSelectorSubscribeFailed(e));
       }
     }
   }
@@ -1096,13 +1097,13 @@ class _MissingEpisodeActionSheet extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '选择 NASTool',
+                            context.l10n.videoEpisodeSelectorSelectNastool,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '订阅: $showName 第$seasonNumber季',
+                            context.l10n.videoEpisodeSelectorSubscribeHint(showName, seasonNumber),
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? Colors.grey[400] : Colors.grey[600],

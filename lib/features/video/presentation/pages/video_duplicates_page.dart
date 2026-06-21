@@ -104,20 +104,19 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
+        title: Text(context.l10n.videoDuplicatesConfirmDeleteTitle),
         content: Text(
-          '确定要删除选中的 ${_selectedVideos.length} 个视频吗？\n\n'
-          '注意：此操作会从 NAS 中永久删除文件，无法恢复。',
+          context.l10n.videoDuplicatesConfirmDeleteContent(_selectedVideos.length),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.videoDuplicatesCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(context.l10n.videoDuplicatesDelete),
           ),
         ],
       ),
@@ -192,13 +191,13 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('重复视频'),
+        title: Text(context.l10n.videoDuplicatesPageTitle),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
           if (_selectedVideos.isNotEmpty) ...[
             TextButton(
               onPressed: _clearSelection,
-              child: Text('取消选择 (${_selectedVideos.length})'),
+              child: Text(context.l10n.videoDuplicatesClearSelection(_selectedVideos.length)),
             ),
             IconButton(
               onPressed: _isDeleting ? null : _deleteSelected,
@@ -209,13 +208,13 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Icon(Icons.delete_rounded, color: AppColors.error),
-              tooltip: '删除选中',
+              tooltip: context.l10n.videoDuplicatesDeleteTooltip,
             ),
           ],
           IconButton(
             onPressed: _isLoading ? null : _loadDuplicates,
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: '刷新',
+            tooltip: context.l10n.videoDuplicatesRefreshTooltip,
           ),
         ],
       ),
@@ -239,7 +238,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadDuplicates,
-              child: const Text('重试'),
+              child: Text(context.l10n.videoDuplicatesRetry),
             ),
           ],
         ),
@@ -275,7 +274,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
                 final firstVideo = videos.first;
                 return _buildDuplicateGroup(
                   title: firstVideo.title ?? firstVideo.fileName,
-                  subtitle: 'TMDB ID: ${entry.key}',
+                  subtitle: context.l10n.videoDuplicatesGroupSubtitleTmdb(entry.key),
                   year: firstVideo.year,
                   videos: videos,
                   isDark: isDark,
@@ -301,7 +300,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
                 final year = parts.length > 1 ? int.tryParse(parts.last) : null;
                 return _buildDuplicateGroup(
                   title: title,
-                  subtitle: '基于标题+年份匹配',
+                  subtitle: context.l10n.videoDuplicatesGroupSubtitleTitleYear,
                   year: year,
                   videos: videos,
                   isDark: isDark,
@@ -328,8 +327,8 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
           children: [
             Expanded(
               child: _buildModeTab(
-                title: 'TMDB ID',
-                subtitle: '精确匹配',
+                title: context.l10n.videoDuplicatesModeTabTmdbId,
+                subtitle: context.l10n.videoDuplicatesModeTabTmdbSubtitle,
                 isSelected: _currentMode == 0,
                 count: _stats?.tmdbIdGroups ?? 0,
                 isDark: isDark,
@@ -338,8 +337,8 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
             ),
             Expanded(
               child: _buildModeTab(
-                title: '标题+年份',
-                subtitle: '无元数据',
+                title: context.l10n.videoDuplicatesModeTabTitleYear,
+                subtitle: context.l10n.videoDuplicatesModeTabTitleYearSubtitle,
                 isSelected: _currentMode == 1,
                 count: _stats?.titleYearGroups ?? 0,
                 isDark: isDark,
@@ -448,14 +447,14 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
             Row(
               children: [
                 _buildStatItem(
-                  '重复组',
+                  context.l10n.videoDuplicatesStatsGroups,
                   '$groups',
                   Icons.collections_rounded,
                   isDark,
                 ),
                 const SizedBox(width: 24),
                 _buildStatItem(
-                  '涉及文件',
+                  context.l10n.videoDuplicatesStatsFiles,
                   '$files',
                   Icons.video_library_rounded,
                   isDark,
@@ -476,8 +475,8 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
                   Expanded(
                     child: Text(
                       _currentMode == 0
-                          ? '基于 TMDB ID 精确匹配，这些视频是同一部影片的不同版本。'
-                          : '基于标题和年份匹配，仅针对未刮削的视频。可能存在误判。',
+                          ? context.l10n.videoDuplicatesStatsTmdbDesc
+                          : context.l10n.videoDuplicatesStatsTitleYearDesc,
                       style: TextStyle(
                         fontSize: 12,
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -523,9 +522,9 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
 
   Widget _buildEmptyState(bool isDark) {
     final (title, subtitle) = switch (_currentMode) {
-      0 => ('没有发现 TMDB ID 重复', '所有已刮削的视频都是唯一的'),
-      1 => ('没有发现标题+年份重复', '未刮削的视频中没有重复'),
-      _ => ('没有数据', ''),
+      0 => (context.l10n.videoDuplicatesEmptyTmdbTitle, context.l10n.videoDuplicatesEmptyTmdbSubtitle),
+      1 => (context.l10n.videoDuplicatesEmptyTitleYearTitle, context.l10n.videoDuplicatesEmptyTitleYearSubtitle),
+      _ => (context.l10n.videoDuplicatesEmptyDefaultTitle, ''),
     };
 
     return Center(
@@ -633,7 +632,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
                 TextButton.icon(
                   onPressed: () => _selectAllExceptFirst(videos),
                   icon: const Icon(Icons.select_all, size: 18),
-                  label: const Text('选择其他'),
+                  label: Text(context.l10n.videoDuplicatesSelectOthers),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
@@ -773,9 +772,9 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
                                 color: AppColors.success,
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: const Text(
-                                '推荐保留',
-                                style: TextStyle(
+                              child: Text(
+                                context.l10n.videoDuplicatesKeepRecommended,
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
