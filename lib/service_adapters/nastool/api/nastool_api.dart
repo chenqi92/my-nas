@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/service_adapters/nastool/api/nastool_auth.dart';
 import 'package:my_nas/service_adapters/nastool/models/models.dart';
@@ -1661,15 +1662,15 @@ class NasToolApi {
       }
 
       if (response.statusCode == 401) {
-        throw const NasToolApiException('认证失败，请重新登录');
+        throw NasToolApiException(appL10n.nastoolApiAuthenticationFailed);
       }
 
       if (response.statusCode == 403) {
-        throw const NasToolApiException('没有权限执行此操作');
+        throw NasToolApiException(appL10n.nastoolApiNoPermission);
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw NasToolApiException('请求失败: ${response.statusCode}');
+        throw NasToolApiException(appL10n.nastoolApiRequestFailed(response.statusCode));
       }
 
       if (response.body.isEmpty) return {};
@@ -1693,12 +1694,12 @@ class NasToolApi {
       if (kDebugMode) {
         logger.e('[NasToolApi] SocketException', e);
       }
-      throw NasToolApiException('无法连接服务器: ${e.message}');
+      throw NasToolApiException(appL10n.nastoolApiNetworkError(e.message));
     } on FormatException catch (e) {
       if (kDebugMode) {
         logger.e('[NasToolApi] FormatException', e);
       }
-      throw const NasToolApiException('响应格式错误');
+      throw NasToolApiException(appL10n.nastoolApiResponseFormatError);
     }
   }
 
@@ -1729,11 +1730,11 @@ class NasToolApi {
       }
 
       if (response.statusCode == 401) {
-        throw const NasToolApiException('认证失败，请重新登录');
+        throw NasToolApiException(appL10n.nastoolApiAuthenticationFailed);
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw NasToolApiException('请求失败: ${response.statusCode}');
+        throw NasToolApiException(appL10n.nastoolApiRequestFailed(response.statusCode));
       }
 
       if (response.body.isEmpty) return {};
@@ -1757,7 +1758,7 @@ class NasToolApi {
       if (kDebugMode) {
         logger.e('[NasToolApi] SocketException', e);
       }
-      throw NasToolApiException('无法连接服务器: ${e.message}');
+      throw NasToolApiException(appL10n.nastoolApiNetworkError(e.message));
     }
   }
 

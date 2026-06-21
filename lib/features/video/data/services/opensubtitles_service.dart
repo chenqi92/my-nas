@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
@@ -105,14 +106,14 @@ class OpenSubtitleResult {
   final double? ratings;
 
   /// 获取语言显示名称
-  String get displayLanguage => _languageDisplayNames[languageCode] ?? language;
+  String get displayLanguage => _getLanguageDisplayNames()[languageCode] ?? language;
 
   /// 获取字幕质量标签
   List<String> get qualityTags {
     final tags = <String>[];
     if (hearingImpaired) tags.add('SDH');
     if (aiTranslated) tags.add('AI');
-    if (machineTranslated) tags.add('机翻');
+    if (machineTranslated) tags.add(appL10n.videoOpensubtitlesMachineTranslated);
     return tags;
   }
 
@@ -137,22 +138,22 @@ class OpenSubtitleResult {
     return language;
   }
 
-  static const _languageDisplayNames = <String, String>{
-    'zh-cn': '简体中文',
-    'zh-tw': '繁体中文',
-    'zh': '中文',
-    'en': 'English',
-    'ja': '日本語',
-    'ko': '한국어',
-    'fr': 'Français',
-    'de': 'Deutsch',
-    'es': 'Español',
-    'pt': 'Português',
-    'ru': 'Русский',
-    'it': 'Italiano',
-    'th': 'ไทย',
-    'vi': 'Tiếng Việt',
-  };
+  static Map<String, String> _getLanguageDisplayNames() => <String, String>{
+      'zh-cn': appL10n.videoOpensubtitlesLanguageZhCn,
+      'zh-tw': appL10n.videoOpensubtitlesLanguageZhTw,
+      'zh': appL10n.videoOpensubtitlesLanguageZh,
+      'en': 'English',
+      'ja': appL10n.videoOpensubtitlesLanguageJa,
+      'ko': appL10n.videoOpensubtitlesLanguageKo,
+      'fr': 'Français',
+      'de': 'Deutsch',
+      'es': 'Español',
+      'pt': 'Português',
+      'ru': 'Русский',
+      'it': 'Italiano',
+      'th': 'ไทย',
+      'vi': 'Tiếng Việt',
+    };
 }
 
 /// OpenSubtitles 下载结果
@@ -407,7 +408,7 @@ class OpenSubtitlesService {
             .toList();
       } else if (response.statusCode == 429) {
         logger.w('OpenSubtitles: 请求频率限制');
-        throw Exception('请求频率限制，请稍后再试');
+        throw Exception(appL10n.videoOpensubtitlesRateLimitError);
       } else {
         logger.w('OpenSubtitles: 搜索失败，状态码: ${response.statusCode}');
         return [];
@@ -436,10 +437,10 @@ class OpenSubtitlesService {
         return OpenSubtitleDownloadResult.fromJson(data);
       } else if (response.statusCode == 406) {
         logger.w('OpenSubtitles: 下载配额用尽');
-        throw Exception('下载配额已用尽，请等待重置或升级账户');
+        throw Exception(appL10n.videoOpensubtitlesQuotaExhaustedError);
       } else if (response.statusCode == 429) {
         logger.w('OpenSubtitles: 请求频率限制');
-        throw Exception('请求频率限制，请稍后再试');
+        throw Exception(appL10n.videoOpensubtitlesRateLimitError);
       } else {
         logger.w('OpenSubtitles: 获取下载链接失败，状态码: ${response.statusCode}');
         return null;

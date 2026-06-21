@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 
@@ -57,14 +58,14 @@ class TranscodingCapabilityService {
 
   /// 获取转码能力描述
   String getCapabilityDescription(TranscodingCapability capability) => switch (capability) {
-        TranscodingCapability.serverSide => '服务端转码',
-        TranscodingCapability.clientSide => '本地转码',
-        TranscodingCapability.none => '不支持转码',
+        TranscodingCapability.serverSide => appL10n.transcodingCapabilityServerSide,
+        TranscodingCapability.clientSide => appL10n.transcodingCapabilityClientSide,
+        TranscodingCapability.none => appL10n.transcodingCapabilityNone,
       };
 
   /// 获取不支持转码时的提示信息
   String getUnsupportedMessage(SourceType sourceType) =>
-      '当前连接源 (${sourceType.displayName}) 不支持清晰度切换，只能播放原画';
+      appL10n.transcodingUnsupportedMessage(sourceType.displayName);
 }
 
 /// 转码配置

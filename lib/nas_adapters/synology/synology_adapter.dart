@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
@@ -98,7 +99,7 @@ class SynologyAdapter implements NasAdapter {
     String? deviceName,
   }) async {
     if (_config == null) {
-      return const ConnectionFailure(error: '请先调用 connect');
+      return ConnectionFailure(error: appL10n.synologyAdapterNotInitialized);
     }
 
     // 如果需要记住设备，必须提供设备名称
@@ -121,7 +122,7 @@ class SynologyAdapter implements NasAdapter {
       AuthSuccess(:final sid, :final deviceId) =>
         await _handleLoginSuccess(sid, deviceId: deviceId),
       AuthFailure(:final error) => ConnectionFailure(error: error),
-      AuthRequires2FA() => const ConnectionFailure(error: '二次验证失败'),
+      AuthRequires2FA() => ConnectionFailure(error: appL10n.synologyAdapter2FaVerificationFailed),
     };
   }
 
@@ -242,7 +243,7 @@ class SynologyAdapter implements NasAdapter {
       await _api.getDsmInfo().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          throw Exception('连接健康检查超时');
+          throw Exception(appL10n.synologyAdapterHealthCheckTimeout);
         },
       );
       logger.d('SynologyAdapter: 连接健康检查 - 正常');
@@ -257,7 +258,7 @@ class SynologyAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected) {
-      throw StateError('未连接到 NAS');
+      throw StateError(appL10n.synologyAdapterNotConnected);
     }
     return _fileSystem;
   }

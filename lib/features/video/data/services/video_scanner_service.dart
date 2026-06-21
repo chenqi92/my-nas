@@ -61,18 +61,18 @@ class VideoScanProgress {
   String get description {
     switch (phase) {
       case VideoScanPhase.scanning:
-        return currentPath ?? '正在扫描...';
+        return currentPath ?? appL10n.videoScanProgressDefault;
       case VideoScanPhase.savingToDb:
-        return '正在保存到数据库 ($scannedCount/$totalCount)';
+        return appL10n.videoScanProgressSavingToDb(scannedCount, totalCount);
       case VideoScanPhase.scraping:
         if (currentFile != null) {
-          return '正在刮削: $currentFile ($scannedCount/$totalCount)';
+          return appL10n.videoScanProgressScrapingFile(currentFile ?? '', scannedCount, totalCount);
         }
-        return '正在刮削元数据 ($scannedCount/$totalCount)';
+        return appL10n.videoScanProgressScrapingMetadata(scannedCount, totalCount);
       case VideoScanPhase.completed:
-        return '扫描完成，共 $scannedCount 个视频';
+        return appL10n.videoScanCompletedCount(scannedCount);
       case VideoScanPhase.error:
-        return '扫描失败';
+        return appL10n.videoScanProgressFailed;
     }
   }
 }
@@ -267,7 +267,7 @@ class VideoScannerService {
     await _backgroundTaskService.init();
     await _backgroundTaskService.startService(
       taskType: BackgroundTaskType.videoScan,
-      initialMessage: '正在扫描媒体库...',
+      initialMessage: appL10n.videoScanBackgroundScanningLibrary,
     );
 
     try {
@@ -676,7 +676,7 @@ class VideoScannerService {
     await _backgroundTaskService.init();
     await _backgroundTaskService.startService(
       taskType: BackgroundTaskType.videoScrape,
-      initialMessage: '正在准备刮削...',
+      initialMessage: appL10n.videoScanBackgroundPreparingScrape,
     );
 
     try {
@@ -713,7 +713,7 @@ class VideoScannerService {
           phase: VideoScanPhase.scraping,
           scannedCount: batchStats.processed,
           totalCount: batchStats.total,
-          currentFile: '正在处理 ${pendingVideos.length} 个视频...',
+          currentFile: appL10n.videoScanProgressProcessingVideos(pendingVideos.length),
         ));
 
         // 更新后台服务进度（批次级别）
@@ -1515,7 +1515,7 @@ VideoScannerService: 增量同步完成
         phase: VideoScanPhase.scanning,
         sourceId: sourceId,
         pathPrefix: rootPath,
-        currentPath: '正在发现目录...',
+        currentPath: appL10n.videoScanProgressDiscoveringDirectories,
       ));
 
       final directories = await _discoverDirectories(
@@ -1800,7 +1800,7 @@ VideoScannerService: 增量同步完成
         phase: VideoScanPhase.scanning,
         sourceId: sourceId,
         pathPrefix: rootPath,
-        currentPath: '${currentStats.completedDirectories}/$totalDirectories 目录',
+        currentPath: appL10n.videoScanProgressDirectoriesProgress(currentStats.completedDirectories, totalDirectories),
         scannedCount: videos.length,
       ));
     } on Exception catch (e) {

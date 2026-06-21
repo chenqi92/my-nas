@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// Aria2 JSON-RPC API 客户端
 ///
@@ -68,7 +69,7 @@ class Aria2Api {
       );
 
       if (response.statusCode != 200) {
-        throw Aria2ApiException('HTTP 错误: ${response.statusCode}');
+        throw Aria2ApiException(appL10n.aria2ApiHttpError(response.statusCode));
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -76,18 +77,18 @@ class Aria2Api {
       if (data.containsKey('error')) {
         final error = data['error'] as Map<String, dynamic>;
         throw Aria2ApiException(
-          error['message'] as String? ?? '未知错误',
+          error['message'] as String? ?? appL10n.aria2ApiUnknownError,
           code: error['code'] as int?,
         );
       }
 
       return data['result'];
     } on SocketException catch (e) {
-      throw Aria2ApiException('无法连接到服务器: ${e.message}');
+      throw Aria2ApiException(appL10n.aria2ApiCannotConnectServer(e.message));
     } on http.ClientException catch (e) {
-      throw Aria2ApiException('网络错误: ${e.message}');
+      throw Aria2ApiException(appL10n.aria2ApiNetworkError(e.message));
     } on FormatException catch (e) {
-      throw Aria2ApiException('响应解析失败: ${e.message}');
+      throw Aria2ApiException(appL10n.aria2ApiResponseParseError(e.message));
     }
   }
 

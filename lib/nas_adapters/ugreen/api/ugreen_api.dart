@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart' show ThumbnailSize;
 import 'package:pointycastle/api.dart';
@@ -131,7 +132,7 @@ class UGreenApi {
       final rsaTokenHeader = checkResponse.headers.value('x-rsa-token');
       if (rsaTokenHeader == null) {
         logger.e('UGreenApi: 未获取到 RSA 公钥');
-        return UGreenAuthFailure(error: '服务器未返回加密密钥');
+        return UGreenAuthFailure(error: appL10n.ugreenAuthServerNoEncryptionKey);
       }
 
       logger..i('UGreenApi: 获取到 RSA 公钥')
@@ -185,22 +186,22 @@ class UGreenApi {
         // 其他错误
         final message = data['message']?.toString() ??
                        data['msg']?.toString() ??
-                       '登录失败 (code: $code)';
+                       appL10n.ugreenAuthLoginFailed('$code');
         logger.e('UGreenApi: 登录失败 => $message');
         return UGreenAuthFailure(error: message, code: code as int?);
       }
 
-      return UGreenAuthFailure(error: '服务器响应格式错误');
+      return UGreenAuthFailure(error: appL10n.ugreenAuthServerResponseInvalid);
     } on DioException catch (e, st) {
       AppError.handle(e, st, 'UGreenApi.login');
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout) {
-        return UGreenAuthFailure(error: '连接超时，请检查网络和地址');
+        return UGreenAuthFailure(error: appL10n.ugreenAuthConnectionTimeout);
       }
       if (e.type == DioExceptionType.connectionError) {
-        return UGreenAuthFailure(error: '无法连接到服务器，请检查地址和端口');
+        return UGreenAuthFailure(error: appL10n.ugreenAuthConnectionFailed);
       }
-      return UGreenAuthFailure(error: e.message ?? '网络错误');
+      return UGreenAuthFailure(error: e.message ?? appL10n.ugreenAuthNetworkError);
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'UGreenApi.login');
       return UGreenAuthFailure(error: e.toString());
@@ -272,7 +273,7 @@ class UGreenApi {
       }
     }
 
-    throw FormatException('无法解析公钥格式');
+    throw FormatException(appL10n.ugreenEncryptionPublicKeyFormatInvalid);
   }
 
   /// 登出
@@ -476,7 +477,7 @@ class UGreenApi {
     );
 
     if (response.data == null) {
-      throw Exception('获取 URL 数据流失败：响应为空');
+      throw Exception(appL10n.ugreenFileUrlStreamFailed);
     }
 
     return response.data!.stream;

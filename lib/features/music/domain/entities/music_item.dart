@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 
 /// 音乐项实体
@@ -83,10 +84,10 @@ class MusicItem {
   final List<int>? coverData;
 
   /// 显示的艺术家名称
-  String get displayArtist => artist?.isNotEmpty ?? false ? artist! : '未知艺术家';
+  String get displayArtist => artist?.isNotEmpty ?? false ? artist! : appL10n.musicDisplayArtistUnknown;
 
   /// 显示的专辑名称
-  String get displayAlbum => album?.isNotEmpty ?? false ? album! : '未知专辑';
+  String get displayAlbum => album?.isNotEmpty ?? false ? album! : appL10n.musicDisplayAlbumUnknown;
 
   /// 显示标题（优先使用元数据标题，否则从文件名解析）
   String get displayTitle {
@@ -102,7 +103,7 @@ class MusicItem {
     if (parts.length >= 2) {
       return parts[parts.length - 2];
     }
-    return '根目录';
+    return appL10n.musicFolderNameRoot;
   }
 
   /// 格式化时长
@@ -227,9 +228,9 @@ class Playlist {
     final hours = totalDuration.inHours;
     final minutes = totalDuration.inMinutes % 60;
     if (hours > 0) {
-      return '$hours小时$minutes分钟';
+      return appL10n.musicPlaylistDurationHours(hours, minutes);
     }
-    return '$minutes分钟';
+    return appL10n.musicPlaylistDurationMinutes(minutes);
   }
 
   Playlist copyWith({

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 import 'package:path/path.dart' as p;
 
@@ -134,12 +135,12 @@ class FingerprintServiceDesktop implements FingerprintService {
     int maxDuration = 120,
   }) async {
     if (!_available || _fpcalcPath == null) {
-      throw const FingerprintUnavailableException('fpcalc 工具不可用');
+      throw FingerprintUnavailableException(appL10n.fingerprintServiceUnavailable);
     }
 
     // 检查文件是否存在
     if (!await File(filePath).exists()) {
-      throw FingerprintGenerationException('音频文件不存在: $filePath');
+      throw FingerprintGenerationException(appL10n.fingerprintAudioFileNotFound(filePath));
     }
 
     try {
@@ -158,14 +159,16 @@ class FingerprintServiceDesktop implements FingerprintService {
       if (result.exitCode != 0) {
         final stderr = result.stderr as String;
         throw FingerprintGenerationException(
-          '生成指纹失败: ${stderr.isNotEmpty ? stderr : "未知错误"}',
+          appL10n.fingerprintGenerationFailed(
+            stderr.isNotEmpty ? stderr : appL10n.fingerprintGenerationUnknownError,
+          ),
         );
       }
 
       // 解析 JSON 输出
       final stdout = result.stdout as String;
       if (stdout.trim().isEmpty) {
-        throw const FingerprintGenerationException('fpcalc 输出为空');
+        throw FingerprintGenerationException(appL10n.fingerprintOutputEmpty);
       }
 
       final json = jsonDecode(stdout) as Map<String, dynamic>;
@@ -173,7 +176,7 @@ class FingerprintServiceDesktop implements FingerprintService {
       final duration = (json['duration'] as num?)?.toInt();
 
       if (fingerprint == null || fingerprint.isEmpty) {
-        throw const FingerprintGenerationException('未能生成有效指纹');
+        throw FingerprintGenerationException(appL10n.fingerprintInvalid);
       }
 
       return FingerprintData(
@@ -181,9 +184,9 @@ class FingerprintServiceDesktop implements FingerprintService {
         duration: duration ?? 0,
       );
     } on FormatException catch (e) {
-      throw FingerprintGenerationException('解析 fpcalc 输出失败', cause: e);
+      throw FingerprintGenerationException(appL10n.fingerprintParsingFailed, cause: e);
     } on ProcessException catch (e) {
-      throw FingerprintGenerationException('执行 fpcalc 失败', cause: e);
+      throw FingerprintGenerationException(appL10n.fingerprintExecutionFailed, cause: e);
     }
   }
 
@@ -195,8 +198,8 @@ class FingerprintServiceDesktop implements FingerprintService {
   }) async {
     // fpcalc 不直接支持流输入
     // 如果需要此功能，应使用 FFI 实现
-    throw const FingerprintGenerationException(
-      '桌面端暂不支持流式指纹生成，请使用 generateFingerprint 方法',
+    throw FingerprintGenerationException(
+      appL10n.fingerprintStreamNotSupported,
     );
   }
 

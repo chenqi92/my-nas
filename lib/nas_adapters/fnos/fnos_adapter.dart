@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:my_nas/core/constants/app_constants.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -115,12 +116,12 @@ class FnOSAdapter implements NasAdapter {
   String _parseError(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout) {
-      return '连接超时，请检查网络和地址';
+      return appL10n.fnosConnectTimeoutError;
     }
     if (e.type == DioExceptionType.connectionError) {
-      return '无法连接到服务器，请检查地址和端口 (默认 5666)';
+      return appL10n.fnosServerConnectionError;
     }
-    return e.message ?? '网络错误';
+    return e.message ?? appL10n.fnosNetworkError;
   }
 
   @override
@@ -155,7 +156,7 @@ class FnOSAdapter implements NasAdapter {
       await _api!.getDeviceInfo().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          throw Exception('连接健康检查超时');
+          throw Exception(appL10n.fnosHealthCheckTimeoutError);
         },
       );
       logger.d('FnOSAdapter: 连接健康检查 - 正常');
@@ -170,7 +171,7 @@ class FnOSAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected || _fileSystem == null) {
-      throw StateError('未连接到飞牛 NAS');
+      throw StateError(appL10n.fnosNotConnectedError);
     }
     return _fileSystem!;
   }

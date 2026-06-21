@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_to_epub.dart';
 import 'package:path/path.dart' as path;
@@ -122,10 +123,10 @@ class MobiParserService {
         return MobiParseResult.fromEpub(result.epubPath!);
       }
 
-      return MobiParseResult.failure(result.error ?? '转换失败');
+      return MobiParseResult.failure(result.error ?? appL10n.bookMobiConversionFailed);
     } on Exception catch (e, st) {
       logger.e('新解析器异常', e, st);
-      return MobiParseResult.failure('解析失败: $e');
+      return MobiParseResult.failure(appL10n.bookMobiParseFailed(e));
     }
   }
 
@@ -137,7 +138,7 @@ class MobiParserService {
     // 检查 ebook-convert 是否可用
     final convertCmd = await _findCalibreConvert();
     if (convertCmd == null) {
-      return MobiParseResult.failure('Calibre 未安装');
+      return MobiParseResult.failure(appL10n.bookMobiCalibreNotInstalled);
     }
 
     // 创建临时目录
@@ -168,7 +169,8 @@ class MobiParserService {
 
       if (result.exitCode != 0) {
         logger.e('Calibre 转换失败: ${result.stderr}');
-        return MobiParseResult.failure('转换失败: ${result.stderr}');
+        return MobiParseResult.failure(
+            appL10n.bookMobiConversionFailedWithStderr('${result.stderr}'));
       }
 
       // 返回 EPUB 文件路径，让调用方使用 EPUB 阅读器打开
@@ -187,7 +189,7 @@ class MobiParserService {
         return MobiParseResult.fromEpub(cachedEpub.path);
       }
 
-      return MobiParseResult.failure('转换后的文件不存在');
+      return MobiParseResult.failure(appL10n.bookMobiConvertedFileNotExists);
     } finally {
       // 清理临时目录
       try {
@@ -257,7 +259,7 @@ class MobiParserService {
     try {
       final title = parseResult.title ??
           path.basenameWithoutExtension(fileName);
-      final author = parseResult.author ?? '未知作者';
+      final author = parseResult.author ?? appL10n.bookMobiUnknownAuthor;
       final htmlContent = parseResult.htmlContent!;
 
       // 清理 HTML 内容，确保是有效的 XHTML
@@ -438,11 +440,11 @@ $htmlContent
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="zh-CN">
 <head>
   <meta charset="UTF-8"/>
-  <title>导航</title>
+  <title>${_escapeXml(appL10n.bookMobiEpubNavTitle)}</title>
 </head>
 <body>
   <nav epub:type="toc" id="toc">
-    <h1>目录</h1>
+    <h1>${_escapeXml(appL10n.bookMobiEpubTocTitle)}</h1>
     <ol>
       <li><a href="chapter1.xhtml">${_escapeXml(title)}</a></li>
     </ol>
@@ -478,7 +480,7 @@ $htmlContent
     try {
       // 验证 Palm Database 格式
       if (bytes.length < 78) {
-        return MobiParseResult.failure('文件太小，不是有效的 MOBI 文件');
+        return MobiParseResult.failure(appL10n.bookMobiFileTooSmall);
       }
 
       // 读取数据库名称（标题）
@@ -494,13 +496,13 @@ $htmlContent
       final creator = String.fromCharCodes(bytes.sublist(64, 68));
 
       if (type != 'BOOK' || creator != 'MOBI') {
-        return MobiParseResult.failure('不是有效的 MOBI 文件');
+        return MobiParseResult.failure(appL10n.bookMobiInvalidFormat);
       }
 
       // 读取记录数量
       final numRecords = _readUint16(bytes, 76);
       if (numRecords == 0) {
-        return MobiParseResult.failure('MOBI 文件没有记录');
+        return MobiParseResult.failure(appL10n.bookMobiNoRecords);
       }
 
       // 读取记录偏移表
@@ -523,7 +525,7 @@ $htmlContent
       }
 
       if (recordOffsets.isEmpty) {
-        return MobiParseResult.failure('MOBI 文件记录偏移无效');
+        return MobiParseResult.failure(appL10n.bookMobiRecordOffsetsInvalid);
       }
 
       // 读取第一个记录（PalmDOC 头部）
@@ -588,9 +590,7 @@ $htmlContent
         } else {
           // HUFF/CDIC 压缩，暂不支持
           return MobiParseResult.failure(
-            'MOBI 文件使用 HUFF/CDIC 压缩\n\n'
-            '此压缩格式较复杂，建议使用 Calibre 转换为 EPUB 格式\n\n'
-            '${_getCalibreInstallHint()}',
+            appL10n.bookMobiHuffCompressionError(_getCalibreInstallHint()),
           );
         }
 
@@ -613,7 +613,7 @@ $htmlContent
       );
     } on Exception catch (e) {
       logger.e('MOBI 解析失败', e);
-      return MobiParseResult.failure('MOBI 解析失败: $e');
+      return MobiParseResult.failure(appL10n.bookMobiParseException(e));
     }
   }
 
@@ -898,25 +898,15 @@ $htmlContent
   String _getCalibreInstallHint() {
     // 移动端显示转换建议
     if (Platform.isAndroid || Platform.isIOS) {
-      return '📱 移动端暂不支持此格式\n\n'
-          '建议在电脑上使用 Calibre 转换为 EPUB 格式后阅读：\n'
-          '1. 下载 Calibre: calibre-ebook.com\n'
-          '2. 打开 MOBI/AZW3 文件\n'
-          '3. 转换 → EPUB\n'
-          '4. 将 EPUB 传到手机阅读';
+      return appL10n.bookMobiCalibreHintMobile;
     }
 
     if (Platform.isMacOS) {
-      return '🖥 macOS 安装 Calibre：\n'
-          'brew install --cask calibre\n'
-          '或从 calibre-ebook.com 下载';
+      return appL10n.bookMobiCalibreHintMacOS;
     } else if (Platform.isWindows) {
-      return '🖥 Windows 安装 Calibre：\n'
-          '从 calibre-ebook.com 下载安装';
+      return appL10n.bookMobiCalibreHintWindows;
     } else {
-      return '🖥 Linux 安装 Calibre：\n'
-          'sudo apt install calibre\n'
-          '或从 calibre-ebook.com 下载';
+      return appL10n.bookMobiCalibreHintLinux;
     }
   }
 

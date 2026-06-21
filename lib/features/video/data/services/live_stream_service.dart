@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/m3u_parser.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
@@ -171,7 +172,7 @@ class LiveStreamService {
 
     final source = sources.firstWhere(
       (s) => s.id == sourceId,
-      orElse: () => throw Exception('源不存在: $sourceId'),
+      orElse: () => throw Exception(appL10n.liveStreamServiceSourceNotFoundError(sourceId)),
     );
 
     final channels = await fetchChannels(source.playlistUrl);
@@ -202,12 +203,12 @@ class LiveStreamService {
       );
 
       if (response.data == null || response.data!.isEmpty) {
-        throw Exception('播放列表内容为空');
+        throw Exception(appL10n.liveStreamServicePlaylistEmptyError);
       }
 
       return M3UParser.parse(response.data!);
     } on DioException catch (e) {
-      throw Exception('获取播放列表失败: ${e.message}');
+      throw Exception(appL10n.liveStreamServiceFetchPlaylistFailedError(e.message ?? ''));
     }
   }
 

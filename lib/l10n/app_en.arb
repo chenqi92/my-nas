@@ -10870,5 +10870,374 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "ugreenAuthServerNoEncryptionKey": "Server did not return encryption key",
+  "ugreenAuthLoginFailed": "Login failed (code: {code})",
+  "@ugreenAuthLoginFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "ugreenAuthServerResponseInvalid": "Server response format is invalid",
+  "ugreenAuthConnectionTimeout": "Connection timeout, please check network and address",
+  "ugreenAuthConnectionFailed": "Unable to connect to server, please check address and port",
+  "ugreenEncryptionPublicKeyFormatInvalid": "Unable to parse public key format",
+  "ugreenFileUrlStreamFailed": "Failed to get URL data stream: response is empty",
+  "transmissionApiErrorFailedToGetSessionId": "Failed to get Session ID",
+  "transmissionApiErrorAuthenticationFailed": "Authentication failed: incorrect username or password",
+  "transmissionApiErrorHttpError": "HTTP error: {statusCode}",
+  "@transmissionApiErrorHttpError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "Object"
+      }
+    }
+  },
+  "transmissionApiErrorOperationFailed": "Operation failed: {result}",
+  "@transmissionApiErrorOperationFailed": {
+    "placeholders": {
+      "result": {
+        "type": "Object"
+      }
+    }
+  },
+  "transmissionApiErrorUnableToConnectServer": "Unable to connect to server: {message}",
+  "@transmissionApiErrorUnableToConnectServer": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "transmissionApiErrorNetworkError": "Network error: {message}",
+  "@transmissionApiErrorNetworkError": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "transmissionApiErrorResponseParseFailed": "Response parsing failed: {message}",
+  "@transmissionApiErrorResponseParseFailed": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "transmissionApiErrorMissingFilenameOrMetainfo": "Must provide either filename or metainfo",
+  "videoScanProgressDefault": "Scanning...",
+  "videoScanProgressSavingToDb": "Saving to database ({current}/{total})",
+  "@videoScanProgressSavingToDb": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "videoScanProgressScrapingFile": "Scraping: {fileName} ({current}/{total})",
+  "@videoScanProgressScrapingFile": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      },
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "videoScanProgressScrapingMetadata": "Scraping metadata ({current}/{total})",
+  "@videoScanProgressScrapingMetadata": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "videoScanProgressFailed": "Scan failed",
+  "videoScanBackgroundScanningLibrary": "Scanning media library...",
+  "videoScanBackgroundPreparingScrape": "Preparing to scrape...",
+  "videoScanProgressProcessingVideos": "Processing {count} videos...",
+  "@videoScanProgressProcessingVideos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoScanProgressDiscoveringDirectories": "Discovering directories...",
+  "videoScanProgressDirectoriesProgress": "{completed}/{total} directories",
+  "@videoScanProgressDirectoriesProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "bookMobiConversionFailed": "Conversion failed",
+  "bookMobiParseFailed": "Parse failed: {error}",
+  "@bookMobiParseFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "bookMobiCalibreNotInstalled": "Calibre is not installed",
+  "bookMobiConversionFailedWithStderr": "Conversion failed: {stderr}",
+  "@bookMobiConversionFailedWithStderr": {
+    "placeholders": {
+      "stderr": {
+        "type": "Object"
+      }
+    }
+  },
+  "bookMobiConvertedFileNotExists": "Converted file does not exist",
+  "bookMobiUnknownAuthor": "Unknown author",
+  "bookMobiFileTooSmall": "File is too small or not a valid MOBI file",
+  "bookMobiInvalidFormat": "Not a valid MOBI file",
+  "bookMobiNoRecords": "MOBI file has no records",
+  "bookMobiRecordOffsetsInvalid": "MOBI file record offsets are invalid",
+  "bookMobiHuffCompressionError": "MOBI file uses HUFF/CDIC compression\n\nThis compression format is complex. It is recommended to use Calibre to convert to EPUB format\n\n{hint}",
+  "@bookMobiHuffCompressionError": {
+    "placeholders": {
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "bookMobiParseException": "MOBI parse failed: {error}",
+  "@bookMobiParseException": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "bookMobiEpubNavTitle": "Navigation",
+  "bookMobiEpubTocTitle": "Table of Contents",
+  "bookMobiCalibreHintMobile": "Mobile format not supported\n\nIt is recommended to use Calibre on your computer to convert to EPUB format before reading:\n1. Download Calibre: calibre-ebook.com\n2. Open MOBI/AZW3 file\n3. Convert → EPUB\n4. Transfer EPUB to your phone for reading",
+  "bookMobiCalibreHintMacOS": "Install Calibre on macOS:\nbrew install --cask calibre\nor download from calibre-ebook.com",
+  "bookMobiCalibreHintWindows": "Install Calibre on Windows:\nDownload and install from calibre-ebook.com",
+  "bookMobiCalibreHintLinux": "Install Calibre on Linux:\nsudo apt install calibre\nor download from calibre-ebook.com",
+  "aria2ApiHttpError": "HTTP error: {code}",
+  "@aria2ApiHttpError": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "aria2ApiUnknownError": "Unknown error",
+  "aria2ApiCannotConnectServer": "Unable to connect to server: {message}",
+  "@aria2ApiCannotConnectServer": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "aria2ApiNetworkError": "Network error: {message}",
+  "@aria2ApiNetworkError": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "aria2ApiResponseParseError": "Response parsing failed: {message}",
+  "@aria2ApiResponseParseError": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "moviepilotApiUnsupportedMethod": "Unsupported HTTP method: {method}",
+  "@moviepilotApiUnsupportedMethod": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "moviepilotApiAuthFailed": "Authentication failed, please check your API Token",
+  "moviepilotApiRequestFailed": "Request failed: {statusCode} {reasonPhrase}",
+  "@moviepilotApiRequestFailed": {
+    "placeholders": {
+      "statusCode": {
+        "type": "Object"
+      },
+      "reasonPhrase": {
+        "type": "Object"
+      }
+    }
+  },
+  "moviepilotApiConnectionError": "Unable to connect to MoviePilot: {error}",
+  "@moviepilotApiConnectionError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "moviepilotApiNetworkError": "Network error: {error}",
+  "@moviepilotApiNetworkError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "moviepilotApiUrlFormatError": "URL format error: {error}",
+  "@moviepilotApiUrlFormatError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolApiAuthenticationFailed": "Authentication failed, please login again",
+  "nastoolApiNoPermission": "No permission to perform this operation",
+  "nastoolApiRequestFailed": "Request failed: {code}",
+  "@nastoolApiRequestFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolApiNetworkError": "Cannot connect to server: {message}",
+  "@nastoolApiNetworkError": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolApiResponseFormatError": "Response format error",
+  "backgroundTaskNotificationChannelName": "Media Library Background Task",
+  "backgroundTaskNotificationChannelDesc": "Processing media library scan or scrape tasks in the background",
+  "backgroundTaskStopButton": "Stop",
+  "backgroundTaskTitleScrape": "Scraping video information",
+  "backgroundTaskTitleScan": "Scanning media library",
+  "backgroundTaskMessageScrape": "Fetching video metadata…",
+  "backgroundTaskMessageScan": "Scanning video files…",
+  "synologyAdapterNotInitialized": "Please call connect first",
+  "synologyAdapter2FaVerificationFailed": "Two-factor verification failed",
+  "synologyAdapterHealthCheckTimeout": "Connection health check timeout",
+  "synologyAdapterNotConnected": "Not connected to NAS",
+  "qnapAdapterConnectNotCalledError": "Please call connect first",
+  "qnapAdapter2FAVerificationFailed": "Two-factor authentication verification failed",
+  "qnapAdapterHealthCheckTimeout": "Connection health check timed out",
+  "qnapAdapterNotConnectedError": "Not connected to NAS",
+  "fnosConnectTimeoutError": "Connection timeout. Please check your network and address.",
+  "fnosServerConnectionError": "Unable to connect to server. Please check the address and port (default 5666).",
+  "fnosNetworkError": "Network error",
+  "fnosHealthCheckTimeoutError": "Connection health check timeout",
+  "fnosNotConnectedError": "Not connected to fnOS NAS",
+  "fingerprintServiceUnavailable": "Fingerprint service unavailable",
+  "fingerprintAudioFileNotFound": "Audio file not found: {filePath}",
+  "@fingerprintAudioFileNotFound": {
+    "placeholders": {
+      "filePath": {
+        "type": "String"
+      }
+    }
+  },
+  "fingerprintGenerationFailed": "Failed to generate fingerprint: {error}",
+  "@fingerprintGenerationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fingerprintGenerationUnknownError": "Unknown error",
+  "fingerprintOutputEmpty": "fpcalc output is empty",
+  "fingerprintInvalid": "Unable to generate valid fingerprint",
+  "fingerprintParsingFailed": "Failed to parse fpcalc output",
+  "fingerprintExecutionFailed": "Failed to execute fpcalc",
+  "fingerprintStreamNotSupported": "Desktop streaming fingerprint generation is not supported. Please use the generateFingerprint method instead.",
+  "musicDisplayArtistUnknown": "Unknown Artist",
+  "musicDisplayAlbumUnknown": "Unknown Album",
+  "musicFolderNameRoot": "Root Directory",
+  "musicPlaylistDurationHours": "{hours} h {minutes} min",
+  "@musicPlaylistDurationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPlaylistDurationMinutes": "{minutes} min",
+  "@musicPlaylistDurationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoOpensubtitlesMachineTranslated": "Machine Translation",
+  "videoOpensubtitlesLanguageZhCn": "Simplified Chinese",
+  "videoOpensubtitlesLanguageZhTw": "Traditional Chinese",
+  "videoOpensubtitlesLanguageZh": "Chinese",
+  "videoOpensubtitlesLanguageJa": "Japanese",
+  "videoOpensubtitlesLanguageKo": "Korean",
+  "videoOpensubtitlesLanguageFr": "French",
+  "videoOpensubtitlesLanguageDe": "German",
+  "videoOpensubtitlesLanguageEs": "Spanish",
+  "videoOpensubtitlesLanguagePt": "Portuguese",
+  "videoOpensubtitlesLanguageRu": "Russian",
+  "videoOpensubtitlesLanguageIt": "Italian",
+  "videoOpensubtitlesLanguageTh": "Thai",
+  "videoOpensubtitlesLanguageVi": "Vietnamese",
+  "videoOpensubtitlesRateLimitError": "Rate limit exceeded, please try again later",
+  "videoOpensubtitlesQuotaExhaustedError": "Download quota exhausted, please wait for reset or upgrade your account",
+  "liveStreamServiceSourceNotFoundError": "Source not found: {sourceId}",
+  "@liveStreamServiceSourceNotFoundError": {
+    "placeholders": {
+      "sourceId": {
+        "type": "String"
+      }
+    }
+  },
+  "liveStreamServicePlaylistEmptyError": "Playlist content is empty",
+  "liveStreamServiceFetchPlaylistFailedError": "Failed to fetch playlist: {message}",
+  "@liveStreamServiceFetchPlaylistFailedError": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "transcodingCapabilityServerSide": "Server-side transcoding",
+  "transcodingCapabilityClientSide": "Client-side transcoding",
+  "transcodingCapabilityNone": "Transcoding not supported",
+  "transcodingUnsupportedMessage": "The current source ({source}) does not support quality switching and can only play the original quality",
+  "@transcodingUnsupportedMessage": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "ugreenAuthNetworkError": "Network error"
 }

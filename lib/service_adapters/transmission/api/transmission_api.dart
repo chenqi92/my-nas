@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// Transmission RPC API 客户端
 ///
@@ -84,7 +85,7 @@ class TransmissionApi {
       if (response.statusCode == 409) {
         _sessionId = response.headers['x-transmission-session-id'];
         if (_sessionId == null) {
-          throw const TransmissionApiException('无法获取 Session ID');
+          throw TransmissionApiException(appL10n.transmissionApiErrorFailedToGetSessionId);
         }
 
         // 使用新的 Session ID 重试请求
@@ -96,27 +97,27 @@ class TransmissionApi {
       }
 
       if (response.statusCode == 401) {
-        throw const TransmissionApiException('认证失败：用户名或密码错误');
+        throw TransmissionApiException(appL10n.transmissionApiErrorAuthenticationFailed);
       }
 
       if (response.statusCode != 200) {
-        throw TransmissionApiException('HTTP 错误: ${response.statusCode}');
+        throw TransmissionApiException(appL10n.transmissionApiErrorHttpError(response.statusCode));
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final result = data['result'] as String?;
 
       if (result != 'success') {
-        throw TransmissionApiException('操作失败: $result');
+        throw TransmissionApiException(appL10n.transmissionApiErrorOperationFailed(result ?? ''));
       }
 
       return data['arguments'] as Map<String, dynamic>? ?? {};
     } on SocketException catch (e) {
-      throw TransmissionApiException('无法连接到服务器: ${e.message}');
+      throw TransmissionApiException(appL10n.transmissionApiErrorUnableToConnectServer(e.message));
     } on http.ClientException catch (e) {
-      throw TransmissionApiException('网络错误: ${e.message}');
+      throw TransmissionApiException(appL10n.transmissionApiErrorNetworkError(e.message));
     } on FormatException catch (e) {
-      throw TransmissionApiException('响应解析失败: ${e.message}');
+      throw TransmissionApiException(appL10n.transmissionApiErrorResponseParseFailed(e.message));
     }
   }
 
@@ -195,7 +196,7 @@ class TransmissionApi {
     bool? paused,
   }) async {
     if (filename == null && metainfo == null) {
-      throw const TransmissionApiException('必须提供 filename 或 metainfo');
+      throw TransmissionApiException(appL10n.transmissionApiErrorMissingFilenameOrMetainfo);
     }
 
     final arguments = <String, dynamic>{};
