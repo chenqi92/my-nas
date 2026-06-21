@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/media_server_adapters/emby/emby_websocket_service.dart';
@@ -226,14 +227,14 @@ class MediaServerEventHandler {
           sourceId: sourceId,
           sourceType: sourceType,
           status: ServerStatus.shuttingDown,
-          message: '服务器正在关闭',
+          message: appL10n.mediaServerShuttingDown,
         ));
       case JellyfinMessageType.serverRestarting:
         _serverStatusController.add(ServerStatusEvent(
           sourceId: sourceId,
           sourceType: sourceType,
           status: ServerStatus.restarting,
-          message: '服务器正在重启',
+          message: appL10n.mediaServerRestarting,
         ));
       default:
         logger.d('MediaServerEventHandler: 未处理的 Jellyfin 事件 ${event.type}');
@@ -251,14 +252,14 @@ class MediaServerEventHandler {
           sourceId: sourceId,
           sourceType: sourceType,
           status: ServerStatus.shuttingDown,
-          message: '服务器正在关闭',
+          message: appL10n.mediaServerShuttingDown,
         ));
       case EmbyMessageType.serverRestarting:
         _serverStatusController.add(ServerStatusEvent(
           sourceId: sourceId,
           sourceType: sourceType,
           status: ServerStatus.restarting,
-          message: '服务器正在重启',
+          message: appL10n.mediaServerRestarting,
         ));
       default:
         logger.d('MediaServerEventHandler: 未处理的 Emby 事件 ${event.type}');

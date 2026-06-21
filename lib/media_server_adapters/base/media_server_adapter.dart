@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/media_server_adapters/base/media_server_entities.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -105,14 +106,14 @@ class MediaServerVersionRequirements {
       return ServerCompatibilityResult.incompatible(
         serverVersion: version,
         minVersion: jellyfinMin.toString(),
-        message: '服务器版本过低，需要 ${jellyfinMin.major}.${jellyfinMin.minor}+ 版本',
+        message: appL10n.mediaServerVersionTooLow('${jellyfinMin.major}.${jellyfinMin.minor}'),
       );
     }
 
     // Quick Connect 需要 10.7+，但我们已经要求 10.8+
     // WebSocket 需要特定版本
     if (current < const ServerVersion(10, 9, 0)) {
-      warnings.add('建议升级到 10.9+ 以获得更好的 WebSocket 支持');
+      warnings.add(appL10n.mediaServerJellyfinUpgradeHint);
     }
 
     return ServerCompatibilityResult.compatible(
@@ -130,13 +131,13 @@ class MediaServerVersionRequirements {
       return ServerCompatibilityResult.incompatible(
         serverVersion: version,
         minVersion: embyMin.toString(),
-        message: '服务器版本过低，需要 ${embyMin.major}.${embyMin.minor}+ 版本',
+        message: appL10n.mediaServerVersionTooLow('${embyMin.major}.${embyMin.minor}'),
       );
     }
 
     // Emby 4.8+ 有更好的 API 支持
     if (current < const ServerVersion(4, 8, 0)) {
-      warnings.add('建议升级到 4.8+ 以获得更好的 API 支持');
+      warnings.add(appL10n.mediaServerEmbyUpgradeHint);
     }
 
     return ServerCompatibilityResult.compatible(
@@ -153,7 +154,7 @@ class MediaServerVersionRequirements {
 
     // Plex 通常向后兼容，但建议使用较新版本
     if (current < plexRecommended) {
-      warnings.add('建议升级到 ${plexRecommended.major}.${plexRecommended.minor}+ 以获得最佳体验');
+      warnings.add(appL10n.mediaServerPlexUpgradeHint('${plexRecommended.major}.${plexRecommended.minor}'));
     }
 
     return ServerCompatibilityResult.compatible(

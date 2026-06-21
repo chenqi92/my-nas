@@ -9,6 +9,7 @@ import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// `showModalBottomSheet` 的桌面自适应替代。
 ///
@@ -673,7 +674,7 @@ class _DesktopDialog extends ConsumerWidget {
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close_rounded),
                 iconSize: 20,
-                tooltip: '关闭',
+                tooltip: localizeFormText(context, '关闭'),
               ),
           ],
         ),
@@ -785,7 +786,7 @@ class _DesktopSidePanel extends ConsumerWidget {
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close_rounded),
                 iconSize: 20,
-                tooltip: '关闭',
+                tooltip: localizeFormText(context, '关闭'),
               ),
             const SizedBox(width: AppSpacing.sm),
             if (titleWidget != null)

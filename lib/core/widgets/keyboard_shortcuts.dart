@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// 键盘快捷键处理器组件
 ///
@@ -351,7 +352,7 @@ class KeyboardShortcutsHelpDialog extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      title,
+                      localizeFormText(context, title),
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -360,7 +361,7 @@ class KeyboardShortcutsHelpDialog extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.close_rounded),
                     onPressed: () => Navigator.pop(context),
-                    tooltip: '关闭',
+                    tooltip: localizeFormText(context, '关闭'),
                   ),
                 ],
               ),
@@ -391,7 +392,7 @@ class KeyboardShortcutsHelpDialog extends StatelessWidget {
                   const _KeyCap(label: '?'),
                   const SizedBox(width: 8),
                   Text(
-                    '按此键显示/隐藏帮助',
+                    localizeFormText(context, '按此键显示/隐藏帮助'),
                     style: TextStyle(
                       color: colorScheme.onSurfaceVariant,
                       fontSize: 13,
@@ -400,7 +401,7 @@ class KeyboardShortcutsHelpDialog extends StatelessWidget {
                   const Spacer(),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('关闭'),
+                    child: Text(localizeFormText(context, '关闭')),
                   ),
                 ],
               ),
@@ -414,7 +415,7 @@ class KeyboardShortcutsHelpDialog extends StatelessWidget {
   Widget _buildFlatContent(BuildContext context, bool isDark) => Column(
         mainAxisSize: MainAxisSize.min,
         children: shortcuts
-            .map((s) => _ShortcutRow(keyLabel: s.key, description: s.description))
+            .map((s) => _ShortcutRow(keyLabel: s.key, description: localizeFormText(context, s.description)))
             .toList(),
       );
 
@@ -447,7 +448,7 @@ class _ShortcutGroupSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            group.title,
+            localizeFormText(context, group.title),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -457,7 +458,7 @@ class _ShortcutGroupSection extends StatelessWidget {
           ),
         ),
         ...group.shortcuts.map(
-          (s) => _ShortcutRow(keyLabel: s.key, description: s.description),
+          (s) => _ShortcutRow(keyLabel: s.key, description: localizeFormText(context, s.description)),
         ),
       ],
     );
