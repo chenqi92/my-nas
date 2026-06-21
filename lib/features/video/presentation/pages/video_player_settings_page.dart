@@ -1049,7 +1049,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
-                    '$threshold 秒',
+                    context.l10n.videoPlayerSettingsThresholdSeconds(threshold),
                     style: context.textTheme.bodyLarge?.copyWith(
                       color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,

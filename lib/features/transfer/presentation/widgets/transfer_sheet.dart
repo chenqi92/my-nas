@@ -1143,7 +1143,7 @@ class _TransferTaskTile extends ConsumerWidget {
       return _buildIconButton(
         context,
         icon: Icons.delete_outline_rounded,
-        tooltip: '删除缓存',
+        tooltip: context.l10n.transferSheetDeleteCacheTooltip,
         onTap: () => notifier.deleteCache(task.sourceId, task.sourcePath),
       );
     }

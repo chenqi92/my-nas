@@ -274,7 +274,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage>
                           const SizedBox(height: 16),
                           TextButton(
                             onPressed: _loadTracks,
-                            child: const Text('重试'),
+                            child: Text(context.l10n.commonRetry),
                           ),
                         ],
                       ),

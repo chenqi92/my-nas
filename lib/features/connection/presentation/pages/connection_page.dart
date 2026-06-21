@@ -538,7 +538,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
               if (comingSoon) ...[
                 const SizedBox(height: 2),
                 Text(
-                  '即将推出',
+                  context.l10n.connPageComingSoon,
                   style: TextStyle(
                     color: AppColors.darkOnSurfaceVariant.withValues(alpha: 0.4),
                     fontSize: 9,
@@ -905,9 +905,9 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                   child: InkWell(
                     onTap: _handleVerify2FA,
                     borderRadius: BorderRadius.circular(16),
-                    child: const Center(
+                    child: Center(
                       child: Text(
-                        '验证',
+                        context.l10n.connPageVerifyButton,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,

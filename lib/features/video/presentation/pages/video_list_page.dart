@@ -7393,14 +7393,14 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
       final sections = <FilterSection>[
         FilterSection(
           id: 'genre',
-          title: '类型',
+          title: context.l10n.videoFilterGenreLabel,
           items: _availableGenres
               .map((g) => FilterItem(value: g, title: g))
               .toList(),
         ),
         FilterSection(
           id: 'year',
-          title: '年份',
+          title: context.l10n.videoFilterYearLabel,
           items: _availableYears
               .map((y) => FilterItem(value: y.toString(), title: y.toString()))
               .toList(),
@@ -7414,7 +7414,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
       final result = await showNativeFilterSheet(
         context: context,
         sections: sections,
-        title: '筛选',
+        title: context.l10n.videoFilterTitle,
         initialSelectedValues: initialValues,
       );
 
@@ -7650,7 +7650,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
                         ),
                       if (_selectedYear != null)
                         _FilterChip(
-                          label: '$_selectedYear年',
+                          label: context.l10n.videoFilterYearDisplay(_selectedYear!),
                           onRemove: () {
                             setState(() => _selectedYear = null);
                             _resetAndReload();
@@ -7938,7 +7938,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '筛选',
+                context.l10n.videoFilterTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -8268,14 +8268,14 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
       final sections = <FilterSection>[
         FilterSection(
           id: 'genre',
-          title: '类型',
+          title: context.l10n.videoFilterGenreLabel,
           items: _availableGenres
               .map((g) => FilterItem(value: g, title: g))
               .toList(),
         ),
         FilterSection(
           id: 'year',
-          title: '年份',
+          title: context.l10n.videoFilterYearLabel,
           items: _availableYears
               .map((y) => FilterItem(value: y.toString(), title: y.toString()))
               .toList(),
@@ -8289,7 +8289,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
       final result = await showNativeFilterSheet(
         context: context,
         sections: sections,
-        title: '筛选',
+        title: context.l10n.videoFilterTitle,
         initialSelectedValues: initialValues,
       );
 
@@ -8610,7 +8610,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
                         ),
                       if (_selectedYear != null)
                         _FilterChip(
-                          label: '$_selectedYear年',
+                          label: context.l10n.videoFilterYearDisplay(_selectedYear!),
                           onRemove: () {
                             setState(() => _selectedYear = null);
                             _resetAndReload();

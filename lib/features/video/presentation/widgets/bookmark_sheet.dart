@@ -273,10 +273,10 @@ class _BookmarkSheetState extends ConsumerState<BookmarkSheet> {
         title: Text(context.l10n.videoBookmarkEditDialogTitle),
         content: TextField(
           controller: _noteController,
-          decoration: const InputDecoration(
-            labelText: '备注',
-            hintText: '输入书签备注...',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.l10n.videoBookmarkNoteLabel,
+            hintText: context.l10n.videoBookmarkNoteHint,
+            border: const OutlineInputBorder(),
           ),
           maxLines: 2,
         ),

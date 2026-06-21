@@ -119,7 +119,7 @@ class TTSControlBar extends ConsumerWidget {
     return Row(
       children: [
         Text(
-          '第 ${state.currentParagraphIndex + 1} 段',
+          context.l10n.ttsControlCurrentParagraph(state.currentParagraphIndex + 1),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

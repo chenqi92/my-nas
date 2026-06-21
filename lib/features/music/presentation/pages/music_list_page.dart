@@ -138,7 +138,7 @@ class MusicFileWithSource {
   }
 
   /// 显示的专辑
-  String get displayAlbum => album?.isNotEmpty ?? false ? album! : '未知专辑';
+  String get displayAlbum => album?.isNotEmpty ?? false ? album! : '';
 
   /// 是否有封面
   bool get hasCover =>
@@ -2416,14 +2416,14 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                 children: [
                   _buildStatChip(
                     icon: Icons.music_note_rounded,
-                    label: '$trackCount 首歌曲',
+                    label: context.l10n.musicListSongCount(trackCount),
                     isDark: isDark,
                   ),
                   if (artistCount > 0) ...[
                     const SizedBox(width: 12),
                     _buildStatChip(
                       icon: Icons.person_rounded,
-                      label: '$artistCount 位',
+                      label: context.l10n.musicListArtistCount(artistCount),
                       isDark: isDark,
                     ),
                   ],
@@ -2431,7 +2431,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                     const SizedBox(width: 12),
                     _buildStatChip(
                       icon: Icons.album_rounded,
-                      label: '$albumCount 张',
+                      label: context.l10n.musicListAlbumCount(albumCount),
                       isDark: isDark,
                     ),
                   ],
@@ -2441,7 +2441,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                       icon: Icons.sync_rounded,
                       label: metadataTotal > 0
                           ? '$metadataProcessed/$metadataTotal'
-                          : '加载中',
+                          : context.l10n.musicListLoading,
                       isDark: isDark,
                       isLoading: true,
                     ),
@@ -2902,7 +2902,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '正在扫描... 已找到 $scannedCount 首音乐',
+                        context.l10n.musicListScanningProgress(scannedCount),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -3009,7 +3009,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            fromCache ? '加载缓存...' : '扫描音乐中...',
+            fromCache ? context.l10n.musicListLoadingCache : context.l10n.musicListScanning,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -5475,7 +5475,7 @@ class _ArtistCard extends StatelessWidget {
         MaterialPageRoute<void>(
           builder: (_) => CategoryDetailPage(
             title: artistName,
-            subtitle: '${tracks.length} 首歌曲',
+            subtitle: context.l10n.musicListSongCount(tracks.length),
             tracks: tracks,
             icon: Icons.person_rounded,
             color: AppColors.primary,
@@ -5725,7 +5725,7 @@ class _ArtistCardFromDb extends ConsumerWidget {
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
           title: artistName,
-          subtitle: '$count 首歌曲',
+          subtitle: context.l10n.musicListSongCount(count),
           tracks: musicTracks,
           icon: Icons.person_rounded,
           color: AppColors.primary,
@@ -6235,7 +6235,7 @@ class _FolderCard extends StatelessWidget {
             MaterialPageRoute<void>(
               builder: (_) => CategoryDetailPage(
                 title: folderName,
-                subtitle: '${tracks.length} 首歌曲',
+                subtitle: context.l10n.musicListSongCount(tracks.length),
                 tracks: tracks,
                 icon: Icons.folder_rounded,
                 color: AppColors.fileAudio,
@@ -6412,7 +6412,7 @@ class _FolderCardFromDb extends ConsumerWidget {
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
           title: folderName,
-          subtitle: '$count 首歌曲',
+          subtitle: context.l10n.musicListSongCount(count),
           tracks: musicTracks,
           icon: Icons.folder_rounded,
           color: AppColors.fileAudio,
@@ -6519,7 +6519,7 @@ class _GenreCard extends StatelessWidget {
         MaterialPageRoute<void>(
           builder: (_) => CategoryDetailPage(
             title: genreName,
-            subtitle: '${tracks.length} 首歌曲',
+            subtitle: context.l10n.musicListSongCount(tracks.length),
             tracks: tracks,
             icon: Icons.category_rounded,
             color: color,
@@ -6696,7 +6696,7 @@ class _GenreCardFromDb extends ConsumerWidget {
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
           title: genreName,
-          subtitle: '$count 首歌曲',
+          subtitle: context.l10n.musicListSongCount(count),
           tracks: musicTracks,
           icon: Icons.category_rounded,
           color: color,
@@ -6824,7 +6824,7 @@ class _YearCard extends StatelessWidget {
         MaterialPageRoute<void>(
           builder: (_) => CategoryDetailPage(
             title: displayTitle,
-            subtitle: '${tracks.length} 首歌曲',
+            subtitle: context.l10n.musicListSongCount(tracks.length),
             tracks: tracks,
             icon: Icons.date_range_rounded,
             color: color,
@@ -7032,7 +7032,7 @@ class _YearCardFromDb extends ConsumerWidget {
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
           title: '$decadeLabel 年代',
-          subtitle: '$count 首歌曲',
+          subtitle: context.l10n.musicListSongCount(count),
           tracks: musicTracks,
           icon: Icons.date_range_rounded,
           color: color,
@@ -8571,7 +8571,7 @@ class _ModernMusicTile extends ConsumerWidget {
             const Divider(height: 1),
             _BottomSheetOption(
               icon: Icons.queue_play_next_rounded,
-              label: '下一首播放',
+              label: context.l10n.musicListPlayNext,
               isDark: isDark,
               onTap: () {
                 Navigator.pop(context);
@@ -9309,7 +9309,7 @@ class _CompactMusicTile extends ConsumerWidget {
                     playlist.name,
                     style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                   ),
-                  subtitle: Text('${playlist.trackCount} 首歌曲'),
+                  subtitle: Text(context.l10n.musicListSongCount(playlist.trackCount)),
                   onTap: () async {
                     await ref.read(playlistProvider.notifier).addToPlaylist(playlist.id, trackPath);
                     if (sheetContext.mounted) {

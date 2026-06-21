@@ -473,7 +473,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
       title: Column(
         children: [
           Text(
-            '正在播放',
+            context.l10n.musicPlayerPlayingNow,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,

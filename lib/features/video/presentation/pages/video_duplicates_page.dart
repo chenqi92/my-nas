@@ -69,7 +69,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'VideoDuplicatesPage._loadDuplicates');
       setState(() {
-        _errorMessage = '加载失败: $e';
+        _errorMessage = context.l10n.videoDuplicatesLoadFailed(e.toString());
         _isLoading = false;
       });
     }
@@ -173,7 +173,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'VideoDuplicatesPage._deleteSelected');
       setState(() {
-        _errorMessage = '删除失败: $e';
+        _errorMessage = context.l10n.videoDuplicatesDeleteFailed(e.toString());
         _isDeleting = false;
       });
     } finally {
@@ -609,7 +609,7 @@ class _VideoDuplicatesPageState extends ConsumerState<VideoDuplicatesPage>
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              '${videos.length} 个文件',
+                              context.l10n.videoDuplicatesGroupFileCount(videos.length),
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 
 /// 媒体信息标签组件
@@ -350,7 +351,7 @@ class RatingBadges extends StatelessWidget {
 
     // 豆瓣评分
     if (doubanRating != null && doubanRating! > 0) {
-      badges.add(_buildDoubanBadge(doubanRating!));
+      badges.add(_buildDoubanBadge(context, doubanRating!));
     }
 
     // IMDb 评分
@@ -470,7 +471,7 @@ class RatingBadges extends StatelessWidget {
   }
 
   /// 豆瓣评分徽章
-  Widget _buildDoubanBadge(double rating) => Row(
+  Widget _buildDoubanBadge(BuildContext context, double rating) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           // 豆瓣图标
@@ -482,8 +483,8 @@ class RatingBadges extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
             ),
             alignment: Alignment.center,
-            child: const Text(
-              '豆',
+            child: Text(
+              context.l10n.videoRatingBadgesDoubanLabel,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,

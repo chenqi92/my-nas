@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -53,7 +54,7 @@ class AspectRatioSelector extends ConsumerWidget {
                 const Icon(Icons.aspect_ratio),
                 const SizedBox(width: 12),
                 Text(
-                  '画面比例',
+                  context.l10n.videoAspectRatioSelectorTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const Spacer(),
@@ -114,15 +115,15 @@ class _AspectRatioTile extends StatelessWidget {
       AspectRatioMode.r1x1 => Icons.crop_square,
     };
 
-  String get _description => switch (mode) {
-      AspectRatioMode.auto => '根据视频自动调整',
-      AspectRatioMode.fill => '拉伸填满屏幕',
-      AspectRatioMode.contain => '完整显示，可能有黑边',
-      AspectRatioMode.cover => '裁剪填满，可能裁掉部分画面',
-      AspectRatioMode.r16x9 => '宽屏比例',
-      AspectRatioMode.r4x3 => '传统电视比例',
-      AspectRatioMode.r21x9 => '超宽屏/电影比例',
-      AspectRatioMode.r1x1 => '正方形',
+  String _getDescription(BuildContext context) => switch (mode) {
+      AspectRatioMode.auto => context.l10n.videoAspectRatioDescAuto,
+      AspectRatioMode.fill => context.l10n.videoAspectRatioDescFill,
+      AspectRatioMode.contain => context.l10n.videoAspectRatioDescContain,
+      AspectRatioMode.cover => context.l10n.videoAspectRatioCover,
+      AspectRatioMode.r16x9 => context.l10n.videoAspectRatioDesc16x9,
+      AspectRatioMode.r4x3 => context.l10n.videoAspectRatioDesc4x3,
+      AspectRatioMode.r21x9 => context.l10n.videoAspectRatioDesc21x9,
+      AspectRatioMode.r1x1 => context.l10n.videoAspectRatioDesc1x1,
     };
 
   @override
@@ -141,7 +142,7 @@ class _AspectRatioTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          _description,
+          _getDescription(context),
           style: const TextStyle(fontSize: 12),
         ),
         trailing: isSelected

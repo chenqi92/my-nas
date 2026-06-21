@@ -591,11 +591,11 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
             children: [
               Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
               const SizedBox(height: 16),
-              Text('加载目录失败'),
+              Text(context.l10n.bookDetailLoadChaptersFailed),
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: _loadChapters,
-                child: const Text('重试'),
+                child: Text(context.l10n.bookDetailRetry),
               ),
             ],
           ),

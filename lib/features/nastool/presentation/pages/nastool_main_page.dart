@@ -466,7 +466,7 @@ conn.adapter.username ?? context.l10n.nastoolConnectionConnected,
       case 7:
         return _SettingsContent(sourceId: widget.source.id, isDark: isDark);
       default:
-        return const Center(child: Text('404'));
+        return Center(child: Text(context.l10n.nastoolNavNotFound));
     }
   }
 }

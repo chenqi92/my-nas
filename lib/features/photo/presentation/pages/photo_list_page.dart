@@ -2389,16 +2389,16 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                     MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
                   ),
                   borderRadius: BorderRadius.circular(16),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.add_rounded, color: Colors.white),
-                        SizedBox(width: 8),
+                        const Icon(Icons.add_rounded, color: Colors.white),
+                        const SizedBox(width: 8),
                         Text(
-                          '添加连接',
-                          style: TextStyle(
+                          context.l10n.photoListAddConnection,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                             fontSize: 16,

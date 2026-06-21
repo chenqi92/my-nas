@@ -8653,5 +8653,213 @@
   },
   "mediaLibraryImportTypeBook": "Books",
   "mediaLibraryImportTypeComic": "Comics",
-  "mediaLibraryImportTypeDocument": "Files"
+  "mediaLibraryImportTypeDocument": "Files",
+  "readingSearchButtonSearch": "Search",
+  "musicListUnknownArtist": "Unknown Artist",
+  "musicListUnknownAlbum": "Unknown Album",
+  "musicListSongCount": "{count} Songs",
+  "@musicListSongCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicListArtistCount": "{count} Artists",
+  "@musicListArtistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicListAlbumCount": "{count} Albums",
+  "@musicListAlbumCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicListLoading": "Loading...",
+  "musicListLoadingCache": "Loading cache...",
+  "musicListScanning": "Scanning music...",
+  "musicListScanningProgress": "Scanning... Found {count} songs",
+  "@musicListScanningProgress": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicListPlayNext": "Play Next",
+  "musicManualScraperSearchFailed": "Search failed: {error}",
+  "@musicManualScraperSearchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicManualScraperGetDetailsFailed": "Failed to get details: {error}",
+  "@musicManualScraperGetDetailsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicManualScraperScrapingFailed": "Scraping failed: {error}",
+  "@musicManualScraperScrapingFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicManualScraperOverrideLabel": "(override)",
+  "musicPlayerPlayingNow": "Now Playing",
+  "videoFilterGenreLabel": "Type",
+  "videoFilterYearDisplay": "{year} year",
+  "@videoFilterYearDisplay": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "videoAspectRatioSelectorTitle": "Aspect Ratio",
+  "videoAudioTrackSelectorEmpty": "No audio tracks available",
+  "videoLanguageEnglish": "English",
+  "videoLanguageJapanese": "Japanese",
+  "videoLanguageKorean": "Korean",
+  "videoLanguageFrench": "French",
+  "videoLanguageGerman": "German",
+  "videoLanguageSpanish": "Spanish",
+  "videoLanguageItalian": "Italian",
+  "videoLanguageRussian": "Russian",
+  "videoLanguagePortuguese": "Portuguese",
+  "videoLanguageArabic": "Arabic",
+  "videoLanguageHindi": "Hindi",
+  "videoLanguageThai": "Thai",
+  "videoLanguageVietnamese": "Vietnamese",
+  "videoLanguageUnknown": "Unknown Language",
+  "videoLanguageChinese": "Chinese",
+  "videoLanguageSimplifiedChinese": "Simplified Chinese",
+  "videoLanguageTraditionalChinese": "Traditional Chinese",
+  "videoLanguageCantonese": "Cantonese",
+  "videoChannelMono": "Mono",
+  "videoChannelStereo": "Stereo",
+  "videoChannelSurround51": "5.1 Surround",
+  "videoChannelSurround71": "7.1 Surround",
+  "videoChannelCustom": "{channels}-channel",
+  "@videoChannelCustom": {
+    "placeholders": {
+      "channels": {
+        "type": "int"
+      }
+    }
+  },
+  "videoRatingBadgesDoubanLabel": "Douban",
+  "qbDetailFilterCategoryLabel": "Category",
+  "qbDetailFilterTagLabel": "Tag",
+  "qbDetailTileShareRatio": "Ratio: {ratio}",
+  "@qbDetailTileShareRatio": {
+    "placeholders": {
+      "ratio": {
+        "type": "String"
+      }
+    }
+  },
+  "ptSendToDownloaderSuccessToast": "Sent to {downloader}",
+  "@ptSendToDownloaderSuccessToast": {
+    "placeholders": {
+      "downloader": {
+        "type": "String"
+      }
+    }
+  },
+  "comicReaderPageListTooltip": "Page List",
+  "comicReaderWebtoonPageGapLabel": "Page Gap",
+  "sourceFormPasswordEditModeHint": "(leave blank to keep unchanged)",
+  "sourceFormPasswordRequired": "Please enter {label}",
+  "@sourceFormPasswordRequired": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceFormQuickConnectSuccessTitle": "Quick Connect authentication successful",
+  "sourceFormPlexAuthSuccessTitle": "Plex account authorization successful",
+  "sourceFormAuthTypeUsernamePassword": "Username & Password",
+  "sourceFormAuthTypePinAuthorization": "PIN Authorization",
+  "sourceFormServiceAddedPendingAuth": "Added {name} (requires completing authorization in the dedicated section)",
+  "@sourceFormServiceAddedPendingAuth": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "serviceType": {
+        "type": "String"
+      }
+    }
+  },
+  "nastoolNavNotFound": "Page not found",
+  "transmissionVersionUnknown": "Unknown",
+  "transmissionUploadedLabel": "Uploaded: {size}",
+  "@transmissionUploadedLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "transmissionShareRatioLabel": "Share ratio: {ratio}",
+  "@transmissionShareRatioLabel": {
+    "placeholders": {
+      "ratio": {
+        "type": "String"
+      }
+    }
+  },
+  "transmissionEtaSeconds": "{seconds} seconds",
+  "@transmissionEtaSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "transmissionEtaMinutes": "{minutes} minutes",
+  "@transmissionEtaMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "transmissionEtaHours": "{hours} hours {minutes} minutes",
+  "@transmissionEtaHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "transmissionEtaDays": "{days} days {hours} hours",
+  "@transmissionEtaDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "videoAspectRatioCover": "Cover"
 }

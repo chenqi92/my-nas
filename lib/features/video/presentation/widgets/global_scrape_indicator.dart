@@ -138,7 +138,7 @@ class _GlobalScrapeIndicatorState extends State<GlobalScrapeIndicator>
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '正在刮削视频元数据...',
+                    context.l10n.videoScrapeIndicatorTitle,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,

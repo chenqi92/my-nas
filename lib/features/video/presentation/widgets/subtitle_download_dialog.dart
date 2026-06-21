@@ -233,12 +233,12 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
-                          builder: (_) => const ServiceSourcesPage(
-                            title: '字幕站点',
+                          builder: (_) => ServiceSourcesPage(
+                            title: context.l10n.videoSubtitleSourcesLabel,
                             category: SourceCategory.subtitleSites,
                             emptyIcon: Icons.subtitles_rounded,
-                            emptyTitle: '尚未配置字幕站点',
-                            emptySubtitle: '添加 OpenSubtitles 等字幕服务\n用于在线搜索和下载字幕',
+                            emptyTitle: context.l10n.videoSubtitleSourceNotConfigured,
+                            emptySubtitle: context.l10n.videoSubtitleSourceConfigHint,
                           ),
                         ),
                       );

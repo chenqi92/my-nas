@@ -184,7 +184,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'ManualMusicScraperPage._search');
       setState(() {
-        _errorMessage = '搜索失败: $e';
+        _errorMessage = context.l10n.musicManualScraperSearchFailed(e);
         _isSearching = false;
       });
     }
@@ -307,7 +307,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'ManualMusicScraperPage._selectItem');
       setState(() {
-        _errorMessage = '获取详情失败: $e';
+        _errorMessage = context.l10n.musicManualScraperGetDetailsFailed(e);
         _isLoadingDetail = false;
       });
     }
@@ -388,7 +388,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'ManualMusicScraperPage._confirmAndScrape');
       if (mounted) {
-        context.showErrorToast('刮削失败: $e');
+        context.showErrorToast(context.l10n.musicManualScraperScrapingFailed(e));
       }
     } finally {
       if (mounted) {
@@ -1285,7 +1285,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                       children: [
                         Expanded(
                           child: _buildCompactOption(
-                            context.l10n.musicManualScraperCoverOption(_hasCover ? '(覆盖)' : ''),
+                            context.l10n.musicManualScraperCoverOption(_hasCover ? context.l10n.musicManualScraperOverrideLabel : ''),
                             _downloadCover && _selectedCover != null,
                             _selectedCover != null
                                 ? (v) => setState(() => _downloadCover = v)
@@ -1297,7 +1297,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                         const SizedBox(width: 8),
                         Expanded(
                           child: _buildCompactOption(
-                            context.l10n.musicManualScraperLyricsOption(_hasLyrics ? '(覆盖)' : ''),
+                            context.l10n.musicManualScraperLyricsOption(_hasLyrics ? context.l10n.musicManualScraperOverrideLabel : ''),
                             _downloadLyrics && (_selectedLyrics?.hasLyrics ?? false),
                             (_selectedLyrics?.hasLyrics ?? false)
                                 ? (v) => setState(() => _downloadLyrics = v)

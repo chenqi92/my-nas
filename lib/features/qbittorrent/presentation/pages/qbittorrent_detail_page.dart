@@ -852,7 +852,7 @@ class _TorrentTile extends ConsumerWidget {
                     const Icon(Icons.sync_rounded, size: 14),
                     const SizedBox(width: 4),
                     Text(
-                      '分享率: ${torrent.ratio?.toStringAsFixed(2) ?? '-'}',
+                      context.l10n.qbDetailTileShareRatio(torrent.ratio?.toStringAsFixed(2) ?? '-'),
                       style: context.textTheme.bodySmall?.copyWith(
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                       ),
@@ -1483,7 +1483,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                   // 分类筛选
                   if (categories.isNotEmpty) ...[
                     Text(
-                      '分类',
+                      context.l10n.qbDetailFilterCategoryLabel,
                       style: context.textTheme.titleSmall?.copyWith(
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                       ),
@@ -1514,7 +1514,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                   // 标签筛选
                   if (tags.isNotEmpty) ...[
                     Text(
-                      '标签',
+                      context.l10n.qbDetailFilterTagLabel,
                       style: context.textTheme.titleSmall?.copyWith(
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                       ),
@@ -2221,7 +2221,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                         children: [
                           _buildCategoryChip(
                             context,
-                            label: '无',
+                            label: context.l10n.qbDetailCategoryNone,
                             isSelected: _selectedCategory == null,
                             onTap: () => setState(() => _selectedCategory = null),
                           ),

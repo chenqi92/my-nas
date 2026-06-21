@@ -698,7 +698,7 @@ class TimelineFilterBottomSheet extends ConsumerWidget {
                 child: Row(
                   children: [
                     Text(
-                      '${yearGroup.year}年',
+                      context.l10n.photoTimelineYearLabel(yearGroup.year),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

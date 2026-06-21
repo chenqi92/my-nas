@@ -363,11 +363,11 @@ class _CloudSyncSettingsPageState
   Widget _buildDesktopModulesSection(List<SyncableModule> modules) {
     if (modules.isEmpty) {
       return SetSection(
-        title: '同步范围',
-        hint: '按模块开关',
+        title: context.l10n.syncSettingsModulesSection,
+        hint: context.l10n.syncSettingsModulesHint,
         bottomMargin: false,
-        children: const [
-          SetRow(title: '当前还没有模块注册到同步系统', last: true),
+        children: [
+          SetRow(title: context.l10n.syncSettingsNoModules, last: true),
         ],
       );
     }

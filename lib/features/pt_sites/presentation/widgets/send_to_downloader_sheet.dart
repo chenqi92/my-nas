@@ -341,7 +341,7 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
 
       if (!mounted) return;
       Navigator.pop(context);
-      context.showSuccessToast('已发送到 ${downloader.name.isEmpty ? downloader.type.displayName : downloader.name}');
+      context.showSuccessToast(context.l10n.ptSendToDownloaderSuccessToast(downloader.name.isEmpty ? downloader.type.displayName : downloader.name));
     } on Exception catch (e) {
       if (!mounted) return;
       final l = AppLocalizations.of(context);

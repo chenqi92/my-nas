@@ -1191,7 +1191,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                   onPressed: state.pages.isNotEmpty
                       ? () => _showPageListDrawer(context, state)
                       : null,
-                  tooltip: '页面列表',
+                  tooltip: context.l10n.comicReaderPageListTooltip,
                 ),
               ],
             ),
@@ -1397,7 +1397,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         // 长条模式页间距
         if (settings.readingMode == ComicReadingMode.webtoon) ...[
           SettingSliderRow(
-            label: '页间距',
+            label: context.l10n.comicReaderWebtoonPageGapLabel,
             value: settings.webtoonPageGap,
             max: 50,
             divisions: 10,

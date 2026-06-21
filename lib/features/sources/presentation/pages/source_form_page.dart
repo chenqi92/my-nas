@@ -474,7 +474,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         obscureText: _obscurePasswords,
         decoration: InputDecoration(
           labelText: widget.mode == SourceFormMode.edit
-              ? '${field.label}（留空保持不变）'
+              ? '${field.label}${context.l10n.sourceFormPasswordEditModeHint}'
               : field.label,
           hintText: field.placeholder,
           helperText: field.helpText,
@@ -499,7 +499,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             if (widget.mode == SourceFormMode.edit) {
               return null;
             }
-            return '请输入${field.label}';
+            return context.l10n.sourceFormPasswordRequired(field.label);
           }
           return field.validator?.call(value);
         },
@@ -806,7 +806,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Quick Connect 认证成功',
+                    context.l10n.sourceFormQuickConnectSuccessTitle,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: Colors.green,
                       fontWeight: FontWeight.bold,
@@ -891,7 +891,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Plex 账号授权成功',
+                    context.l10n.sourceFormPlexAuthSuccessTitle,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: Colors.green,
                       fontWeight: FontWeight.bold,
@@ -1102,7 +1102,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
   Future<bool> _validateServiceSourceConnection(SourceEntity source) async {
     switch (source.type) {
       case SourceType.nastool:
-        final authType = _formValues['authType'] as String? ?? '用户名密码';
+        final authType = _formValues['authType'] as String? ?? context.l10n.sourceFormAuthTypeUsernamePassword;
         final api = NasToolApi(baseUrl: source.baseUrl);
         try {
           if (authType == 'API Token') {
@@ -1172,7 +1172,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           mpApi.dispose();
         }
       case SourceType.jellyfin:
-        final jellyfinAuthType = _formValues['authType'] as String? ?? '用户名密码';
+        final jellyfinAuthType = _formValues['authType'] as String? ?? context.l10n.sourceFormAuthTypeUsernamePassword;
         final jellyfinAdapter = JellyfinAdapter();
         try {
           ServiceConnectionConfig config;
@@ -1206,7 +1206,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           await jellyfinAdapter.dispose();
         }
       case SourceType.plex:
-        final plexAuthType = _formValues['authType'] as String? ?? 'PIN 码授权';
+        final plexAuthType = _formValues['authType'] as String? ?? context.l10n.sourceFormAuthTypePinAuthorization;
         final plexAdapter = PlexAdapter();
         try {
           String? plexToken;
@@ -1232,7 +1232,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           await plexAdapter.dispose();
         }
       case SourceType.emby:
-        final embyAuthType = _formValues['authType'] as String? ?? '用户名密码';
+        final embyAuthType = _formValues['authType'] as String? ?? context.l10n.sourceFormAuthTypeUsernamePassword;
         final embyAdapter = EmbyAdapter();
         try {
           ServiceConnectionConfig config;
@@ -1478,7 +1478,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       if (mounted) {
         _showSuccessAndPop(
           source,
-          '已添加 ${source.displayName}（${e.sourceTypeName} 需在授权入口完成连接）',
+          context.l10n.sourceFormServiceAddedPendingAuth(source.displayName, e.sourceTypeName),
         );
       }
     } on Exception catch (e) {

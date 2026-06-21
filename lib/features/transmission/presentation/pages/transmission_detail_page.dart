@@ -339,7 +339,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
             const SizedBox(height: 12),
             _InfoRow(
               label: context.l10n.transmissionVersion,
-              value: info.version ?? '未知',
+              value: info.version ?? context.l10n.transmissionVersionUnknown,
               isDark: isDark,
             ),
             const SizedBox(height: 12),
@@ -677,7 +677,7 @@ class _TorrentTile extends ConsumerWidget {
                     Icon(Icons.cloud_upload_outlined, size: 14, color: AppColors.primary),
                     const SizedBox(width: 4),
                     Text(
-                      '已上传: ${_formatSize(torrent.uploadedEver!)}',
+                      context.l10n.transmissionUploadedLabel(_formatSize(torrent.uploadedEver!)),
                       style: context.textTheme.bodySmall?.copyWith(
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                       ),
@@ -685,7 +685,7 @@ class _TorrentTile extends ConsumerWidget {
                     if (torrent.downloadedEver != null && torrent.downloadedEver! > 0) ...[
                       const SizedBox(width: 12),
                       Text(
-                        '分享率: ${((torrent.uploadedEver ?? 0) / torrent.downloadedEver!).toStringAsFixed(2)}',
+                        context.l10n.transmissionShareRatioLabel(((torrent.uploadedEver ?? 0) / torrent.downloadedEver!).toStringAsFixed(2)),
                         style: context.textTheme.bodySmall?.copyWith(
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                         ),
@@ -875,7 +875,7 @@ class _TorrentTile extends ConsumerWidget {
                         value: ((torrent.uploadedEver ?? 0) / torrent.downloadedEver!).toStringAsFixed(2),
                       ),
                     if (torrent.eta != null && torrent.eta! > 0)
-                      _DetailItem(label: context.l10n.transmissionDetailTimeRemaining, value: _formatEta(torrent.eta!)),
+                      _DetailItem(label: context.l10n.transmissionDetailTimeRemaining, value: _formatEta(context, torrent.eta!)),
                     if (torrent.addedDate != null)
                       _DetailItem(
                         label: context.l10n.transmissionDetailAddedTime,
@@ -1385,10 +1385,10 @@ String _formatSize(int bytes) {
   return '${(bytes / 1024 / 1024 / 1024 / 1024).toStringAsFixed(2)} TB';
 }
 
-String _formatEta(int seconds) {
+String _formatEta(BuildContext context, int seconds) {
   if (seconds < 0) return '∞';
-  if (seconds < 60) return '$seconds 秒';
-  if (seconds < 3600) return '${seconds ~/ 60} 分钟';
-  if (seconds < 86400) return '${seconds ~/ 3600} 小时 ${(seconds % 3600) ~/ 60} 分钟';
-  return '${seconds ~/ 86400} 天 ${(seconds % 86400) ~/ 3600} 小时';
+  if (seconds < 60) return context.l10n.transmissionEtaSeconds(seconds);
+  if (seconds < 3600) return context.l10n.transmissionEtaMinutes(seconds ~/ 60);
+  if (seconds < 86400) return context.l10n.transmissionEtaHours(seconds ~/ 3600, (seconds % 3600) ~/ 60);
+  return context.l10n.transmissionEtaDays(seconds ~/ 86400, (seconds % 86400) ~/ 3600);
 }

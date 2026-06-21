@@ -1484,7 +1484,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
 
       // 如果只有一张照片，直接返回
       if (widget.photos.length <= 1) {
-        _showSuccessSnackBar(context, '照片已删除');
+        _showSuccessSnackBar(context, context.l10n.photoViewerDeletedSuccess);
         Navigator.of(context).pop();
         return;
       }

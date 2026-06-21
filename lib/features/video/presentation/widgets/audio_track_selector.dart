@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/presentation/providers/video_player_provider.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -48,9 +50,9 @@ class AudioTrackSelector extends ConsumerWidget {
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  '音轨选择',
-                  style: TextStyle(
+                Text(
+                  context.l10n.videoAudioTrackSelectorTitle,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -73,16 +75,16 @@ class AudioTrackSelector extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.all(32),
               child: Column(
-                children: const [
-                  Icon(
+                children: [
+                  const Icon(
                     Icons.music_off_rounded,
                     size: 48,
                     color: Colors.white38,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Text(
-                    '无可用音轨',
-                    style: TextStyle(
+                    context.l10n.videoAudioTrackSelectorEmpty,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 16,
                       decoration: TextDecoration.none,
@@ -100,7 +102,7 @@ class AudioTrackSelector extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final track = audioTracks[index];
                   final isSelected = _isTrackSelected(track, currentTrack);
-                  final trackInfo = _getTrackInfo(track);
+                  final trackInfo = _getTrackInfo(track, context);
 
                   return _AudioTrackTile(
                     title: trackInfo.title,
@@ -126,13 +128,13 @@ class AudioTrackSelector extends ConsumerWidget {
     return track.id == currentTrack.id;
   }
 
-  _TrackInfo _getTrackInfo(AudioTrack track) {
-    final title = track.title ?? '音轨 ${track.id}';
+  _TrackInfo _getTrackInfo(AudioTrack track, BuildContext context) {
+    final title = track.title ?? context.l10n.videoAudioTrackLabel(track.id);
     String? subtitle;
 
     // 解析语言
     if (track.language != null && track.language!.isNotEmpty) {
-      final langName = _getLanguageName(track.language!);
+      final langName = _getLanguageName(track.language!, context);
       subtitle = langName;
     }
 
@@ -149,7 +151,7 @@ class AudioTrackSelector extends ConsumerWidget {
     // 添加声道信息
     final channelCount = track.channelscount ?? track.audiochannels;
     if (channelCount != null && channelCount > 0) {
-      final channelInfo = _getChannelInfo(channelCount);
+      final channelInfo = _getChannelInfo(channelCount, context);
       if (subtitle != null) {
         subtitle = '$subtitle · $channelInfo';
       } else {
@@ -166,54 +168,79 @@ class AudioTrackSelector extends ConsumerWidget {
     return _TrackInfo(title: title, subtitle: subtitle);
   }
 
-  String _getLanguageName(String langCode) {
+  String _getLanguageName(String langCode, BuildContext context) {
     final code = langCode.toLowerCase();
+    final l10n = context.l10n;
     const langMap = {
-      'chi': '中文',
-      'chs': '简体中文',
-      'cht': '繁体中文',
-      'zho': '中文',
-      'zh': '中文',
-      'zh-cn': '简体中文',
-      'zh-tw': '繁体中文',
-      'zh-hk': '粤语',
-      'eng': '英语',
-      'en': '英语',
-      'jpn': '日语',
-      'ja': '日语',
-      'kor': '韩语',
-      'ko': '韩语',
-      'fra': '法语',
-      'fr': '法语',
-      'deu': '德语',
-      'de': '德语',
-      'spa': '西班牙语',
-      'es': '西班牙语',
-      'ita': '意大利语',
-      'it': '意大利语',
-      'rus': '俄语',
-      'ru': '俄语',
-      'por': '葡萄牙语',
-      'pt': '葡萄牙语',
-      'ara': '阿拉伯语',
-      'ar': '阿拉伯语',
-      'hin': '印地语',
-      'hi': '印地语',
-      'tha': '泰语',
-      'th': '泰语',
-      'vie': '越南语',
-      'vi': '越南语',
-      'und': '未知语言',
+      'chi': 'videoLanguageChinese',
+      'chs': 'videoLanguageSimplifiedChinese',
+      'cht': 'videoLanguageTraditionalChinese',
+      'zho': 'videoLanguageChinese',
+      'zh': 'videoLanguageChinese',
+      'zh-cn': 'videoLanguageSimplifiedChinese',
+      'zh-tw': 'videoLanguageTraditionalChinese',
+      'zh-hk': 'videoLanguageCantonese',
+      'eng': 'videoLanguageEnglish',
+      'en': 'videoLanguageEnglish',
+      'jpn': 'videoLanguageJapanese',
+      'ja': 'videoLanguageJapanese',
+      'kor': 'videoLanguageKorean',
+      'ko': 'videoLanguageKorean',
+      'fra': 'videoLanguageFrench',
+      'fr': 'videoLanguageFrench',
+      'deu': 'videoLanguageGerman',
+      'de': 'videoLanguageGerman',
+      'spa': 'videoLanguageSpanish',
+      'es': 'videoLanguageSpanish',
+      'ita': 'videoLanguageItalian',
+      'it': 'videoLanguageItalian',
+      'rus': 'videoLanguageRussian',
+      'ru': 'videoLanguageRussian',
+      'por': 'videoLanguagePortuguese',
+      'pt': 'videoLanguagePortuguese',
+      'ara': 'videoLanguageArabic',
+      'ar': 'videoLanguageArabic',
+      'hin': 'videoLanguageHindi',
+      'hi': 'videoLanguageHindi',
+      'tha': 'videoLanguageThai',
+      'th': 'videoLanguageThai',
+      'vie': 'videoLanguageVietnamese',
+      'vi': 'videoLanguageVietnamese',
+      'und': 'videoLanguageUnknown',
     };
-    return langMap[code] ?? langCode;
+    final keyName = langMap[code];
+    if (keyName == null) return langCode;
+    return _getLangNameByKey(l10n, keyName);
   }
 
-  String _getChannelInfo(int channels) => switch (channels) {
-        1 => '单声道',
-        2 => '立体声',
-        6 => '5.1声道',
-        8 => '7.1声道',
-        _ => '$channels声道',
+  String _getLangNameByKey(AppLocalizations l10n, String keyName) => switch (keyName) {
+      'videoLanguageChinese' => l10n.videoLanguageChinese,
+      'videoLanguageSimplifiedChinese' => l10n.videoLanguageSimplifiedChinese,
+      'videoLanguageTraditionalChinese' => l10n.videoLanguageTraditionalChinese,
+      'videoLanguageCantonese' => l10n.videoLanguageCantonese,
+      'videoLanguageEnglish' => l10n.videoLanguageEnglish,
+      'videoLanguageJapanese' => l10n.videoLanguageJapanese,
+      'videoLanguageKorean' => l10n.videoLanguageKorean,
+      'videoLanguageFrench' => l10n.videoLanguageFrench,
+      'videoLanguageGerman' => l10n.videoLanguageGerman,
+      'videoLanguageSpanish' => l10n.videoLanguageSpanish,
+      'videoLanguageItalian' => l10n.videoLanguageItalian,
+      'videoLanguageRussian' => l10n.videoLanguageRussian,
+      'videoLanguagePortuguese' => l10n.videoLanguagePortuguese,
+      'videoLanguageArabic' => l10n.videoLanguageArabic,
+      'videoLanguageHindi' => l10n.videoLanguageHindi,
+      'videoLanguageThai' => l10n.videoLanguageThai,
+      'videoLanguageVietnamese' => l10n.videoLanguageVietnamese,
+      'videoLanguageUnknown' => l10n.videoLanguageUnknown,
+      _ => '',
+    };
+
+  String _getChannelInfo(int channels, BuildContext context) => switch (channels) {
+        1 => context.l10n.videoChannelMono,
+        2 => context.l10n.videoChannelStereo,
+        6 => context.l10n.videoChannelSurround51,
+        8 => context.l10n.videoChannelSurround71,
+        _ => context.l10n.videoChannelCustom(channels),
       };
 }
 
