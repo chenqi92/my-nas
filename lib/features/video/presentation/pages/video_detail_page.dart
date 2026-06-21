@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.dart';
 import 'package:my_nas/features/pt_sites/presentation/pages/pt_site_detail_page.dart';
@@ -1581,7 +1582,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                       isDark,
                     ),
                   _buildInfoRow(context.l10n.videoTotalSize, totalSizeText, isDark),
-                  _buildInfoRow('目录', showDirectory!, isDark),
+                  _buildInfoRow(appL10n.videoDirectory, showDirectory!, isDark),
                   _buildInfoRow(context.l10n.videoSource, widget.sourceId, isDark),
                 ],
               );

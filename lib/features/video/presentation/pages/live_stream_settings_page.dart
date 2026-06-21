@@ -500,7 +500,7 @@ class _AddSourceDialogState extends State<_AddSourceDialog> {
       });
     } catch (e) {
       setState(() {
-        _error = '解析失败: $e';
+        _error = context.l10n.liveStreamParsePlaylistFailedError(e);
         _isLoading = false;
       });
     }
@@ -530,7 +530,7 @@ class _AddSourceDialogState extends State<_AddSourceDialog> {
       }
     } catch (e) {
       setState(() {
-        _error = '保存失败: $e';
+        _error = context.l10n.liveStreamSaveSourceFailedError(e);
         _isLoading = false;
       });
     }
@@ -649,7 +649,7 @@ class _EditSourceDialogState extends State<_EditSourceDialog> {
       }
     } catch (e) {
       setState(() {
-        _error = '保存失败: $e';
+        _error = context.l10n.liveStreamSaveSourceFailedError(e);
         _isLoading = false;
       });
     }

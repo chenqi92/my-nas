@@ -119,8 +119,8 @@ class _EpisodeSelectorState extends ConsumerState<EpisodeSelector> {
                   const SizedBox(width: 4),
                   Text(
                     localEpisodesCount > 0
-                        ? '($localEpisodesCount/${season.episodeCount}集)'
-                        : '(${season.episodeCount}集)',
+                        ? context.l10n.videoEpisodeSelectorCountBoth(localEpisodesCount, season.episodeCount)
+                        : context.l10n.videoEpisodeSelectorCountTmdb(season.episodeCount),
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark

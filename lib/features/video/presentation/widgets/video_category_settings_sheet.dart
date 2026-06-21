@@ -400,7 +400,7 @@ class _VideoCategorySettingsSheetState
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  context.l10n.videoCategorySettingsNoAvailable(category.isGenreCategory ? '类型' : '地区'),
+                  context.l10n.videoCategorySettingsNoAvailable(category.isGenreCategory ? context.l10n.videoCategorySettingsGenreType : context.l10n.videoCategorySettingsRegionType),
                   style: TextStyle(
                     color: isDark ? Colors.grey[600] : Colors.grey[500],
                   ),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/video/data/services/quality/quality_monitor_service.dart';
@@ -507,7 +508,7 @@ class QualityNotifier extends StateNotifier<QualityState> {
       }
       state = state.copyWith(
         isLoading: false,
-        errorMessage: '切换清晰度失败: $e',
+        errorMessage: appL10n.videoQualitySwitchFailed(e),
       );
       logger.w('切换清晰度失败: $e');
     }
@@ -600,7 +601,7 @@ class QualityNotifier extends StateNotifier<QualityState> {
     final settings = _ref.read(qualitySettingsProvider);
     if (settings.showUnsupportedHint) {
       state = state.copyWith(
-        errorMessage: '当前源不支持清晰度切换',
+        errorMessage: appL10n.videoQualityUnsupportedSource,
       );
     }
   }

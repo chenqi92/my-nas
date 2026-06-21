@@ -6366,5 +6366,12 @@
   "tmdbScraperCountryCz": "捷克",
   "tmdbScraperCountryHu": "匈牙利",
   "tmdbScraperCountryPt": "葡萄牙",
-  "tmdbScraperCountryGr": "希腊"
+  "tmdbScraperCountryGr": "希腊",
+  "videoQualitySwitchFailed": "切换清晰度失败: {error}",
+  "videoQualityUnsupportedSource": "当前源不支持清晰度切换",
+  "liveStreamParsePlaylistFailedError": "解析失败: {error}",
+  "liveStreamSaveSourceFailedError": "保存失败: {error}",
+  "videoEpisodeSelectorCountTmdb": "({count}集)",
+  "videoCategorySettingsGenreType": "类型",
+  "videoCategorySettingsRegionType": "地区"
 }

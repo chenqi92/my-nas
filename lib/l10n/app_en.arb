@@ -12775,5 +12775,40 @@
   "tmdbScraperCountryCz": "Czech Republic",
   "tmdbScraperCountryHu": "Hungary",
   "tmdbScraperCountryPt": "Portugal",
-  "tmdbScraperCountryGr": "Greece"
+  "tmdbScraperCountryGr": "Greece",
+  "videoQualitySwitchFailed": "Failed to switch quality: {error}",
+  "@videoQualitySwitchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoQualityUnsupportedSource": "Current source does not support quality switching",
+  "liveStreamParsePlaylistFailedError": "Failed to parse playlist: {error}",
+  "@liveStreamParsePlaylistFailedError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "liveStreamSaveSourceFailedError": "Failed to save: {error}",
+  "@liveStreamSaveSourceFailedError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoEpisodeSelectorCountTmdb": "({count} episodes)",
+  "@videoEpisodeSelectorCountTmdb": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCategorySettingsGenreType": "Type",
+  "videoCategorySettingsRegionType": "Region"
 }

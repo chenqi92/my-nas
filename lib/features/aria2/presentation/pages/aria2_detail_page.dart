@@ -248,7 +248,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                connection.errorMessage ?? '未知错误',
+                connection.errorMessage ?? context.l10n.aria2UnknownError,
                 textAlign: TextAlign.center,
                 style: context.textTheme.bodyMedium?.copyWith(color: AppColors.error),
               ),
