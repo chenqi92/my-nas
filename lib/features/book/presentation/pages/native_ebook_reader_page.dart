@@ -25,6 +25,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/lottie_loading.dart';
 import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -383,7 +384,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
       child: Scaffold(
         backgroundColor: settings.theme.backgroundColor,
         body: switch (state) {
-          NativeEbookLoading(:final message) => LottieLoading.book(message: message),
+          NativeEbookLoading(:final message) => LottieLoading.book(message: localizeFormText(context, message)),
           NativeEbookError(:final message) => _buildError(message),
           NativeEbookLoaded() => _buildReader(state, settings),
         },

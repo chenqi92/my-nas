@@ -33,6 +33,7 @@ import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/animated_list_item.dart';
@@ -1372,7 +1373,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                 _buildLoadingState(
                   context,
                   progress,
-                  currentFolder,
+                  localizeFormText(context, currentFolder),
                   fromCache,
                   partialPhotos,
                   scannedCount,
@@ -1433,7 +1434,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                 _buildLoadingState(
                   context,
                   progress,
-                  currentFolder,
+                  localizeFormText(context, currentFolder),
                   fromCache,
                   partialPhotos,
                   scannedCount,

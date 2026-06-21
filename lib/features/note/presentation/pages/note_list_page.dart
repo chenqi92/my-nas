@@ -26,6 +26,7 @@ import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
@@ -791,7 +792,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
                     CircularProgressIndicator(color: AppColors.primary),
                     if (message != null) ...[
                       const SizedBox(height: 16),
-                      Text(message),
+                      Text(localizeFormText(context, message)),
                     ],
                   ],
                 ),

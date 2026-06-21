@@ -11,6 +11,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/connection/presentation/providers/connection_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 class ConnectionPage extends ConsumerStatefulWidget {
   const ConnectionPage({super.key});
@@ -746,7 +747,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        (state as ConnectionLoading).message ?? context.l10n.connPageConnectingStatus,
+                        localizeFormText(context, (state as ConnectionLoading).message ?? context.l10n.connPageConnectingStatus),
                         style: const TextStyle(
                           color: AppColors.darkOnSurface,
                           fontWeight: FontWeight.w600,

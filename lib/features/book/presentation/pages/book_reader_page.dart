@@ -31,6 +31,7 @@ import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/lottie_loading.dart';
@@ -1040,7 +1041,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
       child: Scaffold(
         backgroundColor: settings.theme.backgroundColor,
         body: switch (state) {
-          TxtReaderLoading(:final message) => LottieLoading.book(message: message),
+          TxtReaderLoading(:final message) => LottieLoading.book(message: localizeFormText(context, message)),
           TxtReaderError(:final message) => AppErrorWidget(
               message: message,
               onRetry: () =>

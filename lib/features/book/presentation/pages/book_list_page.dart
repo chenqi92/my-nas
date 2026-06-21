@@ -31,6 +31,7 @@ import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/services/nas_file_share_service.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/context_menu_region.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/media_info_sheet.dart';
@@ -1217,7 +1218,7 @@ class _BookListContentState extends ConsumerState<BookListContent> {
 
     return switch (state) {
       BookListLoading(:final progress, :final currentFolder, :final fromCache) =>
-        _buildLoadingState(progress, currentFolder, fromCache, isDark),
+        _buildLoadingState(progress, localizeFormText(context, currentFolder), fromCache, isDark),
       BookListNotConnected() => const MediaSetupWidget(
           mediaType: MediaType.book,
           icon: Icons.menu_book_outlined,

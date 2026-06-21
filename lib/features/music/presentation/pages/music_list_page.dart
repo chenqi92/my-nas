@@ -46,6 +46,7 @@ import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/animated_list_item.dart';
@@ -1851,7 +1852,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                       _buildLoadingState(
                         context,
                         progress,
-                        currentFolder,
+                        localizeFormText(context, currentFolder),
                         fromCache,
                         partialTracks,
                         scannedCount,
