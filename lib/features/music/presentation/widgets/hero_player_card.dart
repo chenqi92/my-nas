@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/presentation/pages/music_player_page.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
@@ -119,9 +120,9 @@ class HeroPlayerCard extends ConsumerWidget {
                       size: 40,
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      '开始探索你的音乐',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.musicPlayerWelcomeTitle,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -130,7 +131,7 @@ class HeroPlayerCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '选择一首歌曲开始播放',
+                      context.l10n.musicPlayerWelcomeSubtitle,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 13,
@@ -207,7 +208,7 @@ class HeroPlayerCard extends ConsumerWidget {
                             const SizedBox(width: 16),
                             // 歌曲信息
                             Expanded(
-                              child: _buildMusicInfo(currentMusic, playerState),
+                              child: _buildMusicInfo(context, currentMusic, playerState),
                             ),
                           ],
                         ),
@@ -301,7 +302,7 @@ class HeroPlayerCard extends ConsumerWidget {
     );
 
   /// 歌曲信息
-  Widget _buildMusicInfo(MusicItem currentMusic, MusicPlayerState playerState) => Column(
+  Widget _buildMusicInfo(BuildContext context, MusicItem currentMusic, MusicPlayerState playerState) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -326,7 +327,7 @@ class HeroPlayerCard extends ConsumerWidget {
                 ),
               const SizedBox(width: 4),
               Text(
-                playerState.isPlaying ? '正在播放' : '已暂停',
+                playerState.isPlaying ? context.l10n.musicPlayerStatusPlaying : context.l10n.musicPlayerStatusPaused,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 10,
@@ -442,7 +443,7 @@ class HeroPlayerCard extends ConsumerWidget {
         if (onShuffleTap != null)
           _buildActionButton(
             icon: Icons.shuffle_rounded,
-            label: '随机播放',
+            label: context.l10n.musicPlayerShuffleButton,
             onTap: onShuffleTap!,
             isPrimary: true,
           ),

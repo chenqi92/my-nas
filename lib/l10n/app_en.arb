@@ -6414,5 +6414,106 @@
         "type": "int"
       }
     }
-  }
+  },
+  "musicStatsCardLibraryTitle": "Music Library",
+  "musicStatsCardSongs": "Songs",
+  "musicStatsCardArtists": "Artists",
+  "musicStatsCardAlbums": "Albums",
+  "musicQueueSheetTitle": "Play Queue",
+  "musicQueueSheetSubtitle": "{count} songs",
+  "@musicQueueSheetSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicQueueSheetClearButton": "Clear",
+  "musicQueueSheetNowPlayingLabel": "Now playing",
+  "musicQueueSheetEmptyTitle": "Queue is empty",
+  "musicQueueSheetEmptyDescription": "Add songs from your music library to start playing",
+  "musicUnsupportedFormatDialogTitle": "Format Not Supported",
+  "musicUnsupportedFormatDialogMessage": "iOS native decoder does not support {format} format.",
+  "@musicUnsupportedFormatDialogMessage": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "musicUnsupportedFormatDialogSuggestion": "Switch to FFmpeg decoder (MediaKit engine) to support more audio formats.",
+  "musicUnsupportedFormatDialogRestartRequired": "Switching engine requires app restart to take effect",
+  "musicUnsupportedFormatDialogNotSwitching": "Not Now",
+  "musicUnsupportedFormatDialogSwitchEngine": "Switch Engine",
+  "musicAudioEffectsPageTitle": "Equalizer",
+  "musicAudioEffectsResetButtonTooltip": "Reset to flat",
+  "musicAudioEffectsEnableTitle": "Enable Equalizer",
+  "musicAudioEffectsCustomPreset": "Custom",
+  "musicAudioEffectsPlatformNoteAndroid": "Android: Uses system AudioEffect hardware equalizer",
+  "musicAudioEffectsPlatformNoteIos": "iOS: EQ not supported by current playback engine (planning AVAudioEngine integration)",
+  "musicAudioEffectsPlatformNoteDesktop": "Desktop: Only the media_kit engine applies (mpv af filters). If using just_audio engine, desktop EQ is unavailable",
+  "musicAudioEffectsPlatformNoteDefault": "Equalizer is not supported on this platform",
+  "musicScraperFormPageTitleEdit": "Edit {sourceType}",
+  "@musicScraperFormPageTitleEdit": {
+    "placeholders": {
+      "sourceType": {
+        "type": "String"
+      }
+    }
+  },
+  "musicScraperFormPageTitleAdd": "Add {sourceType}",
+  "@musicScraperFormPageTitleAdd": {
+    "placeholders": {
+      "sourceType": {
+        "type": "String"
+      }
+    }
+  },
+  "musicScraperFormPageComingSoon": "Coming soon",
+  "musicScraperFormPageCapabilityMetadata": "Metadata",
+  "musicScraperFormPageCapabilityCover": "Cover",
+  "musicScraperFormPageCapabilityLyrics": "Lyrics",
+  "musicScraperFormPageCapabilityFingerprint": "Fingerprint",
+  "musicScraperFormPageValidationNumberInvalid": "Please enter a valid number",
+  "musicScraperFormPageValidationUrlInvalid": "Please enter a valid URL (include http:// or https://)",
+  "musicScraperFormPageTestButton": "Test",
+  "musicScraperFormPageSaveButton": "Save",
+  "musicScraperFormPageAddButton": "Add",
+  "musicScraperFormPageTestFailed": "Test failed: {error}",
+  "@musicScraperFormPageTestFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicScraperFormPageSourceUpdated": "Scraper source updated",
+  "musicScraperFormPageSourceAdded": "Scraper source added",
+  "musicScraperFormPageOperationFailed": "Operation failed: {error}",
+  "@musicScraperFormPageOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicHomeLayoutTitle": "Home Layout",
+  "musicHomeLayoutSubtitle": "Customize the display order of home page content",
+  "musicHomeLayoutHint": "Long press to drag and reorder",
+  "musicHomeLayoutReset": "Reset",
+  "musicPlayerWelcomeTitle": "Start exploring your music",
+  "musicPlayerWelcomeSubtitle": "Select a song to start playing",
+  "musicPlayerStatusPlaying": "Playing",
+  "musicPlayerStatusPaused": "Paused",
+  "musicPlayerShuffleButton": "Shuffle",
+  "lyricViewLoadingText": "Loading lyrics...",
+  "lyricViewHintClickToBack": "Tap to return to album view",
+  "musicPlayerControlsPlaylist": "Playlist",
+  "musicPlayerControlsLoopMode": "Loop",
+  "musicPlayerControlsRepeatOneMode": "Repeat One",
+  "musicPlayerControlsShuffleMode": "Shuffle",
+  "musicPlayerControlsVolume": "Volume",
+  "musicRecentTracksTitle": "Recently Played",
+  "musicViewAll": "View all",
+  "musicPopularTracksTitle": "Recommended for you"
 }

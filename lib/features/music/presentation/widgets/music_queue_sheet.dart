@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
@@ -70,7 +71,7 @@ class MusicQueueSheet extends ConsumerWidget {
                 _buildHeader(context, ref, queue, isDark),
                 // 当前播放提示
                 if (currentMusic != null)
-                  _buildNowPlaying(currentMusic, isDark),
+                  _buildNowPlaying(context, currentMusic, isDark),
                 // 分隔线
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -84,7 +85,7 @@ class MusicQueueSheet extends ConsumerWidget {
                 // 队列列表
                 Expanded(
                   child: queue.isEmpty
-                      ? _buildEmptyState(isDark)
+                      ? _buildEmptyState(context, isDark)
                       : _buildQueueList(
                           context,
                           ref,
@@ -150,7 +151,7 @@ class MusicQueueSheet extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '播放队列',
+                  context.l10n.musicQueueSheetTitle,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -159,7 +160,7 @@ class MusicQueueSheet extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${queue.length} 首歌曲',
+                  context.l10n.musicQueueSheetSubtitle(queue.length),
                   style: TextStyle(
                     fontSize: 13,
                     color: isDark ? Colors.white54 : Colors.black45,
@@ -180,13 +181,13 @@ class MusicQueueSheet extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
               icon: const Icon(Icons.clear_all_rounded, size: 18),
-              label: const Text('清空'),
+              label: Text(context.l10n.musicQueueSheetClearButton),
             ),
         ],
       ),
     );
 
-  Widget _buildNowPlaying(MusicItem currentMusic, bool isDark) => Container(
+  Widget _buildNowPlaying(BuildContext context, MusicItem currentMusic, bool isDark) => Container(
       margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -219,7 +220,7 @@ class MusicQueueSheet extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '正在播放',
+                  context.l10n.musicQueueSheetNowPlayingLabel,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -245,7 +246,7 @@ class MusicQueueSheet extends ConsumerWidget {
       ),
     );
 
-  Widget _buildEmptyState(bool isDark) => Center(
+  Widget _buildEmptyState(BuildContext context, bool isDark) => Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -266,7 +267,7 @@ class MusicQueueSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            '播放队列为空',
+            context.l10n.musicQueueSheetEmptyTitle,
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w600,
@@ -275,7 +276,7 @@ class MusicQueueSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '从音乐列表中添加歌曲开始播放',
+            context.l10n.musicQueueSheetEmptyDescription,
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.white38 : Colors.black38,

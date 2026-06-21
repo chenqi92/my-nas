@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 
 /// 音乐库统计卡片
 class MusicStatsCard extends StatelessWidget {
@@ -21,12 +22,12 @@ class MusicStatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isDesktop) {
-      return _buildDesktopLayout();
+      return _buildDesktopLayout(context);
     }
-    return _buildMobileLayout();
+    return _buildMobileLayout(context);
   }
 
-  Widget _buildMobileLayout() => Container(
+  Widget _buildMobileLayout(BuildContext context) => Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -44,30 +45,33 @@ class MusicStatsCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStatItem(
+            context: context,
             icon: Icons.music_note_rounded,
             value: totalTracks,
-            label: '歌曲',
+            label: context.l10n.musicStatsCardSongs,
             color: AppColors.primary,
           ),
           _buildDivider(),
           _buildStatItem(
+            context: context,
             icon: Icons.person_rounded,
             value: totalArtists,
-            label: '艺术家',
+            label: context.l10n.musicStatsCardArtists,
             color: Colors.purple,
           ),
           _buildDivider(),
           _buildStatItem(
+            context: context,
             icon: Icons.album_rounded,
             value: totalAlbums,
-            label: '专辑',
+            label: context.l10n.musicStatsCardAlbums,
             color: AppColors.warning,
           ),
         ],
       ),
     );
 
-  Widget _buildDesktopLayout() => Container(
+  Widget _buildDesktopLayout(BuildContext context) => Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark
@@ -84,7 +88,7 @@ class MusicStatsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '音乐库',
+            context.l10n.musicStatsCardLibraryTitle,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -93,25 +97,28 @@ class MusicStatsCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _buildStatItem(
+            context: context,
             icon: Icons.music_note_rounded,
             value: totalTracks,
-            label: '歌曲',
+            label: context.l10n.musicStatsCardSongs,
             color: AppColors.primary,
             isDesktop: true,
           ),
           const SizedBox(height: 12),
           _buildStatItem(
+            context: context,
             icon: Icons.person_rounded,
             value: totalArtists,
-            label: '艺术家',
+            label: context.l10n.musicStatsCardArtists,
             color: Colors.purple,
             isDesktop: true,
           ),
           const SizedBox(height: 12),
           _buildStatItem(
+            context: context,
             icon: Icons.album_rounded,
             value: totalAlbums,
-            label: '专辑',
+            label: context.l10n.musicStatsCardAlbums,
             color: AppColors.warning,
             isDesktop: true,
           ),
@@ -120,6 +127,7 @@ class MusicStatsCard extends StatelessWidget {
     );
 
   Widget _buildStatItem({
+    required BuildContext context,
     required IconData icon,
     required int value,
     required String label,

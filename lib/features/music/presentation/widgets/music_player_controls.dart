@@ -123,7 +123,7 @@ class MusicPlayerControls extends StatelessWidget {
           IconButton(
             onPressed: onTogglePlayMode,
             icon: Icon(_getPlayModeIcon()),
-            tooltip: _getPlayModeTooltip(),
+            tooltip: _getPlayModeTooltip(context),
           ),
           // 音量
           _VolumeControl(
@@ -134,7 +134,7 @@ class MusicPlayerControls extends StatelessWidget {
           IconButton(
             onPressed: onShowQueue ?? () => showMusicQueueSheet(context),
             icon: const Icon(Icons.queue_music),
-            tooltip: '播放列表',
+            tooltip: context.l10n.musicPlayerControlsPlaylist,
           ),
         ],
       );
@@ -145,10 +145,10 @@ class MusicPlayerControls extends StatelessWidget {
         PlayMode.shuffle => Icons.shuffle,
       };
 
-  String _getPlayModeTooltip() => switch (state.playMode) {
-        PlayMode.loop => '列表循环',
-        PlayMode.repeatOne => '单曲循环',
-        PlayMode.shuffle => '随机播放',
+  String _getPlayModeTooltip(BuildContext context) => switch (state.playMode) {
+        PlayMode.loop => context.l10n.musicPlayerControlsLoopMode,
+        PlayMode.repeatOne => context.l10n.musicPlayerControlsRepeatOneMode,
+        PlayMode.shuffle => context.l10n.musicPlayerControlsShuffleMode,
       };
 }
 
@@ -181,7 +181,7 @@ class _VolumeControlState extends State<_VolumeControl> {
                       ? Icons.volume_down_rounded
                       : Icons.volume_up_rounded,
             ),
-            tooltip: '音量',
+            tooltip: context.l10n.musicPlayerControlsVolume,
           ),
           if (_showSlider)
             SizedBox(

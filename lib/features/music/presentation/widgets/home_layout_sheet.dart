@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/presentation/providers/home_layout_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -88,7 +89,7 @@ class _HomeLayoutSheetState extends ConsumerState<HomeLayoutSheet> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '长按拖动调整顺序',
+                        context.l10n.musicHomeLayoutHint,
                         style: TextStyle(
                           fontSize: 13,
                           color: isDark ? Colors.white54 : Colors.black45,
@@ -164,7 +165,7 @@ class _HomeLayoutSheetState extends ConsumerState<HomeLayoutSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '首页布局',
+                    context.l10n.musicHomeLayoutTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -173,7 +174,7 @@ class _HomeLayoutSheetState extends ConsumerState<HomeLayoutSheet> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '自定义首页内容展示顺序',
+                    context.l10n.musicHomeLayoutSubtitle,
                     style: TextStyle(
                       fontSize: 13,
                       color: isDark ? Colors.white54 : Colors.black45,
@@ -190,7 +191,7 @@ class _HomeLayoutSheetState extends ConsumerState<HomeLayoutSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('重置'),
+              label: Text(context.l10n.musicHomeLayoutReset),
             ),
           ],
         ),

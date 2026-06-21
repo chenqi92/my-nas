@@ -93,7 +93,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: Text(widget.isEditMode ? '编辑${widget.type.displayName}' : '添加${widget.type.displayName}'),
+        title: Text(widget.isEditMode ? context.l10n.musicScraperFormPageTitleEdit(widget.type.displayName) : context.l10n.musicScraperFormPageTitleAdd(widget.type.displayName)),
       ),
       body: Form(
         key: _formKey,
@@ -155,7 +155,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            '即将支持',
+                            context.l10n.musicScraperFormPageComingSoon,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: colorScheme.onErrorContainer,
                             ),
@@ -187,16 +187,16 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
     final caps = <Widget>[];
 
     if (widget.type.supportsMetadata) {
-      caps.add(_buildCapabilityChip('元数据', colorScheme.primaryContainer, theme));
+      caps.add(_buildCapabilityChip(context.l10n.musicScraperFormPageCapabilityMetadata, colorScheme.primaryContainer, theme));
     }
     if (widget.type.supportsCover) {
-      caps.add(_buildCapabilityChip('封面', colorScheme.secondaryContainer, theme));
+      caps.add(_buildCapabilityChip(context.l10n.musicScraperFormPageCapabilityCover, colorScheme.secondaryContainer, theme));
     }
     if (widget.type.supportsLyrics) {
-      caps.add(_buildCapabilityChip('歌词', colorScheme.tertiaryContainer, theme));
+      caps.add(_buildCapabilityChip(context.l10n.musicScraperFormPageCapabilityLyrics, colorScheme.tertiaryContainer, theme));
     }
     if (widget.type.supportsFingerprint) {
-      caps.add(_buildCapabilityChip('声纹', colorScheme.errorContainer, theme));
+      caps.add(_buildCapabilityChip(context.l10n.musicScraperFormPageCapabilityFingerprint, colorScheme.errorContainer, theme));
     }
 
     return Wrap(
@@ -364,7 +364,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
               return '${field.label}不能为空';
             }
             if (value != null && value.isNotEmpty && int.tryParse(value) == null) {
-              return '请输入有效的数字';
+              return context.l10n.musicScraperFormPageValidationNumberInvalid;
             }
             return field.validator?.call(value);
           },
@@ -391,7 +391,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
             if (value != null && value.isNotEmpty) {
               final uri = Uri.tryParse(value);
               if (uri == null || !uri.hasScheme) {
-                return '请输入有效的 URL（包含 http:// 或 https://）';
+                return context.l10n.musicScraperFormPageValidationUrlInvalid;
               }
             }
             return field.validator?.call(value);
@@ -449,7 +449,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.wifi_tethering),
-                  label: const Text('测试'),
+                  label: Text(context.l10n.musicScraperFormPageTestButton),
                 ),
               ),
             if (_formConfig.testConnectionSupported && isImplemented) const SizedBox(width: 16),
@@ -469,7 +469,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
                         ),
                       )
                     : const Icon(Icons.save_rounded),
-                label: Text(widget.isEditMode ? '保存' : '添加'),
+                label: Text(widget.isEditMode ? context.l10n.musicScraperFormPageSaveButton : context.l10n.musicScraperFormPageAddButton),
               ),
             ),
           ],
@@ -516,7 +516,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
     } on Exception catch (e) {
       if (!mounted) return;
 
-      context.showErrorToast('测试失败: $e');
+      context.showErrorToast(context.l10n.musicScraperFormPageTestFailed(e));
     } finally {
       if (mounted) {
         setState(() {
@@ -562,7 +562,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.isEditMode ? '已更新刮削源' : '已添加刮削源'),
+          content: Text(widget.isEditMode ? context.l10n.musicScraperFormPageSourceUpdated : context.l10n.musicScraperFormPageSourceAdded),
         ),
       );
 
@@ -570,7 +570,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
     } on Exception catch (e) {
       if (!mounted) return;
 
-      context.showErrorToast('操作失败: $e');
+      context.showErrorToast(context.l10n.musicScraperFormPageOperationFailed(e));
     } finally {
       if (mounted) {
         setState(() {

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_audio_handler_interface.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
@@ -69,7 +70,7 @@ class UnsupportedFormatDialog extends ConsumerWidget {
             size: 24,
           ),
           const SizedBox(width: 12),
-          const Text('格式不支持'),
+          Text(context.l10n.musicUnsupportedFormatDialogTitle),
         ],
       ),
       content: Column(
@@ -80,21 +81,15 @@ class UnsupportedFormatDialog extends ConsumerWidget {
             text: TextSpan(
               style: theme.textTheme.bodyMedium,
               children: [
-                const TextSpan(text: 'iOS 原生解码器不支持 '),
                 TextSpan(
-                  text: formatName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
+                  text: context.l10n.musicUnsupportedFormatDialogMessage(formatName),
                 ),
-                const TextSpan(text: ' 格式。'),
               ],
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            '建议切换到 FFmpeg 解码器（MediaKit 引擎）以支持更多音频格式。',
+            context.l10n.musicUnsupportedFormatDialogSuggestion,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -117,7 +112,7 @@ class UnsupportedFormatDialog extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '切换引擎需要重启应用生效',
+                      context.l10n.musicUnsupportedFormatDialogRestartRequired,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.primary,
                       ),
@@ -132,7 +127,7 @@ class UnsupportedFormatDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('暂不切换'),
+          child: Text(context.l10n.musicUnsupportedFormatDialogNotSwitching),
         ),
         FilledButton(
           onPressed: () async {
@@ -159,7 +154,7 @@ class UnsupportedFormatDialog extends ConsumerWidget {
               );
             }
           },
-          child: const Text('切换引擎'),
+          child: Text(context.l10n.musicUnsupportedFormatDialogSwitchEngine),
         ),
       ],
     );

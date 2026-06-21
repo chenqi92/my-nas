@@ -3,6 +3,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/lyric_service.dart';
 import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
@@ -305,7 +306,7 @@ class _LyricViewState extends ConsumerState<LyricView>
           ),
           const SizedBox(height: 20),
           Text(
-            '正在加载歌词...',
+            context.l10n.lyricViewLoadingText,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
@@ -346,7 +347,7 @@ class _LyricViewState extends ConsumerState<LyricView>
             ),
             const SizedBox(height: 24),
             Text(
-              '暂无歌词',
+              context.l10n.lyricContentEmptyHint,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -355,7 +356,7 @@ class _LyricViewState extends ConsumerState<LyricView>
             ),
             const SizedBox(height: 8),
             Text(
-              '点击返回唱片视图',
+              context.l10n.lyricViewHintClickToBack,
               style: TextStyle(
                 fontSize: 14,
                 color: isDark ? Colors.white38 : Colors.black38,

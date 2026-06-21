@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
 import 'package:my_nas/features/music/presentation/widgets/animated_components.dart';
@@ -19,7 +20,7 @@ class RecentTracksSection extends StatelessWidget {
     required this.onTrackTap,
     required this.onMoreTap,
     this.isDesktop = false,
-    this.title = '最近播放',
+    this.title = 'Recently Played',
     super.key,
   });
 
@@ -112,7 +113,7 @@ class RecentTracksSection extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '查看全部',
+                    context.l10n.musicViewAll,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
@@ -368,7 +369,7 @@ class PopularTracksSection extends StatelessWidget {
     required this.onTrackTap,
     required this.onMoreTap,
     this.isDesktop = false,
-    this.title = '为你推荐',
+    this.title = 'Recommended for you',
     this.maxItems = 5,
     super.key,
   });
@@ -477,7 +478,7 @@ class PopularTracksSection extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '查看全部',
+                    context.l10n.musicViewAll,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
