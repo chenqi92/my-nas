@@ -42,6 +42,9 @@ class NativeAVPlayerPlatformView: NSView {
     private let playerLayer: AVPlayerLayer
     private weak var controller: NativeAVPlayerController?
 
+    /// 外部字幕 overlay（AVPlayer 无法直接挂载独立字幕文件，用此 label 绘制）
+    private let subtitleLabel = NSTextField(labelWithString: "")
+
     /// 视频填充模式
     private var videoGravity: AVLayerVideoGravity = .resizeAspect
 
@@ -91,10 +94,35 @@ class NativeAVPlayerPlatformView: NSView {
                 playerLayer.videoGravity = videoGravity
             }
         }
+
+        // 外部字幕 overlay
+        configureSubtitleLabel()
+        addSubview(subtitleLabel)
+        controller?.setSubtitleOverlayLabel(subtitleLabel)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    private func configureSubtitleLabel() {
+        subtitleLabel.isEditable = false
+        subtitleLabel.isSelectable = false
+        subtitleLabel.isBordered = false
+        subtitleLabel.drawsBackground = false
+        subtitleLabel.textColor = .white
+        subtitleLabel.alignment = .center
+        subtitleLabel.font = .systemFont(ofSize: 18, weight: .medium)
+        subtitleLabel.maximumNumberOfLines = 0
+        subtitleLabel.lineBreakMode = .byWordWrapping
+        subtitleLabel.cell?.wraps = true
+        subtitleLabel.isHidden = true
+        subtitleLabel.wantsLayer = true
+        let shadow = NSShadow()
+        shadow.shadowColor = .black
+        shadow.shadowOffset = NSSize(width: 1, height: -1)
+        shadow.shadowBlurRadius = 2
+        subtitleLabel.shadow = shadow
     }
 
     override func layout() {
@@ -104,6 +132,15 @@ class NativeAVPlayerPlatformView: NSView {
         CATransaction.setDisableActions(true)
         playerLayer.frame = bounds
         CATransaction.commit()
+        // 字幕 overlay 置于底部居中（NSView 默认非翻转坐标，y=0 在底部）
+        let width = bounds.width * 0.9
+        let height: CGFloat = 80
+        subtitleLabel.frame = NSRect(
+            x: (bounds.width - width) / 2,
+            y: 24,
+            width: width,
+            height: height
+        )
     }
 
     /// 更新视频填充模式

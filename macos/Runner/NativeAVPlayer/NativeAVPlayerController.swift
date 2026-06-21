@@ -4,6 +4,13 @@ import AVKit
 import Cocoa
 import FlutterMacOS
 
+/// 外部字幕的一条时间轴文本（overlay 渲染用）。
+struct NativeSubtitleCue {
+    let start: Double
+    let end: Double
+    let text: String
+}
+
 /**
  AVPlayer 控制器 (macOS)
 
@@ -34,6 +41,12 @@ class NativeAVPlayerController: NSObject {
     private var currentSpeed: Float = 1.0
     private var videoWidth: Int = 0
     private var videoHeight: Int = 0
+
+    /// 外部字幕（AVFoundation 无法直接挂载独立 .srt/.vtt，改用 overlay 渲染）
+    private var subtitleCues: [NativeSubtitleCue] = []
+    private var subtitleActive = false
+    private var currentCueIndex = -1
+    private weak var subtitleLabel: NSTextField?
 
     /// PlayerLayer (用于视图)
     private(set) var playerLayer: AVPlayerLayer?
@@ -193,6 +206,8 @@ class NativeAVPlayerController: NSObject {
     }
 
     func setSubtitleTrack(index: Int) {
+        // 选择内嵌字幕轨时关闭外部 overlay 字幕
+        deactivateExternalSubtitle()
         guard let item = playerItem,
               let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible),
               index >= 0 && index < group.options.count else {
@@ -204,13 +219,156 @@ class NativeAVPlayerController: NSObject {
     }
 
     func disableSubtitle() {
-        guard let item = playerItem,
-              let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible) else {
-            return
+        // 同时关闭外部 overlay 字幕与内嵌字幕选择
+        deactivateExternalSubtitle()
+        if let item = playerItem,
+           let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible) {
+            item.select(nil, in: group)
         }
-
-        item.select(nil, in: group)
         sendEvent("subtitleTrackChanged", data: ["index": -1])
+    }
+
+    // MARK: - 外部字幕（overlay）
+
+    /// 由 Platform View 注册用于绘制外部字幕的 NSTextField。
+    func setSubtitleOverlayLabel(_ label: NSTextField?) {
+        subtitleLabel = label
+    }
+
+    /// 加载外部字幕文件（本地 file:// / 纯路径 / http(s)），解析为 overlay 字幕轨并选中。
+    /// 返回一个合成索引（置于内嵌字幕轨之后）；失败返回 -1。
+    func loadExternalSubtitle(
+        urlString: String,
+        title: String?,
+        language: String?,
+        completion: @escaping (Int) -> Void
+    ) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { completion(-1); return }
+            let data = Self.loadSubtitleData(urlString)
+            guard let bytes = data, let content = Self.decodeSubtitleData(bytes), !content.isEmpty else {
+                DispatchQueue.main.async { completion(-1) }
+                return
+            }
+            let cues = Self.parseSubtitles(content)
+            DispatchQueue.main.async {
+                guard !cues.isEmpty else { completion(-1); return }
+                self.subtitleCues = cues
+                self.subtitleActive = true
+                self.currentCueIndex = -1
+                let embedded = self.playerItem?.asset
+                    .mediaSelectionGroup(forMediaCharacteristic: .legible)?.options.count ?? 0
+                completion(embedded)
+            }
+        }
+    }
+
+    private func deactivateExternalSubtitle() {
+        subtitleActive = false
+        currentCueIndex = -1
+        let label = subtitleLabel
+        DispatchQueue.main.async {
+            label?.stringValue = ""
+            label?.isHidden = true
+        }
+    }
+
+    private func updateSubtitleOverlay(seconds: Double) {
+        guard subtitleActive, let label = subtitleLabel else { return }
+        if currentCueIndex >= 0 && currentCueIndex < subtitleCues.count {
+            let c = subtitleCues[currentCueIndex]
+            if seconds >= c.start && seconds <= c.end { return }
+        }
+        var found = -1
+        for (i, c) in subtitleCues.enumerated() {
+            if seconds >= c.start && seconds <= c.end { found = i; break }
+            if c.start > seconds { break }
+        }
+        if found != currentCueIndex {
+            currentCueIndex = found
+            if found >= 0 {
+                label.stringValue = subtitleCues[found].text
+                label.isHidden = false
+            } else {
+                label.stringValue = ""
+                label.isHidden = true
+            }
+        }
+    }
+
+    // MARK: - 字幕文件读取与解析
+
+    private static func loadSubtitleData(_ urlString: String) -> Data? {
+        if let url = URL(string: urlString), url.scheme == "http" || url.scheme == "https" {
+            return try? Data(contentsOf: url)
+        }
+        if let url = URL(string: urlString), url.isFileURL {
+            return try? Data(contentsOf: url)
+        }
+        return FileManager.default.contents(atPath: urlString)
+    }
+
+    /// 依次尝试 UTF-8 / GB18030 / Latin-1 解码（中文字幕常为 GBK/GB18030）。
+    private static func decodeSubtitleData(_ data: Data) -> String? {
+        if let s = String(data: data, encoding: .utf8) { return s }
+        let gb = CFStringConvertEncodingToNSStringEncoding(
+            CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue))
+        if let s = String(data: data, encoding: String.Encoding(rawValue: gb)) { return s }
+        return String(data: data, encoding: .isoLatin1)
+    }
+
+    static func parseSubtitles(_ raw: String) -> [NativeSubtitleCue] {
+        var text = raw
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+        if text.hasPrefix("\u{FEFF}") { text.removeFirst() }
+
+        var cues: [NativeSubtitleCue] = []
+        for block in text.components(separatedBy: "\n\n") {
+            var lines = block.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+            if let first = lines.first,
+               Int(first.trimmingCharacters(in: .whitespaces)) != nil {
+                lines.removeFirst()
+            }
+            guard let timeLine = lines.first, timeLine.contains("-->") else { continue }
+            let parts = timeLine.components(separatedBy: "-->")
+            guard parts.count == 2,
+                  let start = parseCueTime(parts[0]),
+                  let end = parseCueTime(parts[1]) else { continue }
+            let cueText = lines.dropFirst()
+                .joined(separator: "\n")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if cueText.isEmpty { continue }
+            cues.append(NativeSubtitleCue(start: start, end: end, text: stripTags(cueText)))
+        }
+        cues.sort { $0.start < $1.start }
+        return cues
+    }
+
+    private static func parseCueTime(_ s: String) -> Double? {
+        let trimmed = s.trimmingCharacters(in: .whitespaces)
+        let token = trimmed.split(separator: " ").first.map(String.init) ?? trimmed
+        let normalized = token.replacingOccurrences(of: ",", with: ".")
+        let comps = normalized.split(separator: ":").map(String.init)
+        guard comps.count >= 2 else { return nil }
+        var hours = 0.0, minutes = 0.0, seconds = 0.0
+        if comps.count >= 3 {
+            hours = Double(comps[0]) ?? 0
+            minutes = Double(comps[1]) ?? 0
+            seconds = Double(comps[2]) ?? 0
+        } else {
+            minutes = Double(comps[0]) ?? 0
+            seconds = Double(comps[1]) ?? 0
+        }
+        return hours * 3600 + minutes * 60 + seconds
+    }
+
+    private static func stripTags(_ s: String) -> String {
+        var result = s.replacingOccurrences(
+            of: "<[^>]+>", with: "", options: .regularExpression)
+        result = result.replacingOccurrences(
+            of: "\\{[^}]*\\}", with: "", options: .regularExpression)
+        return result
     }
 
     // MARK: - 状态获取
@@ -301,6 +459,7 @@ class NativeAVPlayerController: NSObject {
             guard let self = self else { return }
             self.currentPosition = Int64(CMTimeGetSeconds(time) * 1000)
             self.sendEvent("positionChanged", data: ["position": self.currentPosition])
+            self.updateSubtitleOverlay(seconds: CMTimeGetSeconds(time))
         }
 
         // 播放完成通知
@@ -382,6 +541,13 @@ class NativeAVPlayerController: NSObject {
         if let item = playerItem {
             NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: item)
         }
+
+        // 重置外部字幕状态
+        subtitleCues = []
+        subtitleActive = false
+        currentCueIndex = -1
+        subtitleLabel?.stringValue = ""
+        subtitleLabel?.isHidden = true
 
         playerItem = nil
     }

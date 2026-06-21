@@ -183,6 +183,29 @@ class NativeAVPlayerChannel {
     });
   }
 
+  /// 加载外部字幕文件（URL 或本地路径）
+  ///
+  /// 原生侧需要将该字幕作为一条可选字幕轨加入当前 AVPlayerItem
+  /// （通常通过 AVMutableComposition + AVMediaSelectionGroup 实现），
+  /// 并自动选中。返回新加入字幕轨的索引；失败或不支持时返回 null。
+  Future<int?> loadExternalSubtitle(
+    int playerId,
+    String url, {
+    String? title,
+    String? language,
+  }) async {
+    final result = await _methodChannel.invokeMethod<int>(
+      'loadExternalSubtitle',
+      {
+        'playerId': playerId,
+        'url': url,
+        'title': title,
+        'language': language,
+      },
+    );
+    return result;
+  }
+
   /// 获取当前状态
   Future<Map<String, dynamic>> getState(int playerId) async {
     final result = await _methodChannel.invokeMethod<Map<dynamic, dynamic>>('getState', {

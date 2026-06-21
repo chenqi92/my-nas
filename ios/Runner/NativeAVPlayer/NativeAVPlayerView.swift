@@ -45,6 +45,9 @@ class NativeAVPlayerPlatformView: NSObject, FlutterPlatformView {
     private let playerLayer: AVPlayerLayer
     private weak var controller: NativeAVPlayerController?
 
+    /// 外部字幕 overlay（AVPlayer 无法直接挂载独立字幕文件，用此 label 绘制）
+    private let subtitleLabel = UILabel()
+
     /// 视频填充模式
     private var videoGravity: AVLayerVideoGravity = .resizeAspect
 
@@ -98,8 +101,38 @@ class NativeAVPlayerPlatformView: NSObject, FlutterPlatformView {
         // 添加图层
         containerView.layer.addSublayer(playerLayer)
 
+        // 外部字幕 overlay
+        configureSubtitleLabel()
+        containerView.addSubview(subtitleLabel)
+        containerView.bringSubviewToFront(subtitleLabel)
+        controller?.setSubtitleOverlayLabel(subtitleLabel)
+        layoutSubtitleLabel()
+
         // 监听布局变化
         containerView.addObserver(self, forKeyPath: "bounds", options: [.new], context: nil)
+    }
+
+    private func configureSubtitleLabel() {
+        subtitleLabel.numberOfLines = 0
+        subtitleLabel.textAlignment = .center
+        subtitleLabel.textColor = .white
+        subtitleLabel.font = .systemFont(ofSize: 18, weight: .medium)
+        subtitleLabel.shadowColor = .black
+        subtitleLabel.shadowOffset = CGSize(width: 1, height: 1)
+        subtitleLabel.isHidden = true
+        subtitleLabel.isUserInteractionEnabled = false
+    }
+
+    private func layoutSubtitleLabel() {
+        let bounds = containerView.bounds
+        let width = bounds.width * 0.9
+        let height: CGFloat = 80
+        subtitleLabel.frame = CGRect(
+            x: (bounds.width - width) / 2,
+            y: bounds.height - height - 24,
+            width: width,
+            height: height
+        )
     }
 
     deinit {
@@ -122,6 +155,7 @@ class NativeAVPlayerPlatformView: NSObject, FlutterPlatformView {
             CATransaction.setDisableActions(true)
             playerLayer.frame = containerView.bounds
             CATransaction.commit()
+            layoutSubtitleLabel()
         }
     }
 }

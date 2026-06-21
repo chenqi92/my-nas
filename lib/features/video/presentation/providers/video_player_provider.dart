@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
@@ -34,6 +35,7 @@ import 'package:my_nas/features/video/presentation/providers/playback_settings_p
 import 'package:my_nas/features/video/presentation/providers/playlist_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/shared/providers/video_backend_provider.dart';
+import 'package:path_provider/path_provider.dart';
 
 /// 当前播放的视频（autoDispose: 离开播放器页面后自动清理）
 final currentVideoProvider = StateProvider.autoDispose<VideoItem?>((ref) => null);
@@ -1395,14 +1397,29 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
     if (subtitle == null) {
       // 关闭字幕
-      await _player.setSubtitleTrack(SubtitleTrack.no());
+      if (isUsingNativePlayer && _nativeBackend != null) {
+        try {
+          await _nativeBackend!.disableSubtitle();
+        } on Exception catch (e, st) {
+          AppError.ignore(e, st, '原生播放器关闭字幕失败');
+        }
+      } else {
+        await _player.setSubtitleTrack(SubtitleTrack.no());
+      }
       logger.i('VideoPlayerNotifier: 关闭字幕');
     } else {
       // 加载外部字幕
       try {
-        await _player.setSubtitleTrack(
-          SubtitleTrack.uri(subtitle.url, title: subtitle.name),
-        );
+        if (isUsingNativePlayer && _nativeBackend != null) {
+          await _nativeBackend!.loadExternalSubtitle(
+            subtitle.url,
+            title: subtitle.name,
+          );
+        } else {
+          await _player.setSubtitleTrack(
+            SubtitleTrack.uri(subtitle.url, title: subtitle.name),
+          );
+        }
         logger.i('VideoPlayerNotifier: 加载字幕 ${subtitle.name}');
       } on Exception catch (e, st) {
         AppError.handle(e, st, 'VideoPlayer.loadSubtitle', {'name': subtitle.name});
@@ -1414,16 +1431,58 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   /// 不修改 [currentSubtitleProvider]（它对应"外部字幕文件"）。
   Future<void> setInlineSubtitleData(String data, {required String title}) async {
     try {
-      await _player.setSubtitleTrack(SubtitleTrack.data(data, title: title));
+      if (isUsingNativePlayer && _nativeBackend != null) {
+        // 原生 AVPlayer 不支持内联字幕数据，写入临时文件后按外部字幕加载。
+        // 失败时降级为不显示翻译字幕，不影响视频播放。
+        final tmpUrl = await _writeInlineSubtitleToTempFile(data);
+        if (tmpUrl != null) {
+          await _nativeBackend!.loadExternalSubtitle(tmpUrl, title: title);
+        }
+      } else {
+        await _player.setSubtitleTrack(SubtitleTrack.data(data, title: title));
+      }
       logger.i('VideoPlayerNotifier: 加载翻译字幕 $title (${data.length} 字节)');
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'VideoPlayer.loadInlineSubtitle', {'title': title});
     }
   }
 
+  /// 把内联字幕数据写入临时 .srt 文件，返回 file:// URL。失败返回 null。
+  ///
+  /// 仅用于原生 AVPlayer 后端（它不支持内联字幕数据）。
+  Future<String?> _writeInlineSubtitleToTempFile(String data) async {
+    try {
+      final dir = await getTemporaryDirectory();
+      // 复用同一文件名，避免翻译过程中频繁注入快照产生大量临时文件
+      final file = File('${dir.path}/mynas_inline_subtitle.srt');
+      await file.writeAsString(data, flush: true);
+      return Uri.file(file.path).toString();
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, '写入内联字幕临时文件失败（降级忽略）');
+      return null;
+    }
+  }
+
   /// 切换字幕显示
   void toggleSubtitle() {
     state = state.copyWith(subtitleEnabled: !state.subtitleEnabled);
+    if (isUsingNativePlayer && _nativeBackend != null) {
+      if (!state.subtitleEnabled) {
+        AppError.fireAndForget(
+          _nativeBackend!.disableSubtitle(),
+          action: 'nativeToggleSubtitleOff',
+        );
+      } else {
+        final current = _ref.read(currentSubtitleProvider);
+        if (current != null) {
+          AppError.fireAndForget(
+            _nativeBackend!.loadExternalSubtitle(current.url, title: current.name),
+            action: 'nativeToggleSubtitleOn',
+          );
+        }
+      }
+      return;
+    }
     if (!state.subtitleEnabled) {
       _player.setSubtitleTrack(SubtitleTrack.no());
     } else {
@@ -1444,6 +1503,27 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     SubtitleTranslationService.instance.cancelActive();
     _ref.read(currentTranslatedSubtitleIdProvider.notifier).state = null;
     _ref.read(subtitleTranslationProgressProvider.notifier).state = null;
+
+    if (isUsingNativePlayer && _nativeBackend != null) {
+      // 原生 AVPlayer 后端：track.id 为 'no' 表示关闭，否则尝试按索引选择。
+      try {
+        if (track.id == 'no') {
+          await _nativeBackend!.disableSubtitle();
+        } else {
+          final index = int.tryParse(track.id);
+          if (index != null) {
+            await _nativeBackend!.setSubtitleTrack(index);
+          } else {
+            logger.w('VideoPlayerNotifier: 原生后端内嵌字幕 id 非索引，忽略 ${track.id}');
+          }
+        }
+      } on Exception catch (e, st) {
+        AppError.ignore(e, st, '原生播放器设置内嵌字幕失败');
+      }
+      logger.i('VideoPlayerNotifier: 设置内嵌字幕 ${track.title ?? track.id}');
+      return;
+    }
+
     await _player.setSubtitleTrack(track);
     logger.i('VideoPlayerNotifier: 设置内嵌字幕 ${track.title ?? track.id}');
   }

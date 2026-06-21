@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/player/native_av_player_channel.dart';
 import 'package:my_nas/features/video/data/services/player/video_player_backend.dart';
@@ -240,9 +242,25 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
 
   @override
   Future<void> loadExternalSubtitle(String url, {String? title}) async {
-    // AVPlayer 原生不直接支持外部字幕 URL 加载
-    // 需要通过其他方式处理（如 AVMutableComposition）
-    logger.w('NativeAVPlayerBackend: 外部字幕加载暂不支持');
+    try {
+      final index = await _channel.loadExternalSubtitle(
+        _playerId,
+        url,
+        title: title,
+      );
+      if (index != null && index >= 0) {
+        _currentSubtitleTrackIndex = index;
+        logger.i('NativeAVPlayerBackend: 外部字幕已加载 (index: $index) $url');
+      } else {
+        // 原生侧返回 null 表示未实现/不支持，保持当前行为不变
+        logger.w('NativeAVPlayerBackend: 外部字幕加载未生效（原生侧未实现或不支持）');
+      }
+    } on MissingPluginException catch (e, st) {
+      // 原生方法尚未实现：降级为无操作，不影响播放
+      AppError.ignore(e, st, '原生外部字幕方法未实现（降级忽略）');
+    } on PlatformException catch (e, st) {
+      AppError.ignore(e, st, '原生外部字幕加载失败（降级忽略）');
+    }
   }
 
   @override

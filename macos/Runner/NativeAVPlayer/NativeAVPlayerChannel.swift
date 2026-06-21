@@ -142,6 +142,20 @@ class NativeAVPlayerChannel: NSObject, FlutterPlugin {
             }
             handleDisableSubtitle(playerId: playerId, result: result)
 
+        case "loadExternalSubtitle":
+            guard let playerId = args?["playerId"] as? Int64,
+                  let url = args?["url"] as? String else {
+                result(FlutterError(code: "INVALID_ARGS", message: "Missing playerId or url", details: nil))
+                return
+            }
+            handleLoadExternalSubtitle(
+                playerId: playerId,
+                url: url,
+                title: args?["title"] as? String,
+                language: args?["language"] as? String,
+                result: result
+            )
+
         case "getState":
             guard let playerId = args?["playerId"] as? Int64 else {
                 result(FlutterError(code: "INVALID_ARGS", message: "Missing playerId", details: nil))
@@ -290,6 +304,22 @@ class NativeAVPlayerChannel: NSObject, FlutterPlugin {
         }
         controller.disableSubtitle()
         result(nil)
+    }
+
+    private func handleLoadExternalSubtitle(
+        playerId: Int64,
+        url: String,
+        title: String?,
+        language: String?,
+        result: @escaping FlutterResult
+    ) {
+        guard let controller = players[playerId] else {
+            result(FlutterError(code: "NOT_FOUND", message: "Player not found", details: nil))
+            return
+        }
+        controller.loadExternalSubtitle(urlString: url, title: title, language: language) { index in
+            result(index >= 0 ? index : nil)
+        }
     }
 
     private func handleGetState(playerId: Int64, result: @escaping FlutterResult) {
