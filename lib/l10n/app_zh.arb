@@ -5596,5 +5596,9 @@
   "sourceManagerErrorReconnectTimeout": "重连超时",
   "sourceManagerErrorProtocolNotImplemented": "协议 {type} 尚未实现",
   "sourceManagerErrorServiceTypeNotSupportedNas": "服务类源 {type} 不支持 NasAdapter，请使用对应的 ServiceAdapter",
-  "sourceManagerErrorServiceTypeNotSupportedNasType": "服务类源 {type} 不支持 NasAdapterType"
+  "sourceManagerErrorServiceTypeNotSupportedNasType": "服务类源 {type} 不支持 NasAdapterType",
+  "styp_4d1636e4": "本机",
+  "styp_80746097": "绿联 NAS",
+  "styp_8967bc2e": "资源站点",
+  "styp_8ce0ac4c": "飞牛 fnOS"
 }

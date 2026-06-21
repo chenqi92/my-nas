@@ -301,7 +301,7 @@ class _ReorderableServiceCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${source.type.displayName} • ${source.host}',
+                    '${localizeFormText(context, source.type.displayName)} • ${source.host}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -404,7 +404,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${widget.source.type.displayName} • ${widget.source.host}',
+                      '${localizeFormText(context, widget.source.type.displayName)} • ${widget.source.host}',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -773,7 +773,7 @@ class _SourceTypeBottomSheet extends StatelessWidget {
           ),
         ),
         title: Text(
-          type.displayName,
+          localizeFormText(context, type.displayName),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w500,
           ),

@@ -342,6 +342,10 @@ String localizeFormText(BuildContext context, String? text) {
     '漫画' => l.mtype_fe148076,
     '书籍' => l.mtype_72191b3a,
     '笔记' => l.mtype_7051dc52,
+    '本机' => l.styp_4d1636e4,
+    '绿联 NAS' => l.styp_80746097,
+    '资源站点' => l.styp_8967bc2e,
+    '飞牛 fnOS' => l.styp_8ce0ac4c,
     _ => text,
   };
 }

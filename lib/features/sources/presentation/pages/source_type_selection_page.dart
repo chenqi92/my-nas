@@ -210,7 +210,7 @@ class SourceTypeSelectionPage extends ConsumerWidget {
       title: Row(
         children: [
           Text(
-            type.displayName,
+            localizeFormText(context, type.displayName),
             style: TextStyle(
               color: isSupported ? null : colorScheme.onSurfaceVariant,
             ),
