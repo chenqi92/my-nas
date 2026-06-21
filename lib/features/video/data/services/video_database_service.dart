@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_hook.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -36,21 +37,21 @@ extension VideoSortOptionExtension on VideoSortOption {
   String get displayName {
     switch (this) {
       case VideoSortOption.ratingDesc:
-        return '评分最高';
+        return appL10n.videoSortRatingDesc;
       case VideoSortOption.ratingAsc:
-        return '评分最低';
+        return appL10n.videoSortRatingAsc;
       case VideoSortOption.yearDesc:
-        return '最新上映';
+        return appL10n.videoSortYearDesc;
       case VideoSortOption.yearAsc:
-        return '最早上映';
+        return appL10n.videoSortYearAsc;
       case VideoSortOption.titleAsc:
-        return '名称 A-Z';
+        return appL10n.videoSortTitleAsc;
       case VideoSortOption.titleDesc:
-        return '名称 Z-A';
+        return appL10n.videoSortTitleDesc;
       case VideoSortOption.addedDesc:
-        return '最近添加';
+        return appL10n.videoSortAddedDesc;
       case VideoSortOption.addedAsc:
-        return '最早添加';
+        return appL10n.videoSortAddedAsc;
     }
   }
 
@@ -1967,7 +1968,7 @@ class VideoDatabaseService {
         'SELECT COUNT(*) FROM $_tableMetadata')) ?? 0;
 
     if (totalCount == 0) {
-      return '无缓存';
+      return appL10n.videoCacheEmpty;
     }
 
     // 获取数据库文件大小（稳定值，不包括 WAL 波动）
@@ -3396,7 +3397,7 @@ class VideoDatabaseService {
     for (final row in results) {
       final id = row[_colCollectionId]! as int;
       collectionIds.add(id);
-      collectionNames[id] = row[_colCollectionName] as String? ?? '未知系列';
+      collectionNames[id] = row[_colCollectionName] as String? ?? appL10n.videoCollectionNameUnknown;
     }
 
     // 步骤3：单次批量查询获取所有系列的电影
@@ -3475,7 +3476,7 @@ class VideoDatabaseService {
       if (movies.length >= minCount) {
         collections.add(MovieCollection(
           id: id,
-          name: collectionNames[id] ?? '未知系列',
+          name: collectionNames[id] ?? appL10n.videoCollectionNameUnknown,
           movies: movies,
         ));
       }

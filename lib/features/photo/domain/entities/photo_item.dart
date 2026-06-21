@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 
 /// 照片项实体
@@ -63,7 +64,7 @@ class PhotoItem {
 
   /// 显示的文件大小
   String get displaySize {
-    if (size <= 0) return '未知大小';
+    if (size <= 0) return appL10n.photoItemDisplaySizeUnknown;
     const units = ['B', 'KB', 'MB', 'GB'];
     var unitIndex = 0;
     var displaySize = size.toDouble();
@@ -147,22 +148,22 @@ class PhotoGroup<T> {
   String get dateTitle {
     // 1970 年表示未知日期
     if (date.year <= 1970) {
-      return '未知日期';
+      return appL10n.photoGroupDateTitleUnknown;
     }
 
     final now = DateTime.now();
 
     // 按年分组
     if (granularity == PhotoGroupGranularity.year) {
-      if (date.year == now.year) return '今年';
-      return '${date.year}年';
+      if (date.year == now.year) return appL10n.photoGroupDateTitleThisYear;
+      return appL10n.photoGroupDateTitleYear(date.year);
     }
 
     // 按月分组
     if (granularity == PhotoGroupGranularity.month) {
-      if (date.year == now.year && date.month == now.month) return '本月';
-      if (date.year == now.year) return '${date.month}月';
-      return '${date.year}年${date.month}月';
+      if (date.year == now.year && date.month == now.month) return appL10n.photoGroupDateTitleThisMonth;
+      if (date.year == now.year) return appL10n.photoGroupDateTitleMonth(date.month);
+      return appL10n.photoGroupDateTitleYearMonth(date.year, date.month);
     }
 
     // 按天分组（原有逻辑）
@@ -170,12 +171,12 @@ class PhotoGroup<T> {
     final groupDate = DateTime(date.year, date.month, date.day);
     final diff = today.difference(groupDate).inDays;
 
-    if (diff == 0) return '今天';
-    if (diff == 1) return '昨天';
-    if (diff < 7) return '$diff 天前';
+    if (diff == 0) return appL10n.photoGroupDateTitleToday;
+    if (diff == 1) return appL10n.photoGroupDateTitleYesterday;
+    if (diff < 7) return appL10n.photoGroupDateTitleDaysAgo(diff);
     if (date.year == now.year) {
-      return '${date.month}月${date.day}日';
+      return appL10n.photoGroupDateTitleMonthDay(date.month, date.day);
     }
-    return '${date.year}年${date.month}月${date.day}日';
+    return appL10n.photoGroupDateTitleFull(date.year, date.month, date.day);
   }
 }

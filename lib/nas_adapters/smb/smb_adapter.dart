@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/errors/errors.dart' hide ConnectionFailure;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -202,7 +203,7 @@ class SmbAdapter implements NasAdapter {
         ).timeout(
           const Duration(seconds: 30),
           onTimeout: () {
-            throw Exception('SMB 连接超时 (30秒)');
+            throw Exception(appL10n.smbAdapterConnectionTimeoutLabel);
           },
         );
 
@@ -258,7 +259,7 @@ class SmbAdapter implements NasAdapter {
   String _parseErrorAny(dynamic e) {
     // 优先处理 SmbAuthException - 认证失败
     if (e.runtimeType.toString() == 'SmbAuthException') {
-      return 'SMB 认证失败\n用户名或密码错误';
+      return appL10n.smbAdapterAuthFailedMessage;
     }
 
     final msg = e.toString().toLowerCase();
@@ -266,74 +267,76 @@ class SmbAdapter implements NasAdapter {
 
     // SmbAuthException 的字符串匹配（备用）
     if (msg.contains('smbauthexception')) {
-      return 'SMB 认证失败\n用户名或密码错误';
+      return appL10n.smbAdapterAuthFailedMessage;
     }
 
     // 连接相关错误
     if (msg.contains('connection refused')) {
-      return 'SMB 连接被拒绝\n请检查：\n• SMB 服务是否启用\n• 端口 445 是否开放\n• 防火墙设置';
+      return appL10n.smbAdapterConnectionRefusedMessage;
     }
     if (msg.contains('timeout') || msg.contains('timed out')) {
-      return 'SMB 连接超时\n请检查：\n• 服务器地址是否正确\n• 网络是否连通\n• 服务器是否在线';
+      return appL10n.smbAdapterConnectionTimeoutMessage;
     }
     if (msg.contains('host not found') ||
         msg.contains('no address') ||
         msg.contains('getaddrinfo') ||
         msg.contains('nodename nor servname')) {
-      return 'SMB 服务器地址无法解析\n请检查：\n• 服务器地址是否正确\n• DNS 设置是否正确';
+      return appL10n.smbAdapterAddressUnresolvableMessage;
     }
     if (msg.contains('network is unreachable') ||
         msg.contains('no route to host')) {
-      return 'SMB 网络不可达\n请检查：\n• 网络连接是否正常\n• 是否在同一网络';
+      return appL10n.smbAdapterNetworkUnreachableMessage;
     }
     // 连接已关闭错误 (StreamSink closed)
     if (msg.contains('streamsink is closed') ||
         msg.contains('stream is closed') ||
         msg.contains('connection closed') ||
         msg.contains('socket closed')) {
-      return 'SMB 连接已断开\n请检查网络连接后重试';
+      return appL10n.smbAdapterConnectionClosedMessage;
     }
 
     // 认证相关错误
     if (msg.contains('status_logon_failure') ||
         msg.contains('logon failure') ||
         msg.contains('authentication failed')) {
-      return 'SMB 认证失败\n用户名或密码错误';
+      return appL10n.smbAdapterAuthFailedMessage;
     }
     if (msg.contains('status_access_denied') ||
         msg.contains('access denied') ||
         msg.contains('permission denied')) {
-      return 'SMB 访问被拒绝\n请检查用户权限';
+      return appL10n.smbAdapterAccessDeniedMessage;
     }
     if (msg.contains('status_account_disabled')) {
-      return 'SMB 账户已禁用\n请联系管理员启用账户';
+      return appL10n.smbAdapterAccountDisabledMessage;
     }
     if (msg.contains('status_account_locked')) {
-      return 'SMB 账户已锁定\n请稍后重试或联系管理员';
+      return appL10n.smbAdapterAccountLockedMessage;
     }
     if (msg.contains('status_password_expired')) {
-      return 'SMB 密码已过期\n请更新密码后重试';
+      return appL10n.smbAdapterPasswordExpiredMessage;
     }
 
     // SMB 协议错误
     if (msg.contains("can't connect")) {
-      return 'SMB 无法连接到服务器\n请检查服务器地址和网络';
+      return appL10n.smbAdapterCannotConnectMessage;
     }
     if (msg.contains('invalid parameter') ||
         msg.contains('bad network name') ||
         msg.contains('status_bad_network_name')) {
-      return 'SMB 网络名称无效\n请检查共享名称是否正确';
+      return appL10n.smbAdapterInvalidNetworkNameMessage;
     }
     if (msg.contains('not supported') || msg.contains('status_not_supported')) {
-      return 'SMB 协议版本不兼容\n请检查服务器 SMB 协议设置';
+      return appL10n.smbAdapterProtocolIncompatibleMessage;
     }
 
     // 默认错误消息
     final originalMsg = e.toString();
     if (originalMsg.length > 100) {
-      return 'SMB 连接失败\n${originalMsg.substring(0, 100)}...';
+      return appL10n.smbAdapterFailureWithErrorMessage(
+        '${originalMsg.substring(0, 100)}...',
+      );
     }
-    return 'SMB 连接失败\n$originalMsg';
+    return appL10n.smbAdapterFailureWithErrorMessage(originalMsg);
   }
 
   @override
@@ -392,7 +395,7 @@ class SmbAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected || _fileSystem == null) {
-      throw StateError('未连接到 SMB 服务器');
+      throw StateError(appL10n.smbAdapterNotConnectedError);
     }
     return _fileSystem!;
   }

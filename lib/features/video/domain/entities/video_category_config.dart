@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 /// 视频首页分类类型
 ///
 /// 定义所有可以在视频首页显示的分类区块
@@ -64,41 +65,41 @@ extension VideoHomeCategoryExtension on VideoHomeCategory {
   String get displayName {
     switch (this) {
       case VideoHomeCategory.heroBanner:
-        return '精选推荐';
+        return appL10n.videoCategoryHeroBannerDisplay;
       case VideoHomeCategory.continueWatching:
-        return '继续观看';
+        return appL10n.videoCategoryContinueWatchingDisplay;
       case VideoHomeCategory.recentlyAdded:
-        return '最近添加';
+        return appL10n.videoCategoryRecentlyAddedDisplay;
       case VideoHomeCategory.movies:
-        return '电影';
+        return appL10n.videoCategoryMoviesDisplay;
       case VideoHomeCategory.tvShows:
-        return '剧集';
+        return appL10n.videoCategoryTvShowsDisplay;
       case VideoHomeCategory.movieCollections:
-        return '电影系列';
+        return appL10n.videoCategoryMovieCollectionsDisplay;
       case VideoHomeCategory.topRated:
-        return '每日推荐';
+        return appL10n.videoCategoryTopRatedDisplay;
       case VideoHomeCategory.unwatched:
-        return '未观看';
+        return appL10n.videoCategoryUnwatchedDisplay;
       case VideoHomeCategory.others:
-        return '其他';
+        return appL10n.videoCategoryOthersDisplay;
       case VideoHomeCategory.byMovieGenre:
-        return '电影类型';
+        return appL10n.videoCategoryByMovieGenreDisplay;
       case VideoHomeCategory.byMovieRegion:
-        return '电影地区';
+        return appL10n.videoCategoryByMovieRegionDisplay;
       case VideoHomeCategory.byTvGenre:
-        return '电视剧类型';
+        return appL10n.videoCategoryByTvGenreDisplay;
       case VideoHomeCategory.byTvRegion:
-        return '电视剧地区';
+        return appL10n.videoCategoryByTvRegionDisplay;
       case VideoHomeCategory.browseMovieGenres:
-        return '电影-类型';
+        return appL10n.videoCategoryBrowseMovieGenresDisplay;
       case VideoHomeCategory.browseMovieRegions:
-        return '电影-地区';
+        return appL10n.videoCategoryBrowseMovieRegionsDisplay;
       case VideoHomeCategory.browseTvGenres:
-        return '剧集-类型';
+        return appL10n.videoCategoryBrowseTvGenresDisplay;
       case VideoHomeCategory.browseTvRegions:
-        return '剧集-地区';
+        return appL10n.videoCategoryBrowseTvRegionsDisplay;
       case VideoHomeCategory.liveStreaming:
-        return '直播';
+        return appL10n.videoCategoryLiveStreamingDisplay;
     }
   }
 
@@ -109,14 +110,14 @@ extension VideoHomeCategoryExtension on VideoHomeCategory {
       case VideoHomeCategory.byMovieRegion:
       case VideoHomeCategory.browseMovieGenres:
       case VideoHomeCategory.browseMovieRegions:
-        return '电影分类';
+        return appL10n.videoCategoryMovieGroupName;
       case VideoHomeCategory.byTvGenre:
       case VideoHomeCategory.byTvRegion:
       case VideoHomeCategory.browseTvGenres:
       case VideoHomeCategory.browseTvRegions:
-        return '电视剧分类';
+        return appL10n.videoCategoryTvGroupName;
       default:
-        return '基础分类';
+        return appL10n.videoCategoryBasicGroupName;
     }
   }
 
@@ -272,13 +273,13 @@ class VideoCategorySectionConfig {
   String get subtitle {
     switch (category) {
       case VideoHomeCategory.byMovieGenre:
-        return '电影类型';
+        return appL10n.videoCategoryByMovieGenreDisplay;
       case VideoHomeCategory.byMovieRegion:
-        return '电影地区';
+        return appL10n.videoCategoryByMovieRegionDisplay;
       case VideoHomeCategory.byTvGenre:
-        return '电视剧类型';
+        return appL10n.videoCategoryByTvGenreDisplay;
       case VideoHomeCategory.byTvRegion:
-        return '电视剧地区';
+        return appL10n.videoCategoryByTvRegionDisplay;
       default:
         return '';
     }

@@ -9723,5 +9723,723 @@
         "type": "String"
       }
     }
+  },
+  "synoApiFileStreamEmpty": "Failed to retrieve file stream: response is empty",
+  "synoApiUrlStreamEmpty": "Failed to retrieve URL stream: response is empty",
+  "synoApiServerEmpty": "Server returned empty data",
+  "synoApiAuthInvalidCredentials": "Invalid account or password",
+  "synoApiAuthAccountDisabled": "Account is disabled",
+  "synoApiAuthInsufficientPermission": "Insufficient permissions",
+  "synoApiAuth2FARequired": "Two-factor authentication required",
+  "synoApiAuth2FAFailed": "Two-factor authentication failed",
+  "synoApiAuthPasswordChangeRequired": "Password change required",
+  "synoApiAuthIpBanned": "IP address is banned",
+  "synoApiAuthFailedWithCode": "Authentication failed (error code: {code})",
+  "@synoApiAuthFailedWithCode": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "synoApiErrorUnknown": "Unknown error",
+  "synoApiErrorInvalidParam": "Invalid parameter",
+  "synoApiErrorApiNotFound": "API not found",
+  "synoApiErrorMethodNotFound": "Method not found",
+  "synoApiErrorVersionNotSupported": "Version not supported",
+  "synoApiErrorPermissionDenied": "Permission denied",
+  "synoApiErrorSessionTimeout": "Session timeout, please reconnect",
+  "synoApiErrorDuplicateLogin": "Duplicate login",
+  "synoApiErrorSessionInvalid": "Session has expired, please reconnect",
+  "synoApiErrorInvalidPath": "Invalid path",
+  "synoApiErrorPathNotFound": "Path does not exist",
+  "synoApiErrorTargetExists": "Target path already exists",
+  "synoApiErrorFileLocked": "Target file is locked",
+  "synoApiErrorPathDenied": "Target path access denied",
+  "synoApiErrorUploadFailed": "Upload failed",
+  "synoApiErrorInsufficientSpace": "Insufficient disk space",
+  "synoApiErrorFileTooLarge": "File too large",
+  "synoApiErrorOperationAborted": "Operation aborted",
+  "synoApiErrorTaskNotFound": "Task not found",
+  "synoApiErrorUnknownWithCode": "Unknown error ({code})",
+  "@synoApiErrorUnknownWithCode": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoCategoryHeroBannerDisplay": "Featured Recommendations",
+  "videoCategoryContinueWatchingDisplay": "Continue Watching",
+  "videoCategoryRecentlyAddedDisplay": "Recently Added",
+  "videoCategoryMoviesDisplay": "Movies",
+  "videoCategoryTvShowsDisplay": "TV Shows",
+  "videoCategoryMovieCollectionsDisplay": "Movie Series",
+  "videoCategoryTopRatedDisplay": "Daily Recommendations",
+  "videoCategoryUnwatchedDisplay": "Unwatched",
+  "videoCategoryOthersDisplay": "Others",
+  "videoCategoryByMovieGenreDisplay": "Movie Genres",
+  "videoCategoryByMovieRegionDisplay": "Movie Regions",
+  "videoCategoryByTvGenreDisplay": "TV Genres",
+  "videoCategoryByTvRegionDisplay": "TV Regions",
+  "videoCategoryBrowseMovieGenresDisplay": "Movies - Genres",
+  "videoCategoryBrowseMovieRegionsDisplay": "Movies - Regions",
+  "videoCategoryBrowseTvGenresDisplay": "TV Shows - Genres",
+  "videoCategoryBrowseTvRegionsDisplay": "TV Shows - Regions",
+  "videoCategoryLiveStreamingDisplay": "Live",
+  "videoCategoryMovieGroupName": "Movie Categories",
+  "videoCategoryTvGroupName": "TV Categories",
+  "videoCategoryBasicGroupName": "Basic Categories",
+  "videoCategoryByMovieGenreSubtitle": "Movie Genres",
+  "videoCategoryByMovieRegionSubtitle": "Movie Regions",
+  "videoCategoryByTvGenreSubtitle": "TV Genres",
+  "videoCategoryByTvRegionSubtitle": "TV Regions",
+  "sourceTypeDisplayNameLocal": "This Device",
+  "sourceTypeDisplayNameUgreen": "Ugreen NAS",
+  "sourceTypeDisplayNamePtSite": "Resource Site",
+  "sourceTypeDescSynology": "Synology NAS, supports DSM 6/7",
+  "sourceTypeDescQnap": "QNAP NAS",
+  "sourceTypeDescUgreen": "Ugreen Private Cloud NAS",
+  "sourceTypeDescFnos": "FlyNAS fnOS System",
+  "sourceTypeDescWebdav": "WebDAV protocol server",
+  "sourceTypeDescSmb": "Windows file sharing protocol",
+  "sourceTypeDescFtp": "File Transfer Protocol (with TLS encryption)",
+  "sourceTypeDescSftp": "Secure file transfer based on SSH",
+  "sourceTypeDescNfs": "Network File System",
+  "sourceTypeDescUpnp": "Auto-discover media devices on LAN",
+  "sourceTypeDescLocal": "Local storage, automatically accesses system media library on mobile",
+  "sourceTypeDescQbittorrent": "Open source remote download client",
+  "sourceTypeDescTransmission": "Lightweight remote download client",
+  "sourceTypeDescAria2": "Multi-protocol download client",
+  "sourceTypeDescTrakt": "Track watching history and media status",
+  "sourceTypeDescNastool": "NAS media library management tool",
+  "sourceTypeDescMoviepilot": "Media automation management tool",
+  "sourceTypeDescJellyfin": "Open source media server",
+  "sourceTypeDescEmby": "Media server",
+  "sourceTypeDescPlex": "Media server",
+  "sourceTypeDescPtSite": "Custom resource site",
+  "sourceTypeDescOpensubtitles": "World's largest subtitle database",
+  "smbAdapterAuthFailedMessage": "SMB authentication failed\nUsername or password incorrect",
+  "smbAdapterConnectionRefusedMessage": "SMB connection refused\nPlease check:\n• Is SMB service enabled\n• Is port 445 open\n• Firewall settings",
+  "smbAdapterConnectionTimeoutMessage": "SMB connection timeout\nPlease check:\n• Is the server address correct\n• Is the network connected\n• Is the server online",
+  "smbAdapterAddressUnresolvableMessage": "SMB server address cannot be resolved\nPlease check:\n• Is the server address correct\n• Is DNS configured correctly",
+  "smbAdapterNetworkUnreachableMessage": "SMB network unreachable\nPlease check:\n• Is the network connection normal\n• Are you on the same network",
+  "smbAdapterConnectionClosedMessage": "SMB connection disconnected\nPlease check network connection and try again",
+  "smbAdapterAccessDeniedMessage": "SMB access denied\nPlease check user permissions",
+  "smbAdapterAccountDisabledMessage": "SMB account disabled\nPlease contact administrator to enable account",
+  "smbAdapterAccountLockedMessage": "SMB account locked\nPlease try again later or contact administrator",
+  "smbAdapterPasswordExpiredMessage": "SMB password expired\nPlease update password and try again",
+  "smbAdapterCannotConnectMessage": "SMB cannot connect to server\nPlease check server address and network",
+  "smbAdapterInvalidNetworkNameMessage": "SMB network name invalid\nPlease check if share name is correct",
+  "smbAdapterProtocolIncompatibleMessage": "SMB protocol version incompatible\nPlease check server SMB protocol settings",
+  "smbAdapterFailureWithErrorMessage": "SMB connection failed\n{error}",
+  "@smbAdapterFailureWithErrorMessage": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "smbAdapterConnectionTimeoutLabel": "SMB connection timeout (30s)",
+  "smbAdapterNotConnectedError": "Not connected to SMB server",
+  "ptTorrentStatusPromotionDoubleFree": "2x Free",
+  "ptTorrentStatusPromotionFree": "Free",
+  "ptTorrentStatusPromotionHalfDownDoubleUp": "50%↓ 2x↑",
+  "ptTorrentStatusPromotionHalfDown": "50%↓",
+  "ptTorrentStatusPromotionDoubleUp": "2x↑",
+  "ptTorrentStatusPromotionDiscount": "{discount}%↓",
+  "@ptTorrentStatusPromotionDiscount": {
+    "placeholders": {
+      "discount": {
+        "type": "int"
+      }
+    }
+  },
+  "ptTorrentRemainingFreeDays": "{days} day(s)",
+  "@ptTorrentRemainingFreeDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "ptTorrentRemainingFreeHours": "{hours} hour(s)",
+  "@ptTorrentRemainingFreeHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "ptTorrentRemainingFreeMinutes": "{minutes} minute(s)",
+  "@ptTorrentRemainingFreeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "ptTorrentRemainingFreeExpiringSoon": "Expiring soon",
+  "ptUserInfoJoinTimeYearsAgo": "{years} year(s) ago",
+  "@ptUserInfoJoinTimeYearsAgo": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "ptUserInfoJoinTimeMonthsAgo": "{months} month(s) ago",
+  "@ptUserInfoJoinTimeMonthsAgo": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "ptUserInfoJoinTimeDaysAgo": "{days} day(s) ago",
+  "@ptUserInfoJoinTimeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "ptUserInfoJoinTimeToday": "Today",
+  "ptUserInfoLastAccessYearsAgo": "{years} year(s) ago",
+  "@ptUserInfoLastAccessYearsAgo": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "ptUserInfoLastAccessMonthsAgo": "{months} month(s) ago",
+  "@ptUserInfoLastAccessMonthsAgo": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "ptUserInfoLastAccessDaysAgo": "{days} day(s) ago",
+  "@ptUserInfoLastAccessDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "ptUserInfoLastAccessHoursAgo": "{hours} hour(s) ago",
+  "@ptUserInfoLastAccessHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "ptUserInfoLastAccessMinutesAgo": "{minutes} minute(s) ago",
+  "@ptUserInfoLastAccessMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "ptUserInfoLastAccessJustNow": "Just now",
+  "ptTransferLogFormattedSeedTimeDaysHours": "{days}d {hours}h",
+  "@ptTransferLogFormattedSeedTimeDaysHours": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "ptTransferLogFormattedSeedTimeHoursMinutes": "{hours}h {minutes}m",
+  "@ptTransferLogFormattedSeedTimeHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "ptTransferLogFormattedSeedTimeNone": "-",
+  "ptRatioInfinite": "∞",
+  "ptTransferLogTypeAll": "All",
+  "ptTransferLogTypeSeeding": "Seeding",
+  "ptTransferLogTypeLeeching": "Leeching",
+  "ptTransferLogTypeCompleted": "Completed",
+  "traktApiRequestDeviceCodeFailed": "Failed to request device code: {code}",
+  "@traktApiRequestDeviceCodeFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "traktApiConnectionFailed": "Cannot connect to Trakt: {message}",
+  "@traktApiConnectionFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "traktApiNetworkError": "Network error: {message}",
+  "@traktApiNetworkError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "traktApiInvalidDeviceCode": "Invalid device code",
+  "traktApiDeviceCodeAlreadyUsed": "Device code has already been used",
+  "traktApiDeviceCodeExpired": "Device code has expired, please request a new one",
+  "traktApiUserAuthorizationDenied": "User denied authorization",
+  "traktApiPollingTooFrequent": "Polling too frequently, please try again later",
+  "traktApiPollAuthorizationFailed": "Failed to poll authorization status: {code}",
+  "@traktApiPollAuthorizationFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "traktApiGetTokenFailed": "Failed to get token: {code}",
+  "@traktApiGetTokenFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "traktApiNoRefreshToken": "No refresh token available",
+  "traktApiRefreshTokenFailed": "Failed to refresh token: {code}",
+  "@traktApiRefreshTokenFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "traktApiNotAuthenticated": "Not authenticated, please log in first",
+  "traktApiAuthorizationExpired": "Authorization expired, please log in again",
+  "traktApiUnsupportedHttpMethod": "Unsupported HTTP method: {method}",
+  "@traktApiUnsupportedHttpMethod": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "traktApiRequestFailed": "Request failed: {code} {reason}",
+  "@traktApiRequestFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      },
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "plexVfsPathNotExist": "Path does not exist: {path}",
+  "@plexVfsPathNotExist": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "plexVfsLibraryNotExist": "Media library does not exist: {libraryKey}",
+  "@plexVfsLibraryNotExist": {
+    "placeholders": {
+      "libraryKey": {
+        "type": "String"
+      }
+    }
+  },
+  "plexVfsItemNotExist": "Item does not exist: {ratingKey}",
+  "@plexVfsItemNotExist": {
+    "placeholders": {
+      "ratingKey": {
+        "type": "String"
+      }
+    }
+  },
+  "plexVfsDirectReadStreamNotSupported": "Plex virtual file system does not support direct stream reading, please use getFileUrl",
+  "plexVfsUrlStreamNotSupported": "Plex virtual file system does not support URL streams",
+  "plexVfsGetFileUrlFailed": "Failed to get file URL: {path}",
+  "@plexVfsGetFileUrlFailed": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "plexVfsNoAvailableMedia": "No available media: {path}",
+  "@plexVfsNoAvailableMedia": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "plexVfsNoMediaPart": "No available media part: {path}",
+  "@plexVfsNoMediaPart": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "plexVfsCreateDirectoryNotSupported": "Plex virtual file system does not support creating directories",
+  "plexVfsDeleteNotSupported": "Plex virtual file system does not support deletion",
+  "plexVfsRenameNotSupported": "Plex virtual file system does not support renaming",
+  "plexVfsCopyNotSupported": "Plex virtual file system does not support copying",
+  "plexVfsMoveNotSupported": "Plex virtual file system does not support moving",
+  "plexVfsUploadNotSupported": "Plex virtual file system does not support uploading",
+  "plexVfsWriteNotSupported": "Plex virtual file system does not support writing",
+  "qnapApiServerEmptyResponse": "Server returned empty data",
+  "qnapApiNoSessionId": "Failed to retrieve session ID",
+  "qnapApiGetUrlStreamFailed": "Failed to get URL stream: response is empty",
+  "qnapApiUploadFailed": "Upload failed",
+  "qnapApiWriteFailed": "Write failed",
+  "qnapApiOperationFailed": "Operation failed",
+  "qnapApiAuthFailed": "Authentication failed",
+  "qnapApiInvalidCredentials": "Invalid username or password",
+  "qnapApiAccountDisabled": "Account has been disabled",
+  "qnapApiInsufficientPermission": "Insufficient permission",
+  "qnapApiConnectionLimitReached": "Connection limit reached",
+  "qnapApiRequires2FA": "Two-factor authentication required",
+  "qnapApi2FAFailed": "Two-factor authentication failed",
+  "qnapApiIPBlocked": "IP has been blocked",
+  "qnapApiAuthFailedWithCode": "Authentication failed (error code: {code})",
+  "@qnapApiAuthFailedWithCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "photoItemDisplaySizeUnknown": "Unknown size",
+  "photoGroupDateTitleUnknown": "Unknown date",
+  "photoGroupDateTitleThisYear": "This year",
+  "photoGroupDateTitleYear": "{year}",
+  "@photoGroupDateTitleYear": {
+    "placeholders": {
+      "year": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoGroupDateTitleThisMonth": "This month",
+  "photoGroupDateTitleMonth": "{month}",
+  "@photoGroupDateTitleMonth": {
+    "placeholders": {
+      "month": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoGroupDateTitleYearMonth": "{year}/{month}",
+  "@photoGroupDateTitleYearMonth": {
+    "placeholders": {
+      "year": {
+        "type": "Object"
+      },
+      "month": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoGroupDateTitleToday": "Today",
+  "photoGroupDateTitleYesterday": "Yesterday",
+  "photoGroupDateTitleDaysAgo": "{days} days ago",
+  "@photoGroupDateTitleDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoGroupDateTitleMonthDay": "{month}/{day}",
+  "@photoGroupDateTitleMonthDay": {
+    "placeholders": {
+      "month": {
+        "type": "Object"
+      },
+      "day": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoGroupDateTitleFull": "{year}/{month}/{day}",
+  "@photoGroupDateTitleFull": {
+    "placeholders": {
+      "year": {
+        "type": "Object"
+      },
+      "month": {
+        "type": "Object"
+      },
+      "day": {
+        "type": "Object"
+      }
+    }
+  },
+  "updateServiceNetworkError": "Network connection failed. Please check your network and try again.",
+  "updateServiceTimeoutError": "Connection timed out. Please try again later.",
+  "updateServiceNoReleaseError": "No release version found.",
+  "updateServiceNoPlatformAssetError": "No installation package found for the current platform.",
+  "updateServiceDownloadFailedError": "Download failed. Please retry.",
+  "updateServiceInstallFailedError": "Installation failed. Please install manually.",
+  "updateServiceCancelledError": "Operation cancelled.",
+  "updateServiceCheckCancelledError": "Check cancelled.",
+  "updateServiceNoPlatformAssetDetailError": "No installation package found for the current platform ({platform}) .",
+  "@updateServiceNoPlatformAssetDetailError": {
+    "placeholders": {
+      "platform": {
+        "type": "String"
+      }
+    }
+  },
+  "updateServiceDownloadCancelledError": "Download cancelled.",
+  "updateServiceDownloadFailedWithCodeError": "Download failed: {error}",
+  "@updateServiceDownloadFailedWithCodeError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "updateServiceNoDownloadLinkError": "No available download link.",
+  "updateServiceGithubApiError": "GitHub API returned an error: {code}",
+  "@updateServiceGithubApiError": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "updateServiceDownloadFailedWithStatusError": "Download failed: {code}",
+  "@updateServiceDownloadFailedWithStatusError": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "updateServiceInstallFailedWithErrorError": "Installation failed: {error}",
+  "@updateServiceInstallFailedWithErrorError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "updateServiceNoReleaseNotesDefault": "No release notes available.",
+  "jellyfinVfsPathNotFound": "Path not found: {path}",
+  "@jellyfinVfsPathNotFound": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "jellyfinVfsItemNotFound": "Item not found: {itemId}",
+  "@jellyfinVfsItemNotFound": {
+    "placeholders": {
+      "itemId": {
+        "type": "String"
+      }
+    }
+  },
+  "jellyfinVfsUseGetFileUrl": "Please use getFileUrl to get the playback address",
+  "jellyfinVfsCreateDirNotSupported": "Jellyfin does not support creating directories",
+  "jellyfinVfsDeleteNotSupported": "Jellyfin does not support delete operations",
+  "jellyfinVfsRenameNotSupported": "Jellyfin does not support renaming",
+  "jellyfinVfsCopyNotSupported": "Jellyfin does not support copying",
+  "jellyfinVfsMoveNotSupported": "Jellyfin does not support moving",
+  "jellyfinVfsUploadNotSupported": "Jellyfin does not support uploading",
+  "jellyfinVfsWriteFileNotSupported": "Jellyfin does not support writing files",
+  "embyVfsPathNotFound": "Path not found: {path}",
+  "@embyVfsPathNotFound": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "embyVfsItemNotFound": "Item not found: {itemId}",
+  "@embyVfsItemNotFound": {
+    "placeholders": {
+      "itemId": {
+        "type": "String"
+      }
+    }
+  },
+  "embyVfsUnsupportedStreamRead": "Emby virtual filesystem does not support direct stream reading. Please use getFileUrl",
+  "embyVfsUnsupportedUrlStream": "Emby virtual filesystem does not support URL streams",
+  "embyVfsFailedResolveePath": "Failed to resolve path: {path}",
+  "@embyVfsFailedResolveePath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "embyVfsUnsupportedCreateDirectory": "Emby virtual filesystem does not support creating directories",
+  "embyVfsUnsupportedDelete": "Emby virtual filesystem does not support deletion",
+  "embyVfsUnsupportedRename": "Emby virtual filesystem does not support renaming",
+  "embyVfsUnsupportedCopy": "Emby virtual filesystem does not support copying",
+  "embyVfsUnsupportedMove": "Emby virtual filesystem does not support moving",
+  "embyVfsUnsupportedUpload": "Emby virtual filesystem does not support uploading",
+  "embyVfsUnsupportedWrite": "Emby virtual filesystem does not support writing",
+  "upnpFileSystemObjectNotFound": "Object not found: {path}",
+  "@upnpFileSystemObjectNotFound": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "upnpFileSystemCannotGetStream": "Cannot get data stream",
+  "upnpFileSystemNoAccessibleUrl": "This UPnP item has no accessible URL (might be a container or missing res)",
+  "upnpFileSystemCreateDirectoryNotSupported": "UPnP MediaServer does not support creating directories",
+  "upnpFileSystemDeleteNotSupported": "UPnP MediaServer does not support deletion",
+  "upnpFileSystemRenameNotSupported": "UPnP MediaServer does not support renaming",
+  "upnpFileSystemCopyNotSupported": "UPnP MediaServer does not support copying",
+  "upnpFileSystemMoveNotSupported": "UPnP MediaServer does not support moving",
+  "upnpFileSystemUploadNotSupported": "UPnP MediaServer does not support uploading",
+  "upnpFileSystemWriteNotSupported": "UPnP MediaServer does not support writing",
+  "videoSortRatingDesc": "Highest Rating",
+  "videoSortRatingAsc": "Lowest Rating",
+  "videoSortYearDesc": "Latest Release",
+  "videoSortYearAsc": "Earliest Release",
+  "videoSortTitleAsc": "Title A-Z",
+  "videoSortTitleDesc": "Title Z-A",
+  "videoSortAddedDesc": "Recently Added",
+  "videoSortAddedAsc": "Earliest Added",
+  "videoCacheEmpty": "No cache",
+  "videoCollectionNameUnknown": "Unknown Collection",
+  "ptSiteAuthMissingError": "Missing authentication information",
+  "ptSiteMTeamApiKeyRequired": "M-Team site requires x-api-key configuration",
+  "ptSiteApiResponseError": "API returned error: {message}",
+  "@ptSiteApiResponseError": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSiteMTeamApiError": "M-Team API returned error: {message}",
+  "@ptSiteMTeamApiError": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSiteAuthExpiredError": "Authentication information may have expired, please update x-api-key",
+  "ptSiteAuthFailedError": "Authentication failed, please check if x-api-key is correct",
+  "ptSiteAccessDeniedError": "Access denied, please check account permissions",
+  "ptSiteHttpStatusError": "HTTP {code}",
+  "@ptSiteHttpStatusError": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSiteMTeamConnectionFailed": "M-Team connection failed: {error}",
+  "@ptSiteMTeamConnectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSiteMTeamTestConnectionFailed": "M-Team test connection failed",
+  "ptSiteGetUserInfoFailed": "Failed to get user info: {code}",
+  "@ptSiteGetUserInfoFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSiteGetUserInfoFailedDefault": "Failed to get user info",
+  "ptSiteGetTorrentListFailed": "Failed to get torrent list: {code}",
+  "@ptSiteGetTorrentListFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSiteGetTorrentListFailedDefault": "Failed to get torrent list",
+  "ptSiteGetTorrentDetailFailed": "Failed to get torrent detail: {code}",
+  "@ptSiteGetTorrentDetailFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSiteGetTorrentDetailFailedDefault": "Failed to get torrent detail",
+  "ptSiteGetDownloadUrlFailed": "Failed to get download link: {code}",
+  "@ptSiteGetDownloadUrlFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSiteGetDownloadUrlFailedDefault": "Failed to get download link",
+  "ptSiteResponseFormatError": "Response format parsing error, site may have returned non-standard Content-Type",
+  "ptSiteTestConnectionFailed": "Test connection failed, user perceivable error",
+  "ptSiteUnimplementedError": "Need to be implemented in subclass",
+  "sourceManagerErrorConnectionNotFound": "Connection not found",
+  "sourceManager2FAVerificationFailed": "2FA verification failed",
+  "sourceManagerError2FANotSupported": "This source type does not support 2FA",
+  "sourceManagerErrorNotMediaServerType": "{type} is not a media server type",
+  "@sourceManagerErrorNotMediaServerType": {
+    "placeholders": {
+      "type": {
+        "type": "Object"
+      }
+    }
+  },
+  "sourceManagerErrorReconnectTimeout": "Reconnection timeout",
+  "sourceManagerErrorProtocolNotImplemented": "Protocol {type} has not been implemented yet",
+  "@sourceManagerErrorProtocolNotImplemented": {
+    "placeholders": {
+      "type": {
+        "type": "Object"
+      }
+    }
+  },
+  "sourceManagerErrorServiceTypeNotSupportedNas": "Service source {type} does not support NasAdapter, please use the corresponding ServiceAdapter",
+  "@sourceManagerErrorServiceTypeNotSupportedNas": {
+    "placeholders": {
+      "type": {
+        "type": "Object"
+      }
+    }
+  },
+  "sourceManagerErrorServiceTypeNotSupportedNasType": "Service source {type} does not support NasAdapterType",
+  "@sourceManagerErrorServiceTypeNotSupportedNasType": {
+    "placeholders": {
+      "type": {
+        "type": "Object"
+      }
+    }
   }
 }

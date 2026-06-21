@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/upnp/upnp_content_directory_client.dart';
 
@@ -103,7 +104,7 @@ class UpnpFileSystem implements NasFileSystem {
       // 用 BrowseMetadata 拿对象自身
       final entries = await _client.browse(id, browseFlag: 'BrowseMetadata');
       if (entries.isEmpty) {
-        throw Exception('对象不存在: $path');
+        throw Exception(appL10n.upnpFileSystemObjectNotFound(path));
       }
       final e = entries.first;
       _itemCache[e.id] = e;
@@ -155,7 +156,7 @@ class UpnpFileSystem implements NasFileSystem {
       );
       final stream = response.data?.stream;
       if (stream == null) {
-        throw Exception('无法获取数据流');
+        throw Exception(appL10n.upnpFileSystemCannotGetStream);
       }
       return stream;
     } on DioException catch (e, st) {
@@ -173,14 +174,14 @@ class UpnpFileSystem implements NasFileSystem {
       // 用 BrowseMetadata 从服务器再问一次
       final entries = await _client.browse(id, browseFlag: 'BrowseMetadata');
       if (entries.isEmpty) {
-        throw Exception('对象不存在: $path');
+        throw Exception(appL10n.upnpFileSystemObjectNotFound(path));
       }
       item = entries.first;
       _itemCache[id] = item;
     }
     final url = item.contentUrl;
     if (url == null || url.isEmpty) {
-      throw UnsupportedError('该 UPnP 项目无可访问 URL（可能是容器或缺 res）');
+      throw UnsupportedError(appL10n.upnpFileSystemNoAccessibleUrl);
     }
     return url;
   }
@@ -189,23 +190,23 @@ class UpnpFileSystem implements NasFileSystem {
 
   @override
   Future<void> createDirectory(String path) =>
-      throw UnimplementedError('UPnP MediaServer 不支持创建目录');
+      throw UnimplementedError(appL10n.upnpFileSystemCreateDirectoryNotSupported);
 
   @override
   Future<void> delete(String path) =>
-      throw UnimplementedError('UPnP MediaServer 不支持删除');
+      throw UnimplementedError(appL10n.upnpFileSystemDeleteNotSupported);
 
   @override
   Future<void> rename(String oldPath, String newPath) =>
-      throw UnimplementedError('UPnP MediaServer 不支持重命名');
+      throw UnimplementedError(appL10n.upnpFileSystemRenameNotSupported);
 
   @override
   Future<void> copy(String sourcePath, String destPath) =>
-      throw UnimplementedError('UPnP MediaServer 不支持复制');
+      throw UnimplementedError(appL10n.upnpFileSystemCopyNotSupported);
 
   @override
   Future<void> move(String sourcePath, String destPath) =>
-      throw UnimplementedError('UPnP MediaServer 不支持移动');
+      throw UnimplementedError(appL10n.upnpFileSystemMoveNotSupported);
 
   @override
   Future<void> upload(
@@ -214,11 +215,11 @@ class UpnpFileSystem implements NasFileSystem {
     String? fileName,
     void Function(int sent, int total)? onProgress,
   }) =>
-      throw UnimplementedError('UPnP MediaServer 不支持上传');
+      throw UnimplementedError(appL10n.upnpFileSystemUploadNotSupported);
 
   @override
   Future<void> writeFile(String remotePath, List<int> data) =>
-      throw UnimplementedError('UPnP MediaServer 不支持写入');
+      throw UnimplementedError(appL10n.upnpFileSystemWriteNotSupported);
 
   @override
   Future<List<FileItem>> search(String query, {String? path}) async => [];

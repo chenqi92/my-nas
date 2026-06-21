@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/errors/exceptions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 会话刷新回调类型
@@ -404,7 +405,7 @@ class SynologyApi {
     );
 
     if (response.data == null) {
-      throw Exception('获取文件流失败：响应为空');
+      throw Exception(appL10n.synoApiFileStreamEmpty);
     }
 
     return response.data!.stream;
@@ -425,7 +426,7 @@ class SynologyApi {
     );
 
     if (response.data == null) {
-      throw Exception('获取 URL 数据流失败：响应为空');
+      throw Exception(appL10n.synoApiUrlStreamEmpty);
     }
 
     return response.data!.stream;
@@ -741,7 +742,7 @@ class SynologyApi {
 
       if (data == null) {
         logger.e('SynologyApi: 服务器返回空数据');
-        throw const ServerException(message: '服务器返回空数据');
+        throw ServerException(message: appL10n.synoApiServerEmpty);
       }
 
       return data;
@@ -805,7 +806,7 @@ class SynologyApi {
 
       if (data == null) {
         logger.e('SynologyApi: 服务器返回空数据');
-        throw const ServerException(message: '服务器返回空数据');
+        throw ServerException(message: appL10n.synoApiServerEmpty);
       }
 
       if (data['success'] != true) {
@@ -877,39 +878,39 @@ class SynologyApi {
   }
 
   AuthResult _handleAuthError(int? errorCode) => switch (errorCode) {
-        400 => const AuthFailure(error: '账号或密码错误'),
-        401 => const AuthFailure(error: '账号已禁用'),
-        402 => const AuthFailure(error: '权限不足'),
+        400 => AuthFailure(error: appL10n.synoApiAuthInvalidCredentials),
+        401 => AuthFailure(error: appL10n.synoApiAuthAccountDisabled),
+        402 => AuthFailure(error: appL10n.synoApiAuthInsufficientPermission),
         403 => const AuthRequires2FA(),
-        404 => const AuthFailure(error: '二次验证失败'),
-        406 => const AuthFailure(error: '需要强制更改密码'),
-        407 => const AuthFailure(error: 'IP 被封禁'),
-        _ => AuthFailure(error: '认证失败 (错误码: $errorCode)'),
+        404 => AuthFailure(error: appL10n.synoApiAuth2FAFailed),
+        406 => AuthFailure(error: appL10n.synoApiAuthPasswordChangeRequired),
+        407 => AuthFailure(error: appL10n.synoApiAuthIpBanned),
+        _ => AuthFailure(error: appL10n.synoApiAuthFailedWithCode(errorCode ?? 0)),
       };
 
   String _getErrorMessage(int? errorCode) => switch (errorCode) {
-        100 => '未知错误',
-        101 => '无效参数',
-        102 => 'API 不存在',
-        103 => '方法不存在',
-        104 => '版本不支持',
-        105 => '权限不足',
-        106 => '会话超时，请重新连接',
-        107 => '重复登录',
-        119 => '会话已失效，请重新连接',
+        100 => appL10n.synoApiErrorUnknown,
+        101 => appL10n.synoApiErrorInvalidParam,
+        102 => appL10n.synoApiErrorApiNotFound,
+        103 => appL10n.synoApiErrorMethodNotFound,
+        104 => appL10n.synoApiErrorVersionNotSupported,
+        105 => appL10n.synoApiErrorPermissionDenied,
+        106 => appL10n.synoApiErrorSessionTimeout,
+        107 => appL10n.synoApiErrorDuplicateLogin,
+        119 => appL10n.synoApiErrorSessionInvalid,
         // FileStation 特定错误
-        400 => '无效路径',
-        401 => '路径不存在',
-        402 => '权限不足',
-        403 => '目标路径已存在',
-        404 => '目标文件已锁定',
-        405 => '目标路径拒绝',
-        406 => '上传失败',
-        407 => '磁盘空间不足',
-        408 => '文件过大',
-        409 => '操作中断',
-        414 => '任务不存在',
-        _ => '未知错误 ($errorCode)',
+        400 => appL10n.synoApiErrorInvalidPath,
+        401 => appL10n.synoApiErrorPathNotFound,
+        402 => appL10n.synoApiErrorPermissionDenied,
+        403 => appL10n.synoApiErrorTargetExists,
+        404 => appL10n.synoApiErrorFileLocked,
+        405 => appL10n.synoApiErrorPathDenied,
+        406 => appL10n.synoApiErrorUploadFailed,
+        407 => appL10n.synoApiErrorInsufficientSpace,
+        408 => appL10n.synoApiErrorFileTooLarge,
+        409 => appL10n.synoApiErrorOperationAborted,
+        414 => appL10n.synoApiErrorTaskNotFound,
+        _ => appL10n.synoApiErrorUnknownWithCode(errorCode ?? 0),
       };
 }
 

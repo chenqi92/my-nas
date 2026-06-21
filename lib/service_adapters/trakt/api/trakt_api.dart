@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// Trakt API 客户端
 ///
@@ -85,11 +86,11 @@ class TraktApi {
         return TraktDeviceCode.fromJson(data);
       }
 
-      throw TraktApiException('请求设备码失败: ${response.statusCode}');
+      throw TraktApiException(appL10n.traktApiRequestDeviceCodeFailed(response.statusCode));
     } on SocketException catch (e) {
-      throw TraktApiException('无法连接到 Trakt: ${e.message}');
+      throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
-      throw TraktApiException('网络错误: ${e.message}');
+      throw TraktApiException(appL10n.traktApiNetworkError(e.message));
     }
   }
 
@@ -133,25 +134,25 @@ class TraktApi {
           return null;
 
         case 404:
-          throw const TraktApiException('无效的设备码');
+          throw TraktApiException(appL10n.traktApiInvalidDeviceCode);
 
         case 409:
-          throw const TraktApiException('设备码已被使用');
+          throw TraktApiException(appL10n.traktApiDeviceCodeAlreadyUsed);
 
         case 410:
-          throw const TraktApiException('设备码已过期，请重新获取');
+          throw TraktApiException(appL10n.traktApiDeviceCodeExpired);
 
         case 418:
-          throw const TraktApiException('用户拒绝了授权');
+          throw TraktApiException(appL10n.traktApiUserAuthorizationDenied);
 
         case 429:
-          throw const TraktApiException('轮询过于频繁，请稍后重试');
+          throw TraktApiException(appL10n.traktApiPollingTooFrequent);
 
         default:
-          throw TraktApiException('轮询授权状态失败: ${response.statusCode}');
+          throw TraktApiException(appL10n.traktApiPollAuthorizationFailed(response.statusCode));
       }
     } on SocketException catch (e) {
-      throw TraktApiException('无法连接到 Trakt: ${e.message}');
+      throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
       throw TraktApiException('网络错误: ${e.message}');
     }
@@ -190,9 +191,9 @@ class TraktApi {
         return tokenResponse;
       }
 
-      throw TraktApiException('获取 Token 失败: ${response.statusCode}');
+      throw TraktApiException(appL10n.traktApiGetTokenFailed(response.statusCode));
     } on SocketException catch (e) {
-      throw TraktApiException('无法连接到 Trakt: ${e.message}');
+      throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
       throw TraktApiException('网络错误: ${e.message}');
     }
@@ -201,7 +202,7 @@ class TraktApi {
   /// 刷新 Token
   Future<TraktTokenResponse> refreshAccessToken() async {
     if (refreshToken == null) {
-      throw const TraktApiException('没有可用的 Refresh Token');
+      throw TraktApiException(appL10n.traktApiNoRefreshToken);
     }
 
     final url = Uri.parse('$apiUrl/oauth/token');
@@ -235,9 +236,9 @@ class TraktApi {
         return tokenResponse;
       }
 
-      throw TraktApiException('刷新 Token 失败: ${response.statusCode}');
+      throw TraktApiException(appL10n.traktApiRefreshTokenFailed(response.statusCode));
     } on SocketException catch (e) {
-      throw TraktApiException('无法连接到 Trakt: ${e.message}');
+      throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
       throw TraktApiException('网络错误: ${e.message}');
     }
@@ -605,7 +606,7 @@ class TraktApi {
     }
 
     if (!isAuthenticated) {
-      throw const TraktApiException('未认证，请先登录');
+      throw TraktApiException(appL10n.traktApiNotAuthenticated);
     }
 
     return _makeRequest(
@@ -653,23 +654,23 @@ class TraktApi {
       } else if (method == 'DELETE') {
         response = await client.delete(url, headers: headers);
       } else {
-        throw TraktApiException('不支持的 HTTP 方法: $method');
+        throw TraktApiException(appL10n.traktApiUnsupportedHttpMethod(method));
       }
 
       if (response.statusCode == 401) {
         accessToken = null;
-        throw const TraktApiException('认证已过期，请重新登录');
+        throw TraktApiException(appL10n.traktApiAuthorizationExpired);
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw TraktApiException(
-          '请求失败: ${response.statusCode} ${response.reasonPhrase}',
+          appL10n.traktApiRequestFailed(response.statusCode, response.reasonPhrase ?? 'unknown'),
         );
       }
 
       return response;
     } on SocketException catch (e) {
-      throw TraktApiException('无法连接到 Trakt: ${e.message}');
+      throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
       throw TraktApiException('网络错误: ${e.message}');
     }

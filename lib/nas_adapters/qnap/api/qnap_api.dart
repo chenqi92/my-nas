@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/errors/exceptions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// QNAP QTS API 客户端
@@ -49,7 +50,7 @@ class QnapApi {
       logger.d('QnapApi: 登录响应 => $data');
 
       if (data == null) {
-        return const QnapAuthFailure(error: '服务器返回空数据');
+        return QnapAuthFailure(error: appL10n.qnapApiServerEmptyResponse);
       }
 
       // QNAP 返回 authPassed = 1 表示成功
@@ -58,7 +59,7 @@ class QnapApi {
       if (authPassed == 1) {
         _sid = data['authSid'] as String?;
         if (_sid == null) {
-          return const QnapAuthFailure(error: '未获取到会话ID');
+          return QnapAuthFailure(error: appL10n.qnapApiNoSessionId);
         }
 
         logger.i('QnapApi: 登录成功, sid => ${_sid!.substring(0, 8)}...');
@@ -316,7 +317,7 @@ class QnapApi {
     );
 
     if (response.data == null) {
-      throw Exception('获取 URL 数据流失败：响应为空');
+      throw Exception(appL10n.qnapApiGetUrlStreamFailed);
     }
 
     return response.data!.stream;
@@ -375,7 +376,7 @@ class QnapApi {
     final data = response.data;
     if (data == null || data['status'] != 1) {
       throw ServerException(
-        message: data?['msg'] as String? ?? '上传失败',
+        message: data?['msg'] as String? ?? appL10n.qnapApiUploadFailed,
       );
     }
 
@@ -414,7 +415,7 @@ class QnapApi {
     final responseData = response.data;
     if (responseData == null || responseData['status'] != 1) {
       throw ServerException(
-        message: responseData?['msg'] as String? ?? '写入失败',
+        message: responseData?['msg'] as String? ?? appL10n.qnapApiWriteFailed,
       );
     }
 
@@ -444,14 +445,14 @@ class QnapApi {
 
       if (data == null) {
         logger.e('QnapApi: 服务器返回空数据');
-        throw const ServerException(message: '服务器返回空数据');
+        throw ServerException(message: appL10n.qnapApiServerEmptyResponse);
       }
 
       // 检查是否为错误响应
       if (data is Map<String, dynamic>) {
         final status = data['status'] as int?;
         if (status != null && status != 1) {
-          final errorMsg = data['msg'] as String? ?? '操作失败';
+          final errorMsg = data['msg'] as String? ?? appL10n.qnapApiOperationFailed;
           logger.e('QnapApi: API 错误 => $errorMsg');
           throw ServerException(message: errorMsg);
         }
@@ -469,15 +470,15 @@ class QnapApi {
 
   /// 获取认证错误消息
   String _getAuthErrorMessage(int errorCode) => switch (errorCode) {
-        0 => '认证失败',
-        1 => '账号或密码错误',
-        2 => '账号已禁用',
-        3 => '权限不足',
-        4 => '连接数已达上限',
-        5 => '需要二次验证',
-        6 => '二次验证失败',
-        7 => 'IP 已被封禁',
-        _ => '认证失败 (错误码: $errorCode)',
+        0 => appL10n.qnapApiAuthFailed,
+        1 => appL10n.qnapApiInvalidCredentials,
+        2 => appL10n.qnapApiAccountDisabled,
+        3 => appL10n.qnapApiInsufficientPermission,
+        4 => appL10n.qnapApiConnectionLimitReached,
+        5 => appL10n.qnapApiRequires2FA,
+        6 => appL10n.qnapApi2FAFailed,
+        7 => appL10n.qnapApiIPBlocked,
+        _ => appL10n.qnapApiAuthFailedWithCode(errorCode),
       };
 }
 

@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:logger/logger.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 
@@ -148,9 +149,9 @@ class MTeamApi extends PTSiteApi {
       if (xApiKey.isEmpty) {
         _logger.w('MTeamApi.testConnection: 缺少 x-api-key');
         AppError.ignore(
-          Exception('缺少认证信息'),
+          Exception(appL10n.ptSiteAuthMissingError),
           StackTrace.current,
-          '馒头站点需要配置 x-api-key',
+          appL10n.ptSiteMTeamApiKeyRequired,
         );
         return false;
       }
@@ -191,9 +192,9 @@ class MTeamApi extends PTSiteApi {
         final message = data['message'] as String? ?? '未知错误';
         _logger.w('MTeamApi.testConnection: API 返回错误 - code=$code, message=$message');
         AppError.ignore(
-          Exception('API 返回错误: $message'),
+          Exception(appL10n.ptSiteApiResponseError(message)),
           StackTrace.current,
-          '馒头 API 返回错误: $message',
+          appL10n.ptSiteMTeamApiError(message),
         );
         return false;
       }
@@ -203,10 +204,10 @@ class MTeamApi extends PTSiteApi {
 
       // 302 重定向通常表示认证信息无效或已过期
       final errorMessage = switch (response.statusCode) {
-        302 => '认证信息可能已过期，请更新 x-api-key',
-        401 => '认证失败，请检查 x-api-key 是否正确',
-        403 => '访问被拒绝，请检查账号权限',
-        _ => 'HTTP ${response.statusCode}',
+        302 => appL10n.ptSiteAuthExpiredError,
+        401 => appL10n.ptSiteAuthFailedError,
+        403 => appL10n.ptSiteAccessDeniedError,
+        _ => appL10n.ptSiteHttpStatusError(response.statusCode),
       };
 
       AppError.ignore(
@@ -217,7 +218,7 @@ class MTeamApi extends PTSiteApi {
       return false;
     } on Exception catch (e, st) {
       _logger.e('MTeamApi.testConnection: 异常 - $e');
-      AppError.ignore(e, st, '馒头测试连接失败');
+      AppError.ignore(e, st, appL10n.ptSiteMTeamTestConnectionFailed);
       return false;
     }
   }
@@ -241,13 +242,13 @@ class MTeamApi extends PTSiteApi {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('获取用户信息失败: ${response.statusCode}');
+        throw Exception(appL10n.ptSiteGetUserInfoFailed(response.statusCode));
       }
 
       final data = json.decode(response.body) as Map<String, dynamic>;
       final code = data['code'];
       if (code != '0' && code != 0 && code != 'SUCCESS') {
-        throw Exception(data['message'] ?? '获取用户信息失败');
+        throw Exception(data['message'] ?? appL10n.ptSiteGetUserInfoFailedDefault);
       }
 
       final profile = data['data'] as Map<String, dynamic>;
@@ -403,14 +404,14 @@ class MTeamApi extends PTSiteApi {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('获取种子列表失败: ${response.statusCode}');
+        throw Exception(appL10n.ptSiteGetTorrentListFailed(response.statusCode));
       }
 
       final data = json.decode(response.body) as Map<String, dynamic>;
       final code = data['code'];
       // code 可能是字符串 "0" 或整数 0
       if (code != '0' && code != 0 && code != 'SUCCESS') {
-        throw Exception(data['message'] ?? '获取种子列表失败');
+        throw Exception(data['message'] ?? appL10n.ptSiteGetTorrentListFailedDefault);
       }
 
       final torrentsData = data['data'] as Map<String, dynamic>? ?? {};
@@ -433,13 +434,13 @@ class MTeamApi extends PTSiteApi {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('获取种子详情失败: ${response.statusCode}');
+        throw Exception(appL10n.ptSiteGetTorrentDetailFailed(response.statusCode));
       }
 
       final data = json.decode(response.body) as Map<String, dynamic>;
       final code = data['code'];
       if (code != '0' && code != 0 && code != 'SUCCESS') {
-        throw Exception(data['message'] ?? '获取种子详情失败');
+        throw Exception(data['message'] ?? appL10n.ptSiteGetTorrentDetailFailedDefault);
       }
 
       return _parseTorrent(data['data'] as Map<String, dynamic>);
@@ -459,13 +460,13 @@ class MTeamApi extends PTSiteApi {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('获取下载链接失败: ${response.statusCode}');
+        throw Exception(appL10n.ptSiteGetDownloadUrlFailed(response.statusCode));
       }
 
       final data = json.decode(response.body) as Map<String, dynamic>;
       final code = data['code'];
       if (code != '0' && code != 0 && code != 'SUCCESS') {
-        throw Exception(data['message'] ?? '获取下载链接失败');
+        throw Exception(data['message'] ?? appL10n.ptSiteGetDownloadUrlFailedDefault);
       }
 
       return data['data'] as String? ?? '';
@@ -845,10 +846,10 @@ class GenericPTSiteApi extends PTSiteApi {
     } on FormatException catch (e, st) {
       // 处理 Content-Type 解析错误（如 "Invalid media type"）
       _logger.w('GenericPTSiteApi.testConnection: 响应格式解析错误 - $e');
-      AppError.ignore(e, st, '响应格式解析错误，站点可能返回了非标准的 Content-Type');
+      AppError.ignore(e, st, appL10n.ptSiteResponseFormatError);
       return false;
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '测试连接失败，用户可感知');
+      AppError.ignore(e, st, appL10n.ptSiteTestConnectionFailed);
       return false;
     }
   }
@@ -905,12 +906,11 @@ class GenericPTSiteApi extends PTSiteApi {
 
       if (response.statusCode != 200) {
         _logger.e('GenericPTSiteApi.getTorrents: HTTP 状态错误 ${response.statusCode}');
-        throw Exception('获取种子列表失败: ${response.statusCode}');
+        throw Exception(appL10n.ptSiteGetTorrentListFailed(response.statusCode));
       }
 
       // 检测是否被重定向到登录页
       if (body.contains('login.php') ||
-          body.contains('请先登录') ||
           body.contains('Please login') ||
           body.contains('class="login"')) {
         _logger.w('GenericPTSiteApi.getTorrents: 检测到登录页面，Cookie 可能已失效');
@@ -1145,7 +1145,7 @@ class GenericPTSiteApi extends PTSiteApi {
 
   @override
   Future<PTTorrent> getTorrentDetail(String torrentId) async =>
-      throw UnimplementedError('需要在子类中实现');
+      throw UnimplementedError(appL10n.ptSiteUnimplementedError);
 
   @override
   Future<String> getDownloadUrl(String torrentId) async =>

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -148,19 +149,19 @@ class UpdateError {
   String get userFriendlyMessage {
     switch (type) {
       case UpdateErrorType.network:
-        return '网络连接失败，请检查网络后重试';
+        return appL10n.updateServiceNetworkError;
       case UpdateErrorType.timeout:
-        return '连接超时，请稍后重试';
+        return appL10n.updateServiceTimeoutError;
       case UpdateErrorType.noRelease:
-        return '未找到发布版本';
+        return appL10n.updateServiceNoReleaseError;
       case UpdateErrorType.noPlatformAsset:
-        return '未找到当前平台的安装包';
+        return appL10n.updateServiceNoPlatformAssetError;
       case UpdateErrorType.downloadFailed:
-        return '下载失败，请重试';
+        return appL10n.updateServiceDownloadFailedError;
       case UpdateErrorType.installFailed:
-        return '安装失败，请手动安装';
+        return appL10n.updateServiceInstallFailedError;
       case UpdateErrorType.cancelled:
-        return '操作已取消';
+        return appL10n.updateServiceCancelledError;
       case UpdateErrorType.unknown:
         return message;
     }
@@ -287,7 +288,7 @@ class UpdateService extends ChangeNotifier {
         AppError.ignore(e, st, '检查更新失败 (尝试 $attempt/${_config.maxRetries})');
 
         if (_isCancelled) {
-          _setError(UpdateErrorType.cancelled, '检查已取消');
+          _setError(UpdateErrorType.cancelled, appL10n.updateServiceCheckCancelledError);
           return;
         }
 
@@ -307,11 +308,11 @@ class UpdateService extends ChangeNotifier {
     ).timeout(_config.checkTimeout);
 
     if (response.statusCode == 404) {
-      throw Exception('未找到发布版本');
+      throw Exception(appL10n.updateServiceNoReleaseError);
     }
 
     if (response.statusCode != 200) {
-      throw Exception('GitHub API 返回错误: ${response.statusCode}');
+      throw Exception(appL10n.updateServiceGithubApiError(response.statusCode));
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -339,7 +340,7 @@ class UpdateService extends ChangeNotifier {
 
         _updateInfo = UpdateInfo(
           version: displayVersion,
-          releaseNotes: data['body'] as String? ?? '暂无更新说明',
+          releaseNotes: data['body'] as String? ?? appL10n.updateServiceNoReleaseNotesDefault,
           releaseDate: DateTime.parse(data['published_at'] as String),
           downloadUrl: asset['browser_download_url'] as String,
           fileName: asset['name'] as String,
@@ -357,7 +358,7 @@ class UpdateService extends ChangeNotifier {
 
         _updateInfo = UpdateInfo(
           version: displayVersion,
-          releaseNotes: data['body'] as String? ?? '暂无更新说明',
+          releaseNotes: data['body'] as String? ?? appL10n.updateServiceNoReleaseNotesDefault,
           releaseDate: DateTime.parse(data['published_at'] as String),
           downloadUrl: '',
           fileName: '',
@@ -369,7 +370,7 @@ class UpdateService extends ChangeNotifier {
         logger.i('UpdateService: iOS 发现新版本 $displayVersion (无直接下载)');
       } else {
         _status = UpdateStatus.notAvailable;
-        _setError(UpdateErrorType.noPlatformAsset, '未找到当前平台 (${PlatformArchitecture.platformName}-${PlatformArchitecture.current}) 的安装包');
+        _setError(UpdateErrorType.noPlatformAsset, appL10n.updateServiceNoPlatformAssetDetailError('${PlatformArchitecture.platformName}-${PlatformArchitecture.current}'));
         logger.w('UpdateService: 未找到当前平台的安装包');
       }
     } else {
@@ -554,11 +555,11 @@ class UpdateService extends ChangeNotifier {
 
   void _handleCheckError(Exception e) {
     if (e is TimeoutException) {
-      _setError(UpdateErrorType.timeout, '连接超时');
+      _setError(UpdateErrorType.timeout, appL10n.updateServiceTimeoutError);
     } else if (e is SocketException) {
-      _setError(UpdateErrorType.network, '网络连接失败');
+      _setError(UpdateErrorType.network, appL10n.updateServiceNetworkError);
     } else if (e.toString().contains('未找到发布版本')) {
-      _setError(UpdateErrorType.noRelease, '未找到发布版本');
+      _setError(UpdateErrorType.noRelease, appL10n.updateServiceNoReleaseError);
     } else {
       _setError(UpdateErrorType.unknown, e.toString());
     }
@@ -577,7 +578,7 @@ class UpdateService extends ChangeNotifier {
     }
 
     if (_updateInfo!.downloadUrl.isEmpty) {
-      _setError(UpdateErrorType.downloadFailed, '无可用下载链接');
+      _setError(UpdateErrorType.downloadFailed, appL10n.updateServiceNoDownloadLinkError);
       notifyListeners();
       return;
     }
@@ -595,7 +596,7 @@ class UpdateService extends ChangeNotifier {
       } on Exception catch (e, st) {
         if (_isCancelled) {
           AppError.ignore(e, st, '用户取消下载更新');
-          _setError(UpdateErrorType.cancelled, '下载已取消');
+          _setError(UpdateErrorType.cancelled, appL10n.updateServiceDownloadCancelledError);
           notifyListeners();
           return;
         }
@@ -603,7 +604,7 @@ class UpdateService extends ChangeNotifier {
         // 最后一次重试失败时上报错误
         if (attempt >= _config.maxRetries) {
           AppError.handle(e, st, 'downloadUpdate', {'attempt': attempt});
-          _setError(UpdateErrorType.downloadFailed, '下载失败: $e');
+          _setError(UpdateErrorType.downloadFailed, appL10n.updateServiceDownloadFailedWithCodeError(e));
           notifyListeners();
         } else {
           AppError.ignore(e, st, '下载失败，重试中 (尝试 $attempt/${_config.maxRetries})');
@@ -641,12 +642,12 @@ class UpdateService extends ChangeNotifier {
 
     if (_isCancelled) {
       _downloadClient?.close();
-      throw Exception('下载已取消');
+      throw Exception(appL10n.updateServiceDownloadCancelledError);
     }
 
     final isResuming = response.statusCode == 206;
     if (response.statusCode != 200 && response.statusCode != 206) {
-      throw Exception('下载失败: ${response.statusCode}');
+      throw Exception(appL10n.updateServiceDownloadFailedWithStatusError(response.statusCode));
     }
 
     final contentLength = (response.contentLength ?? 0) + (isResuming ? existingLength : 0);
@@ -658,7 +659,7 @@ class UpdateService extends ChangeNotifier {
     try {
       await for (final chunk in response.stream) {
         if (_isCancelled) {
-          throw Exception('下载已取消');
+          throw Exception(appL10n.updateServiceDownloadCancelledError);
         }
         sink.add(chunk);
         received += chunk.length;
@@ -719,7 +720,7 @@ class UpdateService extends ChangeNotifier {
       return success;
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'installUpdate', {'filePath': _downloadedFilePath});
-      _setError(UpdateErrorType.installFailed, '安装失败: $e');
+      _setError(UpdateErrorType.installFailed, appL10n.updateServiceInstallFailedWithErrorError(e));
       _status = UpdateStatus.readyToInstall;
       notifyListeners();
       return false;

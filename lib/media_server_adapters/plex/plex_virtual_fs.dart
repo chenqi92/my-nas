@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/media_server_adapters/plex/api/plex_api.dart';
 import 'package:my_nas/media_server_adapters/plex/api/plex_models.dart';
@@ -62,7 +63,7 @@ class PlexVirtualFileSystem implements NasFileSystem {
 
     final ratingKey = await _resolvePathToKey(normalizedPath);
     if (ratingKey == null) {
-      throw Exception('路径不存在: $path');
+      throw Exception(appL10n.plexVfsPathNotExist(path));
     }
 
     if (ratingKey.startsWith('library:')) {
@@ -73,7 +74,7 @@ class PlexVirtualFileSystem implements NasFileSystem {
             orElse: () => null,
           );
       if (library == null) {
-        throw Exception('媒体库不存在: $libraryKey');
+        throw Exception(appL10n.plexVfsLibraryNotExist(libraryKey));
       }
       return FileItem(
         name: library.title,
@@ -85,7 +86,7 @@ class PlexVirtualFileSystem implements NasFileSystem {
 
     final item = await _getItem(ratingKey);
     if (item == null) {
-      throw Exception('项目不存在: $ratingKey');
+      throw Exception(appL10n.plexVfsItemNotExist(ratingKey));
     }
 
     return _itemToFileItem(item, normalizedPath);
@@ -93,12 +94,12 @@ class PlexVirtualFileSystem implements NasFileSystem {
 
   @override
   Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
-    throw UnsupportedError('Plex 虚拟文件系统不支持直接读取流，请使用 getFileUrl');
+    throw UnsupportedError(appL10n.plexVfsDirectReadStreamNotSupported);
   }
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) async {
-    throw UnsupportedError('Plex 虚拟文件系统不支持 URL 流');
+    throw UnsupportedError(appL10n.plexVfsUrlStreamNotSupported);
   }
 
   @override
@@ -106,17 +107,17 @@ class PlexVirtualFileSystem implements NasFileSystem {
     final normalizedPath = _normalizePath(path);
     final ratingKey = await _resolvePathToKey(normalizedPath);
     if (ratingKey == null || ratingKey.startsWith('library:')) {
-      throw Exception('无法获取文件 URL: $path');
+      throw Exception(appL10n.plexVfsGetFileUrlFailed(path));
     }
 
     final item = await _getItem(ratingKey);
     if (item == null || item.media == null || item.media!.isEmpty) {
-      throw Exception('没有可用的媒体: $path');
+      throw Exception(appL10n.plexVfsNoAvailableMedia(path));
     }
 
     final part = item.media!.first.parts?.first;
     if (part?.key == null) {
-      throw Exception('没有可用的媒体部分: $path');
+      throw Exception(appL10n.plexVfsNoMediaPart(path));
     }
 
     return _api.getPlayUrl(part!.key!);
@@ -124,27 +125,27 @@ class PlexVirtualFileSystem implements NasFileSystem {
 
   @override
   Future<void> createDirectory(String path) async {
-    throw UnsupportedError('Plex 虚拟文件系统不支持创建目录');
+    throw UnsupportedError(appL10n.plexVfsCreateDirectoryNotSupported);
   }
 
   @override
   Future<void> delete(String path) async {
-    throw UnsupportedError('Plex 虚拟文件系统不支持删除');
+    throw UnsupportedError(appL10n.plexVfsDeleteNotSupported);
   }
 
   @override
   Future<void> rename(String oldPath, String newPath) async {
-    throw UnsupportedError('Plex 虚拟文件系统不支持重命名');
+    throw UnsupportedError(appL10n.plexVfsRenameNotSupported);
   }
 
   @override
   Future<void> copy(String sourcePath, String destPath) async {
-    throw UnsupportedError('Plex 虚拟文件系统不支持复制');
+    throw UnsupportedError(appL10n.plexVfsCopyNotSupported);
   }
 
   @override
   Future<void> move(String sourcePath, String destPath) async {
-    throw UnsupportedError('Plex 虚拟文件系统不支持移动');
+    throw UnsupportedError(appL10n.plexVfsMoveNotSupported);
   }
 
   @override
@@ -154,12 +155,12 @@ class PlexVirtualFileSystem implements NasFileSystem {
     String? fileName,
     void Function(int sent, int total)? onProgress,
   }) async {
-    throw UnsupportedError('Plex 虚拟文件系统不支持上传');
+    throw UnsupportedError(appL10n.plexVfsUploadNotSupported);
   }
 
   @override
   Future<void> writeFile(String remotePath, List<int> data) async {
-    throw UnsupportedError('Plex 虚拟文件系统不支持写入');
+    throw UnsupportedError(appL10n.plexVfsWriteNotSupported);
   }
 
   @override

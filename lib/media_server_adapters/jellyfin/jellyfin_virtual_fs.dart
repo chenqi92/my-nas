@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/media_server_adapters/base/media_server_entities.dart';
@@ -84,12 +85,12 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
 
     final itemId = await _resolvePathToId(normalizedPath);
     if (itemId == null) {
-      throw Exception('路径不存在: $path');
+      throw Exception(appL10n.jellyfinVfsPathNotFound(path));
     }
 
     final item = await _getItem(itemId);
     if (item == null) {
-      throw Exception('项目不存在: $itemId');
+      throw Exception(appL10n.jellyfinVfsItemNotFound(itemId));
     }
 
     return _itemToFileItem(item, normalizedPath);
@@ -99,13 +100,13 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
   Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
     logger.i('JellyfinVirtualFS: getFileStream, path=$path');
     // 媒体服务器通常返回 URL 让播放器直接访问
-    throw UnsupportedError('请使用 getFileUrl 获取播放地址');
+    throw UnsupportedError(appL10n.jellyfinVfsUseGetFileUrl);
   }
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) async {
     // 媒体服务器通常返回 URL 让播放器直接访问
-    throw UnsupportedError('请使用 getFileUrl 获取播放地址');
+    throw UnsupportedError(appL10n.jellyfinVfsUseGetFileUrl);
   }
 
   @override
@@ -115,7 +116,7 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
     final normalizedPath = _normalizePath(path);
     final itemId = await _resolvePathToId(normalizedPath);
     if (itemId == null) {
-      throw Exception('路径不存在: $path');
+      throw Exception(appL10n.jellyfinVfsPathNotFound(path));
     }
 
     // 返回直接播放 URL
@@ -152,27 +153,27 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
 
   @override
   Future<void> createDirectory(String path) async {
-    throw UnsupportedError('Jellyfin 不支持创建目录');
+    throw UnsupportedError(appL10n.jellyfinVfsCreateDirNotSupported);
   }
 
   @override
   Future<void> delete(String path) async {
-    throw UnsupportedError('Jellyfin 不支持删除操作');
+    throw UnsupportedError(appL10n.jellyfinVfsDeleteNotSupported);
   }
 
   @override
   Future<void> rename(String oldPath, String newPath) async {
-    throw UnsupportedError('Jellyfin 不支持重命名');
+    throw UnsupportedError(appL10n.jellyfinVfsRenameNotSupported);
   }
 
   @override
   Future<void> copy(String sourcePath, String destPath) async {
-    throw UnsupportedError('Jellyfin 不支持复制');
+    throw UnsupportedError(appL10n.jellyfinVfsCopyNotSupported);
   }
 
   @override
   Future<void> move(String sourcePath, String destPath) async {
-    throw UnsupportedError('Jellyfin 不支持移动');
+    throw UnsupportedError(appL10n.jellyfinVfsMoveNotSupported);
   }
 
   @override
@@ -182,12 +183,12 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
     String? fileName,
     void Function(int sent, int total)? onProgress,
   }) async {
-    throw UnsupportedError('Jellyfin 不支持上传');
+    throw UnsupportedError(appL10n.jellyfinVfsUploadNotSupported);
   }
 
   @override
   Future<void> writeFile(String remotePath, List<int> data) async {
-    throw UnsupportedError('Jellyfin 不支持写入文件');
+    throw UnsupportedError(appL10n.jellyfinVfsWriteFileNotSupported);
   }
 
   @override

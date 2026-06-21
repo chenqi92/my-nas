@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 /// PT 站点种子信息
 class PTTorrent {
   const PTTorrent({
@@ -158,12 +159,12 @@ class PTTorrentStatus {
 
   /// 获取促销标签
   String? get promotionLabel {
-    if (isDoubleFree) return '2xFree';
-    if (isFree) return 'Free';
-    if (isHalfDown && isDoubleUp) return '50%↓ 2x↑';
-    if (isHalfDown) return '50%↓';
-    if (isDoubleUp) return '2x↑';
-    if (discount != null && discount! > 0) return '$discount%↓';
+    if (isDoubleFree) return appL10n.ptTorrentStatusPromotionDoubleFree;
+    if (isFree) return appL10n.ptTorrentStatusPromotionFree;
+    if (isHalfDown && isDoubleUp) return appL10n.ptTorrentStatusPromotionHalfDownDoubleUp;
+    if (isHalfDown) return appL10n.ptTorrentStatusPromotionHalfDown;
+    if (isDoubleUp) return appL10n.ptTorrentStatusPromotionDoubleUp;
+    if (discount != null && discount! > 0) return appL10n.ptTorrentStatusPromotionDiscount(discount!);
     return null;
   }
 
@@ -179,10 +180,10 @@ class PTTorrentStatus {
   String? get formattedRemainingTime {
     final remaining = remainingFreeTime;
     if (remaining == null) return null;
-    if (remaining.inDays > 0) return '${remaining.inDays}天';
-    if (remaining.inHours > 0) return '${remaining.inHours}小时';
-    if (remaining.inMinutes > 0) return '${remaining.inMinutes}分钟';
-    return '即将结束';
+    if (remaining.inDays > 0) return appL10n.ptTorrentRemainingFreeDays(remaining.inDays);
+    if (remaining.inHours > 0) return appL10n.ptTorrentRemainingFreeHours(remaining.inHours);
+    if (remaining.inMinutes > 0) return appL10n.ptTorrentRemainingFreeMinutes(remaining.inMinutes);
+    return appL10n.ptTorrentRemainingFreeExpiringSoon;
   }
 }
 
@@ -251,8 +252,8 @@ class PTUserInfo {
 
   /// 格式化分享率
   String get formattedRatio {
-    if (ratio == null) return '∞';
-    if (ratio!.isInfinite) return '∞';
+    if (ratio == null) return appL10n.ptRatioInfinite;
+    if (ratio!.isInfinite) return appL10n.ptRatioInfinite;
     return ratio!.toStringAsFixed(2);
   }
 
@@ -277,16 +278,16 @@ class PTUserInfo {
     final diff = DateTime.now().difference(joinTime!);
     if (diff.inDays > 365) {
       final years = (diff.inDays / 365).floor();
-      return '$years 年前';
+      return appL10n.ptUserInfoJoinTimeYearsAgo(years);
     }
     if (diff.inDays > 30) {
       final months = (diff.inDays / 30).floor();
-      return '$months 个月前';
+      return appL10n.ptUserInfoJoinTimeMonthsAgo(months);
     }
     if (diff.inDays > 0) {
-      return '${diff.inDays} 天前';
+      return appL10n.ptUserInfoJoinTimeDaysAgo(diff.inDays);
     }
-    return '今天';
+    return appL10n.ptUserInfoJoinTimeToday;
   }
 
   /// 格式化最后访问时间
@@ -295,22 +296,22 @@ class PTUserInfo {
     final diff = DateTime.now().difference(lastAccess!);
     if (diff.inDays > 365) {
       final years = (diff.inDays / 365).floor();
-      return '$years 年前';
+      return appL10n.ptUserInfoLastAccessYearsAgo(years);
     }
     if (diff.inDays > 30) {
       final months = (diff.inDays / 30).floor();
-      return '$months 个月前';
+      return appL10n.ptUserInfoLastAccessMonthsAgo(months);
     }
     if (diff.inDays > 0) {
-      return '${diff.inDays} 天前';
+      return appL10n.ptUserInfoLastAccessDaysAgo(diff.inDays);
     }
     if (diff.inHours > 0) {
-      return '${diff.inHours} 小时前';
+      return appL10n.ptUserInfoLastAccessHoursAgo(diff.inHours);
     }
     if (diff.inMinutes > 0) {
-      return '${diff.inMinutes} 分钟前';
+      return appL10n.ptUserInfoLastAccessMinutesAgo(diff.inMinutes);
     }
-    return '刚刚';
+    return appL10n.ptUserInfoLastAccessJustNow;
   }
 
   String _formatBytes(int bytes) {
@@ -376,14 +377,29 @@ class PTCategory {
 
 /// PT 站点传输日志统计类型
 enum PTTransferLogType {
-  all('全部'),
-  seeding('做种'),
-  leeching('下载'),
-  completed('已完成'),
+  all('all'),
+  seeding('seeding'),
+  leeching('leeching'),
+  completed('completed'),
   hit('H&R');
 
   const PTTransferLogType(this.label);
   final String label;
+
+  String get displayName {
+    switch (this) {
+      case PTTransferLogType.all:
+        return appL10n.ptTransferLogTypeAll;
+      case PTTransferLogType.seeding:
+        return appL10n.ptTransferLogTypeSeeding;
+      case PTTransferLogType.leeching:
+        return appL10n.ptTransferLogTypeLeeching;
+      case PTTransferLogType.completed:
+        return appL10n.ptTransferLogTypeCompleted;
+      case PTTransferLogType.hit:
+        return 'H&R';
+    }
+  }
 }
 
 /// PT 站点传输日志项
@@ -435,21 +451,21 @@ class PTTransferLog {
 
   /// 格式化分享率
   String get formattedRatio {
-    if (ratio.isInfinite) return '∞';
+    if (ratio.isInfinite) return appL10n.ptRatioInfinite;
     return ratio.toStringAsFixed(2);
   }
 
   /// 格式化做种时长
   String get formattedSeedTime {
-    if (seedTime <= 0) return '-';
+    if (seedTime <= 0) return appL10n.ptTransferLogFormattedSeedTimeNone;
     final hours = seedTime ~/ 3600;
     if (hours >= 24) {
       final days = hours ~/ 24;
       final remainingHours = hours % 24;
-      return '$days天$remainingHours时';
+      return appL10n.ptTransferLogFormattedSeedTimeDaysHours(days, remainingHours);
     }
     final minutes = (seedTime % 3600) ~/ 60;
-    return '$hours时$minutes分';
+    return appL10n.ptTransferLogFormattedSeedTimeHoursMinutes(hours, minutes);
   }
 
   String _formatBytes(int bytes) {
@@ -509,7 +525,7 @@ class PTTransferStats {
 
   /// 格式化总分享率
   String get formattedTotalRatio {
-    if (totalRatio.isInfinite) return '∞';
+    if (totalRatio.isInfinite) return appL10n.ptRatioInfinite;
     return totalRatio.toStringAsFixed(2);
   }
 

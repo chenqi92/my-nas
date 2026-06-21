@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -483,7 +484,7 @@ class SourceManagerService {
   }) async {
     final connection = _connections[sourceId];
     if (connection == null) {
-      throw StateError('未找到连接');
+      throw StateError(appL10n.sourceManagerErrorConnectionNotFound);
     }
 
     final adapter = connection.adapter;
@@ -549,7 +550,7 @@ class SourceManagerService {
         case ConnectionRequires2FA():
           newConnection = connection.copyWith(
             status: SourceStatus.error,
-            errorMessage: '二次验证失败',
+            errorMessage: appL10n.sourceManager2FAVerificationFailed,
           );
       }
 
@@ -557,7 +558,7 @@ class SourceManagerService {
       return newConnection;
     }
 
-    throw UnsupportedError('该源类型不支持二次验证');
+    throw UnsupportedError(appL10n.sourceManagerError2FANotSupported);
   }
 
   /// 断开连接
@@ -615,7 +616,7 @@ class SourceManagerService {
     logger.i('SourceManagerService: 连接到媒体服务器 ${source.name}');
 
     if (!isMediaServerType(source.type)) {
-      throw UnsupportedError('${source.type.displayName} 不是媒体服务器类型');
+      throw UnsupportedError(appL10n.sourceManagerErrorNotMediaServerType(source.type.displayName));
     }
 
     // 创建适配器
@@ -685,7 +686,7 @@ class SourceManagerService {
         SourceType.jellyfin => JellyfinAdapter(),
         SourceType.emby => EmbyAdapter(),
         SourceType.plex => PlexAdapter(),
-        _ => throw UnsupportedError('${type.displayName} 不是媒体服务器类型'),
+        _ => throw UnsupportedError(appL10n.sourceManagerErrorNotMediaServerType(type.displayName)),
       };
 
   /// 检查连接健康状态
@@ -758,7 +759,7 @@ class SourceManagerService {
           logger.w('SourceManagerService: 重连超时 $sourceId');
           // 注意：这里不创建新适配器，返回 null 表示超时
           // 由调用方处理超时情况
-          throw TimeoutException('重连超时');
+          throw TimeoutException(appL10n.sourceManagerErrorReconnectTimeout);
         },
       );
 
@@ -949,7 +950,7 @@ class SourceManagerService {
       SourceType.local => LocalAdapter(),
       // 尚未接入的通用协议
       SourceType.nfs =>
-        throw UnsupportedError('协议 ${type.displayName} 尚未实现'),
+        throw UnsupportedError(appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName)),
       // 服务类源不使用 NasAdapter，需要使用各自的 ServiceAdapter
       SourceType.qbittorrent ||
       SourceType.transmission ||
@@ -962,7 +963,7 @@ class SourceManagerService {
       SourceType.plex ||
       SourceType.ptSite ||
       SourceType.opensubtitles =>
-        throw UnsupportedError('服务类源 ${type.displayName} 不支持 NasAdapter，请使用对应的 ServiceAdapter'),
+        throw UnsupportedError(appL10n.sourceManagerErrorServiceTypeNotSupportedNas(type.displayName)),
     };
 
   NasAdapterType _getAdapterType(SourceType type) => switch (type) {
@@ -978,7 +979,7 @@ class SourceManagerService {
       SourceType.local => NasAdapterType.local,
       // 尚未接入的通用协议
       SourceType.nfs =>
-        throw UnsupportedError('协议 ${type.displayName} 尚未实现'),
+        throw UnsupportedError(appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName)),
       // 服务类源不使用 NasAdapterType
       SourceType.qbittorrent ||
       SourceType.transmission ||
@@ -991,7 +992,7 @@ class SourceManagerService {
       SourceType.plex ||
       SourceType.ptSite ||
       SourceType.opensubtitles =>
-        throw UnsupportedError('服务类源 ${type.displayName} 不支持 NasAdapterType'),
+        throw UnsupportedError(appL10n.sourceManagerErrorServiceTypeNotSupportedNasType(type.displayName)),
     };
 
   // ============ 媒体库配置 ============
