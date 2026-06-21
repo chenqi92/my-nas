@@ -5714,5 +5714,105 @@
     }
   },
   "bookDetailIntroduction": "Introduction",
-  "bookDetailRemovedFromShelf": "Removed from shelf"
+  "bookDetailRemovedFromShelf": "Removed from shelf",
+  "bookTtsControlClose": "Close",
+  "bookTtsControlPrevious": "Previous paragraph",
+  "bookTtsControlNext": "Next paragraph",
+  "bookTtsControlVoice": "Voice",
+  "bookTtsControlSettings": "Settings",
+  "bookTtsEngineSystem": "System voice",
+  "bookTtsLoadingVoices": "Loading system voices...",
+  "bookTtsSettingsSpeechRate": "Speech rate",
+  "bookTtsSettingsPitch": "Pitch",
+  "bookTtsSettingsVolume": "Volume",
+  "bookTtsSettingsAutoPlayNext": "Auto-play next chapter",
+  "bookSearchHintText": "Search for book name or author",
+  "bookSearchEmptyTitle": "Search online books",
+  "bookSearchEmptyHint": "Enter a book name or author to start searching",
+  "bookSearchNoResultsTitle": "No books found",
+  "bookSearchNoResultsHint": "Try other keywords or add more book sources",
+  "bookSearchErrorTitle": "Search failed",
+  "bookSearchErrorMessage": "Search failed: {error}",
+  "@bookSearchErrorMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "bookSearchRetry": "Retry",
+  "bookSearchResultsCount": "Search results: {count} books",
+  "@bookSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookSearchSearching": "Searching...",
+  "bookSearchSourcesProgress": "{completed}/{total} sources",
+  "@bookSearchSourcesProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "bookCardSourceLabel": "Source: {source}",
+  "@bookCardSourceLabel": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "bookTTSVoiceSelectorTitle": "Select Voice",
+  "bookTTSVoiceSelectorDone": "Done",
+  "bookTTSVoiceFilterAll": "All",
+  "bookTTSVoiceFilterMale": "👨 Male",
+  "bookTTSVoiceFilterFemale": "👩 Female",
+  "bookTTSVoiceEmpty": "No voices available",
+  "bookTTSVoicePreviewTooltip": "Preview",
+  "ttsControlClose": "Close",
+  "ttsControlPreviousParagraph": "Previous",
+  "ttsControlNextParagraph": "Next",
+  "ttsControlVoice": "Voice",
+  "ttsControlSettings": "Settings",
+  "ttsControlCurrentParagraph": "Para {index}",
+  "@ttsControlCurrentParagraph": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "ttsControlMiniReading": "Reading…",
+  "bookSettingsPageTitle": "Book Settings",
+  "bookSettingsReaderSectionTitle": "Reader",
+  "bookSettingsEngineInfoTitle": "Reader Engine Information",
+  "bookSettingsNativeEngineTitle": "Native Engine",
+  "bookSettingsNativeEngineDesc": "Pure Flutter rendering, faster loading, smoother page simulation",
+  "bookSettingsWebViewEngineTitle": "WebView Engine",
+  "bookSettingsWebViewEngineDesc": "foliate-js rendering, more complete features, better compatibility",
+  "bookSettingsRenderEngineLabel": "Rendering Engine",
+  "bookSettingsNativeEngineFast": "Native Engine (faster)",
+  "bookSettingsWebViewEngineStable": "WebView Engine (more stable)",
+  "bookSettingsEngineOptionNative": "Native",
+  "bookSettingsEngineOptionWebView": "WebView",
+  "bookEpubComicReaderLoading": "Loading comic...",
+  "commonBack": "Back",
+  "bookEpubComicReadingModeLtr": "Left to right",
+  "bookEpubComicReadingModeRtl": "Right to left",
+  "bookReaderLoadingContent": "Loading content...",
+  "bookReaderEstimatedPages": "Estimated {pages} pages",
+  "@bookReaderEstimatedPages": {
+    "placeholders": {
+      "pages": {
+        "type": "int"
+      }
+    }
+  }
 }

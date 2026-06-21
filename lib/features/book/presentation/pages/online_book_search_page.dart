@@ -83,7 +83,7 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
       controller: _searchController,
       focusNode: _focusNode,
       decoration: InputDecoration(
-        hintText: '搜索书名或作者',
+        hintText: context.l10n.bookSearchHintText,
         border: InputBorder.none,
         hintStyle: TextStyle(
           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -133,14 +133,14 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
           ),
           const SizedBox(height: 16),
           Text(
-            '搜索在线书籍',
+            context.l10n.bookSearchEmptyTitle,
             style: context.textTheme.titleMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '输入书名或作者名开始搜索',
+            context.l10n.bookSearchEmptyHint,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -160,14 +160,14 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
           ),
           const SizedBox(height: 16),
           Text(
-            '未找到相关书籍',
+            context.l10n.bookSearchNoResultsTitle,
             style: context.textTheme.titleMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '尝试其他关键词或添加更多书源',
+            context.l10n.bookSearchNoResultsHint,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -182,11 +182,11 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
         children: [
           Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
           const SizedBox(height: 16),
-          Text('搜索失败: $error'),
+          Text(context.l10n.bookSearchErrorMessage(error)),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => _handleSearch(_searchController.text),
-            child: const Text('重试'),
+            child: Text(context.l10n.bookSearchRetry),
           ),
         ],
       ),
@@ -207,7 +207,7 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
           child: Row(
             children: [
               Text(
-                '搜索结果: ${books.length} 本',
+                context.l10n.bookSearchResultsCount(books.length),
                 style: context.textTheme.bodySmall?.copyWith(
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                 ),
@@ -222,8 +222,8 @@ class _OnlineBookSearchPageState extends ConsumerState<OnlineBookSearchPage>
                 const SizedBox(width: 4),
                 Text(
                   searchState.totalSources > 0
-                      ? '${searchState.completedSources}/${searchState.totalSources} 书源'
-                      : '搜索中...',
+                      ? context.l10n.bookSearchSourcesProgress(searchState.completedSources, searchState.totalSources)
+                      : context.l10n.bookSearchSearching,
                   style: context.textTheme.bodySmall?.copyWith(
                     color: AppColors.primary,
                   ),
@@ -389,7 +389,7 @@ class _BookCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       // 书源
                       Text(
-                        '来源: ${book.source.displayName}',
+                        context.l10n.bookCardSourceLabel(book.source.displayName),
                         style: context.textTheme.bodySmall?.copyWith(
                           color: isDark
                               ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.7)

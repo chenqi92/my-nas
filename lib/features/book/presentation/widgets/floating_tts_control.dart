@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_service.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
@@ -123,7 +124,7 @@ class _FloatingTTSControlState extends ConsumerState<FloatingTTSControl>
             icon: Icons.close_rounded,
             onPressed: _handleClose,
             isDark: isDark,
-            tooltip: '关闭',
+            tooltip: context.l10n.bookTtsControlClose,
           ),
 
           const SizedBox(height: 4),
@@ -135,7 +136,7 @@ class _FloatingTTSControlState extends ConsumerState<FloatingTTSControl>
             icon: Icons.skip_previous_rounded,
             onPressed: notifier.previousParagraph,
             isDark: isDark,
-            tooltip: '上一段',
+            tooltip: context.l10n.bookTtsControlPrevious,
           ),
 
           const SizedBox(height: 4),
@@ -150,7 +151,7 @@ class _FloatingTTSControlState extends ConsumerState<FloatingTTSControl>
             icon: Icons.skip_next_rounded,
             onPressed: notifier.nextParagraph,
             isDark: isDark,
-            tooltip: '下一段',
+            tooltip: context.l10n.bookTtsControlNext,
           ),
 
           const SizedBox(height: 4),
@@ -163,7 +164,7 @@ class _FloatingTTSControlState extends ConsumerState<FloatingTTSControl>
             icon: Icons.record_voice_over_rounded,
             onPressed: () => _showVoicePopup(context),
             isDark: isDark,
-            tooltip: '音色',
+            tooltip: context.l10n.bookTtsControlVoice,
           ),
 
           const SizedBox(height: 4),
@@ -174,7 +175,7 @@ class _FloatingTTSControlState extends ConsumerState<FloatingTTSControl>
             icon: Icons.tune_rounded,
             onPressed: () => _showSettingsPopup(context),
             isDark: isDark,
-            tooltip: '设置',
+            tooltip: context.l10n.bookTtsControlSettings,
           ),
         ],
       ),
@@ -370,7 +371,7 @@ class _VoiceSelectionPopup extends ConsumerWidget {
               Expanded(
                 child: _buildEngineTab(
                   context: context,
-                  label: '系统语音',
+                  label: context.l10n.bookTtsEngineSystem,
                   icon: Icons.phone_android_rounded,
                   isSelected: !isEdge,
                   isDark: isDark,
@@ -519,7 +520,7 @@ class _VoiceSelectionPopup extends ConsumerWidget {
         padding: const EdgeInsets.all(24),
         child: Center(
           child: Text(
-            '正在加载系统音色...',
+            context.l10n.bookTtsLoadingVoices,
             style: TextStyle(
               color: isDark ? Colors.white54 : Colors.black54,
             ),
@@ -607,7 +608,7 @@ class _SettingsPopup extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.all(12),
           child: Text(
-            'TTS 设置',
+            context.l10n.bookTtsSettingsTitle,
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: isDark ? Colors.white : Colors.black87,
@@ -618,7 +619,7 @@ class _SettingsPopup extends ConsumerWidget {
         // 语速
         _buildSliderItem(
           context: context,
-          label: '语速',
+          label: context.l10n.bookTtsSettingsSpeechRate,
           value: settings.speechRate,
           min: 0.5,
           max: 2.0,
@@ -629,7 +630,7 @@ class _SettingsPopup extends ConsumerWidget {
         // 音调
         _buildSliderItem(
           context: context,
-          label: '音调',
+          label: context.l10n.bookTtsSettingsPitch,
           value: settings.pitch,
           min: 0.5,
           max: 2.0,
@@ -640,7 +641,7 @@ class _SettingsPopup extends ConsumerWidget {
         // 音量
         _buildSliderItem(
           context: context,
-          label: '音量',
+          label: context.l10n.bookTtsSettingsVolume,
           value: settings.volume,
           min: 0.0,
           max: 1.0,
@@ -651,7 +652,7 @@ class _SettingsPopup extends ConsumerWidget {
         const Divider(height: 1),
         // 开关选项
         _buildSwitchItem(
-          label: '自动播放下一章',
+          label: context.l10n.bookTtsSettingsAutoPlayNext,
           value: settings.autoPlayNextChapter,
           onChanged: (v) => notifier.updateSettings(
             settings.copyWith(autoPlayNextChapter: v),

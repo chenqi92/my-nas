@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/book/data/services/online_book_shelf_service.dart';
 
 /// 在线书籍卡片
@@ -69,9 +70,9 @@ class OnlineBookCard extends StatelessWidget {
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text(
-                        '在线',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.bookReadingCategoryOnline,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
                           fontWeight: FontWeight.w600,

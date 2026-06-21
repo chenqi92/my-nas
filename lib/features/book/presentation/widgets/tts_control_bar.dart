@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_service.dart';
 import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
 import 'package:my_nas/features/book/presentation/widgets/tts_settings_sheet.dart';
@@ -57,7 +58,7 @@ class TTSControlBar extends ConsumerWidget {
                 _buildControlButton(
                   context,
                   icon: Icons.close_rounded,
-                  label: '关闭',
+                  label: context.l10n.ttsControlClose,
                   onTap: () {
                     debugPrint('TTS Control: 关闭按钮点击');
                     ttsNotifier.stop();
@@ -69,7 +70,7 @@ class TTSControlBar extends ConsumerWidget {
                 _buildControlButton(
                   context,
                   icon: Icons.skip_previous_rounded,
-                  label: '上一段',
+                  label: context.l10n.ttsControlPreviousParagraph,
                   onTap: () {
                     debugPrint('TTS Control: 上一段按钮点击');
                     ttsNotifier.previousParagraph();
@@ -83,7 +84,7 @@ class TTSControlBar extends ConsumerWidget {
                 _buildControlButton(
                   context,
                   icon: Icons.skip_next_rounded,
-                  label: '下一段',
+                  label: context.l10n.ttsControlNextParagraph,
                   onTap: () {
                     debugPrint('TTS Control: 下一段按钮点击');
                     ttsNotifier.nextParagraph();
@@ -94,7 +95,7 @@ class TTSControlBar extends ConsumerWidget {
                 _buildControlButton(
                   context,
                   icon: Icons.record_voice_over,
-                  label: '音色',
+                  label: context.l10n.ttsControlVoice,
                   onTap: () => _showVoiceSelector(context),
                 ),
 
@@ -102,7 +103,7 @@ class TTSControlBar extends ConsumerWidget {
                 _buildControlButton(
                   context,
                   icon: Icons.settings_rounded,
-                  label: '设置',
+                  label: context.l10n.ttsControlSettings,
                   onTap: () => _showSettings(context),
                 ),
               ],
@@ -283,7 +284,7 @@ class MiniTTSControlBar extends ConsumerWidget {
 
           // 当前朗读指示
           Text(
-            '朗读中...',
+            context.l10n.ttsControlMiniReading,
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onPrimaryContainer,
             ),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/epub_image_extractor.dart';
 import 'package:my_nas/features/book/domain/entities/book_item.dart';
@@ -265,7 +266,7 @@ class _EpubComicReaderPageState extends ConsumerState<EpubComicReaderPage> {
         child: Focus(
           autofocus: true,
           child: state.isLoading
-              ? const LottieLoading.book(message: '加载漫画中...')
+              ? LottieLoading.book(message: context.l10n.bookEpubComicReaderLoading)
               : state.error != null
                   ? _buildErrorView(state.error!)
                   : Stack(
@@ -298,7 +299,7 @@ class _EpubComicReaderPageState extends ConsumerState<EpubComicReaderPage> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('返回'),
+              child: Text(context.l10n.commonBack),
             ),
           ],
         ),
@@ -391,8 +392,8 @@ class _EpubComicReaderPageState extends ConsumerState<EpubComicReaderPage> {
                     color: Colors.white,
                   ),
                   tooltip: state.readingMode == EpubComicReadingMode.rightToLeft
-                      ? '从右到左'
-                      : '从左到右',
+                      ? context.l10n.bookEpubComicReadingModeRtl
+                      : context.l10n.bookEpubComicReadingModeLtr,
                   onPressed: () {
                     notifier.setReadingMode(
                       state.readingMode == EpubComicReadingMode.rightToLeft

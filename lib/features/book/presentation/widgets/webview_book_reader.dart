@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/book_content_processor.dart';
 import 'package:my_nas/features/book/data/services/chunked_content_provider.dart';
@@ -281,7 +282,7 @@ class WebViewBookReaderState extends State<WebViewBookReader> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          '正在加载内容...',
+                          context.l10n.bookReaderLoadingContent,
                           style: TextStyle(
                             color: widget.settings.theme.textColor
                                 .withValues(alpha: 0.5),
@@ -291,7 +292,7 @@ class WebViewBookReaderState extends State<WebViewBookReader> {
                         if (_contentProvider != null) ...[
                           const SizedBox(height: 8),
                           Text(
-                            '预计 ${_contentProvider!.estimatedTotalPages} 页',
+                            context.l10n.bookReaderEstimatedPages(_contentProvider!.estimatedTotalPages),
                             style: TextStyle(
                               color: widget.settings.theme.textColor
                                   .withValues(alpha: 0.3),

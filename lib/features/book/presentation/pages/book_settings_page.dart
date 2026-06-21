@@ -29,7 +29,7 @@ class BookSettingsPage extends ConsumerWidget {
         backgroundColor: isDark ? AppColors.darkBackground : null,
         appBar: AppBar(
           leading: const RoundedBackButton(),
-          title: const Text('图书设置'),
+          title: Text(context.l10n.bookSettingsPageTitle),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
@@ -37,7 +37,7 @@ class BookSettingsPage extends ConsumerWidget {
         padding: AppSpacing.paddingMd,
         children: [
           // 阅读器设置
-          _buildSectionHeader(context, '阅读器', Icons.auto_stories_rounded, isDark),
+          _buildSectionHeader(context, context.l10n.bookSettingsReaderSectionTitle, Icons.auto_stories_rounded, isDark),
           const SizedBox(height: AppSpacing.sm),
           AdaptiveGlassContainer(
             uiStyle: uiStyle,
@@ -71,7 +71,7 @@ class BookSettingsPage extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '阅读器引擎说明',
+                        context.l10n.bookSettingsEngineInfoTitle,
                         style: context.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -83,16 +83,16 @@ class BookSettingsPage extends ConsumerWidget {
                   _buildEngineInfo(
                     context,
                     isDark,
-                    title: '原生引擎',
-                    description: '使用纯 Flutter 渲染，加载更快，仿真翻页更流畅',
+                    title: context.l10n.bookSettingsNativeEngineTitle,
+                    description: context.l10n.bookSettingsNativeEngineDesc,
                     icon: Icons.speed_rounded,
                   ),
                   const SizedBox(height: 8),
                   _buildEngineInfo(
                     context,
                     isDark,
-                    title: 'WebView 引擎',
-                    description: '使用 foliate-js 渲染，功能更完整，兼容性更好',
+                    title: context.l10n.bookSettingsWebViewEngineTitle,
+                    description: context.l10n.bookSettingsWebViewEngineDesc,
                     icon: Icons.web_rounded,
                   ),
                 ],
@@ -166,7 +166,7 @@ class BookSettingsPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '渲染引擎',
+                  context.l10n.bookSettingsRenderEngineLabel,
                   style: context.textTheme.bodyLarge?.copyWith(
                     color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                     fontWeight: FontWeight.w500,
@@ -174,7 +174,7 @@ class BookSettingsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  isNative ? '原生引擎（更快）' : 'WebView 引擎（更稳定）',
+                  isNative ? context.l10n.bookSettingsNativeEngineFast : context.l10n.bookSettingsWebViewEngineStable,
                   style: context.textTheme.bodySmall?.copyWith(
                     color: isDark
                         ? AppColors.darkOnSurfaceVariant
@@ -219,7 +219,7 @@ class BookSettingsPage extends ConsumerWidget {
             _buildEngineOption(
               context,
               ref,
-              label: '原生',
+              label: context.l10n.bookSettingsEngineOptionNative,
               isSelected: isNative,
               isDark: isDark,
               radius: innerRadius,
@@ -229,7 +229,7 @@ class BookSettingsPage extends ConsumerWidget {
             _buildEngineOption(
               context,
               ref,
-              label: 'WebView',
+              label: context.l10n.bookSettingsEngineOptionWebView,
               isSelected: !isNative,
               isDark: isDark,
               radius: innerRadius,
