@@ -24,9 +24,10 @@ class PlaylistIoService {
   /// 仅写入轨道路径相对元数据，不携带文件本体。
   Future<String> exportM3u8(PlaylistEntry playlist) async {
     await _db.init();
+    final index = await _buildTrackIndex();
     final lines = <String>['#EXTM3U', '#PLAYLIST:${playlist.name}'];
     for (final path in playlist.trackPaths) {
-      final track = await _findTrackByPath(path);
+      final track = index[path];
       final duration = (track?.duration ?? 0) ~/ 1000;
       final artist = track?.displayArtist ?? '';
       final title = track?.displayTitle ?? p.basenameWithoutExtension(path);
@@ -42,9 +43,10 @@ class PlaylistIoService {
   /// 导入端可用三级匹配 + qualityScore 选最优本地版本。
   Future<String> exportJson(PlaylistEntry playlist) async {
     await _db.init();
+    final index = await _buildTrackIndex();
     final tracks = <Map<String, dynamic>>[];
     for (final path in playlist.trackPaths) {
-      final t = await _findTrackByPath(path);
+      final t = index[path];
       tracks.add({
         'path': path,
         if (t != null) ...{
@@ -69,13 +71,15 @@ class PlaylistIoService {
     return const JsonEncoder.withIndent('  ').convert(payload);
   }
 
-  Future<MusicTrackEntity?> _findTrackByPath(String path) async {
-    // 简化：扫全库找匹配 filePath（库通常 < 万条；后续可加索引）
+  /// 一次性加载全库并构建 `filePath -> track` 索引，导出时 O(1) 查找。
+  /// 同一 filePath 多命中时保留首个（与旧线性扫描首命中语义一致）。
+  Future<Map<String, MusicTrackEntity>> _buildTrackIndex() async {
     final all = await _db.getPage(limit: 100000);
+    final index = <String, MusicTrackEntity>{};
     for (final t in all) {
-      if (t.filePath == path) return t;
+      index.putIfAbsent(t.filePath, () => t);
     }
-    return null;
+    return index;
   }
 
   // ---------------------------- 导入 ----------------------------

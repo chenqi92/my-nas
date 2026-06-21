@@ -61,6 +61,7 @@ class FaceBox {
     required this.y,
     required this.width,
     required this.height,
+    this.score = 1.0,
   });
 
   factory FaceBox.fromJson(Map<String, dynamic> json) => FaceBox(
@@ -68,6 +69,7 @@ class FaceBox {
         y: (json['y'] as num).toDouble(),
         width: (json['width'] as num).toDouble(),
         height: (json['height'] as num).toDouble(),
+        score: (json['score'] as num?)?.toDouble() ?? 1.0,
       );
 
   final double x;
@@ -75,11 +77,15 @@ class FaceBox {
   final double width;
   final double height;
 
+  /// 检测模型输出的置信度（0~1）。回退/无评分来源时为 1.0。
+  final double score;
+
   Map<String, dynamic> toJson() => {
         'x': x,
         'y': y,
         'width': width,
         'height': height,
+        'score': score,
       };
 
   @override

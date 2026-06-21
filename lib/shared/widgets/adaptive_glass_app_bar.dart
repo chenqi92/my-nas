@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/utils/form_l10n.dart';
@@ -1030,7 +1031,9 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
         // ignore: avoid_dynamic_calls
         (onSelectedCallback as Function)(value);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      AppError.ignore(e, st, '显示玻璃弹出菜单失败，忽略');
+    }
   }
 
   void _setupChannel(int viewId) {
@@ -1234,7 +1237,9 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
         // ignore: avoid_dynamic_calls
         (onSelectedCallback as Function)(value);
       }
-    } catch (_) {}
+    } catch (e, st) {
+      AppError.ignore(e, st, '显示经典弹出菜单失败，忽略');
+    }
   }
 
   Widget _buildNativeGlassButtonGroup(bool isDark) {

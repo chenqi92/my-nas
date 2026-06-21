@@ -117,6 +117,7 @@ class VideoDatabaseService {
   static const String _colThumbnailUrl = 'thumbnail_url';
   static const String _colGeneratedThumbnailUrl = 'generated_thumbnail_url';
   static const String _colLocalPosterUrl = 'local_poster_url';
+  static const String _colLocalBackdropUrl = 'local_backdrop_url';
   static const String _colFileSize = 'file_size';
   static const String _colFileModifiedTime = 'file_modified_time';
   static const String _colCollectionId = 'collection_id';
@@ -221,7 +222,7 @@ class VideoDatabaseService {
 
       _db = await openDatabase(
         dbPath,
-        version: 19, // 添加媒体服务器支持字段
+        version: 20, // 添加 NFO 本地背景图字段
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
         onConfigure: _onConfigure,
@@ -286,6 +287,7 @@ class VideoDatabaseService {
         $_colThumbnailUrl TEXT,
         $_colGeneratedThumbnailUrl TEXT,
         $_colLocalPosterUrl TEXT,
+        $_colLocalBackdropUrl TEXT,
         $_colFileSize INTEGER,
         $_colFileModifiedTime INTEGER,
         $_colCollectionId INTEGER,
@@ -1107,6 +1109,14 @@ class VideoDatabaseService {
       ''');
 
       logger.i('VideoDatabaseService: 版本18->19 升级完成（添加媒体服务器支持）');
+    }
+
+    // 从版本19升级到版本20
+    if (oldVersion < 20) {
+      // 添加 NFO 本地背景图字段（独立于 backdrop_url，存本地 fanart 路径）
+      await _safeAddColumn(db, _tableMetadata, _colLocalBackdropUrl, 'TEXT');
+
+      logger.i('VideoDatabaseService: 版本19->20 升级完成（添加本地背景图字段）');
     }
   }
 
@@ -2064,18 +2074,35 @@ class VideoDatabaseService {
   ///
   /// 直接查询聚合表 tv_show_groups，确保与列表显示数量一致
   ///
-  /// [enabledPaths] 启用的路径列表（暂未实现过滤）
+  /// [enabledPaths] 启用的路径列表，如果提供则只统计代表视频命中这些路径的分组
   Future<int> getTvShowGroupCount({
     List<({String sourceId, String path})>? enabledPaths,
   }) async {
     if (!_initialized) await init();
 
-    // 直接查询聚合表的数量，确保与列表一致
+    // 未指定路径过滤时，直接查询聚合表的数量，确保与列表一致
+    if (enabledPaths == null || enabledPaths.isEmpty) {
+      final count = Sqflite.firstIntValue(await _db!.rawQuery(
+        '''
+        SELECT COUNT(*) FROM $_tableTvShowGroups
+        WHERE $_tvgColRepresentativeRowid IS NOT NULL
+        ''',
+      )) ?? 0;
+
+      return count;
+    }
+
+    // 指定了启用路径：通过代表视频的 rowid 关联到 video_metadata，
+    // 仅统计其 (source_id, file_path) 命中启用路径的分组。
+    // INNER JOIN 天然排除了 representative_rowid 为 NULL 的分组。
+    final pathFilter = _buildPathFilter(enabledPaths);
     final count = Sqflite.firstIntValue(await _db!.rawQuery(
       '''
-      SELECT COUNT(*) FROM $_tableTvShowGroups
-      WHERE $_tvgColRepresentativeRowid IS NOT NULL
+      SELECT COUNT(*) FROM $_tableTvShowGroups g
+      INNER JOIN $_tableMetadata vm
+        ON g.$_tvgColRepresentativeRowid = vm.rowid${pathFilter.andWhere}
       ''',
+      pathFilter.args,
     )) ?? 0;
 
     return count;
@@ -2916,6 +2943,7 @@ class VideoDatabaseService {
         _colThumbnailUrl: m.thumbnailUrl,
         _colGeneratedThumbnailUrl: m.generatedThumbnailUrl,
         _colLocalPosterUrl: m.localPosterUrl,
+        _colLocalBackdropUrl: m.localBackdropUrl,
         _colFileSize: m.fileSize,
         _colFileModifiedTime: m.fileModifiedTime?.millisecondsSinceEpoch,
         _colCollectionId: m.collectionId,
@@ -3003,6 +3031,7 @@ class VideoDatabaseService {
         thumbnailUrl: row[_colThumbnailUrl] as String?,
         generatedThumbnailUrl: row[_colGeneratedThumbnailUrl] as String?,
         localPosterUrl: row[_colLocalPosterUrl] as String?,
+        localBackdropUrl: row[_colLocalBackdropUrl] as String?,
         fileSize: row[_colFileSize] as int?,
         fileModifiedTime: row[_colFileModifiedTime] != null
             ? DateTime.fromMillisecondsSinceEpoch(

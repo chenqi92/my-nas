@@ -313,15 +313,37 @@ class PlexVirtualFileSystem implements NasFileSystem {
     return item;
   }
 
-  FileItem _itemToFileItem(PlexMediaItem item, String path) => FileItem(
-      name: item.isPlayable ? '${item.title}.mp4' : item.title,
+  FileItem _itemToFileItem(PlexMediaItem item, String path) {
+    final media = (item.media != null && item.media!.isNotEmpty)
+        ? item.media!.first
+        : null;
+    final part = (media?.parts != null && media!.parts!.isNotEmpty)
+        ? media.parts!.first
+        : null;
+
+    final name = item.isPlayable
+        ? '${item.title}.${_resolveExtension(media, part)}'
+        : item.title;
+
+    return FileItem(
+      name: name,
       path: path,
       isDirectory: !item.isPlayable,
-      size: 0,
+      size: part?.size ?? 0,
       modifiedTime: item.originallyAvailableAt != null
           ? DateTime.tryParse(item.originallyAvailableAt!)
           : null,
     );
+  }
+
+  /// 根据 Plex 容器信息推导可播放项扩展名，缺失时回退默认 mp4
+  String _resolveExtension(PlexMedia? media, PlexPart? part) {
+    final container = part?.container ?? media?.container;
+    if (container != null && container.isNotEmpty) {
+      return container;
+    }
+    return 'mp4';
+  }
 
   String _stripExtension(String name) {
     final dotIndex = name.lastIndexOf('.');

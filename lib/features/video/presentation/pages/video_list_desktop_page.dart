@@ -719,7 +719,7 @@ class _Hero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    final backdrop = meta.backdropUrl ?? meta.localPosterUrl ?? meta.posterUrl;
+    final backdrop = meta.displayBackdropUrl ?? meta.localPosterUrl ?? meta.posterUrl;
     return GestureDetector(
       onTap: () => showDialog<void>(
         context: context,

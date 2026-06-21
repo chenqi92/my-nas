@@ -56,6 +56,7 @@ class VideoMetadata {
     this.thumbnailUrl,
     this.generatedThumbnailUrl,
     this.localPosterUrl,
+    this.localBackdropUrl,
     this.fileSize,
     this.fileModifiedTime,
     this.collectionId,
@@ -120,6 +121,7 @@ class VideoMetadata {
       thumbnailUrl: map['thumbnailUrl'] as String?,
       generatedThumbnailUrl: map['generatedThumbnailUrl'] as String?,
       localPosterUrl: map['localPosterUrl'] as String?,
+      localBackdropUrl: map['localBackdropUrl'] as String?,
       fileSize: map['fileSize'] as int?,
       fileModifiedTime: map['fileModifiedTime'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['fileModifiedTime'] as int)
@@ -201,6 +203,7 @@ class VideoMetadata {
   String? thumbnailUrl; // 内置缩略图 URL（来自 NAS）
   String? generatedThumbnailUrl; // 生成的缩略图 URL（本地 file://）
   String? localPosterUrl; // 本地缓存的海报 URL（本地 file://，离线可用）
+  String? localBackdropUrl; // 本地缓存的背景图路径（NFO fanart，本地路径，需流式加载）
   int? fileSize; // 文件大小（字节）
   DateTime? fileModifiedTime; // 文件修改时间
   int? collectionId; // TMDB 电影系列 ID
@@ -254,6 +257,15 @@ class VideoMetadata {
   /// 4. 生成的视频缩略图（本地文件）
   ///
   /// 注意：localPosterUrl 始终指向本地 file:// 缓存路径，不会是 NAS 路径
+  /// 背景图显示优先级：本地缓存的背景图（NFO fanart，离线可用）优先，其次网络 backdrop。
+  String? get displayBackdropUrl {
+    if (localBackdropUrl != null && localBackdropUrl!.isNotEmpty) {
+      return localBackdropUrl;
+    }
+    if (backdropUrl != null && backdropUrl!.isNotEmpty) return backdropUrl;
+    return null;
+  }
+
   String? get displayPosterUrl {
     // 本地缓存优先（离线可用）
     if (localPosterUrl != null && localPosterUrl!.isNotEmpty) return localPosterUrl;
@@ -506,6 +518,7 @@ class VideoMetadata {
       'thumbnailUrl': thumbnailUrl,
       'generatedThumbnailUrl': generatedThumbnailUrl,
       'localPosterUrl': localPosterUrl,
+      'localBackdropUrl': localBackdropUrl,
       'fileSize': fileSize,
       'fileModifiedTime': fileModifiedTime?.millisecondsSinceEpoch,
       'collectionId': collectionId,

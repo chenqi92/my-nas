@@ -378,6 +378,7 @@ class JellyfinApi {
           'Overview',
           'Genres',
           'MediaStreams',
+          'MediaSources',
           'ProviderIds',
           'PrimaryImageAspectRatio',
         ];
@@ -421,7 +422,8 @@ class JellyfinApi {
     logger.i('JellyfinApi: 获取集列表, seriesId=$seriesId, seasonId=$seasonId');
     final queryParams = <String, dynamic>{
       'UserId': _userId,
-      'Fields': 'Overview,MediaStreams,ProviderIds,PrimaryImageAspectRatio',
+      'Fields':
+          'Overview,MediaStreams,MediaSources,ProviderIds,PrimaryImageAspectRatio',
     };
     if (seasonId != null) queryParams['SeasonId'] = seasonId;
 

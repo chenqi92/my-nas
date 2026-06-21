@@ -134,19 +134,34 @@ class TraktApi {
           return null;
 
         case 404:
-          throw TraktApiException(appL10n.traktApiInvalidDeviceCode);
+          throw TraktApiException(
+            appL10n.traktApiInvalidDeviceCode,
+            kind: TraktApiErrorKind.invalid,
+          );
 
         case 409:
-          throw TraktApiException(appL10n.traktApiDeviceCodeAlreadyUsed);
+          throw TraktApiException(
+            appL10n.traktApiDeviceCodeAlreadyUsed,
+            kind: TraktApiErrorKind.alreadyUsed,
+          );
 
         case 410:
-          throw TraktApiException(appL10n.traktApiDeviceCodeExpired);
+          throw TraktApiException(
+            appL10n.traktApiDeviceCodeExpired,
+            kind: TraktApiErrorKind.expired,
+          );
 
         case 418:
-          throw TraktApiException(appL10n.traktApiUserAuthorizationDenied);
+          throw TraktApiException(
+            appL10n.traktApiUserAuthorizationDenied,
+            kind: TraktApiErrorKind.denied,
+          );
 
         case 429:
-          throw TraktApiException(appL10n.traktApiPollingTooFrequent);
+          throw TraktApiException(
+            appL10n.traktApiPollingTooFrequent,
+            kind: TraktApiErrorKind.pollingTooFrequent,
+          );
 
         default:
           throw TraktApiException(appL10n.traktApiPollAuthorizationFailed(response.statusCode));
@@ -683,11 +698,50 @@ class TraktApi {
   }
 }
 
+/// Trakt API 错误类型
+///
+/// 用于在不依赖本地化文案的情况下判别错误语义（例如设备码轮询是否应终止）。
+enum TraktApiErrorKind {
+  /// 用户尚未完成授权，需要继续轮询（非致命）
+  deviceCodePending,
+
+  /// 设备码已过期（致命，应停止轮询）
+  expired,
+
+  /// 用户拒绝了授权（致命，应停止轮询）
+  denied,
+
+  /// 设备码无效（致命，应停止轮询）
+  invalid,
+
+  /// 设备码已被使用（致命，应停止轮询）
+  alreadyUsed,
+
+  /// 轮询过于频繁（非致命，可继续轮询）
+  pollingTooFrequent,
+
+  /// 其他错误
+  other,
+}
+
 /// Trakt API 异常
 class TraktApiException implements Exception {
-  const TraktApiException(this.message);
+  const TraktApiException(
+    this.message, {
+    this.kind = TraktApiErrorKind.other,
+  });
 
   final String message;
+
+  /// 错误类型，便于调用方在不依赖本地化文案的情况下判别语义
+  final TraktApiErrorKind kind;
+
+  /// 是否为致命错误（设备码轮询遇到此类错误应停止轮询）
+  bool get isFatal =>
+      kind == TraktApiErrorKind.expired ||
+      kind == TraktApiErrorKind.denied ||
+      kind == TraktApiErrorKind.invalid ||
+      kind == TraktApiErrorKind.alreadyUsed;
 
   @override
   String toString() => message;

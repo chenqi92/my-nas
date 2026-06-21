@@ -419,22 +419,48 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
         .replaceAll('>', '_')
         .replaceAll('|', '_');
 
+  /// 解析项目的首个媒体源（mediaSources 为原始 JSON 列表）
+  JellyfinMediaSource? _firstMediaSource(JellyfinItem item) {
+    final sources = item.mediaSources;
+    if (sources == null || sources.isEmpty) {
+      return null;
+    }
+    final first = sources.first;
+    if (first is! Map<String, dynamic>) {
+      return null;
+    }
+    try {
+      return JellyfinMediaSource.fromJson(first);
+    } on Exception catch (e) {
+      logger.w('JellyfinVirtualFS: 解析媒体源失败, itemId=${item.id}', e);
+      return null;
+    }
+  }
+
   /// 将 JellyfinItem 转换为 FileItem
   FileItem _itemToFileItem(JellyfinItem item, String path) {
     final itemType = MediaItemType.fromJellyfinType(item.type);
     final isDirectory = itemType.isContainer;
     final isPlayable = itemType.isPlayable;
 
+    // 解析首个媒体源（包含真实容器格式与字节数）
+    final mediaSource = _firstMediaSource(item);
+
     // 确定文件扩展名
     String? ext;
     if (isPlayable) {
-      // 从媒体源获取容器格式，或使用默认
-      ext = '.mkv'; // 默认假设为 mkv
+      // 从媒体源的真实容器格式推导扩展名，缺失时回退默认
+      final container = mediaSource?.container;
+      if (container != null && container.isNotEmpty) {
+        ext = '.${container.toLowerCase()}';
+      } else {
+        ext = '.mkv'; // 容器格式未知时的默认值
+      }
     }
 
-    // 计算文件大小（从运行时长估算，或使用 0）
-    var size = 0;
-    if (item.runTimeTicks != null) {
+    // 计算文件大小：优先使用媒体源的真实字节数，缺失时回退估算或 0
+    var size = mediaSource?.size ?? 0;
+    if (size <= 0 && item.runTimeTicks != null) {
       // 粗略估算：1小时约 5GB（对于1080p视频）
       size = (item.runTimeTicks! / 10000000 / 3600 * 5 * 1024 * 1024 * 1024)
           .round();

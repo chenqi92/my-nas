@@ -135,7 +135,8 @@ class EmbyApi {
       'StartIndex': startIndex.toString(),
       'Limit': limit.toString(),
       'Recursive': 'true',
-      'Fields': fields ?? 'Overview,Genres,DateCreated,MediaStreams,ProviderIds',
+      'Fields':
+          fields ?? 'Overview,Genres,DateCreated,MediaStreams,ProviderIds,MediaSources',
     };
     if (parentId != null) params['ParentId'] = parentId;
     if (includeItemTypes != null) params['IncludeItemTypes'] = includeItemTypes;
@@ -148,7 +149,10 @@ class EmbyApi {
 
   /// 获取单个项目详情
   Future<JellyfinItem> getItem(String itemId) async {
-    final response = await _get('/Users/$userId/Items/$itemId');
+    final response = await _get(
+      '/Users/$userId/Items/$itemId',
+      {'Fields': 'MediaSources'},
+    );
     return JellyfinItem.fromJson(response as Map<String, dynamic>);
   }
 

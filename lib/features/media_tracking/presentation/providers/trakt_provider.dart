@@ -277,9 +277,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
           }
         } on TraktApiException catch (e) {
           // 如果是致命错误，停止轮询
-          if (e.message.contains('过期') ||
-              e.message.contains('拒绝') ||
-              e.message.contains('无效')) {
+          if (e.isFatal) {
             _isPolling = false;
             state = state.copyWith(
               status: TraktConnectionStatus.error,
@@ -288,7 +286,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
             );
             return;
           }
-          // 其他错误继续轮询
+          // 其他错误（如轮询过于频繁、临时网络错误）继续轮询
         }
       }
 

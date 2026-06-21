@@ -9,6 +9,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/online_book_shelf_service.dart';
 import 'package:my_nas/features/book/data/services/sources/book_source_manager_service.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
@@ -1002,9 +1003,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
       height: headerHeight,
       backgroundColor: uiStyle.isGlass
           ? tintColor
-          : (isDark
-              ? const Color(0xFF2E2A1A) // 深琥珀棕色调
-              : Colors.amber.withValues(alpha: 0.08)),
+          : Theme.of(context).colorScheme.surface,
       child: Padding(
         padding: isDesktop
             ? const EdgeInsets.fromLTRB(16, 6, 12, 6)
@@ -1093,7 +1092,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                               _performSearch(value, currentTab);
                             },
                             onSubmitted: (value) {
-                              debugPrint('📚 onSubmitted: value="$value", currentTab=$currentTab, _bookSearchMode=$_bookSearchMode');
+                              logger.d('📚 onSubmitted: value="$value", currentTab=$currentTab, _bookSearchMode=$_bookSearchMode');
                               if (currentTab == 0 && _bookSearchMode == BookSearchMode.online) {
                                 _performOnlineSearch(value);
                               } else {
@@ -1164,7 +1163,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                             if (_bookSearchMode == BookSearchMode.online && _searchController.text.isNotEmpty)
                               GestureDetector(
                                 onTap: () {
-                                  debugPrint('📚 Search button tapped');
+                                  logger.d('📚 Search button tapped');
                                   _performOnlineSearch(_searchController.text);
                                 },
                                 child: Container(
@@ -1254,8 +1253,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
       case 1: // 漫画
         ref.read(comicListProvider.notifier).setSearchQuery('');
       case 2: // 笔记
-        // 笔记暂不支持搜索
-        break;
+        ref.read(notePageProvider.notifier).setSearchQuery('');
     }
   }
 
@@ -1278,12 +1276,12 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
 
   /// 执行书源搜索（按回车时调用）
   void _performOnlineSearch(String query) {
-    debugPrint('📚 _performOnlineSearch called with query: "$query"');
+    logger.d('📚 _performOnlineSearch called with query: "$query"');
     if (query.trim().isEmpty) {
-      debugPrint('📚 _performOnlineSearch: query is empty, returning');
+      logger.d('📚 _performOnlineSearch: query is empty, returning');
       return;
     }
-    debugPrint('📚 _performOnlineSearch: calling bookSearchProvider.search()');
+    logger.d('📚 _performOnlineSearch: calling bookSearchProvider.search()');
     ref.read(bookSearchProvider.notifier).search(query.trim());
   }
 

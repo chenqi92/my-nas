@@ -244,7 +244,7 @@ class FaceRecognitionService {
         photoPath: photoPath,
         faceBox: box,
         embedding: embedding,
-        confidence: 0.9, // 暂时使用固定值
+        confidence: box.score,
       ));
     }
 
@@ -294,22 +294,14 @@ class FaceRecognitionService {
     }
   }
 
-  /// 简单的备用人脸检测（基于图像中心区域）
+  /// 人脸检测模型不可用时的回退
+  ///
+  /// 不再伪造人脸框（旧实现假设图片中心上半部有一张脸，会导致错误的人脸
+  /// 检测与聚类结果）。模型缺失时返回空列表，表示“无法检测”，调用方会跳过
+  /// 该图，不会把假人脸写入数据库。
   List<FaceBox> _detectFacesFallback(img.Image image) {
-    // 简单策略：假设人脸在图片中心区域
-    // 这只是一个占位实现，实际应该使用真正的检测模型
-    final centerX = image.width / 2;
-    final centerY = image.height / 3; // 通常人脸在上半部分
-    final size = math.min(image.width, image.height) * 0.4;
-
-    return [
-      FaceBox(
-        x: centerX - size / 2,
-        y: centerY - size / 2,
-        width: size,
-        height: size,
-      ),
-    ];
+    logger.w('FaceRecognitionService: 人脸检测模型不可用，跳过人脸检测');
+    return const [];
   }
 
   List<FaceBox> _parseDetectorOutput(
@@ -336,6 +328,7 @@ class FaceRecognitionService {
           y: yMin,
           width: xMax - xMin,
           height: yMax - yMin,
+          score: score,
         ));
       }
     }
@@ -413,7 +406,6 @@ class FaceRecognitionService {
   /// 提取人脸特征向量
   Future<Float32List?> _extractEmbedding(img.Image faceImage) async {
     if (_faceEmbedder == null) {
-      // 使用简单的备用方案：基于像素值的简单特征
       return _extractEmbeddingFallback(faceImage);
     }
 
@@ -449,50 +441,13 @@ class FaceRecognitionService {
     }
   }
 
-  /// 简单的备用特征提取（基于图像统计）
-  Float32List _extractEmbeddingFallback(img.Image image) {
-    // 使用图像的简单统计特征作为备用
-    final embedding = Float32List(_embeddingSize);
-    final blockSize = _embedderInputSize ~/ 8;
-
-    var idx = 0;
-    for (var by = 0; by < 8 && idx < _embeddingSize; by++) {
-      for (var bx = 0; bx < 8 && idx < _embeddingSize; bx++) {
-        var sum = 0.0;
-        var count = 0;
-
-        for (var y = by * blockSize;
-            y < (by + 1) * blockSize && y < image.height;
-            y++) {
-          for (var x = bx * blockSize;
-              x < (bx + 1) * blockSize && x < image.width;
-              x++) {
-            final pixel = image.getPixel(x, y);
-            sum += img.getLuminance(pixel);
-            count++;
-          }
-        }
-
-        embedding[idx++] = count > 0 ? sum / count / 255.0 : 0.0;
-        if (idx < _embeddingSize) {
-          embedding[idx++] = (sum / count / 255.0 - 0.5).abs();
-        }
-      }
-    }
-
-    // L2 归一化
-    var norm = 0.0;
-    for (var i = 0; i < _embeddingSize; i++) {
-      norm += embedding[i] * embedding[i];
-    }
-    norm = math.sqrt(norm);
-    if (norm > 0) {
-      for (var i = 0; i < _embeddingSize; i++) {
-        embedding[i] /= norm;
-      }
-    }
-
-    return embedding;
+  /// 人脸特征提取模型不可用时的回退
+  ///
+  /// 不再用图像统计量伪造特征向量（旧实现会产出无意义的 embedding，导致错误
+  /// 聚类）。模型缺失时返回 null，调用方会跳过该人脸，不写入数据库。
+  Float32List? _extractEmbeddingFallback(img.Image image) {
+    logger.w('FaceRecognitionService: 人脸特征模型不可用，跳过特征提取');
+    return null;
   }
 
   List<double> _imageToFloat32List(img.Image image, {bool normalize = false}) {

@@ -479,12 +479,12 @@ class VideoMetadataService {
           metadata.localPosterUrl = nfoData.posterPath;
         }
 
-        // 存储本地背景图路径（用于 StreamImage 流式加载）
+        // 存储本地背景图路径（NFO fanart，本地路径，用于 StreamImage 流式加载）
         if (nfoData.fanartPath != null) {
-          // 背景图使用 localPosterUrl 以外的字段无法存储，暂时不处理
-          // TODO: 考虑添加 localBackdropUrl 字段
-          // 目前使用 backdropUrl 存储路径，显示时需要识别并使用流式加载
-          metadata.backdropUrl = nfoData.fanartPath;
+          // 同时写入 backdropUrl 以兼容仍直接读取该字段的展示逻辑
+          metadata
+            ..localBackdropUrl = nfoData.fanartPath
+            ..backdropUrl = nfoData.fanartPath;
         }
 
         logger.d('VideoMetadataService: 从 NFO 获取到元数据 "${nfoData.title}"'

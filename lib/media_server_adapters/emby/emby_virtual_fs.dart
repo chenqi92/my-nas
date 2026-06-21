@@ -40,7 +40,7 @@ class EmbyVirtualFileSystem implements NasFileSystem {
       return [];
     }
 
-    return _listFolderContent(itemId);
+    return _listFolderContent(itemId, parentPath: normalizedPath);
   }
 
   @override
@@ -187,12 +187,15 @@ class EmbyVirtualFileSystem implements NasFileSystem {
     }).toList();
   }
 
-  Future<List<FileItem>> _listFolderContent(String parentId) async {
+  Future<List<FileItem>> _listFolderContent(
+    String parentId, {
+    String parentPath = '',
+  }) async {
     final result = await _api.getItems(parentId: parentId, limit: 1000);
 
     final items = <FileItem>[];
     for (final item in result.items) {
-      final itemPath = await _buildItemPath(item);
+      final itemPath = _buildItemPath(item, parentPath);
       _pathToIdCache[itemPath] = item.id;
       _itemCache[item.id] = item;
       items.add(_itemToFileItem(item, itemPath));
@@ -252,21 +255,44 @@ class EmbyVirtualFileSystem implements NasFileSystem {
     return item;
   }
 
-  // 简化路径构建
-  Future<String> _buildItemPath(JellyfinItem item) async => '/${item.name}';
+  /// 在父路径下构建条目路径，保留层级以避免同名条目路径冲突。
+  String _buildItemPath(JellyfinItem item, String parentPath) {
+    if (parentPath.isEmpty || parentPath == '/') {
+      return '/${item.name}';
+    }
+    return '$parentPath/${item.name}';
+  }
 
   FileItem _itemToFileItem(JellyfinItem item, String path) {
     final isPlayable = item.type == 'Movie' ||
         item.type == 'Episode' ||
         item.type == 'Audio';
 
+    // 从 Emby item 的真实媒体源读取容器格式与文件大小（参考 emby_adapter
+    // source.container / source.size 的取法）。getItems/getItem 默认不返回
+    // MediaSources，缺失时回退默认扩展名与 0 字节。
+    final source = _firstMediaSource(item);
+    final container = (source?['Container'] as String?)?.trim();
+    final extension =
+        (container != null && container.isNotEmpty) ? container : 'mp4';
+    final size = (source?['Size'] as num?)?.toInt() ?? 0;
+
     return FileItem(
-      name: isPlayable ? '${item.name}.mp4' : item.name,
+      name: isPlayable ? '${item.name}.$extension' : item.name,
       path: path,
       isDirectory: !isPlayable,
-      size: 0,
+      size: isPlayable ? size : 0,
+      extension: isPlayable ? extension : null,
       modifiedTime: item.premiereDate,
     );
+  }
+
+  /// 取 item 的首个媒体源原始 JSON（JellyfinItem.mediaSources 为原始 Map 列表）。
+  Map<String, dynamic>? _firstMediaSource(JellyfinItem item) {
+    final sources = item.mediaSources;
+    if (sources == null || sources.isEmpty) return null;
+    final first = sources.first;
+    return first is Map<String, dynamic> ? first : null;
   }
 
   String _stripExtension(String name) {
