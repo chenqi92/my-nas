@@ -86,7 +86,7 @@ class _NasToolLoginPageState extends ConsumerState<NasToolLoginPage>
         );
       } else {
         setState(() {
-          _errorMessage = connection.errorMessage ?? '登录失败';
+          _errorMessage = connection.errorMessage ?? context.l10n.nastoolLoginPageLoginFailed;
           _isLoading = false;
         });
       }
@@ -196,7 +196,7 @@ class _NasToolLoginPageState extends ConsumerState<NasToolLoginPage>
                         TextFormField(
                           controller: _usernameController,
                           decoration: InputDecoration(
-                            labelText: '用户名',
+                            labelText: context.l10n.nastoolLoginPageUsernameLabel,
                             prefixIcon: const Icon(Icons.person_outline),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -205,7 +205,7 @@ class _NasToolLoginPageState extends ConsumerState<NasToolLoginPage>
                           textInputAction: TextInputAction.next,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return '请输入用户名';
+                              return context.l10n.nastoolLoginPageUsernameEmpty;
                             }
                             return null;
                           },
@@ -217,7 +217,7 @@ class _NasToolLoginPageState extends ConsumerState<NasToolLoginPage>
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
-                            labelText: '密码',
+                            labelText: context.l10n.nastoolLoginPagePasswordLabel,
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -239,7 +239,7 @@ class _NasToolLoginPageState extends ConsumerState<NasToolLoginPage>
                           onFieldSubmitted: (_) => _login(),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return '请输入密码';
+                              return context.l10n.nastoolLoginPagePasswordEmpty;
                             }
                             return null;
                           },
@@ -258,7 +258,7 @@ class _NasToolLoginPageState extends ConsumerState<NasToolLoginPage>
                               },
                             ),
                             Text(
-                              '记住登录状态',
+                              context.l10n.nastoolLoginPageRememberMe,
                               style: context.textTheme.bodyMedium?.copyWith(
                                 color: isDark
                                     ? AppColors.darkOnSurfaceVariant
@@ -320,9 +320,9 @@ class _NasToolLoginPageState extends ConsumerState<NasToolLoginPage>
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Text(
-                                    '登录',
-                                    style: TextStyle(
+                                : Text(
+                                    context.l10n.nastoolLoginPageLoginButton,
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                     ),

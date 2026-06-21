@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/presentation/pages/service_sources_page.dart';
 
@@ -9,11 +10,11 @@ class PTSitesListPage extends StatelessWidget {
   const PTSitesListPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const ServiceSourcesPage(
-    title: '站点',
+  Widget build(BuildContext context) => ServiceSourcesPage(
+    title: context.l10n.ptSitesListTitle,
     category: SourceCategory.ptSites,
     emptyIcon: Icons.rss_feed_rounded,
-    emptyTitle: '尚未添加站点',
-    emptySubtitle: '添加资源站点来订阅和下载内容',
+    emptyTitle: context.l10n.ptSitesListEmptyTitle,
+    emptySubtitle: context.l10n.ptSitesListEmptySubtitle,
   );
 }

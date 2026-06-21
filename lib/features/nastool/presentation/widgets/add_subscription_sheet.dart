@@ -41,7 +41,7 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
               .searchMediaResources(q);
       if (mounted) setState(() => _results = results);
     } on Object catch (e) {
-      if (mounted) context.showErrorToast('搜索失败：$e');
+      if (mounted) context.showErrorToast(context.l10n.nastoolAddSubscriptionSearchError(e));
     } finally {
       if (mounted) setState(() => _searching = false);
     }
@@ -71,12 +71,12 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
       ref.invalidate(nastoolSubscribesProvider(widget.sourceId));
       if (mounted) {
         Navigator.of(context).pop();
-        context.showSuccessToast('已订阅《${r.title}》');
+        context.showSuccessToast(context.l10n.nastoolAddSubscriptionSuccess(r.title));
       }
     } on Object catch (e) {
       if (mounted) {
         setState(() => _addingKey = null);
-        context.showErrorToast('订阅失败：$e');
+        context.showErrorToast(context.l10n.nastoolAddSubscriptionError(e));
       }
     }
   }
@@ -107,7 +107,7 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        '新增订阅',
+                        context.l10n.nastoolAddSubscriptionSheetTitle,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -129,12 +129,12 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
                   autofocus: true,
                   onSubmitted: (_) => _search(),
                   decoration: InputDecoration(
-                    hintText: '搜索电影 / 剧集名称…',
+                    hintText: context.l10n.nastoolAddSubscriptionSearchHint,
                     hintStyle: TextStyle(color: t.text3, fontSize: 13),
                     prefixIcon:
                         Icon(Icons.search_rounded, size: 18, color: t.text2),
                     suffixIcon: TextButton(
-                        onPressed: _search, child: const Text('搜索')),
+                        onPressed: _search, child: Text(context.l10n.nastoolAddSubscriptionSearchButton)),
                     filled: true,
                     fillColor: t.insetBg,
                     isDense: true,
@@ -165,7 +165,7 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
                             height: 200,
                             child: Center(
                               child: Text(
-                                '输入名称后搜索 TMDB，从结果中选择订阅。',
+                                context.l10n.nastoolAddSubscriptionEmptyHint,
                                 style:
                                     TextStyle(fontSize: 13, color: t.text2),
                               ),
@@ -241,8 +241,8 @@ class _ResultRow extends StatelessWidget {
                     if (result.type != null)
                       AppTag(
                         (result.type!).toUpperCase().contains('TV')
-                            ? '剧集'
-                            : '电影',
+                            ? context.l10n.nastoolAddSubscriptionTagSeries
+                            : context.l10n.nastoolAddSubscriptionTagMovie,
                         variant: TagVariant.neutral,
                       ),
                     if (result.vote != null && result.vote!.isNotEmpty)
@@ -274,7 +274,7 @@ class _ResultRow extends StatelessWidget {
                   onPressed: onAdd,
                   icon: Icon(Icons.add_circle_outline_rounded,
                       color: t.accent),
-                  tooltip: '订阅',
+                  tooltip: context.l10n.nastoolAddSubscriptionTooltip,
                 ),
         ],
       ),

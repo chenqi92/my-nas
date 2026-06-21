@@ -255,7 +255,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          '连接您的私有云',
+          context.l10n.connPageTagline,
           style: context.textTheme.bodyLarge?.copyWith(
             color: AppColors.darkOnSurfaceVariant,
           ),
@@ -291,13 +291,13 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                 // 主机地址
                 _buildTextField(
                   controller: _hostController,
-                  label: '主机地址',
-                  hint: '192.168.1.100 或 nas.example.com',
+                  label: context.l10n.connPageHostLabel,
+                  hint: context.l10n.connPageHostHint,
                   icon: Icons.dns_outlined,
                   enabled: !isLoading,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入主机地址';
+                      return context.l10n.connPageHostError;
                     }
                     return null;
                   },
@@ -307,18 +307,18 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                 // 端口
                 _buildTextField(
                   controller: _portController,
-                  label: '端口',
-                  hint: '5000',
+                  label: context.l10n.connPagePortLabel,
+                  hint: context.l10n.connPagePortHint,
                   icon: Icons.tag,
                   enabled: !isLoading,
                   keyboardType: TextInputType.number,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入端口';
+                      return context.l10n.connPagePortError;
                     }
                     final port = int.tryParse(value);
                     if (port == null || port < 1 || port > 65535) {
-                      return '请输入有效端口 (1-65535)';
+                      return context.l10n.connPagePortInvalidError;
                     }
                     return null;
                   },
@@ -328,12 +328,12 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                 // 用户名
                 _buildTextField(
                   controller: _usernameController,
-                  label: '用户名',
+                  label: context.l10n.connPageUsernameLabel,
                   icon: Icons.person_outline,
                   enabled: !isLoading,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入用户名';
+                      return context.l10n.connPageUsernameError;
                     }
                     return null;
                   },
@@ -343,7 +343,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                 // 密码
                 _buildTextField(
                   controller: _passwordController,
-                  label: '密码',
+                  label: context.l10n.connPagePasswordLabel,
                   icon: Icons.lock_outline,
                   enabled: !isLoading,
                   obscureText: _obscurePassword,
@@ -360,7 +360,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                   onFieldSubmitted: (_) => _handleConnect(),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入密码';
+                      return context.l10n.connPagePasswordError;
                     }
                     return null;
                   },
@@ -457,18 +457,18 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
         children: [
           _buildTypeOption(
             type: NasAdapterType.synology,
-            label: '群晖',
+            label: context.l10n.connPageNasTypeSynology,
             icon: Icons.storage_rounded,
           ),
           _buildTypeOption(
             type: NasAdapterType.ugreen,
-            label: '绿联',
+            label: context.l10n.connPageNasTypeUGreen,
             icon: Icons.storage_rounded,
             comingSoon: true, // 绿联 API 系逆向工程获得，暂不开放
           ),
           _buildTypeOption(
             type: NasAdapterType.webdav,
-            label: 'WebDAV',
+            label: context.l10n.connPageNasTypeWebDAV,
             icon: Icons.cloud_outlined,
           ),
         ],
@@ -573,8 +573,8 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  '使用 HTTPS',
+                Text(
+                  context.l10n.connPageUseHttps,
                   style: TextStyle(
                     color: AppColors.darkOnSurface,
                     fontSize: 14,
@@ -582,7 +582,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                   ),
                 ),
                 Text(
-                  _useSsl ? '加密连接' : '不安全连接',
+                  _useSsl ? context.l10n.connPageSecureConnection : context.l10n.connPageInsecureConnection,
                   style: TextStyle(
                     color: AppColors.darkOnSurfaceVariant,
                     fontSize: 12,
@@ -624,8 +624,8 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '记住登录',
+                    Text(
+                      context.l10n.connPageRememberLogin,
                       style: TextStyle(
                         color: AppColors.darkOnSurface,
                         fontSize: 14,
@@ -633,7 +633,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                       ),
                     ),
                     Text(
-                      '下次打开自动登录',
+                      context.l10n.connPageRememberLoginDesc,
                       style: TextStyle(
                         color: AppColors.darkOnSurfaceVariant,
                         fontSize: 12,
@@ -679,8 +679,8 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '记住此设备',
+                    Text(
+                      context.l10n.connPageRememberDevice,
                       style: TextStyle(
                         color: AppColors.darkOnSurface,
                         fontSize: 14,
@@ -688,7 +688,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                       ),
                     ),
                     Text(
-                      '跳过二次验证',
+                      context.l10n.connPageRememberDeviceDesc,
                       style: TextStyle(
                         color: AppColors.darkOnSurfaceVariant,
                         fontSize: 12,
@@ -746,7 +746,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        (state as ConnectionLoading).message ?? '连接中...',
+                        (state as ConnectionLoading).message ?? context.l10n.connPageConnectingStatus,
                         style: const TextStyle(
                           color: AppColors.darkOnSurface,
                           fontWeight: FontWeight.w600,
@@ -754,13 +754,13 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                       ),
                     ],
                   )
-                : const Row(
+                : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.login_rounded, color: Colors.white),
                       SizedBox(width: 8),
                       Text(
-                        '连接',
+                        context.l10n.connPageConnectButton,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -806,7 +806,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                 ),
               ),
               Text(
-                '二次验证',
+                context.l10n.connPageTwoFactorTitle,
                 style: context.textTheme.titleLarge?.copyWith(
                   color: AppColors.darkOnSurface,
                   fontWeight: FontWeight.bold,
@@ -815,7 +815,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                '请输入验证器应用中的验证码',
+                context.l10n.connPageTwoFactorDesc,
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: AppColors.darkOnSurfaceVariant,
                 ),
@@ -826,8 +826,8 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
               // OTP 输入框
               _buildTextField(
                 controller: _otpController,
-                label: '验证码',
-                hint: '6 位数字',
+                label: context.l10n.connPageOtpLabel,
+                hint: context.l10n.connPageOtpHint,
                 icon: Icons.pin_outlined,
                 keyboardType: TextInputType.number,
                 onFieldSubmitted: (_) => _handleVerify2FA(),
@@ -858,8 +858,8 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            '记住此设备',
+                          Text(
+                            context.l10n.connPageRememberDevice,
                             style: TextStyle(
                               color: AppColors.darkOnSurface,
                               fontSize: 14,
@@ -867,7 +867,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                             ),
                           ),
                           Text(
-                            '下次登录跳过二次验证',
+                            context.l10n.connPageRememberDeviceDesc2FA,
                             style: TextStyle(
                               color: AppColors.darkOnSurfaceVariant,
                               fontSize: 12,
@@ -927,7 +927,7 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
                   _otpController.clear();
                 },
                 child: Text(
-                  '返回',
+                  context.l10n.connPageBackButton,
                   style: TextStyle(
                     color: AppColors.darkOnSurfaceVariant,
                   ),

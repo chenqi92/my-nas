@@ -92,7 +92,7 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
     bool rememberDevice = false,
     String? connectionId,
   }) async {
-    state = const ConnectionLoading(message: '正在连接...');
+    state = ConnectionLoading(message: '正在连接...');
 
     // 保存记住设置
     _rememberLogin = rememberLogin;

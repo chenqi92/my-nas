@@ -29,15 +29,15 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
     with ConsumerTabBarVisibilityMixin {
   int _selectedIndex = 0;
 
-  static const _navItems = [
-    _NavItem(icon: Icons.dashboard_rounded, label: '仪表盘'),
-    _NavItem(icon: Icons.bookmark_rounded, label: '订阅'),
-    _NavItem(icon: Icons.download_rounded, label: '下载'),
-    _NavItem(icon: Icons.search_rounded, label: '搜索'),
-    _NavItem(icon: Icons.movie_rounded, label: '媒体'),
-    _NavItem(icon: Icons.language_rounded, label: '站点'),
-    _NavItem(icon: Icons.extension_rounded, label: '高级'),
-    _NavItem(icon: Icons.settings_rounded, label: '设置'),
+  List<_NavItem> _navItems(BuildContext context) => [
+    _NavItem(icon: Icons.dashboard_rounded, label: context.l10n.nastoolNavDashboard),
+    _NavItem(icon: Icons.bookmark_rounded, label: context.l10n.nastoolNavSubscribe),
+    _NavItem(icon: Icons.download_rounded, label: context.l10n.nastoolNavDownload),
+    _NavItem(icon: Icons.search_rounded, label: context.l10n.nastoolNavSearch),
+    _NavItem(icon: Icons.movie_rounded, label: context.l10n.nastoolNavMedia),
+    _NavItem(icon: Icons.language_rounded, label: context.l10n.nastoolNavSites),
+    _NavItem(icon: Icons.extension_rounded, label: context.l10n.nastoolNavAdvanced),
+    _NavItem(icon: Icons.settings_rounded, label: context.l10n.nastoolNavSettings),
   ];
 
   @override
@@ -68,7 +68,7 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
     final width = MediaQuery.of(context).size.width;
     final isCompact = width < 700;
     final isWide = width >= 1100;
-    final selectedItem = _navItems[_selectedIndex];
+    final selectedItem = _navItems(context)[_selectedIndex];
 
     if (isCompact) {
       // 移动端：AppBar + Drawer + 全宽内容
@@ -90,7 +90,7 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
               onPressed: () => ref
                   .read(nastoolActionsProvider(widget.source.id))
                   .refreshAll(),
-              tooltip: '刷新',
+              tooltip: context.l10n.nastoolRefresh,
             ),
           ],
         ),
@@ -167,9 +167,9 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
                 child: ListView.builder(
                   padding:
                       const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                  itemCount: _navItems.length,
+                  itemCount: _navItems(context).length,
                   itemBuilder: (context, index) {
-                    final item = _navItems[index];
+                    final item = _navItems(context)[index];
                     final isSelected = _selectedIndex == index;
                     return _buildNavItem(
                       context,
@@ -190,8 +190,8 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 child: _buildNavItem(
                   context,
-                  const _NavItem(
-                      icon: Icons.arrow_back_rounded, label: '返回'),
+                  _NavItem(
+                      icon: Icons.arrow_back_rounded, label: context.l10n.nastoolNavBack),
                   false,
                   isDark,
                   true,
@@ -271,9 +271,9 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
               child: ListView.builder(
                 padding:
                     const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                itemCount: _navItems.length,
+                itemCount: _navItems(context).length,
                 itemBuilder: (context, index) {
-                  final item = _navItems[index];
+                  final item = _navItems(context)[index];
                   final isSelected = _selectedIndex == index;
                   return _buildNavItem(
                     context,
@@ -291,8 +291,8 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
               padding: const EdgeInsets.all(AppSpacing.sm),
               child: _buildNavItem(
                 context,
-                const _NavItem(
-                    icon: Icons.arrow_back_rounded, label: '返回'),
+    _NavItem(
+                    icon: Icons.arrow_back_rounded, label: context.l10n.nastoolNavBack),
                 false,
                 isDark,
                 isWide,
@@ -390,10 +390,10 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
         ),
         child: Row(
           children: [
-            Icon(_navItems[_selectedIndex].icon, color: AppColors.primary),
+            Icon(_navItems(context)[_selectedIndex].icon, color: AppColors.primary),
             const SizedBox(width: AppSpacing.sm),
             Text(
-              _navItems[_selectedIndex].label,
+              _navItems(context)[_selectedIndex].label,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark
@@ -411,7 +411,7 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
               onPressed: () => ref
                   .read(nastoolActionsProvider(widget.source.id))
                   .refreshAll(),
-              tooltip: '刷新',
+              tooltip: context.l10n.nastoolRefresh,
             ),
           ],
         ),
@@ -437,7 +437,7 @@ class _NasToolMainPageState extends ConsumerState<NasToolMainPage>
           ),
           const SizedBox(width: 6),
           Text(
-            conn.adapter.username ?? '已连接',
+conn.adapter.username ?? context.l10n.nastoolConnectionConnected,
             style: context.textTheme.bodySmall?.copyWith(
               color: AppColors.success,
               fontWeight: FontWeight.w500,
@@ -505,7 +505,7 @@ class _DashboardContent extends ConsumerWidget {
 
     return statsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('加载失败: $e')),
+error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
       data: (stats) => RefreshIndicator(
         onRefresh: () async {
           ref
@@ -522,27 +522,27 @@ class _DashboardContent extends ConsumerWidget {
               error: (_, _) => const SizedBox.shrink(),
             ),
             const SizedBox(height: AppSpacing.lg),
-            _buildSectionTitle(context, '媒体库统计'),
+_buildSectionTitle(context, context.l10n.nastoolDashboardMediaStats),
             const SizedBox(height: AppSpacing.md),
             _buildStatsGrid(context, stats),
             const SizedBox(height: AppSpacing.xl),
-            _buildSectionTitle(context, '站点数据'),
+_buildSectionTitle(context, context.l10n.nastoolDashboardSiteStats),
             const SizedBox(height: AppSpacing.md),
             siteStatsAsync.when(
               data: (sites) => _buildSiteStats(context, sites),
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
-              error: (_, _) => _buildEmptyState('暂无站点数据'),
+error: (_, _) => _buildEmptyState(context.l10n.nastoolDashboardNoSiteData),
             ),
             const SizedBox(height: AppSpacing.xl),
-            _buildSectionTitle(context, '最近转移'),
+_buildSectionTitle(context, context.l10n.nastoolDashboardRecentTransfers),
             const SizedBox(height: AppSpacing.md),
             transfersAsync.when(
               data: (transfers) => _buildTransferList(
                   context, transfers.take(5).toList()),
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
-              error: (_, _) => _buildEmptyState('暂无转移记录'),
+error: (_, _) => _buildEmptyState(context.l10n.nastoolDashboardNoTransferRecords),
             ),
           ],
         ),
@@ -604,7 +604,7 @@ class _DashboardContent extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      sys.version != null ? '版本 ${sys.version}' : '系统信息',
+sys.version != null ? context.l10n.nastoolDashboardVersion(sys.version!) : context.l10n.nastoolDashboardSystemInfo,
                       style: context.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: isDark
@@ -613,7 +613,7 @@ class _DashboardContent extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      hasUpdate ? '可更新到 ${sys.latestVersion}' : '已是最新版本',
+hasUpdate ? context.l10n.nastoolDashboardCanUpdateTo(sys.latestVersion!) : context.l10n.nastoolDashboardAlreadyLatest,
                       style: context.textTheme.bodySmall?.copyWith(
                         color: hasUpdate
                             ? AppColors.warning
@@ -634,7 +634,7 @@ class _DashboardContent extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '有更新',
+context.l10n.nastoolDashboardHasUpdate,
                     style: context.textTheme.labelSmall?.copyWith(
                       color: AppColors.warning,
                       fontWeight: FontWeight.w600,
@@ -649,7 +649,7 @@ class _DashboardContent extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '存储',
+context.l10n.nastoolDashboardStorage,
                   style: context.textTheme.bodySmall?.copyWith(
                     color: isDark
                         ? AppColors.darkOnSurfaceVariant
@@ -706,44 +706,44 @@ class _DashboardContent extends ConsumerWidget {
             spacing: spacing,
             runSpacing: spacing,
             children: [
-              _StatCard(
+_StatCard(
                   icon: Icons.movie_rounded,
-                  label: '电影',
+                  label: context.l10n.nastoolDashboardStatsMovie,
                   value: '${stats?.movieCount ?? 0}',
                   color: AppColors.primary,
                   isDark: isDark,
                   width: cardWidth),
-              _StatCard(
+_StatCard(
                   icon: Icons.tv_rounded,
-                  label: '剧集',
+                  label: context.l10n.nastoolDashboardStatsTV,
                   value: '${stats?.tvCount ?? 0}',
                   color: AppColors.success,
                   isDark: isDark,
                   width: cardWidth),
-              _StatCard(
+_StatCard(
                   icon: Icons.animation_rounded,
-                  label: '动漫',
+                  label: context.l10n.nastoolDashboardStatsAnime,
                   value: '${stats?.animeCount ?? 0}',
                   color: const Color(0xFF9C27B0),
                   isDark: isDark,
                   width: cardWidth),
-              _StatCard(
+_StatCard(
                   icon: Icons.bookmark_rounded,
-                  label: '订阅',
+                  label: context.l10n.nastoolDashboardStatsSubscriptions,
                   value: '${stats?.subscribeCount ?? 0}',
                   color: const Color(0xFF009688),
                   isDark: isDark,
                   width: cardWidth),
-              _StatCard(
+_StatCard(
                   icon: Icons.downloading_rounded,
-                  label: '下载中',
+                  label: context.l10n.nastoolDashboardStatsDownloading,
                   value: '${stats?.activeDownloads ?? 0}',
                   color: AppColors.warning,
                   isDark: isDark,
                   width: cardWidth),
-              _StatCard(
+_StatCard(
                   icon: Icons.check_circle_rounded,
-                  label: '已完成',
+                  label: context.l10n.nastoolDashboardStatsCompleted,
                   value: '${stats?.completedDownloads ?? 0}',
                   color: AppColors.success,
                   isDark: isDark,
@@ -754,18 +754,18 @@ class _DashboardContent extends ConsumerWidget {
       );
 
   Widget _buildSiteStats(BuildContext context, List<NtSiteStatistics> sites) {
-    if (sites.isEmpty) return _buildEmptyState('暂无站点');
+if (sites.isEmpty) return _buildEmptyState(context.l10n.nastoolDashboardNoSites);
     final totalUp = sites.fold<int>(0, (sum, s) => sum + (s.upload ?? 0));
     final totalDown = sites.fold<int>(0, (sum, s) => sum + (s.download ?? 0));
     return LayoutBuilder(
       builder: (context, constraints) {
         final stack = constraints.maxWidth < 480;
         final items = [
-          _buildDataItem(context, Icons.upload_rounded, '总上传',
+_buildDataItem(context, Icons.upload_rounded, context.l10n.nastoolDashboardTotalUpload,
               _formatBytes(totalUp), AppColors.success),
-          _buildDataItem(context, Icons.download_rounded, '总下载',
+_buildDataItem(context, Icons.download_rounded, context.l10n.nastoolDashboardTotalDownload,
               _formatBytes(totalDown), AppColors.primary),
-          _buildDataItem(context, Icons.language_rounded, '站点数',
+_buildDataItem(context, Icons.language_rounded, context.l10n.nastoolDashboardSiteCount,
               '${sites.length}', Colors.purple),
         ];
         return Container(
@@ -829,7 +829,7 @@ class _DashboardContent extends ConsumerWidget {
 
   Widget _buildTransferList(
       BuildContext context, List<NtTransferHistory> transfers) {
-    if (transfers.isEmpty) return _buildEmptyState('暂无转移记录');
+if (transfers.isEmpty) return _buildEmptyState(context.l10n.nastoolDashboardNoTransferRecords);
     return Column(
       children: transfers
           .map((t) => Card(
@@ -987,14 +987,14 @@ class _SubscribesContentState extends ConsumerState<_SubscribesContent> with Sin
       children: [
         TabBar(
           controller: _tabController,
-          tabs: const [Tab(text: '电影'), Tab(text: '剧集')],
+tabs: [Tab(text: context.l10n.nastoolSubscribesTabMovie), Tab(text: context.l10n.nastoolSubscribesTabTV)],
           labelColor: AppColors.primary,
           indicatorColor: AppColors.primary,
         ),
         Expanded(
           child: subscribesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('加载失败: $e')),
+      error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
             data: (subscribes) {
               final movies = subscribes.where((s) => s.isMovie).toList();
               final tvs = subscribes.where((s) => !s.isMovie).toList();
@@ -1020,7 +1020,7 @@ class _SubscribesContentState extends ConsumerState<_SubscribesContent> with Sin
           children: [
             Icon(isMovie ? Icons.movie_outlined : Icons.tv_outlined, size: 64, color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
             const SizedBox(height: AppSpacing.md),
-            Text('暂无${isMovie ? '电影' : '剧集'}订阅', style: context.textTheme.titleMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)),
+Text(isMovie ? context.l10n.nastoolSubscribesEmptyMovie : context.l10n.nastoolSubscribesEmptyTV, style: context.textTheme.titleMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)),
           ],
         ),
       );
@@ -1049,8 +1049,8 @@ class _SubscribesContentState extends ConsumerState<_SubscribesContent> with Sin
               trailing: PopupMenuButton<String>(
                 onSelected: (action) => _handleAction(action, sub),
                 itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'search', child: Row(children: [Icon(Icons.search_rounded, size: 20), SizedBox(width: 8), Text('搜索资源')])),
-                  const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline, color: AppColors.error, size: 20), SizedBox(width: 8), Text('删除', style: TextStyle(color: AppColors.error))])),
+PopupMenuItem(value: 'search', child: Row(children: [Icon(Icons.search_rounded, size: 20), SizedBox(width: 8), Text(context.l10n.nastoolSubscribesMenuSearch)])),
+PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline, color: AppColors.error, size: 20), SizedBox(width: 8), Text(context.l10n.nastoolSubscribesMenuDelete, style: TextStyle(color: AppColors.error))])),
                 ],
               ),
             ),
@@ -1108,7 +1108,7 @@ class _DownloadsContentState extends ConsumerState<_DownloadsContent> with Singl
       children: [
         TabBar(
           controller: _tabController,
-          tabs: const [Tab(text: '进行中'), Tab(text: '历史')],
+tabs: [Tab(text: context.l10n.nastoolDownloadsTabActive), Tab(text: context.l10n.nastoolDownloadsTabHistory)],
           labelColor: AppColors.primary,
           indicatorColor: AppColors.primary,
         ),
@@ -1118,12 +1118,12 @@ class _DownloadsContentState extends ConsumerState<_DownloadsContent> with Singl
             children: [
               downloadsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('加载失败: $e')),
+          error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
                 data: (downloads) => _buildDownloadList(context, downloads),
               ),
               historyAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('加载失败: $e')),
+          error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
                 data: (history) => _buildHistoryList(context, history),
               ),
             ],
@@ -1141,7 +1141,7 @@ class _DownloadsContentState extends ConsumerState<_DownloadsContent> with Singl
           children: [
             Icon(Icons.download_done_rounded, size: 64, color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
             const SizedBox(height: AppSpacing.md),
-            Text('暂无下载任务', style: context.textTheme.titleMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)),
+Text(context.l10n.nastoolDownloadsNoTasks, style: context.textTheme.titleMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)),
           ],
         ),
       );
@@ -1180,12 +1180,12 @@ class _DownloadsContentState extends ConsumerState<_DownloadsContent> with Singl
                       IconButton(
                         icon: Icon(task.isCompleted ? Icons.check_circle : Icons.pause_rounded, size: 20),
                         onPressed: task.isCompleted ? null : () => ref.read(nastoolActionsProvider(widget.sourceId)).stopDownload(task.id),
-                        tooltip: '暂停',
+tooltip: context.l10n.nastoolDownloadsPause,
                       ),
                       IconButton(
                         icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.error),
                         onPressed: () => ref.read(nastoolActionsProvider(widget.sourceId)).removeDownload(task.id),
-                        tooltip: '删除',
+tooltip: context.l10n.nastoolDownloadsDelete,
                       ),
                     ],
                   ),
@@ -1200,7 +1200,7 @@ class _DownloadsContentState extends ConsumerState<_DownloadsContent> with Singl
 
   Widget _buildHistoryList(BuildContext context, List<NtDownloadHistory> history) {
     if (history.isEmpty) {
-      return Center(child: Text('暂无下载历史', style: context.textTheme.titleMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)));
+return Center(child: Text(context.l10n.nastoolDownloadsNoHistory, style: context.textTheme.titleMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)));
     }
 
     return ListView.builder(
@@ -1285,7 +1285,7 @@ class _SearchContentState extends ConsumerState<_SearchContent> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: '搜索资源...',
+hintText: context.l10n.nastoolSearchHint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _isSearching
                     ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
@@ -1299,9 +1299,9 @@ class _SearchContentState extends ConsumerState<_SearchContent> {
               child: _isSearching
                   ? const Center(child: CircularProgressIndicator())
                   : _error != null
-                      ? Center(child: Text('搜索失败: $_error'))
+? Center(child: Text(context.l10n.nastoolSearchFailed(_error ?? 'Unknown')))
                       : _results.isEmpty
-                          ? Center(child: Text('输入关键词搜索资源', style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
+? Center(child: Text(context.l10n.nastoolSearchInputKeyword, style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
                           : ListView.builder(
                               itemCount: _results.length,
                               itemBuilder: (context, index) {
@@ -1318,7 +1318,7 @@ class _SearchContentState extends ConsumerState<_SearchContent> {
                                           )
                                         : null,
                                     title: Text(r.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-                                    subtitle: Text('${r.year ?? ""} • ${r.torrents.length}个分组 • $torrentCount个资源'),
+subtitle: Text('${r.year ?? ""} • ${r.torrents.length}个分组 • ${context.l10n.nastoolSearchResultGroupCount(torrentCount)}'),
                                     trailing: const Icon(Icons.chevron_right_rounded),
                                     onTap: () => _showTorrentDetail(r),
                                   ),
@@ -1383,7 +1383,7 @@ class _TorrentDetailSheet extends ConsumerWidget {
           // 种子列表
           Expanded(
             child: media.torrents.isEmpty
-                ? const Center(child: Text('暂无可用资源'))
+                ? Center(child: Text(context.l10n.nastoolSearchNoAvailableResources))
                 : ListView.builder(
                     controller: scrollController,
                     padding: const EdgeInsets.all(AppSpacing.md),
@@ -1435,7 +1435,7 @@ class _TorrentDetailSheet extends ConsumerWidget {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                         decoration: BoxDecoration(color: AppColors.success, borderRadius: BorderRadius.circular(2)),
-                                        child: const Text('免费', style: TextStyle(color: Colors.white, fontSize: 10)),
+child: Text(context.l10n.nastoolSearchFreeTag, style: TextStyle(color: Colors.white, fontSize: 10)),
                                       ),
                                     if (torrent.is2xUpload)
                                       Container(
@@ -1451,7 +1451,7 @@ class _TorrentDetailSheet extends ConsumerWidget {
                                 onPressed: torrent.enclosure != null ? () async {
                                   await ref.read(nastoolActionsProvider(sourceId)).downloadResource(enclosure: torrent.enclosure!, title: torrent.title);
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已添加下载任务')));
+ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.l10n.nastoolSearchAddedToDownloads)));
                                   }
                                 } : null,
                               ),
@@ -1516,7 +1516,7 @@ class _MediaContentState extends ConsumerState<_MediaContent> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: '搜索电影/剧集 (TMDB/豆瓣)...',
+hintText: context.l10n.nastoolMediaSearchHint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: IconButton(icon: const Icon(Icons.send_rounded), onPressed: _searchMedia),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -1533,7 +1533,7 @@ class _MediaContentState extends ConsumerState<_MediaContent> {
                           children: [
                             Icon(Icons.movie_filter_rounded, size: 64, color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
                             const SizedBox(height: AppSpacing.md),
-                            Text('搜索电影或剧集添加到订阅', style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)),
+Text(context.l10n.nastoolMediaEmptyTitle, style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)),
                           ],
                         ))
                       : GridView.builder(
@@ -1561,7 +1561,7 @@ class _MediaContentState extends ConsumerState<_MediaContent> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(m.title ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
-                                          Text('${m.year ?? ""} • ${m.type == 'movie' ? '电影' : '剧集'}', style: context.textTheme.bodySmall?.copyWith(fontSize: 10)),
+Text('${m.year ?? ""} • ${m.type == 'movie' ? context.l10n.nastoolMediaTypeMovie : context.l10n.nastoolMediaTypeTV}', style: context.textTheme.bodySmall?.copyWith(fontSize: 10)),
                                         ],
                                       ),
                                     ),
@@ -1586,7 +1586,7 @@ class _MediaContentState extends ConsumerState<_MediaContent> {
             ListTile(title: Text(media.title ?? '', style: const TextStyle(fontWeight: FontWeight.bold))),
             ListTile(
               leading: const Icon(Icons.bookmark_add_rounded),
-              title: const Text('添加订阅'),
+title: Text(context.l10n.nastoolMediaActionsAddSubscription),
               onTap: () {
                 Navigator.pop(context);
                 ref.read(nastoolActionsProvider(widget.sourceId)).addSubscribe(
@@ -1599,7 +1599,7 @@ class _MediaContentState extends ConsumerState<_MediaContent> {
             ),
             ListTile(
               leading: const Icon(Icons.search_rounded),
-              title: const Text('搜索资源'),
+title: Text(context.l10n.nastoolMediaActionsSearchResources),
               onTap: () {
                 Navigator.pop(context);
                 _searchController.text = media.title ?? '';
@@ -1628,10 +1628,10 @@ class _SitesContent extends ConsumerWidget {
 
     return sitesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('加载失败: $e')),
+error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
       data: (sites) {
         if (sites.isEmpty) {
-          return Center(child: Text('暂无站点', style: context.textTheme.titleMedium?.copyWith(color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)));
+return Center(child: Text(context.l10n.nastoolSitesNoSites, style: context.textTheme.titleMedium?.copyWith(color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)));
         }
 
         final statsMap = <String, NtSiteStatistics>{};
@@ -1670,19 +1670,19 @@ class _SitesContent extends ConsumerWidget {
                     onPressed: () async {
                       // 显示测试中状态
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('正在测试连接...'), duration: Duration(seconds: 1)),
+SnackBar(content: Text(context.l10n.nastoolSitesTestingConnection), duration: Duration(seconds: 1)),
                       );
                       final success = await ref.read(nastoolActionsProvider(sourceId)).testSite(site.id);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(success ? '连接成功' : '连接失败'),
+content: Text(success ? context.l10n.nastoolSitesConnectionSuccess : context.l10n.nastoolSitesConnectionFailed),
                             backgroundColor: success ? AppColors.success : AppColors.error,
                           ),
                         );
                       }
                     },
-                    tooltip: '测试连接',
+tooltip: context.l10n.nastoolSitesTestTooltip,
                   ),
                 ),
               );
@@ -1735,7 +1735,7 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
         children: [
           TabBar(
             controller: _tabController,
-            tabs: const [Tab(text: 'RSS订阅'), Tab(text: '刷流任务'), Tab(text: '插件')],
+tabs: [Tab(text: context.l10n.nastoolAdvancedTabRss), Tab(text: context.l10n.nastoolAdvancedTabBrushTask), Tab(text: context.l10n.nastoolAdvancedTabPlugins)],
             labelColor: AppColors.primary,
             indicatorColor: AppColors.primary,
           ),
@@ -1756,7 +1756,7 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
     final rssAsync = ref.watch(nastoolRssTasksProvider(widget.sourceId));
     return rssAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('加载失败: $e')),
+error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
       data: (tasks) => tasks.isEmpty
           ? Center(child: Text('暂无RSS任务', style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
           : ListView.builder(
@@ -1769,7 +1769,7 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
                   child: ListTile(
                     leading: Icon(Icons.rss_feed_rounded, color: t.state == 'Y' ? AppColors.success : AppColors.lightOnSurfaceVariant),
                     title: Text(t.name),
-                    subtitle: Text('间隔: ${t.interval}分钟'),
+subtitle: Text(context.l10n.nastoolAdvancedRssInterval(t.interval ?? 0)),
                     trailing: IconButton(
                       icon: const Icon(Icons.preview_rounded),
                       onPressed: () async {
@@ -1782,11 +1782,11 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
                               height: 300,
                               child: ListView(children: articles.map((a) => ListTile(title: Text(a.title ?? '', maxLines: 2))).toList()),
                             ),
-                            actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('关闭'))],
+actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.nastoolAdvancedRssPreviewDialogClose))],
                           )));
                         }
                       },
-                      tooltip: '预览',
+tooltip: context.l10n.nastoolAdvancedRssPreviewTooltip,
                     ),
                   ),
                 );
@@ -1799,7 +1799,7 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
     final brushAsync = ref.watch(nastoolBrushTasksProvider(widget.sourceId));
     return brushAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('加载失败: $e')),
+error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
       data: (tasks) => tasks.isEmpty
           ? Center(child: Text('暂无刷流任务', style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
           : ListView.builder(
@@ -1812,8 +1812,8 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
                   child: ListTile(
                     leading: Icon(Icons.speed_rounded, color: t.state == 'Y' ? AppColors.success : AppColors.lightOnSurfaceVariant),
                     title: Text(t.name),
-                    subtitle: Text('保种: ${t.totalSize ?? 0}GB • 间隔: ${t.interval}分钟'),
-                    trailing: IconButton(icon: Icon(Icons.play_circle_rounded, color: AppColors.primary), onPressed: () => ref.read(nastoolActionsProvider(widget.sourceId)).runBrushTask(int.tryParse(t.id) ?? 0), tooltip: '运行'),
+subtitle: Text(context.l10n.nastoolAdvancedBrushSubtitle(t.totalSize ?? 0, t.interval ?? 0)),
+trailing: IconButton(icon: Icon(Icons.play_circle_rounded, color: AppColors.primary), onPressed: () => ref.read(nastoolActionsProvider(widget.sourceId)).runBrushTask(int.tryParse(t.id) ?? 0), tooltip: context.l10n.nastoolAdvancedBrushRunTooltip),
                   ),
                 );
               },
@@ -1825,7 +1825,7 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
     final pluginsAsync = ref.watch(nastoolPluginsProvider(widget.sourceId));
     return pluginsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('加载失败: $e')),
+error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
       data: (plugins) => plugins.isEmpty
           ? Center(child: Text('暂无已安装插件', style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
           : ListView.builder(
@@ -1846,7 +1846,7 @@ class _AdvancedContentState extends ConsumerState<_AdvancedContent> with SingleT
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: AppColors.error),
                       onPressed: () => ref.read(nastoolActionsProvider(widget.sourceId)).uninstallPlugin(p.id),
-                      tooltip: '卸载',
+tooltip: context.l10n.nastoolAdvancedPluginsUninstallTooltip,
                     ),
                   ),
                 );
@@ -1882,12 +1882,12 @@ class _SettingsContent extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('系统信息', style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+Text(context.l10n.nastoolSettingsSystemInfoTitle, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: AppSpacing.md),
-                  _buildInfoRow(context, '版本', sys.version ?? '未知'),
-                  if (sys.latestVersion != null) _buildInfoRow(context, '最新版本', sys.latestVersion!),
-                  if (sys.totalSpace != null) _buildInfoRow(context, '总空间', _formatBytes(sys.totalSpace!)),
-                  if (sys.freeSpace != null) _buildInfoRow(context, '可用空间', _formatBytes(sys.freeSpace!)),
+_buildInfoRow(context, context.l10n.nastoolSettingsVersion, sys.version ?? context.l10n.nastoolSettingsUnknown),
+if (sys.latestVersion != null) _buildInfoRow(context, context.l10n.nastoolSettingsLatestVersion, sys.latestVersion!),
+if (sys.totalSpace != null) _buildInfoRow(context, context.l10n.nastoolSettingsTotalSpace, _formatBytes(sys.totalSpace!)),
+if (sys.freeSpace != null) _buildInfoRow(context, context.l10n.nastoolSettingsAvailableSpace, _formatBytes(sys.freeSpace!)),
                 ],
               ),
             ),
@@ -1904,43 +1904,43 @@ class _SettingsContent extends ConsumerWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
-                child: Text('同步目录', style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+child: Text(context.l10n.nastoolSettingsSyncDirectoriesTitle, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               ),
               syncDirsAsync.when(
                 data: (dirs) => dirs.isEmpty
-                    ? const Padding(padding: EdgeInsets.all(AppSpacing.md), child: Text('暂无同步目录'))
+                    ? Padding(padding: EdgeInsets.all(AppSpacing.md), child: Text(context.l10n.nastoolSettingsNoSyncDirs))
                     : Column(
                         children: dirs.map((d) => ListTile(
                           leading: Icon(Icons.folder_rounded, color: d.isEnabled ? AppColors.success : AppColors.lightOnSurfaceVariant),
                           title: Text(d.name ?? d.from ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-                          subtitle: Text('${d.from ?? ''} → ${d.to ?? "媒体库"}', maxLines: 1, overflow: TextOverflow.ellipsis),
+subtitle: Text('${d.from ?? ''} → ${d.to ?? context.l10n.nastoolSettingsSyncDirTarget}', maxLines: 1, overflow: TextOverflow.ellipsis),
                           trailing: IconButton(
                             icon: const Icon(Icons.sync_rounded),
                             onPressed: d.id != null ? () async {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('正在同步...'), duration: Duration(seconds: 1)),
+SnackBar(content: Text(context.l10n.nastoolSettingsSyncing), duration: Duration(seconds: 1)),
                               );
                               try {
                                 await actions.runSyncDir(d.id!);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('同步已启动'), backgroundColor: AppColors.success),
+SnackBar(content: Text(context.l10n.nastoolSettingsSyncStarted), backgroundColor: AppColors.success),
                                   );
                                 }
                               } catch (e) {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('同步失败: $e'), backgroundColor: AppColors.error),
+SnackBar(content: Text(context.l10n.nastoolSettingsSyncFailed(e.toString())), backgroundColor: AppColors.error),
                                   );
                                 }
                               }
                             } : null,
-                            tooltip: '同步',
+tooltip: context.l10n.nastoolSettingsSyncTooltip,
                           ),
                         )).toList(),
                       ),
                 loading: () => const Padding(padding: EdgeInsets.all(AppSpacing.md), child: Center(child: CircularProgressIndicator())),
-                error: (_, _) => const Padding(padding: EdgeInsets.all(AppSpacing.md), child: Text('加载失败')),
+error: (_, _) => Padding(padding: EdgeInsets.all(AppSpacing.md), child: Text(context.l10n.nastoolSettingsLoadFailed)),
               ),
             ],
           ),
@@ -1951,18 +1951,18 @@ class _SettingsContent extends ConsumerWidget {
         Card(
           child: Column(
             children: [
-              ListTile(leading: const Icon(Icons.refresh_rounded), title: const Text('刷新媒体库'), subtitle: const Text('同步媒体库数据'), onTap: actions.refreshLibrary),
+ListTile(leading: Icon(Icons.refresh_rounded), title: Text(context.l10n.nastoolSettingsRefreshLibraryTitle), subtitle: Text(context.l10n.nastoolSettingsRefreshLibrarySubtitle), onTap: actions.refreshLibrary),
               const Divider(height: 1),
-              ListTile(leading: const Icon(Icons.update_rounded), title: const Text('检查更新'), subtitle: const Text('检查 NASTool 更新'), onTap: () async {
+ListTile(leading: Icon(Icons.update_rounded), title: Text(context.l10n.nastoolSettingsCheckUpdateTitle), subtitle: Text(context.l10n.nastoolSettingsCheckUpdateSubtitle), onTap: () async {
                 final hasUpdate = await actions.checkUpdate();
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(hasUpdate ? '发现新版本' : '已是最新版本')));
+ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(hasUpdate ? context.l10n.nastoolSettingsFoundNewVersion : context.l10n.nastoolDashboardAlreadyLatest)));
                 }
               }),
               const Divider(height: 1),
-              ListTile(leading: const Icon(Icons.restart_alt_rounded, color: AppColors.warning), title: const Text('重启服务'), onTap: () => _showConfirmDialog(context, '确定要重启 NASTool 服务吗?', actions.restartService)),
+ListTile(leading: Icon(Icons.restart_alt_rounded, color: AppColors.warning), title: Text(context.l10n.nastoolSettingsRestartServiceTitle), onTap: () => _showConfirmDialog(context, context.l10n.nastoolSettingsRestartServiceConfirm, actions.restartService)),
               const Divider(height: 1),
-              ListTile(leading: const Icon(Icons.logout_rounded, color: AppColors.error), title: const Text('退出登录'), onTap: () => Navigator.pop(context)),
+ListTile(leading: Icon(Icons.logout_rounded, color: AppColors.error), title: Text(context.l10n.nastoolSettingsLogoutTitle), onTap: () => Navigator.pop(context)),
             ],
           ),
         ),
@@ -1993,11 +1993,11 @@ class _SettingsContent extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认'),
+title: Text(context.l10n.nastoolConfirmDialogTitle),
         content: Text(message),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
-          TextButton(onPressed: () { Navigator.pop(context); onConfirm(); }, child: const Text('确定')),
+TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.nastoolConfirmDialogCancel)),
+TextButton(onPressed: () { Navigator.pop(context); onConfirm(); }, child: Text(context.l10n.nastoolConfirmDialogOk)),
         ],
       ),
     );

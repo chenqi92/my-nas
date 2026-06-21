@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/transfer/domain/entities/transfer_task.dart';
 
 /// 传输任务列表项
@@ -60,7 +61,7 @@ class TransferTaskTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                _buildStatusBadge(colorScheme),
+                _buildStatusBadge(context, colorScheme),
               ],
             ),
 
@@ -91,7 +92,7 @@ class TransferTaskTile extends StatelessWidget {
                     const Spacer(),
                     if (_etaText(task) != null)
                       Text(
-                        '剩余 ${_etaText(task)}',
+                        context.l10n.transferTaskTimeRemaining(_etaText(task) ?? ''),
                         style: TextStyle(
                           fontSize: 11,
                           color: colorScheme.onSurfaceVariant,
@@ -110,27 +111,27 @@ class TransferTaskTile extends StatelessWidget {
                 if (task.canPause)
                   _buildActionButton(
                     icon: Icons.pause_rounded,
-                    label: '暂停',
+                    label: context.l10n.transferTaskActionPause,
                     onTap: onPause,
                   ),
                 if (task.canResume)
                   _buildActionButton(
                     icon: Icons.play_arrow_rounded,
-                    label: '继续',
+                    label: context.l10n.transferTaskActionResume,
                     onTap: onResume,
                   ),
                 // 重试按钮
                 if (task.canRetry)
                   _buildActionButton(
                     icon: Icons.refresh_rounded,
-                    label: '重试',
+                    label: context.l10n.transferTaskActionRetry,
                     onTap: onRetry,
                   ),
                 // 取消按钮
                 if (task.canCancel)
                   _buildActionButton(
                     icon: Icons.close_rounded,
-                    label: '取消',
+                    label: context.l10n.transferTaskActionCancel,
                     onTap: onCancel,
                   ),
                 // 删除按钮（完成或取消后）
@@ -139,7 +140,7 @@ class TransferTaskTile extends StatelessWidget {
                     task.isFailed)
                   _buildActionButton(
                     icon: Icons.delete_outline,
-                    label: '删除',
+                    label: context.l10n.transferTaskActionDelete,
                     onTap: onDelete,
                   ),
               ],
@@ -187,15 +188,15 @@ class TransferTaskTile extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(ColorScheme colorScheme) {
+  Widget _buildStatusBadge(BuildContext context, ColorScheme colorScheme) {
     final (text, bgColor, textColor) = switch (task.status) {
-      TransferStatus.pending => ('等待中', colorScheme.surfaceContainerHighest, colorScheme.onSurfaceVariant),
-      TransferStatus.queued => ('排队中', colorScheme.primaryContainer, colorScheme.onPrimaryContainer),
+      TransferStatus.pending => (context.l10n.transferTaskStatusPending, colorScheme.surfaceContainerHighest, colorScheme.onSurfaceVariant),
+      TransferStatus.queued => (context.l10n.transferTaskStatusQueued, colorScheme.primaryContainer, colorScheme.onPrimaryContainer),
       TransferStatus.transferring => (task.progressText, colorScheme.primaryContainer, colorScheme.onPrimaryContainer),
-      TransferStatus.paused => ('已暂停', colorScheme.secondaryContainer, colorScheme.onSecondaryContainer),
-      TransferStatus.completed => ('已完成', colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
-      TransferStatus.failed => ('失败', colorScheme.errorContainer, colorScheme.onErrorContainer),
-      TransferStatus.cancelled => ('已取消', colorScheme.surfaceContainerHighest, colorScheme.onSurfaceVariant),
+      TransferStatus.paused => (context.l10n.transferTaskStatusPaused, colorScheme.secondaryContainer, colorScheme.onSecondaryContainer),
+      TransferStatus.completed => (context.l10n.transferTaskStatusCompleted, colorScheme.tertiaryContainer, colorScheme.onTertiaryContainer),
+      TransferStatus.failed => (context.l10n.transferTaskStatusFailed, colorScheme.errorContainer, colorScheme.onErrorContainer),
+      TransferStatus.cancelled => (context.l10n.transferTaskStatusCancelled, colorScheme.surfaceContainerHighest, colorScheme.onSurfaceVariant),
     };
 
     return Container(

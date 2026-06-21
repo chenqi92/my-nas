@@ -22,7 +22,7 @@ Future<void> launchPtSearchForMedia(
 }) async {
   final trimmed = query.trim();
   if (trimmed.isEmpty) {
-    context.showToast('未提供搜索关键词');
+    context.showToast(context.l10n.ptSearchNoKeywordToast);
     return;
   }
 
@@ -33,7 +33,7 @@ Future<void> launchPtSearchForMedia(
       .toList();
 
   if (ptSites.isEmpty) {
-    context.showToast('尚未添加任何 PT 站点');
+    context.showToast(context.l10n.ptSearchNoSitesConfiguredToast);
     return;
   }
 
@@ -55,7 +55,7 @@ Future<void> launchPtSearchForMedia(
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '在哪个 PT 站搜索 "$trimmed"？',
+                      context.l10n.ptSearchSelectSiteDialogTitle(trimmed),
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,

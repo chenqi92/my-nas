@@ -68,20 +68,23 @@ class SubscriptionDetailSheet extends ConsumerWidget {
                               spacing: 8,
                               runSpacing: 4,
                               children: [
-                                AppTag(sub.isMovie ? '电影' : '剧集'),
+                                AppTag(sub.isMovie ? context.l10n.nastoolDetailSheetTypeMovie : context.l10n.nastoolDetailSheetTypeSeries),
                                 if (sub.year != null)
                                   AppTag(sub.year!, variant: TagVariant.neutral),
                                 if (sub.seasonDisplay != null)
                                   AppTag(sub.seasonDisplay!,
                                       variant: TagVariant.neutral),
                                 if (sub.isCompleted)
-                                  const AppTag('已完成', variant: TagVariant.free),
+                                  AppTag(context.l10n.nastoolDetailSheetCompleted, variant: TagVariant.free),
                               ],
                             ),
                             const SizedBox(height: 14),
                             if (sub.isTv && sub.totalEp != null) ...[
                               Text(
-                                '剧集进度 · ${sub.currentEp ?? 0}/${sub.totalEp}',
+                                context.l10n.nastoolDetailSheetEpisodeProgress(
+                                  sub.currentEp ?? 0,
+                                  sub.totalEp!,
+                                ),
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -108,7 +111,7 @@ class SubscriptionDetailSheet extends ConsumerWidget {
                             if (sub.sites != null && sub.sites!.isNotEmpty) ...[
                               const SizedBox(height: 12),
                               Text(
-                                '站点：${sub.sites}',
+                                context.l10n.nastoolDetailSheetSitesLabel(sub.sites!),
                                 style:
                                     TextStyle(fontSize: 12, color: t.text2),
                               ),
@@ -130,13 +133,13 @@ class SubscriptionDetailSheet extends ConsumerWidget {
                     OutlinedButton.icon(
                       onPressed: () => _delete(context, ref),
                       icon: const Icon(Icons.delete_outline_rounded, size: 15),
-                      label: const Text('删除订阅'),
+                      label: Text(context.l10n.nastoolDetailSheetDeleteButton),
                     ),
                     const Spacer(),
                     FilledButton.icon(
                       onPressed: () => _search(context, ref),
                       icon: const Icon(Icons.search_rounded, size: 16),
-                      label: const Text('立即搜索资源'),
+                      label: Text(context.l10n.nastoolDetailSheetSearchButton),
                     ),
                   ],
                 ),
@@ -155,10 +158,10 @@ class SubscriptionDetailSheet extends ConsumerWidget {
           .searchSubscribe(sub.id, sub.type);
       if (context.mounted) {
         Navigator.of(context).pop();
-        context.showSuccessToast('已触发资源搜索');
+        context.showSuccessToast(context.l10n.nastoolDetailSheetSearchTriggered);
       }
     } on Object catch (e) {
-      if (context.mounted) context.showErrorToast('搜索失败：$e');
+      if (context.mounted) context.showErrorToast(context.l10n.nastoolDetailSheetSearchFailed(e));
     }
   }
 
@@ -170,10 +173,10 @@ class SubscriptionDetailSheet extends ConsumerWidget {
       ref.invalidate(nastoolSubscribesProvider(sourceId));
       if (context.mounted) {
         Navigator.of(context).pop();
-        context.showSuccessToast('已删除订阅');
+        context.showSuccessToast(context.l10n.nastoolDetailSheetDeleteSuccess);
       }
     } on Object catch (e) {
-      if (context.mounted) context.showErrorToast('删除失败：$e');
+      if (context.mounted) context.showErrorToast(context.l10n.nastoolDetailSheetDeleteFailed(e));
     }
   }
 }

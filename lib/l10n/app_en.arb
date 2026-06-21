@@ -3938,5 +3938,589 @@
   "sourcesConnectionRefused": "Connection refused, please check address and port",
   "sourcesConnectionTimeout": "Connection timeout, please check network",
   "sourcesNetworkConnectionFailed": "Network connection failed, please check network settings",
-  "sourcesSslHandshakeFailed": "SSL handshake failed, please check SSL settings"
+  "sourcesSslHandshakeFailed": "SSL handshake failed, please check SSL settings",
+  "nastoolNavDashboard": "Dashboard",
+  "nastoolNavSubscribe": "Subscribe",
+  "nastoolNavDownload": "Download",
+  "nastoolNavSearch": "Search",
+  "nastoolNavMedia": "Media",
+  "nastoolNavSites": "Sites",
+  "nastoolNavAdvanced": "Advanced",
+  "nastoolNavSettings": "Settings",
+  "nastoolNavBack": "Back",
+  "nastoolRefresh": "Refresh",
+  "nastoolConnectionConnected": "Connected",
+  "nastoolDashboardLoadFailed": "Load failed: {error}",
+  "@nastoolDashboardLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolDashboardMediaStats": "Media Library Stats",
+  "nastoolDashboardSiteStats": "Site Statistics",
+  "nastoolDashboardNoSiteData": "No site data",
+  "nastoolDashboardRecentTransfers": "Recent Transfers",
+  "nastoolDashboardNoTransferRecords": "No transfer records",
+  "nastoolDashboardVersion": "Version {version}",
+  "@nastoolDashboardVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "nastoolDashboardSystemInfo": "System Information",
+  "nastoolDashboardCanUpdateTo": "Can update to {version}",
+  "@nastoolDashboardCanUpdateTo": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "nastoolDashboardAlreadyLatest": "Already the latest version",
+  "nastoolDashboardHasUpdate": "Update available",
+  "nastoolDashboardStorage": "Storage",
+  "nastoolDashboardStatsMovie": "Movies",
+  "nastoolDashboardStatsTV": "TV Series",
+  "nastoolDashboardStatsAnime": "Anime",
+  "nastoolDashboardStatsSubscriptions": "Subscriptions",
+  "nastoolDashboardStatsDownloading": "Downloading",
+  "nastoolDashboardStatsCompleted": "Completed",
+  "nastoolDashboardNoSites": "No sites",
+  "nastoolDashboardTotalUpload": "Total Upload",
+  "nastoolDashboardTotalDownload": "Total Download",
+  "nastoolDashboardSiteCount": "Site Count",
+  "nastoolSubscribesTabMovie": "Movies",
+  "nastoolSubscribesTabTV": "TV Series",
+  "nastoolSubscribesLoadFailed": "Load failed: {error}",
+  "@nastoolSubscribesLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolSubscribesEmptyMovie": "No movie subscriptions",
+  "nastoolSubscribesEmptyTV": "No TV subscriptions",
+  "nastoolSubscribersSeason": "Season {season}",
+  "@nastoolSubscribersSeason": {
+    "placeholders": {
+      "season": {
+        "type": "int"
+      }
+    }
+  },
+  "nastoolSubscribesMenuSearch": "Search Resources",
+  "nastoolSubscribesMenuDelete": "Delete",
+  "nastoolDownloadsTabActive": "In Progress",
+  "nastoolDownloadsTabHistory": "History",
+  "nastoolDownloadsLoadFailed": "Load failed: {error}",
+  "@nastoolDownloadsLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolDownloadsNoTasks": "No download tasks",
+  "nastoolDownloadsPause": "Pause",
+  "nastoolDownloadsDelete": "Delete",
+  "nastoolDownloadsNoHistory": "No download history",
+  "nastoolSearchHint": "Search resources...",
+  "nastoolSearchFailed": "Search failed: {error}",
+  "@nastoolSearchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolSearchInputKeyword": "Enter keywords to search for resources",
+  "nastoolSearchNoAvailableResources": "No available resources",
+  "nastoolSearchResultGroupCount": "{count} resources",
+  "@nastoolSearchResultGroupCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nastoolSearchFreeTag": "Free",
+  "nastoolSearchAddedToDownloads": "Added to downloads",
+  "nastoolMediaSearchHint": "Search movies/TV series (TMDB/Douban)...",
+  "nastoolMediaEmptyTitle": "Search and add to subscriptions",
+  "nastoolMediaTypeMovie": "Movie",
+  "nastoolMediaTypeTV": "TV Series",
+  "nastoolMediaActionsAddSubscription": "Add Subscription",
+  "nastoolMediaActionsSearchResources": "Search Resources",
+  "nastoolSitesNoSites": "No sites",
+  "nastoolSitesLoadFailed": "Load failed: {error}",
+  "@nastoolSitesLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolSitesTestingConnection": "Testing connection...",
+  "nastoolSitesConnectionSuccess": "Connection successful",
+  "nastoolSitesConnectionFailed": "Connection failed",
+  "nastoolSitesTestTooltip": "Test Connection",
+  "nastoolAdvancedTabRss": "RSS Subscriptions",
+  "nastoolAdvancedTabBrushTask": "Brush Tasks",
+  "nastoolAdvancedTabPlugins": "Plugins",
+  "nastoolAdvancedRssLoadFailed": "Load failed: {error}",
+  "@nastoolAdvancedRssLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolAdvancedRssNoTasks": "No RSS tasks",
+  "nastoolAdvancedRssInterval": "Interval: {minutes} minutes",
+  "@nastoolAdvancedRssInterval": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "nastoolAdvancedRssPreviewTooltip": "Preview",
+  "nastoolAdvancedRssPreviewDialogClose": "Close",
+  "nastoolAdvancedBrushLoadFailed": "Load failed: {error}",
+  "@nastoolAdvancedBrushLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolAdvancedBrushNoTasks": "No brush tasks",
+  "nastoolAdvancedBrushSubtitle": "Seeding: {size}GB • Interval: {minutes} minutes",
+  "@nastoolAdvancedBrushSubtitle": {
+    "placeholders": {
+      "size": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "nastoolAdvancedBrushRunTooltip": "Run",
+  "nastoolAdvancedPluginsLoadFailed": "Load failed: {error}",
+  "@nastoolAdvancedPluginsLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolAdvancedPluginsNoPlugins": "No installed plugins",
+  "nastoolAdvancedPluginsUninstallTooltip": "Uninstall",
+  "nastoolSettingsSystemInfoTitle": "System Information",
+  "nastoolSettingsVersion": "Version",
+  "nastoolSettingsLatestVersion": "Latest Version",
+  "nastoolSettingsTotalSpace": "Total Space",
+  "nastoolSettingsAvailableSpace": "Available Space",
+  "nastoolSettingsUnknown": "Unknown",
+  "nastoolSettingsSyncDirectoriesTitle": "Sync Directories",
+  "nastoolSettingsNoSyncDirs": "No sync directories",
+  "nastoolSettingsSyncDirTarget": "Media Library",
+  "nastoolSettingsSyncing": "Syncing...",
+  "nastoolSettingsSyncStarted": "Sync started",
+  "nastoolSettingsSyncFailed": "Sync failed: {error}",
+  "@nastoolSettingsSyncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolSettingsSyncTooltip": "Sync",
+  "nastoolSettingsLoadFailed": "Load failed",
+  "nastoolSettingsRefreshLibraryTitle": "Refresh Media Library",
+  "nastoolSettingsRefreshLibrarySubtitle": "Sync media library data",
+  "nastoolSettingsCheckUpdateTitle": "Check for Updates",
+  "nastoolSettingsCheckUpdateSubtitle": "Check NASTool updates",
+  "nastoolSettingsFoundNewVersion": "New version found",
+  "nastoolSettingsRestartServiceTitle": "Restart Service",
+  "nastoolSettingsRestartServiceConfirm": "Are you sure you want to restart the NASTool service?",
+  "nastoolSettingsLogoutTitle": "Logout",
+  "nastoolConfirmDialogTitle": "Confirm",
+  "nastoolConfirmDialogCancel": "Cancel",
+  "nastoolConfirmDialogOk": "Confirm",
+  "nastoolLoginPageUsernameLabel": "Username",
+  "nastoolLoginPageUsernameEmpty": "Please enter your username",
+  "nastoolLoginPagePasswordLabel": "Password",
+  "nastoolLoginPagePasswordEmpty": "Please enter your password",
+  "nastoolLoginPageRememberMe": "Remember login status",
+  "nastoolLoginPageLoginButton": "Sign In",
+  "nastoolLoginPageLoginFailed": "Sign in failed",
+  "nastoolAddSubscriptionSheetTitle": "Add Subscription",
+  "nastoolAddSubscriptionSearchHint": "Search movies / series…",
+  "nastoolAddSubscriptionSearchButton": "Search",
+  "nastoolAddSubscriptionEmptyHint": "Enter a name and search TMDB, then select from results to subscribe.",
+  "nastoolAddSubscriptionTagSeries": "Series",
+  "nastoolAddSubscriptionTagMovie": "Movie",
+  "nastoolAddSubscriptionTooltip": "Subscribe",
+  "nastoolAddSubscriptionSearchError": "Search failed: {error}",
+  "@nastoolAddSubscriptionSearchError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolAddSubscriptionSuccess": "Subscribed to \"{title}\"",
+  "@nastoolAddSubscriptionSuccess": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "nastoolAddSubscriptionError": "Subscription failed: {error}",
+  "@nastoolAddSubscriptionError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolDetailSheetTypeMovie": "Movie",
+  "nastoolDetailSheetTypeSeries": "Series",
+  "nastoolDetailSheetCompleted": "Completed",
+  "nastoolDetailSheetEpisodeProgress": "Episode Progress · {current}/{total}",
+  "@nastoolDetailSheetEpisodeProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "nastoolDetailSheetSitesLabel": "Sites: {sites}",
+  "@nastoolDetailSheetSitesLabel": {
+    "placeholders": {
+      "sites": {
+        "type": "String"
+      }
+    }
+  },
+  "nastoolDetailSheetDeleteButton": "Delete Subscription",
+  "nastoolDetailSheetSearchButton": "Search Resources Now",
+  "nastoolDetailSheetSearchTriggered": "Resource search triggered",
+  "nastoolDetailSheetSearchFailed": "Search failed: {error}",
+  "@nastoolDetailSheetSearchFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolDetailSheetDeleteSuccess": "Subscription deleted",
+  "nastoolDetailSheetDeleteFailed": "Delete failed: {error}",
+  "@nastoolDetailSheetDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSearchNoKeywordToast": "No search keyword provided",
+  "ptSearchNoSitesConfiguredToast": "No PT sites configured yet",
+  "ptSearchSelectSiteDialogTitle": "Search \"{query}\" on which PT site?",
+  "@ptSearchSelectSiteDialogTitle": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "ptSiteDetailSearchHint": "Search torrents...",
+  "ptSiteDetailRefresh": "Refresh",
+  "ptSiteDetailUserInfo": "User Info",
+  "ptSiteDetailTransferList": "Transfer List",
+  "ptSiteDetailConnecting": "Connecting...",
+  "ptSiteDetailConnectFailed": "Connection Failed",
+  "ptSiteDetailUnknownError": "Unknown Error",
+  "ptSiteDetailRetry": "Retry",
+  "ptSiteDetailNoTorrent": "No torrents",
+  "ptSiteDetailNoMatchTorrent": "No matching torrents",
+  "ptSiteDetailFilterCategory": "Filter Categories",
+  "ptSiteDetailAllCategories": "All",
+  "ptSiteDetailSortMethod": "Sort By",
+  "ptSiteDetailAscending": "Ascending",
+  "ptSiteDetailDescending": "Descending",
+  "ptSiteDetailSortUploadTime": "Upload Time",
+  "ptSiteDetailSortSize": "Size",
+  "ptSiteDetailSortSeeders": "Seeders",
+  "ptSiteDetailSortLeechers": "Leechers",
+  "ptSiteDetailSortSnatched": "Completed",
+  "ptSiteDetailStatSize": "Size",
+  "ptSiteDetailStatSeeding": "Seeders",
+  "ptSiteDetailStatDownloading": "Leechers",
+  "ptSiteDetailStatCompleted": "Completed",
+  "ptSiteDetailCategory": "Category",
+  "ptSiteDetailSubCategory": "Subcategory",
+  "ptSiteDetailImdb": "IMDB",
+  "ptSiteDetailDouban": "Douban",
+  "ptSiteDetailTorrentId": "Torrent ID",
+  "ptSiteDetailIntroduction": "Description",
+  "ptSiteDetailCopyLink": "Copy Link",
+  "ptSiteDetailDownload": "Download",
+  "ptSiteDetailRemaining": "Remaining {time}",
+  "@ptSiteDetailRemaining": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "ptSiteDetailCopyUrlSuccess": "Download URL copied to clipboard",
+  "ptSiteDetailCopyUrlFailed": "Failed to get download URL: {error}",
+  "@ptSiteDetailCopyUrlFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "ptSiteDetailDataOverview": "Data Stats",
+  "ptSiteDetailActivityData": "Activity Data",
+  "ptSiteDetailAccountInfo": "Account Info",
+  "ptSiteDetailUploadAmount": "Uploaded",
+  "ptSiteDetailDownloadAmount": "Downloaded",
+  "ptSiteDetailShareRatio": "Share Ratio",
+  "ptSiteDetailBonus": "Bonus Points",
+  "ptSiteDetailSeedingCount": "Seeding",
+  "ptSiteDetailLeechingCount": "Leeching",
+  "ptSiteDetailInviteCount": "Invites",
+  "ptSiteDetailJoinTime": "Join Date",
+  "ptSiteDetailLastAccess": "Last Access",
+  "ptSiteDetailTimeFormatMinutesAgo": "{n} minutes ago",
+  "@ptSiteDetailTimeFormatMinutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ptSiteDetailTimeFormatHoursAgo": "{n} hours ago",
+  "@ptSiteDetailTimeFormatHoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ptSiteDetailTimeFormatDaysAgo": "{n} days ago",
+  "@ptSiteDetailTimeFormatDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "ptSiteDetailTransferOverview": "Overview",
+  "ptSiteDetailTransferTotalUpload": "Total Uploaded",
+  "ptSiteDetailTransferTotalDownload": "Total Downloaded",
+  "ptSiteDetailTransferSeeding": "Seeding",
+  "ptSiteDetailTransferLeeching": "Leeching",
+  "ptSiteDetailTransferLogsList": "{type} List",
+  "@ptSiteDetailTransferLogsList": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "ptSiteDetailNoData": "No {type} data",
+  "@ptSiteDetailNoData": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "ptSiteDetailEmptyData": "No data",
+  "ptSiteDetailNotConnected": "Not connected",
+  "ptSitesListTitle": "Sites",
+  "ptSitesListEmptyTitle": "No sites added yet",
+  "ptSitesListEmptySubtitle": "Add resource sites to subscribe and download content",
+  "ptSendToDownloaderSheetTitle": "Send to Downloader",
+  "ptSendToDownloaderEmptyTitle": "No downloaders added yet",
+  "ptSendToDownloaderEmptyDescription": "Add qBittorrent, Transmission, or Aria2 in Settings first",
+  "ptSendToDownloaderSelectLabel": "Select downloader",
+  "ptSendToDownloaderPauseAfterAdd": "Pause after adding",
+  "ptSendToDownloaderPauseAfterAddDesc": "Don't start downloading immediately after adding the torrent",
+  "ptSendToDownloaderCopySuccess": "Download link copied to clipboard",
+  "ptSendToDownloaderCopyButton": "Copy link",
+  "ptSendToDownloaderSendButton": "Send",
+  "cacheListViewCaching": "Caching",
+  "cacheListViewCached": "Cached",
+  "cacheListViewClearAll": "Clear All",
+  "cacheListViewEmpty": "No cached content",
+  "cacheListViewEmptyHint": "Cached music and videos can be played offline",
+  "cacheListViewUsed": "Cache used",
+  "cacheListViewCount": "Cache count",
+  "cacheListViewCountValue": "{count} items",
+  "@cacheListViewCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cacheListViewMediaTypePhoto": "Photos",
+  "cacheListViewMediaTypeMusic": "Music",
+  "cacheListViewMediaTypeVideo": "Videos",
+  "cacheListViewMediaTypeBook": "Books",
+  "cacheListViewMediaTypeComic": "Comics",
+  "cacheListViewMediaTypeNote": "Notes",
+  "transferTaskActionPause": "Pause",
+  "transferTaskActionResume": "Resume",
+  "transferTaskActionRetry": "Retry",
+  "transferTaskActionCancel": "Cancel",
+  "transferTaskActionDelete": "Delete",
+  "transferTaskStatusPending": "Pending",
+  "transferTaskStatusQueued": "Queued",
+  "transferTaskStatusPaused": "Paused",
+  "transferTaskStatusCompleted": "Completed",
+  "transferTaskStatusFailed": "Failed",
+  "transferTaskStatusCancelled": "Cancelled",
+  "transferTaskTimeRemaining": "Remaining {time}",
+  "@transferTaskTimeRemaining": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "transferTargetPickerTitle": "Select upload target",
+  "transferTargetPickerEmptyStateTitle": "No available upload targets",
+  "transferTargetPickerEmptyStateHint": "Please connect to NAS or cloud storage first",
+  "transferTargetPickerNoLibraryConfig": "No {mediaType} library configured for this source",
+  "@transferTargetPickerNoLibraryConfig": {
+    "placeholders": {
+      "mediaType": {
+        "type": "String"
+      }
+    }
+  },
+  "transferTargetPickerSelectOtherDirectory": "Select other directory...",
+  "transferMediaTypePhoto": "Photo",
+  "transferMediaTypeMusic": "Music",
+  "transferMediaTypeVideo": "Video",
+  "transferMediaTypeBook": "Book",
+  "transferMediaTypeComic": "Comic",
+  "transferMediaTypeNote": "Note",
+  "transferDirectoryBrowserCreateFolderTitle": "New Folder",
+  "transferDirectoryBrowserCreateFolderHint": "Folder name",
+  "transferDirectoryBrowserCancel": "Cancel",
+  "transferDirectoryBrowserCreate": "Create",
+  "transferDirectoryBrowserCreateFolderError": "Failed to create",
+  "transferDirectoryBrowserCreateFolderTooltip": "Create new folder",
+  "transferDirectoryBrowserSelectCurrent": "Select this location",
+  "transferDirectoryBrowserGoUp": "Go back",
+  "transferDirectoryBrowserLoadError": "Failed to load: {error}",
+  "@transferDirectoryBrowserLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "transferDirectoryBrowserRetry": "Retry",
+  "transferDirectoryBrowserEmptyDirectory": "This directory is empty",
+  "transferSheetDownloadTitle": "Download tasks",
+  "transferSheetDownloadEmpty": "No download tasks",
+  "transferSheetUploadTitle": "Upload tasks",
+  "transferSheetUploadEmpty": "No upload tasks",
+  "transferSheetCacheTitle": "Cache management",
+  "transferSheetCacheEmpty": "No cache content",
+  "transferSheetClearCacheButton": "Clear cache",
+  "transferSheetClearCompletedButton": "Clear completed",
+  "transferSheetClearCacheDialogTitle": "Clear cache",
+  "transferSheetClearCacheDialogMessage": "Clear all cache? This action cannot be undone.",
+  "transferSheetCancel": "Cancel",
+  "transferSheetConfirm": "Confirm",
+  "transferSheetOfflineAccessHint": "Cached content can be accessed offline",
+  "transferSheetTaskCompletionHint": "Tasks will appear here after completion",
+  "transferSheetCachingSection": "Caching",
+  "transferSheetCachedSection": "Cached",
+  "transferSheetPhotoLabel": "Photos",
+  "transferSheetMusicLabel": "Music",
+  "transferSheetVideoLabel": "Video",
+  "transferSheetBookLabel": "Books",
+  "transferSheetComicLabel": "Comics",
+  "transferSheetNoteLabel": "Notes",
+  "transferSheetDeleteCacheTooltip": "Delete cache",
+  "transferSheetCacheUsageLabel": "Cache usage",
+  "transferSheetCacheCountLabel": "Cache count",
+  "transferSheetCacheCountValue": "{count} items",
+  "@transferSheetCacheCountValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "transferSheetCacheLimitSettings": "Cache limit settings",
+  "transferSheetCacheLimitDescription": "Set the maximum cache space for each media type. Least recently accessed items are automatically cleared when the limit is exceeded.",
+  "transferSheetClose": "Close",
+  "transferSheetTaskPause": "Pause",
+  "transferSheetTaskResume": "Resume",
+  "transferSheetTaskDelete": "Delete",
+  "transferSheetTaskRetry": "Retry",
+  "connectionConnecting": "Connecting...",
+  "connectionVerifying": "Verifying...",
+  "connectionFailedTitle": "Connection failed: {error}",
+  "@connectionFailedTitle": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "connection2FAFailedTitle": "Two-factor verification failed.",
+  "connPageTagline": "Connect to Your Private Cloud",
+  "connPageHostLabel": "Host Address",
+  "connPageHostHint": "192.168.1.100 or nas.example.com",
+  "connPageHostError": "Please enter host address",
+  "connPagePortLabel": "Port",
+  "connPagePortHint": "5000",
+  "connPagePortError": "Please enter port",
+  "connPagePortInvalidError": "Please enter valid port (1-65535)",
+  "connPageUsernameLabel": "Username",
+  "connPageUsernameError": "Please enter username",
+  "connPagePasswordLabel": "Password",
+  "connPagePasswordError": "Please enter password",
+  "connPageNasTypeSynology": "Synology",
+  "connPageNasTypeUGreen": "UGreen",
+  "connPageNasTypeWebDAV": "WebDAV",
+  "connPageComingSoon": "Coming Soon",
+  "connPageUseHttps": "Use HTTPS",
+  "connPageSecureConnection": "Encrypted connection",
+  "connPageInsecureConnection": "Insecure connection",
+  "connPageRememberLogin": "Remember login",
+  "connPageRememberLoginDesc": "Auto-login on next launch",
+  "connPageRememberDevice": "Remember this device",
+  "connPageRememberDeviceDesc": "Skip two-factor verification",
+  "connPageConnectingStatus": "Connecting...",
+  "connPageConnectButton": "Connect",
+  "connPageTwoFactorTitle": "Two-Factor Verification",
+  "connPageTwoFactorDesc": "Enter the verification code from your authenticator app",
+  "connPageOtpLabel": "Verification code",
+  "connPageOtpHint": "6 digits",
+  "connPageRememberDeviceDesc2FA": "Skip two-factor verification on next login",
+  "connPageVerifyButton": "Verify",
+  "connPageBackButton": "Back"
 }

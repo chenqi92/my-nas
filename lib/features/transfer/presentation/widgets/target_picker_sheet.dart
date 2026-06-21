@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -36,7 +37,7 @@ class TargetPickerSheet extends ConsumerStatefulWidget {
   const TargetPickerSheet({
     super.key,
     required this.mediaType,
-    this.title = '选择上传目标',
+    this.title = 'transferTargetPickerTitle',
   });
 
   /// 媒体类型（用于筛选对应的媒体库）
@@ -49,7 +50,7 @@ class TargetPickerSheet extends ConsumerStatefulWidget {
   static Future<UploadTarget?> show(
     BuildContext context, {
     required MediaType mediaType,
-    String title = '选择上传目标',
+    String title = 'transferTargetPickerTitle',
   }) => showAdaptiveModalSheet<UploadTarget>(
       context: context,
       isScrollControlled: true,
@@ -152,7 +153,7 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
           ),
           const SizedBox(height: 16),
           Text(
-            '没有可用的上传目标',
+            context.l10n.transferTargetPickerEmptyStateTitle,
             style: TextStyle(
               color: colorScheme.onSurfaceVariant,
               fontSize: 16,
@@ -160,7 +161,7 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
           ),
           const SizedBox(height: 8),
           Text(
-            '请先连接到 NAS 或云存储',
+            context.l10n.transferTargetPickerEmptyStateHint,
             style: TextStyle(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               fontSize: 14,
@@ -231,7 +232,7 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  '该源没有配置${_getMediaTypeName(widget.mediaType)}媒体库',
+                  context.l10n.transferTargetPickerNoLibraryConfig(_getMediaTypeName(widget.mediaType, context)),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -243,7 +244,7 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
             // 选择自定义路径选项
             ListTile(
               leading: const SizedBox(width: 24),
-              title: const Text('选择其他目录...'),
+              title: Text(context.l10n.transferTargetPickerSelectOtherDirectory),
               trailing: const Icon(Icons.folder_open_rounded, size: 20),
               onTap: () => _showDirectoryPicker(context, connection),
             ),
@@ -307,13 +308,13 @@ class _TargetPickerSheetState extends ConsumerState<TargetPickerSheet> {
     }
   }
 
-  String _getMediaTypeName(MediaType type) => switch (type) {
-        MediaType.photo => '照片',
-        MediaType.music => '音乐',
-        MediaType.video => '视频',
-        MediaType.book => '图书',
-        MediaType.comic => '漫画',
-        MediaType.note => '笔记',
+  String _getMediaTypeName(MediaType type, BuildContext context) => switch (type) {
+        MediaType.photo => context.l10n.transferMediaTypePhoto,
+        MediaType.music => context.l10n.transferMediaTypeMusic,
+        MediaType.video => context.l10n.transferMediaTypeVideo,
+        MediaType.book => context.l10n.transferMediaTypeBook,
+        MediaType.comic => context.l10n.transferMediaTypeComic,
+        MediaType.note => context.l10n.transferMediaTypeNote,
       };
 }
 
@@ -384,20 +385,20 @@ class _DirectoryBrowserPageState extends State<_DirectoryBrowserPage> {
     final folderName = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('新建文件夹'),
+        title: Text(dialogContext.l10n.transferDirectoryBrowserCreateFolderTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(hintText: '文件夹名称'),
+          decoration: InputDecoration(hintText: dialogContext.l10n.transferDirectoryBrowserCreateFolderHint),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('取消'),
+            child: Text(dialogContext.l10n.transferDirectoryBrowserCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
-            child: const Text('创建'),
+            child: Text(dialogContext.l10n.transferDirectoryBrowserCreate),
           ),
         ],
       ),
@@ -413,7 +414,7 @@ class _DirectoryBrowserPageState extends State<_DirectoryBrowserPage> {
       await _loadDirectory(_currentPath);
     } on Exception catch (e, st) {
       if (mounted) {
-        AppError.handleWithUI(context, e, st, '创建失败', 'directoryPicker.create');
+        AppError.handleWithUI(context, e, st, context.l10n.transferDirectoryBrowserCreateFolderError, 'directoryPicker.create');
       } else {
         AppError.handle(e, st, 'directoryPicker.create');
       }
@@ -428,13 +429,13 @@ class _DirectoryBrowserPageState extends State<_DirectoryBrowserPage> {
         title: Text(widget.connection.source.name),
         actions: [
           IconButton(
-            tooltip: '新建文件夹',
+            tooltip: context.l10n.transferDirectoryBrowserCreateFolderTooltip,
             icon: const Icon(Icons.create_new_folder_outlined),
             onPressed: _createFolder,
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, _currentPath),
-            child: const Text('选择此处'),
+            child: Text(context.l10n.transferDirectoryBrowserSelectCurrent),
           ),
         ],
       ),
@@ -462,7 +463,7 @@ class _DirectoryBrowserPageState extends State<_DirectoryBrowserPage> {
           if (!atRoot)
             ListTile(
               leading: const Icon(Icons.arrow_upward),
-              title: const Text('返回上一级'),
+              title: Text(context.l10n.transferDirectoryBrowserGoUp),
               onTap: () => _loadDirectory(_parentPath(_currentPath)),
             ),
           Expanded(
@@ -477,18 +478,18 @@ class _DirectoryBrowserPageState extends State<_DirectoryBrowserPage> {
                             children: [
                               const Icon(Icons.error_outline_rounded, size: 48, color: Colors.redAccent),
                               const SizedBox(height: 12),
-                              Text('加载失败: $_error', textAlign: TextAlign.center),
+                              Text(context.l10n.transferDirectoryBrowserLoadError(_error ?? 'Unknown'), textAlign: TextAlign.center),
                               const SizedBox(height: 12),
                               FilledButton(
                                 onPressed: () => _loadDirectory(_currentPath),
-                                child: const Text('重试'),
+                                child: Text(context.l10n.transferDirectoryBrowserRetry),
                               ),
                             ],
                           ),
                         ),
                       )
                     : _entries.isEmpty
-                        ? const Center(child: Text('当前目录为空'))
+                        ? Center(child: Text(context.l10n.transferDirectoryBrowserEmptyDirectory))
                         : ListView.builder(
                             itemCount: _entries.length,
                             itemBuilder: (_, index) {

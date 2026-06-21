@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/pt_sites/data/services/pt_site_api.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
@@ -113,7 +114,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                 controller: _searchController,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: '搜索种子...',
+                  hintText: context.l10n.ptSiteDetailSearchHint,
                   border: InputBorder.none,
                   hintStyle: TextStyle(
                     color: isDark
@@ -180,35 +181,35 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'refresh',
                 child: Row(
                   children: [
                     Icon(Icons.refresh_rounded),
                     SizedBox(width: 12),
-                    Text('刷新'),
+                    Text(context.l10n.ptSiteDetailRefresh),
                   ],
                 ),
               ),
               if (connection.userInfo != null)
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'user_info',
                   child: Row(
                     children: [
                       Icon(Icons.person_rounded),
                       SizedBox(width: 12),
-                      Text('个人信息'),
+                      Text(context.l10n.ptSiteDetailUserInfo),
                     ],
                   ),
                 ),
               if (connection.status == PTSiteConnectionStatus.connected)
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'stats',
                   child: Row(
                     children: [
                       Icon(Icons.cloud_sync),
                       SizedBox(width: 12),
-                      Text('传输列表'),
+                      Text(context.l10n.ptSiteDetailTransferList),
                     ],
                   ),
                 ),
@@ -227,13 +228,13 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
   ) {
     // 连接中
     if (connection.status == PTSiteConnectionStatus.connecting) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('正在连接...'),
+            Text(context.l10n.ptSiteDetailConnecting),
           ],
         ),
       );
@@ -252,14 +253,14 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
             ),
             const SizedBox(height: 16),
             Text(
-              '连接失败',
+              context.l10n.ptSiteDetailConnectFailed,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                connection.errorMessage ?? '未知错误',
+                connection.errorMessage ?? context.l10n.ptSiteDetailUnknownError,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isDark
@@ -275,7 +276,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                 _connect();
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重试'),
+              label: Text(context.l10n.ptSiteDetailRetry),
             ),
           ],
         ),
@@ -301,7 +302,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
               onPressed: () => ref
                   .read(ptTorrentListProvider(widget.source.id).notifier)
                   .loadTorrents(refresh: true),
-              child: const Text('重试'),
+              child: Text(context.l10n.ptSiteDetailRetry),
             ),
           ],
         ),
@@ -323,7 +324,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
             ),
             const SizedBox(height: 16),
             Text(
-              torrentListState.keyword != null ? '没有找到相关种子' : '暂无种子',
+              torrentListState.keyword != null ? context.l10n.ptSiteDetailNoMatchTorrent : context.l10n.ptSiteDetailNoTorrent,
               style: TextStyle(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant
@@ -413,7 +414,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '筛选分类',
+                            context.l10n.ptSiteDetailFilterCategory,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -446,7 +447,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                               ),
                             ),
                             title: Text(
-                              '全部',
+                              context.l10n.ptSiteDetailAllCategories,
                               style: TextStyle(
                                 fontWeight: currentState.category == null ? FontWeight.w600 : null,
                                 color: currentState.category == null ? AppColors.primary : null,
@@ -576,7 +577,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '排序方式',
+                            context.l10n.ptSiteDetailSortMethod,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -599,7 +600,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                   : Icons.arrow_upward,
                               size: 18,
                             ),
-                            label: Text(currentState.descending ? '降序' : '升序'),
+                            label: Text(currentState.descending ? context.l10n.ptSiteDetailDescending : context.l10n.ptSiteDetailAscending),
                           ),
                         ],
                       ),
@@ -610,11 +611,11 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                       child: ListView(
                         controller: scrollController,
                         children: [
-                          (PTTorrentSortBy.uploadTime, '上传时间', Icons.access_time),
-                          (PTTorrentSortBy.size, '大小', Icons.storage),
-                          (PTTorrentSortBy.seeders, '做种人数', Icons.upload_rounded),
-                          (PTTorrentSortBy.leechers, '下载人数', Icons.download_rounded),
-                          (PTTorrentSortBy.snatched, '完成次数', Icons.check_circle),
+                          (PTTorrentSortBy.uploadTime, context.l10n.ptSiteDetailSortUploadTime, Icons.access_time),
+                          (PTTorrentSortBy.size, context.l10n.ptSiteDetailSortSize, Icons.storage),
+                          (PTTorrentSortBy.seeders, context.l10n.ptSiteDetailSortSeeders, Icons.upload_rounded),
+                          (PTTorrentSortBy.leechers, context.l10n.ptSiteDetailSortLeechers, Icons.download_rounded),
+                          (PTTorrentSortBy.snatched, context.l10n.ptSiteDetailSortSnatched, Icons.check_circle),
                         ].map((item) {
                           final isSelected = currentState.sortBy == item.$1;
                           return ListTile(
@@ -716,7 +717,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '个人信息',
+                            context.l10n.ptSiteDetailUserInfo,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -793,7 +794,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           const SizedBox(height: 24),
 
                           // 分享数据统计
-                          _buildSectionHeader(context, '数据统计', isDark),
+                          _buildSectionHeader(context, context.l10n.ptSiteDetailDataOverview, isDark),
                           const SizedBox(height: 8),
                           DecoratedBox(
                             decoration: BoxDecoration(
@@ -806,7 +807,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                   context,
                                   icon: Icons.upload_rounded,
                                   iconColor: AppColors.success,
-                                  label: '上传量',
+                                  label: context.l10n.ptSiteDetailUploadAmount,
                                   value: userInfo.formattedUploaded,
                                   isDark: isDark,
                                 ),
@@ -815,7 +816,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                   context,
                                   icon: Icons.download_rounded,
                                   iconColor: AppColors.primary,
-                                  label: '下载量',
+                                  label: context.l10n.ptSiteDetailDownloadAmount,
                                   value: userInfo.formattedDownloaded,
                                   isDark: isDark,
                                 ),
@@ -824,7 +825,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                   context,
                                   icon: Icons.swap_horiz,
                                   iconColor: AppColors.warning,
-                                  label: '分享率',
+                                  label: context.l10n.ptSiteDetailShareRatio,
                                   value: userInfo.formattedRatio,
                                   isDark: isDark,
                                 ),
@@ -834,7 +835,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           const SizedBox(height: 16),
 
                           // 活动数据
-                          _buildSectionHeader(context, '活动数据', isDark),
+                          _buildSectionHeader(context, context.l10n.ptSiteDetailActivityData, isDark),
                           const SizedBox(height: 8),
                           DecoratedBox(
                             decoration: BoxDecoration(
@@ -847,7 +848,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                   context,
                                   icon: Icons.auto_awesome,
                                   iconColor: Colors.purple,
-                                  label: '魔力值',
+                                  label: context.l10n.ptSiteDetailBonus,
                                   value: userInfo.formattedBonus,
                                   isDark: isDark,
                                 ),
@@ -856,7 +857,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                   context,
                                   icon: Icons.cloud_upload,
                                   iconColor: AppColors.success,
-                                  label: '做种数',
+                                  label: context.l10n.ptSiteDetailSeedingCount,
                                   value: userInfo.seedingCount.toString(),
                                   isDark: isDark,
                                 ),
@@ -865,7 +866,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                   context,
                                   icon: Icons.cloud_download,
                                   iconColor: AppColors.primary,
-                                  label: '下载数',
+                                  label: context.l10n.ptSiteDetailLeechingCount,
                                   value: userInfo.leechingCount.toString(),
                                   isDark: isDark,
                                 ),
@@ -875,7 +876,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                     context,
                                     icon: Icons.card_giftcard,
                                     iconColor: Colors.teal,
-                                    label: '邀请数',
+                                    label: context.l10n.ptSiteDetailInviteCount,
                                     value: userInfo.invites.toString(),
                                     isDark: isDark,
                                   ),
@@ -887,7 +888,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           // 账户信息（如果有日期数据）
                           if (userInfo.joinTime != null || userInfo.lastAccess != null) ...[
                             const SizedBox(height: 16),
-                            _buildSectionHeader(context, '账户信息', isDark),
+                            _buildSectionHeader(context, context.l10n.ptSiteDetailAccountInfo, isDark),
                             const SizedBox(height: 8),
                             DecoratedBox(
                               decoration: BoxDecoration(
@@ -901,7 +902,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                       context,
                                       icon: Icons.calendar_today,
                                       iconColor: Colors.blue,
-                                      label: '注册时间',
+                                      label: context.l10n.ptSiteDetailJoinTime,
                                       value: userInfo.formattedJoinTime ?? '-',
                                       isDark: isDark,
                                     ),
@@ -912,7 +913,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                       context,
                                       icon: Icons.access_time,
                                       iconColor: Colors.grey,
-                                      label: '最后访问',
+                                      label: context.l10n.ptSiteDetailLastAccess,
                                       value: userInfo.formattedLastAccess ?? '-',
                                       isDark: isDark,
                                     ),
@@ -1037,7 +1038,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                             if (torrent.status.formattedRemainingTime != null)
                               Chip(
                                 label: Text(
-                                  '剩余 ${torrent.status.formattedRemainingTime}',
+                                  context.l10n.ptSiteDetailRemaining(torrent.status.formattedRemainingTime!),
                                 ),
                                 backgroundColor: AppColors.warning.withValues(alpha: 0.2),
                                 labelStyle: TextStyle(
@@ -1051,44 +1052,45 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                       ],
 
                       // 基本信息
-                      _buildDetailRow(Icons.storage, '大小', torrent.formattedSize),
-                      _buildDetailRow(Icons.upload_rounded, '做种', '${torrent.seeders}'),
-                      _buildDetailRow(Icons.download_rounded, '下载', '${torrent.leechers}'),
+                      _buildDetailRow(context, Icons.storage, context.l10n.ptSiteDetailSortSize, torrent.formattedSize),
+                      _buildDetailRow(context, Icons.upload_rounded, context.l10n.ptSiteDetailStatSeeding, '${torrent.seeders}'),
+                      _buildDetailRow(context, Icons.download_rounded, context.l10n.ptSiteDetailStatDownloading, '${torrent.leechers}'),
                       _buildDetailRow(
-                          Icons.check_circle, '完成', '${torrent.snatched}'),
+                          context, Icons.check_circle, context.l10n.ptSiteDetailStatCompleted, '${torrent.snatched}'),
                       _buildDetailRow(
+                        context,
                         Icons.access_time,
-                        '上传时间',
-                        _formatDateTime(torrent.uploadTime),
+                        context.l10n.ptSiteDetailSortUploadTime,
+                        _formatDateTime(context, torrent.uploadTime),
                       ),
 
                       if (torrent.category != null)
-                        _buildDetailRow(Icons.folder_rounded, '分类', torrent.category!),
+                        _buildDetailRow(context, Icons.folder_rounded, context.l10n.ptSiteDetailCategory, torrent.category!),
 
                       if (torrent.subCategory != null &&
                           torrent.subCategory!.isNotEmpty)
                         _buildDetailRow(
-                            Icons.folder_open_rounded, '子分类', torrent.subCategory!),
+                            context, Icons.folder_open_rounded, context.l10n.ptSiteDetailSubCategory, torrent.subCategory!),
 
                       // IMDB / 豆瓣 信息
                       if (torrent.imdbId != null &&
                           torrent.imdbId!.isNotEmpty)
                         _buildDetailRow(
-                            Icons.movie, 'IMDB', torrent.imdbId!),
+                            context, Icons.movie, context.l10n.ptSiteDetailImdb, torrent.imdbId!),
 
                       if (torrent.doubanId != null &&
                           torrent.doubanId!.isNotEmpty)
                         _buildDetailRow(
-                            Icons.star_rounded, '豆瓣', torrent.doubanId!),
+                            context, Icons.star_rounded, context.l10n.ptSiteDetailDouban, torrent.doubanId!),
 
                       // 种子 ID
-                      _buildDetailRow(Icons.tag, '种子ID', torrent.id),
+                      _buildDetailRow(context, Icons.tag, context.l10n.ptSiteDetailTorrentId, torrent.id),
 
                       if (torrent.smallDescr != null &&
                           torrent.smallDescr!.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         Text(
-                          '简介',
+                          context.l10n.ptSiteDetailIntroduction,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: isDark
@@ -1135,7 +1137,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                             child: OutlinedButton.icon(
                               onPressed: () => _copyDownloadUrl(torrent),
                               icon: const Icon(Icons.copy_rounded),
-                              label: const Text('复制链接'),
+                              label: Text(context.l10n.ptSiteDetailCopyLink),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -1146,7 +1148,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                 _showDownloadOptions(context, torrent);
                               },
                               icon: const Icon(Icons.download_rounded),
-                              label: const Text('下载'),
+                              label: Text(context.l10n.ptSiteDetailDownload),
                             ),
                           ),
                         ],
@@ -1183,7 +1185,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value) => Padding(
+  Widget _buildDetailRow(BuildContext context, IconData icon, String label, String value) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
@@ -1208,16 +1210,16 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
       ),
     );
 
-  String _formatDateTime(DateTime dateTime) {
+  String _formatDateTime(BuildContext context, DateTime dateTime) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
     if (diff.inMinutes < 60) {
-      return '${diff.inMinutes} 分钟前';
+      return context.l10n.ptSiteDetailTimeFormatMinutesAgo(diff.inMinutes);
     } else if (diff.inHours < 24) {
-      return '${diff.inHours} 小时前';
+      return context.l10n.ptSiteDetailTimeFormatHoursAgo(diff.inHours);
     } else if (diff.inDays < 30) {
-      return '${diff.inDays} 天前';
+      return context.l10n.ptSiteDetailTimeFormatDaysAgo(diff.inDays);
     } else {
       return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
     }
@@ -1233,8 +1235,8 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('下载链接已复制到剪贴板'),
+        SnackBar(
+          content: Text(context.l10n.ptSiteDetailCopyUrlSuccess),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -1242,7 +1244,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('获取下载链接失败: $e'),
+          content: Text(context.l10n.ptSiteDetailCopyUrlFailed(e)),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.error,
         ),
@@ -1302,7 +1304,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
       final api = ref.read(ptSiteConnectionProvider(widget.sourceId)).api;
       if (api == null) {
         setState(() {
-          _error = '未连接';
+          _error = context.l10n.ptSiteDetailNotConnected;
           _isLoading = false;
         });
         return;
@@ -1367,7 +1369,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        '传输列表',
+                        context.l10n.ptSiteDetailTransferList,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -1433,7 +1435,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
             FilledButton.icon(
               onPressed: _loadStats,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重试'),
+              label: Text(context.l10n.ptSiteDetailRetry),
             ),
           ],
         ),
@@ -1442,7 +1444,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
 
     final stats = _stats;
     if (stats == null) {
-      return const Center(child: Text('暂无数据'));
+      return Center(child: Text(context.l10n.ptSiteDetailEmptyData));
     }
 
     return ListView(
@@ -1477,7 +1479,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '数据总览',
+              context.l10n.ptSiteDetailTransferOverview,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -1492,7 +1494,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                   child: _buildStatItem(
                     icon: Icons.upload_rounded,
                     iconColor: AppColors.success,
-                    label: '总上传',
+                    label: context.l10n.ptSiteDetailTransferTotalUpload,
                     value: stats.formattedTotalUploaded,
                     isDark: isDark,
                   ),
@@ -1501,7 +1503,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                   child: _buildStatItem(
                     icon: Icons.download_rounded,
                     iconColor: AppColors.primary,
-                    label: '总下载',
+                    label: context.l10n.ptSiteDetailTransferTotalDownload,
                     value: stats.formattedTotalDownloaded,
                     isDark: isDark,
                   ),
@@ -1510,7 +1512,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                   child: _buildStatItem(
                     icon: Icons.swap_horiz,
                     iconColor: AppColors.warning,
-                    label: '分享率',
+                    label: context.l10n.ptSiteDetailShareRatio,
                     value: stats.formattedTotalRatio,
                     isDark: isDark,
                   ),
@@ -1525,7 +1527,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                   child: _buildStatItem(
                     icon: Icons.cloud_upload,
                     iconColor: Colors.teal,
-                    label: '做种中',
+                    label: context.l10n.ptSiteDetailTransferSeeding,
                     value: '${stats.seedingCount}',
                     isDark: isDark,
                   ),
@@ -1534,7 +1536,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                   child: _buildStatItem(
                     icon: Icons.cloud_download,
                     iconColor: Colors.blue,
-                    label: '下载中',
+                    label: context.l10n.ptSiteDetailTransferLeeching,
                     value: '${stats.leechingCount}',
                     isDark: isDark,
                   ),
@@ -1551,7 +1553,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '${_selectedType.label}列表',
+          context.l10n.ptSiteDetailTransferLogsList(_selectedType.label),
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -1572,7 +1574,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '暂无${_selectedType.label}数据',
+                  context.l10n.ptSiteDetailNoData(_selectedType.label),
                   style: TextStyle(
                     color: isDark ? Colors.grey[500] : Colors.grey[600],
                   ),

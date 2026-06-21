@@ -62,21 +62,21 @@ class _TransferSheet extends ConsumerWidget {
     final (icon, title, emptyIcon, emptyText) = switch (type) {
       TransferSheetType.download => (
           Icons.download_rounded,
-          '下载任务',
+          context.l10n.transferSheetDownloadTitle,
           Icons.download_done_rounded,
-          '暂无下载任务',
+          context.l10n.transferSheetDownloadEmpty,
         ),
       TransferSheetType.upload => (
           Icons.upload_rounded,
-          '上传任务',
+          context.l10n.transferSheetUploadTitle,
           Icons.cloud_upload_outlined,
-          '暂无上传任务',
+          context.l10n.transferSheetUploadEmpty,
         ),
       TransferSheetType.cache => (
           Icons.storage_rounded,
-          '缓存管理',
+          context.l10n.transferSheetCacheTitle,
           Icons.storage_outlined,
-          '暂无缓存内容',
+          context.l10n.transferSheetCacheEmpty,
         ),
     };
 
@@ -176,7 +176,7 @@ class _TransferSheet extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final buttonText = type == TransferSheetType.cache ? '清空缓存' : '清除已完成';
+    final buttonText = type == TransferSheetType.cache ? context.l10n.transferSheetClearCacheButton : context.l10n.transferSheetClearCompletedButton;
 
     return Material(
       color: Colors.transparent,
@@ -210,16 +210,16 @@ class _TransferSheet extends ConsumerWidget {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('清空缓存'),
-          content: const Text('确定要清空所有缓存吗？此操作无法恢复。'),
+          title: Text(context.l10n.transferSheetClearCacheDialogTitle),
+          content: Text(context.l10n.transferSheetClearCacheDialogMessage),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
+              child: Text(context.l10n.transferSheetCancel),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('确定'),
+              child: Text(context.l10n.transferSheetConfirm),
             ),
           ],
         ),
@@ -262,7 +262,7 @@ class _TransferSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              type == TransferSheetType.cache ? '缓存的内容可以离线访问' : '任务完成后将显示在这里',
+              type == TransferSheetType.cache ? context.l10n.transferSheetOfflineAccessHint : context.l10n.transferSheetTaskCompletionHint,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -350,7 +350,7 @@ class _CacheContent extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: Text(
-                    '正在缓存',
+                    context.l10n.transferSheetCachingSection,
                     style: context.textTheme.titleSmall?.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -379,7 +379,7 @@ class _CacheContent extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
-                    '已缓存',
+                    context.l10n.transferSheetCachedSection,
                     style: context.textTheme.titleSmall?.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -437,7 +437,7 @@ class _CacheContent extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '缓存的内容可以离线访问',
+              context.l10n.transferSheetOfflineAccessHint,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -448,12 +448,12 @@ class _CacheContent extends ConsumerWidget {
 
   Widget _buildMediaTypeHeader(BuildContext context, MediaType mediaType, int count) {
     final (icon, label) = switch (mediaType) {
-      MediaType.photo => (Icons.photo_library, '照片'),
-      MediaType.music => (Icons.music_note, '音乐'),
-      MediaType.video => (Icons.movie, '视频'),
-      MediaType.book => (Icons.book, '图书'),
-      MediaType.comic => (Icons.menu_book, '漫画'),
-      MediaType.note => (Icons.note, '笔记'),
+      MediaType.photo => (Icons.photo_library, context.l10n.transferSheetPhotoLabel),
+      MediaType.music => (Icons.music_note, context.l10n.transferSheetMusicLabel),
+      MediaType.video => (Icons.movie, context.l10n.transferSheetVideoLabel),
+      MediaType.book => (Icons.book, context.l10n.transferSheetBookLabel),
+      MediaType.comic => (Icons.menu_book, context.l10n.transferSheetComicLabel),
+      MediaType.note => (Icons.note, context.l10n.transferSheetNoteLabel),
     };
 
     return Padding(
@@ -559,8 +559,12 @@ class _CachedItemTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildDeleteButton(BuildContext context, TransferTasksNotifier notifier) => Tooltip(
-        message: '删除缓存',
+  Widget _buildDeleteButton(
+    BuildContext context,
+    TransferTasksNotifier notifier,
+  ) =>
+      Tooltip(
+        message: context.l10n.transferSheetDeleteCacheTooltip,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -570,7 +574,9 @@ class _CachedItemTile extends ConsumerWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurfaceElevated : AppColors.lightSurfaceVariant,
+                color: isDark
+                    ? AppColors.darkSurfaceElevated
+                    : AppColors.lightSurfaceVariant,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -639,7 +645,7 @@ class _CacheStats extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '缓存占用',
+                          context.l10n.transferSheetCacheUsageLabel,
                           style: context.textTheme.bodySmall?.copyWith(
                             color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                           ),
@@ -669,14 +675,14 @@ class _CacheStats extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '缓存数量',
+                            context.l10n.transferSheetCacheCountLabel,
                             style: context.textTheme.bodySmall?.copyWith(
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '$totalCount 个',
+                            context.l10n.transferSheetCacheCountValue(totalCount),
                             style: context.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: isDark ? AppColors.darkOnSurface : null,
@@ -717,7 +723,7 @@ class _CacheStats extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '缓存限制设置',
+                          context.l10n.transferSheetCacheLimitSettings,
                           style: context.textTheme.bodyMedium?.copyWith(
                             color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                           ),
@@ -825,7 +831,7 @@ class _CacheSettingsDialogState extends ConsumerState<_CacheSettingsDialog> {
           ),
           const SizedBox(width: 12),
           Text(
-            '缓存限制设置',
+            context.l10n.transferSheetCacheLimitSettings,
             style: context.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: isDark ? AppColors.darkOnSurface : null,
@@ -843,7 +849,7 @@ class _CacheSettingsDialogState extends ConsumerState<_CacheSettingsDialog> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '设置各类型媒体的最大缓存空间，超出限制时自动清理最久未访问的缓存',
+                    context.l10n.transferSheetCacheLimitDescription,
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                     ),
@@ -856,7 +862,7 @@ class _CacheSettingsDialogState extends ConsumerState<_CacheSettingsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('关闭'),
+          child: Text(context.l10n.transferSheetClose),
         ),
       ],
     );
@@ -865,11 +871,11 @@ class _CacheSettingsDialogState extends ConsumerState<_CacheSettingsDialog> {
   List<Widget> _buildMediaTypeSettings(BuildContext context) {
     final isDark = widget.isDark;
     final mediaTypes = [
-      (MediaType.photo, '照片', Icons.photo_library_rounded),
-      (MediaType.music, '音乐', Icons.music_note_rounded),
-      (MediaType.video, '视频', Icons.movie_rounded),
-      (MediaType.book, '图书', Icons.book_rounded),
-      (MediaType.comic, '漫画', Icons.menu_book_rounded),
+      (MediaType.photo, context.l10n.transferSheetPhotoLabel, Icons.photo_library_rounded),
+      (MediaType.music, context.l10n.transferSheetMusicLabel, Icons.music_note_rounded),
+      (MediaType.video, context.l10n.transferSheetVideoLabel, Icons.movie_rounded),
+      (MediaType.book, context.l10n.transferSheetBookLabel, Icons.book_rounded),
+      (MediaType.comic, context.l10n.transferSheetComicLabel, Icons.menu_book_rounded),
     ];
 
     return mediaTypes.map((item) {
@@ -1145,32 +1151,32 @@ class _TransferTaskTile extends ConsumerWidget {
     final (icon, tooltip, onTap) = switch (task.status) {
       TransferStatus.pending || TransferStatus.queued => (
           Icons.close_rounded,
-          '取消',
+          context.l10n.transferSheetCancel,
           () => notifier.cancelTask(task.id),
         ),
       TransferStatus.transferring => (
           Icons.pause_rounded,
-          '暂停',
+          context.l10n.transferSheetTaskPause,
           () => notifier.pauseTask(task.id),
         ),
       TransferStatus.paused => (
           Icons.play_arrow_rounded,
-          '继续',
+          context.l10n.transferSheetTaskResume,
           () => notifier.resumeTask(task.id),
         ),
       TransferStatus.completed => (
           Icons.delete_outline_rounded,
-          '删除',
+          context.l10n.transferSheetTaskDelete,
           () => notifier.deleteTask(task.id),
         ),
       TransferStatus.failed => (
           Icons.refresh_rounded,
-          '重试',
+          context.l10n.transferSheetTaskRetry,
           () => notifier.retryTask(task.id),
         ),
       TransferStatus.cancelled => (
           Icons.delete_outline_rounded,
-          '删除',
+          context.l10n.transferSheetTaskDelete,
           () => notifier.deleteTask(task.id),
         ),
     };

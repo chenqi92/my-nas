@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/domain/entities/transfer_task.dart';
 import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
@@ -71,7 +72,7 @@ class CacheListView extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-                '正在缓存',
+                context.l10n.cacheListViewCaching,
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: colorScheme.primary,
                   fontWeight: FontWeight.w600,
@@ -98,7 +99,7 @@ class CacheListView extends ConsumerWidget {
               child: Row(
                 children: [
                   Text(
-                    '已缓存',
+                    context.l10n.cacheListViewCached,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.w600,
@@ -107,7 +108,7 @@ class CacheListView extends ConsumerWidget {
                   const Spacer(),
                   TextButton(
                     onPressed: onClearAll,
-                    child: const Text('清空'),
+                    child: Text(context.l10n.cacheListViewClearAll),
                   ),
                 ],
               ),
@@ -150,7 +151,7 @@ class CacheListView extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无缓存内容',
+            context.l10n.cacheListViewEmpty,
             style: TextStyle(
               color: colorScheme.onSurfaceVariant,
               fontSize: 16,
@@ -158,7 +159,7 @@ class CacheListView extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '缓存的音乐和视频可以离线播放',
+            context.l10n.cacheListViewEmptyHint,
             style: TextStyle(
               color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               fontSize: 14,
@@ -197,7 +198,7 @@ class CacheListView extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '缓存占用',
+                      context.l10n.cacheListViewUsed,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -224,14 +225,14 @@ class CacheListView extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '缓存数量',
+                        context.l10n.cacheListViewCount,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '$totalCount 个',
+                        context.l10n.cacheListViewCountValue(totalCount),
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -261,12 +262,12 @@ class CacheListView extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
 
     final (icon, label) = switch (mediaType) {
-      MediaType.photo => (Icons.photo_library, '照片'),
-      MediaType.music => (Icons.music_note, '音乐'),
-      MediaType.video => (Icons.movie, '视频'),
-      MediaType.book => (Icons.book, '图书'),
-      MediaType.comic => (Icons.menu_book, '漫画'),
-      MediaType.note => (Icons.note, '笔记'),
+      MediaType.photo => (Icons.photo_library, context.l10n.cacheListViewMediaTypePhoto),
+      MediaType.music => (Icons.music_note, context.l10n.cacheListViewMediaTypeMusic),
+      MediaType.video => (Icons.movie, context.l10n.cacheListViewMediaTypeVideo),
+      MediaType.book => (Icons.book, context.l10n.cacheListViewMediaTypeBook),
+      MediaType.comic => (Icons.menu_book, context.l10n.cacheListViewMediaTypeComic),
+      MediaType.note => (Icons.note, context.l10n.cacheListViewMediaTypeNote),
     };
 
     return Padding(

@@ -84,7 +84,7 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '发送到下载器',
+                    context.l10n.ptSendToDownloaderSheetTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
@@ -177,10 +177,10 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
                             : AppColors.lightOnSurfaceVariant,
                       ),
                       const SizedBox(height: 16),
-                      const Text('尚未添加下载器'),
+                      Text(context.l10n.ptSendToDownloaderEmptyTitle),
                       const SizedBox(height: 8),
                       Text(
-                        '请先在设置中添加 qBittorrent、Transmission 或 Aria2',
+                        context.l10n.ptSendToDownloaderEmptyDescription,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark
@@ -195,7 +195,7 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
               ),
             ] else ...[
               Text(
-                '选择下载器',
+                context.l10n.ptSendToDownloaderSelectLabel,
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
                   color: isDark
@@ -248,8 +248,8 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
                     _pauseAfterAdd = value;
                   });
                 },
-                title: const Text('添加后暂停'),
-                subtitle: const Text('添加种子后不立即开始下载'),
+                title: Text(context.l10n.ptSendToDownloaderPauseAfterAdd),
+                subtitle: Text(context.l10n.ptSendToDownloaderPauseAfterAddDesc),
                 contentPadding: EdgeInsets.zero,
               ),
             ],
@@ -270,15 +270,15 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
                             if (!mounted) return;
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('下载链接已复制到剪贴板'),
+                              SnackBar(
+                                content: Text(context.l10n.ptSendToDownloaderCopySuccess),
                                 behavior: SnackBarBehavior.floating,
                               ),
                             );
                           }
                         : null,
                     icon: const Icon(Icons.copy_rounded),
-                    label: const Text('复制链接'),
+                    label: Text(context.l10n.ptSendToDownloaderCopyButton),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -300,7 +300,7 @@ class _SendToDownloaderSheetState extends ConsumerState<SendToDownloaderSheet> {
                             ),
                           )
                         : const Icon(Icons.send),
-                    label: const Text('发送'),
+                    label: Text(context.l10n.ptSendToDownloaderSendButton),
                   ),
                 ),
               ],
