@@ -1811,13 +1811,14 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
 
 
   /// 获取问候语
-  String _getGreeting() {
+  String _getGreeting(BuildContext context) {
     final hour = DateTime.now().hour;
-    if (hour < 6) return '夜深了';
-    if (hour < 12) return '早上好';
-    if (hour < 14) return '中午好';
-    if (hour < 18) return '下午好';
-    return '晚上好';
+    final l = context.l10n;
+    if (hour < 6) return l.musicGreetingLateNight;
+    if (hour < 12) return l.musicGreetingMorning;
+    if (hour < 14) return l.musicGreetingNoon;
+    if (hour < 18) return l.musicGreetingAfternoon;
+    return l.musicGreetingEvening;
   }
 
   @override
@@ -2000,7 +2001,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                _getGreeting(),
+                _getGreeting(context),
                 style: (isDesktop
                         ? context.textTheme.titleMedium
                         : context.textTheme.headlineSmall)
@@ -2015,7 +2016,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                 Row(
                   children: [
                     Text(
-                      '共 $trackCount 首歌曲',
+                      context.l10n.musicTrackCountLabel(trackCount),
                       style: TextStyle(
                         fontSize: 13,
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -2035,8 +2036,8 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                       Flexible(
                         child: Text(
                           metadataTotal > 0
-                              ? '提取元数据 $metadataProcessed/$metadataTotal'
-                              : '正在加载元数据...',
+                              ? context.l10n.musicMetadataExtracting(metadataProcessed, metadataTotal)
+                              : context.l10n.musicMetadataLoading,
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark ? Colors.grey[500] : Colors.grey[500],
@@ -2056,44 +2057,44 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             GlassGroupIconButton(
               icon: Icons.search_rounded,
               onPressed: () => setState(() => _showSearch = true),
-              tooltip: '搜索',
+              tooltip: context.l10n.musicSearchTooltip,
             ),
             GlassGroupIconButton(
               icon: Icons.queue_music_rounded,
               onPressed: () => showMusicQueueSheet(context),
-              tooltip: '播放队列',
+              tooltip: context.l10n.musicQueueTooltip,
             ),
             GlassGroupPopupMenuButton<String>(
               icon: Icons.more_vert_rounded,
-              tooltip: '更多',
+              tooltip: context.l10n.musicMoreTooltip,
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: 'layout',
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.dashboard_customize_rounded, size: 20),
                       SizedBox(width: 12),
-                      Text('首页布局'),
+                      Text(context.l10n.musicHomeLayoutMenuLabel),
                     ],
                   ),
                 ),
                 PopupMenuItem(
                   value: 'library',
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.settings_rounded, size: 20),
                       SizedBox(width: 12),
-                      Text('媒体库设置'),
+                      Text(context.l10n.musicMediaLibraryMenuLabel),
                     ],
                   ),
                 ),
                 PopupMenuItem(
                   value: 'sources',
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.cloud_rounded, size: 20),
                       SizedBox(width: 12),
-                      Text('连接源管理'),
+                      Text(context.l10n.musicSourcesMenuLabel),
                     ],
                   ),
                 ),
@@ -2123,7 +2124,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             autofocus: true,
             style: TextStyle(color: isDark ? Colors.white : Colors.black87),
             decoration: InputDecoration(
-              hintText: '搜索歌曲、艺术家、专辑...',
+              hintText: context.l10n.musicSearchHintLong,
               hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -2241,7 +2242,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
 
     return GlassFloatingSearchBar(
       controller: _searchController,
-      hintText: '搜索歌曲、艺术家...',
+      hintText: context.l10n.musicSearchHintShort,
       width: searchWidth,
       onChanged: (query) {
         ref.read(musicListProvider.notifier).setSearchQuery(query);
@@ -2399,7 +2400,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             Padding(
               padding: EdgeInsets.only(right: hasFloatingButtons ? 150 : 0),
               child: Text(
-                _getGreeting(),
+                _getGreeting(context),
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -3368,7 +3369,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
                   color: isDark ? Colors.white70 : Colors.black54,
                   size: 20,
                 ),
-                tooltip: _isTableView ? '网格视图' : '表格视图',
+                tooltip: _isTableView ? context.l10n.musicGridViewTooltip : context.l10n.musicTableViewTooltip,
               ),
             ],
             // 排序按钮
@@ -3395,7 +3396,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
             child: _SpotifyPlayButton(
               onPressed: () => _playAll(context, sortedTracks),
               icon: Icons.play_arrow_rounded,
-              label: '播放全部',
+              label: context.l10n.musicPlayAll,
             ),
           ),
           const SizedBox(width: 12),
@@ -3404,7 +3405,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
             child: _SpotifyPlayButton(
               onPressed: () => _shufflePlay(context, sortedTracks),
               icon: Icons.shuffle_rounded,
-              label: '随机播放',
+              label: context.l10n.musicShufflePlay,
               isPrimary: false,
               isDark: isDark,
             ),
@@ -3443,7 +3444,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
           ),
           const SizedBox(height: 8),
           Text(
-            '扫描音乐库以添加歌曲',
+            context.l10n.musicEmptyScanHint,
             style: TextStyle(
               fontSize: 13,
               color: isDark ? Colors.grey[600] : Colors.grey[500],
@@ -3479,10 +3480,10 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
           child: Row(
             children: [
               const SizedBox(width: 40), // 序号列
-              const Expanded(flex: 4, child: _TableHeader(title: '标题')),
-              const Expanded(flex: 2, child: _TableHeader(title: '艺术家')),
-              const Expanded(flex: 2, child: _TableHeader(title: '专辑')),
-              const SizedBox(width: 60, child: _TableHeader(title: '时长', align: TextAlign.right)),
+              Expanded(flex: 4, child: _TableHeader(title: context.l10n.musicTableHeaderTitle)),
+              Expanded(flex: 2, child: _TableHeader(title: context.l10n.musicTableHeaderArtist)),
+              Expanded(flex: 2, child: _TableHeader(title: context.l10n.musicTableHeaderAlbum)),
+              SizedBox(width: 60, child: _TableHeader(title: context.l10n.musicTableHeaderDuration, align: TextAlign.right)),
               const SizedBox(width: 48), // 操作列
             ],
           ),
@@ -3566,7 +3567,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '排序方式',
+                    context.l10n.musicSortTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -3884,7 +3885,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
             ),
             const SizedBox(height: 8),
             Text(
-              '扫描音乐库以添加歌曲',
+              context.l10n.musicEmptyScanHint,
               style: TextStyle(
                 fontSize: 13,
                 color: widget.isDark ? Colors.grey[600] : Colors.grey[500],
@@ -4009,7 +4010,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
                 child: _SpotifyPlayButton(
                   onPressed: () => _playAll(context, ref),
                   icon: Icons.play_arrow_rounded,
-                  label: '播放全部',
+                  label: context.l10n.musicPlayAll,
                 ),
               ),
               const SizedBox(width: 12),
@@ -4018,7 +4019,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
                 child: _SpotifyPlayButton(
                   onPressed: () => _shufflePlay(context, ref),
                   icon: Icons.shuffle_rounded,
-                  label: '随机播放',
+                  label: context.l10n.musicShufflePlay,
                   isPrimary: false,
                   isDark: widget.isDark,
                 ),
@@ -4053,7 +4054,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '排序方式',
+                    context.l10n.musicSortTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -5227,7 +5228,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
             child: _SpotifyPlayButton(
               onPressed: () => _playAll(context),
               icon: Icons.play_arrow_rounded,
-              label: '播放全部',
+              label: context.l10n.musicPlayAll,
             ),
           ),
           const SizedBox(width: 12),
@@ -5235,7 +5236,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
             child: _SpotifyPlayButton(
               onPressed: () => _shufflePlay(context),
               icon: Icons.shuffle_rounded,
-              label: '随机播放',
+              label: context.l10n.musicShufflePlay,
               isPrimary: false,
               isDark: isDark,
             ),
@@ -8286,7 +8287,7 @@ class _ModernMusicTile extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '离线',
+                                context.l10n.musicOfflineBadge,
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: AppColors.warning,

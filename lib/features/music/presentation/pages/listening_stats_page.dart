@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/play_history_store.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
@@ -49,7 +50,7 @@ class _ListeningStatsPageState extends ConsumerState<ListeningStatsPage>
         leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
-          '听歌统计',
+          context.l10n.listeningStatsPageTitle,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
@@ -60,16 +61,16 @@ class _ListeningStatsPageState extends ConsumerState<ListeningStatsPage>
         ),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: '本周'),
-            Tab(text: '本月'),
-            Tab(text: '本年'),
+          tabs: [
+            Tab(text: context.l10n.listeningStatsTabWeek),
+            Tab(text: context.l10n.listeningStatsTabMonth),
+            Tab(text: context.l10n.listeningStatsTabYear),
           ],
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            tooltip: '清空全部历史',
+            tooltip: context.l10n.listeningStatsClearHistoryTooltip,
             onPressed: _confirmClear,
           ),
         ],
@@ -108,7 +109,7 @@ class _ListeningStatsPageState extends ConsumerState<ListeningStatsPage>
               ),
               const SizedBox(height: 12),
               Text(
-                '近期还没有听歌记录',
+                context.l10n.listeningStatsEmptyTitle,
                 style: TextStyle(
                   fontSize: 16,
                   color: isDark ? Colors.white60 : Colors.black54,
@@ -116,7 +117,7 @@ class _ListeningStatsPageState extends ConsumerState<ListeningStatsPage>
               ),
               const SizedBox(height: 4),
               Text(
-                '听满 30 秒的歌曲会被记录到统计中',
+                context.l10n.listeningStatsEmptyHint,
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark ? Colors.white38 : Colors.black38,
@@ -136,21 +137,21 @@ class _ListeningStatsPageState extends ConsumerState<ListeningStatsPage>
         _Heatmap(daily: daily, isDark: isDark),
         const SizedBox(height: AppSpacing.lg),
         _RankSection(
-          title: 'Top 歌曲',
+          title: context.l10n.listeningStatsRankSectionSongs,
           icon: Icons.music_note_rounded,
           items: topSongs,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.lg),
         _RankSection(
-          title: 'Top 艺术家',
+          title: context.l10n.listeningStatsRankSectionArtists,
           icon: Icons.person_rounded,
           items: topArtists,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.lg),
         _RankSection(
-          title: 'Top 专辑',
+          title: context.l10n.listeningStatsRankSectionAlbums,
           icon: Icons.album_rounded,
           items: topAlbums,
           isDark: isDark,
@@ -163,16 +164,16 @@ class _ListeningStatsPageState extends ConsumerState<ListeningStatsPage>
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('清空听歌历史'),
-        content: const Text('将永久删除所有播放记录，此操作不可撤销。继续？'),
+        title: Text(ctx.l10n.listeningStatsDialogTitle),
+        content: Text(ctx.l10n.listeningStatsDialogContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(ctx.l10n.listeningStatsDialogCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('清空'),
+            child: Text(ctx.l10n.listeningStatsDialogConfirm),
           ),
         ],
       ),
@@ -209,7 +210,7 @@ class _SummaryCard extends StatelessWidget {
           Expanded(
             child: _SummaryCell(
               value: summary.totalPlays.toString(),
-              label: '播放次数',
+              label: context.l10n.listeningStatsSummaryCellPlays,
               isDark: isDark,
             ),
           ),
@@ -218,21 +219,21 @@ class _SummaryCard extends StatelessWidget {
               value: hours >= 10
                   ? hours.toStringAsFixed(0)
                   : hours.toStringAsFixed(1),
-              label: '听歌小时',
+              label: context.l10n.listeningStatsSummaryCellHours,
               isDark: isDark,
             ),
           ),
           Expanded(
             child: _SummaryCell(
               value: summary.uniqueSongs.toString(),
-              label: '不重复歌曲',
+              label: context.l10n.listeningStatsSummaryCellUniqueSongs,
               isDark: isDark,
             ),
           ),
           Expanded(
             child: _SummaryCell(
               value: summary.activeDays.toString(),
-              label: '活跃天数',
+              label: context.l10n.listeningStatsSummaryCellActiveDays,
               isDark: isDark,
             ),
           ),
@@ -298,7 +299,7 @@ class _Heatmap extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '播放热力图',
+            context.l10n.listeningStatsHeatmapTitle,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -475,7 +476,7 @@ class _RankRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            '${item.playCount} 次',
+            context.l10n.listeningStatsRankRowPlayCount(item.playCount),
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.white60 : Colors.black54,

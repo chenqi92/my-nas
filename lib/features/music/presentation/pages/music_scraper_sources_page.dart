@@ -43,7 +43,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('音乐刮削源'),
+        title: Text(context.l10n.musicScraperSourcesPageTitle),
         centerTitle: false,
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
@@ -55,12 +55,12 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
                 _isReorderMode = !_isReorderMode;
               });
             },
-            tooltip: _isReorderMode ? '完成排序' : '调整顺序',
+            tooltip: _isReorderMode ? context.l10n.musicScraperSourcesPageReorderDone : context.l10n.musicScraperSourcesPageReorderAdjust,
           ),
           IconButton(
             icon: const Icon(Icons.help_outline_rounded),
             onPressed: () => _showHelpDialog(context),
-            tooltip: '帮助',
+            tooltip: context.l10n.musicScraperSourcesPageHelp,
           ),
         ],
       ),
@@ -80,11 +80,11 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
           children: [
             Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('加载失败: ${state.error}'),
+            Text(context.l10n.musicScraperSourcesPageLoadError(state.error ?? '')),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () => ref.read(musicScraperSourcesProvider.notifier).load(),
-              child: const Text('重试'),
+              child: Text(context.l10n.musicScraperSourcesPageRetry),
             ),
           ],
         ),
@@ -143,7 +143,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Text(
-            '暂无已配置的刮削源可排序',
+            context.l10n.musicScraperSourcesPageNoConfiguredEmpty,
             style: TextStyle(
               color: isDark ? Colors.grey[500] : Colors.grey[600],
             ),
@@ -157,7 +157,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
           child: Text(
-            '拖动调整刮削优先级（数值越靠前越先尝试）；未配置的源不参与排序',
+            context.l10n.musicScraperSourcesPageReorderHint,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -281,7 +281,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
     if (notice == null) return true;
 
     final isHigh = type.riskLevel == MusicScraperRiskLevel.antiCircumvention;
-    final title = isHigh ? '启用前请知悉（较高风险）' : '启用前请知悉';
+    final title = isHigh ? context.l10n.musicScraperSourcesPageRiskWarningTitleHigh : context.l10n.musicScraperSourcesPageRiskWarningTitle;
 
     final result = await showDialog<bool>(
       context: context,
@@ -303,16 +303,15 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '即将启用：${type.displayName}',
+                context.l10n.musicScraperSourcesPageRiskAboutToEnable(type.displayName),
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
               Text(notice, style: const TextStyle(height: 1.5)),
               const SizedBox(height: 12),
-              const Text(
-                '本应用仅获取元数据 / 封面 / 歌词写入你本地的音频文件， '
-                '不下载也不传播音频本体。',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+              Text(
+                context.l10n.musicScraperSourcesPageRiskDisclaimer,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
           ),
@@ -320,14 +319,14 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.musicScraperSourcesPageRiskCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
               backgroundColor: isHigh ? AppColors.error : null,
             ),
-            child: const Text('我已知悉，启用'),
+            child: Text(context.l10n.musicScraperSourcesPageRiskAcknowledge),
           ),
         ],
       ),
@@ -409,7 +408,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
 
     if (mounted) {
       Navigator.pop(context);
-      context.showSuccessToast('${type.displayName} 配置已保存');
+      context.showSuccessToast(context.l10n.musicScraperSourcesPageConfigSaved(type.displayName));
     }
   }
 
@@ -456,47 +455,45 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('刮削源说明'),
-        content: const SingleChildScrollView(
+        title: Text(context.l10n.musicScraperSourcesPageHelpTitle),
+        content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('推荐配置（按合规优先级）：',
+              Text(context.l10n.musicScraperSourcesPageHelpRecommendedTitle,
                   style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
-              Text('1. MusicBrainz - 开放音乐数据库，CC0 元数据 + 封面（默认启用）'),
-              Text('2. AcoustID - 声纹识别（需要 API Key，建议使用）'),
+              Text(context.l10n.musicScraperSourcesPageHelpMusicBrainz),
+              Text(context.l10n.musicScraperSourcesPageHelpAcoustID),
               SizedBox(height: 12),
-              Text('3. Music Tag Web - 自托管刮削网关（需要部署服务器，默认禁用）',
+              Text(context.l10n.musicScraperSourcesPageHelpMusicTagWeb,
                   style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Text(
-                '把刮削请求转发到你自己部署的 Music Tag Web 服务（开源项目 xhongc/music_tag_web）， '
-                '由你的服务器决定具体走哪个上游音乐平台，本应用只对接服务器接口。',
+                context.l10n.musicScraperSourcesPageHelpMusicTagWebDesc,
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
               SizedBox(height: 12),
-              Text('以下为商业平台刮削源（默认禁用）：',
+              Text(context.l10n.musicScraperSourcesPageHelpCommercialTitle,
                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
               SizedBox(height: 8),
-              Text('• QQ音乐 / 酷狗 / 酷我 / 咪咕：使用未公开 API，违反平台 ToS'),
-              Text('• 网易云音乐：使用加密请求绕过限制，存在不正当竞争争议'),
+              Text(context.l10n.musicScraperSourcesPageHelpCommercialApis),
+              Text(context.l10n.musicScraperSourcesPageHelpNetease),
               SizedBox(height: 8),
               Text(
-                '启用上述商业平台刮削源前请知悉相关法律风险。本应用仅获取元数据/封面/歌词写入你本地音频文件，'
-                '不下载也不传播音频本体；请仅用于管理你合法获取的音乐，并自行承担合规责任。',
+                context.l10n.musicScraperSourcesPageHelpCommercialRiskDisclaimer,
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
               SizedBox(height: 16),
-              Text('功能说明：', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(context.l10n.musicScraperSourcesPageHelpFeaturesTitle, style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
-              Text('• 元数据：歌曲名、艺术家、专辑等'),
-              Text('• 封面：专辑封面图片'),
-              Text('• 歌词：歌词文本（LRC 格式）'),
-              Text('• 声纹：通过音频指纹识别歌曲'),
+              Text(context.l10n.musicScraperSourcesPageHelpMetadata),
+              Text(context.l10n.musicScraperSourcesPageHelpCover),
+              Text(context.l10n.musicScraperSourcesPageHelpLyrics),
+              Text(context.l10n.musicScraperSourcesPageHelpFingerprint),
               SizedBox(height: 16),
-              Text('外部资源：', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(context.l10n.musicScraperSourcesPageHelpResourcesTitle, style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Text('• AcoustID API Key: acoustid.org/api-key'),
               Text('• Music Tag Web: github.com/xhongc/music_tag_web'),
@@ -506,7 +503,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('知道了'),
+            child: Text(context.l10n.musicScraperSourcesPageHelpClose),
           ),
         ],
       ),
@@ -620,7 +617,7 @@ class _MusicScraperTypeCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '即将支持',
+                                context.l10n.musicScraperSourcesPageCardComingSoon,
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
                                   fontSize: 10,
@@ -636,8 +633,8 @@ class _MusicScraperTypeCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '已配置',
-                                style: TextStyle(
+                                context.l10n.musicScraperSourcesPageCardConfigured,
+                                style: const TextStyle(
                                   fontSize: 10,
                                   color: AppColors.success,
                                   fontWeight: FontWeight.w500,
@@ -662,7 +659,7 @@ class _MusicScraperTypeCard extends StatelessWidget {
                       color: isDark ? Colors.grey[500] : Colors.grey[400],
                       size: 22,
                     ),
-                    tooltip: '配置',
+                    tooltip: context.l10n.musicScraperSourcesPageCardConfigure,
                     visualDensity: VisualDensity.compact,
                   ),
 
@@ -689,16 +686,16 @@ class _MusicScraperTypeCard extends StatelessWidget {
     final chips = <Widget>[];
 
     if (type.supportsMetadata) {
-      chips.add(_buildChip(context, '元数据', colorScheme.primaryContainer));
+      chips.add(_buildChip(context, context.l10n.musicScraperSourcesPageCapabilityMetadata, colorScheme.primaryContainer));
     }
     if (type.supportsCover) {
-      chips.add(_buildChip(context, '封面', colorScheme.secondaryContainer));
+      chips.add(_buildChip(context, context.l10n.musicScraperSourcesPageCapabilityCover, colorScheme.secondaryContainer));
     }
     if (type.supportsLyrics) {
-      chips.add(_buildChip(context, '歌词', colorScheme.tertiaryContainer));
+      chips.add(_buildChip(context, context.l10n.musicScraperSourcesPageCapabilityLyrics, colorScheme.tertiaryContainer));
     }
     if (type.supportsFingerprint) {
-      chips.add(_buildChip(context, '声纹', colorScheme.errorContainer));
+      chips.add(_buildChip(context, context.l10n.musicScraperSourcesPageCapabilityFingerprint, colorScheme.errorContainer));
     }
 
     return Wrap(
@@ -889,8 +886,8 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
                       // Cookie
                       if (widget.type.supportsCookie) ...[
                         _buildTextField(
-                          label: 'Cookie（可选）',
-                          hint: '登录后可获取更多内容',
+                          label: context.l10n.musicScraperSourcesPageConfigSheetCookieLabel,
+                          hint: context.l10n.musicScraperSourcesPageConfigSheetCookieHint,
                           controller: _cookieController,
                           isRequired: false,
                           isObscure: _obscureCookie,
@@ -900,7 +897,7 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '从浏览器开发者工具复制 Cookie',
+                          context.l10n.musicScraperSourcesPageConfigSheetCookieHelper,
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -912,8 +909,8 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
                       // Music Tag Web 配置
                       if (widget.type.requiresServerUrl) ...[
                         _buildTextField(
-                          label: '服务器地址',
-                          hint: '例如: http://192.168.1.100:8002',
+                          label: context.l10n.musicScraperSourcesPageConfigSheetServerUrlLabel,
+                          hint: context.l10n.musicScraperSourcesPageConfigSheetServerUrlHint,
                           controller: _serverUrlController,
                           isRequired: true,
                           isUrl: true,
@@ -921,7 +918,7 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Music Tag Web 服务器的地址和端口',
+                          context.l10n.musicScraperSourcesPageConfigSheetServerUrlHelper,
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -932,8 +929,8 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
                           children: [
                             Expanded(
                               child: _buildTextField(
-                                label: '用户名',
-                                hint: '默认: admin',
+                                label: context.l10n.musicScraperSourcesPageConfigSheetUsernameLabel,
+                                hint: context.l10n.musicScraperSourcesPageConfigSheetUsernameHint,
                                 controller: _usernameController,
                                 isRequired: false,
                                 isDark: isDark,
@@ -942,8 +939,8 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
                             const SizedBox(width: 16),
                             Expanded(
                               child: _buildTextField(
-                                label: '密码',
-                                hint: '服务器密码',
+                                label: context.l10n.musicScraperSourcesPageConfigSheetPasswordLabel,
+                                hint: context.l10n.musicScraperSourcesPageConfigSheetPasswordHint,
                                 controller: _passwordController,
                                 isRequired: false,
                                 isObscure: _obscurePassword,
@@ -986,7 +983,7 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
                                     child: CircularProgressIndicator(strokeWidth: 2),
                                   )
                                 : const Icon(Icons.wifi_tethering_rounded, size: 18),
-                            label: Text(widget.isTesting ? '测试中...' : '测试连接'),
+                            label: Text(widget.isTesting ? context.l10n.musicScraperSourcesPageConfigSheetTestButtonTesting : context.l10n.musicScraperSourcesPageConfigSheetTestButton),
                           ),
                         ),
                       if (widget.onTest != null) const SizedBox(width: 12),
@@ -994,7 +991,7 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
                         child: FilledButton.icon(
                           onPressed: _handleSave,
                           icon: const Icon(Icons.check_rounded, size: 18),
-                          label: const Text('保存'),
+                          label: Text(context.l10n.musicScraperSourcesPageConfigSheetSaveButton),
                           style: FilledButton.styleFrom(
                             backgroundColor: widget.type.themeColor,
                           ),
@@ -1012,18 +1009,22 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
   }
 
   String _getTypeDescription() {
+    final l = AppLocalizations.of(context);
     final capabilities = <String>[];
-    if (widget.type.supportsMetadata) capabilities.add('元数据');
-    if (widget.type.supportsCover) capabilities.add('封面');
-    if (widget.type.supportsLyrics) capabilities.add('歌词');
-    if (widget.type.supportsFingerprint) capabilities.add('声纹识别');
-    return capabilities.isEmpty ? '音乐刮削源' : '支持: ${capabilities.join('、')}';
+    if (widget.type.supportsMetadata) capabilities.add(l.musicScraperSourcesPageCapabilityMetadata);
+    if (widget.type.supportsCover) capabilities.add(l.musicScraperSourcesPageCapabilityCover);
+    if (widget.type.supportsLyrics) capabilities.add(l.musicScraperSourcesPageCapabilityLyrics);
+    if (widget.type.supportsFingerprint) capabilities.add(l.musicScraperSourcesPageCapabilityFingerprint);
+    return capabilities.isEmpty ? l.musicScraperSourcesPageTypeDescriptionDefault : l.musicScraperSourcesPageTypeDescriptionSupports(capabilities.join('、'));
   }
 
-  String _getApiKeyHint() => switch (widget.type) {
-        MusicScraperType.acoustId => '从 acoustid.org 获取',
-        _ => '请输入 API Key',
-      };
+  String _getApiKeyHint() {
+    final l = AppLocalizations.of(context);
+    return switch (widget.type) {
+      MusicScraperType.acoustId => l.musicScraperSourcesPageConfigSheetApiKeyHintAcoustID,
+      _ => l.musicScraperSourcesPageConfigSheetApiKeyHintDefault,
+    };
+  }
 
   void _handleSave() {
     // 验证必填项
@@ -1051,19 +1052,20 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
   }
 
   Widget _buildPreferredSourceDropdown(bool isDark) {
-    const options = [
-      ('netease', '网易云音乐'),
-      ('qmusic', 'QQ音乐'),
-      ('kugou', '酷狗音乐'),
-      ('kuwo', '酷我音乐'),
-      ('migu', '咪咕音乐'),
+    final l = AppLocalizations.of(context);
+    final options = [
+      ('netease', l.musicScraperSourcesPageConfigSheetPreferredSourceNetease),
+      ('qmusic', l.musicScraperSourcesPageConfigSheetPreferredSourceQQ),
+      ('kugou', l.musicScraperSourcesPageConfigSheetPreferredSourceKugou),
+      ('kuwo', l.musicScraperSourcesPageConfigSheetPreferredSourceKuwo),
+      ('migu', l.musicScraperSourcesPageConfigSheetPreferredSourceMigu),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '首选音乐源',
+          context.l10n.musicScraperSourcesPageConfigSheetPreferredSourceLabel,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
@@ -1099,7 +1101,7 @@ class _MusicScraperConfigSheetState extends State<_MusicScraperConfigSheet> {
         ),
         const SizedBox(height: 8),
         Text(
-          '搜索时优先使用的音乐平台',
+          context.l10n.musicScraperSourcesPageConfigSheetPreferredSourceHelper,
           style: TextStyle(
             fontSize: 12,
             color: isDark ? Colors.grey[500] : Colors.grey[600],

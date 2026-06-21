@@ -329,7 +329,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
     }
 
     if (fileSystem == null) {
-      context.showErrorToast('无法访问文件系统');
+      context.showErrorToast(context.l10n.musicManualScraperFileSystemUnavailable);
       return;
     }
 
@@ -383,7 +383,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
 
       if (!mounted) return;
 
-      context.showSuccessToast('刮削完成');
+      context.showSuccessToast(context.l10n.musicManualScraperCompletedToast);
       Navigator.pop(context, true);
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'ManualMusicScraperPage._confirmAndScrape');
@@ -717,14 +717,14 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('手动刮削'),
+        title: Text(context.l10n.musicManualScraperPageTitle),
         actions: [
           if (_totalResultCount > 0)
             Center(
               child: Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: Text(
-                  '$_totalResultCount 个结果',
+                  context.l10n.musicManualScraperResultCount(_totalResultCount),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -860,7 +860,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
           child: TextField(
             controller: _titleController,
             decoration: InputDecoration(
-              hintText: '歌曲名称',
+              hintText: context.l10n.musicManualScraperSongHint,
               prefixIcon: const Icon(Icons.music_note_outlined, size: 20),
               border: const OutlineInputBorder(),
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -875,8 +875,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
           flex: 2,
           child: TextField(
             controller: _artistController,
-            decoration: const InputDecoration(
-              hintText: '艺术家',
+            decoration: InputDecoration(
+              hintText: context.l10n.musicManualScraperArtistHint,
               prefixIcon: Icon(Icons.person_outline, size: 20),
               border: OutlineInputBorder(),
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -921,7 +921,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
             const SizedBox(height: 16),
             Text(_errorMessage!, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton(onPressed: _search, child: const Text('重试')),
+            FilledButton(onPressed: _search, child: Text(context.l10n.musicManualScraperRetryButton)),
           ],
         ),
       );
@@ -939,14 +939,14 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
             ),
             const SizedBox(height: 16),
             Text(
-              '未找到结果',
+              context.l10n.musicManualScraperNoResults,
               style: theme.textTheme.titleMedium?.copyWith(
                 color: isDark ? AppColors.darkOnSurfaceVariant : theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '尝试调整搜索关键词',
+              context.l10n.musicManualScraperAdjustKeywords,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: isDark ? AppColors.darkOnSurfaceVariant : theme.colorScheme.outline,
               ),
@@ -1266,10 +1266,10 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                                   const SizedBox(width: 8),
                                   // 可用内容指示
                                   if (_selectedCover != null)
-                                    _buildFeatureChip(Icons.image_rounded, '封面', isDark),
+                                    _buildFeatureChip(Icons.image_rounded, context.l10n.musicManualScraperCoverFeature, isDark),
                                   if (_selectedLyrics?.hasLyrics ?? false) ...[
                                     const SizedBox(width: 4),
-                                    _buildFeatureChip(Icons.lyrics_rounded, '歌词', isDark),
+                                    _buildFeatureChip(Icons.lyrics_rounded, context.l10n.musicManualScraperLyricsFeature, isDark),
                                   ],
                                 ],
                               ),
@@ -1285,7 +1285,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                       children: [
                         Expanded(
                           child: _buildCompactOption(
-                            '封面${_hasCover ? "(覆盖)" : ""}',
+                            context.l10n.musicManualScraperCoverOption(_hasCover ? '(覆盖)' : ''),
                             _downloadCover && _selectedCover != null,
                             _selectedCover != null
                                 ? (v) => setState(() => _downloadCover = v)
@@ -1297,7 +1297,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                         const SizedBox(width: 8),
                         Expanded(
                           child: _buildCompactOption(
-                            '歌词${_hasLyrics ? "(覆盖)" : ""}',
+                            context.l10n.musicManualScraperLyricsOption(_hasLyrics ? '(覆盖)' : ''),
                             _downloadLyrics && (_selectedLyrics?.hasLyrics ?? false),
                             (_selectedLyrics?.hasLyrics ?? false)
                                 ? (v) => setState(() => _downloadLyrics = v)
@@ -1310,7 +1310,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                           const SizedBox(width: 8),
                           Expanded(
                             child: _buildCompactOption(
-                              '写入标签',
+                              context.l10n.musicManualScraperWriteTagsOption,
                               _writeToFile,
                               (v) => setState(() => _writeToFile = v),
                               theme,
@@ -1328,7 +1328,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                         Expanded(
                           child: OutlinedButton(
                             onPressed: _isScraping ? null : () => setState(_clearSelection),
-                            child: const Text('取消选择'),
+                            child: Text(context.l10n.musicManualScraperDeselectButton),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -1346,7 +1346,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                                     ),
                                   )
                                 : const Icon(Icons.check_rounded, size: 18),
-                            label: const Text('确认刮削'),
+                            label: Text(context.l10n.musicManualScraperConfirmButton),
                           ),
                         ),
                       ],
@@ -1368,7 +1368,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      '正在获取详情...',
+                      context.l10n.musicManualScraperLoadingDetails,
                       style: theme.textTheme.bodyMedium,
                     ),
                   ],

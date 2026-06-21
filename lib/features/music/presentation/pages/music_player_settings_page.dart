@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/lyrics_translation_service.dart';
 import 'package:my_nas/features/music/data/services/music_audio_handler_interface.dart';
 import 'package:my_nas/features/music/presentation/pages/audio_effects_page.dart';
@@ -36,7 +37,7 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
           leading: const RoundedBackButton(),
           backgroundColor: isDark ? AppColors.darkSurface : null,
           title: Text(
-            '音乐播放设置',
+            context.l10n.musicPlayerSettingsPageTitle,
             style: TextStyle(
               color: isDark ? AppColors.darkOnSurface : null,
               fontWeight: FontWeight.bold,
@@ -53,16 +54,16 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
             _buildEngineSection(context, settings, notifier, isDark),
             const SizedBox(height: AppSpacing.lg),
             // 播放模式
-            _buildPlayModeSection(settings, notifier, isDark),
+            _buildPlayModeSection(context, settings, notifier, isDark),
             const SizedBox(height: AppSpacing.lg),
             // 音量控制
-            _buildVolumeSection(settings, notifier, isDark),
+            _buildVolumeSection(context, settings, notifier, isDark),
             const SizedBox(height: AppSpacing.lg),
             // 淡入淡出
-            _buildCrossfadeSection(settings, notifier, isDark),
+            _buildCrossfadeSection(context, settings, notifier, isDark),
             const SizedBox(height: AppSpacing.lg),
             // 开关选项
-            _buildSwitchOptions(settings, notifier, isDark),
+            _buildSwitchOptions(context, settings, notifier, isDark),
             const SizedBox(height: AppSpacing.lg),
             // 均衡器入口
             _buildEqualizerEntry(context, isDark),
@@ -79,8 +80,8 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
     MusicSettingsNotifier notifier,
     bool isDark,
   ) => _SettingsSection(
-      title: '播放引擎',
-      subtitle: '切换需要重启应用生效',
+      title: context.l10n.musicPlayerEngineSection,
+      subtitle: context.l10n.musicPlayerEngineHint,
       icon: Icons.memory_rounded,
       isDark: isDark,
       child: Column(
@@ -89,8 +90,8 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
             children: [
               _EngineButton(
                 icon: Icons.phone_android_rounded,
-                title: '平台原生',
-                subtitle: '稳定 / 低功耗',
+                title: context.l10n.musicPlayerEnginePlatformNativeTitle,
+                subtitle: context.l10n.musicPlayerEnginePlatformNativeDesc,
                 isSelected: settings.playerEngine == MusicPlayerEngine.justAudio,
                 isDark: isDark,
                 onTap: () => _switchEngine(
@@ -103,8 +104,8 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
               const SizedBox(width: 12),
               _EngineButton(
                 icon: Icons.graphic_eq_rounded,
-                title: 'FFmpeg',
-                subtitle: 'FLAC / DSD / 全格式',
+                title: context.l10n.musicPlayerEngineFFmpegTitle,
+                subtitle: context.l10n.musicPlayerEngineFFmpegDesc,
                 isSelected: settings.playerEngine == MusicPlayerEngine.mediaKit,
                 isDark: isDark,
                 onTap: () => _switchEngine(
@@ -139,10 +140,10 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     settings.playerEngine == MusicPlayerEngine.mediaKit
-                        ? '当前使用 FFmpeg 引擎，支持 FLAC、DSD、APE 等全格式音频'
+                        ? context.l10n.musicPlayerEngineFFmpegInfoText
                         : Platform.isIOS
-                            ? '平台原生引擎更省电，但 iOS 不支持 FLAC 等格式'
-                            : '当前使用平台原生引擎，更省电',
+                            ? context.l10n.musicPlayerEngineNativeInfoIOS
+                            : context.l10n.musicPlayerEngineNativeInfoOther,
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark ? Colors.amber[300] : Colors.amber[800],
@@ -166,30 +167,30 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
 
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('切换播放引擎'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.musicPlayerEngineSwitchDialogTitle),
         content: Text(
           newEngine == MusicPlayerEngine.mediaKit
-              ? '切换到 FFmpeg 引擎后，将支持 FLAC、DSD、APE、WMA 等全格式音频。\n\n需要重启应用才能生效。'
-              : '切换到平台原生引擎后，将更加省电但 iOS 不支持 FLAC 等格式。\n\n需要重启应用才能生效。',
+              ? context.l10n.musicPlayerEngineSwitchToFFmpegContent
+              : context.l10n.musicPlayerEngineSwitchToNativeContent,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(context.l10n.musicPlayerEngineSwitchCancel),
           ),
           FilledButton(
             onPressed: () {
               notifier.setPlayerEngine(newEngine);
-              Navigator.of(context).pop();
+              Navigator.of(dialogContext).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('播放引擎已更改，请重启应用生效'),
+                SnackBar(
+                  content: Text(context.l10n.musicPlayerEngineChangedSnackBar),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
             },
-            child: const Text('确认切换'),
+            child: Text(context.l10n.musicPlayerEngineSwitchConfirm),
           ),
         ],
       ),
@@ -197,18 +198,19 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
   }
 
   Widget _buildPlayModeSection(
+    BuildContext context,
     MusicSettings settings,
     MusicSettingsNotifier notifier,
     bool isDark,
   ) => _SettingsSection(
-      title: '默认播放模式',
+      title: context.l10n.musicPlayerPlayModeSection,
       icon: Icons.repeat_rounded,
       isDark: isDark,
       child: Row(
         children: [
           _PlayModeButton(
             icon: Icons.repeat_rounded,
-            label: '列表循环',
+            label: context.l10n.musicPlayerPlayModeLoop,
             isSelected: settings.playMode == PlayMode.loop,
             isDark: isDark,
             onTap: () => notifier.setPlayMode(PlayMode.loop),
@@ -216,7 +218,7 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
           const SizedBox(width: 12),
           _PlayModeButton(
             icon: Icons.repeat_one_rounded,
-            label: '单曲循环',
+            label: context.l10n.musicPlayerPlayModeRepeatOne,
             isSelected: settings.playMode == PlayMode.repeatOne,
             isDark: isDark,
             onTap: () => notifier.setPlayMode(PlayMode.repeatOne),
@@ -224,7 +226,7 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
           const SizedBox(width: 12),
           _PlayModeButton(
             icon: Icons.shuffle_rounded,
-            label: '随机播放',
+            label: context.l10n.musicPlayerPlayModeShuffle,
             isSelected: settings.playMode == PlayMode.shuffle,
             isDark: isDark,
             onTap: () => notifier.setPlayMode(PlayMode.shuffle),
@@ -234,11 +236,12 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
     );
 
   Widget _buildVolumeSection(
+    BuildContext context,
     MusicSettings settings,
     MusicSettingsNotifier notifier,
     bool isDark,
   ) => _SettingsSection(
-      title: '默认音量',
+      title: context.l10n.musicPlayerVolumeSection,
       icon: Icons.volume_up_rounded,
       isDark: isDark,
       child: Row(
@@ -293,12 +296,13 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
     );
 
   Widget _buildCrossfadeSection(
+    BuildContext context,
     MusicSettings settings,
     MusicSettingsNotifier notifier,
     bool isDark,
   ) => _SettingsSection(
-      title: '歌曲切换淡入淡出',
-      subtitle: '歌曲切换时平滑过渡',
+      title: context.l10n.musicPlayerCrossfadeSection,
+      subtitle: context.l10n.musicPlayerCrossfadeSubtitle,
       icon: Icons.compare_arrows_rounded,
       isDark: isDark,
       child: Wrap(
@@ -307,7 +311,7 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
         children: availableCrossfadeDurations.map((duration) {
           final isSelected = duration == settings.crossfadeDuration;
           return _DurationChip(
-            label: duration == 0 ? '关闭' : '$duration秒',
+            label: duration == 0 ? context.l10n.musicPlayerCrossfadeOff : context.l10n.musicPlayerCrossfadeDuration(duration),
             isSelected: isSelected,
             isDark: isDark,
             onTap: () => notifier.setCrossfadeDuration(duration),
@@ -318,15 +322,15 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
 
   Widget _buildEqualizerEntry(BuildContext context, bool isDark) =>
       _SettingsSection(
-        title: '均衡器',
-        subtitle: '10 段 EQ + 8 个预设',
+        title: context.l10n.musicPlayerEqualizerSection,
+        subtitle: context.l10n.musicPlayerEqualizerHint,
         icon: Icons.equalizer_rounded,
         isDark: isDark,
         child: ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.tune_rounded),
-          title: const Text('打开均衡器'),
-          subtitle: const Text('Android 走系统硬件 EQ；桌面 media_kit 走 mpv af'),
+          title: Text(context.l10n.musicPlayerEqualizerOpen),
+          subtitle: Text(context.l10n.musicPlayerEqualizerNote),
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: () => Navigator.of(context).push<void>(
             MaterialPageRoute(builder: (_) => const AudioEffectsPage()),
@@ -335,6 +339,7 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
       );
 
   Widget _buildSwitchOptions(
+    BuildContext context,
     MusicSettings settings,
     MusicSettingsNotifier notifier,
     bool isDark,
@@ -342,8 +347,8 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
       children: [
         _SettingsSwitch(
           icon: Icons.graphic_eq_rounded,
-          title: '无缝播放',
-          subtitle: '播放列表歌曲之间无间隙',
+          title: context.l10n.musicPlayerGaplessPlaybackTitle,
+          subtitle: context.l10n.musicPlayerGaplessPlaybackDesc,
           value: settings.gaplessPlayback,
           isDark: isDark,
           onChanged: (value) => notifier.setGaplessPlayback(enabled: value),
@@ -351,8 +356,8 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
         const SizedBox(height: 12),
         _SettingsSwitch(
           icon: Icons.lyrics_rounded,
-          title: '显示歌词',
-          subtitle: '在播放页面显示歌词（如果可用）',
+          title: context.l10n.musicPlayerLyricsShowTitle,
+          subtitle: context.l10n.musicPlayerLyricsShowDesc,
           value: settings.showLyrics,
           isDark: isDark,
           onChanged: (value) => notifier.setShowLyrics(enabled: value),
@@ -360,8 +365,8 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
         const SizedBox(height: 12),
         _SettingsSwitch(
           icon: Icons.play_circle_outline_rounded,
-          title: '连接后自动播放',
-          subtitle: '连接到数据源后自动继续上次播放',
+          title: context.l10n.musicPlayerAutoPlayOnConnectTitle,
+          subtitle: context.l10n.musicPlayerAutoPlayOnConnectDesc,
           value: settings.autoPlayOnConnect,
           isDark: isDark,
           onChanged: (value) => notifier.setAutoPlayOnConnect(enabled: value),
@@ -369,8 +374,8 @@ class MusicPlayerSettingsPage extends ConsumerWidget {
         const SizedBox(height: 12),
         _SettingsSwitch(
           icon: Icons.translate_rounded,
-          title: '歌词翻译',
-          subtitle: '使用 Google 翻译（免费，需联网）',
+          title: context.l10n.musicPlayerLyricsTranslateTitle,
+          subtitle: context.l10n.musicPlayerLyricsTranslateDesc,
           value: settings.lyricsTranslateEnabled,
           isDark: isDark,
           onChanged: (value) => notifier.setLyricsTranslateEnabled(enabled: value),
@@ -418,7 +423,7 @@ class _LyricsTranslateLangTile extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '目标语言',
+                context.l10n.musicPlayerLyricsTranslateLangTitle,
                 style: TextStyle(
                   fontSize: 14,
                   color: isDark ? Colors.white70 : Colors.black87,
@@ -448,7 +453,7 @@ class _LyricsTranslateLangTile extends StatelessWidget {
     final picked = await showDialog<LyricsTranslationLang>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: const Text('翻译目标语言'),
+        title: Text(ctx.l10n.musicPlayerLyricsTranslateLangDialogTitle),
         children: [
           for (final lang in LyricsTranslationLang.values)
             SimpleDialogOption(

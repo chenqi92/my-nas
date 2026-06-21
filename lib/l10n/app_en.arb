@@ -5814,5 +5814,605 @@
         "type": "int"
       }
     }
+  },
+  "musicGreetingLateNight": "It is getting late",
+  "musicGreetingMorning": "Good morning",
+  "musicGreetingNoon": "Good noon",
+  "musicGreetingAfternoon": "Good afternoon",
+  "musicGreetingEvening": "Good evening",
+  "musicTrackCountLabel": "{count} songs",
+  "@musicTrackCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicMetadataExtracting": "Extracting metadata {processed}/{total}",
+  "@musicMetadataExtracting": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "musicMetadataLoading": "Loading metadata...",
+  "musicSearchTooltip": "Search",
+  "musicQueueTooltip": "Playback queue",
+  "musicMoreTooltip": "More",
+  "musicHomeLayoutMenuLabel": "Home layout",
+  "musicMediaLibraryMenuLabel": "Media library settings",
+  "musicSourcesMenuLabel": "Connect sources",
+  "musicSearchHintLong": "Search songs, artists, albums...",
+  "musicSearchHintShort": "Search songs, artists...",
+  "musicSourceFilterAll": "All",
+  "musicSourceFilterLocal": "Local",
+  "musicSourceFilterRemote": "NAS",
+  "musicSortByName": "Name",
+  "musicSortByArtist": "Artist",
+  "musicSortByAlbum": "Album",
+  "musicSortByDateAdded": "Date added",
+  "musicSortByDuration": "Duration",
+  "musicCategoryAll": "All songs",
+  "musicCategoryArtists": "Artists",
+  "musicCategoryAlbums": "Albums",
+  "musicCategoryFolders": "Folders",
+  "musicCategoryFavorites": "My favorites",
+  "musicCategoryRecent": "Recently played",
+  "musicCategoryGenres": "Genres",
+  "musicCategoryYears": "Decades",
+  "musicCategoryPlaylists": "Playlists",
+  "musicEmptyNoSongs": "No songs",
+  "musicEmptyScanHint": "Scan music library to add songs",
+  "musicTableHeaderTitle": "Title",
+  "musicTableHeaderArtist": "Artist",
+  "musicTableHeaderAlbum": "Album",
+  "musicTableHeaderDuration": "Duration",
+  "musicSortTitle": "Sort by",
+  "musicSortAscending": "Ascending",
+  "musicSortDescending": "Descending",
+  "musicPlayAll": "Play all",
+  "musicShufflePlay": "Shuffle play",
+  "musicGridViewTooltip": "Grid view",
+  "musicTableViewTooltip": "Table view",
+  "musicOfflineBadge": "Offline",
+  "musicRemoveFromLibraryTitle": "Remove from library",
+  "musicRemoveFromLibraryConfirm": "Remove",
+  "musicDeleteSourceFileTitle": "Delete source file",
+  "musicAddToPlaylistTitle": "Add to playlist",
+  "musicCreatePlaylistTitle": "Create playlist",
+  "musicRenamePlaylistTitle": "Rename playlist",
+  "musicDeletePlaylistTitle": "Delete playlist",
+  "musicCancelButton": "Cancel",
+  "musicConfirmButton": "Confirm",
+  "musicCreateButton": "Create",
+  "musicDeleteButton": "Delete",
+  "musicCreateAndAddButton": "Create and add",
+  "musicCreateNewPlaylist": "Create new playlist",
+  "musicRenamePlaylistHint": "Playlist name",
+  "musicNextToPlayLabel": "Play next",
+  "musicAddToQueueLabel": "Add to playback queue",
+  "musicAddToFavoritesLabel": "Add to favorites",
+  "musicPlayLabel": "Play",
+  "musicAddToQueueLabel2": "Add to queue",
+  "musicViewArtistLabel": "View artist",
+  "musicViewAlbumLabel": "View album",
+  "musicRenameLabel": "Rename",
+  "musicPlaylistButtonLabel": "New",
+  "musicManualScrapeLabel": "Manual scrape",
+  "musicConnectSourcesButton": "Connect Management",
+  "musicAddedNextToPlayToast": "Added to play next",
+  "musicAddedToQueueToast": "Added to playback queue",
+  "musicAddedFavoriteToast": "Added to favorites",
+  "musicRemovedFavoriteToast": "Removed from favorites",
+  "musicRemovedFromLibraryToast": "Removed from library",
+  "musicRemoveFailedToast": "Remove failed",
+  "musicDeletedSourceFileToast": "Source file deleted",
+  "musicDeleteFailedCheckConnectionToast": "Delete failed, please check connection status",
+  "musicSourceNotConnectedWarning": "Source not connected, please connect to NAS first",
+  "musicPlayFailedError": "Playback failed",
+  "musicImportFailedError": "Import failed: Invalid format or empty",
+  "musicFavoritedToast": "Added to favorites",
+  "musicUnfavoritedToast": "Removed from favorites",
+  "musicOperationFailedError": "Operation failed",
+  "musicScraperSourcesPageTitle": "Music Scraper Sources",
+  "musicScraperSourcesPageReorderDone": "Done sorting",
+  "musicScraperSourcesPageReorderAdjust": "Adjust order",
+  "musicScraperSourcesPageHelp": "Help",
+  "musicScraperSourcesPageLoadError": "Failed to load: {error}",
+  "@musicScraperSourcesPageLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicScraperSourcesPageRetry": "Retry",
+  "musicScraperSourcesPageNoConfiguredEmpty": "No configured scraper sources to reorder",
+  "musicScraperSourcesPageReorderHint": "Drag to adjust priority (earlier numbers are tried first); unconfigured sources don't participate in sorting",
+  "musicScraperSourcesPageRiskWarningTitleHigh": "Please be aware (higher risk)",
+  "musicScraperSourcesPageRiskWarningTitle": "Please be aware",
+  "musicScraperSourcesPageRiskAboutToEnable": "About to enable: {sourceName}",
+  "@musicScraperSourcesPageRiskAboutToEnable": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "musicScraperSourcesPageRiskDisclaimer": "This app only retrieves metadata / cover art / lyrics and writes them to your local audio files, without downloading or distributing the audio itself.",
+  "musicScraperSourcesPageRiskCancel": "Cancel",
+  "musicScraperSourcesPageRiskAcknowledge": "I understand the risks, enable it",
+  "musicScraperSourcesPageConfigSaved": "{sourceName} configuration saved",
+  "@musicScraperSourcesPageConfigSaved": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "musicScraperSourcesPageHelpTitle": "Scraper Sources Guide",
+  "musicScraperSourcesPageHelpRecommendedTitle": "Recommended Configuration (by compliance priority):",
+  "musicScraperSourcesPageHelpMusicBrainz": "1. MusicBrainz - Open music database, CC0 metadata + cover art (enabled by default)",
+  "musicScraperSourcesPageHelpAcoustID": "2. AcoustID - Acoustic fingerprinting (requires API Key, recommended)",
+  "musicScraperSourcesPageHelpMusicTagWeb": "3. Music Tag Web - Self-hosted scraper gateway (requires server deployment, disabled by default)",
+  "musicScraperSourcesPageHelpMusicTagWebDesc": "Forward scraper requests to your own deployed Music Tag Web service (open-source project xhongc/music_tag_web), and let your server decide which upstream music platform to use. This app only interfaces with the server.",
+  "musicScraperSourcesPageHelpCommercialTitle": "The following are commercial platform scrapers (disabled by default):",
+  "musicScraperSourcesPageHelpCommercialApis": "• QQ Music / Kugou / Kuwo / Migu: Use undisclosed APIs, violating platform ToS",
+  "musicScraperSourcesPageHelpNetease": "• NetEase Cloud Music: Use encrypted requests to bypass restrictions, subject to unfair competition disputes",
+  "musicScraperSourcesPageHelpCommercialRiskDisclaimer": "Please be aware of the legal risks before enabling commercial platform scrapers. This app only retrieves metadata/cover/lyrics and writes them to your local audio files, without downloading or distributing the audio itself; use only for managing music you've legally obtained, and take full responsibility for compliance.",
+  "musicScraperSourcesPageHelpFeaturesTitle": "Features:",
+  "musicScraperSourcesPageHelpMetadata": "• Metadata: Song name, artist, album, etc.",
+  "musicScraperSourcesPageHelpCover": "• Cover: Album cover images",
+  "musicScraperSourcesPageHelpLyrics": "• Lyrics: Lyrics text (LRC format)",
+  "musicScraperSourcesPageHelpFingerprint": "• Fingerprint: Identify songs through audio fingerprinting",
+  "musicScraperSourcesPageHelpResourcesTitle": "External Resources:",
+  "musicScraperSourcesPageHelpClose": "Got it",
+  "musicScraperSourcesPageCardComingSoon": "Coming soon",
+  "musicScraperSourcesPageCardConfigured": "Configured",
+  "musicScraperSourcesPageCardConfigure": "Configure",
+  "musicScraperSourcesPageCapabilityMetadata": "Metadata",
+  "musicScraperSourcesPageCapabilityCover": "Cover",
+  "musicScraperSourcesPageCapabilityLyrics": "Lyrics",
+  "musicScraperSourcesPageCapabilityFingerprint": "Fingerprint",
+  "musicScraperSourcesPageTypeDescriptionDefault": "Music scraper source",
+  "musicScraperSourcesPageTypeDescriptionSupports": "Supports: {capabilities}",
+  "@musicScraperSourcesPageTypeDescriptionSupports": {
+    "placeholders": {
+      "capabilities": {
+        "type": "String"
+      }
+    }
+  },
+  "musicScraperSourcesPageConfigSheetCookieLabel": "Cookie (optional)",
+  "musicScraperSourcesPageConfigSheetCookieHint": "Get more content after logging in",
+  "musicScraperSourcesPageConfigSheetCookieHelper": "Copy Cookie from browser developer tools",
+  "musicScraperSourcesPageConfigSheetServerUrlLabel": "Server address",
+  "musicScraperSourcesPageConfigSheetServerUrlHint": "e.g., http://192.168.1.100:8002",
+  "musicScraperSourcesPageConfigSheetServerUrlHelper": "Music Tag Web server address and port",
+  "musicScraperSourcesPageConfigSheetUsernameLabel": "Username",
+  "musicScraperSourcesPageConfigSheetUsernameHint": "Default: admin",
+  "musicScraperSourcesPageConfigSheetPasswordLabel": "Password",
+  "musicScraperSourcesPageConfigSheetPasswordHint": "Server password",
+  "musicScraperSourcesPageConfigSheetTestButton": "Test Connection",
+  "musicScraperSourcesPageConfigSheetTestButtonTesting": "Testing...",
+  "musicScraperSourcesPageConfigSheetSaveButton": "Save",
+  "musicScraperSourcesPageConfigSheetPreferredSourceLabel": "Preferred music source",
+  "musicScraperSourcesPageConfigSheetPreferredSourceHelper": "Primary music platform when searching",
+  "musicScraperSourcesPageConfigSheetPreferredSourceNetease": "NetEase Cloud Music",
+  "musicScraperSourcesPageConfigSheetPreferredSourceQQ": "QQ Music",
+  "musicScraperSourcesPageConfigSheetPreferredSourceKugou": "Kugou Music",
+  "musicScraperSourcesPageConfigSheetPreferredSourceKuwo": "Kuwo Music",
+  "musicScraperSourcesPageConfigSheetPreferredSourceMigu": "Migu Music",
+  "musicScraperSourcesPageConfigSheetApiKeyHintAcoustID": "Get from acoustid.org",
+  "musicScraperSourcesPageConfigSheetApiKeyHintDefault": "Please enter API Key",
+  "musicPlaylistNotFound": "Playlist not found",
+  "musicRemoveTrackDialogTitle": "Remove Track",
+  "musicRemoveTrackDialogContent": "Remove \"{title}\" from this playlist?",
+  "@musicRemoveTrackDialogContent": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "commonCancel": "Cancel",
+  "musicRemoveTrackButton": "Remove",
+  "commonRetry": "Retry",
+  "commonMore": "More",
+  "musicPlaylistClear": "Clear Playlist",
+  "musicExportM3u8": "Export as m3u8",
+  "musicExportJson": "Export as JSON",
+  "musicTrackCount": "{count} songs",
+  "@musicTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPlaylistEmptyHint": "Browse music library to add songs to this playlist",
+  "musicPlay": "Play",
+  "musicAddToQueue": "Add to Queue",
+  "musicRemoveFromPlaylist": "Remove from Playlist",
+  "musicRenamePlaylistDialogTitle": "Rename Playlist",
+  "commonConfirm": "OK",
+  "musicClearPlaylistDialogTitle": "Clear Playlist",
+  "musicClearPlaylistDialogContent": "Remove all songs from this playlist?",
+  "musicClearButton": "Clear",
+  "musicDeletePlaylistDialogTitle": "Delete Playlist",
+  "musicDeletePlaylistDialogContent": "Delete playlist \"{name}\"? This cannot be undone.",
+  "@musicDeletePlaylistDialogContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "musicSettingsTitle": "Playback Settings",
+  "musicSettingsSubtitle": "Customize your music experience",
+  "musicSettingsReset": "Reset",
+  "musicSettingsPlayModeSection": "Play Mode",
+  "musicSettingsPlayModeLoop": "List Loop",
+  "musicSettingsPlayModeRepeatOne": "Repeat One",
+  "musicSettingsPlayModeShuffle": "Shuffle",
+  "musicSettingsVolumeSection": "Default Volume",
+  "musicSettingsCrossfadeSection": "Fade Between Tracks",
+  "musicSettingsCrossfadeSubtitle": "Smooth transition between tracks",
+  "musicSettingsCrossfadeOff": "Off",
+  "musicSettingsCrossfadeDuration": "{duration}s",
+  "@musicSettingsCrossfadeDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "int"
+      }
+    }
+  },
+  "musicSettingsGaplessPlayback": "Gapless Playback",
+  "musicSettingsGaplessPlaybackSubtitle": "No gaps between tracks in a playlist",
+  "musicSettingsShowLyrics": "Show Lyrics",
+  "musicSettingsShowLyricsSubtitle": "Display lyrics on player (if available)",
+  "musicSettingsAutoPlayOnConnect": "Auto-play After Connect",
+  "musicSettingsAutoPlayOnConnectSubtitle": "Resume playback after connecting to data source",
+  "musicSettingsDesktopEnhancementSection": "Desktop Enhancement",
+  "musicSettingsDesktopEnhancementSubtitleMacOS": "Desktop Lyrics & Menu Bar Player",
+  "musicSettingsDesktopEnhancementSubtitleOther": "Desktop Lyrics",
+  "musicSettingsDesktopLyrics": "Desktop Lyrics",
+  "musicSettingsDesktopLyricsSubtitle": "Display floating lyrics window on desktop",
+  "musicSettingsMenuBarPlayer": "Menu Bar Player",
+  "musicSettingsMenuBarPlayerSubtitle": "Show mini player in menu bar",
+  "musicSettingsShowLyricsOnMinimize": "Show Lyrics When Minimized",
+  "musicSettingsShowLyricsOnMinimizeSubtitle": "Auto-show desktop lyrics when main window is minimized",
+  "musicSettingsHideLyricsOnRestore": "Hide Lyrics When Restored",
+  "musicSettingsHideLyricsOnRestoreSubtitle": "Auto-hide desktop lyrics when main window is restored",
+  "musicSettingsDesktopLyricsHint": "Drag the lyrics window to reposition it. Hover over the window to show controls.",
+  "musicSettingsEngineSection": "Playback Engine",
+  "musicSettingsEngineSubtitle": "Requires app restart to take effect",
+  "musicSettingsEnginePlatformNative": "Platform Native",
+  "musicSettingsEnginePlatformNativeSubtitle": "Stable / Low Power",
+  "musicSettingsEngineFFmpeg": "FFmpeg",
+  "musicSettingsEngineFFmpegSubtitle": "AC3 / DTS / Dolby",
+  "musicSettingsEngineStatusFFmpeg": "Currently using FFmpeg engine, supports advanced audio formats like AC3, DTS, Dolby, etc.",
+  "musicSettingsEngineStatusPlatformNative": "Currently using platform native engine, more power-efficient but doesn't support AC3/DTS formats.",
+  "musicSettingsSwitchEngineDialogTitle": "Switch Playback Engine",
+  "musicSettingsSwitchEngineToFFmpegMessage": "After switching to FFmpeg engine, advanced audio formats such as AC3, DTS, and Dolby TrueHD will be supported.\n\nApp restart is required for the changes to take effect.",
+  "musicSettingsSwitchEngineToPlatformNativeMessage": "After switching to platform native engine, it will be more power-efficient but no longer support advanced formats like AC3/DTS.\n\nApp restart is required for the changes to take effect.",
+  "musicSettingsSwitchEngineCancelButton": "Cancel",
+  "musicSettingsSwitchEngineConfirmButton": "Confirm",
+  "musicSettingsEngineChangedSnackbar": "Playback engine changed. Please restart the app for changes to take effect.",
+  "musicPlayerSettingsPageTitle": "Music Playback Settings",
+  "musicPlayerEngineSection": "Playback Engine",
+  "musicPlayerEngineHint": "Restart required to take effect",
+  "musicPlayerEnginePlatformNativeTitle": "Platform Native",
+  "musicPlayerEnginePlatformNativeDesc": "Stable / Low power",
+  "musicPlayerEngineFFmpegTitle": "FFmpeg",
+  "musicPlayerEngineFFmpegDesc": "FLAC / DSD / All formats",
+  "musicPlayerEngineFFmpegInfoText": "Currently using FFmpeg engine, supports FLAC, DSD, APE and more audio formats",
+  "musicPlayerEngineNativeInfoIOS": "Platform native engine is more power-efficient, but iOS doesn't support FLAC and other formats",
+  "musicPlayerEngineNativeInfoOther": "Currently using platform native engine, more power-efficient",
+  "musicPlayerEngineSwitchDialogTitle": "Switch Playback Engine",
+  "musicPlayerEngineSwitchToFFmpegContent": "After switching to FFmpeg engine, it will support FLAC, DSD, APE, WMA and other audio formats.\\n\\nRestart the app to take effect.",
+  "musicPlayerEngineSwitchToNativeContent": "After switching to platform native engine, it will be more power-efficient but iOS won't support FLAC and other formats.\\n\\nRestart the app to take effect.",
+  "musicPlayerEngineSwitchCancel": "Cancel",
+  "musicPlayerEngineSwitchConfirm": "Confirm Switch",
+  "musicPlayerEngineChangedSnackBar": "Playback engine changed, please restart the app to take effect",
+  "musicPlayerPlayModeSection": "Default Play Mode",
+  "musicPlayerPlayModeLoop": "Loop List",
+  "musicPlayerPlayModeRepeatOne": "Repeat One",
+  "musicPlayerPlayModeShuffle": "Shuffle",
+  "musicPlayerVolumeSection": "Default Volume",
+  "musicPlayerCrossfadeSection": "Song Transition Crossfade",
+  "musicPlayerCrossfadeSubtitle": "Smooth transition between songs",
+  "musicPlayerCrossfadeOff": "Off",
+  "musicPlayerCrossfadeDuration": "{duration}s",
+  "@musicPlayerCrossfadeDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPlayerEqualizerSection": "Equalizer",
+  "musicPlayerEqualizerHint": "10 bands EQ + 8 presets",
+  "musicPlayerEqualizerOpen": "Open Equalizer",
+  "musicPlayerEqualizerNote": "Android uses system hardware EQ; desktop media_kit uses mpv af",
+  "musicPlayerGaplessPlaybackTitle": "Gapless Playback",
+  "musicPlayerGaplessPlaybackDesc": "No gaps between tracks in the playlist",
+  "musicPlayerLyricsShowTitle": "Show Lyrics",
+  "musicPlayerLyricsShowDesc": "Display lyrics on the playback page (if available)",
+  "musicPlayerAutoPlayOnConnectTitle": "Auto-play on Connect",
+  "musicPlayerAutoPlayOnConnectDesc": "Automatically resume the last playback after connecting to a data source",
+  "musicPlayerLyricsTranslateTitle": "Lyrics Translation",
+  "musicPlayerLyricsTranslateDesc": "Use Google Translate (free, requires internet)",
+  "musicPlayerLyricsTranslateLangTitle": "Target Language",
+  "musicPlayerLyricsTranslateLangDialogTitle": "Translation Target Language",
+  "listeningStatsPageTitle": "Listening Stats",
+  "listeningStatsTabWeek": "This Week",
+  "listeningStatsTabMonth": "This Month",
+  "listeningStatsTabYear": "This Year",
+  "listeningStatsClearHistoryTooltip": "Clear all history",
+  "listeningStatsEmptyTitle": "No listening history yet",
+  "listeningStatsEmptyHint": "Songs played for 30+ seconds will be recorded in stats",
+  "listeningStatsDialogTitle": "Clear listening history",
+  "listeningStatsDialogContent": "All play records will be permanently deleted and cannot be undone. Continue?",
+  "listeningStatsDialogCancel": "Cancel",
+  "listeningStatsDialogConfirm": "Clear",
+  "listeningStatsSummaryCellPlays": "Plays",
+  "listeningStatsSummaryCellHours": "Listening hours",
+  "listeningStatsSummaryCellUniqueSongs": "Unique songs",
+  "listeningStatsSummaryCellActiveDays": "Active days",
+  "listeningStatsHeatmapTitle": "Play heatmap",
+  "listeningStatsRankSectionSongs": "Top Songs",
+  "listeningStatsRankSectionArtists": "Top Artists",
+  "listeningStatsRankSectionAlbums": "Top Albums",
+  "listeningStatsRankRowPlayCount": "{count} times",
+  "@listeningStatsRankRowPlayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicHomeRecommendedTitle": "For You",
+  "musicHomeQuickAccessTitle": "Quick Access",
+  "musicHomeBrowseLibraryTitle": "Browse Library",
+  "musicLibraryLabel": "My Music",
+  "musicHomeMyFavorites": "My Favorites",
+  "musicHomeRecentlyPlayed": "Recently Played",
+  "musicHomeAllSongs": "All Songs",
+  "musicHomeBrowseCategory": "Browse by Category",
+  "musicBrowseArtists": "Artists",
+  "musicBrowseAlbums": "Albums",
+  "musicBrowseGenres": "Genres",
+  "musicBrowseFolders": "Folders",
+  "musicHomePlaylistsTitle": "Playlists",
+  "musicHomeViewAll": "View All",
+  "musicHomeGreetingNight": "It's late",
+  "musicHomeGreetingMorning": "Good morning",
+  "musicHomeGreetingNoon": "Good noon",
+  "musicHomeGreetingAfternoon": "Good afternoon",
+  "musicHomeGreetingEvening": "Good evening",
+  "musicPlayerNowPlaying": "Now Playing",
+  "musicPlayerNoMusicSelected": "No music selected",
+  "musicPlayerKeyboardShortcutsTitle": "Music Player Shortcuts",
+  "musicPlayerShortcutPlayPause": "Play/Pause",
+  "musicPlayerShortcutPrevious": "Previous Track",
+  "musicPlayerShortcutNext": "Next Track",
+  "musicPlayerShortcutSeekBackward": "Rewind 10 Seconds",
+  "musicPlayerShortcutSeekForward": "Forward 10 Seconds",
+  "musicPlayerShortcutVolumeUp": "Increase Volume",
+  "musicPlayerShortcutVolumeDown": "Decrease Volume",
+  "musicPlayerShortcutMute": "Mute/Unmute",
+  "musicPlayerShortcutRepeatMode": "Toggle Repeat Mode",
+  "musicPlayerShortcutShowHideLyrics": "Show/Hide Lyrics",
+  "musicPlayerShortcutReturn": "Return",
+  "musicPlayerShortcutShowHelp": "Show This Help",
+  "musicPlayerFavoriteAdded": "Added to Favorites",
+  "musicPlayerFavoriteRemoved": "Removed from Favorites",
+  "musicPlayerFavoriteButtonTooltip": "Favorite",
+  "musicPlayerFavoriteButtonTooltipRemove": "Remove from Favorites",
+  "musicPlayerAutoIdentifyTooltip": "Auto Identify",
+  "musicPlayerMoreOptionsTooltip": "More Options",
+  "musicPlayerQueueTooltip": "Queue",
+  "musicPlayerLyricsTooltip": "Lyrics",
+  "musicPlayerSleepTimerTooltip": "Sleep Timer",
+  "musicPlayerSleepTimerTitle": "Sleep Timer",
+  "musicPlayerSleepTimerAfterMinutes": "After {minutes} minutes",
+  "@musicPlayerSleepTimerAfterMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPlayerSleepTimerStopPlayback": "Will stop playback in {minutes} minutes",
+  "@musicPlayerSleepTimerStopPlayback": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPlayerSleepTimerAfterCurrentSong": "After Current Song",
+  "musicPlayerVolumeTooltip": "Volume",
+  "musicManualScraperPageTitle": "Manual Scraper",
+  "musicManualScraperResultCount": "{count} results",
+  "@musicManualScraperResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicManualScraperSongHint": "Song title",
+  "musicManualScraperArtistHint": "Artist",
+  "musicManualScraperRetryButton": "Retry",
+  "musicManualScraperNoResults": "No results found",
+  "musicManualScraperAdjustKeywords": "Try adjusting search keywords",
+  "musicManualScraperCoverFeature": "Cover",
+  "musicManualScraperLyricsFeature": "Lyrics",
+  "musicManualScraperCoverOption": "Cover{override}",
+  "@musicManualScraperCoverOption": {
+    "placeholders": {
+      "override": {
+        "type": "String"
+      }
+    }
+  },
+  "musicManualScraperLyricsOption": "Lyrics{override}",
+  "@musicManualScraperLyricsOption": {
+    "placeholders": {
+      "override": {
+        "type": "String"
+      }
+    }
+  },
+  "musicManualScraperWriteTagsOption": "Write Tags",
+  "musicManualScraperDeselectButton": "Deselect",
+  "musicManualScraperConfirmButton": "Confirm Scraper",
+  "musicManualScraperLoadingDetails": "Getting details...",
+  "musicManualScraperFileSystemUnavailable": "Cannot access file system",
+  "musicManualScraperCompletedToast": "Scraping completed",
+  "musicScrobblePageTitle": "Scrobble Reporting",
+  "musicScrobbleSaveButton": "Save",
+  "musicScrobbleEnableTitle": "Enable Scrobble Reporting",
+  "musicScrobbleEnableSubtitle": "Report when played for at least 30s and ≥50% of length, or ≥240s",
+  "musicScrobbleIntroTitle": "What is Scrobble",
+  "musicScrobbleIntroDesc": "Report the songs you're listening to external services (Last.fm / ListenBrainz). They record your listening history and provide analytics and recommendations. Both can be enabled at the same time; leave fields empty to disable a service.",
+  "musicScrobbleListenBrainzHint": "Go to listenbrainz.org → Settings → Profile and copy the user token",
+  "musicScrobbleLastFmHint": "Go to last.fm/api/account/create to create an app and get API key + secret",
+  "musicScrobbleSessionKeyDesc": "Session key requires authorization flow",
+  "musicScrobbleAuthorizeButton": "Authorize",
+  "musicScrobblePasteTooltip": "Paste from clipboard",
+  "musicAutoScrapeSearching": "Searching...",
+  "musicAutoScrapeFailed": "Scrape failed",
+  "musicAutoScrapeGeneratingFingerprint": "Generating audio fingerprint...",
+  "musicAutoScrapeIdentifying": "Identifying music...",
+  "musicAutoScrapeFetchingDetails": "Fetching details...",
+  "musicAutoScrapeSearchTitle": "Searching \"{title}\"...",
+  "@musicAutoScrapeSearchTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "musicAutoScrapeNotFound": "No matching results found",
+  "musicAutoScrapeFingerprintSuccess": "Fingerprint recognition successful",
+  "musicAutoScrapeFoundResults": "Found matching results",
+  "musicAutoScrapeNoFileSystem": "Unable to access file system",
+  "musicAutoScrapeProcessing": "Processing...",
+  "musicAutoScrapeDownloadingCover": "Downloading cover...",
+  "musicAutoScrapeDownloadingLyrics": "Downloading lyrics...",
+  "musicAutoScrapeWritingTags": "Writing tags ({tagType})...",
+  "@musicAutoScrapeWritingTags": {
+    "placeholders": {
+      "tagType": {
+        "type": "String"
+      }
+    }
+  },
+  "musicAutoScrapeCompleted": "Processing completed",
+  "musicAutoScrapeProcessingFailed": "Processing failed",
+  "musicAutoScrapeTitle": "Auto Identify",
+  "musicAutoScrapeManualButton": "Manual",
+  "musicAutoScrapeFoundContent": "Found the following:",
+  "musicAutoScrapeMetadata": "Metadata",
+  "musicAutoScrapeArtistUnknown": "Unknown",
+  "musicAutoScrapeCover": "Cover",
+  "musicAutoScrapeCoverExisting": "Cover (existing)",
+  "musicAutoScrapeCoverOverwrite": "Overwrite existing cover",
+  "musicAutoScrapeCoverFrom": "From {source}",
+  "@musicAutoScrapeCoverFrom": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "musicAutoScrapeLyrics": "Lyrics",
+  "musicAutoScrapeLyricsExisting": "Lyrics (existing)",
+  "musicAutoScrapeLyricsOverwrite": "Overwrite existing lyrics",
+  "musicAutoScrapeLyricsLrc": "LRC (time-synced)",
+  "musicAutoScrapeLyricsPlainText": "Plain text",
+  "musicAutoScrapeWriteTags": "Write Tags",
+  "musicAutoScrapeFormatNotSupported": "This format does not support writing tags, only external files will be saved",
+  "musicAutoScrapeNoCoverAndLyrics": "No cover or lyrics found",
+  "musicAutoScrapeCancel": "Cancel",
+  "musicAutoScrapeApply": "Apply",
+  "musicAutoScrapeDownload": "Download",
+  "musicAutoScrapeDone": "Done",
+  "musicAutoScrapeClose": "Close",
+  "musicAutoScrapeRetry": "Retry",
+  "musicDuplicatePageTitle": "Duplicate Songs",
+  "musicDuplicateRemoveDialogTitle": "Remove from Music Library",
+  "musicDuplicateRemoveDialogContent": "Will be removed from local index:\n{fileName}\n\nThe original file on NAS will not be deleted. It will be re-added after the next scan.",
+  "@musicDuplicateRemoveDialogContent": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "musicDuplicateRemoveCancel": "Cancel",
+  "musicDuplicateRemoveConfirm": "Remove",
+  "musicDuplicateEmptyMessage": "No duplicate songs found",
+  "musicDuplicateEmptyHint": "Detected by title + artist + duration ±2s",
+  "musicDuplicateSummary": "{groupCount} groups · {redundantCount} removable",
+  "@musicDuplicateSummary": {
+    "placeholders": {
+      "groupCount": {
+        "type": "int"
+      },
+      "redundantCount": {
+        "type": "int"
+      }
+    }
+  },
+  "musicDuplicateVersionBadge": "{count} versions",
+  "@musicDuplicateVersionBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicDuplicateRecommendKeep": "Recommended to keep",
+  "musicDuplicateRemoveTooltip": "Remove from Music Library",
+  "musicRecycleBinTitle": "Recycle Bin",
+  "musicRecycleBinEmptyTitle": "Recycle bin is empty",
+  "musicRecycleBinEmptySubtitle": "Deleted playlists will be kept here for 30 days",
+  "musicRecycleBinDeleteConfirmTitle": "Permanently delete",
+  "musicRecycleBinDeleteConfirmContent": "Permanently delete \\\"{name}\\\"? This action cannot be undone.",
+  "@musicRecycleBinDeleteConfirmContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "musicRecycleBinDeleteCancel": "Cancel",
+  "musicRecycleBinDeleteConfirm": "Permanently delete",
+  "musicRecycleBinRestoreTooltip": "Restore",
+  "musicRecycleBinDeleteTooltip": "Permanently delete",
+  "musicRecycleBinRetentionExpiring": "Will be auto-cleaned soon",
+  "musicRecycleBinRetentionDays": "Auto-cleaned in {days} days",
+  "@musicRecycleBinRetentionDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "musicRecycleBinItemCount": "{count} songs",
+  "@musicRecycleBinItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

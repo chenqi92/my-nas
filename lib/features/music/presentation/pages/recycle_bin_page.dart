@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/playlist_service.dart';
 import 'package:my_nas/features/music/presentation/providers/playlist_provider.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
@@ -49,16 +50,16 @@ class _RecycleBinPageState extends ConsumerState<RecycleBinPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('永久删除'),
-        content: Text('确定永久删除「${p.name}」？此操作不可撤销。'),
+        title: Text(ctx.l10n.musicRecycleBinDeleteConfirmTitle),
+        content: Text(ctx.l10n.musicRecycleBinDeleteConfirmContent(p.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(ctx.l10n.musicRecycleBinDeleteCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('永久删除'),
+            child: Text(ctx.l10n.musicRecycleBinDeleteConfirm),
           ),
         ],
       ),
@@ -72,8 +73,8 @@ class _RecycleBinPageState extends ConsumerState<RecycleBinPage> {
     final remaining = PlaylistService.retentionPeriod -
         DateTime.now().difference(p.deletedAt!);
     final days = remaining.inDays;
-    if (days < 0) return '即将清理';
-    return '$days 天后自动清理';
+    if (days < 0) return context.l10n.musicRecycleBinRetentionExpiring;
+    return context.l10n.musicRecycleBinRetentionDays(days);
   }
 
   @override
@@ -85,7 +86,7 @@ class _RecycleBinPageState extends ConsumerState<RecycleBinPage> {
         leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
-          '回收站',
+          context.l10n.musicRecycleBinTitle,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
@@ -115,7 +116,7 @@ class _RecycleBinPageState extends ConsumerState<RecycleBinPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '回收站是空的',
+              context.l10n.musicRecycleBinEmptyTitle,
               style: TextStyle(
                 fontSize: 16,
                 color: isDark ? Colors.white60 : Colors.black54,
@@ -123,7 +124,7 @@ class _RecycleBinPageState extends ConsumerState<RecycleBinPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              '已删除的播放列表会在这里保留 30 天',
+              context.l10n.musicRecycleBinEmptySubtitle,
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? Colors.white38 : Colors.black38,
@@ -167,7 +168,7 @@ class _RecycleBinPageState extends ConsumerState<RecycleBinPage> {
                       ),
                     ),
                     Text(
-                      '${p.trackCount} 首 · ${_daysLeft(p)}',
+                      '${context.l10n.musicRecycleBinItemCount(p.trackCount)} · ${_daysLeft(p)}',
                       style: TextStyle(
                         fontSize: 11,
                         color: isDark ? Colors.white54 : Colors.black54,
@@ -178,12 +179,12 @@ class _RecycleBinPageState extends ConsumerState<RecycleBinPage> {
               ),
               IconButton(
                 icon: const Icon(Icons.restore_rounded),
-                tooltip: '恢复',
+                tooltip: context.l10n.musicRecycleBinRestoreTooltip,
                 onPressed: () => _restore(p),
               ),
               IconButton(
                 icon: const Icon(Icons.delete_forever_rounded),
-                tooltip: '永久删除',
+                tooltip: context.l10n.musicRecycleBinDeleteTooltip,
                 onPressed: () => _purge(p),
               ),
             ],

@@ -148,7 +148,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       if (mounted) {
         setState(() {
           _status = _ScrapeStatus.error;
-          _statusMessage = '刮削失败';
+          _statusMessage = context.l10n.musicAutoScrapeFailed;
           _errorMessage = e.toString();
         });
       }
@@ -161,7 +161,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
     if (localPath == null) return false;
 
     setState(() {
-      _statusMessage = '正在生成音频指纹...';
+      _statusMessage = context.l10n.musicAutoScrapeGeneratingFingerprint;
       _progress = 0.1;
     });
 
@@ -173,7 +173,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       final fpData = await service.generateFingerprint(localPath);
 
       setState(() {
-        _statusMessage = '正在识别音乐...';
+        _statusMessage = context.l10n.musicAutoScrapeIdentifying;
         _progress = 0.4;
       });
 
@@ -190,7 +190,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       }
 
       setState(() {
-        _statusMessage = '获取详细信息...';
+        _statusMessage = context.l10n.musicAutoScrapeFetchingDetails;
         _progress = 0.7;
         _usedFingerprint = true;
       });
@@ -224,7 +224,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
     final artist = widget.music.displayArtist;
 
     setState(() {
-      _statusMessage = '搜索 "$title"...';
+      _statusMessage = context.l10n.musicAutoScrapeSearchTitle(title);
       _progress = 0.2;
     });
 
@@ -247,7 +247,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
     if (result.detail == null && result.cover == null && result.lyrics == null) {
       setState(() {
         _status = _ScrapeStatus.notFound;
-        _statusMessage = '未找到匹配结果';
+        _statusMessage = context.l10n.musicAutoScrapeNotFound;
         if (result.errors.isNotEmpty) {
           _errorMessage = result.errors.join('\n');
         }
@@ -257,7 +257,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
 
     setState(() {
       _status = _ScrapeStatus.found;
-      _statusMessage = _usedFingerprint ? '音纹识别成功' : '找到匹配结果';
+      _statusMessage = _usedFingerprint ? context.l10n.musicAutoScrapeFingerprintSuccess : context.l10n.musicAutoScrapeFoundResults;
       _progress = 1.0;
       _detail = result.detail;
       _cover = result.cover;
@@ -278,14 +278,14 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
   Future<void> _downloadFiles() async {
     if (widget.fileSystem == null) {
       if (mounted) {
-        context.showErrorToast('无法访问文件系统');
+        context.showErrorToast(context.l10n.musicAutoScrapeNoFileSystem);
       }
       return;
     }
 
     setState(() {
       _status = _ScrapeStatus.downloading;
-      _statusMessage = '正在处理...';
+      _statusMessage = context.l10n.musicAutoScrapeProcessing;
       _progress = 0;
     });
 
@@ -307,7 +307,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       // 下载封面
       if (_downloadCover && _cover != null) {
         setState(() {
-          _statusMessage = '下载封面...';
+          _statusMessage = context.l10n.musicAutoScrapeDownloadingCover;
         });
 
         final result = await _downloadCoverData();
@@ -330,7 +330,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       // 下载歌词
       if (_downloadLyrics && _lyrics != null) {
         setState(() {
-          _statusMessage = '下载歌词...';
+          _statusMessage = context.l10n.musicAutoScrapeDownloadingLyrics;
         });
 
         await _downloadLyrics_(fileSystem, musicDir, baseName);
@@ -352,7 +352,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       // 写入到文件标签
       if (_writeToFile && _audioFormat != null) {
         setState(() {
-          _statusMessage = '写入标签 (${_audioFormat!.tagType})...';
+          _statusMessage = context.l10n.musicAutoScrapeWritingTags(_audioFormat!.tagType);
         });
 
         await _writeTagsToFile(fileSystem, musicPath, coverData, coverMimeType);
@@ -370,7 +370,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
 
       setState(() {
         _status = _ScrapeStatus.completed;
-        _statusMessage = '处理完成';
+        _statusMessage = context.l10n.musicAutoScrapeCompleted;
         _progress = 1.0;
       });
 
@@ -383,7 +383,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       AppError.ignore(e, st, '处理文件失败');
       setState(() {
         _status = _ScrapeStatus.error;
-        _statusMessage = '处理失败';
+        _statusMessage = context.l10n.musicAutoScrapeProcessingFailed;
         _errorMessage = e.toString();
       });
     }
@@ -746,14 +746,14 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
             color: AppColors.primary,
           ),
           const SizedBox(width: 12),
-          const Expanded(
-            child: Text('自动识别'),
+          Expanded(
+            child: Text(context.l10n.musicAutoScrapeTitle),
           ),
           // 手动搜索按钮放在右上角
           TextButton.icon(
             onPressed: _openManualScraper,
             icon: const Icon(Icons.edit_outlined, size: 16),
-            label: const Text('手动'),
+            label: Text(context.l10n.musicAutoScrapeManualButton),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               minimumSize: Size.zero,
@@ -960,7 +960,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '找到以下内容:',
+          context.l10n.musicAutoScrapeFoundContent,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -974,8 +974,8 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
           _buildResultRow(
             isDark,
             Icons.info_outline_rounded,
-            '元数据',
-            '${_detail!.title} - ${_detail!.artist ?? "未知"}',
+            context.l10n.musicAutoScrapeMetadata,
+            '${_detail!.title} - ${_detail!.artist ?? context.l10n.musicAutoScrapeArtistUnknown}',
             source: _detail!.source,
             // 显示来源是否支持歌词
             badge: _detail!.source.supportsLyrics
@@ -992,10 +992,10 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
           _buildResultRow(
             isDark,
             Icons.image_rounded,
-            '封面${_hasCover ? " (已有)" : ""}',
+            _hasCover ? context.l10n.musicAutoScrapeCoverExisting : context.l10n.musicAutoScrapeCover,
             _hasCover && _downloadCover
-                ? '覆盖现有封面'
-                : '来自 ${_cover!.source.displayName}',
+                ? context.l10n.musicAutoScrapeCoverOverwrite
+                : context.l10n.musicAutoScrapeCoverFrom(_cover!.source.displayName),
             source: _cover!.source,
             trailing: Checkbox(
               value: _downloadCover,
@@ -1009,12 +1009,12 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
           _buildResultRow(
             isDark,
             Icons.lyrics_rounded,
-            '歌词${_hasLyrics ? " (已有)" : ""}',
+            _hasLyrics ? context.l10n.musicAutoScrapeLyricsExisting : context.l10n.musicAutoScrapeLyrics,
             _hasLyrics && _downloadLyrics
-                ? '覆盖现有歌词'
+                ? context.l10n.musicAutoScrapeLyricsOverwrite
                 : _lyrics!.isLrc
-                    ? 'LRC (时间同步)'
-                    : '纯文本',
+                    ? context.l10n.musicAutoScrapeLyricsLrc
+                    : context.l10n.musicAutoScrapeLyricsPlainText,
             source: _lyrics!.source,
             trailing: Checkbox(
               value: _downloadLyrics,
@@ -1031,7 +1031,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
           _buildResultRow(
             isDark,
             Icons.edit_note_rounded,
-            '写入标签',
+            context.l10n.musicAutoScrapeWriteTags,
             '${_audioFormat!.displayName} (${_audioFormat!.tagType})',
             trailing: Checkbox(
               value: _writeToFile,
@@ -1055,7 +1055,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    '该格式不支持写入标签，仅保存外部文件',
+                    context.l10n.musicAutoScrapeFormatNotSupported,
                     style: TextStyle(
                       fontSize: 11,
                       color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -1071,7 +1071,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              '未找到封面和歌词',
+              context.l10n.musicAutoScrapeNoCoverAndLyrics,
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -1142,7 +1142,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
         return [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(context.l10n.musicAutoScrapeCancel),
           ),
         ];
 
@@ -1154,12 +1154,12 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
         return [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(context.l10n.musicAutoScrapeCancel),
           ),
           if (hasAction && widget.fileSystem != null)
             FilledButton(
               onPressed: _downloadFiles,
-              child: Text(hasWritable ? '应用' : '下载'),
+              child: Text(hasWritable ? context.l10n.musicAutoScrapeApply : context.l10n.musicAutoScrapeDownload),
             ),
         ];
 
@@ -1170,7 +1170,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
         return [
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('完成'),
+            child: Text(context.l10n.musicAutoScrapeDone),
           ),
         ];
 
@@ -1179,19 +1179,19 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
         return [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('关闭'),
+            child: Text(context.l10n.musicAutoScrapeClose),
           ),
           FilledButton(
             onPressed: () {
               setState(() {
                 _status = _ScrapeStatus.searching;
-                _statusMessage = '正在搜索...';
+                _statusMessage = context.l10n.musicAutoScrapeSearching;
                 _progress = null;
                 _errorMessage = null;
               });
               _startScraping();
             },
-            child: const Text('重试'),
+            child: Text(context.l10n.musicAutoScrapeRetry),
           ),
         ];
     }

@@ -208,7 +208,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
         return PopularTracksSection(
           tracks: _getCachedRandomTracks(5),
           isDark: isDark,
-          title: '为你推荐',
+          title: context.l10n.musicHomeRecommendedTitle,
           onTrackTap: (track) => widget.onTrackTap(track, widget.tracks),
           onMoreTap: () => widget.onCategoryTap(MusicCategory.all),
         );
@@ -236,7 +236,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
   Widget _buildQuickAccessSection(bool isDark) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('快捷访问', isDark),
+        _buildSectionTitle(context.l10n.musicHomeQuickAccessTitle, isDark),
         const SizedBox(height: 12),
         QuickAccessGrid(
           isDark: isDark,
@@ -256,7 +256,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
   Widget _buildBrowseSection(bool isDark) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('浏览音乐库', isDark),
+        _buildSectionTitle(context.l10n.musicHomeBrowseLibraryTitle, isDark),
         const SizedBox(height: 12),
         BrowseCategoryGrid(
           isDark: isDark,
@@ -314,7 +314,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '音乐库',
+                  context.l10n.musicLibraryLabel,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -344,7 +344,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
               children: [
                 _buildSidebarItem(
                   icon: Icons.favorite_rounded,
-                  label: '我喜欢',
+                  label: context.l10n.musicHomeMyFavorites,
                   count: widget.favoritesCount > 0 ? widget.favoritesCount : widget.favoriteTracks.length,
                   color: const Color(0xFFE91E63),
                   isDark: isDark,
@@ -352,7 +352,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
                 ),
                 _buildSidebarItem(
                   icon: Icons.history_rounded,
-                  label: '最近播放',
+                  label: context.l10n.musicHomeRecentlyPlayed,
                   count: widget.recentCount > 0 ? widget.recentCount : widget.recentTracks.length,
                   color: const Color(0xFF2196F3),
                   isDark: isDark,
@@ -360,7 +360,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
                 ),
                 _buildSidebarItem(
                   icon: Icons.queue_music_rounded,
-                  label: '全部歌曲',
+                  label: context.l10n.musicHomeAllSongs,
                   count: widget.totalCount > 0 ? widget.totalCount : widget.tracks.length,
                   color: AppColors.primary,
                   isDark: isDark,
@@ -370,7 +370,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
-                    '分类浏览',
+                    context.l10n.musicHomeBrowseCategory,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -381,7 +381,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
                 ),
                 _buildSidebarItem(
                   icon: Icons.mic_rounded,
-                  label: '艺术家',
+                  label: context.l10n.musicBrowseArtists,
                   count: widget.artistCount,
                   color: const Color(0xFF9C27B0),
                   isDark: isDark,
@@ -389,7 +389,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
                 ),
                 _buildSidebarItem(
                   icon: Icons.album_rounded,
-                  label: '专辑',
+                  label: context.l10n.musicBrowseAlbums,
                   count: widget.albumCount,
                   color: const Color(0xFFFF9800),
                   isDark: isDark,
@@ -397,7 +397,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
                 ),
                 _buildSidebarItem(
                   icon: Icons.library_music_rounded,
-                  label: '流派',
+                  label: context.l10n.musicBrowseGenres,
                   count: widget.genreCount,
                   color: const Color(0xFFE91E63),
                   isDark: isDark,
@@ -405,7 +405,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
                 ),
                 _buildSidebarItem(
                   icon: Icons.folder_open_rounded,
-                  label: '文件夹',
+                  label: context.l10n.musicBrowseFolders,
                   count: widget.folderCount,
                   color: const Color(0xFF795548),
                   isDark: isDark,
@@ -502,7 +502,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '快捷访问',
+                  context.l10n.musicHomeQuickAccessTitle,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -549,7 +549,7 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
                 tracks: _getCachedRandomTracks(8),
                 isDark: isDark,
                 isDesktop: true,
-                title: '为你推荐',
+                title: context.l10n.musicHomeRecommendedTitle,
                 maxItems: 8,
                 onTrackTap: (track) => widget.onTrackTap(track, widget.tracks),
                 onMoreTap: () => widget.onCategoryTap(MusicCategory.all),
@@ -591,11 +591,11 @@ class _MusicHomeContentState extends ConsumerState<MusicHomeContent> {
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 6) return '夜深了';
-    if (hour < 12) return '早上好';
-    if (hour < 14) return '中午好';
-    if (hour < 18) return '下午好';
-    return '晚上好';
+    if (hour < 6) return context.l10n.musicHomeGreetingNight;
+    if (hour < 12) return context.l10n.musicHomeGreetingMorning;
+    if (hour < 14) return context.l10n.musicHomeGreetingNoon;
+    if (hour < 18) return context.l10n.musicHomeGreetingAfternoon;
+    return context.l10n.musicHomeGreetingEvening;
   }
 
   Map<MusicBrowseCategory, int> _getCategoryCounts() => {
@@ -683,7 +683,7 @@ class _PlaylistsSection extends ConsumerWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    '歌单',
+                    context.l10n.musicHomePlaylistsTitle,
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -708,7 +708,7 @@ class _PlaylistsSection extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '查看全部',
+                          context.l10n.musicHomeViewAll,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -851,7 +851,7 @@ class _ModernPlaylistCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     // 歌曲数量
                     Text(
-                      '${playlist.trackPaths.length} 首歌曲',
+                      context.l10n.musicPlaylistTrackCount(playlist.trackPaths.length),
                       style: TextStyle(
                         fontSize: 11,
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/scrobble/music_scrobble_service.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
@@ -99,7 +100,7 @@ class _ScrobbleSettingsPageState
         leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
-          'Scrobble 上报',
+          context.l10n.musicScrobblePageTitle,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
@@ -112,7 +113,7 @@ class _ScrobbleSettingsPageState
           if (_loaded)
             TextButton(
               onPressed: _save,
-              child: const Text('保存'),
+              child: Text(context.l10n.musicScrobbleSaveButton),
             ),
         ],
       ),
@@ -124,9 +125,9 @@ class _ScrobbleSettingsPageState
                 _buildIntro(isDark),
                 const SizedBox(height: AppSpacing.lg),
                 SwitchListTile(
-                  title: const Text('启用 Scrobble 上报'),
-                  subtitle: const Text(
-                    '听满 30s 且 ≥ 50% 或 ≥ 240s 时上报到下方已配置的服务',
+                  title: Text(context.l10n.musicScrobbleEnableTitle),
+                  subtitle: Text(
+                    context.l10n.musicScrobbleEnableSubtitle,
                   ),
                   value: _enabled,
                   onChanged: (v) => setState(() => _enabled = v),
@@ -154,7 +155,7 @@ class _ScrobbleSettingsPageState
                 Icon(Icons.info_outline, size: 18, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Text(
-                  '什么是 Scrobble',
+                  context.l10n.musicScrobbleIntroTitle,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.primary,
@@ -164,7 +165,7 @@ class _ScrobbleSettingsPageState
             ),
             const SizedBox(height: 8),
             Text(
-              '把你正在听的歌曲上报到外部服务（Last.fm / ListenBrainz），它们会记录你的听歌历史并提供分析、推荐。两者可同时启用，留空对应字段即关闭该服务。',
+              context.l10n.musicScrobbleIntroDesc,
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? Colors.white70 : Colors.black87,
@@ -184,7 +185,7 @@ class _ScrobbleSettingsPageState
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Text(
-              '在 listenbrainz.org → Settings → Profile 复制 user token',
+              context.l10n.musicScrobbleListenBrainzHint,
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.primary,
@@ -214,7 +215,7 @@ class _ScrobbleSettingsPageState
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Text(
-              '在 last.fm/api/account/create 创建应用拿到 API key + secret',
+              context.l10n.musicScrobbleLastFmHint,
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.primary,
@@ -245,7 +246,7 @@ class _ScrobbleSettingsPageState
           children: [
             Expanded(
               child: Text(
-                'Session key 需要授权流程后获取',
+                context.l10n.musicScrobbleSessionKeyDesc,
                 style: TextStyle(
                   fontSize: 11,
                   color: isDark ? Colors.white60 : Colors.black54,
@@ -254,7 +255,7 @@ class _ScrobbleSettingsPageState
             ),
             TextButton.icon(
               icon: const Icon(Icons.open_in_new_rounded, size: 16),
-              label: const Text('授权'),
+              label: Text(context.l10n.musicScrobbleAuthorizeButton),
               onPressed: () {
                 final key = _lfApiKey.text.trim();
                 if (key.isEmpty) {
@@ -271,7 +272,7 @@ class _ScrobbleSettingsPageState
             ),
             IconButton(
               icon: const Icon(Icons.paste_rounded, size: 18),
-              tooltip: '从剪贴板粘贴',
+              tooltip: context.l10n.musicScrobblePasteTooltip,
               onPressed: () async {
                 final data = await Clipboard.getData('text/plain');
                 if (data?.text != null) {

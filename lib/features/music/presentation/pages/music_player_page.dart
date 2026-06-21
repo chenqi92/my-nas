@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/theme/dynamic_accent_provider.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
@@ -184,10 +185,10 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
           leading: const RoundedBackButton(),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('正在播放'),
+          title: Text(context.l10n.musicPlayerNowPlaying),
         ),
-        body: const Center(
-          child: Text('未选择音乐'),
+        body: Center(
+          child: Text(context.l10n.musicPlayerNoMusicSelected),
         ),
       );
     }
@@ -307,20 +308,20 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
   void _showKeyboardHelp() {
     KeyboardShortcutsHelpDialog.show(
       context,
-      title: '音乐播放快捷键',
+      title: context.l10n.musicPlayerKeyboardShortcutsTitle,
       shortcuts: [
-        (key: 'Space / K', description: '播放/暂停'),
-        (key: '←', description: '上一曲'),
-        (key: '→', description: '下一曲'),
-        (key: 'J', description: '快退 10 秒'),
-        (key: 'L', description: '快进 10 秒'),
-        (key: '↑', description: '增加音量'),
-        (key: '↓', description: '减少音量'),
-        (key: 'M', description: '静音/取消静音'),
-        (key: 'R', description: '切换播放模式'),
-        (key: 'C', description: '显示/隐藏歌词'),
-        (key: 'Esc', description: '返回'),
-        (key: '?', description: '显示此帮助'),
+        (key: 'Space / K', description: context.l10n.musicPlayerShortcutPlayPause),
+        (key: '←', description: context.l10n.musicPlayerShortcutPrevious),
+        (key: '→', description: context.l10n.musicPlayerShortcutNext),
+        (key: 'J', description: context.l10n.musicPlayerShortcutSeekBackward),
+        (key: 'L', description: context.l10n.musicPlayerShortcutSeekForward),
+        (key: '↑', description: context.l10n.musicPlayerShortcutVolumeUp),
+        (key: '↓', description: context.l10n.musicPlayerShortcutVolumeDown),
+        (key: 'M', description: context.l10n.musicPlayerShortcutMute),
+        (key: 'R', description: context.l10n.musicPlayerShortcutRepeatMode),
+        (key: 'C', description: context.l10n.musicPlayerShortcutShowHideLyrics),
+        (key: 'Esc', description: context.l10n.musicPlayerShortcutReturn),
+        (key: '?', description: context.l10n.musicPlayerShortcutShowHelp),
       ],
     );
   }
@@ -500,7 +501,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(result ? '已添加到收藏' : '已取消收藏'),
+                    content: Text(result ? context.l10n.musicPlayerFavoriteAdded : context.l10n.musicPlayerFavoriteRemoved),
                     behavior: SnackBarBehavior.floating,
                     duration: const Duration(seconds: 1),
                   ),
@@ -511,7 +512,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
               color: isFavorite ? AppColors.error : (isDark ? Colors.white : Colors.black87),
             ),
-            tooltip: isFavorite ? '取消收藏' : '收藏',
+            tooltip: isFavorite ? context.l10n.musicPlayerFavoriteButtonTooltipRemove : context.l10n.musicPlayerFavoriteButtonTooltip,
           ),
           loading: () => const SizedBox(
             width: 48,
@@ -538,7 +539,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
             Icons.auto_fix_high_rounded,
             color: isDark ? Colors.white : Colors.black87,
           ),
-          tooltip: '自动识别',
+          tooltip: context.l10n.musicPlayerAutoIdentifyTooltip,
         ),
         // 更多选项
         IconButton(
@@ -547,7 +548,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
             Icons.more_vert_rounded,
             color: isDark ? Colors.white : Colors.black87,
           ),
-          tooltip: '更多选项',
+          tooltip: context.l10n.musicPlayerMoreOptionsTooltip,
         ),
       ],
     );
@@ -894,7 +895,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               Icons.queue_music_rounded,
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
-            tooltip: '播放队列',
+            tooltip: context.l10n.musicPlayerQueueTooltip,
           ),
         ],
       ),
@@ -922,7 +923,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               Icons.lyrics_rounded,
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
-            tooltip: '歌词',
+            tooltip: context.l10n.musicPlayerLyricsTooltip,
           ),
           // 定时关闭
           IconButton(
@@ -931,7 +932,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               Icons.timer_outlined,
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
-            tooltip: '定时关闭',
+            tooltip: context.l10n.musicPlayerSleepTimerTooltip,
           ),
         ],
       ),
@@ -944,9 +945,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
       };
 
   String _getPlayModeTooltip(PlayMode mode) => switch (mode) {
-        PlayMode.loop => '列表循环',
-        PlayMode.repeatOne => '单曲循环',
-        PlayMode.shuffle => '随机播放',
+        PlayMode.loop => context.l10n.musicPlayerPlayModeLoop,
+        PlayMode.repeatOne => context.l10n.musicPlayerPlayModeRepeatOne,
+        PlayMode.shuffle => context.l10n.musicPlayerPlayModeShuffle,
       };
 
   void _showSleepTimer(BuildContext context) {
@@ -963,7 +964,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
           children: [
             const SheetDragHandle(topPadding: 16, bottomPadding: 16),
             Text(
-              '定时关闭',
+              context.l10n.musicPlayerSleepTimerTitle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -973,14 +974,14 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
             const SizedBox(height: 16),
             ...[15, 30, 45, 60, 90].map((minutes) => ListTile(
                 title: Text(
-                  '$minutes 分钟后',
+                  context.l10n.musicPlayerSleepTimerAfterMinutes(minutes),
                   style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                 ),
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('将在 $minutes 分钟后停止播放'),
+                      content: Text(context.l10n.musicPlayerSleepTimerStopPlayback(minutes)),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -988,7 +989,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               )),
             ListTile(
               title: Text(
-                '播放完当前歌曲后',
+                context.l10n.musicPlayerSleepTimerAfterCurrentSong,
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
               ),
               onTap: () => Navigator.pop(context),
@@ -1031,7 +1032,7 @@ class _VolumeButtonState extends ConsumerState<_VolumeButton> {
                     : Icons.volume_up_rounded,
             color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
           ),
-          tooltip: '音量',
+          tooltip: context.l10n.musicPlayerVolumeTooltip,
         ),
         if (_showSlider)
           SizedBox(

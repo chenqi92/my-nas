@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/duplicate_detector.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
@@ -53,18 +54,18 @@ class _DuplicateSongsPageState extends ConsumerState<DuplicateSongsPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('从音乐库移除'),
+        title: Text(ctx.l10n.musicDuplicateRemoveDialogTitle),
         content: Text(
-          '将从本地索引中移除：\n${track.fileName}\n\nNAS 上的原始文件不会被删除，下次扫描会重新加入。',
+          ctx.l10n.musicDuplicateRemoveDialogContent(track.fileName),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(ctx.l10n.musicDuplicateRemoveCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('移除'),
+            child: Text(ctx.l10n.musicDuplicateRemoveConfirm),
           ),
         ],
       ),
@@ -83,7 +84,7 @@ class _DuplicateSongsPageState extends ConsumerState<DuplicateSongsPage> {
         leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
-          '重复歌曲',
+          context.l10n.musicDuplicatePageTitle,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
@@ -123,7 +124,7 @@ class _DuplicateSongsPageState extends ConsumerState<DuplicateSongsPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '没有发现重复歌曲',
+              context.l10n.musicDuplicateEmptyMessage,
               style: TextStyle(
                 fontSize: 16,
                 color: isDark ? Colors.white70 : Colors.black87,
@@ -131,7 +132,7 @@ class _DuplicateSongsPageState extends ConsumerState<DuplicateSongsPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              '基于标题 + 艺术家 + 时长 ±2s 检测',
+              context.l10n.musicDuplicateEmptyHint,
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? Colors.white38 : Colors.black38,
@@ -155,7 +156,7 @@ class _DuplicateSongsPageState extends ConsumerState<DuplicateSongsPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                '${groups.length} 组重复，可清理 $totalDup 首',
+                context.l10n.musicDuplicateSummary(groups.length, totalDup),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -241,7 +242,7 @@ class _GroupCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${group.count} 个版本',
+                  context.l10n.musicDuplicateVersionBadge(group.count),
                   style: TextStyle(
                     fontSize: 11,
                     color: AppColors.primary,
@@ -308,7 +309,7 @@ class _TrackRow extends StatelessWidget {
                 ),
                 Text(
                   '${track.folderName} · ${track.displaySize}'
-                  '${isBest ? ' · 推荐保留' : ''}',
+                  '${isBest ? ' · ${context.l10n.musicDuplicateRecommendKeep}' : ''}',
                   style: TextStyle(
                     fontSize: 10,
                     color: color,
@@ -320,7 +321,7 @@ class _TrackRow extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 18),
             color: isDark ? Colors.white54 : Colors.black54,
-            tooltip: '从音乐库移除',
+            tooltip: context.l10n.musicDuplicateRemoveTooltip,
             onPressed: onDelete,
           ),
         ],
