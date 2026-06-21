@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:uuid/uuid.dart';
 
 /// 直播源配置
@@ -186,7 +187,7 @@ class LiveChannel {
   String get displayName => tvgName ?? name;
 
   /// 获取分类显示名称
-  String get categoryDisplayName => category ?? '未分类';
+  String get categoryDisplayName => category ?? appL10n.livePageUncategorized;
 
   /// 转为 Map
   Map<String, dynamic> toMap() => {
@@ -286,7 +287,7 @@ class LiveStreamSettings {
   Map<String, List<LiveChannel>> get channelsByCategory {
     final result = <String, List<LiveChannel>>{};
     for (final channel in allChannels) {
-      final category = channel.category ?? '未分类';
+      final category = channel.category ?? appL10n.livePageUncategorized;
       result.putIfAbsent(category, () => []).add(channel);
     }
     return result;

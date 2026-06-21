@@ -12700,5 +12700,80 @@
   "tmdbCountryCodeID": "Indonesia",
   "tmdbCountryCodePH": "Philippines",
   "tmdbCountryCodeVN": "Vietnam",
-  "videoCollectionNameFallback": "Unknown Collection"
+  "videoCollectionNameFallback": "Unknown Collection",
+  "xmltvParserDefaultProgramTitle": "Program",
+  "videoTranscodeErrorUnknown": "Unknown error",
+  "videoTranscodeErrorWithMessage": "Transcoding error: {message}",
+  "@videoTranscodeErrorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "Object"
+      }
+    }
+  },
+  "transcodingInputUrlNotAccessible": "Cannot access input URL",
+  "transcodingMediaCodecNotAvailable": "MediaCodec is not available",
+  "transcodingFailedToStartMediaCodec": "Failed to start MediaCodec transcoding",
+  "transcodingCancelled": "Transcoding cancelled",
+  "transcodingFailed": "Transcoding failed",
+  "transcodingTimeoutInputSourceNoResponse": "Transcoding timeout: input source is not responding",
+  "transcodingWaitOutputTimeout": "Timeout waiting for transcoding output",
+  "transcodingFFmpegNotAvailable": "FFmpeg is not available",
+  "transcodingFailedWithExitCode": "Transcoding failed, exit code: {code}",
+  "@transcodingFailedWithExitCode": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "tmdbScraperCountryUs": "United States",
+  "tmdbScraperCountryCn": "China",
+  "tmdbScraperCountryJp": "Japan",
+  "tmdbScraperCountryKr": "South Korea",
+  "tmdbScraperCountryGb": "United Kingdom",
+  "tmdbScraperCountryFr": "France",
+  "tmdbScraperCountryDe": "Germany",
+  "tmdbScraperCountryIt": "Italy",
+  "tmdbScraperCountryEs": "Spain",
+  "tmdbScraperCountryCa": "Canada",
+  "tmdbScraperCountryAu": "Australia",
+  "tmdbScraperCountryIn": "India",
+  "tmdbScraperCountryTw": "Taiwan",
+  "tmdbScraperCountryHk": "Hong Kong",
+  "tmdbScraperCountryTh": "Thailand",
+  "tmdbScraperCountryRu": "Russia",
+  "tmdbScraperCountryBr": "Brazil",
+  "tmdbScraperCountryMx": "Mexico",
+  "tmdbScraperCountryNl": "Netherlands",
+  "tmdbScraperCountrySe": "Sweden",
+  "tmdbScraperCountryDk": "Denmark",
+  "tmdbScraperCountryNo": "Norway",
+  "tmdbScraperCountryFi": "Finland",
+  "tmdbScraperCountryBe": "Belgium",
+  "tmdbScraperCountryAt": "Austria",
+  "tmdbScraperCountryCh": "Switzerland",
+  "tmdbScraperCountryNz": "New Zealand",
+  "tmdbScraperCountryIe": "Ireland",
+  "tmdbScraperCountryPl": "Poland",
+  "tmdbScraperCountryTr": "Turkey",
+  "tmdbScraperCountryZa": "South Africa",
+  "tmdbScraperCountrySg": "Singapore",
+  "tmdbScraperCountryMy": "Malaysia",
+  "tmdbScraperCountryId": "Indonesia",
+  "tmdbScraperCountryPh": "Philippines",
+  "tmdbScraperCountryVn": "Vietnam",
+  "tmdbScraperCountryAr": "Argentina",
+  "tmdbScraperCountryCl": "Chile",
+  "tmdbScraperCountryCo": "Colombia",
+  "tmdbScraperCountryPe": "Peru",
+  "tmdbScraperCountryEg": "Egypt",
+  "tmdbScraperCountryIl": "Israel",
+  "tmdbScraperCountryAe": "United Arab Emirates",
+  "tmdbScraperCountrySa": "Saudi Arabia",
+  "tmdbScraperCountryUa": "Ukraine",
+  "tmdbScraperCountryCz": "Czech Republic",
+  "tmdbScraperCountryHu": "Hungary",
+  "tmdbScraperCountryPt": "Portugal",
+  "tmdbScraperCountryGr": "Greece"
 }

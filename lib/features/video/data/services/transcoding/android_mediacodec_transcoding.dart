@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:path_provider/path_provider.dart';
@@ -180,7 +181,7 @@ class AndroidMediaCodecTranscoding {
           if (success && path != null) {
             return TranscodeResult.success(path);
           } else {
-            return TranscodeResult.error(error ?? 'Unknown error');
+            return TranscodeResult.error(error ?? appL10n.videoTranscodeErrorUnknown);
           }
         }),
       );

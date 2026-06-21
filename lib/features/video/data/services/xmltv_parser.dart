@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:xml/xml.dart';
 
 /// 一条电子节目单（EPG）节目。
@@ -43,7 +44,7 @@ class XmltvParser {
               channelId: channel,
               start: start,
               stop: stop ?? start.add(const Duration(minutes: 30)),
-              title: title.isEmpty ? '节目' : title,
+              title: title.isEmpty ? appL10n.xmltvParserDefaultProgramTitle : title,
               desc: (desc?.isEmpty ?? true) ? null : desc,
             ),
           );

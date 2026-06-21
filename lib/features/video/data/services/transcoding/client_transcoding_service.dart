@@ -5,6 +5,7 @@ import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_session.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/transcoding/android_mediacodec_transcoding.dart';
 import 'package:my_nas/features/video/data/services/transcoding/nas_transcoding_service.dart';
@@ -405,7 +406,7 @@ class ClientTranscodingService implements NasTranscodingService {
         if (!isAccessible) {
           task
             ..isRunning = false
-            ..error = '无法访问输入 URL';
+            ..error = appL10n.transcodingInputUrlNotAccessible;
           return;
         }
       }
@@ -443,7 +444,7 @@ class ClientTranscodingService implements NasTranscodingService {
     if (!mediaCodec.isAvailable) {
       task
         ..isRunning = false
-        ..error = 'MediaCodec 不可用';
+        ..error = appL10n.transcodingMediaCodecNotAvailable;
       return;
     }
 
@@ -457,7 +458,7 @@ class ClientTranscodingService implements NasTranscodingService {
       if (session == null) {
         task
           ..isRunning = false
-          ..error = '无法启动 MediaCodec 转码';
+          ..error = appL10n.transcodingFailedToStartMediaCodec;
         return;
       }
 
@@ -558,7 +559,7 @@ class ClientTranscodingService implements NasTranscodingService {
           } else if (ReturnCode.isCancel(returnCode)) {
             task.isRunning = false;
             if (!hasError) {
-              task.error = '转码已取消';
+              task.error = appL10n.transcodingCancelled;
             }
             logger.i('ClientTranscoding: 转码已取消');
           } else {
@@ -568,7 +569,7 @@ class ClientTranscodingService implements NasTranscodingService {
                 ? logs.substring(logs.length - 500)
                 : logs ?? '';
             hasError = true;
-            task.error = '转码失败';
+            task.error = appL10n.transcodingFailed;
             logger
               ..e('ClientTranscoding: 转码失败 returnCode=$returnCode')
               ..e('ClientTranscoding: FFmpeg 输出:\n$errorSnippet');
@@ -643,7 +644,7 @@ class ClientTranscodingService implements NasTranscodingService {
           hasError = true;
           task
             ..cancel()
-            ..error = '转码超时：输入源无响应';
+            ..error = appL10n.transcodingTimeoutInputSourceNoResponse;
           timer.cancel();
           if (!readyCompleter.isCompleted) {
             readyCompleter.complete();
@@ -683,7 +684,7 @@ class ClientTranscodingService implements NasTranscodingService {
         hasError = true;
         task
           ..isRunning = false
-          ..error = '等待转码输出超时'
+          ..error = appL10n.transcodingWaitOutputTimeout
           ..cancel();
         logger.e('ClientTranscoding: 等待转码输出超时');
       }
@@ -714,7 +715,7 @@ class ClientTranscodingService implements NasTranscodingService {
     if (_ffmpegPath == null) {
       task
         ..isRunning = false
-        ..error = 'FFmpeg 不可用';
+        ..error = appL10n.transcodingFFmpegNotAvailable;
       return;
     }
 
@@ -801,7 +802,7 @@ class ClientTranscodingService implements NasTranscodingService {
           // 等待超时，检查当前状态
           task
             ..isRunning = false
-            ..error = '等待转码输出超时';
+            ..error = appL10n.transcodingWaitOutputTimeout;
           logger
             ..e('ClientTranscoding: 等待转码输出超时')
             ..e('ClientTranscoding: FFmpeg 输出:\n${stderrBuffer.toString().length > 1000 ? stderrBuffer.toString().substring(stderrBuffer.toString().length - 1000) : stderrBuffer.toString()}');
@@ -830,7 +831,7 @@ class ClientTranscodingService implements NasTranscodingService {
       final errorSnippet = stderrOutput.length > 500
           ? stderrOutput.substring(stderrOutput.length - 500)
           : stderrOutput;
-      task.error = '转码失败，退出码: $exitCode';
+      task.error = appL10n.transcodingFailedWithExitCode(exitCode);
       logger
         ..e('ClientTranscoding: 转码失败 $exitCode')
         ..e('ClientTranscoding: FFmpeg 错误输出:\n$errorSnippet');
