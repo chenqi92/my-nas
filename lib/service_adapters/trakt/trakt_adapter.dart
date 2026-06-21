@@ -77,7 +77,7 @@ class TraktAdapter implements ServiceAdapter {
       return ServiceConnectionFailure(e.message);
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'authenticateTraktWithCode');
-      return ServiceConnectionFailure('认证失败: $e');
+      return ServiceConnectionFailure(appL10n.traktAdapterAuthenticationFailed(e));
     }
   }
 
