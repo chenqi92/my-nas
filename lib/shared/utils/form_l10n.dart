@@ -352,6 +352,18 @@ String localizeFormText(BuildContext context, String? text) {
     '媒体追踪' => l.sourceCategoryDisplayNameMediaTracking,
     '媒体管理' => l.sourceCategoryDisplayNameMediaManagement,
     '字幕站点' => l.sourceCategoryDisplayNameSubtitleSites,
+    '原画' => l.enl_fa0e7145,
+    '无' => l.enl_d81bb206,
+    '直通' => l.enl_0e6fd2df,
+    '色调映射' => l.enl_7511663f,
+    '禁用' => l.enl_710ad08b,
+    'Mobius（推荐）' => l.enl_962b1213,
+    '光纤' => l.enl_56944fc3,
+    '蓝牙' => l.enl_0a4e4862,
+    '耳机' => l.enl_01b6f87b,
+    '扬声器' => l.enl_1c59faa2,
+    '未知' => l.enl_1622dc9b,
+    '启用' => l.enl_7854b52a,
     _ => text,
   };
 }

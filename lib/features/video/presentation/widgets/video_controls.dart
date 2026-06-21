@@ -9,6 +9,7 @@ import 'package:my_nas/features/video/presentation/widgets/cast/cast_button.dart
 import 'package:my_nas/features/video/presentation/widgets/infuse_settings_panel.dart';
 import 'package:my_nas/features/video/presentation/widgets/playlist_sheet.dart';
 import 'package:my_nas/features/video/presentation/widgets/quality/quality_button.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 class VideoControls extends ConsumerWidget {
   const VideoControls({
@@ -513,7 +514,7 @@ class _AspectRatioButton extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      mode.label,
+                      localizeFormText(context, mode.label),
                       style: TextStyle(
                         color: mode == aspectRatio ? Colors.white : Colors.white70,
                         fontWeight:

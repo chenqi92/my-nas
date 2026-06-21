@@ -6373,5 +6373,17 @@
   "liveStreamSaveSourceFailedError": "保存失败: {error}",
   "videoEpisodeSelectorCountTmdb": "({count}集)",
   "videoCategorySettingsGenreType": "类型",
-  "videoCategorySettingsRegionType": "地区"
+  "videoCategorySettingsRegionType": "地区",
+  "enl_fa0e7145": "原画",
+  "enl_d81bb206": "无",
+  "enl_0e6fd2df": "直通",
+  "enl_7511663f": "色调映射",
+  "enl_710ad08b": "禁用",
+  "enl_962b1213": "Mobius（推荐）",
+  "enl_56944fc3": "光纤",
+  "enl_0a4e4862": "蓝牙",
+  "enl_01b6f87b": "耳机",
+  "enl_1c59faa2": "扬声器",
+  "enl_1622dc9b": "未知",
+  "enl_7854b52a": "启用"
 }

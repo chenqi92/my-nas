@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -214,7 +215,7 @@ class _QualityTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        quality.label,
+                        localizeFormText(context, quality.label),
                         style: TextStyle(
                           color: isSelected ? Colors.white : Colors.white70,
                           fontSize: 15,

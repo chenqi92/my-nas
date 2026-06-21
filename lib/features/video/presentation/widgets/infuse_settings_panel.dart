@@ -13,6 +13,7 @@ import 'package:my_nas/features/video/presentation/widgets/subtitle_download_dia
 import 'package:my_nas/features/video/presentation/widgets/subtitle_selector.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_style_sheet.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// Infuse 风格的设置面板
 ///
@@ -580,7 +581,7 @@ class _AspectRatioChip extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Text(
-              mode.label,
+              localizeFormText(context, mode.label),
               style: TextStyle(
                 color: isSelected ? Colors.white : Colors.white70,
                 fontSize: 13,

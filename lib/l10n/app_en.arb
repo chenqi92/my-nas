@@ -12810,5 +12810,17 @@
     }
   },
   "videoCategorySettingsGenreType": "Type",
-  "videoCategorySettingsRegionType": "Region"
+  "videoCategorySettingsRegionType": "Region",
+  "enl_fa0e7145": "Original",
+  "enl_d81bb206": "None",
+  "enl_0e6fd2df": "Passthrough",
+  "enl_7511663f": "Tone Mapping",
+  "enl_710ad08b": "Disabled",
+  "enl_962b1213": "Mobius (Recommended)",
+  "enl_56944fc3": "Optical",
+  "enl_0a4e4862": "Bluetooth",
+  "enl_01b6f87b": "Headphones",
+  "enl_1c59faa2": "Speaker",
+  "enl_1622dc9b": "Unknown",
+  "enl_7854b52a": "Enabled"
 }

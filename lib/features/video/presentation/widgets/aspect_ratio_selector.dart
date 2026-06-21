@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -135,7 +136,7 @@ class _AspectRatioTile extends StatelessWidget {
               : Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         title: Text(
-          mode.label,
+          localizeFormText(context, mode.label),
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected ? Theme.of(context).colorScheme.primary : null,

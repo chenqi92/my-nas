@@ -15,6 +15,7 @@ import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/subtitle_translation_settings_provider.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -64,7 +65,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 icon: Icons.hd_rounded,
                 iconColor: AppColors.primary,
                 title: context.l10n.videoPlayerSettingsDefaultQuality,
-                subtitle: settings.defaultQuality.label,
+                subtitle: localizeFormText(context, settings.defaultQuality.label),
                 onTap: () => _showQualityPicker(context, ref, settings.defaultQuality, isDark),
               ),
               _buildDivider(isDark),
@@ -872,7 +873,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        quality.label,
+                        localizeFormText(context, quality.label),
                         style: context.textTheme.bodyLarge?.copyWith(
                           color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -1214,7 +1215,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                     (option) => _buildPickerOption(
                       context,
                       isDark,
-                      label: option.label,
+                      label: localizeFormText(context, option.label),
                       description: option.description,
                       isSelected: option.isSelected,
                       onTap: () {

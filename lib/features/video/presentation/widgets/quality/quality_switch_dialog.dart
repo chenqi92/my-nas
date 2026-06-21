@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// 清晰度切换建议弹窗
 /// 当检测到播放卡顿时显示，建议用户切换到较低清晰度
@@ -179,7 +180,7 @@ class _QualitySwitchDialogState extends ConsumerState<QualitySwitchDialog> {
                           ),
                         ),
                         child: Text(
-                          context.l10n.videoQualitySwitchKeepQuality(widget.currentQuality.label),
+                          context.l10n.videoQualitySwitchKeepQuality(localizeFormText(context, widget.currentQuality.label)),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -204,7 +205,7 @@ class _QualitySwitchDialogState extends ConsumerState<QualitySwitchDialog> {
                           ),
                         ),
                         child: Text(
-                          context.l10n.videoQualitySwitchSwitchQuality(widget.suggestedQuality.label),
+                          context.l10n.videoQualitySwitchSwitchQuality(localizeFormText(context, widget.suggestedQuality.label)),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -255,7 +256,7 @@ class _QualityCompareRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              quality.label,
+              localizeFormText(context, quality.label),
               style: TextStyle(
                 color: isHighlighted ? Colors.white : Colors.white70,
                 fontSize: 15,

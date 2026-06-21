@@ -4,6 +4,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/quality/quality_selector_sheet.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// 清晰度快捷按钮（显示在视频控制栏）- PopupMenu 风格
 class QualityButton extends ConsumerWidget {
@@ -23,7 +24,7 @@ class QualityButton extends ConsumerWidget {
             const Icon(Icons.high_quality_rounded, color: Colors.white54, size: 20),
             const SizedBox(width: 4),
             Text(
-              qualityState.currentQuality.label,
+              localizeFormText(context, qualityState.currentQuality.label),
               style: const TextStyle(color: Colors.white54, fontSize: 12),
             ),
           ],
@@ -50,7 +51,7 @@ class QualityButton extends ConsumerWidget {
             const Icon(Icons.high_quality_rounded, color: Colors.white, size: 20),
             const SizedBox(width: 4),
             Text(
-              qualityState.currentQuality.label,
+              localizeFormText(context, qualityState.currentQuality.label),
               style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
             if (qualityState.isLoading) ...[
@@ -87,7 +88,7 @@ class QualityButton extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          quality.label,
+                          localizeFormText(context, quality.label),
                           style: TextStyle(
                             color: quality == qualityState.currentQuality
                                 ? Colors.white
@@ -148,7 +149,7 @@ class QualityButtonOutlined extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              qualityState.currentQuality.label,
+              localizeFormText(context, qualityState.currentQuality.label),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -204,7 +205,7 @@ class QualityIconButton extends ConsumerWidget {
             ),
         ],
       ),
-      tooltip: context.l10n.videoQualityButtonTooltipWithLabel(qualityState.currentQuality.label),
+      tooltip: context.l10n.videoQualityButtonTooltipWithLabel(localizeFormText(context, qualityState.currentQuality.label)),
     );
   }
 }
