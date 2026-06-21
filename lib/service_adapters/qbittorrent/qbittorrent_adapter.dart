@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
 import 'package:my_nas/service_adapters/qbittorrent/api/qbittorrent_api.dart';
@@ -50,7 +51,7 @@ class QBittorrentAdapter implements ServiceAdapter {
       if (!success) {
         _api?.dispose();
         _api = null;
-        return const ServiceConnectionFailure('登录失败');
+        return ServiceConnectionFailure(appL10n.qbittorrentAdapterLoginFailedConnection);
       }
 
       // 获取版本信息
@@ -71,7 +72,7 @@ class QBittorrentAdapter implements ServiceAdapter {
       AppError.handle(e, st, 'connectToQBittorrent');
       _api?.dispose();
       _api = null;
-      return ServiceConnectionFailure('连接失败: $e');
+      return ServiceConnectionFailure(appL10n.qbittorrentAdapterConnectionFailedWithError(e));
     }
   }
 
@@ -333,7 +334,7 @@ class QBittorrentAdapter implements ServiceAdapter {
 
   void _ensureConnected() {
     if (!isConnected) {
-      throw const QBittorrentApiException('未连接到 qBittorrent');
+      throw QBittorrentApiException(appL10n.qbittorrentAdapterNotConnected);
     }
   }
 }

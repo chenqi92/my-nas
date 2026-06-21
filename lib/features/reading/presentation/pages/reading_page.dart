@@ -1179,7 +1179,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                                       Icon(Icons.search_rounded, size: 14, color: Colors.white),
                                       SizedBox(width: 4),
                                       Text(
-                                        '搜索',
+                                        context.l10n.readingSearchButtonText,
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,

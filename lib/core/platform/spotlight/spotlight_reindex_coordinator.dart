@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_channel.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_indexer.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
@@ -148,7 +149,7 @@ class SpotlightReindexCoordinator {
           id: SpotlightIndexer.buildId(SpotlightItemKind.comic, raw),
           kind: SpotlightItemKind.comic,
           title: c.folderName,
-          subtitle: c.pageCount > 0 ? '${c.pageCount} 页' : null,
+          subtitle: c.pageCount > 0 ? appL10n.spotlightComicPageCount(c.pageCount) : null,
           thumbPath: _toLocalPath(c.coverPath),
         );
       }).toList(growable: false);

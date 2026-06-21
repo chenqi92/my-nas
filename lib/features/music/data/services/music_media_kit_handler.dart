@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import 'package:image/image.dart' as img;
 import 'package:media_kit/media_kit.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/audio_effects_service.dart';
 import 'package:my_nas/features/music/data/services/music_audio_handler_interface.dart';
@@ -849,10 +850,10 @@ Future<MusicMediaKitAudioHandler> initMediaKitAudioHandler() async {
       // init() 需要在返回后调用
       return h;
     },
-    config: const AudioServiceConfig(
+    config: AudioServiceConfig(
       androidNotificationChannelId: 'com.kkape.mynas.channel.audio',
-      androidNotificationChannelName: '音乐播放',
-      androidNotificationChannelDescription: '音乐播放控制通知',
+      androidNotificationChannelName: appL10n.musicNotificationChannelName,
+      androidNotificationChannelDescription: appL10n.musicNotificationChannelDescription,
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
       fastForwardInterval: Duration(seconds: 10),

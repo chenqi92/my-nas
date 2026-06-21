@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/aria2/api/aria2_api.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
@@ -17,7 +18,7 @@ class Aria2Adapter implements ServiceAdapter {
         name: 'Aria2',
         type: SourceType.aria2,
         version: _api?.version,
-        description: '多协议下载客户端',
+        description: appL10n.sourceTypeDescAria2,
       );
 
   @override
@@ -45,7 +46,7 @@ class Aria2Adapter implements ServiceAdapter {
       if (!success) {
         _api?.dispose();
         _api = null;
-        return const ServiceConnectionFailure('连接失败');
+        return ServiceConnectionFailure(appL10n.aria2AdapterConnectionFailed);
       }
 
       _connection = config;
@@ -58,7 +59,7 @@ class Aria2Adapter implements ServiceAdapter {
       AppError.handle(e, st, 'connectToAria2');
       _api?.dispose();
       _api = null;
-      return ServiceConnectionFailure('连接失败: $e');
+      return ServiceConnectionFailure(appL10n.aria2AdapterConnectionFailedWithError(e.toString()));
     }
   }
 
@@ -192,7 +193,7 @@ class Aria2Adapter implements ServiceAdapter {
 
   void _ensureConnected() {
     if (!isConnected) {
-      throw const Aria2ApiException('未连接到 Aria2');
+      throw Aria2ApiException(appL10n.aria2AdapterNotConnected);
     }
   }
 }

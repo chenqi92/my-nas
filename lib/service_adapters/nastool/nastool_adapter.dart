@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
 import 'package:my_nas/service_adapters/nastool/api/nastool_api.dart';
@@ -43,14 +44,14 @@ class NasToolAdapter implements ServiceAdapter {
       _api = NasToolApi(baseUrl: config.baseUrl);
 
       // 检查认证类型
-      final authType = config.extraConfig?['authType'] as String? ?? '用户名密码';
+      final authType = config.extraConfig?['authType'] as String? ?? appL10n.nastoolAuthTypeDefault;
 
       if (authType == 'API Token') {
         // API Token 认证
         final apiToken = config.apiKey ?? config.extraConfig?['apiToken'] as String?;
 
         if (apiToken == null || apiToken.isEmpty) {
-          return const ServiceConnectionFailure('缺少 API Token');
+          return ServiceConnectionFailure(appL10n.nastoolErrorMissingApiToken);
         }
 
         final valid = await _api!.validateApiToken(apiToken);
@@ -58,7 +59,7 @@ class NasToolAdapter implements ServiceAdapter {
         if (!valid) {
           _api?.dispose();
           _api = null;
-          return const ServiceConnectionFailure('API Token 无效');
+          return ServiceConnectionFailure(appL10n.nastoolErrorInvalidApiToken);
         }
       } else {
         // 用户名密码认证
@@ -69,15 +70,15 @@ class NasToolAdapter implements ServiceAdapter {
         AppError.ignore(
           Exception('Debug: username=$username, password=${password != null ? '***' : 'null'}, config.password=${config.password != null}, extraConfig.password=${config.extraConfig?['password'] != null}'),
           StackTrace.current,
-          'NASTool 连接调试',
+          appL10n.nastoolDebugConnectionInfo,
         );
 
         if (username == null || username.isEmpty) {
-          return const ServiceConnectionFailure('缺少用户名');
+          return ServiceConnectionFailure(appL10n.nastoolErrorMissingUsername);
         }
 
         if (password == null || password.isEmpty) {
-          return const ServiceConnectionFailure('缺少密码');
+          return ServiceConnectionFailure(appL10n.nastoolErrorMissingPassword);
         }
 
         // 登录认证
@@ -99,7 +100,7 @@ class NasToolAdapter implements ServiceAdapter {
       try {
         _systemVersion = await _api!.getSystemVersion();
       } on Exception catch (e, st) {
-        AppError.ignore(e, st, '系统版本获取失败不影响连接');
+        AppError.ignore(e, st, appL10n.nastoolIgnoreSystemVersionFailed);
       }
 
       _connection = config;
@@ -112,7 +113,7 @@ class NasToolAdapter implements ServiceAdapter {
       AppError.handle(e, st, 'connectToNasTool');
       _api?.dispose();
       _api = null;
-      return ServiceConnectionFailure('连接失败: $e');
+      return ServiceConnectionFailure(appL10n.nastoolErrorConnectionFailed(e));
     }
   }
 
@@ -414,7 +415,7 @@ class NasToolAdapter implements ServiceAdapter {
 
   void _ensureConnected() {
     if (!isConnected) {
-      throw const NasToolApiException('未连接到 NASTool');
+      throw NasToolApiException(appL10n.nastoolErrorNotConnected);
     }
   }
 }

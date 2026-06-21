@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/smb/smb_pool_config.dart';
 
@@ -81,7 +82,7 @@ class BackgroundTaskPool {
   /// 返回任务完成的 Future
   Future<T> add<T>(Future<T> Function() task, {String? taskName}) async {
     if (_disposed) {
-      throw StateError('BackgroundTaskPool "$name" has been disposed');
+      throw StateError(appL10n.backgroundTaskPoolDisposed(name));
     }
 
     final completer = Completer<T>();
@@ -166,7 +167,7 @@ class BackgroundTaskPool {
   void clearQueue() {
     for (final task in _queue) {
       task.completer.completeError(
-        StateError('Task cancelled: queue cleared'),
+        StateError(appL10n.backgroundTaskPoolQueuedTaskCancelled),
       );
     }
     _queue.clear();

@@ -12388,5 +12388,99 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "qbittorrentAdapterLoginFailedConnection": "Login failed",
+  "qbittorrentAdapterConnectionFailedWithError": "Connection failed: {error}",
+  "@qbittorrentAdapterConnectionFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "qbittorrentAdapterNotConnected": "Not connected to qBittorrent",
+  "traktAdapterDescription": "Track watch history and media status",
+  "traktAdapterAuthenticationFailed": "Authentication failed: {error}",
+  "@traktAdapterAuthenticationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "traktAdapterMissingOAuthConfig": "Missing OAuth configuration",
+  "traktAdapterMissingClientCredentials": "Missing Client ID or Client Secret",
+  "traktAdapterRequiresOAuthAuthorization": "OAuth authorization required",
+  "traktAdapterConnectionVerificationFailed": "Connection verification failed: {error}",
+  "@traktAdapterConnectionVerificationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "traktAdapterConnectionFailed": "Connection failed: {error}",
+  "@traktAdapterConnectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "traktAdapterNotConnected": "Not connected to Trakt",
+  "aria2AdapterConnectionFailed": "Connection failed",
+  "aria2AdapterConnectionFailedWithError": "Connection failed: {error}",
+  "@aria2AdapterConnectionFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolAdapterDescription": "NAS Media Library Management Tool",
+  "nastoolAuthTypeDefault": "Username and Password",
+  "nastoolErrorMissingApiToken": "Missing API Token",
+  "nastoolErrorInvalidApiToken": "API Token is invalid",
+  "nastoolDebugConnectionInfo": "NASTool connection debug",
+  "nastoolErrorMissingUsername": "Missing username",
+  "nastoolErrorMissingPassword": "Missing password",
+  "nastoolIgnoreSystemVersionFailed": "Failed to get system version, does not affect connection",
+  "nastoolErrorConnectionFailed": "Connection failed: {error}",
+  "@nastoolErrorConnectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolErrorNotConnected": "Not connected to NASTool",
+  "transmissionAdapterDescription": "Lightweight remote download client",
+  "transmissionConnectionFailedWithException": "Connection failed: {exception}",
+  "@transmissionConnectionFailedWithException": {
+    "placeholders": {
+      "exception": {
+        "type": "Object"
+      }
+    }
+  },
+  "transmissionAdapterNotConnected": "Not connected to Transmission",
+  "spotlightComicPageCount": "{count} pages",
+  "@spotlightComicPageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backgroundTaskPoolDisposed": "BackgroundTaskPool \"{name}\" has been disposed",
+  "@backgroundTaskPoolDisposed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backgroundTaskPoolQueuedTaskCancelled": "Task cancelled: queue cleared",
+  "musicNotificationChannelName": "Music Playback",
+  "musicNotificationChannelDescription": "Music playback control notification"
 }

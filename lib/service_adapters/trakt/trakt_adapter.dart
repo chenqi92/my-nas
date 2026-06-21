@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
 import 'package:my_nas/service_adapters/trakt/api/trakt_api.dart';
@@ -18,7 +19,7 @@ class TraktAdapter implements ServiceAdapter {
   ServiceAdapterInfo get info => ServiceAdapterInfo(
     name: 'Trakt',
     type: SourceType.trakt,
-    description: '追踪观看记录和媒体状态',
+    description: appL10n.traktAdapterDescription,
   );
 
   @override
@@ -87,7 +88,7 @@ class TraktAdapter implements ServiceAdapter {
     try {
       final extraConfig = config.extraConfig;
       if (extraConfig == null) {
-        return const ServiceConnectionFailure('缺少 OAuth 配置信息');
+        return ServiceConnectionFailure(appL10n.traktAdapterMissingOAuthConfig);
       }
 
       final clientId = extraConfig['clientId'] as String?;
@@ -96,7 +97,7 @@ class TraktAdapter implements ServiceAdapter {
       final refreshToken = extraConfig['refreshToken'] as String?;
 
       if (clientId == null || clientSecret == null) {
-        return const ServiceConnectionFailure('缺少 Client ID 或 Client Secret');
+        return ServiceConnectionFailure(appL10n.traktAdapterMissingClientCredentials);
       }
 
       _api = TraktApi(
@@ -108,7 +109,7 @@ class TraktAdapter implements ServiceAdapter {
 
       // 如果没有 token，需要进行 OAuth 授权
       if (accessToken == null || accessToken.isEmpty) {
-        return const ServiceConnectionFailure('需要进行 OAuth 授权');
+        return ServiceConnectionFailure(appL10n.traktAdapterRequiresOAuthAuthorization);
       }
 
       // 检查 token 是否需要刷新
@@ -123,7 +124,7 @@ class TraktAdapter implements ServiceAdapter {
         AppError.handle(e, st, 'getTraktUserSettings');
         _api?.dispose();
         _api = null;
-        return ServiceConnectionFailure('连接验证失败: $e');
+        return ServiceConnectionFailure(appL10n.traktAdapterConnectionVerificationFailed(e));
       }
 
       _connection = config;
@@ -136,7 +137,7 @@ class TraktAdapter implements ServiceAdapter {
       AppError.handle(e, st, 'connectToTrakt');
       _api?.dispose();
       _api = null;
-      return ServiceConnectionFailure('连接失败: $e');
+      return ServiceConnectionFailure(appL10n.traktAdapterConnectionFailed(e));
     }
   }
 
@@ -254,7 +255,7 @@ class TraktAdapter implements ServiceAdapter {
 
   void _ensureConnected() {
     if (!isConnected) {
-      throw const TraktApiException('未连接到 Trakt');
+      throw TraktApiException(appL10n.traktAdapterNotConnected);
     }
   }
 }

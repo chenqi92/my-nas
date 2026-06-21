@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
@@ -19,7 +20,7 @@ class TransmissionAdapter implements ServiceAdapter {
         version: _api?.version != null && _api?.rpcVersion != null
             ? '${_api!.version} (RPC: ${_api!.rpcVersion})'
             : _api?.version,
-        description: '轻量级远程下载客户端',
+        description: appL10n.transmissionAdapterDescription,
       );
 
   @override
@@ -49,7 +50,7 @@ class TransmissionAdapter implements ServiceAdapter {
       if (!success) {
         _api?.dispose();
         _api = null;
-        return const ServiceConnectionFailure('连接失败');
+        return ServiceConnectionFailure(appL10n.transmissionConnectionFailed);
       }
 
       _connection = config;
@@ -62,7 +63,7 @@ class TransmissionAdapter implements ServiceAdapter {
       AppError.handle(e, st, 'connectToTransmission');
       _api?.dispose();
       _api = null;
-      return ServiceConnectionFailure('连接失败: $e');
+      return ServiceConnectionFailure(appL10n.transmissionConnectionFailedWithException(e));
     }
   }
 
@@ -203,7 +204,7 @@ class TransmissionAdapter implements ServiceAdapter {
 
   void _ensureConnected() {
     if (!isConnected) {
-      throw const TransmissionApiException('未连接到 Transmission');
+      throw TransmissionApiException(appL10n.transmissionAdapterNotConnected);
     }
   }
 }
