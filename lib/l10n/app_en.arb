@@ -11724,5 +11724,82 @@
   "hdrCapabilityNotSupported": "HDR not supported",
   "cacheConfigServiceUnlimited": "Unlimited",
   "bookUnknownAuthor": "Unknown Author",
-  "bookUnknownSize": "Unknown Size"
+  "bookUnknownSize": "Unknown Size",
+  "webviewContentParsingFailed": "Content parsing failed. Please try converting to EPUB format using Calibre",
+  "mobiConversionFailedParsing": "Failed to parse MOBI file",
+  "mobiConversionFailedExtractText": "Failed to extract text content",
+  "mobiConversionFailed": "Conversion failed: {error}",
+  "@mobiConversionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "mobiUnknownAuthor": "Unknown Author",
+  "mobiChapterTitle": "Chapter {number}",
+  "@mobiChapterTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "mobiTableOfContents": "Table of Contents",
+  "mobiEpubZipEncodingFailed": "EPUB ZIP encoding failed",
+  "bookContentChapterNameUnknown": "Unknown",
+  "bookContentChapterNameFromNumber": "Chapter {number}",
+  "@bookContentChapterNameFromNumber": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "localFileSystemUrlStreamUnsupported": "Local file system does not support retrieving data streams via URL",
+  "mobileFilesErrorInvalidPath": "Invalid path: {path}",
+  "@mobileFilesErrorInvalidPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileFilesErrorFileNotFound": "File not found: {path}",
+  "@mobileFilesErrorFileNotFound": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileFilesErrorInvalidPathNoArg": "Invalid path",
+  "mobileFilesErrorUrlStreamNotSupported": "Mobile files do not support URL stream access",
+  "mobileCompositeFileSystemGallery": "Gallery",
+  "mobileCompositeFileSystemMusic": "Music",
+  "mobileCompositeFileSystemFiles": "Files",
+  "mobileCompositeFileSystemUnsupportedUrl": "Unsupported URL: {url}",
+  "@mobileCompositeFileSystemUnsupportedUrl": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "ugreenFileSystemFileNotFound": "File not found: {path}",
+  "@ugreenFileSystemFileNotFound": {
+    "placeholders": {
+      "path": {
+        "type": "Object"
+      }
+    }
+  },
+  "fnosFileNotFound": "File not found: {path}",
+  "@fnosFileNotFound": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  }
 }

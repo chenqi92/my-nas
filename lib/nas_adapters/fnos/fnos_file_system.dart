@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/fnos/api/fnos_api.dart';
@@ -84,7 +85,7 @@ class FnOSFileSystem implements NasFileSystem {
     final files = await listDirectory(parentPath.isEmpty ? '/' : parentPath);
     final file = files.firstWhere(
       (f) => f.name == fileName,
-      orElse: () => throw Exception('文件不存在: $path'),
+      orElse: () => throw Exception(appL10n.fnosFileNotFound(path)),
     );
     return file;
   }

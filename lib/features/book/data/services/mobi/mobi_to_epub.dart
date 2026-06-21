@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_header.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_index.dart';
@@ -68,7 +69,7 @@ class MobiToEpubConverter {
       // 1. 解析 MOBI 头部
       final header = MobiHeaderParser.parse(bytes);
       if (header == null) {
-        return EpubConversionResult.failure('无法解析 MOBI 文件');
+        return EpubConversionResult.failure(appL10n.mobiConversionFailedParsing);
       }
 
       logger..i('MOBI 解析成功: ${header.title}')
@@ -79,7 +80,7 @@ class MobiToEpubConverter {
       // 2. 提取文本内容
       final htmlContent = await MobiTextExtractor.extractText(header);
       if (htmlContent.isEmpty) {
-        return EpubConversionResult.failure('无法提取文本内容');
+        return EpubConversionResult.failure(appL10n.mobiConversionFailedExtractText);
       }
 
       logger.d('提取文本: ${htmlContent.length} 字符');
@@ -114,7 +115,7 @@ class MobiToEpubConverter {
       );
     } on Exception catch (e, st) {
       logger.e('MOBI 转换失败', e, st);
-      return EpubConversionResult.failure('转换失败: $e');
+      return EpubConversionResult.failure(appL10n.mobiConversionFailed(e));
     }
   }
 
@@ -173,7 +174,7 @@ class MobiToEpubConverter {
     final title = header.title.isNotEmpty
         ? header.title
         : path.basenameWithoutExtension(fileName);
-    final author = header.author ?? '未知作者';
+    final author = header.author ?? appL10n.mobiUnknownAuthor;
 
     // 1. mimetype (必须是第一个文件，不压缩)
     _addFileToArchive(archive, 'mimetype', 'application/epub+zip');
@@ -239,7 +240,7 @@ $spineItems  </spine>
     for (var i = 0; i < chapterFiles.length; i++) {
       final chapterTitle = i < chapters.length
           ? _escapeXml(chapters[i].title)
-          : '第 ${i + 1} 章';
+          : _escapeXml(appL10n.mobiChapterTitle(i + 1));
       navItems.writeln(
         '      <li><a href="chapter_${i + 1}.xhtml">$chapterTitle</a></li>',
       );
@@ -251,11 +252,11 @@ $spineItems  </spine>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="zh-CN">
 <head>
   <meta charset="UTF-8"/>
-  <title>目录</title>
+  <title>${appL10n.mobiTableOfContents}</title>
 </head>
 <body>
   <nav epub:type="toc" id="toc">
-    <h1>目录</h1>
+    <h1>${appL10n.mobiTableOfContents}</h1>
     <ol>
 $navItems    </ol>
   </nav>
@@ -266,7 +267,7 @@ $navItems    </ol>
     for (var i = 0; i < chapterFiles.length; i++) {
       final chapterTitle = i < chapters.length
           ? _escapeXml(chapters[i].title)
-          : '第 ${i + 1} 章';
+          : _escapeXml(appL10n.mobiChapterTitle(i + 1));
       final chapterContent = chapterFiles[i];
 
       _addFileToArchive(
@@ -314,7 +315,7 @@ $chapterContent
 
     final zipData = ZipEncoder().encode(archive);
     if (zipData == null) {
-      throw StateError('EPUB ZIP 编码失败');
+      throw StateError(appL10n.mobiEpubZipEncodingFailed);
     }
 
     await File(epubPath).writeAsBytes(zipData);

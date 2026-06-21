@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -204,24 +205,24 @@ class MobileCompositeFileSystem implements NasFileSystem {
     final items = <FileItem>[]
 
     // 相册（照片和视频）
-    ..add(const FileItem(
-      name: '相册',
+    ..add(FileItem(
+      name: appL10n.mobileCompositeFileSystemGallery,
       path: '/gallery',
       isDirectory: true,
       size: 0,
     ))
 
     // 音乐库（iOS 和 Android 都支持）
-    ..add(const FileItem(
-      name: '音乐',
+    ..add(FileItem(
+      name: appL10n.mobileCompositeFileSystemMusic,
       path: '/music',
       isDirectory: true,
       size: 0,
     ))
 
     // 文件（Documents 和 Downloads）
-    ..add(const FileItem(
-      name: '文件',
+    ..add(FileItem(
+      name: appL10n.mobileCompositeFileSystemFiles,
       path: '/files',
       isDirectory: true,
       size: 0,
@@ -287,7 +288,7 @@ class MobileCompositeFileSystem implements NasFileSystem {
     if (url.startsWith('file://')) {
       return _filesFileSystem.getUrlStream(url);
     }
-    throw UnimplementedError('不支持的 URL: $url');
+    throw UnimplementedError(appL10n.mobileCompositeFileSystemUnsupportedUrl(url));
   }
 
   @override

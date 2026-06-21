@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/local/api/local_file_api.dart';
 import 'package:path/path.dart' as p;
@@ -75,7 +76,7 @@ class LocalFileSystem implements NasFileSystem {
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) =>
-      throw UnimplementedError('本地文件系统不支持通过 URL 获取数据流');
+      throw UnimplementedError(appL10n.localFileSystemUrlStreamUnsupported);
 
   @override
   Future<String> getFileUrl(String path, {Duration? expiry}) async =>

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/book_content_processor.dart';
 import 'package:my_nas/features/reading/data/services/reader_settings_service.dart';
@@ -337,7 +338,7 @@ class WebViewPaginationRenderer {
     // 如果内容为空或只有空白，返回提示
     final trimmed = cleaned.trim();
     if (trimmed.isEmpty) {
-      return '<p style="color: #999; text-align: center; padding: 20px;">内容解析失败，请尝试使用 Calibre 转换为 EPUB 格式</p>';
+      return '<p style="color: #999; text-align: center; padding: 20px;">${appL10n.webviewContentParsingFailed}</p>';
     }
     
     return trimmed;

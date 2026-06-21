@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -191,12 +192,12 @@ class MobileFilesFileSystem implements NasFileSystem {
   Future<FileItem> getFileInfo(String path) async {
     final realPath = _toRealPath(path);
     if (realPath == null) {
-      throw Exception('Invalid path: $path');
+      throw Exception(appL10n.mobileFilesErrorInvalidPath(path));
     }
 
     final type = FileSystemEntity.typeSync(realPath);
     if (type == FileSystemEntityType.notFound) {
-      throw Exception('File not found: $path');
+      throw Exception(appL10n.mobileFilesErrorFileNotFound(path));
     }
 
     final isDir = type == FileSystemEntityType.directory;
@@ -229,12 +230,12 @@ class MobileFilesFileSystem implements NasFileSystem {
   }) async {
     final realPath = _toRealPath(path);
     if (realPath == null) {
-      throw Exception('Invalid path: $path');
+      throw Exception(appL10n.mobileFilesErrorInvalidPath(path));
     }
 
     final file = File(realPath);
     if (!await file.exists()) {
-      throw Exception('File not found: $path');
+      throw Exception(appL10n.mobileFilesErrorFileNotFound(path));
     }
 
     if (range != null) {
@@ -251,7 +252,7 @@ class MobileFilesFileSystem implements NasFileSystem {
   Future<String> getFileUrl(String path, {Duration? expiry}) async {
     final realPath = _toRealPath(path);
     if (realPath == null) {
-      throw Exception('Invalid path: $path');
+      throw Exception(appL10n.mobileFilesErrorInvalidPath(path));
     }
 
     return File(realPath).uri.toString();
@@ -267,14 +268,14 @@ class MobileFilesFileSystem implements NasFileSystem {
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) {
-    throw UnimplementedError('手机文件不支持 URL 流访问');
+    throw UnimplementedError(appL10n.mobileFilesErrorUrlStreamNotSupported);
   }
 
   @override
   Future<void> createDirectory(String path) async {
     final realPath = _toRealPath(path);
     if (realPath == null) {
-      throw Exception('Invalid path: $path');
+      throw Exception(appL10n.mobileFilesErrorInvalidPath(path));
     }
 
     final dir = Directory(realPath);
@@ -285,7 +286,7 @@ class MobileFilesFileSystem implements NasFileSystem {
   Future<void> delete(String path) async {
     final realPath = _toRealPath(path);
     if (realPath == null) {
-      throw Exception('Invalid path: $path');
+      throw Exception(appL10n.mobileFilesErrorInvalidPath(path));
     }
 
     final type = await FileSystemEntity.type(realPath);
@@ -302,7 +303,7 @@ class MobileFilesFileSystem implements NasFileSystem {
     final newRealPath = _toRealPath(newPath);
 
     if (oldRealPath == null || newRealPath == null) {
-      throw Exception('Invalid path');
+      throw Exception(appL10n.mobileFilesErrorInvalidPathNoArg);
     }
 
     final type = await FileSystemEntity.type(oldRealPath);
@@ -319,7 +320,7 @@ class MobileFilesFileSystem implements NasFileSystem {
     final destRealPath = _toRealPath(destPath);
 
     if (sourceRealPath == null || destRealPath == null) {
-      throw Exception('Invalid path');
+      throw Exception(appL10n.mobileFilesErrorInvalidPathNoArg);
     }
 
     final type = await FileSystemEntity.type(sourceRealPath);
@@ -350,7 +351,7 @@ class MobileFilesFileSystem implements NasFileSystem {
     final destRealPath = _toRealPath(destPath);
 
     if (sourceRealPath == null || destRealPath == null) {
-      throw Exception('Invalid path');
+      throw Exception(appL10n.mobileFilesErrorInvalidPathNoArg);
     }
 
     final type = await FileSystemEntity.type(sourceRealPath);
@@ -370,7 +371,7 @@ class MobileFilesFileSystem implements NasFileSystem {
   }) async {
     final destRealPath = _toRealPath(remotePath);
     if (destRealPath == null) {
-      throw Exception('Invalid path: $remotePath');
+      throw Exception(appL10n.mobileFilesErrorInvalidPath(remotePath));
     }
 
     final sourceFile = File(localPath);
@@ -384,7 +385,7 @@ class MobileFilesFileSystem implements NasFileSystem {
   Future<void> writeFile(String remotePath, List<int> data) async {
     final realPath = _toRealPath(remotePath);
     if (realPath == null) {
-      throw Exception('Invalid path: $remotePath');
+      throw Exception(appL10n.mobileFilesErrorInvalidPath(remotePath));
     }
 
     final file = File(realPath);

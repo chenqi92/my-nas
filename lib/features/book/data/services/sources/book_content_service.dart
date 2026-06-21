@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/sources/rule_parser.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
@@ -308,7 +309,7 @@ class BookContentService {
             // 智能清理章节名称（仅在检测到问题时清理）
             var cleanedName = _smartCleanChapterName(name);
             if (cleanedName.isEmpty) {
-              cleanedName = _extractNameFromUrl(url) ?? 'Unknown';
+              cleanedName = _extractNameFromUrl(url) ?? appL10n.bookContentChapterNameUnknown;
             }
             
             // 过滤非章节链接
@@ -484,7 +485,7 @@ class BookContentService {
         // 智能清理章节名称（仅在检测到问题时清理）
         var cleanedName = _smartCleanChapterName(name);
         if (cleanedName.isEmpty) {
-          cleanedName = _extractNameFromUrl(url) ?? 'Unknown';
+          cleanedName = _extractNameFromUrl(url) ?? appL10n.bookContentChapterNameUnknown;
         }
 
         chapters.add(OnlineChapter(
@@ -725,7 +726,7 @@ class BookContentService {
       
       // 如果只是数字，返回 "第X章"
       if (RegExp(r'^\d+$').hasMatch(path)) {
-        return '第$path章';
+        return appL10n.bookContentChapterNameFromNumber(path);
       }
       
       // 如果包含中文，直接返回

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -62,7 +63,7 @@ class DownloadTask {
   }
 
   String get sizeText {
-    if (totalBytes == 0) return '未知大小'; // TODO: migrate to l10n via context
+    if (totalBytes == 0) return appL10n.downloadServiceUnknownSize;
     return '${_formatBytes(downloadedBytes)} / ${_formatBytes(totalBytes)}';
   }
 
@@ -199,7 +200,7 @@ class DownloadService {
         _updateTask(
           taskId,
           status: DownloadStatus.failed,
-          errorMessage: 'Download failed: ${response.statusCode}', // TODO: migrate to l10n via context in UI layer
+          errorMessage: appL10n.downloadServiceDownloadFailed(response.statusCode ?? 0),
         );
       }
     } on DioException catch (e, st) {
@@ -212,7 +213,7 @@ class DownloadService {
       _updateTask(
         taskId,
         status: DownloadStatus.failed,
-        errorMessage: e.message ?? 'Download failed', // TODO: migrate to l10n via context in UI layer
+        errorMessage: appL10n.downloadServiceDownloadFailedGeneric,
       );
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'startDownload', {'taskId': taskId, 'url': task.url});
@@ -298,15 +299,15 @@ class DownloadService {
   Future<DownloadOpenResult> openFile(String taskId) async {
     final task = _tasks[taskId];
     if (task == null) {
-      return const DownloadOpenResult(success: false, message: 'Task not found');
+      return DownloadOpenResult(success: false, message: appL10n.downloadServiceTaskNotFound);
     }
     if (task.status != DownloadStatus.completed) {
-      return const DownloadOpenResult(success: false, message: 'File is not downloaded yet');
+      return DownloadOpenResult(success: false, message: appL10n.downloadServiceFileNotCompleted);
     }
 
     final file = File(task.savePath);
     if (!file.existsSync()) {
-      return const DownloadOpenResult(success: false, message: 'File has been removed or path is invalid');
+      return DownloadOpenResult(success: false, message: appL10n.downloadServiceFileNotFound);
     }
 
     try {
@@ -330,7 +331,7 @@ class DownloadService {
       final dir = await downloadDirectory;
       final directory = Directory(dir);
       if (!directory.existsSync()) {
-        return const DownloadOpenResult(success: false, message: 'Download directory does not exist');
+        return DownloadOpenResult(success: false, message: appL10n.downloadServiceDirectoryNotFound);
       }
 
       if (Platform.isMacOS) {
@@ -347,9 +348,9 @@ class DownloadService {
       }
       // 移动端：OpenFilex 在 iOS 不能打开目录，Android 通常需要 SAF；
       // 提示用户从系统文件 App 自行进入即可。
-      return const DownloadOpenResult(
+      return DownloadOpenResult(
         success: false,
-        message: 'Current platform does not support opening directories directly. Please access via the system file app.',
+        message: appL10n.downloadServiceMobileNotSupported,
       );
     } on Exception catch (e, st) {
       AppError.ignore(e, st, 'Failed to open download directory');
