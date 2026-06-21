@@ -43,7 +43,7 @@ class PhotoEntity {
 
   /// 显示的文件大小
   String get displaySize {
-    if (size <= 0) return '未知大小';
+    if (size <= 0) return appL10n.photoDatabaseUnknownSize;
     const units = ['B', 'KB', 'MB', 'GB'];
     var unitIndex = 0;
     var displaySize = size.toDouble();
@@ -60,7 +60,7 @@ class PhotoEntity {
     if (parts.length > 1) {
       return parts[parts.length - 2];
     }
-    return '根目录';
+    return appL10n.photoDatabaseRootFolder;
   }
 
   PhotoEntity copyWith({
@@ -1000,5 +1000,5 @@ class MonthData {
       };
 
   /// 短月份名称
-  String get shortMonthName => '$month月';
+  String get shortMonthName => appL10n.photoDatabaseShortMonth(month);
 }

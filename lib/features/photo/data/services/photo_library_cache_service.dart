@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 照片库缓存条目
@@ -189,22 +190,22 @@ class PhotoLibraryCacheService {
   /// 获取缓存信息文本
   String getCacheInfo() {
     final cache = getCache();
-    if (cache == null) return '无缓存';
+    if (cache == null) return appL10n.photoLibraryCacheInfoNoCache;
 
     final size = getCacheSize();
     final sizeText = size < 1024
-        ? '$size B'
+        ? appL10n.photoLibraryCacheInfoSizeBytes(size)
         : size < 1024 * 1024
-            ? '${(size / 1024).toStringAsFixed(1)} KB'
-            : '${(size / (1024 * 1024)).toStringAsFixed(2)} MB';
+            ? appL10n.photoLibraryCacheInfoSizeKB((size / 1024).toStringAsFixed(1))
+            : appL10n.photoLibraryCacheInfoSizeMB((size / (1024 * 1024)).toStringAsFixed(2));
 
     final age = DateTime.now().difference(cache.lastUpdated);
     final ageText = age.inHours < 1
-        ? '${age.inMinutes} 分钟前'
+        ? appL10n.photoLibraryCacheInfoAgeMinutesAgo(age.inMinutes)
         : age.inHours < 24
-            ? '${age.inHours} 小时前'
-            : '${age.inDays} 天前';
+            ? appL10n.photoLibraryCacheInfoAgeHoursAgo(age.inHours)
+            : appL10n.photoLibraryCacheInfoAgeDaysAgo(age.inDays);
 
-    return '${cache.photos.length} 张照片 · $sizeText · $ageText更新';
+    return appL10n.photoLibraryCacheInfoFormat(cache.photos.length, sizeText, ageText);
   }
 }

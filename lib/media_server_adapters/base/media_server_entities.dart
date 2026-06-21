@@ -3,6 +3,8 @@
 /// 定义媒体库、媒体项目等通用数据模型，供各媒体服务器适配器使用
 library;
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
+
 /// 媒体库信息
 class MediaLibrary {
   const MediaLibrary({
@@ -137,10 +139,12 @@ class MediaItem {
   String? get formattedRuntime {
     if (runTimeTicks == null) return null;
     final minutes = runTimeTicks! ~/ (10000000 * 60);
-    if (minutes < 60) return '$minutes分钟';
+    if (minutes < 60) return appL10n.videoEpisodeCardRuntimeMinutes(minutes);
     final hours = minutes ~/ 60;
     final remainingMinutes = minutes % 60;
-    return '$hours小时${remainingMinutes > 0 ? ' $remainingMinutes分钟' : ''}';
+    return remainingMinutes > 0
+        ? appL10n.videoEpisodeCardRuntimeHoursMinutes(hours, remainingMinutes)
+        : appL10n.videoEpisodeCardRuntimeHours(hours);
   }
 
   /// 获取显示名称（剧集包含集数信息）
@@ -267,7 +271,7 @@ class MediaStream {
     if (type == MediaStreamType.audio && channels != null) {
       parts.add('${channels}ch');
     }
-    return parts.isEmpty ? 'Track $index' : parts.join(' - ');
+    return parts.isEmpty ? appL10n.infuseTrackName(index.toString()) : parts.join(' - ');
   }
 }
 

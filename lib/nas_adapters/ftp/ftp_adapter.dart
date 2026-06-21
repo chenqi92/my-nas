@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:my_nas/core/constants/app_constants.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -62,7 +63,7 @@ class FtpAdapter implements NasAdapter {
       final ok = await _ftp!.connect();
       if (!ok) {
         _connected = false;
-        return const ConnectionFailure(error: 'FTP 连接失败：认证未通过或网络不可达');
+        return ConnectionFailure(error: appL10n.ftpAdapterConnectionAuthFailed);
       }
 
       _fileSystem = FtpFileSystem(ftp: _ftp!);
@@ -119,7 +120,7 @@ class FtpAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected || _fileSystem == null) {
-      throw StateError('未连接到 FTP 服务器');
+      throw StateError(appL10n.ftpAdapterNotConnected);
     }
     return _fileSystem!;
   }

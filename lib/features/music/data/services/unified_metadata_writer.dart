@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/audiotags_metadata_writer.dart';
 import 'package:my_nas/features/music/data/services/ffmpeg_metadata_writer.dart';
@@ -176,7 +177,7 @@ class UnifiedMetadataWriter implements MusicMetadataWriter {
     if (!isFormatSupported(ext)) {
       return NasMetadataWriteResult(
         success: false,
-        error: '不支持的格式: $ext',
+        error: appL10n.musicWriterUnsupportedFormat(ext),
       );
     }
 
@@ -184,7 +185,7 @@ class UnifiedMetadataWriter implements MusicMetadataWriter {
 
     try {
       // 获取文件信息
-      onProgress?.call(0.0, '获取文件信息');
+      onProgress?.call(0.0, appL10n.musicWriterStageGetFileInfo);
       final fileInfo = await fileSystem.getFileInfo(remotePath);
       final fileSize = fileInfo.size;
 
@@ -198,29 +199,29 @@ class UnifiedMetadataWriter implements MusicMetadataWriter {
       tempFile = File(p.join(_tempDir.path, 'metadata_edit_$uniqueId$ext'));
 
       // 下载文件
-      onProgress?.call(0.1, '下载文件');
+      onProgress?.call(0.1, appL10n.musicWriterStageDownloadFile);
       await _downloadFile(fileSystem, remotePath, tempFile, fileSize, (progress) {
-        onProgress?.call(0.1 + progress * 0.4, '下载文件');
+        onProgress?.call(0.1 + progress * 0.4, appL10n.musicWriterStageDownloadFile);
       });
 
       // 写入元数据
-      onProgress?.call(0.5, '写入元数据');
+      onProgress?.call(0.5, appL10n.musicWriterStageWriteMetadata);
       final writeResult = await writeMetadata(tempFile.path, metadata);
 
       if (!writeResult) {
         return NasMetadataWriteResult(
           success: false,
-          error: '写入元数据失败',
+          error: appL10n.musicWriterWriteMetadataFailed,
         );
       }
 
       // 上传文件
-      onProgress?.call(0.6, '上传文件');
+      onProgress?.call(0.6, appL10n.musicWriterStageUploadFile);
       await _uploadFile(fileSystem, tempFile, remotePath, (progress) {
-        onProgress?.call(0.6 + progress * 0.35, '上传文件');
+        onProgress?.call(0.6 + progress * 0.35, appL10n.musicWriterStageUploadFile);
       });
 
-      onProgress?.call(1.0, '完成');
+      onProgress?.call(1.0, appL10n.musicWriterStageComplete);
 
       return NasMetadataWriteResult(
         success: true,

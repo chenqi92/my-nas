@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
 
@@ -126,7 +127,7 @@ class BookSourceManagerService {
     for (final source in sources) {
       final groups = source.groups;
       if (groups.isEmpty) {
-        grouped.putIfAbsent('未分组', () => []).add(source);
+        grouped.putIfAbsent(appL10n.bookSourceUngrouped, () => []).add(source);
       } else {
         for (final group in groups) {
           grouped.putIfAbsent(group, () => []).add(source);
@@ -142,7 +143,7 @@ class BookSourceManagerService {
     await _ensureInitialized();
     return _sourcesCache?.firstWhere(
       (s) => s.id == id,
-      orElse: () => throw StateError('书源不存在'),
+      orElse: () => throw StateError(appL10n.bookSourceNotFoundError),
     );
   }
 
@@ -231,7 +232,7 @@ class BookSourceManagerService {
 
     final index = _sourcesCache?.indexWhere((s) => s.id == source.id) ?? -1;
     if (index == -1) {
-      throw StateError('书源不存在: ${source.id}');
+      throw StateError(appL10n.bookSourceNotFoundWithIdError(source.id));
     }
 
     // 保存到Hive
@@ -334,7 +335,7 @@ class BookSourceManagerService {
       final response = await dio.get<String>(url);
       
       if (response.data == null || response.data!.isEmpty) {
-        throw Exception('无法从URL获取书源数据');
+        throw Exception(appL10n.bookSourceImportUrlFetchError);
       }
       
       return importFromJson(response.data!);

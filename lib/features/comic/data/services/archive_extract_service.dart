@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart' as archive_lib;
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -90,7 +91,7 @@ class ArchiveExtractService {
       case ArchiveType.sevenZip:
         return _extract7z(archiveBytes, fileName);
       case ArchiveType.unknown:
-        return ExtractResult.failure('未知的压缩格式');
+        return ExtractResult.failure(appL10n.archiveExtractUnknownFormat);
     }
   }
 
@@ -118,7 +119,7 @@ class ArchiveExtractService {
       return ExtractResult.fromFiles(files);
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'extractZip');
-      return ExtractResult.failure('ZIP 解压失败: $e');
+      return ExtractResult.failure(appL10n.archiveExtractZipFailed(e));
     }
   }
 
@@ -139,10 +140,7 @@ class ArchiveExtractService {
       return await _extractZip(bytes);
     } on Exception catch (e, st) {
       AppError.ignore(e, st, 'RAR格式在移动平台不支持，尝试ZIP解压失败');
-      return ExtractResult.failure(
-        'RAR 格式在此平台暂不支持\n\n'
-        '建议将文件转换为 CBZ 格式',
-      );
+      return ExtractResult.failure(appL10n.archiveExtractRarUnsupported);
     }
   }
 
@@ -158,10 +156,7 @@ class ArchiveExtractService {
       );
     }
 
-    return ExtractResult.failure(
-      '7z 格式在此平台暂不支持\n\n'
-      '建议将文件转换为 CBZ 格式',
-    );
+    return ExtractResult.failure(appL10n.archiveExtract7zUnsupported);
   }
 
   /// 使用系统命令解压
@@ -182,10 +177,11 @@ class ArchiveExtractService {
 
     if (availableCommand == null) {
       return ExtractResult.failure(
-        '$formatName 解压工具未安装\n\n'
-        '请安装以下工具之一：\n'
-        '${commands.join(", ")}\n\n'
-        '${_getInstallHint(formatName)}',
+        appL10n.archiveExtractToolNotInstalled(
+          formatName,
+          commands.join(', '),
+          _getInstallHint(formatName),
+        ),
       );
     }
 
@@ -216,7 +212,7 @@ class ArchiveExtractService {
       );
 
       if (!result) {
-        return ExtractResult.failure('$formatName 解压失败');
+        return ExtractResult.failure(appL10n.archiveExtractFormatFailed(formatName));
       }
 
       // 读取解压出的图片文件
@@ -313,11 +309,11 @@ class ArchiveExtractService {
   /// 获取安装提示
   String _getInstallHint(String formatName) {
     if (Platform.isMacOS) {
-      return 'macOS 安装方法：\nbrew install p7zip\n或\nbrew install unar';
+      return appL10n.archiveExtractInstallHintMacOS;
     } else if (Platform.isWindows) {
-      return 'Windows 安装方法：\n下载安装 7-Zip: https://7-zip.org';
+      return appL10n.archiveExtractInstallHintWindows;
     } else {
-      return 'Linux 安装方法：\nsudo apt install p7zip-full\n或\nsudo apt install unar';
+      return appL10n.archiveExtractInstallHintLinux;
     }
   }
 

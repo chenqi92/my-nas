@@ -1,6 +1,8 @@
 import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_hook.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -217,7 +219,7 @@ class ComicLibraryCacheService {
   /// 获取缓存信息文本
   String getCacheInfo() {
     final cache = getCache();
-    if (cache == null) return '无缓存';
+    if (cache == null) return appL10n.comicCacheServiceNoCache;
 
     final size = getCacheSize();
     final sizeText = size < 1024
@@ -228,12 +230,12 @@ class ComicLibraryCacheService {
 
     final age = DateTime.now().difference(cache.lastUpdated);
     final ageText = age.inHours < 1
-        ? '${age.inMinutes} 分钟前'
+        ? appL10n.comicCacheServiceMinutesAgo(age.inMinutes)
         : age.inHours < 24
-            ? '${age.inHours} 小时前'
-            : '${age.inDays} 天前';
+            ? appL10n.comicCacheServiceHoursAgo(age.inHours)
+            : appL10n.comicCacheServiceDaysAgo(age.inDays);
 
-    return '${cache.comics.length} 本漫画 · $sizeText · $ageText更新';
+    return appL10n.comicCacheServiceInfoFormat(cache.comics.length, sizeText, ageText);
   }
 
   /// 获取漫画数量

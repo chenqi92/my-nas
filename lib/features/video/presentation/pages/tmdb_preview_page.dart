@@ -13,6 +13,7 @@ import 'package:my_nas/features/video/data/services/video_database_service.dart'
 import 'package:my_nas/features/video/presentation/pages/video_detail_page.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
@@ -703,7 +704,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                   ),
                 ),
                 title: Text(
-                  site.name.isEmpty ? site.type.displayName : site.name,
+                  site.name.isEmpty ? localizeFormText(context, site.type.displayName) : site.name,
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 subtitle: Text(
@@ -863,7 +864,7 @@ class _TmdbPreviewPageState extends ConsumerState<TmdbPreviewPage>
                   ),
                 ),
                 title: Text(
-                  source.name.isEmpty ? source.type.displayName : source.name,
+                  source.name.isEmpty ? localizeFormText(context, source.type.displayName) : source.name,
                   style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
                 subtitle: Text(

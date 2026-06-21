@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 音乐库缓存条目
@@ -80,11 +81,11 @@ class MusicLibraryCacheEntry {
     // 尝试从文件名解析
     final nameWithoutExt = fileName.replaceAll(RegExp(r'\.[^.]+$'), '');
     final match = RegExp(r'^(.+?)\s*[-–—]\s*.+$').firstMatch(nameWithoutExt);
-    return match?.group(1)?.trim() ?? '未知艺术家';
+    return match?.group(1)?.trim() ?? appL10n.musicCacheUnknownArtist;
   }
 
   /// 显示的专辑
-  String get displayAlbum => album?.isNotEmpty ?? false ? album! : '未知专辑';
+  String get displayAlbum => album?.isNotEmpty ?? false ? album! : appL10n.musicCacheUnknownAlbum;
 
   /// 是否有封面
   bool get hasCover => coverBase64 != null && coverBase64!.isNotEmpty;
@@ -254,7 +255,7 @@ class MusicLibraryCacheService {
   /// 获取缓存信息文本
   String getCacheInfo() {
     final cache = getCache();
-    if (cache == null) return '无缓存';
+    if (cache == null) return appL10n.musicCacheNoCache;
 
     final size = getCacheSize();
     final sizeText = size < 1024
@@ -265,12 +266,12 @@ class MusicLibraryCacheService {
 
     final age = DateTime.now().difference(cache.lastUpdated);
     final ageText = age.inHours < 1
-        ? '${age.inMinutes} 分钟前'
+        ? appL10n.musicCacheAgeMinutes(age.inMinutes)
         : age.inHours < 24
-            ? '${age.inHours} 小时前'
-            : '${age.inDays} 天前';
+            ? appL10n.musicCacheAgeHours(age.inHours)
+            : appL10n.musicCacheAgeDays(age.inDays);
 
-    return '${cache.tracks.length} 首音乐 · $sizeText · $ageText更新';
+    return appL10n.musicCacheInfoFormat(cache.tracks.length, sizeText, ageText);
   }
 
   /// 更新单个曲目的元数据

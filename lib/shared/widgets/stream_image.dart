@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/performance_mode_service.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/smb/smb_pool_config.dart';
@@ -321,7 +322,7 @@ class _StreamImageState extends State<StreamImage> {
             await for (final chunk in stream) {
               bytes.addAll(chunk);
               if (bytes.length > 50 * 1024 * 1024) {
-                throw Exception('图片文件过大');
+                throw Exception(appL10n.streamImageFileTooLarge);
               }
             }
             imageData = Uint8List.fromList(bytes);
@@ -333,14 +334,14 @@ class _StreamImageState extends State<StreamImage> {
         // 3. 最后使用文件流（加载完整原文件）
         if (imageData == null) {
           if (widget.path == null) {
-            throw Exception('无法加载图片：没有可用的 URL 或路径');
+            throw Exception(appL10n.streamImageNoValidSource);
           }
           final stream = await widget.fileSystem!.getFileStream(widget.path!);
           final bytes = <int>[];
           await for (final chunk in stream) {
             bytes.addAll(chunk);
             if (bytes.length > 50 * 1024 * 1024) {
-              throw Exception('图片文件过大');
+              throw Exception(appL10n.streamImageFileTooLarge);
             }
           }
           imageData = Uint8List.fromList(bytes);

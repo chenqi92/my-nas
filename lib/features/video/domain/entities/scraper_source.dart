@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:uuid/uuid.dart';
 
 /// 刮削源类型
@@ -31,9 +32,9 @@ enum ScraperType {
 
   /// 描述
   String get description => switch (this) {
-        ScraperType.tmdb => '官方 TMDB API，需要 API Key',
-        ScraperType.doubanApi => '第三方豆瓣 API 服务',
-        ScraperType.doubanWeb => '豆瓣网页爬虫，需要 Cookie',
+        ScraperType.tmdb => appL10n.scraperTypeDescTmdb,
+        ScraperType.doubanApi => appL10n.scraperTypeDescDoubanApi,
+        ScraperType.doubanWeb => appL10n.scraperTypeDescDoubanWeb,
       };
 
   /// 是否需要 API Key

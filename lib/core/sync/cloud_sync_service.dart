@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/cloud_sync_backend.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 
@@ -245,7 +246,7 @@ class CloudSyncService {
           CloudSyncReport(
             moduleKey: '*',
             outcome: CloudSyncOutcome.failed,
-            error: '未配置同步凭证',
+            error: appL10n.cloudSyncNotConfigured,
           ),
         ];
       }
@@ -256,7 +257,7 @@ class CloudSyncService {
           CloudSyncReport(
             moduleKey: '*',
             outcome: CloudSyncOutcome.failed,
-            error: '无法连接到 WebDAV',
+            error: appL10n.cloudSyncCannotConnectWebdav,
           ),
         ];
       }

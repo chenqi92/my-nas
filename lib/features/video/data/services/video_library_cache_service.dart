@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 视频库缓存条目
@@ -181,7 +182,7 @@ class VideoLibraryCacheService {
   /// 获取缓存信息文本
   String getCacheInfo() {
     final cache = getCache();
-    if (cache == null) return '无缓存';
+    if (cache == null) return appL10n.videoCacheInfoNone;
 
     final size = getCacheSize();
     final sizeText = size < 1024
@@ -192,12 +193,12 @@ class VideoLibraryCacheService {
 
     final age = DateTime.now().difference(cache.lastUpdated);
     final ageText = age.inHours < 1
-        ? '${age.inMinutes} 分钟前'
+        ? appL10n.videoCacheInfoMinutesAgo(age.inMinutes)
         : age.inHours < 24
-            ? '${age.inHours} 小时前'
-            : '${age.inDays} 天前';
+            ? appL10n.videoCacheInfoHoursAgo(age.inHours)
+            : appL10n.videoCacheInfoDaysAgo(age.inDays);
 
-    return '${cache.videos.length} 个视频 · $sizeText · $ageText更新';
+    return appL10n.videoCacheInfoFormat(cache.videos.length, sizeText, ageText);
   }
 
   /// 根据 sourceId 删除所有视频缓存

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart' show ThumbnailSize;
 
@@ -180,12 +181,12 @@ class FnOSApi {
       }
     }
 
-    return FnOSAuthFailure(error: '登录失败，请检查用户名密码或服务器地址');
+    return FnOSAuthFailure(error: appL10n.fnosApiLoginFailedDefault);
   }
 
   FnOSAuthResult _parseLoginResponse(dynamic data) {
     if (data is! Map) {
-      return FnOSAuthFailure(error: '响应格式错误');
+      return FnOSAuthFailure(error: appL10n.fnosApiResponseFormatError);
     }
 
     // 检查成功响应
@@ -222,7 +223,7 @@ class FnOSApi {
     final message = data['message']?.toString() ??
         data['msg']?.toString() ??
         data['error']?.toString() ??
-        '登录失败 (code: $code)';
+        appL10n.fnosApiLoginFailedWithCode(code.toString());
 
     return FnOSAuthFailure(error: message, code: code as int?);
   }
@@ -452,7 +453,7 @@ class FnOSApi {
     );
 
     if (response.data == null) {
-      throw Exception('获取 URL 数据流失败：响应为空');
+      throw Exception(appL10n.fnosApiFileStreamEmpty);
     }
 
     return response.data!.stream;

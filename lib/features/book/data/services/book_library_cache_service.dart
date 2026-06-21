@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 图书库缓存条目
@@ -185,7 +186,7 @@ class BookLibraryCacheService {
   /// 获取缓存信息文本
   String getCacheInfo() {
     final cache = getCache();
-    if (cache == null) return '无缓存';
+    if (cache == null) return appL10n.bookLibraryCacheServiceNoCache;
 
     final size = getCacheSize();
     final sizeText = size < 1024
@@ -196,11 +197,11 @@ class BookLibraryCacheService {
 
     final age = DateTime.now().difference(cache.lastUpdated);
     final ageText = age.inHours < 1
-        ? '${age.inMinutes} 分钟前'
+        ? appL10n.bookLibraryCacheServiceMinutesAgo(age.inMinutes)
         : age.inHours < 24
-            ? '${age.inHours} 小时前'
-            : '${age.inDays} 天前';
+            ? appL10n.bookLibraryCacheServiceHoursAgo(age.inHours)
+            : appL10n.bookLibraryCacheServiceDaysAgo(age.inDays);
 
-    return '${cache.books.length} 本图书 · $sizeText · $ageText更新';
+    return appL10n.bookLibraryCacheServiceInfo(cache.books.length, sizeText, ageText);
   }
 }

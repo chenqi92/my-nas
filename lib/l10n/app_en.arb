@@ -11239,5 +11239,320 @@
       }
     }
   },
-  "ugreenAuthNetworkError": "Network error"
+  "ugreenAuthNetworkError": "Network error",
+  "scraperTypeDescTmdb": "Official TMDB API, API Key required",
+  "scraperTypeDescDoubanApi": "Third-party Douban API service",
+  "scraperTypeDescDoubanWeb": "Douban web scraper, Cookie required",
+  "archiveExtractUnknownFormat": "Unknown archive format",
+  "archiveExtractZipFailed": "ZIP extraction failed: {error}",
+  "@archiveExtractZipFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "archiveExtractRarUnsupported": "RAR format is not supported on this platform\n\nIt is recommended to convert the file to CBZ format",
+  "archiveExtract7zUnsupported": "7z format is not supported on this platform\n\nIt is recommended to convert the file to CBZ format",
+  "archiveExtractToolNotInstalled": "{formatName} extraction tool not installed\n\nPlease install one of the following tools:\n{commands}\n\n{hint}",
+  "@archiveExtractToolNotInstalled": {
+    "placeholders": {
+      "formatName": {
+        "type": "String"
+      },
+      "commands": {
+        "type": "String"
+      },
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveExtractFormatFailed": "{formatName} extraction failed",
+  "@archiveExtractFormatFailed": {
+    "placeholders": {
+      "formatName": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveExtractInstallHintMacOS": "macOS installation method:\nbrew install p7zip\nor\nbrew install unar",
+  "archiveExtractInstallHintWindows": "Windows installation method:\nDownload and install 7-Zip: https://7-zip.org",
+  "archiveExtractInstallHintLinux": "Linux installation method:\nsudo apt install p7zip-full\nor\nsudo apt install unar",
+  "bookSourceUngrouped": "Uncategorized",
+  "bookSourceNotFoundError": "Book source does not exist",
+  "bookSourceNotFoundWithIdError": "Book source does not exist: {id}",
+  "@bookSourceNotFoundWithIdError": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "bookSourceImportUrlFetchError": "Unable to fetch book source data from URL",
+  "photoDatabaseUnknownSize": "Unknown size",
+  "photoDatabaseRootFolder": "Root",
+  "photoDatabaseShortMonth": "{month} months",
+  "@photoDatabaseShortMonth": {
+    "placeholders": {
+      "month": {
+        "type": "Object"
+      }
+    }
+  },
+  "streamImageFileTooLarge": "Image file is too large",
+  "streamImageNoValidSource": "Cannot load image: no valid URL or path available",
+  "upnpDeviceFetcherDescriptionEmpty": "Device description is empty",
+  "upnpDeviceFetcherNoDeviceElement": "Device description missing <device> element",
+  "upnpDeviceFetcherNoContentDirectory": "Device does not provide ContentDirectory service",
+  "fnosApiLoginFailedDefault": "Login failed. Please check username, password, or server address.",
+  "fnosApiResponseFormatError": "Invalid response format",
+  "fnosApiLoginFailedWithCode": "Login failed (code: {code})",
+  "@fnosApiLoginFailedWithCode": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "fnosApiFileStreamEmpty": "Failed to retrieve URL stream: response is empty",
+  "cloudSyncNotConfigured": "Sync credentials not configured",
+  "cloudSyncCannotConnectWebdav": "Cannot connect to WebDAV",
+  "musicCacheUnknownArtist": "Unknown Artist",
+  "musicCacheUnknownAlbum": "Unknown Album",
+  "musicCacheNoCache": "No cache",
+  "musicCacheAgeMinutes": "{minutes} minutes ago",
+  "@musicCacheAgeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicCacheAgeHours": "{hours} hours ago",
+  "@musicCacheAgeHours": {
+    "placeholders": {
+      "hours": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicCacheAgeDays": "{days} days ago",
+  "@musicCacheAgeDays": {
+    "placeholders": {
+      "days": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicCacheInfoFormat": "{trackCount} tracks · {size} · {age} updated",
+  "@musicCacheInfoFormat": {
+    "placeholders": {
+      "trackCount": {
+        "type": "Object"
+      },
+      "size": {
+        "type": "String"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "musicWriterUnsupportedFormat": "Unsupported format: {ext}",
+  "@musicWriterUnsupportedFormat": {
+    "placeholders": {
+      "ext": {
+        "type": "String"
+      }
+    }
+  },
+  "musicWriterStageGetFileInfo": "Getting file info",
+  "musicWriterStageDownloadFile": "Downloading file",
+  "musicWriterStageWriteMetadata": "Writing metadata",
+  "musicWriterStageUploadFile": "Uploading file",
+  "musicWriterStageComplete": "Complete",
+  "musicWriterWriteMetadataFailed": "Failed to write metadata",
+  "videoCacheInfoNone": "No cache",
+  "videoCacheInfoMinutesAgo": "{minutes} minutes ago",
+  "@videoCacheInfoMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoCacheInfoHoursAgo": "{hours} hours ago",
+  "@videoCacheInfoHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoCacheInfoDaysAgo": "{days} days ago",
+  "@videoCacheInfoDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoCacheInfoFormat": "{count} videos · {size} · {age} updated",
+  "@videoCacheInfoFormat": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      },
+      "size": {
+        "type": "Object"
+      },
+      "age": {
+        "type": "Object"
+      }
+    }
+  },
+  "comicCacheServiceNoCache": "No cache",
+  "comicCacheServiceMinutesAgo": "{minutes} minutes ago",
+  "@comicCacheServiceMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "comicCacheServiceHoursAgo": "{hours} hours ago",
+  "@comicCacheServiceHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "comicCacheServiceDaysAgo": "{days} days ago",
+  "@comicCacheServiceDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "comicCacheServiceInfoFormat": "{count} comics · {size} · {age} updated",
+  "@comicCacheServiceInfoFormat": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "bookLibraryCacheServiceNoCache": "No cache",
+  "bookLibraryCacheServiceMinutesAgo": "{minutes} minutes ago",
+  "@bookLibraryCacheServiceMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "bookLibraryCacheServiceHoursAgo": "{hours} hours ago",
+  "@bookLibraryCacheServiceHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "bookLibraryCacheServiceDaysAgo": "{days} days ago",
+  "@bookLibraryCacheServiceDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bookLibraryCacheServiceInfo": "{count} books · {size} · {age} updated",
+  "@bookLibraryCacheServiceInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "photoLibraryCacheInfoNoCache": "No cache",
+  "photoLibraryCacheInfoSizeBytes": "{size} B",
+  "@photoLibraryCacheInfoSizeBytes": {
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoLibraryCacheInfoSizeKB": "{size} KB",
+  "@photoLibraryCacheInfoSizeKB": {
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoLibraryCacheInfoSizeMB": "{size} MB",
+  "@photoLibraryCacheInfoSizeMB": {
+    "placeholders": {
+      "size": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoLibraryCacheInfoAgeMinutesAgo": "{minutes} minutes ago",
+  "@photoLibraryCacheInfoAgeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoLibraryCacheInfoAgeHoursAgo": "{hours} hours ago",
+  "@photoLibraryCacheInfoAgeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoLibraryCacheInfoAgeDaysAgo": "{days} days ago",
+  "@photoLibraryCacheInfoAgeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoLibraryCacheInfoFormat": "{photoCount} photos · {size} · {age} updated",
+  "@photoLibraryCacheInfoFormat": {
+    "placeholders": {
+      "photoCount": {
+        "type": "Object"
+      },
+      "size": {
+        "type": "String"
+      },
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpAdapterConnectionAuthFailed": "FTP connection failed: authentication failed or network unreachable",
+  "ftpAdapterNotConnected": "Not connected to FTP server"
 }

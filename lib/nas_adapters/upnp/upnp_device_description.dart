@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:xml/xml.dart';
 
@@ -40,7 +41,7 @@ class UpnpDeviceFetcher {
       );
       final xml = response.data;
       if (xml == null || xml.isEmpty) {
-        throw Exception('设备描述为空');
+        throw Exception(appL10n.upnpDeviceFetcherDescriptionEmpty);
       }
       return _parse(xml, descriptionUrl);
     } on DioException catch (e, st) {
@@ -55,7 +56,7 @@ class UpnpDeviceFetcher {
     // friendlyName / manufacturer / modelName
     final device = doc.findAllElements('device').firstOrNull;
     if (device == null) {
-      throw Exception('设备描述缺少 <device>');
+      throw Exception(appL10n.upnpDeviceFetcherNoDeviceElement);
     }
     final friendlyName =
         device.findElements('friendlyName').firstOrNull?.innerText ??
@@ -75,7 +76,7 @@ class UpnpDeviceFetcher {
       }
     }
     if (controlUrl == null || controlUrl.isEmpty) {
-      throw Exception('设备未提供 ContentDirectory 服务');
+      throw Exception(appL10n.upnpDeviceFetcherNoContentDirectory);
     }
 
     // controlURL 可能是相对路径——拼接成绝对 URL

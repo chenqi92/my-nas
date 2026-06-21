@@ -8,6 +8,7 @@ import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -619,7 +620,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.type.displayName,
+                              localizeFormText(context, widget.type.displayName),
                               style: context.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: isDark ? AppColors.darkOnSurface : null,
