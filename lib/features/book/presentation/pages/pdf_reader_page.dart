@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
@@ -493,20 +494,20 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
   void _showKeyboardHelp() {
     KeyboardShortcutsHelpDialog.show(
       context,
-      title: 'PDF 阅读快捷键',
+      title: context.l10n.pdfReaderKeyboardHelpTitle,
       shortcuts: [
-        (key: '←', description: '上一页'),
-        (key: '→', description: '下一页'),
-        (key: 'Page Up', description: '上一页'),
-        (key: 'Page Down', description: '下一页'),
-        (key: 'Home', description: '跳到首页'),
-        (key: 'End', description: '跳到末页'),
-        (key: 'Space', description: '显示/隐藏控制栏'),
-        (key: 'M', description: '切换夜间模式'),
-        (key: '+/=', description: '放大'),
-        (key: '-', description: '缩小'),
-        (key: 'Esc', description: '返回'),
-        (key: '?', description: '显示此帮助'),
+        (key: '←', description: context.l10n.pdfReaderKeyboardPreviousPage),
+        (key: '→', description: context.l10n.pdfReaderKeyboardNextPage),
+        (key: 'Page Up', description: context.l10n.pdfReaderKeyboardPreviousPage),
+        (key: 'Page Down', description: context.l10n.pdfReaderKeyboardNextPage),
+        (key: 'Home', description: context.l10n.pdfReaderKeyboardFirstPage),
+        (key: 'End', description: context.l10n.pdfReaderKeyboardLastPage),
+        (key: 'Space', description: context.l10n.pdfReaderKeyboardToggleControls),
+        (key: 'M', description: context.l10n.pdfReaderKeyboardToggleDarkMode),
+        (key: '+/=', description: context.l10n.pdfReaderKeyboardZoomIn),
+        (key: '-', description: context.l10n.pdfReaderKeyboardZoomOut),
+        (key: 'Esc', description: context.l10n.pdfReaderKeyboardBack),
+        (key: '?', description: context.l10n.pdfReaderKeyboardShowHelp),
       ],
     );
   }
@@ -556,7 +557,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
             ElevatedButton.icon(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_rounded),
-              label: const Text('返回'),
+              label: Text(context.l10n.pdfReaderBackButton),
             ),
           ],
         ),
@@ -625,7 +626,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
                 color: Colors.black54,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
@@ -635,7 +636,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
                   ),
                   SizedBox(width: 6),
                   Text(
-                    '流式加载',
+                    context.l10n.pdfReaderStreaming,
                     style: TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ],
@@ -755,12 +756,12 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
                   state.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
                   color: Colors.white,
                 ),
-                tooltip: state.isDarkMode ? '浅色模式' : '深色模式',
+                tooltip: state.isDarkMode ? context.l10n.pdfReaderLightMode : context.l10n.pdfReaderDarkMode,
               ),
               IconButton(
                 onPressed: () => setState(() => _showThumbnails = !_showThumbnails),
                 icon: const Icon(Icons.grid_view_rounded, color: Colors.white),
-                tooltip: '页面缩略图',
+                tooltip: context.l10n.pdfReaderPageThumbnails,
               ),
             ],
           ),
@@ -860,7 +861,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
                 children: [
                   _buildBottomButton(
                     icon: Icons.first_page_rounded,
-                    label: '首页',
+                    label: context.l10n.pdfReaderFirstPage,
                     onTap: () {
                       _controller.goToPage(pageNumber: 1);
                       ref.read(pdfReaderProvider(widget.book).notifier).setPage(1);
@@ -868,17 +869,17 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
                   ),
                   _buildBottomButton(
                     icon: Icons.zoom_out_rounded,
-                    label: '缩小',
+                    label: context.l10n.pdfReaderKeyboardZoomOut,
                     onTap: _controller.zoomDown,
                   ),
                   _buildBottomButton(
                     icon: Icons.zoom_in_rounded,
-                    label: '放大',
+                    label: context.l10n.pdfReaderKeyboardZoomIn,
                     onTap: _controller.zoomUp,
                   ),
                   _buildBottomButton(
                     icon: Icons.last_page_rounded,
-                    label: '末页',
+                    label: context.l10n.pdfReaderLastPage,
                     onTap: () {
                       _controller.goToPage(pageNumber: state.totalPages);
                       ref.read(pdfReaderProvider(widget.book).notifier).setPage(state.totalPages);
@@ -932,8 +933,8 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
-                    const Text(
-                      '页面',
+                    Text(
+                      context.l10n.pdfReaderPagesPanel,
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -973,7 +974,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
                         ),
                         child: Center(
                           child: Text(
-                            '第 $pageNumber 页',
+                            context.l10n.pdfReaderPageNumber(pageNumber),
                             style: TextStyle(
                               color: isActive ? Colors.white : Colors.grey.shade400,
                               fontSize: 14,

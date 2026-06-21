@@ -2115,20 +2115,20 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
                 children: [
                   _buildStatChip(
                     icon: Icons.movie_filter_rounded,
-                    label: '$movieCount 电影',
+                    label: context.l10n.videoListStatisticMovies(movieCount),
                     color: AppColors.primary,
                     isDark: isDark,
                   ),
                   _buildStatChip(
                     icon: Icons.tv_rounded,
-                    label: '$tvShowCount 剧集',
+                    label: context.l10n.videoListStatisticTvShows(tvShowCount),
                     color: AppColors.accent,
                     isDark: isDark,
                   ),
                   if (otherCount > 0)
                     _buildStatChip(
                       icon: Icons.folder_special_rounded,
-                      label: '$otherCount 其他',
+                      label: context.l10n.videoListStatisticOthers(otherCount),
                       color: Colors.grey,
                       isDark: isDark,
                     ),
@@ -2228,14 +2228,14 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
                     children: [
                       _buildStatChip(
                         icon: Icons.movie_filter_rounded,
-                        label: '$movieCount 电影',
+                        label: context.l10n.videoListStatisticMovies(movieCount),
                         color: AppColors.primary,
                         isDark: isDark,
                       ),
                       const SizedBox(width: 12),
                       _buildStatChip(
                         icon: Icons.tv_rounded,
-                        label: '$tvShowCount 剧集',
+                        label: context.l10n.videoListStatisticTvShows(tvShowCount),
                         color: AppColors.accent,
                         isDark: isDark,
                       ),
@@ -2244,7 +2244,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
                         const SizedBox(width: 12),
                         _buildStatChip(
                           icon: Icons.folder_special_rounded,
-                          label: '$otherCount 其他',
+                          label: context.l10n.videoListStatisticOthers(otherCount),
                           color: Colors.grey,
                           isDark: isDark,
                         ),
@@ -2266,16 +2266,16 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
             GlassGroupIconButton(
               icon: Icons.search_rounded,
               onPressed: () => setState(() => _showSearch = true),
-              tooltip: '搜索',
+              tooltip: context.l10n.videoListTooltipSearch,
             ),
             GlassGroupIconButton(
               icon: Icons.tune_rounded,
               onPressed: () => VideoCategorySettingsSheet.show(context),
-              tooltip: '分类设置',
+              tooltip: context.l10n.videoListTooltipCategorySettings,
             ),
             GlassGroupPopupMenuButton<String>(
               icon: Icons.more_vert_rounded,
-              tooltip: '更多',
+              tooltip: context.l10n.videoListTooltipMore,
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: 'library',
@@ -2391,7 +2391,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               autofocus: true,
               style: TextStyle(color: isDark ? Colors.white : Colors.black87),
               decoration: InputDecoration(
-                hintText: '搜索电影、剧集...',
+                hintText: context.l10n.videoListSearchHint,
                 hintStyle: TextStyle(
                   color: isDark ? Colors.grey[500] : Colors.grey[400],
                 ),
@@ -2783,7 +2783,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
               MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
             ),
             icon: const Icon(Icons.cloud_rounded),
-            label: const Text('连接管理'),
+            label: Text(context.l10n.videoListSourceManagementLabel),
             style: TextButton.styleFrom(foregroundColor: AppColors.primary),
           ),
         ],
@@ -3496,7 +3496,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
-              '找到 ${results.length} 个结果',
+              context.l10n.videoListSearchResultCount(results.length),
               style: TextStyle(
                 fontSize: 14,
                 color: isDark
@@ -5236,7 +5236,7 @@ class _ViewMoreCardState extends State<_ViewMoreCard> {
                   // 标题区域 - 与 _VerticalPosterCard 保持一致的间距
                   const SizedBox(height: 8),
                   Text(
-                    '更多内容',
+                    context.l10n.videoMoreContentLabel,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -5247,7 +5247,7 @@ class _ViewMoreCardState extends State<_ViewMoreCard> {
                   ),
                   // 副标题 - 与 _VerticalPosterCard 的年份行对应
                   Text(
-                    '共 ${widget.totalCount} 部',
+                    context.l10n.videoSeriesCountLabel(widget.totalCount),
                     style: TextStyle(
                       fontSize: 10,
                       color: widget.isDark
@@ -5347,7 +5347,7 @@ class _ViewMoreCardState extends State<_ViewMoreCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '查看全部',
+                        context.l10n.videoViewAllLabel,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -6231,7 +6231,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
                 ),
               ),
               onPressed: () => _showFilterOptions(context, isDark),
-              tooltip: '筛选',
+              tooltip: context.l10n.videoFilterTooltip,
             ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -6306,7 +6306,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
       child: Row(
         children: [
           Text(
-            '筛选: ',
+            context.l10n.videoFilterStatusLabel,
             style: TextStyle(
               fontSize: 12,
               color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -6398,7 +6398,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
         ),
         const SizedBox(height: 16),
         Text(
-          '没有符合筛选条件的内容',
+          context.l10n.videoFilterNoResults,
           style: TextStyle(
             fontSize: 16,
             color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -6407,7 +6407,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
         const SizedBox(height: 8),
         TextButton(
           onPressed: () => setState(() => _selectedGenre = null),
-          child: const Text('清除筛选'),
+          child: Text(context.l10n.videoFilterResetButton),
         ),
       ],
     ),
@@ -6423,25 +6423,25 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
       // 玻璃模式使用原生 iOS sheet
       final items = [
         ListSheetItem<_SortType>(
-          title: '按评分',
+          title: context.l10n.videoSortByRating,
           icon: Icons.star_rounded,
           value: _SortType.rating,
           isSelected: _sortType == _SortType.rating,
         ),
         ListSheetItem<_SortType>(
-          title: '按年份',
+          title: context.l10n.videoSortByYear,
           icon: Icons.calendar_today_rounded,
           value: _SortType.year,
           isSelected: _sortType == _SortType.year,
         ),
         ListSheetItem<_SortType>(
-          title: '按名称',
+          title: context.l10n.videoSortByName,
           icon: Icons.sort_by_alpha_rounded,
           value: _SortType.name,
           isSelected: _sortType == _SortType.name,
         ),
         ListSheetItem<_SortType>(
-          title: '按添加时间',
+          title: context.l10n.videoSortByAddedTime,
           icon: Icons.schedule_rounded,
           value: _SortType.recent,
           isSelected: _sortType == _SortType.recent,
@@ -6483,7 +6483,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                '排序方式',
+                context.l10n.videoSortMethodsTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -6495,7 +6495,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
             _buildSortOption(
               context,
               icon: Icons.star_rounded,
-              label: '按评分',
+              label: context.l10n.videoSortByRating,
               type: _SortType.rating,
               isDark: isDark,
             ),
@@ -6657,7 +6657,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
                 child: Row(
                   children: [
                     Text(
-                      '按类型筛选',
+                      context.l10n.videoFilterByTypeLabel,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -7494,7 +7494,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
                   ),
                   GlassGroupIconButton(
                     icon: Icons.filter_alt_rounded,
-                    tooltip: '筛选',
+                    tooltip: context.l10n.videoFilterTooltip,
                     onPressed: _isLoadingFilters
                         ? null
                         : () => _showFilterSheet(context, isDark),
@@ -7779,7 +7779,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                '排序方式',
+                context.l10n.videoSortMethodsTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -8376,7 +8376,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                '排序方式',
+                context.l10n.videoSortMethodsTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -8457,7 +8457,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
                   ),
                   GlassGroupIconButton(
                     icon: Icons.filter_alt_rounded,
-                    tooltip: '筛选',
+                    tooltip: context.l10n.videoFilterTooltip,
                     onPressed: _isLoadingFilters
                         ? null
                         : () => _showFilterSheet(context, isDark),
@@ -8826,7 +8826,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                '排序方式',
+                context.l10n.videoSortMethodsTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -9015,7 +9015,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '没有其他视频',
+                    context.l10n.videoOthersEmptyState,
                     style: TextStyle(
                       fontSize: 16,
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -9141,7 +9141,7 @@ class _MovieCollectionRow extends StatelessWidget {
                 TextButton(
                   onPressed: onSeeAllTap,
                   child: Text(
-                    '查看全部 (${collections.length})',
+                    context.l10n.videoViewMoreCollections(collections.length),
                     style: TextStyle(color: AppColors.primary, fontSize: 13),
                   ),
                 ),
@@ -9859,8 +9859,8 @@ class _CollectionMovieCard extends StatelessWidget {
                           color: Colors.black.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text(
-                          '未收藏',
+                        child: Text(
+                          context.l10n.videoNotFavoritedLabel,
                           style: TextStyle(color: Colors.white70, fontSize: 10),
                         ),
                       ),
@@ -10340,7 +10340,7 @@ class _FilteredVideosPaginatedPageState
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                '排序方式',
+                context.l10n.videoSortMethodsTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -10477,7 +10477,7 @@ class _FilteredVideosPaginatedPageState
               ),
               const SizedBox(height: 16),
               Text(
-                '暂无视频',
+                context.l10n.videoEmptyState,
                 style: TextStyle(
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
                   fontSize: 16,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/book/data/services/tts/edge_tts_voices.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_voice.dart';
@@ -67,7 +68,7 @@ class _TTSVoiceSelectorState extends ConsumerState<TTSVoiceSelector> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '选择音色',
+                  context.l10n.bookTTSVoiceSelectorTitle,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -75,7 +76,7 @@ class _TTSVoiceSelectorState extends ConsumerState<TTSVoiceSelector> {
                 const Spacer(),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('完成'),
+                  child: Text(context.l10n.bookTTSVoiceSelectorDone),
                 ),
               ],
             ),
@@ -87,20 +88,20 @@ class _TTSVoiceSelectorState extends ConsumerState<TTSVoiceSelector> {
             child: Row(
               children: [
                 _buildFilterChip(
-                  label: '全部',
+                  label: context.l10n.bookTTSVoiceFilterAll,
                   isSelected: _filterGender == null,
                   onSelected: () => setState(() => _filterGender = null),
                 ),
                 const SizedBox(width: 8),
                 _buildFilterChip(
-                  label: '👨 男声',
+                  label: context.l10n.bookTTSVoiceFilterMale,
                   isSelected: _filterGender == VoiceGender.male,
                   onSelected: () =>
                       setState(() => _filterGender = VoiceGender.male),
                 ),
                 const SizedBox(width: 8),
                 _buildFilterChip(
-                  label: '👩 女声',
+                  label: context.l10n.bookTTSVoiceFilterFemale,
                   isSelected: _filterGender == VoiceGender.female,
                   onSelected: () =>
                       setState(() => _filterGender = VoiceGender.female),
@@ -116,7 +117,7 @@ class _TTSVoiceSelectorState extends ConsumerState<TTSVoiceSelector> {
             child: filteredVoices.isEmpty
                 ? Center(
                     child: Text(
-                      '没有可用的音色',
+                      context.l10n.bookTTSVoiceEmpty,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -213,7 +214,7 @@ class _TTSVoiceSelectorState extends ConsumerState<TTSVoiceSelector> {
             IconButton(
               icon: const Icon(Icons.play_circle_outline),
               onPressed: onPreview,
-              tooltip: '试听',
+              tooltip: context.l10n.bookTTSVoicePreviewTooltip,
             ),
             // 选中标记
             if (isSelected)

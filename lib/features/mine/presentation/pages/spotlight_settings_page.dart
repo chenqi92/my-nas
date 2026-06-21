@@ -42,9 +42,9 @@ class _SpotlightSettingsPageState extends ConsumerState<SpotlightSettingsPage>
       appBar: AppBar(
         leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
-        title: const Text(
-          'Spotlight 索引',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          context.l10n.spotlightSettingsPageTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: ListView(
@@ -59,11 +59,8 @@ class _SpotlightSettingsPageState extends ConsumerState<SpotlightSettingsPage>
                 SwitchListTile.adaptive(
                   value: enabled,
                   onChanged: rebuilding ? null : _toggle,
-                  title: const Text('启用 Spotlight 索引'),
-                  subtitle: const Text(
-                    '把视频 / 音乐 / 书籍 / 漫画 / 笔记标题写入 macOS 系统搜索； '
-                    '默认关闭，避免首次扫描卡顿。',
-                  ),
+                  title: Text(context.l10n.spotlightSettingsEnableToggleTitle),
+                  subtitle: Text(context.l10n.spotlightSettingsEnableToggleSubtitle),
                 ),
               ],
             ),
@@ -73,12 +70,12 @@ class _SpotlightSettingsPageState extends ConsumerState<SpotlightSettingsPage>
               children: [
                 ListTile(
                   leading: const Icon(Icons.refresh_rounded),
-                  title: const Text('重建 Spotlight 索引'),
+                  title: Text(context.l10n.spotlightSettingsRebuildTitle),
                   subtitle: Text(
                     rebuilding
-                        ? '正在重建…'
+                        ? context.l10n.spotlightSettingsRebuildingStatus
                         : lastReport == null
-                            ? '把所有已知条目重新写入系统索引'
+                            ? context.l10n.spotlightSettingsRebuildIdleStatus
                             : _summarize(lastReport),
                   ),
                   trailing: rebuilding
@@ -97,8 +94,7 @@ class _SpotlightSettingsPageState extends ConsumerState<SpotlightSettingsPage>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Text(
-                '提示：开启或重建后，可在系统聚焦（⌘ + 空格）里搜到 MyNAS 数据； '
-                '点击结果会跳回 App 对应入口。',
+                context.l10n.spotlightSettingsHintText,
                 style: context.textTheme.bodySmall?.copyWith(
                   color: isDark
                       ? AppColors.darkOnSurfaceVariant
@@ -117,18 +113,18 @@ class _SpotlightSettingsPageState extends ConsumerState<SpotlightSettingsPage>
     final parts = <String>[];
     for (final kind in SpotlightItemKind.values) {
       final n = report[kind] ?? 0;
-      if (n > 0) parts.add('${_label(kind)} $n');
+      if (n > 0) parts.add('${_label(context, kind)} $n');
     }
-    if (parts.isEmpty) return '上次重建：无条目';
-    return '上次重建 $total 条 (${parts.join(' · ')})';
+    if (parts.isEmpty) return context.l10n.spotlightSettingsSummaryNoEntries;
+    return context.l10n.spotlightSettingsSummaryWithCount(total, parts.join(' · '));
   }
 
-  String _label(SpotlightItemKind kind) => switch (kind) {
-        SpotlightItemKind.video => '视频',
-        SpotlightItemKind.music => '音乐',
-        SpotlightItemKind.book => '书籍',
-        SpotlightItemKind.comic => '漫画',
-        SpotlightItemKind.note => '笔记',
+  String _label(BuildContext context, SpotlightItemKind kind) => switch (kind) {
+        SpotlightItemKind.video => context.l10n.spotlightItemKindVideo,
+        SpotlightItemKind.music => context.l10n.spotlightItemKindMusic,
+        SpotlightItemKind.book => context.l10n.spotlightItemKindBook,
+        SpotlightItemKind.comic => context.l10n.spotlightItemKindComic,
+        SpotlightItemKind.note => context.l10n.spotlightItemKindNote,
       };
 
   Future<void> _toggle(bool value) async {
@@ -173,7 +169,7 @@ class _NotSupportedHint extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Text(
-        'Spotlight 索引仅在 macOS 上可用。',
+        context.l10n.spotlightSettingsNotSupportedHint,
         style: context.textTheme.bodyMedium?.copyWith(
           color: isDark
               ? AppColors.darkOnSurfaceVariant

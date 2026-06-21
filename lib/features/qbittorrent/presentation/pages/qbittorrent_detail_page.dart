@@ -454,7 +454,7 @@ class _SpeedCard extends StatelessWidget {
                 ),
                 Text(
                   limit > 0
-                      ? '$label: ${_formatSize(total)} (限速: ${_formatSpeed(limit)})'
+                      ? '$label: ${_formatSize(total)} (${context.l10n.qbSpeedCardSpeedLimitLabel}: ${_formatSpeed(limit)})'
                       : '$label: ${_formatSize(total)}',
                   style: context.textTheme.bodySmall?.copyWith(
                     color: isDark
@@ -603,10 +603,10 @@ class _TorrentList extends ConsumerWidget {
   Widget _buildFilterHint(BuildContext context, WidgetRef ref, QBSortSettings sortSettings) {
     final filters = <String>[];
     if (sortSettings.filterCategory != null) {
-      filters.add('分类: ${sortSettings.filterCategory!.isEmpty ? "(未分类)" : sortSettings.filterCategory}');
+      filters.add('${context.l10n.qbDetailFilterHintCategory}: ${sortSettings.filterCategory!.isEmpty ? context.l10n.qbDetailFilterHintUncategorized : sortSettings.filterCategory}');
     }
     if (sortSettings.filterTag != null) {
-      filters.add('标签: ${sortSettings.filterTag}');
+      filters.add('${context.l10n.qbDetailFilterHintTag}: ${sortSettings.filterTag}');
     }
 
     return Container(
@@ -862,7 +862,7 @@ class _TorrentTile extends ConsumerWidget {
                       const Icon(Icons.cloud_upload_outlined, size: 14),
                       const SizedBox(width: 4),
                       Text(
-                        '已上传: ${_formatSize(torrent.uploaded!)}',
+                        '${context.l10n.qbDetailTileUploadedLabel}: ${_formatSize(torrent.uploaded!)}',
                         style: context.textTheme.bodySmall?.copyWith(
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                         ),
@@ -996,7 +996,7 @@ class _TorrentTile extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: torrent.hash));
-                      context.showSuccessToast('已复制 Hash');
+                      context.showSuccessToast(context.l10n.qbDetailCopyHashSuccess);
                     },
                     icon: const Icon(Icons.copy_rounded),
                     label: Text(context.l10n.qbDetailCopyHashButton),
@@ -1458,7 +1458,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                   const Icon(Icons.filter_alt_rounded, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    '筛选',
+                    context.l10n.qbDetailFilterSheetTitle,
                     style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
@@ -1657,7 +1657,7 @@ class _SortOptionsSheet extends ConsumerWidget {
                   const Icon(Icons.swap_vert_rounded, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    '排序',
+                    context.l10n.qbDetailSortSheetTitle,
                     style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
@@ -1874,7 +1874,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                       Expanded(
                         child: _buildSpeedInput(
                           controller: _dlLimitController,
-                          label: '下载',
+                          label: context.l10n.qbDetailSpeedInputDownloadLabel,
                           icon: Icons.download_rounded,
                           color: AppColors.success,
                           isDark: isDark,
@@ -1884,7 +1884,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                       Expanded(
                         child: _buildSpeedInput(
                           controller: _upLimitController,
-                          label: '上传',
+                          label: context.l10n.qbDetailSpeedInputUploadLabel,
                           icon: Icons.upload_rounded,
                           color: AppColors.primary,
                           isDark: isDark,
@@ -1915,7 +1915,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                       Expanded(
                         child: _buildSpeedInput(
                           controller: _altDlLimitController,
-                          label: '下载',
+                          label: context.l10n.qbDetailSpeedInputDownloadLabel,
                           icon: Icons.download_rounded,
                           color: AppColors.warning,
                           isDark: isDark,
@@ -1925,7 +1925,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                       Expanded(
                         child: _buildSpeedInput(
                           controller: _altUpLimitController,
-                          label: '上传',
+                          label: context.l10n.qbDetailSpeedInputUploadLabel,
                           icon: Icons.upload_rounded,
                           color: AppColors.warning,
                           isDark: isDark,
@@ -2122,7 +2122,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                     TextFormField(
                       controller: _controller,
                       decoration: InputDecoration(
-                        hintText: 'magnet:?xt=urn:btih:... 或 https://...',
+                        hintText: context.l10n.qbDetailAddTorrentLinkHintMagnetOrUrl,
                         hintStyle: TextStyle(
                           color: isDark
                               ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.5)
@@ -2209,7 +2209,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                     // 分类选择
                     if (categories.isNotEmpty) ...[
                       Text(
-                        '分类',
+                        context.l10n.qbDetailFilterHintCategory,
                         style: context.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -2228,7 +2228,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                           ...categories.map(
                             (category) => _buildCategoryChip(
                               context,
-                              label: category.isEmpty ? '(未分类)' : category,
+                              label: category.isEmpty ? context.l10n.qbDetailCategoryUncategorized : category,
                               isSelected: _selectedCategory == category,
                               onTap: () => setState(() => _selectedCategory = category),
                             ),

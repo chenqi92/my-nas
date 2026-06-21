@@ -402,7 +402,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
       contentBuilder: (context) => Consumer(
           builder: (context, ref, _) {
             final settings = ref.watch(bookReaderSettingsProvider);
-            return _buildSettingsContent(settings);
+            return _buildSettingsContent(settings, context);
           },
         ),
     );
@@ -423,7 +423,34 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         BookPageTurnMode.none => FoliatePageTurnStyle.noAnimation,
       };
 
-  // 所有翻页模式
+  // 翻页模式配置（标签已移至本地化）
+  static const _pageTurnModeConfigs = [
+    (icon: Icons.swap_horiz_rounded, localizationKey: 'ebookReaderPageTurnModeHorizontal', mode: BookPageTurnMode.scroll),
+    (icon: Icons.swap_vert_rounded, localizationKey: 'ebookReaderPageTurnModeScroll', mode: BookPageTurnMode.slide),
+    (icon: Icons.auto_stories_rounded, localizationKey: 'ebookReaderPageTurnModeSimulation', mode: BookPageTurnMode.simulation),
+    (icon: Icons.flip_rounded, localizationKey: 'ebookReaderPageTurnModeCover', mode: BookPageTurnMode.cover),
+    (icon: Icons.article_rounded, localizationKey: 'ebookReaderPageTurnModeNone', mode: BookPageTurnMode.none),
+  ];
+
+  /// 获取本地化后的翻页模式列表
+  List<({IconData icon, String label, BookPageTurnMode mode})> _getLocalizedPageTurnModes(BuildContext context) => _pageTurnModeConfigs
+        .map((config) => (
+          icon: config.icon,
+          label: _getPageTurnModeLabel(context, config.localizationKey),
+          mode: config.mode,
+        ))
+        .toList();
+
+  /// 根据 localization key 获取翻页模式标签
+  String _getPageTurnModeLabel(BuildContext context, String key) => switch (key) {
+    'ebookReaderPageTurnModeHorizontal' => context.l10n.ebookReaderPageTurnModeHorizontal,
+    'ebookReaderPageTurnModeScroll' => context.l10n.ebookReaderPageTurnModeScroll,
+    'ebookReaderPageTurnModeSimulation' => context.l10n.ebookReaderPageTurnModeSimulation,
+    'ebookReaderPageTurnModeCover' => context.l10n.ebookReaderPageTurnModeCover,
+    'ebookReaderPageTurnModeNone' => context.l10n.ebookReaderPageTurnModeNone,
+    _ => key,
+  };
+
   static const _allPageTurnModes = [
     (icon: Icons.swap_horiz_rounded, label: '翻页', mode: BookPageTurnMode.scroll),
     (icon: Icons.swap_vert_rounded, label: '滚动', mode: BookPageTurnMode.slide),
@@ -445,7 +472,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   // ignore: unused_element
   bool _useFlutterPageFlip(BookPageTurnMode mode) => false;
 
-  Widget _buildSettingsContent(BookReaderSettings settings) {
+  Widget _buildSettingsContent(BookReaderSettings settings, BuildContext context) {
     final settingsNotifier = ref.read(bookReaderSettingsProvider.notifier);
 
     return Column(
@@ -454,7 +481,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         // 翻页方式
         SettingSectionTitle(title: context.l10n.ebookReaderSettingPageTurnMode),
         SettingPageTurnModePicker(
-          modes: _allPageTurnModes
+          modes: _getLocalizedPageTurnModes(context)
               .map((m) => (icon: m.icon, label: m.label))
               .toList(),
           selectedIndex: _getPageTurnModeIndex(settings.pageTurnMode),
@@ -793,8 +820,8 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                 style: style,
                 // 当使用 Flutter 翻页效果时，禁用 WebView 原生手势
                 disableNativeGestures: useFlutterFlip,
-                loadingWidget: const LottieLoading.book(
-                  message: '加载中...',
+                loadingWidget: LottieLoading.book(
+                  message: context.l10n.ebookReaderLoadingDefault,
                 ),
                 onBookLoaded: (info) {
                   setState(() {

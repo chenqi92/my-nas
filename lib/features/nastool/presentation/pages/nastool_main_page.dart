@@ -1045,7 +1045,7 @@ Text(isMovie ? context.l10n.nastoolSubscribesEmptyMovie : context.l10n.nastoolSu
                 child: Icon(sub.isMovie ? Icons.movie_rounded : Icons.tv_rounded, color: sub.isMovie ? AppColors.primary : AppColors.success),
               ),
               title: Text(sub.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-              subtitle: Text('${sub.year ?? ""} ${sub.season != null ? "第${sub.season}季" : ""}'),
+              subtitle: Text('${sub.year ?? ""} ${sub.season != null ? context.l10n.nastoolSubscribersSeason(sub.season!) : ""}'),
               trailing: PopupMenuButton<String>(
                 onSelected: (action) => _handleAction(action, sub),
                 itemBuilder: (context) => [
@@ -1371,7 +1371,7 @@ class _TorrentDetailSheet extends ConsumerWidget {
                     children: [
                       Text(media.title, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold), maxLines: 2, overflow: TextOverflow.ellipsis),
                       if (media.year != null) Text(media.year!, style: context.textTheme.bodySmall),
-                      Text('${media.torrents.length}个分组', style: context.textTheme.bodySmall?.copyWith(color: AppColors.primary)),
+                      Text(context.l10n.nastoolTorrentGroupCount(media.torrents.length), style: context.textTheme.bodySmall?.copyWith(color: AppColors.primary)),
                     ],
                   ),
                 ),
@@ -1404,7 +1404,7 @@ class _TorrentDetailSheet extends ConsumerWidget {
                                   child: Text(group.displayTitle, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                                 ),
                                 const SizedBox(width: 8),
-                                Text('${group.items.length}个资源', style: context.textTheme.bodySmall),
+                                Text(context.l10n.nastoolTorrentResourceCount(group.items.length), style: context.textTheme.bodySmall),
                               ],
                             ),
                           ),
@@ -1758,7 +1758,7 @@ tabs: [Tab(text: context.l10n.nastoolAdvancedTabRss), Tab(text: context.l10n.nas
       loading: () => const Center(child: CircularProgressIndicator()),
 error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
       data: (tasks) => tasks.isEmpty
-          ? Center(child: Text('暂无RSS任务', style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
+          ? Center(child: Text(context.l10n.nastoolAdvancedRssNoTasks, style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
           : ListView.builder(
               padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: tasks.length,
@@ -1776,7 +1776,7 @@ subtitle: Text(context.l10n.nastoolAdvancedRssInterval(t.interval ?? 0)),
                         final articles = await ref.read(nastoolActionsProvider(widget.sourceId)).previewRssTask(t.id);
                         if (context.mounted) {
                           unawaited(showDialog<void>(context: context, builder: (_) => AlertDialog(
-                            title: Text('RSS预览: ${t.name}'),
+                            title: Text(context.l10n.nastoolRssPreviewTitle(t.name)),
                             content: SizedBox(
                               width: double.maxFinite,
                               height: 300,
@@ -1801,7 +1801,7 @@ tooltip: context.l10n.nastoolAdvancedRssPreviewTooltip,
       loading: () => const Center(child: CircularProgressIndicator()),
 error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
       data: (tasks) => tasks.isEmpty
-          ? Center(child: Text('暂无刷流任务', style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
+          ? Center(child: Text(context.l10n.nastoolAdvancedBrushNoTasks, style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
           : ListView.builder(
               padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: tasks.length,
@@ -1827,7 +1827,7 @@ trailing: IconButton(icon: Icon(Icons.play_circle_rounded, color: AppColors.prim
       loading: () => const Center(child: CircularProgressIndicator()),
 error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.toString()))),
       data: (plugins) => plugins.isEmpty
-          ? Center(child: Text('暂无已安装插件', style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
+          ? Center(child: Text(context.l10n.nastoolAdvancedPluginsNoPlugins, style: context.textTheme.bodyMedium?.copyWith(color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)))
           : ListView.builder(
               padding: const EdgeInsets.all(AppSpacing.lg),
               itemCount: plugins.length,

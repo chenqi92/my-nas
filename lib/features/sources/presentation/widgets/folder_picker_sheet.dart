@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -106,7 +107,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
               child: Row(
                 children: [
                   Text(
-                    '选择目录',
+                    context.l10n.folderPickerSelectTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const Spacer(),
@@ -125,9 +126,9 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
                 child: DropdownButtonFormField<SourceEntity>(
                   key: ValueKey(_selectedSource?.id),
                   initialValue: _selectedSource,
-                  decoration: const InputDecoration(
-                    labelText: '选择源',
-                    prefixIcon: Icon(Icons.storage),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.folderPickerSelectSource,
+                    prefixIcon: const Icon(Icons.storage),
                   ),
                   items: widget.sources.map((source) => DropdownMenuItem(
                       value: source,
@@ -156,7 +157,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
                   IconButton(
                     onPressed: _pathHistory.length > 1 ? _navigateBack : null,
                     icon: const Icon(Icons.arrow_back_rounded),
-                    tooltip: '返回上级',
+                    tooltip: context.l10n.folderPickerBackToParent,
                   ),
                   Expanded(
                     child: Container(
@@ -188,7 +189,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
                       );
                     },
                     icon: const Icon(Icons.check_rounded),
-                    label: const Text('选择'),
+                    label: Text(context.l10n.folderPickerSelect),
                   ),
                 ],
               ),
@@ -225,7 +226,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: _loadDirectory,
-              child: const Text('重试'),
+              child: Text(context.l10n.folderPickerRetry),
             ),
           ],
         ),
@@ -244,7 +245,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
             ),
             const SizedBox(height: 16),
             Text(
-              '此目录为空',
+              context.l10n.folderPickerEmptyDirectory,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
           ],

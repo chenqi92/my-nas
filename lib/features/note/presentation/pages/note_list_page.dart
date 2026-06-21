@@ -704,7 +704,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
     await MediaInfoSheet.show(
       context: context,
       title: node.displayName,
-      subtitle: '笔记',
+      subtitle: context.l10n.noteInfoSubtitleNote,
       entries: [
         MediaInfoEntry(label: context.l10n.noteListInfoLabelFileName, value: node.name),
         MediaInfoEntry(
@@ -1062,7 +1062,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
         ),
         const SizedBox(height: 12),
         Text(
-          '从左侧选择笔记查看 / 编辑',
+          context.l10n.noteListSelectNoteHint,
           style: context.textTheme.bodyMedium?.copyWith(
             color: isDark
                 ? AppColors.darkOnSurfaceVariant
@@ -1669,7 +1669,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              '实时预览',
+                              context.l10n.noteListLivePreviewLabel,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -2046,7 +2046,7 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
     await MediaInfoSheet.show(
       context: context,
       title: node.displayName,
-      subtitle: '笔记',
+      subtitle: context.l10n.noteInfoSubtitleNote,
       entries: [
         MediaInfoEntry(label: context.l10n.noteListInfoLabelFileName, value: node.name),
         MediaInfoEntry(

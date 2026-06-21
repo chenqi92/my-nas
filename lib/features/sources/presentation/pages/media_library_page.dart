@@ -542,10 +542,10 @@ class _MediaTypeTab extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16),
               child: Text(
-                '选择数据源',
+                context.l10n.mediaLibrarySourceSelectionTitle,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
@@ -752,7 +752,7 @@ class _MediaTypeTab extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                '添加本机$typeDisplayName',
+                context.l10n.mediaLibraryAddLocalFileTypeTitle(typeDisplayName),
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
@@ -847,9 +847,9 @@ class _MediaTypeTab extends ConsumerWidget {
     FileImportType importType,
   ) async {
     final typeDisplayName = switch (importType) {
-      FileImportType.book => '书籍',
-      FileImportType.comic => '漫画',
-      FileImportType.document => '文件',
+      FileImportType.book => context.l10n.mediaLibraryImportTypeBook,
+      FileImportType.comic => context.l10n.mediaLibraryImportTypeComic,
+      FileImportType.document => context.l10n.mediaLibraryImportTypeDocument,
     };
 
     try {
@@ -1588,7 +1588,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                 theme: theme,
                 isDark: isDark,
                 progress: currentProgress,
-                description: currentDescription ?? '正在扫描...',
+                description: currentDescription ?? context.l10n.mediaLibraryScanningDescription,
                 color: AppColors.primary,
               ),
             ],
@@ -2018,7 +2018,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
           await ref.read(videoListProvider.notifier).reloadFromCache();
           await _loadStats();
           if (mounted) {
-            context.showSuccessToast('扫描完成，共 $count 个视频，开始刮削元数据...');
+            context.showSuccessToast(context.l10n.mediaLibraryScanCompleteVideosToast(count));
           }
           // 扫描完成后自动触发后台刮削（使用最新连接状态）
           if (!mounted) return;
@@ -2153,7 +2153,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
     setState(() => _isScraping = true);
 
     try {
-      context.showInfoToast('开始重试刮削 $_retryableCount 个视频...');
+      context.showInfoToast(context.l10n.mediaLibraryRetryStartToast(_retryableCount));
 
       await VideoScannerService().retryScrapeFailedVideos(
         connections: connections,
@@ -2238,9 +2238,9 @@ class _PathCardState extends ConsumerState<_PathCard> {
     };
 
     final typeDisplayName = switch (widget.mediaType) {
-      MediaType.book => '书籍',
-      MediaType.comic => '漫画',
-      _ => '文件',
+      MediaType.book => context.l10n.mediaLibraryImportTypeBook,
+      MediaType.comic => context.l10n.mediaLibraryImportTypeComic,
+      _ => context.l10n.mediaLibraryImportTypeDocument,
     };
 
     try {

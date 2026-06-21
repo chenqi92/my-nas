@@ -269,9 +269,9 @@ final musicListProvider =
 
 /// 音乐来源筛选
 enum MusicSourceFilter {
-  all('全部'),
-  local('本机'),
-  remote('NAS');
+  all('musicSourceFilterAll'),
+  local('musicSourceFilterLocal'),
+  remote('musicSourceFilterRemote');
 
   const MusicSourceFilter(this.label);
   final String label;
@@ -324,11 +324,11 @@ enum MusicScanPhase {
 
 /// 音乐排序选项
 enum MusicSortOption {
-  name('名称', Icons.sort_by_alpha_rounded),
-  artist('歌手', Icons.person_rounded),
-  album('专辑', Icons.album_rounded),
-  dateAdded('添加时间', Icons.schedule_rounded),
-  duration('时长', Icons.timer_rounded);
+  name('musicSortOptionName', Icons.sort_by_alpha_rounded),
+  artist('musicSortOptionArtist', Icons.person_rounded),
+  album('musicSortOptionAlbum', Icons.album_rounded),
+  dateAdded('musicSortOptionDateAdded', Icons.schedule_rounded),
+  duration('musicSortOptionDuration', Icons.timer_rounded);
 
   const MusicSortOption(this.label, this.icon);
   final String label;
@@ -1738,15 +1738,15 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
 /// 音乐分类Tab枚举
 /// 音乐库分类
 enum MusicCategory {
-  all('全部歌曲', Icons.queue_music_rounded),
-  artists('艺术家', Icons.person_rounded),
-  albums('专辑', Icons.album_rounded),
-  folders('文件夹', Icons.folder_rounded),
-  favorites('我喜欢', Icons.favorite_rounded),
-  recent('最近播放', Icons.history_rounded),
-  genres('流派', Icons.category_rounded),
-  years('年代', Icons.date_range_rounded),
-  playlists('歌单', Icons.playlist_play_rounded);
+  all('musicCategoryAll', Icons.queue_music_rounded),
+  artists('musicCategoryArtists', Icons.person_rounded),
+  albums('musicCategoryAlbums', Icons.album_rounded),
+  folders('musicCategoryFolders', Icons.folder_rounded),
+  favorites('musicCategoryFavorites', Icons.favorite_rounded),
+  recent('musicCategoryRecent', Icons.history_rounded),
+  genres('musicCategoryGenres', Icons.category_rounded),
+  years('musicCategoryYears', Icons.date_range_rounded),
+  playlists('musicCategoryPlaylists', Icons.playlist_play_rounded);
 
   const MusicCategory(this.label, this.icon);
   final String label;
@@ -2158,44 +2158,44 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
         GlassGroupIconButton(
           icon: Icons.search_rounded,
           onPressed: () => setState(() => _showSearch = true),
-          tooltip: '搜索',
+          tooltip: context.l10n.musicSearchActionTooltip,
         ),
         GlassGroupIconButton(
           icon: Icons.queue_music_rounded,
           onPressed: () => showMusicQueueSheet(context),
-          tooltip: '播放队列',
+          tooltip: context.l10n.musicQueueActionTooltip,
         ),
         GlassGroupPopupMenuButton<String>(
           icon: Icons.more_vert_rounded,
-          tooltip: '更多',
+          tooltip: context.l10n.musicMoreActionTooltip,
           itemBuilder: (context) => [
             PopupMenuItem(
               value: 'layout',
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.dashboard_customize_rounded, size: 20),
                   SizedBox(width: 12),
-                  Text('首页布局'),
+                  Text(context.l10n.musicMenuItemHomeLayout),
                 ],
               ),
             ),
             PopupMenuItem(
               value: 'library',
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.settings_rounded, size: 20),
                   SizedBox(width: 12),
-                  Text('媒体库设置'),
+                  Text(context.l10n.musicMenuItemMediaLibrarySettings),
                 ],
               ),
             ),
             PopupMenuItem(
               value: 'sources',
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.cloud_rounded, size: 20),
                   SizedBox(width: 12),
-                  Text('连接源管理'),
+                  Text(context.l10n.musicMenuItemConnectionManager),
                 ],
               ),
             ),
@@ -2616,7 +2616,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              '未找到 "${state.searchQuery}" 相关歌曲',
+              context.l10n.musicSearchResultNotFound(state.searchQuery),
               style: TextStyle(color: Colors.grey[600]),
             ),
           ],
@@ -2677,7 +2677,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     if (connection == null || connection.status != SourceStatus.connected) {
       logger.e('_playTrack: 源未连接 sourceId=${track.sourceId}');
       if (context.mounted) {
-        context.showWarningToast('源未连接，请先连接到 NAS');
+        context.showWarningToast(context.l10n.musicSourceNotConnected);
       }
       return;
     }
@@ -2722,7 +2722,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
       );
     } on Exception catch (e) {
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -2808,7 +2808,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
       if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
         logger.e('MusicListPage._shufflePlay: 第一首歌曲的源未连接');
         if (context.mounted) {
-          context.showWarningToast('源未连接，请先连接到 NAS');
+          context.showWarningToast(context.l10n.musicSourceNotConnected);
         }
         return;
       }
@@ -2856,7 +2856,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     } on Exception catch (e, stackTrace) {
       logger.e('MusicListPage._shufflePlay: 播放失败', e, stackTrace);
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -3061,7 +3061,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             ),
             const SizedBox(height: 24),
             Text(
-              '音乐库为空',
+              context.l10n.musicLibraryEmpty,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : null,
@@ -3069,7 +3069,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '请在媒体库设置中配置音乐目录并扫描',
+              context.l10n.musicLibraryEmptyHint,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark ? Colors.grey[400] : Colors.grey,
               ),
@@ -3109,7 +3109,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                 MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
               ),
               icon: const Icon(Icons.folder_open_rounded),
-              label: const Text('媒体库设置'),
+              label: Text(context.l10n.musicMediaLibrarySettingsButton),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -3123,7 +3123,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                 MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
               ),
               icon: const Icon(Icons.cloud_rounded),
-              label: const Text('连接管理'),
+              label: Text(context.l10n.musicConnectionManagementButton),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,
               ),
@@ -3285,7 +3285,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Text(
-              '上拉加载更多',
+              context.l10n.musicLoadMoreAction,
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -3332,7 +3332,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
                     Flexible(
                       flex: 0,
                       child: Text(
-                        '所有歌曲',
+                        context.l10n.musicAllSongsPageTitle,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -3346,7 +3346,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
                     Flexible(
                       flex: 0,
                       child: Text(
-                        '共 $trackCount 首',
+                        context.l10n.musicAllSongsCount(trackCount),
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -3435,7 +3435,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无歌曲',
+            context.l10n.musicNoSongsEmpty,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -3628,7 +3628,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
       if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
         logger.e('AllSongsPage._playAll: 第一首歌曲的源未连接');
         if (context.mounted) {
-          context.showWarningToast('源未连接，请先连接到 NAS');
+          context.showWarningToast(context.l10n.musicSourceNotConnected);
         }
         return;
       }
@@ -3676,7 +3676,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
     } on Exception catch (e, stackTrace) {
       logger.e('AllSongsPage._playAll: 播放失败', e, stackTrace);
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -3698,7 +3698,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
       if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
         logger.e('AllSongsPage._shufflePlay: 第一首歌曲的源未连接');
         if (context.mounted) {
-          context.showWarningToast('源未连接，请先连接到 NAS');
+          context.showWarningToast(context.l10n.musicSourceNotConnected);
         }
         return;
       }
@@ -3746,7 +3746,7 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
     } on Exception catch (e, stackTrace) {
       logger.e('AllSongsPage._shufflePlay: 播放失败', e, stackTrace);
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -3876,7 +3876,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无歌曲',
+              context.l10n.musicNoSongsEmpty,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -3940,7 +3940,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Text(
-              '上拉加载更多',
+              context.l10n.musicLoadMoreAction,
               style: TextStyle(
                 fontSize: 13,
                 color: widget.isDark ? Colors.grey[500] : Colors.grey[600],
@@ -4115,7 +4115,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
       if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
         logger.e('_AllSongsView._playAll: 第一首歌曲的源未连接');
         if (context.mounted) {
-          context.showWarningToast('源未连接，请先连接到 NAS');
+          context.showWarningToast(context.l10n.musicSourceNotConnected);
         }
         return;
       }
@@ -4163,7 +4163,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
     } on Exception catch (e, stackTrace) {
       logger.e('_AllSongsView._playAll: 播放失败', e, stackTrace);
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -4185,7 +4185,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
       if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
         logger.e('_AllSongsView._shufflePlay: 第一首歌曲的源未连接');
         if (context.mounted) {
-          context.showWarningToast('源未连接，请先连接到 NAS');
+          context.showWarningToast(context.l10n.musicSourceNotConnected);
         }
         return;
       }
@@ -4233,7 +4233,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
     } on Exception catch (e, stackTrace) {
       logger.e('_AllSongsView._shufflePlay: 播放失败', e, stackTrace);
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -4418,7 +4418,7 @@ class _MusicListTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '下一首播放',
+                            context.l10n.musicMenuPlayNext,
                             style: TextStyle(
                               color: isDark ? AppColors.darkOnSurface : null,
                             ),
@@ -4436,7 +4436,7 @@ class _MusicListTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '添加到播放列表',
+                            context.l10n.musicMenuAddToQueue,
                             style: TextStyle(
                               color: isDark ? AppColors.darkOnSurface : null,
                             ),
@@ -4454,7 +4454,7 @@ class _MusicListTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '收藏',
+                            context.l10n.musicMenuFavorite,
                             style: TextStyle(
                               color: isDark ? AppColors.darkOnSurface : null,
                             ),
@@ -4472,7 +4472,7 @@ class _MusicListTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '添加到歌单',
+                            context.l10n.musicMenuAddToPlaylist,
                             style: TextStyle(
                               color: isDark ? AppColors.darkOnSurface : null,
                             ),
@@ -4491,7 +4491,7 @@ class _MusicListTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '手动刮削',
+                            context.l10n.musicMenuManualScrape,
                             style: TextStyle(
                               color: isDark ? AppColors.darkOnSurface : null,
                             ),
@@ -4510,7 +4510,7 @@ class _MusicListTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '从媒体库移除',
+                            context.l10n.musicMenuRemoveFromLibrary,
                             style: TextStyle(
                               color: isDark ? AppColors.darkOnSurface : null,
                             ),
@@ -4528,7 +4528,7 @@ class _MusicListTile extends ConsumerWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            '删除源文件',
+                            context.l10n.musicMenuDeleteSourceFile,
                             style: TextStyle(
                               color: AppColors.error,
                             ),
@@ -4616,7 +4616,7 @@ class _MusicListTile extends ConsumerWidget {
     final connection = connections[track.sourceId];
     if (connection == null || connection.status != SourceStatus.connected) {
       if (context.mounted) {
-        context.showWarningToast('源未连接，请先连接到 NAS');
+        context.showWarningToast(context.l10n.musicSourceNotConnected);
       }
       return;
     }
@@ -4650,7 +4650,7 @@ class _MusicListTile extends ConsumerWidget {
     final connection = connections[track.sourceId];
     if (connection == null || connection.status != SourceStatus.connected) {
       if (context.mounted) {
-        context.showWarningToast('源未连接，请先连接到 NAS');
+        context.showWarningToast(context.l10n.musicSourceNotConnected);
       }
       return;
     }
@@ -4685,20 +4685,20 @@ class _MusicListTile extends ConsumerWidget {
           ref.read(playQueueProvider.notifier).setQueue(newQueue);
 
           if (context.mounted) {
-            context.showSuccessToast('已添加到下一首播放');
+            context.showSuccessToast(context.l10n.musicToastPlayNextSuccess);
           }
         }
 
       case 'add_to_queue':
         ref.read(playQueueProvider.notifier).addToQueue(musicItem);
         if (context.mounted) {
-          context.showSuccessToast('已添加到播放队列');
+          context.showSuccessToast(context.l10n.musicToastQueueSuccess);
         }
 
       case 'add_to_favorites':
         final isFav = await ref.read(musicFavoritesProvider.notifier).toggleFavorite(musicItem);
         if (context.mounted) {
-          context.showSuccessToast(isFav ? '已添加到收藏' : '已取消收藏');
+          context.showSuccessToast(isFav ? context.l10n.musicToastFavoriteAdded : context.l10n.musicToastFavoriteRemoved);
         }
 
       case 'add_to_playlist':
@@ -4712,9 +4712,9 @@ class _MusicListTile extends ConsumerWidget {
         if (context.mounted) {
           final confirmed = await showDeleteConfirmDialog(
             context: context,
-            title: '从媒体库移除',
-            content: '确定要从媒体库移除「${track.displayTitle}」吗？\n\n这只会移除索引记录，源文件不会被删除。',
-            confirmText: '移除',
+            title: context.l10n.musicRemoveFromLibraryTitle,
+            content: context.l10n.musicRemoveFromLibraryContent(track.displayTitle),
+            confirmText: context.l10n.musicRemoveFromLibraryConfirm,
             isDestructive: false,
           );
           if (confirmed && context.mounted) {
@@ -4724,7 +4724,7 @@ class _MusicListTile extends ConsumerWidget {
               track.displayTitle,
             );
             if (context.mounted) {
-              context.showSuccessToast(success ? '已从媒体库移除' : '移除失败');
+              context.showSuccessToast(success ? context.l10n.musicRemoveFromLibrarySuccess : context.l10n.musicRemoveFromLibraryFailed);
             }
           }
         }
@@ -4733,8 +4733,8 @@ class _MusicListTile extends ConsumerWidget {
         if (context.mounted) {
           final confirmed = await showDeleteConfirmDialog(
             context: context,
-            title: '删除源文件',
-            content: '确定要删除「${track.displayTitle}」的源文件吗？\n\n⚠️ 此操作不可恢复！文件将从 NAS 中永久删除。',
+            title: context.l10n.musicDeleteSourceFileTitle,
+            content: context.l10n.musicDeleteSourceFileContent(track.displayTitle),
           );
           if (confirmed && context.mounted) {
             final success = await ref.read(musicListProvider.notifier).deleteFromSource(
@@ -4743,7 +4743,7 @@ class _MusicListTile extends ConsumerWidget {
               track.displayTitle,
             );
             if (context.mounted) {
-              context.showSuccessToast(success ? '已删除源文件' : '删除失败，请检查连接状态');
+              context.showSuccessToast(success ? context.l10n.musicDeleteSourceFileSuccess : context.l10n.musicDeleteSourceFileFailed);
             }
           }
         }
@@ -4798,7 +4798,7 @@ class _MusicListTile extends ConsumerWidget {
                 child: Icon(Icons.add_rounded, color: AppColors.primary),
               ),
               title: Text(
-                '新建歌单',
+                context.l10n.musicAddToPlaylistNew,
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
               ),
               onTap: () {
@@ -4841,7 +4841,7 @@ class _MusicListTile extends ConsumerWidget {
                     await ref.read(playlistProvider.notifier).addToPlaylist(playlist.id, trackPath);
                     if (context.mounted) {
                       Navigator.pop(context);
-                      context.showSuccessToast('已添加到歌单"${playlist.name}"');
+                      context.showSuccessToast(context.l10n.musicAddToPlaylistSuccess(playlist.name));
                     }
                   },
                 )),
@@ -4869,7 +4869,7 @@ class _MusicListTile extends ConsumerWidget {
           controller: controller,
           autofocus: true,
           decoration: InputDecoration(
-            hintText: '输入歌单名称',
+            hintText: context.l10n.musicPlaylistNameHint,
             hintStyle: TextStyle(
               color: isDark ? Colors.grey[500] : Colors.grey[400],
             ),
@@ -4910,7 +4910,7 @@ class _MusicListTile extends ConsumerWidget {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('创建并添加'),
+            child: Text(context.l10n.musicPlaylistCreateAndAdd),
           ),
         ],
       ),
@@ -5257,7 +5257,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无歌曲',
+            context.l10n.musicNoSongsEmpty,
             style: TextStyle(
               fontSize: 16,
               color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -5276,7 +5276,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
 
     if (connection == null || connection.status != SourceStatus.connected) {
       if (context.mounted) {
-        context.showWarningToast('源未连接，请先连接到 NAS');
+        context.showWarningToast(context.l10n.musicSourceNotConnected);
       }
       return;
     }
@@ -5322,7 +5322,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
       }
     } on Exception catch (e) {
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -5337,7 +5337,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
 
     if (connection == null || connection.status != SourceStatus.connected) {
       if (context.mounted) {
-        context.showWarningToast('源未连接，请先连接到 NAS');
+        context.showWarningToast(context.l10n.musicSourceNotConnected);
       }
       return;
     }
@@ -5383,7 +5383,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
       }
     } on Exception catch (e) {
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -5417,12 +5417,12 @@ class _ArtistsView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView('加载失败', Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
         }
 
         final artists = snapshot.data ?? [];
         if (artists.isEmpty) {
-          return _buildEmptyView('暂无艺术家', Icons.person_off_rounded, isDark);
+          return _buildEmptyView(context.l10n.musicArtistEmpty, Icons.person_off_rounded, isDark);
         }
 
         final gridConfig = GridHelper.getMusicArtistGridConfig(context);
@@ -5553,7 +5553,7 @@ class _ArtistCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        '${tracks.length} 首歌曲',
+                        context.l10n.musicArtistSongs(tracks.length),
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -5762,12 +5762,12 @@ class _AlbumsView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView('加载失败', Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
         }
 
         final albums = snapshot.data ?? [];
         if (albums.isEmpty) {
-          return _buildEmptyView('暂无专辑', Icons.album_outlined, isDark);
+          return _buildEmptyView(context.l10n.musicAlbumEmpty, Icons.album_outlined, isDark);
         }
 
         final gridConfig = GridHelper.getMusicAlbumGridConfig(context);
@@ -5928,7 +5928,7 @@ class _AlbumCard extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              '${tracks.length} 首歌曲',
+                              context.l10n.musicArtistSongs(tracks.length),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -6182,12 +6182,12 @@ class _FoldersView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView('加载失败', Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
         }
 
         final folders = snapshot.data ?? [];
         if (folders.isEmpty) {
-          return _buildEmptyView('暂无文件夹', Icons.folder_off_rounded, isDark);
+          return _buildEmptyView(context.l10n.musicFolderEmpty, Icons.folder_off_rounded, isDark);
         }
 
         return ListView.builder(
@@ -6279,7 +6279,7 @@ class _FolderCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${tracks.length} 首歌曲',
+                        context.l10n.musicArtistSongs(tracks.length),
                         style: TextStyle(
                           fontSize: 13,
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -6449,12 +6449,12 @@ class _GenresView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView('加载失败', Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
         }
 
         final genres = snapshot.data ?? [];
         if (genres.isEmpty) {
-          return _buildEmptyView('暂无流派信息', Icons.category_outlined, isDark);
+          return _buildEmptyView(context.l10n.musicGenreEmpty, Icons.category_outlined, isDark);
         }
 
         final gridConfig = GridHelper.getMusicCategoryGridConfig(context);
@@ -6733,12 +6733,12 @@ class _YearsView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView('加载失败', Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
         }
 
         final yearData = snapshot.data ?? [];
         if (yearData.isEmpty) {
-          return _buildEmptyView('暂无年代信息', Icons.date_range_rounded, isDark);
+          return _buildEmptyView(context.l10n.musicYearEmpty, Icons.date_range_rounded, isDark);
         }
 
         // 按年代（每10年）重新分组
@@ -6814,7 +6814,8 @@ class _YearCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayTitle = yearLabel == '未知年代' ? yearLabel : '$yearLabel 年代';
+    final unknownYear = context.l10n.musicYearUnknown;
+    final displayTitle = yearLabel == unknownYear ? yearLabel : context.l10n.musicYearLabel(yearLabel);
     final displayYear = yearLabel == '未知年代' ? '?' : yearLabel.replaceAll('s', '');
 
     return GestureDetector(
@@ -7053,7 +7054,7 @@ class _FavoritesView extends ConsumerWidget {
     final favorites = favoritesState.favorites;
 
     if (favorites.isEmpty) {
-      return _buildEmptyView('暂无收藏', Icons.favorite_outline_rounded, isDark);
+      return _buildEmptyView(context.l10n.musicFavoritesEmpty, Icons.favorite_outline_rounded, isDark);
     }
 
     return ListView.builder(
@@ -7209,7 +7210,7 @@ class _RecentView extends ConsumerWidget {
     final recentTracks = ref.watch(recentTracksProvider);
 
     if (recentTracks.isEmpty) {
-      return _buildEmptyView('暂无播放记录', Icons.history_rounded, isDark);
+      return _buildEmptyView(context.l10n.musicRecentEmpty, Icons.history_rounded, isDark);
     }
 
     return ListView.builder(
@@ -7460,7 +7461,7 @@ class _ImportPlaylistButton extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '导入',
+                  context.l10n.musicPlaylistImportAction,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -7488,14 +7489,14 @@ class _ImportPlaylistButton extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '已导入「${imported.name}」，匹配到 ${imported.trackCount} 首',
+              context.l10n.musicPlaylistImportSuccess(imported.name, imported.trackCount),
             ),
           ),
         );
       }
     } else if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('导入失败：格式无效或为空')),
+        SnackBar(content: Text(context.l10n.musicPlaylistImportFailed)),
       );
     }
   }
@@ -7532,7 +7533,7 @@ class _CreatePlaylistButton extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '创建新歌单',
+                  context.l10n.musicPlaylistCreateNewButton,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -7551,19 +7552,19 @@ class _CreatePlaylistButton extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('创建歌单'),
+        title: Text(context.l10n.musicPlaylistCreateTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: '歌单名称',
+          decoration: InputDecoration(
+            hintText: context.l10n.musicPlaylistNameHint,
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.musicPlaylistCreateCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -7575,7 +7576,7 @@ class _CreatePlaylistButton extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('创建'),
+            child: Text(context.l10n.musicPlaylistCreateConfirm),
           ),
         ],
       ),
@@ -7696,19 +7697,19 @@ class _PlaylistTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('重命名歌单'),
+        title: Text(context.l10n.musicPlaylistRenameTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: '歌单名称',
+          decoration: InputDecoration(
+            hintText: context.l10n.musicPlaylistNameHint,
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.musicPlaylistCreateCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -7731,12 +7732,12 @@ class _PlaylistTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除歌单'),
-        content: Text('确定要删除歌单「${playlist.name}」吗？'),
+        title: Text(context.l10n.musicPlaylistDeleteTitle),
+        content: Text(context.l10n.musicPlaylistDeleteContent(playlist.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.musicPlaylistCreateCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -7748,7 +7749,7 @@ class _PlaylistTile extends ConsumerWidget {
                 Navigator.pop(context);
               }
             },
-            child: const Text('删除'),
+            child: Text(context.l10n.musicPlaylistDeleteConfirm),
           ),
         ],
       ),
@@ -7794,7 +7795,7 @@ class _SortDirectionButton extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                direction == SortDirection.ascending ? '升序' : '降序',
+                direction == SortDirection.ascending ? context.l10n.musicSortDirectionAscending : context.l10n.musicSortDirectionDescending,
                 style: TextStyle(
                   fontSize: 13,
                   color: isDark ? Colors.white70 : Colors.black87,
@@ -8163,12 +8164,12 @@ class _MusicTableRow extends ConsumerWidget {
         position.dy + size.height,
       ),
       items: [
-        const PopupMenuItem(value: 'play', child: Text('播放')),
-        const PopupMenuItem(value: 'queue', child: Text('添加到队列')),
-        const PopupMenuItem(value: 'playlist', child: Text('添加到播放列表')),
+        PopupMenuItem(value: 'play', child: Text(context.l10n.musicTableHeaderPlay)),
+        PopupMenuItem(value: 'queue', child: Text(context.l10n.musicTableMenuAddQueue)),
+        PopupMenuItem(value: 'playlist', child: Text(context.l10n.musicTableMenuAddPlaylist)),
         const PopupMenuDivider(),
-        const PopupMenuItem(value: 'artist', child: Text('查看艺术家')),
-        const PopupMenuItem(value: 'album', child: Text('查看专辑')),
+        PopupMenuItem(value: 'artist', child: Text(context.l10n.musicTableMenuViewArtist)),
+        PopupMenuItem(value: 'album', child: Text(context.l10n.musicTableMenuViewAlbum)),
       ],
     ).then((value) {
       if (value == null) return;
@@ -8434,7 +8435,7 @@ class _ModernMusicTile extends ConsumerWidget {
     final connection = connections[track.sourceId];
     if (connection == null || connection.status != SourceStatus.connected) {
       if (context.mounted) {
-        context.showWarningToast('源未连接，请先连接到 NAS');
+        context.showWarningToast(context.l10n.musicSourceNotConnected);
       }
       return;
     }
@@ -8484,7 +8485,7 @@ class _ModernMusicTile extends ConsumerWidget {
       }
     } on Exception catch (e) {
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -8712,14 +8713,14 @@ class _ModernMusicTile extends ConsumerWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '暂无歌单',
+                        context.l10n.musicBottomSheetEmptyNoPlaylist,
                         style: TextStyle(
                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '点击右上角新建歌单',
+                        context.l10n.musicBottomSheetEmptyHint,
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.grey[500] : Colors.grey[500],
@@ -8774,7 +8775,7 @@ class _ModernMusicTile extends ConsumerWidget {
                         if (rootContext.mounted) {
                           ScaffoldMessenger.of(rootContext).showSnackBar(
                             SnackBar(
-                              content: Text('已添加到「${playlist.name}」'),
+                              content: Text(context.l10n.musicAddToPlaylistSuccess(playlist.name)),
                               behavior: SnackBarBehavior.floating,
                               duration: const Duration(seconds: 2),
                             ),
@@ -8798,19 +8799,19 @@ class _ModernMusicTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('新建歌单'),
+        title: Text(context.l10n.musicAddToPlaylistNew),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(
-            hintText: '歌单名称',
+          decoration: InputDecoration(
+            hintText: context.l10n.musicPlaylistNameHint,
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('取消'),
+            child: Text(context.l10n.musicPlaylistCreateCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -8826,7 +8827,7 @@ class _ModernMusicTile extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('创建'),
+            child: Text(context.l10n.musicPlaylistCreateConfirm),
           ),
         ],
       ),
@@ -9030,12 +9031,12 @@ class _CompactMusicTile extends ConsumerWidget {
           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
         ),
         itemBuilder: (context) => [
-          const PopupMenuItem(value: 'play_next', child: Text('下一首播放')),
-          const PopupMenuItem(value: 'add_to_queue', child: Text('添加到队列')),
-          const PopupMenuItem(value: 'add_to_favorites', child: Text('收藏')),
-          const PopupMenuItem(value: 'add_to_playlist', child: Text('添加到歌单')),
+          PopupMenuItem(value: 'play_next', child: Text(context.l10n.musicMenuPlayNext)),
+          PopupMenuItem(value: 'add_to_queue', child: Text(context.l10n.musicTableMenuAddQueue)),
+          PopupMenuItem(value: 'add_to_favorites', child: Text(context.l10n.musicMenuFavorite)),
+          PopupMenuItem(value: 'add_to_playlist', child: Text(context.l10n.musicMenuAddToPlaylist)),
           const PopupMenuDivider(),
-          const PopupMenuItem(value: 'manual_scrape', child: Text('手动刮削')),
+          PopupMenuItem(value: 'manual_scrape', child: Text(context.l10n.musicMenuManualScrape)),
         ],
       ),
     );
@@ -9050,7 +9051,7 @@ class _CompactMusicTile extends ConsumerWidget {
     if (connection == null || connection.status != SourceStatus.connected) {
       logger.e('_CompactMusicTile._playTrack: 源未连接 sourceId=${track.sourceId}');
       if (context.mounted) {
-        context.showWarningToast('源未连接，请先连接到 NAS');
+        context.showWarningToast(context.l10n.musicSourceNotConnected);
       }
       return;
     }
@@ -9100,7 +9101,7 @@ class _CompactMusicTile extends ConsumerWidget {
     } on Exception catch (e, stackTrace) {
       logger.e('_CompactMusicTile._playTrack: 播放失败', e, stackTrace);
       if (context.mounted) {
-        context.showErrorToast('播放失败: $e');
+        context.showErrorToast(context.l10n.musicPlayFailed(e.toString()));
       }
     }
   }
@@ -9173,7 +9174,7 @@ class _CompactMusicTile extends ConsumerWidget {
     if (connection == null || connection.status != SourceStatus.connected) {
       logger.e('_CompactMusicTile._handleAction: 源未连接 sourceId=${track.sourceId}');
       if (context.mounted) {
-        context.showWarningToast('源未连接，请先连接到 NAS');
+        context.showWarningToast(context.l10n.musicSourceNotConnected);
       }
       return;
     }
@@ -9205,18 +9206,18 @@ class _CompactMusicTile extends ConsumerWidget {
           newQueue.insert(insertIndex.clamp(0, newQueue.length), musicItem);
           ref.read(playQueueProvider.notifier).setQueue(newQueue);
           if (context.mounted) {
-            context.showSuccessToast('已添加到下一首播放');
+            context.showSuccessToast(context.l10n.musicToastPlayNextSuccess);
           }
         }
       case 'add_to_queue':
         ref.read(playQueueProvider.notifier).addToQueue(musicItem);
         if (context.mounted) {
-          context.showSuccessToast('已添加到播放队列');
+          context.showSuccessToast(context.l10n.musicToastQueueSuccess);
         }
       case 'add_to_favorites':
         final isFav = await ref.read(musicFavoritesProvider.notifier).toggleFavorite(musicItem);
         if (context.mounted) {
-          context.showSuccessToast(isFav ? '已添加到收藏' : '已取消收藏');
+          context.showSuccessToast(isFav ? context.l10n.musicToastFavoriteAdded : context.l10n.musicToastFavoriteRemoved);
         }
       case 'add_to_playlist':
         if (context.mounted) {
@@ -9239,7 +9240,7 @@ class _CompactMusicTile extends ConsumerWidget {
     } on Exception catch (e, stackTrace) {
       logger.e('_CompactMusicTile._handleAction: 操作失败', e, stackTrace);
       if (context.mounted) {
-        context.showErrorToast('操作失败: $e');
+        context.showErrorToast(context.l10n.musicActionFailed(e.toString()));
       }
     }
   }
@@ -9279,7 +9280,7 @@ class _CompactMusicTile extends ConsumerWidget {
                 child: Icon(Icons.add_rounded, color: AppColors.primary),
               ),
               title: Text(
-                '新建歌单',
+                context.l10n.musicAddToPlaylistNew,
                 style: TextStyle(color: isDark ? Colors.white : Colors.black87),
               ),
               onTap: () {
@@ -9313,7 +9314,7 @@ class _CompactMusicTile extends ConsumerWidget {
                     await ref.read(playlistProvider.notifier).addToPlaylist(playlist.id, trackPath);
                     if (sheetContext.mounted) {
                       Navigator.pop(sheetContext);
-                      context.showSuccessToast('已添加到歌单"${playlist.name}"');
+                      context.showSuccessToast(context.l10n.musicAddToPlaylistSuccess(playlist.name));
                     }
                   },
                 )),
@@ -9341,7 +9342,7 @@ class _CompactMusicTile extends ConsumerWidget {
           controller: controller,
           autofocus: true,
           decoration: InputDecoration(
-            hintText: '输入歌单名称',
+            hintText: context.l10n.musicPlaylistNameHint,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
@@ -9349,7 +9350,7 @@ class _CompactMusicTile extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('取消'),
+            child: Text(context.l10n.musicPlaylistCreateCancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -9375,7 +9376,7 @@ class _CompactMusicTile extends ConsumerWidget {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('创建并添加'),
+            child: Text(context.l10n.musicPlaylistCreateAndAdd),
           ),
         ],
       ),

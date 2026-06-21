@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/data/services/tmdb_service.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
@@ -62,7 +63,7 @@ class _EpisodeSelectorState extends ConsumerState<EpisodeSelector> {
           child: Row(
             children: [
               Text(
-                '剧集',
+                context.l10n.videoEpisodeSelectorTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -108,7 +109,7 @@ class _EpisodeSelectorState extends ConsumerState<EpisodeSelector> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    season.seasonNumber == 0 ? '特别篇' : '第${season.seasonNumber}季',
+                    season.seasonNumber == 0 ? context.l10n.videoEpisodeSelectorSpecialSeason : context.l10n.videoEpisodeSelectorSeasonLabel(season.seasonNumber),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -155,7 +156,7 @@ class _EpisodeSelectorState extends ConsumerState<EpisodeSelector> {
         height: 100,
         child: Center(
           child: Text(
-            '加载剧集失败',
+            context.l10n.videoEpisodeSelectorLoadFailed,
             style: TextStyle(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -168,7 +169,7 @@ class _EpisodeSelectorState extends ConsumerState<EpisodeSelector> {
             height: 100,
             child: Center(
               child: Text(
-                '暂无剧集信息',
+                context.l10n.videoEpisodeSelectorEmpty,
                 style: TextStyle(
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                 ),
@@ -267,7 +268,7 @@ class _LocalEpisodeSelectorState extends State<LocalEpisodeSelector> {
           child: Row(
             children: [
               Text(
-                '剧集',
+                context.l10n.videoEpisodeSelectorTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -313,7 +314,7 @@ class _LocalEpisodeSelectorState extends State<LocalEpisodeSelector> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    seasonNum == 0 ? '特别篇' : '第$seasonNum季',
+                    seasonNum == 0 ? context.l10n.videoEpisodeSelectorSpecialSeason : context.l10n.videoEpisodeSelectorSeasonLabel(seasonNum),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -322,7 +323,7 @@ class _LocalEpisodeSelectorState extends State<LocalEpisodeSelector> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '($episodeCount集)',
+                    context.l10n.videoEpisodeSelectorCountLocal(episodeCount),
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark
@@ -350,7 +351,7 @@ class _LocalEpisodeSelectorState extends State<LocalEpisodeSelector> {
         height: 100,
         child: Center(
           child: Text(
-            '暂无剧集',
+            context.l10n.videoEpisodeSelectorEmpty,
             style: TextStyle(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -448,7 +449,7 @@ class _LocalEpisodeCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      '第${episode.episodeNumber}集',
+                      context.l10n.videoEpisodeSelectorEpisodeLabel(episode.episodeNumber ?? 0),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -585,7 +586,7 @@ class _CompactEpisodeSelectorState extends ConsumerState<CompactEpisodeSelector>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        season.seasonNumber == 0 ? '特别篇' : '第${season.seasonNumber}季',
+                        season.seasonNumber == 0 ? context.l10n.videoEpisodeSelectorSpecialSeason : context.l10n.videoEpisodeSelectorSeasonLabel(season.seasonNumber),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -642,7 +643,7 @@ class _CompactEpisodeSelectorState extends ConsumerState<CompactEpisodeSelector>
         padding: const EdgeInsets.all(16),
         child: Center(
           child: Text(
-            '加载剧集失败',
+            context.l10n.videoEpisodeSelectorLoadFailed,
             style: TextStyle(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -655,7 +656,7 @@ class _CompactEpisodeSelectorState extends ConsumerState<CompactEpisodeSelector>
             padding: const EdgeInsets.all(16),
             child: Center(
               child: Text(
-                '暂无剧集信息',
+                context.l10n.videoEpisodeSelectorEmpty,
                 style: TextStyle(
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                 ),
@@ -706,7 +707,7 @@ class _CompactEpisodeSelectorState extends ConsumerState<CompactEpisodeSelector>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        _showAllEpisodes ? '收起' : '显示全部${episodes.length}集',
+                        _showAllEpisodes ? context.l10n.videoEpisodeSelectorCollapse : context.l10n.videoEpisodeSelectorExpandAll(episodes.length),
                         style: TextStyle(color: AppColors.primary),
                       ),
                       Icon(

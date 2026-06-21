@@ -8205,5 +8205,453 @@
       }
     }
   },
-  "videoCastCastingToLabel": "Casting to"
+  "videoCastCastingToLabel": "Casting to",
+  "musicSortOptionName": "Name",
+  "musicSortOptionArtist": "Artist",
+  "musicSortOptionAlbum": "Album",
+  "musicSortOptionDateAdded": "Date Added",
+  "musicSortOptionDuration": "Duration",
+  "musicSearchActionTooltip": "Search",
+  "musicQueueActionTooltip": "Queue",
+  "musicMoreActionTooltip": "More",
+  "musicMenuItemHomeLayout": "Home Layout",
+  "musicMenuItemMediaLibrarySettings": "Media Library Settings",
+  "musicMenuItemConnectionManager": "Connection Manager",
+  "musicSearchResultNotFound": "No songs found related to \"{query}\"",
+  "@musicSearchResultNotFound": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "musicLibraryEmpty": "Library is Empty",
+  "musicLibraryEmptyHint": "Configure music directories and scan in media library settings",
+  "musicMediaLibrarySettingsButton": "Media Library Settings",
+  "musicConnectionManagementButton": "Connection Management",
+  "musicAllSongsPageTitle": "All Songs",
+  "musicAllSongsCount": "{count} songs",
+  "@musicAllSongsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicLoadMoreAction": "Pull to load more",
+  "musicNoSongsEmpty": "No Songs",
+  "musicMenuPlayNext": "Play Next",
+  "musicMenuAddToQueue": "Add to Queue",
+  "musicMenuFavorite": "Favorite",
+  "musicMenuAddToPlaylist": "Add to Playlist",
+  "musicMenuManualScrape": "Manual Scrape",
+  "musicMenuRemoveFromLibrary": "Remove from Library",
+  "musicMenuDeleteSourceFile": "Delete Source File",
+  "musicRemoveFromLibraryContent": "Are you sure you want to remove \"{title}\" from the library?\\n\\nThis will only remove the index record, the source file will not be deleted.",
+  "@musicRemoveFromLibraryContent": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "musicRemoveFromLibrarySuccess": "Removed from library",
+  "musicRemoveFromLibraryFailed": "Failed to remove",
+  "musicDeleteSourceFileContent": "Are you sure you want to delete the source file of \"{title}\"?\\n\\n⚠️ This operation is irreversible! The file will be permanently deleted from NAS.",
+  "@musicDeleteSourceFileContent": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "musicDeleteSourceFileSuccess": "Source file deleted",
+  "musicDeleteSourceFileFailed": "Delete failed, please check connection status",
+  "musicAddToPlaylistNew": "Create New Playlist",
+  "musicPlaylistCreateCancel": "Cancel",
+  "musicPlaylistCreateAndAdd": "Create and Add",
+  "musicAddToPlaylistSuccess": "Added to playlist \"{name}\"",
+  "@musicAddToPlaylistSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "musicArtistEmpty": "No Artists",
+  "musicLoadFailed": "Failed to load",
+  "musicArtistSongs": "{count} songs",
+  "@musicArtistSongs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicAlbumEmpty": "No Albums",
+  "musicFolderEmpty": "No Folders",
+  "musicGenreEmpty": "No Genres",
+  "musicYearEmpty": "No Years",
+  "musicYearUnknown": "Unknown Year",
+  "musicYearLabel": "{year}s",
+  "@musicYearLabel": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "musicFavoritesEmpty": "No Favorites",
+  "musicRecentEmpty": "No Play History",
+  "musicPlaylistImportAction": "Import",
+  "musicPlaylistImportSuccess": "Imported \"{name}\", matched {count} songs",
+  "@musicPlaylistImportSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "musicPlaylistImportFailed": "Import failed: invalid format or empty",
+  "musicPlaylistCreateNewButton": "Create New Playlist",
+  "musicPlaylistCreateConfirm": "Create",
+  "musicPlaylistRenameMenuLabel": "Rename",
+  "musicPlaylistDeleteMenuLabel": "Delete",
+  "musicPlaylistRenameConfirm": "Confirm",
+  "musicPlaylistDeleteContent": "Are you sure you want to delete the playlist \"{name}\"?",
+  "@musicPlaylistDeleteContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "musicPlaylistDeleteConfirm": "Delete",
+  "musicSortDirectionAscending": "Ascending",
+  "musicSortDirectionDescending": "Descending",
+  "musicTableHeaderPlay": "Play",
+  "musicTableMenuAddQueue": "Add to Queue",
+  "musicTableMenuAddPlaylist": "Add to Playlist",
+  "musicTableMenuViewArtist": "View Artist",
+  "musicTableMenuViewAlbum": "View Album",
+  "musicBottomSheetEmptyNoPlaylist": "No Playlists",
+  "musicBottomSheetEmptyHint": "Click the top right to create a playlist",
+  "musicPlayAllButton": "Play All",
+  "musicToastPlayNextSuccess": "Added to play next",
+  "musicToastQueueSuccess": "Added to queue",
+  "musicToastFavoriteAdded": "Added to favorites",
+  "musicToastFavoriteRemoved": "Removed from favorites",
+  "musicSourceNotConnected": "Source not connected, please connect to NAS first",
+  "musicPlayFailed": "Play failed: {error}",
+  "@musicPlayFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicActionFailed": "Operation failed: {error}",
+  "@musicActionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoListSourceManagementLabel": "Connection Management",
+  "videoListStatisticMovies": "{count} movies",
+  "@videoListStatisticMovies": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoListStatisticTvShows": "{count} TV shows",
+  "@videoListStatisticTvShows": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoListStatisticOthers": "{count} others",
+  "@videoListStatisticOthers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoViewAllLabel": "View All",
+  "videoSeriesCountLabel": "{count} series",
+  "@videoSeriesCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoMoreContentLabel": "More Content",
+  "videoEpisodeLabel": "Episode",
+  "videoNotFavoritedLabel": "Not Favorited",
+  "videoEmptyState": "No videos available",
+  "videoFilterNoResults": "No content matching the filter criteria",
+  "videoSortByRating": "By Rating",
+  "videoSortByYear": "By Year",
+  "videoFilterStatusLabel": "Filter: ",
+  "videoFilterTooltip": "Filter",
+  "videoFilterByTypeLabel": "Filter by Type",
+  "videoViewMoreCollections": "View All ({count})",
+  "@videoViewMoreCollections": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfReaderBackButton": "Back",
+  "pdfReaderKeyboardPreviousPage": "Previous Page",
+  "pdfReaderKeyboardNextPage": "Next Page",
+  "pdfReaderKeyboardFirstPage": "Jump to First Page",
+  "pdfReaderKeyboardLastPage": "Jump to Last Page",
+  "pdfReaderKeyboardBack": "Back",
+  "pdfReaderKeyboardShowHelp": "Show This Help",
+  "pdfReaderStreaming": "Streaming",
+  "pdfReaderPageThumbnails": "Page Thumbnails",
+  "pdfReaderFirstPage": "First",
+  "pdfReaderLastPage": "Last",
+  "pdfReaderPagesPanel": "Pages",
+  "pdfReaderPageNumber": "Page {pageNumber}",
+  "@pdfReaderPageNumber": {
+    "placeholders": {
+      "pageNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "qbSpeedCardSpeedLimitLabel": "Speed limit",
+  "qbDetailFilterHintCategory": "Category",
+  "qbDetailFilterHintUncategorized": "Uncategorized",
+  "qbDetailFilterHintTag": "Tag",
+  "qbDetailTileRatioLabel": "Ratio",
+  "qbDetailTileUploadedLabel": "Uploaded",
+  "qbDetailCopyHashSuccess": "Hash copied",
+  "qbDetailFilterSheetTitle": "Filter",
+  "qbDetailSortSheetTitle": "Sort",
+  "qbDetailSpeedInputDownloadLabel": "Download",
+  "qbDetailSpeedInputUploadLabel": "Upload",
+  "qbDetailAddTorrentLinkHintMagnetOrUrl": "magnet:?xt=urn:btih:... or https://...",
+  "qbDetailCategoryNoneLabel": "None",
+  "qbDetailCategoryUncategorized": "(Uncategorized)",
+  "bookReaderFileTooLarge": "File too large ({size} MB). Maximum supported size: {maxSize} MB. Consider using Calibre to split or convert to a smaller format.",
+  "@bookReaderFileTooLarge": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      },
+      "maxSize": {
+        "type": "int"
+      }
+    }
+  },
+  "bookReaderLoadingCaching": "Using cache...",
+  "bookReaderErrorFileNotFound": "File not found",
+  "bookReaderErrorProtocolNotSupported": "Unsupported protocol: {protocol}",
+  "@bookReaderErrorProtocolNotSupported": {
+    "placeholders": {
+      "protocol": {
+        "type": "String"
+      }
+    }
+  },
+  "bookReaderErrorLoadingFailed": "Loading failed: {statusCode}",
+  "@bookReaderErrorLoadingFailed": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "bookReaderBookmarkLocationLabel": "Position {percent}%",
+  "@bookReaderBookmarkLocationLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "videoEpisodeSelectorLoadFailed": "Failed to load episodes",
+  "videoEpisodeSelectorEpisodeLabel": "Episode {episode}",
+  "@videoEpisodeSelectorEpisodeLabel": {
+    "placeholders": {
+      "episode": {
+        "type": "int"
+      }
+    }
+  },
+  "videoEpisodeSelectorCollapse": "Show less",
+  "videoEpisodeSelectorExpandAll": "Show all {count} episodes",
+  "@videoEpisodeSelectorExpandAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nastoolSearchResultGroupLabel": "{count} groups",
+  "@nastoolSearchResultGroupLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nastoolTorrentGroupCount": "{count} groups",
+  "@nastoolTorrentGroupCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nastoolTorrentResourceCount": "{count} resources",
+  "@nastoolTorrentResourceCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nastoolRssPreviewTitle": "RSS Preview: {name}",
+  "@nastoolRssPreviewTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "photoListLoadingData": "Loading data...",
+  "photoListMigratingData": "Migrating data...",
+  "photoListLoadingConfig": "Loading configuration...",
+  "photoListLoadConfigFailed": "Failed to load media library configuration",
+  "photoListContinueScanning": "Continuing scan...",
+  "photoListScanComplete": "Scan complete",
+  "photoListSavingData": "Saving data...",
+  "photoListGreetingLateNight": "It's late",
+  "photoListGreetingMorning": "Good morning",
+  "photoListGreetingNoon": "Good afternoon",
+  "photoListGreetingEvening": "Good afternoon",
+  "photoListGreetingNight": "Good evening",
+  "photoListPhotoCountDisplay": "{count} photos",
+  "@photoListPhotoCountDisplay": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListPhotoCountSmall": "{count} photos",
+  "@photoListPhotoCountSmall": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListLocalCountLabel": "Local",
+  "photoListTimelineHeaderCount": "{count} photos",
+  "@photoListTimelineHeaderCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListYearMonthDisplay": "{year}/{month}",
+  "@photoListYearMonthDisplay": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListYearDisplay": "{year}",
+  "@photoListYearDisplay": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "noteInfoSubtitleNote": "Note",
+  "noteListLoadFailedFormat": "Failed to load: {error}",
+  "@noteListLoadFailedFormat": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicEffectsPageTitle": "Equalizer",
+  "musicEffectsResetToFlat": "Reset to flat",
+  "musicEffectsEnableTitle": "Enable Equalizer",
+  "musicEffectsCustomPreset": "Custom",
+  "musicEffectsPlatformNoteAndroid": "Android: Uses system AudioEffect hardware equalizer",
+  "musicEffectsPlatformNoteIos": "iOS: The current playback engine does not support EQ (AVAudioEngine integration planned)",
+  "musicEffectsPlatformNoteDesktop": "Desktop: Only media_kit engine takes effect (mpv af filters). EQ is unavailable if using just_audio engine",
+  "musicEffectsPlatformNoteUnsupported": "Current platform does not support equalizer",
+  "musicBrowseCategoryAllSongs": "All Songs",
+  "musicBrowseCategoryFavorites": "Favorites",
+  "musicBrowseCategoryRecent": "Recently Played",
+  "musicBrowseCategoryPlaylists": "Playlists",
+  "musicBrowseCategoryFormatCountWan": "{count}M",
+  "@musicBrowseCategoryFormatCountWan": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "musicBrowseCategoryFormatCountK": "{count}k",
+  "@musicBrowseCategoryFormatCountK": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "musicBrowseCategoryFormatCountUnit": "{count}",
+  "@musicBrowseCategoryFormatCountUnit": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryAddLocalFileTypeTitle": "Add Local {typeDisplayName}",
+  "@mediaLibraryAddLocalFileTypeTitle": {
+    "placeholders": {
+      "typeDisplayName": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryScanCompleteVideosToast": "Scan complete, {count} videos found. Starting metadata scraping...",
+  "@mediaLibraryScanCompleteVideosToast": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryImportTypeBook": "Books",
+  "mediaLibraryImportTypeComic": "Comics",
+  "mediaLibraryImportTypeDocument": "Files"
 }

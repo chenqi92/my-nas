@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/audio_effects_service.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
@@ -59,13 +60,13 @@ class _AudioEffectsPageState extends State<AudioEffectsPage> {
     setState(() => _state = AudioEffectsService.instance.state);
   }
 
-  String get _platformNote {
-    if (Platform.isAndroid) return 'Android：使用系统 AudioEffect 硬件均衡器';
-    if (Platform.isIOS) return 'iOS：当前播放引擎暂不支持 EQ（计划接入 AVAudioEngine）';
+  String _platformNote(BuildContext context) {
+    if (Platform.isAndroid) return context.l10n.musicEffectsPlatformNoteAndroid;
+    if (Platform.isIOS) return context.l10n.musicEffectsPlatformNoteIos;
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      return '桌面端：仅 media_kit 引擎生效（mpv af 滤镜）。如使用 just_audio 引擎，桌面 EQ 不可用';
+      return context.l10n.musicEffectsPlatformNoteDesktop;
     }
-    return '当前平台暂不支持均衡器';
+    return context.l10n.musicEffectsPlatformNoteUnsupported;
   }
 
   String _formatBandLabel(int hz) {
@@ -81,10 +82,10 @@ class _AudioEffectsPageState extends State<AudioEffectsPage> {
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('均衡器'),
+        title: Text(context.l10n.musicEffectsPageTitle),
         actions: [
           IconButton(
-            tooltip: '重置为平直',
+            tooltip: context.l10n.musicEffectsResetToFlat,
             icon: const Icon(Icons.restart_alt),
             onPressed: _resetFlat,
           ),
@@ -94,8 +95,8 @@ class _AudioEffectsPageState extends State<AudioEffectsPage> {
         padding: const EdgeInsets.all(16),
         children: [
           SwitchListTile(
-            title: const Text('启用均衡器'),
-            subtitle: Text(_platformNote),
+            title: Text(context.l10n.musicEffectsEnableTitle),
+            subtitle: Text(_platformNote(context)),
             value: _state.enabled,
             onChanged: _toggleEnabled,
           ),
@@ -119,7 +120,7 @@ class _AudioEffectsPageState extends State<AudioEffectsPage> {
               onSelected: _state.enabled ? (_) => _applyPreset(p.id) : null,
             ),
           if (_state.presetId == 'custom')
-            const ChoiceChip(label: Text('自定义'), selected: true),
+            ChoiceChip(label: Text(context.l10n.musicEffectsCustomPreset), selected: true),
         ],
       );
 

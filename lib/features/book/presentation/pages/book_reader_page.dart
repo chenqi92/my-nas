@@ -48,7 +48,7 @@ final txtReaderProvider =
 sealed class TxtReaderState {}
 
 class TxtReaderLoading extends TxtReaderState {
-  TxtReaderLoading({this.message = '加载中...'});
+  TxtReaderLoading({this.message = 'Loading...'});
 
   final String message;
 }
@@ -859,7 +859,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                           final position = _currentReadPosition();
                           final title = _currentChapterTitle.isNotEmpty
                               ? _currentChapterTitle
-                              : '位置 ${(position * 100).toStringAsFixed(1)}%';
+                              : context.l10n.bookReaderBookmarkLocationLabel((position * 100).toStringAsFixed(1));
                           final bookmark = Bookmark(
                             id: DateTime.now().microsecondsSinceEpoch.toString(),
                             itemId: itemId,
@@ -1767,7 +1767,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
                   child: Row(
                     children: [
                       Text(
-                        '目录',
+                        context.l10n.bookReaderTableOfContents,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1839,8 +1839,8 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
     final theme = settings.theme;
 
     // 调试: 输出当前字体设置
-    logger.d('渲染HTML内容 - 字体: ${settings.fontFamily ?? "系统默认"}, '
-        '字号: ${settings.fontSize}, 行高: ${settings.lineHeight}');
+    logger.d('Rendering HTML content - font: ${settings.fontFamily ?? "system default"}, '
+        'size: ${settings.fontSize}, line height: ${settings.lineHeight}');
 
     // 额外的颜色值清理（防止 flutter_html 解析崩溃）
     final cleanedHtml = _sanitizeHtmlColors(htmlContent);
@@ -1990,7 +1990,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
     BookReaderTheme theme,
   ) {
     // 调试: 确保分页模式下也正确应用字体
-    logger.d('构建HTML样式 - 字体: ${settings.fontFamily ?? "系统默认"}');
+    logger.d('Building HTML styles - font: ${settings.fontFamily ?? "system default"}');
 
     return {
       'body': Style(

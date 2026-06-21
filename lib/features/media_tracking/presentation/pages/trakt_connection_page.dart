@@ -247,7 +247,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
             child: OutlinedButton.icon(
               onPressed: _showLogoutConfirmation,
               icon: const Icon(Icons.logout_rounded),
-              label: const Text('注销'),
+              label: Text(context.l10n.traktConnectionLogout),
               style: OutlinedButton.styleFrom(
                 foregroundColor: colorScheme.error,
                 side: BorderSide(color: colorScheme.error.withValues(alpha: 0.5)),
@@ -926,7 +926,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
               onTap: () {
                 Clipboard.setData(ClipboardData(text: deviceCode.userCode));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('验证码已复制'), duration: Duration(seconds: 2)),
+                  SnackBar(content: Text(context.l10n.traktConnectionCodeCopied), duration: Duration(seconds: 2)),
                 );
               },
               borderRadius: BorderRadius.circular(12),
@@ -971,7 +971,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  '等待授权...',
+                  context.l10n.traktConnectionWaitingAuth,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),

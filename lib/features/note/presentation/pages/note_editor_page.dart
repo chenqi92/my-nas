@@ -235,10 +235,10 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
         backgroundColor: isDark ? AppColors.darkSurface : null,
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: '预览', icon: Icon(Icons.visibility_rounded, size: 20)),
-            Tab(text: '任务', icon: Icon(Icons.checklist_rounded, size: 20)),
-            Tab(text: '编辑', icon: Icon(Icons.edit_rounded, size: 20)),
+          tabs: [
+            Tab(text: context.l10n.noteEditorTabPreview, icon: Icon(Icons.visibility_rounded, size: 20)),
+            Tab(text: context.l10n.noteEditorTabTasks, icon: Icon(Icons.checklist_rounded, size: 20)),
+            Tab(text: context.l10n.noteEditorTabEdit, icon: Icon(Icons.edit_rounded, size: 20)),
           ],
           labelColor: AppColors.primary,
           unselectedLabelColor: isDark ? AppColors.darkOnSurfaceVariant : null,
@@ -246,7 +246,7 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
         ),
       ),
       body: switch (state) {
-        NoteEditorLoading() => const LoadingWidget(message: '加载中...'),
+        NoteEditorLoading() => LoadingWidget(message: context.l10n.noteEditorLoading),
         NoteEditorError(:final message) => AppErrorWidget(
             message: message,
             onRetry: () =>
@@ -288,14 +288,14 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无待办任务',
+              context.l10n.noteEditorNoTasks,
               style: context.textTheme.titleMedium?.copyWith(
                 color: isDark ? AppColors.darkOnSurfaceVariant : null,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '使用 - [ ] 语法添加任务',
+              context.l10n.noteEditorTaskHint,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.7)
@@ -340,44 +340,44 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
             children: [
               _buildToolButton(
                 icon: Icons.format_bold_rounded,
-                tooltip: '粗体',
+                tooltip: context.l10n.noteEditorBoldTooltip,
                 onTap: () => _insertMarkdown('**', '**'),
               ),
               _buildToolButton(
                 icon: Icons.format_italic_rounded,
-                tooltip: '斜体',
+                tooltip: context.l10n.noteEditorItalicTooltip,
                 onTap: () => _insertMarkdown('*', '*'),
               ),
               _buildToolButton(
                 icon: Icons.strikethrough_s_rounded,
-                tooltip: '删除线',
+                tooltip: context.l10n.noteEditorStrikethroughTooltip,
                 onTap: () => _insertMarkdown('~~', '~~'),
               ),
               const VerticalDivider(width: 16),
               _buildToolButton(
                 icon: Icons.title_rounded,
-                tooltip: '标题',
+                tooltip: context.l10n.noteEditorHeadingTooltip,
                 onTap: () => _insertMarkdown('## ', ''),
               ),
               _buildToolButton(
                 icon: Icons.format_list_bulleted_rounded,
-                tooltip: '列表',
+                tooltip: context.l10n.noteEditorListTooltip,
                 onTap: () => _insertMarkdown('- ', ''),
               ),
               _buildToolButton(
                 icon: Icons.check_box_outlined,
-                tooltip: '任务',
+                tooltip: context.l10n.noteEditorTaskTooltip,
                 onTap: () => _insertMarkdown('- [ ] ', ''),
               ),
               const VerticalDivider(width: 16),
               _buildToolButton(
                 icon: Icons.code_rounded,
-                tooltip: '代码',
+                tooltip: context.l10n.noteEditorCodeTooltip,
                 onTap: () => _insertMarkdown('`', '`'),
               ),
               _buildToolButton(
                 icon: Icons.link_rounded,
-                tooltip: '链接',
+                tooltip: context.l10n.noteEditorLinkTooltip,
                 onTap: () => _insertMarkdown('[', '](url)'),
               ),
             ],
@@ -399,7 +399,7 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.all(AppSpacing.md),
               border: InputBorder.none,
-              hintText: '开始编写...',
+              hintText: context.l10n.noteEditorHintText,
               hintStyle: TextStyle(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.5)

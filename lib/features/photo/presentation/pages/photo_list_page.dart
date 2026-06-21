@@ -1332,13 +1332,13 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
   }
 
   /// 获取问候语
-  String _getGreeting() {
+  String _getGreeting(BuildContext context) {
     final hour = DateTime.now().hour;
-    if (hour < 6) return '夜深了';
-    if (hour < 12) return '早上好';
-    if (hour < 14) return '中午好';
-    if (hour < 18) return '下午好';
-    return '晚上好';
+    if (hour < 6) return context.l10n.photoListGreetingLateNight;
+    if (hour < 12) return context.l10n.photoListGreetingMorning;
+    if (hour < 14) return context.l10n.photoListGreetingNoon;
+    if (hour < 18) return context.l10n.photoListGreetingEvening;
+    return context.l10n.photoListGreetingNight;
   }
 
   @override
@@ -1559,7 +1559,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                _getGreeting(),
+                _getGreeting(context),
                 style: (isDesktop
                         ? context.textTheme.titleMedium
                         : context.textTheme.headlineSmall)
@@ -1579,7 +1579,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '$photoCount 张照片',
+                      context.l10n.photoListPhotoCountDisplay(photoCount),
                       style: TextStyle(
                         fontSize: 13,
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -1748,30 +1748,30 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             PopupMenuItem(
               value: 'duplicates',
               child: Row(
-                children: const [
-                  Icon(Icons.content_copy_rounded, size: 20),
-                  SizedBox(width: 12),
-                  Text('重复照片'),
+                children: [
+                  const Icon(Icons.content_copy_rounded, size: 20),
+                  const SizedBox(width: 12),
+                  Text(context.l10n.photoListDuplicates),
                 ],
               ),
             ),
             PopupMenuItem(
               value: 'library',
               child: Row(
-                children: const [
-                  Icon(Icons.settings_rounded, size: 20),
-                  SizedBox(width: 12),
-                  Text('媒体库设置'),
+                children: [
+                  const Icon(Icons.settings_rounded, size: 20),
+                  const SizedBox(width: 12),
+                  Text(context.l10n.photoListLibrarySettings),
                 ],
               ),
             ),
             PopupMenuItem(
               value: 'sources',
               child: Row(
-                children: const [
-                  Icon(Icons.cloud_rounded, size: 20),
-                  SizedBox(width: 12),
-                  Text('连接源管理'),
+                children: [
+                  const Icon(Icons.cloud_rounded, size: 20),
+                  const SizedBox(width: 12),
+                  Text(context.l10n.photoListSourceManagement),
                 ],
               ),
             ),
@@ -1967,7 +1967,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
           children: [
             // 大标题
             Text(
-              _getGreeting(),
+              _getGreeting(context),
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -1984,14 +1984,14 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                 children: [
                   _buildStatChip(
                     icon: Icons.photo_library_rounded,
-                    label: '$photoCount 照片',
+                    label: context.l10n.photoListPhotoCountSmall(photoCount),
                     color: AppColors.success,
                     isDark: isDark,
                   ),
                   if (localCount > 0)
                     _buildStatChip(
                       icon: Icons.phone_iphone_rounded,
-                      label: '$localCount 本机',
+                      label: '${context.l10n.photoListLocalCountLabel} $localCount',
                       color: AppColors.primary,
                       isDark: isDark,
                     ),
@@ -2719,8 +2719,8 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                     Text(
                       hasFilter
                           ? (state.filterMonth != null
-                              ? '${state.filterYear}年${state.filterMonth}月'
-                              : '${state.filterYear}年')
+                              ? context.l10n.photoListYearMonthDisplay(state.filterYear ?? 0, state.filterMonth ?? 0)
+                              : context.l10n.photoListYearDisplay(state.filterYear ?? 0))
                           : context.l10n.photoListTimelineFilter,
                       style: TextStyle(
                         color: hasFilter
@@ -2927,7 +2927,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             ),
             const SizedBox(width: 8),
             Text(
-              '$count 张',
+              context.l10n.photoListTimelineHeaderCount(count),
               style: context.textTheme.bodySmall?.copyWith(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant

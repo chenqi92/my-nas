@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/presentation/widgets/animated_components.dart';
 
 /// 音乐分类
@@ -53,21 +54,21 @@ class BrowseCategoryGrid extends StatelessWidget {
     ];
 
     if (isDesktop) {
-      return _buildDesktopGrid(categories);
+      return _buildDesktopGrid(categories, context);
     }
 
-    return _buildMobileChips(categories);
+    return _buildMobileChips(categories, context);
   }
 
   /// 移动端：横向胶囊按钮
-  Widget _buildMobileChips(List<MusicBrowseCategory> categories) => SizedBox(
+  Widget _buildMobileChips(List<MusicBrowseCategory> categories, BuildContext context) => SizedBox(
       height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: categories.length,
         separatorBuilder: (_, _) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
+        itemBuilder: (buildContext, index) {
           final category = categories[index];
           final count = counts[category] ?? 0;
           return GradientChip(
@@ -85,7 +86,7 @@ class BrowseCategoryGrid extends StatelessWidget {
     );
 
   /// 桌面端：网格布局
-  Widget _buildDesktopGrid(List<MusicBrowseCategory> categories) => GridView.builder(
+  Widget _buildDesktopGrid(List<MusicBrowseCategory> categories, BuildContext context) => GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -239,21 +240,21 @@ class QuickAccessGrid extends StatelessWidget {
     final cards = [
       _QuickAccessCardData(
         icon: Icons.favorite_rounded,
-        label: '我喜欢',
+        label: context.l10n.musicBrowseCategoryFavorites,
         count: favoritesCount,
         color: const Color(0xFFE91E63),
         onTap: onFavoritesTap,
       ),
       _QuickAccessCardData(
         icon: Icons.queue_music_rounded,
-        label: '全部歌曲',
+        label: context.l10n.musicBrowseCategoryAllSongs,
         count: totalCount,
         color: AppColors.primary,
         onTap: onAllTap,
       ),
       _QuickAccessCardData(
         icon: Icons.history_rounded,
-        label: '最近播放',
+        label: context.l10n.musicBrowseCategoryRecent,
         count: recentCount,
         color: const Color(0xFF2196F3),
         onTap: onRecentTap,
@@ -261,7 +262,7 @@ class QuickAccessGrid extends StatelessWidget {
       if (playlistCount > 0 && onPlaylistTap != null)
         _QuickAccessCardData(
           icon: Icons.playlist_play_rounded,
-          label: '歌单',
+          label: context.l10n.musicBrowseCategoryPlaylists,
           count: playlistCount,
           color: const Color(0xFF9C27B0),
           onTap: onPlaylistTap!,
@@ -437,7 +438,7 @@ class _GlassQuickCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              _formatCount(data.count),
+                              _formatCount(context, data.count),
                               style: TextStyle(
                                 fontSize: isDesktop ? 13 : 12,
                                 color: isDark ? Colors.white54 : Colors.black45,
@@ -464,12 +465,12 @@ class _GlassQuickCard extends StatelessWidget {
       ),
     );
 
-  String _formatCount(int count) {
+  String _formatCount(BuildContext context, int count) {
     if (count >= 10000) {
-      return '${(count / 10000).toStringAsFixed(1)}万首';
+      return context.l10n.musicBrowseCategoryFormatCountWan((count / 10000).toStringAsFixed(1));
     } else if (count >= 1000) {
-      return '${(count / 1000).toStringAsFixed(1)}k首';
+      return context.l10n.musicBrowseCategoryFormatCountK((count / 1000).toStringAsFixed(1));
     }
-    return '$count首';
+    return context.l10n.musicBrowseCategoryFormatCountUnit(count.toString());
   }
 }
