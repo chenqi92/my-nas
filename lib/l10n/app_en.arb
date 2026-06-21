@@ -9069,5 +9069,113 @@
   "cfgForm_6d7a7270": "After logging in to Douban, get the Cookie from your browser's developer tools\\n",
   "cfgForm_ece04e69": "Request Settings",
   "cfgForm_6b9a9afa": "Request Interval (seconds)",
-  "cfgForm_70307954": "Minimum interval between two requests, no less than 3 seconds recommended"
+  "cfgForm_70307954": "Minimum interval between two requests, no less than 3 seconds recommended",
+  "musicUnknownArtist": "Unknown Artist",
+  "musicMetadataPreparingExtraction": "Preparing metadata extraction...",
+  "musicScanningInProgress": "Scanning...",
+  "musicDecadeCategoryTitle": "{decade}s",
+  "@musicDecadeCategoryTitle": {
+    "placeholders": {
+      "decade": {
+        "type": "String"
+      }
+    }
+  },
+  "musicPlaylistContextMenuRename": "Rename",
+  "musicPlaylistContextMenuDelete": "Delete",
+  "musicContextMenuAddToQueue": "Add to queue",
+  "musicContextMenuAddToFavorites": "Add to favorites",
+  "musicContextMenuAddToPlaylist": "Add to playlist",
+  "musicAddToPlayNextToast": "Added \"{title}\" to play next",
+  "@musicAddToPlayNextToast": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "musicAddToQueueToast": "Added \"{title}\" to queue",
+  "@musicAddToQueueToast": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "musicAddToFavoritesSuccess": "Added to favorites",
+  "musicRemoveFromFavoritesSuccess": "Removed from favorites",
+  "musicPlaylistAddToSheetTitle": "Add to playlist",
+  "musicPlaylistCreateNew": "New",
+  "musicPlaylistCreatedToast": "Created playlist \"{name}\" and added song",
+  "@musicPlaylistCreatedToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "musicPlaylistNewDialogTitle": "New Playlist",
+  "musicPlayAllButtonLabel": "Play All",
+  "musicPlaylistSongCountFormat": "{count} songs",
+  "@musicPlaylistSongCountFormat": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoPosterCardEpisodeLabel": "Episode",
+  "videoPosterCardRuntimeMinutes": "{minutes} min",
+  "@videoPosterCardRuntimeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCategoryMovieCount": "{count} movies",
+  "@videoCategoryMovieCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoTvShowSeriesInfoSeasonEpisode": "{seasons} seasons {episodes} episodes",
+  "@videoTvShowSeriesInfoSeasonEpisode": {
+    "placeholders": {
+      "seasons": {
+        "type": "int"
+      },
+      "episodes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoTvShowSeriesInfoEpisodeOnly": "{episodes} episodes",
+  "@videoTvShowSeriesInfoEpisodeOnly": {
+    "placeholders": {
+      "episodes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoOthersCategoryCountFormat": "{count} videos",
+  "@videoOthersCategoryCountFormat": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCollectionMovieCountBadge": "{count} films",
+  "@videoCollectionMovieCountBadge": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoTvShowSeasonLabel": "Season",
+  "videoTvShowEpisodeLabel": "Episode"
 }

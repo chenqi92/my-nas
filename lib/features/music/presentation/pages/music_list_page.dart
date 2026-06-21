@@ -2979,7 +2979,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                     ),
                   ),
                   subtitle: Text(
-                    '扫描中...',
+                    context.l10n.musicScanningInProgress,
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -4778,7 +4778,7 @@ class _MusicListTile extends ConsumerWidget {
           children: [
             const SheetDragHandle(topPadding: 16, bottomPadding: 16),
             Text(
-              '添加到歌单',
+              context.l10n.musicPlaylistAddToSheetTitle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -4831,7 +4831,7 @@ class _MusicListTile extends ConsumerWidget {
                     style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                   ),
                   subtitle: Text(
-                    '${playlist.trackCount} 首歌曲',
+                    context.l10n.musicPlaylistSongCountFormat(playlist.trackCount),
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -4862,7 +4862,7 @@ class _MusicListTile extends ConsumerWidget {
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
         title: Text(
-          '新建歌单',
+          context.l10n.musicPlaylistNewDialogTitle,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
         ),
         content: TextField(
@@ -7031,7 +7031,7 @@ class _YearCardFromDb extends ConsumerWidget {
       context,
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
-          title: '$decadeLabel 年代',
+          title: context.l10n.musicDecadeCategoryTitle(decadeLabel),
           subtitle: context.l10n.musicListSongCount(count),
           tracks: musicTracks,
           icon: Icons.date_range_rounded,
@@ -7653,23 +7653,23 @@ class _PlaylistTile extends ConsumerWidget {
             ),
             onSelected: (value) => _handleMenuAction(context, ref, value),
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'rename',
                 child: Row(
                   children: [
                     Icon(Icons.edit_rounded, size: 20),
                     SizedBox(width: 12),
-                    Text('重命名'),
+                    Text(context.l10n.musicPlaylistContextMenuRename),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'delete',
                 child: Row(
                   children: [
                     Icon(Icons.delete_rounded, size: 20, color: AppColors.error),
                     SizedBox(width: 12),
-                    Text('删除', style: TextStyle(color: AppColors.error)),
+                    Text(context.l10n.musicPlaylistContextMenuDelete, style: TextStyle(color: AppColors.error)),
                   ],
                 ),
               ),
@@ -7721,7 +7721,7 @@ class _PlaylistTile extends ConsumerWidget {
                 }
               }
             },
-            child: const Text('确定'),
+            child: Text(context.l10n.musicPlaylistRenameConfirm),
           ),
         ],
       ),
@@ -8580,7 +8580,7 @@ class _ModernMusicTile extends ConsumerWidget {
             ),
             _BottomSheetOption(
               icon: Icons.playlist_add_rounded,
-              label: '添加到播放队列',
+              label: context.l10n.musicContextMenuAddToQueue,
               isDark: isDark,
               onTap: () {
                 Navigator.pop(context);
@@ -8589,7 +8589,7 @@ class _ModernMusicTile extends ConsumerWidget {
             ),
             _BottomSheetOption(
               icon: Icons.favorite_border_rounded,
-              label: '添加到我喜欢',
+              label: context.l10n.musicContextMenuAddToFavorites,
               isDark: isDark,
               onTap: () {
                 Navigator.pop(context);
@@ -8598,7 +8598,7 @@ class _ModernMusicTile extends ConsumerWidget {
             ),
             _BottomSheetOption(
               icon: Icons.playlist_add_check_rounded,
-              label: '添加到歌单',
+              label: context.l10n.musicContextMenuAddToPlaylist,
               isDark: isDark,
               onTap: () {
                 Navigator.pop(context);
@@ -8618,7 +8618,7 @@ class _ModernMusicTile extends ConsumerWidget {
     final currentIndex = ref.read(musicPlayerControllerProvider).currentIndex;
     ref.read(playQueueProvider.notifier).addNext(musicItem, currentIndex);
     if (context.mounted) {
-      context.showSuccessToast('已添加「${track.displayTitle}」到下一首播放');
+      context.showSuccessToast(context.l10n.musicAddToPlayNextToast(track.displayTitle));
     }
   }
 
@@ -8627,7 +8627,7 @@ class _ModernMusicTile extends ConsumerWidget {
     final musicItem = track.toMusicItem();
     ref.read(playQueueProvider.notifier).addToQueue(musicItem);
     if (context.mounted) {
-      context.showSuccessToast('已添加「${track.displayTitle}」到播放队列');
+      context.showSuccessToast(context.l10n.musicAddToQueueToast(track.displayTitle));
     }
   }
 
@@ -8638,7 +8638,7 @@ class _ModernMusicTile extends ConsumerWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isFavorite ? '已添加到我喜欢' : '已从我喜欢中移除'),
+          content: Text(isFavorite ? context.l10n.musicAddToFavoritesSuccess : context.l10n.musicRemoveFromFavoritesSuccess),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
         ),
@@ -8677,7 +8677,7 @@ class _ModernMusicTile extends ConsumerWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '添加到歌单',
+                    context.l10n.musicPlaylistAddToSheetTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -8693,7 +8693,7 @@ class _ModernMusicTile extends ConsumerWidget {
                       _showCreatePlaylistDialog(rootContext, ref);
                     },
                     icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('新建'),
+                    label: Text(context.l10n.musicPlaylistCreateNew),
                   ),
                 ],
               ),
@@ -8760,7 +8760,7 @@ class _ModernMusicTile extends ConsumerWidget {
                         ),
                       ),
                       subtitle: Text(
-                        '${playlist.trackCount} 首歌曲',
+                        context.l10n.musicPlaylistSongCountFormat(playlist.trackCount),
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -8823,7 +8823,7 @@ class _ModernMusicTile extends ConsumerWidget {
                   initialTracks: [track.path],
                 );
                 if (context.mounted && playlist != null) {
-                  context.showSuccessToast('已创建歌单「$name」并添加歌曲');
+                  context.showSuccessToast(context.l10n.musicPlaylistCreatedToast(name));
                 }
               }
             },
@@ -9261,7 +9261,7 @@ class _CompactMusicTile extends ConsumerWidget {
           children: [
             const SheetDragHandle(topPadding: 16, bottomPadding: 16),
             Text(
-              '添加到歌单',
+              context.l10n.musicPlaylistAddToSheetTitle,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -9335,7 +9335,7 @@ class _CompactMusicTile extends ConsumerWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
         title: Text(
-          '新建歌单',
+          context.l10n.musicPlaylistNewDialogTitle,
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
         ),
         content: TextField(
@@ -9398,7 +9398,7 @@ class _PlayAllButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => ElevatedButton.icon(
       onPressed: () => _playAll(context, ref),
       icon: const Icon(Icons.play_arrow_rounded, size: 20),
-      label: const Text('播放全部'),
+      label: Text(context.l10n.musicPlayAllButtonLabel),
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,

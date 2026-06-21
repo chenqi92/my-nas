@@ -5646,7 +5646,7 @@ class _VerticalPosterCardState extends ConsumerState<_VerticalPosterCard> {
                               child: Text(
                                 widget.metadata.seasonNumber != null
                                     ? 'S${widget.metadata.seasonNumber}'
-                                    : '剧集',
+                                    : context.l10n.videoPosterCardEpisodeLabel,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 9,
@@ -5955,7 +5955,7 @@ class _HorizontalVideoCardState extends ConsumerState<_HorizontalVideoCard> {
                                 hasProgress
                                     ? '${(progress.progressPercent * 100).toInt()}%'
                                     : (widget.metadata.runtime != null
-                                          ? '${widget.metadata.runtime}分钟'
+                                          ? context.l10n.videoPosterCardRuntimeMinutes(widget.metadata.runtime ?? 0)
                                           : ''),
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -6237,7 +6237,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
             padding: const EdgeInsets.only(right: 16),
             child: Center(
               child: Text(
-                '${filteredItems.length} 部',
+                context.l10n.videoCategoryMovieCount(filteredItems.length),
                 style: TextStyle(
                   fontSize: 14,
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -7141,11 +7141,11 @@ class _TvShowPosterCardState extends State<_TvShowPosterCard> {
     final episodeCount = widget.group.episodeCount;
 
     if (seasonCount > 1) {
-      return '$seasonCount季 $episodeCount集';
+      return context.l10n.videoTvShowSeriesInfoSeasonEpisode(seasonCount, episodeCount);
     } else if (seasonCount == 1) {
-      return '$episodeCount集';
+      return context.l10n.videoTvShowSeriesInfoEpisodeOnly(episodeCount);
     } else {
-      return '$episodeCount集';
+      return context.l10n.videoTvShowSeriesInfoEpisodeOnly(episodeCount);
     }
   }
 
@@ -7158,9 +7158,9 @@ class _TvShowPosterCardState extends State<_TvShowPosterCard> {
     final seasonCount = widget.group.seasonCount;
     final episodeCount = widget.group.episodeCount;
     if (seasonCount > 1) {
-      parts.add('$seasonCount季');
+      parts.add('$seasonCount${context.l10n.videoTvShowSeasonLabel}');
     }
-    parts.add('$episodeCount集');
+    parts.add('$episodeCount${context.l10n.videoTvShowEpisodeLabel}');
 
     return parts.join(' · ');
   }
@@ -8984,7 +8984,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
       appBar: AppBar(
         backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
         title: Text(
-          '$_totalCount 个${widget.title}',
+          context.l10n.videoOthersCategoryCountFormat(_totalCount),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: isDark ? Colors.white : Colors.black87,
@@ -9278,7 +9278,7 @@ class _MovieCollectionCardState extends State<_MovieCollectionCard> {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              '${collection.movieCount}部',
+                              context.l10n.videoCollectionMovieCountBadge(collection.movieCount),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -9508,7 +9508,7 @@ class _MovieCollectionGridCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${collection.movies.length} 部',
+                          context.l10n.videoCategoryMovieCount(collection.movies.length),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 11,
