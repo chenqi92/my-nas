@@ -12482,5 +12482,120 @@
   },
   "backgroundTaskPoolQueuedTaskCancelled": "Task cancelled: queue cleared",
   "musicNotificationChannelName": "Music Playback",
-  "musicNotificationChannelDescription": "Music playback control notification"
+  "musicNotificationChannelDescription": "Music playback control notification",
+  "playlistIoImportedPlaylistDefaultName": "Imported playlist",
+  "musicCoverCacheSaveFailed": "Failed to save cover, non-critical function",
+  "musicCoverCacheDeleteFileFailed": "Failed to delete file",
+  "musicCoverCacheQuotaFailed": "Failed to clean cache quota, non-critical function",
+  "musicCoverCacheBase64DecodeFailed": "Failed to decode Base64 cover",
+  "musicCoverCacheReadFailed": "Failed to read cover, non-critical function",
+  "musicCoverCacheDeleteFailed": "Failed to delete cover, non-critical function",
+  "musicCoverCacheSizeCalculationFailed": "Failed to calculate cache size, non-critical function",
+  "musicAudioHandlerNotificationChannelName": "Music Playback",
+  "musicAudioHandlerNotificationChannelDescription": "Music playback control notifications",
+  "musicBrowserFolderFavorites": "Favorites",
+  "musicBrowserFolderRecent": "Recent",
+  "musicBrowserFolderPlaylists": "Playlists",
+  "musicBrowserFolderArtists": "Artists",
+  "musicBrowserFolderAlbums": "Albums",
+  "musicBrowserTrackCount": "{count} songs",
+  "@musicBrowserTrackCount": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicAudioCacheItemName": "Music Cache {number}{extension}",
+  "@musicAudioCacheItemName": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "extension": {
+        "type": "String"
+      }
+    }
+  },
+  "musicScraperMiguRateLimitError": "Too many requests, please try again later",
+  "musicScraperMiguNetworkError": "Network connection failed: {errorType}",
+  "@musicScraperMiguNetworkError": {
+    "placeholders": {
+      "errorType": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicScraperMiguUnknownError": "Unknown error",
+  "kugouScraperRateLimitError": "Requests are too frequent, please try again later",
+  "kugouScraperNetworkError": "Network connection failed: {errorType}{errorDetail}",
+  "@kugouScraperNetworkError": {
+    "placeholders": {
+      "errorType": {
+        "type": "Object"
+      },
+      "errorDetail": {
+        "type": "String"
+      }
+    }
+  },
+  "kugouScraperUnknownError": "Unknown error ({errorType})",
+  "@kugouScraperUnknownError": {
+    "placeholders": {
+      "errorType": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicScraperKuwoRateLimitError": "Request too frequent, please try again later",
+  "musicScraperKuwoNetworkError": "Network connection failed: {errorType}",
+  "@musicScraperKuwoNetworkError": {
+    "placeholders": {
+      "errorType": {
+        "type": "String"
+      }
+    }
+  },
+  "musicScraperKuwoUnknownError": "Unknown error",
+  "qqMusicScraperParseResponseFailed": "Failed to parse response: {error}",
+  "@qqMusicScraperParseResponseFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "qqMusicScraperCookieInvalidOrExpired": "Cookie is invalid or expired",
+  "qqMusicScraperRateLimit": "Requests are too frequent, please try again later",
+  "qqMusicScraperNetworkError": "Network connection failed: {type}",
+  "@qqMusicScraperNetworkError": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "qqMusicScraperNetworkErrorWithDetails": "Network connection failed: {type} ({details})",
+  "@qqMusicScraperNetworkErrorWithDetails": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "details": {
+        "type": "String"
+      }
+    }
+  },
+  "qqMusicScraperUnknownError": "Unknown error ({type})",
+  "@qqMusicScraperUnknownError": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "musicBrainzAuthError": "Authentication failed",
+  "musicBrainzRateLimitError": "Requests too frequent, please try again later",
+  "musicBrainzNetworkError": "Network connection failed",
+  "musicBrainzGenericError": "Unknown error"
 }

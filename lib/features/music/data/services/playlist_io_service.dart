@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/duplicate_detector.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
@@ -84,7 +85,7 @@ class PlaylistIoService {
   /// 返回 `(name, [(originalPath, extInfTitle?, extInfArtist?)])`
   ({String name, List<_M3uTrack> tracks}) parseM3u8(String content) {
     final lines = content.split('\n');
-    var name = 'Imported playlist';
+    var name = appL10n.playlistIoImportedPlaylistDefaultName;
     final tracks = <_M3uTrack>[];
     String? pendingTitle;
     String? pendingArtist;
@@ -163,7 +164,7 @@ class PlaylistIoService {
       logger.w('PlaylistIo: JSON 格式不匹配，期待 my-nas-playlist');
       return null;
     }
-    final name = data['name'] as String? ?? 'Imported playlist';
+    final name = data['name'] as String? ?? appL10n.playlistIoImportedPlaylistDefaultName;
     final tracks = (data['tracks'] as List).cast<Map<dynamic, dynamic>>();
 
     await _db.init();

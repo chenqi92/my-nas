@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/data/services/cache_config_service.dart';
@@ -378,7 +379,7 @@ class MusicAudioCacheService {
           sourceId: 'music_audio_cache',
           sourcePath: info.file.path,
           mediaType: MediaType.music,
-          fileName: '音乐缓存 ${i + 1}${info.extension}',
+          fileName: appL10n.musicAudioCacheItemName(i + 1, info.extension),
           fileSize: info.stat.size,
           cachePath: info.file.path,
           cachedAt: info.stat.modified,

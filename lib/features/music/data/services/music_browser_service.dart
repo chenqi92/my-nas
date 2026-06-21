@@ -1,5 +1,6 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/data/services/music_favorites_service.dart';
 import 'package:my_nas/features/music/data/services/playlist_service.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
@@ -73,13 +74,13 @@ class MusicBrowserService {
 
   Future<MediaItem?> getMediaItem(String mediaId) async {
     if (mediaId == kMediaFavoritesId) {
-      return _folder(kMediaFavoritesId, '收藏');
+      return _folder(kMediaFavoritesId, appL10n.musicBrowserFolderFavorites);
     }
     if (mediaId == kMediaRecentId) {
-      return _folder(kMediaRecentId, '最近播放');
+      return _folder(kMediaRecentId, appL10n.musicBrowserFolderRecent);
     }
     if (mediaId == kMediaPlaylistsId) {
-      return _folder(kMediaPlaylistsId, '播放列表');
+      return _folder(kMediaPlaylistsId, appL10n.musicBrowserFolderPlaylists);
     }
     return null;
   }
@@ -212,11 +213,11 @@ class MusicBrowserService {
   // ============ 私有：构建子项 ============
 
   List<MediaItem> _rootChildren() => [
-        _folder(kMediaFavoritesId, '收藏'),
-        _folder(kMediaRecentId, '最近播放'),
-        _folder(kMediaArtistsId, '艺术家'),
-        _folder(kMediaAlbumsId, '专辑'),
-        _folder(kMediaPlaylistsId, '播放列表'),
+        _folder(kMediaFavoritesId, appL10n.musicBrowserFolderFavorites),
+        _folder(kMediaRecentId, appL10n.musicBrowserFolderRecent),
+        _folder(kMediaArtistsId, appL10n.musicBrowserFolderArtists),
+        _folder(kMediaAlbumsId, appL10n.musicBrowserFolderAlbums),
+        _folder(kMediaPlaylistsId, appL10n.musicBrowserFolderPlaylists),
       ];
 
   Future<List<MediaItem>> _favoriteChildren() async {
@@ -262,7 +263,7 @@ class MusicBrowserService {
         MediaItem(
           id: '$_kPlaylistPrefix${p.id}',
           title: p.name,
-          album: '${p.trackCount} 首',
+          album: appL10n.musicBrowserTrackCount(p.trackCount),
           playable: false,
           extras: const {'browsable': true},
         ),
@@ -332,7 +333,7 @@ class MusicBrowserService {
         MediaItem(
           id: '$_kArtistPrefix$a',
           title: a,
-          album: '${byArtist[a]} 首',
+          album: appL10n.musicBrowserTrackCount(byArtist[a] ?? 0),
           playable: false,
           extras: const {'browsable': true},
         ),
@@ -353,7 +354,7 @@ class MusicBrowserService {
         MediaItem(
           id: '$_kAlbumPrefix$a',
           title: a,
-          album: '${byAlbum[a]} 首',
+          album: appL10n.musicBrowserTrackCount(byAlbum[a] ?? 0),
           playable: false,
           extras: const {'browsable': true},
         ),

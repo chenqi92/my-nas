@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -76,7 +77,7 @@ class MusicCoverCacheService {
       await file.writeAsBytes(coverData);
       return path;
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '保存封面失败，非关键功能');
+      AppError.ignore(e, st, appL10n.musicCoverCacheSaveFailed);
       return null;
     }
   }
@@ -114,7 +115,7 @@ class MusicCoverCacheService {
           freedSize += fileSize;
           logger.d('MusicCoverCacheService: 清理旧封面 ${entry.key.path}');
         } on Exception catch (e, st) {
-          AppError.ignore(e, st, '单个文件删除失败');
+          AppError.ignore(e, st, appL10n.musicCoverCacheDeleteFileFailed);
         }
       }
 
@@ -125,7 +126,7 @@ class MusicCoverCacheService {
         );
       }
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '清理缓存配额失败，非关键功能');
+      AppError.ignore(e, st, appL10n.musicCoverCacheQuotaFailed);
     }
   }
 
@@ -138,7 +139,7 @@ class MusicCoverCacheService {
       final data = base64Decode(base64Data);
       return saveCover(uniqueKey, Uint8List.fromList(data));
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '解码 Base64 封面失败');
+      AppError.ignore(e, st, appL10n.musicCoverCacheBase64DecodeFailed);
       return null;
     }
   }
@@ -154,7 +155,7 @@ class MusicCoverCacheService {
         return await file.readAsBytes();
       }
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '读取封面失败，非关键功能');
+      AppError.ignore(e, st, appL10n.musicCoverCacheReadFailed);
     }
     return null;
   }
@@ -211,7 +212,7 @@ class MusicCoverCacheService {
         await file.delete();
       }
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '删除封面失败，非关键功能');
+      AppError.ignore(e, st, appL10n.musicCoverCacheDeleteFailed);
     }
   }
 
@@ -249,7 +250,7 @@ class MusicCoverCacheService {
         }
       }
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '计算缓存大小失败，非关键功能');
+      AppError.ignore(e, st, appL10n.musicCoverCacheSizeCalculationFailed);
     }
     return totalSize;
   }

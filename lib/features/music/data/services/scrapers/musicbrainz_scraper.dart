@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
@@ -428,7 +429,7 @@ class MusicBrainzScraper implements MusicScraper {
   MusicScraperException _handleDioError(DioException e) {
     if (e.response?.statusCode == 401) {
       return MusicScraperAuthException(
-        '认证失败',
+        appL10n.musicBrainzAuthError,
         source: type,
         cause: e,
       );
@@ -438,7 +439,7 @@ class MusicBrainzScraper implements MusicScraper {
         e.response?.headers.value('retry-after') ?? '',
       );
       return MusicScraperRateLimitException(
-        '请求过于频繁，请稍后再试',
+        appL10n.musicBrainzRateLimitError,
         source: type,
         cause: e,
         retryAfter: retryAfter,
@@ -448,13 +449,13 @@ class MusicBrainzScraper implements MusicScraper {
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {
       return MusicScraperNetworkException(
-        '网络连接失败',
+        appL10n.musicBrainzNetworkError,
         source: type,
         cause: e,
       );
     }
     return MusicScraperException(
-      e.message ?? '未知错误',
+      e.message ?? appL10n.musicBrainzGenericError,
       source: type,
       cause: e,
     );

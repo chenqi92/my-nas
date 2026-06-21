@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -417,7 +418,7 @@ class KuwoScraper implements MusicScraper {
 
     if (statusCode == 429) {
       return MusicScraperRateLimitException(
-        '请求过于频繁，请稍后再试',
+        appL10n.musicScraperKuwoRateLimitError,
         source: type,
         cause: e,
       );
@@ -427,14 +428,14 @@ class KuwoScraper implements MusicScraper {
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {
       return MusicScraperNetworkException(
-        '网络连接失败: ${e.type.name}',
+        appL10n.musicScraperKuwoNetworkError(e.type.name),
         source: type,
         cause: e,
       );
     }
 
     return MusicScraperException(
-      e.message ?? '未知错误',
+      e.message ?? appL10n.musicScraperKuwoUnknownError,
       source: type,
       cause: e,
     );

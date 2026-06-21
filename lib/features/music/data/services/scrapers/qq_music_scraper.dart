@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
@@ -137,7 +138,7 @@ class QQMusicScraper implements MusicScraper {
       throw _handleDioError(e);
     } on FormatException catch (e) {
       throw MusicScraperException(
-        '解析响应失败: $e',
+        appL10n.qqMusicScraperParseResponseFailed(e),
         source: type,
         cause: e,
       );
@@ -408,14 +409,14 @@ class QQMusicScraper implements MusicScraper {
 
     if (statusCode == 401 || statusCode == 403) {
       return MusicScraperAuthException(
-        'Cookie 无效或已过期',
+        appL10n.qqMusicScraperCookieInvalidOrExpired,
         source: type,
         cause: e,
       );
     }
     if (statusCode == 429) {
       return MusicScraperRateLimitException(
-        '请求过于频繁，请稍后再试',
+        appL10n.qqMusicScraperRateLimit,
         source: type,
         cause: e,
       );
@@ -426,7 +427,9 @@ class QQMusicScraper implements MusicScraper {
         e.type == DioExceptionType.connectionError) {
       final errorDetail = e.error?.toString() ?? '';
       return MusicScraperNetworkException(
-        '网络连接失败: ${e.type.name}${errorDetail.isNotEmpty ? " ($errorDetail)" : ""}',
+        errorDetail.isNotEmpty
+            ? appL10n.qqMusicScraperNetworkErrorWithDetails(e.type.name, errorDetail)
+            : appL10n.qqMusicScraperNetworkError(e.type.name),
         source: type,
         cause: e,
       );
@@ -447,7 +450,7 @@ class QQMusicScraper implements MusicScraper {
         }
       }
     } else {
-      errorMessage = e.message ?? e.error?.toString() ?? '未知错误 (${e.type.name})';
+      errorMessage = e.message ?? e.error?.toString() ?? appL10n.qqMusicScraperUnknownError(e.type.name);
     }
 
     return MusicScraperException(

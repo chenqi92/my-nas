@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import 'package:image/image.dart' as img;
 import 'package:just_audio/just_audio.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/audio_effects_service.dart';
 import 'package:my_nas/features/music/data/services/music_audio_handler_interface.dart';
@@ -883,11 +884,11 @@ class MusicAudioHandler extends BaseAudioHandler
 /// 在 main.dart 中调用
 Future<MusicAudioHandler> initAudioHandler() => AudioService.init(
       builder: MusicAudioHandler.new,
-      config: const AudioServiceConfig(
+      config: AudioServiceConfig(
       // Android 通知渠道配置
       androidNotificationChannelId: 'com.kkape.mynas.channel.audio',
-      androidNotificationChannelName: '音乐播放',
-      androidNotificationChannelDescription: '音乐播放控制通知',
+      androidNotificationChannelName: appL10n.musicAudioHandlerNotificationChannelName,
+      androidNotificationChannelDescription: appL10n.musicAudioHandlerNotificationChannelDescription,
       // Android 通知配置
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
