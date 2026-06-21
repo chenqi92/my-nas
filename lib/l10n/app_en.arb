@@ -11801,5 +11801,272 @@
         "type": "String"
       }
     }
+  },
+  "bgTaskNotificationChannelName": "Media Library Background Tasks",
+  "bgTaskNotificationChannelDesc": "Processing media library scan or scrape tasks in background",
+  "bgTaskNotificationStopButton": "Stop",
+  "bgTaskNotificationTitleVideoScrape": "Scraping video info",
+  "bgTaskNotificationTitleVideoScan": "Scanning media library",
+  "bgTaskDefaultMessageVideoScrape": "Fetching video metadata…",
+  "bgTaskDefaultMessageVideoScan": "Scanning video files…",
+  "ffmpegAudioTagFieldCover": "Cover",
+  "ffmpegAudioTagFieldTitle": "Title",
+  "ffmpegAudioTagFieldArtist": "Artist",
+  "ffmpegAudioTagFieldAlbum": "Album",
+  "ffmpegAudioTagFieldAlbumArtist": "Album Artist",
+  "ffmpegAudioTagFieldYear": "Year",
+  "ffmpegAudioTagFieldTrackNumber": "Track Number",
+  "ffmpegAudioTagFieldDiscNumber": "Disc Number",
+  "ffmpegAudioTagFieldGenre": "Genre",
+  "ffmpegAudioTagWriteFailedWithCode": "FFmpeg write failed: returnCode={code}",
+  "@ffmpegAudioTagWriteFailedWithCode": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "ffmpegAudioTagWriteException": "FFmpeg write exception: {exception}",
+  "@ffmpegAudioTagWriteException": {
+    "placeholders": {
+      "exception": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicTagWriterUnsupportedFormat": "Unsupported file format: {extension}",
+  "@musicTagWriterUnsupportedFormat": {
+    "placeholders": {
+      "extension": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicTagWriterNoDataToWrite": "No data to write",
+  "musicTagWriterWriteFailed": "Write failed: {error}",
+  "@musicTagWriterWriteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicTagWriterFlacWriteFailed": "FFmpeg FLAC write failed: {error}",
+  "@musicTagWriterFlacWriteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicTagWriterNcmDecryptFailed": "NCM file decryption failed",
+  "musicTagWriterConvertedFormat": "Converted to {format}",
+  "@musicTagWriterConvertedFormat": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "musicTagWriterNcmProcessFailed": "NCM processing failed: {error}",
+  "@musicTagWriterNcmProcessFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicTagFieldTitle": "Title",
+  "musicTagFieldArtist": "Artist",
+  "musicTagFieldAlbum": "Album",
+  "musicTagFieldTrackNumber": "Track Number",
+  "musicTagFieldYear": "Year",
+  "musicTagFieldGenre": "Genre",
+  "musicTagFieldLyrics": "Lyrics",
+  "musicTagFieldCover": "Cover",
+  "photoSaveStartingDownload": "Starting to download photo: {fileName}",
+  "@photoSaveStartingDownload": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSaveTempFilePath": "Temporary file path: {path}",
+  "@photoSaveTempFilePath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSaveHttpStatusCodeError": "Download failed: HTTP {statusCode}",
+  "@photoSaveHttpStatusCodeError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoSaveSaveToDesktopTitle": "Save Photo",
+  "photoSaveStreamDownloadStarting": "Starting to download photo from stream: {fileName}",
+  "@photoSaveStreamDownloadStarting": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSaveLocalPhotoCopyingStarting": "Starting to save local photo: {fileName}",
+  "@photoSaveLocalPhotoCopyingStarting": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSaveSmartDownloadUnsupportedUrlOrMissingFs": "Unsupported URL type or missing file system",
+  "photoSaveGalleryAccessDenied": "Gallery access permission required. Please grant access in settings.",
+  "photoSaveToGalleryFailedWithType": "Failed to save to gallery: {reason}",
+  "@photoSaveToGalleryFailedWithType": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "photoDioErrorNetwork": "Network error",
+  "photoSaveSharePhotoStarting": "Starting to share photo: {fileName}",
+  "@photoSaveSharePhotoStarting": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "photoShareDownloadCancelled": "Share download cancelled",
+  "photoShareDownloadFailed": "Download failed: {reason}",
+  "@photoShareDownloadFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "photoShareFromStreamStarting": "Starting to prepare sharing from stream: {fileName}",
+  "@photoShareFromStreamStarting": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSmartShareUnsupportedUrlOrMissingFs": "Unsupported URL type or missing file system",
+  "localAdapterDefaultHostname": "Local Device",
+  "mobileMusicInvalidSongId": "Invalid song ID: {id}",
+  "@mobileMusicInvalidSongId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMusicSongNotFound": "Song not found: {songId}",
+  "@mobileMusicSongNotFound": {
+    "placeholders": {
+      "songId": {
+        "type": "Object"
+      }
+    }
+  },
+  "mobileMusicFileNotFound": "File not found: {path}",
+  "@mobileMusicFileNotFound": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "mobileMusicUrlStreamUnsupported": "Music library does not support URL stream access",
+  "mobileMusicCreateDirectoryUnsupported": "Music library does not support creating directories",
+  "mobileMusicDeleteUnsupported": "Music library does not support delete operations",
+  "mobileMusicRenameUnsupported": "Music library does not support renaming",
+  "mobileMusicCopyUnsupported": "Music library does not support copying",
+  "mobileMusicMoveUnsupported": "Music library does not support moving",
+  "mobileMusicUploadUnsupported": "Music library does not support uploading",
+  "mobileMusicWriteUnsupported": "Music library does not support writing",
+  "nastoolAuthLoginSuccessButNoAuthInfo": "Login successful but no authentication info returned",
+  "nastoolAuthLoginFailed": "Login failed",
+  "nastoolAuthInvalidUsernamePassword": "Invalid username or password",
+  "nastoolAuthRequestFailed": "Request failed: {code}",
+  "@nastoolAuthRequestFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolAuthCannotConnectServer": "Cannot connect to server: {error}",
+  "@nastoolAuthCannotConnectServer": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nastoolAuthLoginException": "Login exception: {error}",
+  "@nastoolAuthLoginException": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nasFileSharePlatformNotSupported": "Share is not supported on this platform",
+  "nasFileShareTempFileFailed": "Failed to write temporary file",
+  "nasFileShareUnavailable": "System share is unavailable",
+  "aria2AdapterNotConnected": "Not connected to Aria2",
+  "bookReaderErrorFileTooLarge": "File too large ({sizeMB} MB)\nMaximum supported file size is {maxMB} MB\n\nPlease consider using Calibre to split or convert the file to a smaller format",
+  "@bookReaderErrorFileTooLarge": {
+    "placeholders": {
+      "sizeMB": {
+        "type": "String"
+      },
+      "maxMB": {
+        "type": "int"
+      }
+    }
+  },
+  "bookReaderErrorLoadFailed": "Failed to load: {error}",
+  "@bookReaderErrorLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "bookReaderErrorUnsupportedProtocol": "Unsupported protocol: {scheme}",
+  "@bookReaderErrorUnsupportedProtocol": {
+    "placeholders": {
+      "scheme": {
+        "type": "String"
+      }
+    }
+  },
+  "bookReaderErrorParseFailed": "Parse failed: {error}",
+  "@bookReaderErrorParseFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "bookEpubComicReaderErrorLoadFailed": "Failed to load comic: {error}",
+  "@bookEpubComicReaderErrorLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
   }
 }

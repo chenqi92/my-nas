@@ -461,7 +461,7 @@ $htmlContent
     // 编码为 ZIP 并写入文件
     final zipData = ZipEncoder().encode(archive);
     if (zipData == null) {
-      throw StateError('EPUB ZIP 编码失败');
+      throw StateError(appL10n.mobiEpubZipEncodingFailed);
     }
 
     await File(epubPath).writeAsBytes(zipData);

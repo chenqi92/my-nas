@@ -33,7 +33,8 @@ final pdfReaderProvider =
 sealed class PdfReaderState {}
 
 class PdfReaderLoading extends PdfReaderState {
-  PdfReaderLoading({this.message = '加载中...', this.progress = 0.0});
+  PdfReaderLoading({String? message, this.progress = 0.0})
+      : message = message ?? appL10n.pdfReaderLoadingMessage;
   final String message;
   final double progress; // 0.0 - 1.0
 }
@@ -125,7 +126,7 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
 
       if (cachedFile != null) {
         // 使用缓存文件
-        state = PdfReaderLoading(message: '使用缓存...');
+        state = PdfReaderLoading(message: appL10n.pdfReaderUsingCache);
         logger.i('PDF 使用缓存: ${cachedFile.path}');
         await _loadFromFile(cachedFile, startPage);
         return;
@@ -143,7 +144,7 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
       if (uri.scheme == 'file') {
         final localFile = File(uri.toFilePath());
         if (!await localFile.exists()) {
-          state = PdfReaderError('文件不存在');
+          state = PdfReaderError(appL10n.pdfReaderFileNotFound);
           return;
         }
         await _loadFromFile(localFile, startPage);
@@ -156,16 +157,16 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
         return;
       }
 
-      state = PdfReaderError('不支持的协议: ${uri.scheme}');
+      state = PdfReaderError(appL10n.pdfReaderUnsupportedProtocol(uri.scheme));
     } on Exception catch (e, stackTrace) {
       logger.e('加载 PDF 失败', e, stackTrace);
-      state = PdfReaderError('加载失败: $e');
+      state = PdfReaderError(appL10n.pdfReaderLoadFailedMessage(e));
     }
   }
 
   /// 从本地文件加载
   Future<void> _loadFromFile(File file, int startPage) async {
-    state = PdfReaderLoading(message: '解析中...');
+    state = PdfReaderLoading(message: appL10n.pdfReaderParsingMessage);
     final documentRef = PdfDocumentRefFile(file.path);
 
     try {
@@ -180,17 +181,17 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
       logger.i('PDF 加载完成（缓存）: ${book.name}, ${document.pages.length} 页');
     } on TimeoutException catch (e) {
       logger.e('PDF 解析超时', e);
-      state = PdfReaderError('PDF 解析超时，请重试');
+      state = PdfReaderError(appL10n.pdfReaderParseTimeoutMessage);
     } on Exception catch (e) {
       logger.e('PDF 解析失败', e);
-      state = PdfReaderError('PDF 解析失败: $e');
+      state = PdfReaderError(appL10n.pdfReaderParseFailedMessage(e));
     }
   }
 
   /// 从 NAS 加载 PDF
   /// 策略：边下载边显示，先加载前几页让用户可以开始阅读
   Future<void> _loadFromUrl(NasFileSystem fileSystem, int startPage) async {
-    state = PdfReaderLoading(message: '连接中...');
+    state = PdfReaderLoading(message: appL10n.pdfReaderConnectingMessage);
 
     try {
       logger.i('PDF 开始加载: ${book.path}');
@@ -254,7 +255,7 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
 
       // 如果还没有成功加载，使用完整数据
       if (documentRef == null || state is PdfReaderLoading) {
-        state = PdfReaderLoading(message: '解析中...');
+        state = PdfReaderLoading(message: appL10n.pdfReaderParsingMessage);
         documentRef = PdfDocumentRefData(bytes, sourceName: book.name);
         final document = await _waitForDocument(documentRef);
 
@@ -280,7 +281,7 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
       }
     } on Exception catch (e, stackTrace) {
       logger.e('PDF 加载失败', e, stackTrace);
-      state = PdfReaderError('加载失败: $e');
+      state = PdfReaderError(appL10n.pdfReaderLoadFailedMessage(e));
     }
   }
 
@@ -297,7 +298,7 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
 
   /// 从 HTTP URL 加载（无文件系统）
   Future<void> _loadFromHttpUrl(Uri uri, int startPage) async {
-    state = PdfReaderLoading(message: '流式加载中...');
+    state = PdfReaderLoading(message: appL10n.pdfReaderStreamingMessage);
 
     try {
       final documentRef = PdfDocumentRefUri(
@@ -317,10 +318,10 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
       logger.i('PDF HTTP 加载完成: ${book.name}, ${document.pages.length} 页');
     } on TimeoutException catch (e) {
       logger.e('PDF HTTP 加载超时', e);
-      state = PdfReaderError('PDF 加载超时，请重试');
+      state = PdfReaderError(appL10n.pdfReaderTimeoutMessage);
     } on Exception catch (e, stackTrace) {
       logger.e('PDF HTTP 加载失败', e, stackTrace);
-      state = PdfReaderError('加载失败: $e');
+      state = PdfReaderError(appL10n.pdfReaderLoadFailedMessage(e));
     }
   }
 
@@ -336,7 +337,7 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
     await listenable.load().timeout(
       const Duration(seconds: 30),
       onTimeout: () {
-        throw TimeoutException('PDF 解析超时，请重试');
+        throw TimeoutException(appL10n.pdfReaderParseTimeoutMessage);
       },
     );
 
@@ -350,10 +351,10 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
       if (error is Exception || error is Error) {
         throw error;
       }
-      throw Exception('PDF 加载失败: $error');
+      throw Exception(appL10n.pdfReaderLoadFailedMessage(error));
     }
 
-    throw StateError('PDF 加载失败：未知错误');
+    throw StateError(appL10n.pdfReaderLoadErrorUnknown);
   }
 
 

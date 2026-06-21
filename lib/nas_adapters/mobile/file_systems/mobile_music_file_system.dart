@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -325,12 +326,12 @@ class MobileMusicFileSystem implements NasFileSystem {
   Future<FileItem> getFileInfo(String path) async {
     final songId = int.tryParse(path.split('/').last);
     if (songId == null) {
-      throw Exception('Invalid song ID: $path');
+      throw Exception(appL10n.mobileMusicInvalidSongId(path));
     }
 
     final song = _songCache[songId];
     if (song == null) {
-      throw Exception('Song not found: $songId');
+      throw Exception(appL10n.mobileMusicSongNotFound(songId));
     }
 
     return _songToFileItem(song, path.substring(0, path.lastIndexOf('/')));
@@ -340,17 +341,17 @@ class MobileMusicFileSystem implements NasFileSystem {
   Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
     final songId = int.tryParse(path.split('/').last);
     if (songId == null) {
-      throw Exception('Invalid song ID: $path');
+      throw Exception(appL10n.mobileMusicInvalidSongId(path));
     }
 
     final song = _songCache[songId];
     if (song == null) {
-      throw Exception('Song not found: $songId');
+      throw Exception(appL10n.mobileMusicSongNotFound(songId));
     }
 
     final file = File(song.data);
     if (!await file.exists()) {
-      throw Exception('File not found: ${song.data}');
+      throw Exception(appL10n.mobileMusicFileNotFound(song.data));
     }
 
     if (range != null) {
@@ -367,12 +368,12 @@ class MobileMusicFileSystem implements NasFileSystem {
   Future<String> getFileUrl(String path, {Duration? expiry}) async {
     final songId = int.tryParse(path.split('/').last);
     if (songId == null) {
-      throw Exception('Invalid song ID: $path');
+      throw Exception(appL10n.mobileMusicInvalidSongId(path));
     }
 
     final song = _songCache[songId];
     if (song == null) {
-      throw Exception('Song not found: $songId');
+      throw Exception(appL10n.mobileMusicSongNotFound(songId));
     }
 
     return File(song.data).uri.toString();
@@ -393,7 +394,7 @@ class MobileMusicFileSystem implements NasFileSystem {
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) {
-    throw UnimplementedError('音乐库不支持 URL 流访问');
+    throw UnimplementedError(appL10n.mobileMusicUrlStreamUnsupported);
   }
 
   /// 获取专辑封面数据
@@ -423,27 +424,27 @@ class MobileMusicFileSystem implements NasFileSystem {
 
   @override
   Future<void> createDirectory(String path) async {
-    throw UnsupportedError('音乐库不支持创建目录');
+    throw UnsupportedError(appL10n.mobileMusicCreateDirectoryUnsupported);
   }
 
   @override
   Future<void> delete(String path) async {
-    throw UnsupportedError('音乐库不支持删除操作');
+    throw UnsupportedError(appL10n.mobileMusicDeleteUnsupported);
   }
 
   @override
   Future<void> rename(String oldPath, String newPath) async {
-    throw UnsupportedError('音乐库不支持重命名');
+    throw UnsupportedError(appL10n.mobileMusicRenameUnsupported);
   }
 
   @override
   Future<void> copy(String sourcePath, String destPath) async {
-    throw UnsupportedError('音乐库不支持复制');
+    throw UnsupportedError(appL10n.mobileMusicCopyUnsupported);
   }
 
   @override
   Future<void> move(String sourcePath, String destPath) async {
-    throw UnsupportedError('音乐库不支持移动');
+    throw UnsupportedError(appL10n.mobileMusicMoveUnsupported);
   }
 
   @override
@@ -453,12 +454,12 @@ class MobileMusicFileSystem implements NasFileSystem {
     String? fileName,
     void Function(int sent, int total)? onProgress,
   }) async {
-    throw UnsupportedError('音乐库不支持上传');
+    throw UnsupportedError(appL10n.mobileMusicUploadUnsupported);
   }
 
   @override
   Future<void> writeFile(String remotePath, List<int> data) async {
-    throw UnsupportedError('音乐库不支持写入');
+    throw UnsupportedError(appL10n.mobileMusicWriteUnsupported);
   }
 
   @override

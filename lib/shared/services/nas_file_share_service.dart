@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -37,7 +38,7 @@ class NasFileShareService {
     void Function(double progress)? onProgress,
   }) async {
     if (!canShare) {
-      return const NasFileShareResult.failure('当前平台不支持系统分享');
+      return NasFileShareResult.failure(appL10n.nasFileSharePlatformNotSupported);
     }
 
     File? tempFile;
@@ -71,7 +72,7 @@ class NasFileShareService {
       }
 
       if (!tempFile.existsSync()) {
-        return const NasFileShareResult.failure('临时文件写入失败');
+        return NasFileShareResult.failure(appL10n.nasFileShareTempFileFailed);
       }
 
       // 3. 调系统分享
@@ -88,7 +89,7 @@ class NasFileShareService {
         ShareResultStatus.success => const NasFileShareResult.success(),
         ShareResultStatus.dismissed => const NasFileShareResult.cancelled(),
         ShareResultStatus.unavailable =>
-          const NasFileShareResult.failure('系统分享不可用'),
+          NasFileShareResult.failure(appL10n.nasFileShareUnavailable),
       };
     } on Exception catch (e, st) {
       AppError.ignore(e, st, 'NasFileShareService.shareFromStream 失败');

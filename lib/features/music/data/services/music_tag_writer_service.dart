@@ -11,6 +11,7 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart'
         Picture,
         PictureType,
         updateMetadata;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/ffmpeg_audio_tag_service.dart';
 import 'package:my_nas/features/music/data/services/music_audio_cache_service.dart';
@@ -182,11 +183,11 @@ class MusicTagWriterService {
 
     final format = getFormat(file.path);
     if (format == null) {
-      return MusicTagWriteResult.failure('不支持的文件格式: ${p.extension(file.path)}');
+      return MusicTagWriteResult.failure(appL10n.musicTagWriterUnsupportedFormat(p.extension(file.path)));
     }
 
     if (tagData.isEmpty) {
-      return MusicTagWriteResult.failure('没有要写入的数据');
+      return MusicTagWriteResult.failure(appL10n.musicTagWriterNoDataToWrite);
     }
 
     try {
@@ -211,38 +212,38 @@ class MusicTagWriterService {
           final title = tagData.title;
           if (title != null && title.isNotEmpty) {
             metadata.setTitle(title);
-            updatedFields.add('标题');
+            updatedFields.add(appL10n.musicTagFieldTitle);
           }
           final artist = tagData.artist;
           if (artist != null && artist.isNotEmpty) {
             metadata.setArtist(artist);
-            updatedFields.add('艺术家');
+            updatedFields.add(appL10n.musicTagFieldArtist);
           }
           final album = tagData.album;
           if (album != null && album.isNotEmpty) {
             metadata.setAlbum(album);
-            updatedFields.add('专辑');
+            updatedFields.add(appL10n.musicTagFieldAlbum);
           }
           final trackNumber = tagData.trackNumber;
           if (trackNumber != null) {
             metadata.setTrackNumber(trackNumber);
-            updatedFields.add('曲目号');
+            updatedFields.add(appL10n.musicTagFieldTrackNumber);
           }
           final year = tagData.year;
           if (year != null) {
             metadata.setYear(DateTime(year));
-            updatedFields.add('年份');
+            updatedFields.add(appL10n.musicTagFieldYear);
           }
           final genre = tagData.genre;
           if (genre != null && genre.isNotEmpty) {
             final genres = genre.split(',').map((g) => g.trim()).toList();
             metadata.setGenres(genres);
-            updatedFields.add('流派');
+            updatedFields.add(appL10n.musicTagFieldGenre);
           }
           final lyrics = tagData.lyrics;
           if (lyrics != null && lyrics.isNotEmpty) {
             metadata.setLyrics(lyrics);
-            updatedFields.add('歌词');
+            updatedFields.add(appL10n.musicTagFieldLyrics);
           }
           final coverData = tagData.coverData;
           if (coverData != null && coverData.isNotEmpty) {
@@ -250,7 +251,7 @@ class MusicTagWriterService {
             metadata.setPictures([
               Picture(coverData, mimeType, PictureType.coverFront),
             ]);
-            updatedFields.add('封面');
+            updatedFields.add(appL10n.musicTagFieldCover);
           }
         });
       } on MetadataParserException {
@@ -267,7 +268,7 @@ class MusicTagWriterService {
       return MusicTagWriteResult.success(updatedFields);
     } on Exception catch (e, st) {
       logger.e('MusicTagWriterService: 写入失败', e, st);
-      return MusicTagWriteResult.failure('写入失败: $e');
+      return MusicTagWriteResult.failure(appL10n.musicTagWriterWriteFailed(e));
     }
   }
 
@@ -280,42 +281,42 @@ class MusicTagWriterService {
 
     if (tagData.title != null && tagData.title!.isNotEmpty) {
       metadata.songName = tagData.title;
-      updatedFields.add('标题');
+      updatedFields.add(appL10n.musicTagFieldTitle);
     }
     if (tagData.artist != null && tagData.artist!.isNotEmpty) {
       metadata.leadPerformer = tagData.artist;
-      updatedFields.add('艺术家');
+      updatedFields.add(appL10n.musicTagFieldArtist);
     }
     if (tagData.album != null && tagData.album!.isNotEmpty) {
       metadata.album = tagData.album;
-      updatedFields.add('专辑');
+      updatedFields.add(appL10n.musicTagFieldAlbum);
     }
     if (tagData.albumArtist != null && tagData.albumArtist!.isNotEmpty) {
       metadata.bandOrOrchestra = tagData.albumArtist;
     }
     if (tagData.trackNumber != null) {
       metadata.trackNumber = tagData.trackNumber;
-      updatedFields.add('曲目号');
+      updatedFields.add(appL10n.musicTagFieldTrackNumber);
     }
     if (tagData.year != null) {
       metadata.year = tagData.year;
-      updatedFields.add('年份');
+      updatedFields.add(appL10n.musicTagFieldYear);
     }
     if (tagData.genre != null && tagData.genre!.isNotEmpty) {
       final genres = tagData.genre!.split(',').map((g) => g.trim()).toList();
       metadata.genres = genres;
-      updatedFields.add('流派');
+      updatedFields.add(appL10n.musicTagFieldGenre);
     }
     if (tagData.lyrics != null && tagData.lyrics!.isNotEmpty) {
       metadata.lyric = tagData.lyrics;
-      updatedFields.add('歌词');
+      updatedFields.add(appL10n.musicTagFieldLyrics);
     }
     if (tagData.coverData != null && tagData.coverData!.isNotEmpty) {
       final mimeType = tagData.coverMimeType ?? 'image/jpeg';
       metadata.pictures = [
         Picture(tagData.coverData!, mimeType, PictureType.coverFront),
       ];
-      updatedFields.add('封面');
+      updatedFields.add(appL10n.musicTagFieldCover);
     }
 
     // 使用 Id3v4Writer 写入新标签
@@ -360,7 +361,7 @@ class MusicTagWriterService {
       }
     } on Exception catch (e, st) {
       logger.e('MusicTagWriterService: FFmpeg FLAC 写入失败', e, st);
-      return MusicTagWriteResult.failure('FFmpeg FLAC 写入失败: $e');
+      return MusicTagWriteResult.failure(appL10n.musicTagWriterFlacWriteFailed(e));
     }
   }
 
@@ -380,11 +381,11 @@ class MusicTagWriterService {
 
     final format = getFormat(remotePath);
     if (format == null) {
-      return MusicTagWriteResult.failure('不支持的文件格式: ${p.extension(remotePath)}');
+      return MusicTagWriteResult.failure(appL10n.musicTagWriterUnsupportedFormat(p.extension(remotePath)));
     }
 
     if (tagData.isEmpty) {
-      return MusicTagWriteResult.failure('没有要写入的数据');
+      return MusicTagWriteResult.failure(appL10n.musicTagWriterNoDataToWrite);
     }
 
     // NCM 文件需要特殊处理
@@ -437,7 +438,7 @@ class MusicTagWriterService {
       return result;
     } on Exception catch (e, st) {
       logger.e('MusicTagWriterService: NAS 文件标签写入失败', e, st);
-      return MusicTagWriteResult.failure('写入失败: $e');
+      return MusicTagWriteResult.failure(appL10n.musicTagWriterWriteFailed(e));
     } finally {
       // 清理临时文件
       if (tempFile != null) {
@@ -486,7 +487,7 @@ class MusicTagWriterService {
       final decryptResult = ncmService.decrypt(ncmData);
 
       if (decryptResult == null) {
-        return MusicTagWriteResult.failure('NCM 文件解密失败');
+        return MusicTagWriteResult.failure(appL10n.musicTagWriterNcmDecryptFailed);
       }
 
       // 确定输出格式
@@ -535,13 +536,13 @@ class MusicTagWriterService {
 
       final updatedFields = List<String>.from(writeResult.updatedFields);
       if (!updatedFields.contains('转换')) {
-        updatedFields.insert(0, '转换为 ${outputFormat.toUpperCase()}');
+        updatedFields.insert(0, appL10n.musicTagWriterConvertedFormat(outputFormat.toUpperCase()));
       }
 
       return MusicTagWriteResult.success(updatedFields);
     } on Exception catch (e, st) {
       logger.e('MusicTagWriterService: NCM 文件处理失败', e, st);
-      return MusicTagWriteResult.failure('NCM 处理失败: $e');
+      return MusicTagWriteResult.failure(appL10n.musicTagWriterNcmProcessFailed(e));
     } finally {
       // 清理临时文件
       for (final file in [tempNcmFile, tempAudioFile]) {

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// MoviePilot API 客户端
 ///
@@ -201,33 +202,33 @@ class MoviePilotApi {
       } else if (method == 'DELETE') {
         response = await client.delete(url, headers: headers);
       } else {
-        throw MoviePilotApiException('不支持的 HTTP 方法: $method');
+        throw MoviePilotApiException(appL10n.moviepilotApiUnsupportedMethod(method));
       }
 
       _log('_makeRequest: 响应 ${response.statusCode}');
 
       if (response.statusCode == 401 || response.statusCode == 403) {
         _isAuthenticated = false;
-        throw const MoviePilotApiException('认证失败，请检查 API Token');
+        throw MoviePilotApiException(appL10n.moviepilotApiAuthFailed);
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         _log('_makeRequest: 错误响应 body=${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
         throw MoviePilotApiException(
-          '请求失败: ${response.statusCode} ${response.reasonPhrase}',
+          appL10n.moviepilotApiRequestFailed(response.statusCode, response.reasonPhrase ?? ''),
         );
       }
 
       return response;
     } on SocketException catch (e) {
       _log('_makeRequest: SocketException - ${e.message}');
-      throw MoviePilotApiException('无法连接到 MoviePilot: ${e.message}');
+      throw MoviePilotApiException(appL10n.moviepilotApiConnectionError(e.message));
     } on http.ClientException catch (e) {
       _log('_makeRequest: ClientException - ${e.message}');
-      throw MoviePilotApiException('网络错误: ${e.message}');
+      throw MoviePilotApiException(appL10n.moviepilotApiNetworkError(e.message));
     } on FormatException catch (e) {
       _log('_makeRequest: FormatException - $e');
-      throw MoviePilotApiException('URL格式错误: $e');
+      throw MoviePilotApiException(appL10n.moviepilotApiUrlFormatError(e));
     }
   }
 

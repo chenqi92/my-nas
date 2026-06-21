@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_tag_writer_service.dart';
 import 'package:path/path.dart' as p;
@@ -87,56 +88,56 @@ class FfmpegAudioTagService {
             '-disposition:v:0',
             'attached_pic',
           ]); // 标记为附加图片
-        updatedFields.add('封面');
+        updatedFields.add(appL10n.ffmpegAudioTagFieldCover);
       }
 
       // 添加元数据
       final title = tagData.title;
       if (title != null && title.isNotEmpty) {
         args.addAll(['-metadata', 'title=$title']);
-        updatedFields.add('标题');
+        updatedFields.add(appL10n.ffmpegAudioTagFieldTitle);
       }
 
       final artist = tagData.artist;
       if (artist != null && artist.isNotEmpty) {
         args.addAll(['-metadata', 'artist=$artist']);
-        updatedFields.add('艺术家');
+        updatedFields.add(appL10n.ffmpegAudioTagFieldArtist);
       }
 
       final album = tagData.album;
       if (album != null && album.isNotEmpty) {
         args.addAll(['-metadata', 'album=$album']);
-        updatedFields.add('专辑');
+        updatedFields.add(appL10n.ffmpegAudioTagFieldAlbum);
       }
 
       final albumArtist = tagData.albumArtist;
       if (albumArtist != null && albumArtist.isNotEmpty) {
         args.addAll(['-metadata', 'album_artist=$albumArtist']);
-        updatedFields.add('专辑艺术家');
+        updatedFields.add(appL10n.ffmpegAudioTagFieldAlbumArtist);
       }
 
       final year = tagData.year;
       if (year != null) {
         args.addAll(['-metadata', 'date=$year']);
-        updatedFields.add('年份');
+        updatedFields.add(appL10n.ffmpegAudioTagFieldYear);
       }
 
       final trackNumber = tagData.trackNumber;
       if (trackNumber != null) {
         args.addAll(['-metadata', 'track=$trackNumber']);
-        updatedFields.add('曲目号');
+        updatedFields.add(appL10n.ffmpegAudioTagFieldTrackNumber);
       }
 
       final discNumber = tagData.discNumber;
       if (discNumber != null) {
         args.addAll(['-metadata', 'disc=$discNumber']);
-        updatedFields.add('碟号');
+        updatedFields.add(appL10n.ffmpegAudioTagFieldDiscNumber);
       }
 
       final genre = tagData.genre;
       if (genre != null && genre.isNotEmpty) {
         args.addAll(['-metadata', 'genre=$genre']);
-        updatedFields.add('流派');
+        updatedFields.add(appL10n.ffmpegAudioTagFieldGenre);
       }
 
       // 注意：FLAC 的 Vorbis Comment 不直接支持歌词字段
@@ -175,11 +176,12 @@ class FfmpegAudioTagService {
           await tempOutput.delete();
         }
 
-        return MusicTagWriteResult.failure('FFmpeg 写入失败: returnCode=$returnCode');
+        return MusicTagWriteResult.failure(
+            appL10n.ffmpegAudioTagWriteFailedWithCode('$returnCode'));
       }
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'FfmpegAudioTagService.writeFlacTags');
-      return MusicTagWriteResult.failure('FFmpeg 写入异常: $e');
+      return MusicTagWriteResult.failure(appL10n.ffmpegAudioTagWriteException(e));
     }
   }
 

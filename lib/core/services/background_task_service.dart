@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 后台任务类型
@@ -127,8 +128,8 @@ class BackgroundTaskService {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'mynas_background_task',
-        channelName: '媒体库后台任务',
-        channelDescription: '正在后台处理媒体库扫描或刮削任务',
+        channelName: appL10n.bgTaskNotificationChannelName,
+        channelDescription: appL10n.bgTaskNotificationChannelDesc,
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         onlyAlertOnce: true,
@@ -224,7 +225,7 @@ class BackgroundTaskService {
       notificationText: text,
       notificationIcon: null, // 使用默认图标
       notificationButtons: [
-        const NotificationButton(id: 'stop', text: '停止'),
+        NotificationButton(id: 'stop', text: appL10n.bgTaskNotificationStopButton),
       ],
       callback: startBackgroundTaskCallback,
     );
@@ -324,18 +325,18 @@ class BackgroundTaskService {
   String _getNotificationTitle(BackgroundTaskType taskType) {
     switch (taskType) {
       case BackgroundTaskType.videoScrape:
-        return '正在刮削视频信息';
+        return appL10n.bgTaskNotificationTitleVideoScrape;
       case BackgroundTaskType.videoScan:
-        return '正在扫描媒体库';
+        return appL10n.bgTaskNotificationTitleVideoScan;
     }
   }
 
   String _getDefaultMessage(BackgroundTaskType taskType) {
     switch (taskType) {
       case BackgroundTaskType.videoScrape:
-        return '正在获取视频元数据...';
+        return appL10n.bgTaskDefaultMessageVideoScrape;
       case BackgroundTaskType.videoScan:
-        return '正在扫描视频文件...';
+        return appL10n.bgTaskDefaultMessageVideoScan;
     }
   }
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// NASTool 认证管理器
@@ -128,24 +129,24 @@ class NasToolAuth {
             );
           }
 
-          return const NasToolLoginResult.failure('登录成功但未返回认证信息');
+          return NasToolLoginResult.failure(appL10n.nastoolAuthLoginSuccessButNoAuthInfo);
         } else {
           final message = data['message'] as String? ??
                           data['msg'] as String? ??
-                          '登录失败';
+                          appL10n.nastoolAuthLoginFailed;
           return NasToolLoginResult.failure(message);
         }
       } else if (response.statusCode == 401) {
-        return const NasToolLoginResult.failure('用户名或密码错误');
+        return NasToolLoginResult.failure(appL10n.nastoolAuthInvalidUsernamePassword);
       } else {
         return NasToolLoginResult.failure(
-          '请求失败: ${response.statusCode}',
+          appL10n.nastoolAuthRequestFailed(response.statusCode),
         );
       }
     } on SocketException catch (e) {
-      return NasToolLoginResult.failure('无法连接服务器: ${e.message}');
+      return NasToolLoginResult.failure(appL10n.nastoolAuthCannotConnectServer(e.message));
     } on Exception catch (e) {
-      return NasToolLoginResult.failure('登录异常: $e');
+      return NasToolLoginResult.failure(appL10n.nastoolAuthLoginException(e));
     }
   }
 

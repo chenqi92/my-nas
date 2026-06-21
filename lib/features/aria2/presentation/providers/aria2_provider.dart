@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/aria2/api/aria2_api.dart';
@@ -329,7 +330,7 @@ class Aria2Actions {
   }) async {
     final adapter = _adapter;
     if (adapter == null) {
-      throw Exception('未连接到 Aria2');
+      throw Exception(appL10n.aria2AdapterNotConnected);
     }
 
     final gid = await adapter.addUri(

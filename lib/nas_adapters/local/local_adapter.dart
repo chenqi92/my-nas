@@ -164,7 +164,7 @@ class LocalAdapter implements NasAdapter {
     try {
       return Platform.localHostname;
     } on Exception catch (_) {
-      return '本地设备';
+      return appL10n.localAdapterDefaultHostname;
     }
   }
 

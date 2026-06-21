@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/epub_image_extractor.dart';
 import 'package:my_nas/features/book/domain/entities/book_item.dart';
@@ -105,7 +106,7 @@ class EpubComicReaderNotifier extends StateNotifier<EpubComicReaderState> {
       logger.e('EpubComicReader: 加载失败', e, st);
       state = state.copyWith(
         isLoading: false,
-        error: '加载失败: $e',
+        error: appL10n.bookEpubComicReaderErrorLoadFailed(e),
       );
     }
   }

@@ -1,5 +1,6 @@
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
@@ -88,7 +89,7 @@ class QnapAdapter implements NasAdapter {
     bool rememberDevice = false,
   }) async {
     if (_config == null) {
-      return const ConnectionFailure(error: '请先调用 connect');
+      return ConnectionFailure(error: appL10n.qnapAdapterConnectNotCalledError);
     }
 
     final authResult = await _api.login(
@@ -101,7 +102,7 @@ class QnapAdapter implements NasAdapter {
     return switch (authResult) {
       QnapAuthSuccess(:final sid) => await _handleLoginSuccess(sid),
       QnapAuthFailure(:final error) => ConnectionFailure(error: error),
-      QnapAuthRequires2FA() => const ConnectionFailure(error: '二次验证失败'),
+      QnapAuthRequires2FA() => ConnectionFailure(error: appL10n.qnapAdapter2FAVerificationFailed),
     };
   }
 
@@ -150,7 +151,7 @@ class QnapAdapter implements NasAdapter {
       await _api.getSystemInfo().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
-          throw Exception('连接健康检查超时');
+          throw Exception(appL10n.qnapAdapterHealthCheckTimeout);
         },
       );
       logger.d('QnapAdapter: 连接健康检查 - 正常');
@@ -165,7 +166,7 @@ class QnapAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected) {
-      throw StateError('未连接到 NAS');
+      throw StateError(appL10n.qnapAdapterNotConnectedError);
     }
     return _fileSystem;
   }

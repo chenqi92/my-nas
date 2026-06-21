@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
@@ -123,9 +124,10 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
       // 检查文件大小
       if (book.size > _maxFileSizeBytes) {
         state = TxtReaderError(
-          '文件过大 (${(book.size / 1024 / 1024).toStringAsFixed(1)} MB)\n'
-          '最大支持 ${_maxFileSizeBytes ~/ 1024 ~/ 1024} MB 的文件\n\n'
-          '建议使用 Calibre 将文件分割或转换为更小的格式',
+          appL10n.bookReaderErrorFileTooLarge(
+            (book.size / 1024 / 1024).toStringAsFixed(1),
+            _maxFileSizeBytes ~/ 1024 ~/ 1024,
+          ),
         );
         return;
       }
@@ -141,11 +143,11 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
           content = await _loadTxtBook();
         case BookFormat.epub:
           // EPUB/MOBI/AZW3 使用专门的 EbookReaderPage
-          state = TxtReaderError('请使用电子书阅读器');
+          state = TxtReaderError(appL10n.bookReaderErrorUseEbookReader);
           return;
         case BookFormat.pdf:
           // PDF 使用专门的 PdfReaderPage
-          state = TxtReaderError('请使用 PDF 阅读器');
+          state = TxtReaderError(appL10n.bookReaderErrorUsePdfReader);
           return;
         case BookFormat.mobi:
         case BookFormat.azw3:
@@ -158,13 +160,13 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
           content = result.content ?? '';
           htmlContent = result.htmlContent;
         case BookFormat.unknown:
-          state = TxtReaderError('未知的电子书格式');
+          state = TxtReaderError(appL10n.bookReaderErrorUnknownFormat);
           return;
       }
 
       // 检查内容是否为空
       if (content.isEmpty && (htmlContent == null || htmlContent.isEmpty)) {
-        state = TxtReaderError('文件内容为空或无法解析');
+        state = TxtReaderError(appL10n.bookReaderErrorEmptyContent);
         return;
       }
 
@@ -186,9 +188,9 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
       // 检查是否是内存相关错误
       final errorMsg = e.toString().toLowerCase();
       if (errorMsg.contains('memory') || errorMsg.contains('heap')) {
-        state = TxtReaderError('内存不足，文件可能过大\n请尝试加载较小的文件');
+        state = TxtReaderError(appL10n.bookReaderErrorMemoryInsufficient);
       } else {
-        state = TxtReaderError('加载失败: ${e.toString().replaceAll('Exception: ', '')}');
+        state = TxtReaderError(appL10n.bookReaderErrorLoadFailed(e.toString().replaceAll('Exception: ', '')));
       }
     }
   }
@@ -216,25 +218,25 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
     // 优先使用流式加载（支持 SMB/WebDAV 等协议）
     final fileSystem = _getFileSystem();
     if (fileSystem != null) {
-      state = TxtReaderLoading(message: '流式加载中...');
+      state = TxtReaderLoading(message: appL10n.bookReaderLoadingStreaming);
       final stream = await fileSystem.getFileStream(book.path);
       bytes = await _readStreamBytes(stream);
     } else if (uri.scheme == 'file') {
       // 本地文件
       final localFile = File(uri.toFilePath());
       if (!await localFile.exists()) {
-        throw Exception('文件不存在');
+        throw Exception(appL10n.bookReaderErrorFileNotFound);
       }
       bytes = await localFile.readAsBytes();
     } else if (uri.scheme == 'http' || uri.scheme == 'https') {
       // HTTP 远程文件
       final response = await InsecureHttpClient.get(uri);
       if (response.statusCode != 200) {
-        throw Exception('加载失败: ${response.statusCode}');
+        throw Exception(appL10n.bookReaderErrorLoadFailed(response.statusCode));
       }
       bytes = response.bodyBytes;
     } else {
-      throw Exception('不支持的协议: ${uri.scheme}');
+      throw Exception(appL10n.bookReaderErrorUnsupportedProtocol(uri.scheme));
     }
 
     // 尝试检测编码
@@ -262,7 +264,7 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
     );
 
     if (cachedFile != null) {
-      state = TxtReaderLoading(message: '使用缓存...');
+      state = TxtReaderLoading(message: appL10n.bookReaderLoadingCache);
       bytes = await cachedFile.readAsBytes();
       logger.i('MOBI 使用缓存: ${cachedFile.path}');
     } else {
@@ -271,39 +273,39 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
 
       final fileSystem = _getFileSystem();
       if (fileSystem != null) {
-        state = TxtReaderLoading(message: '加载文件中...');
+        state = TxtReaderLoading(message: appL10n.bookReaderLoadingFile);
         final stream = await fileSystem.getFileStream(book.path);
         bytes = await _readStreamBytes(stream);
       } else if (uri.scheme == 'file') {
         final localFile = File(uri.toFilePath());
         if (!await localFile.exists()) {
-          throw Exception('文件不存在');
+          throw Exception(appL10n.bookReaderErrorFileNotFound);
         }
         bytes = await localFile.readAsBytes();
       } else if (uri.scheme == 'http' || uri.scheme == 'https') {
-        state = TxtReaderLoading(message: '下载中...');
+        state = TxtReaderLoading(message: appL10n.bookReaderLoadingDownload);
         final response = await InsecureHttpClient.get(uri);
         if (response.statusCode != 200) {
-          throw Exception('加载失败: ${response.statusCode}');
+          throw Exception(appL10n.bookReaderErrorLoadFailed(response.statusCode));
         }
         bytes = response.bodyBytes;
       } else {
-        throw Exception('不支持的协议: ${uri.scheme}');
+        throw Exception(appL10n.bookReaderErrorUnsupportedProtocol(uri.scheme));
       }
 
       // 保存到缓存
-      state = TxtReaderLoading(message: '缓存文件...');
+      state = TxtReaderLoading(message: appL10n.bookReaderLoadingCachingFile);
       await _cacheService.saveToCache(book.sourceId, book.path, bytes);
     }
 
     // 使用 MOBI 解析器
-    state = TxtReaderLoading(message: '解析中...');
+    state = TxtReaderLoading(message: appL10n.bookReaderLoadingParsing);
     final parser = MobiParserService();
     final fileName = path.basename(book.path);
     final result = await parser.parse(bytes, fileName);
 
     if (!result.success) {
-      throw Exception(result.error ?? '解析失败');
+      throw Exception(result.error ?? appL10n.bookReaderErrorParseFailed(result.error ?? 'unknown'));
     }
 
     return result;
@@ -1070,8 +1072,8 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
       );
     });
 
-    return const LottieLoading.book(
-      message: '正在打开电子书阅读器...',
+    return LottieLoading.book(
+      message: appL10n.bookReaderOpeningEbookReader,
     );
   }
 

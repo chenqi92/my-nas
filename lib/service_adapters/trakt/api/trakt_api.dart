@@ -154,7 +154,7 @@ class TraktApi {
     } on SocketException catch (e) {
       throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
-      throw TraktApiException('网络错误: ${e.message}');
+      throw TraktApiException(appL10n.traktApiNetworkError(e.message));
     }
   }
 
@@ -195,7 +195,7 @@ class TraktApi {
     } on SocketException catch (e) {
       throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
-      throw TraktApiException('网络错误: ${e.message}');
+      throw TraktApiException(appL10n.traktApiNetworkError(e.message));
     }
   }
 
@@ -240,7 +240,7 @@ class TraktApi {
     } on SocketException catch (e) {
       throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
-      throw TraktApiException('网络错误: ${e.message}');
+      throw TraktApiException(appL10n.traktApiNetworkError(e.message));
     }
   }
 
@@ -672,7 +672,7 @@ class TraktApi {
     } on SocketException catch (e) {
       throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
-      throw TraktApiException('网络错误: ${e.message}');
+      throw TraktApiException(appL10n.traktApiNetworkError(e.message));
     }
   }
 
