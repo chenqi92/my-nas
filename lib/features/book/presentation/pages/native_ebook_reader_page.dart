@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
@@ -34,7 +35,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 sealed class NativeEbookReaderState {}
 
 class NativeEbookLoading extends NativeEbookReaderState {
-  NativeEbookLoading({this.message = '加载中...'});
+  NativeEbookLoading({String? message})
+      : message = message ?? appL10n.nativeEbookLoadingDefault;
+
   final String message;
 }
 
@@ -78,34 +81,34 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
     try {
       await _cacheService.init();
 
-      state = NativeEbookLoading(message: '获取文件...');
+      state = NativeEbookLoading(message: appL10n.nativeEbookLoadingGettingFile);
 
       // 获取或下载文件
       var epubFile = await _getOrDownloadFile();
       if (epubFile == null) {
-        state = NativeEbookError('无法获取文件');
+        state = NativeEbookError(appL10n.nativeEbookErrorUnableToGetFile);
         return;
       }
 
       // 如果是 MOBI/AZW3，需要先转换为 EPUB
       if (book.format == BookFormat.mobi || book.format == BookFormat.azw3) {
-        state = NativeEbookLoading(message: '转换格式...');
+        state = NativeEbookLoading(message: appL10n.nativeEbookLoadingConvertingFormat);
         final bytes = await epubFile.readAsBytes();
         final result = await MobiParserService().parse(bytes, book.name);
         if (result.epubPath != null) {
           epubFile = File(result.epubPath!);
         } else {
-          state = NativeEbookError('转换失败');
+          state = NativeEbookError(appL10n.nativeEbookErrorConversionFailed);
           return;
         }
       }
 
       // 解析 EPUB
-      state = NativeEbookLoading(message: '解析内容...');
+      state = NativeEbookLoading(message: appL10n.nativeEbookLoadingParsingContent);
       final parsedBook = await _parser.parse(epubFile);
 
       // 分页
-      state = NativeEbookLoading(message: '分页中...');
+      state = NativeEbookLoading(message: appL10n.nativeEbookLoadingPaginating);
       final htmlContents = parsedBook.chapters.map((c) => c.htmlContent).toList();
 
       // 使用默认视口大小进行分页（实际大小会在 build 时调整）
@@ -128,7 +131,7 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
       logger.i('NativeEbookReader: 加载完成 ${parsedBook.title}, ${result.totalPages} 页');
     } on Exception catch (e, st) {
       logger.e('NativeEbookReader: 加载失败', e, st);
-      state = NativeEbookError('加载失败: $e');
+      state = NativeEbookError(appL10n.nativeEbookErrorLoadFailed(e));
     }
   }
 
@@ -152,7 +155,7 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
     // 从 NAS 下载
     final fileSystem = _getFileSystem();
     if (fileSystem != null) {
-      state = NativeEbookLoading(message: '下载中...');
+      state = NativeEbookLoading(message: appL10n.nativeEbookLoadingDownloading);
       final savedFile = await _cacheService.saveToCacheFromStream(
         book.sourceId,
         book.path,

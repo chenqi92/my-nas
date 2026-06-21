@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// 音色性别
 enum VoiceGender {
@@ -46,7 +47,7 @@ class TTSVoice {
     // 生成友好显示名称
     var displayName = name;
     if (name.isEmpty) {
-      displayName = locale.contains('zh') ? '默认中文' : '默认音色';
+      displayName = locale.contains('zh') ? appL10n.ttsVoiceDefaultChinese : appL10n.ttsVoiceDefaultVoice;
     } else {
       // 简化显示名称
       displayName = _simplifyVoiceName(name, locale);

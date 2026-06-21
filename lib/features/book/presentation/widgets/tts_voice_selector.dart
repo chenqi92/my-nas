@@ -5,6 +5,7 @@ import 'package:my_nas/features/book/data/services/tts/edge_tts_voices.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_voice.dart';
 import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 /// 音色选择器
@@ -196,13 +197,13 @@ class _TTSVoiceSelectorState extends ConsumerState<TTSVoiceSelector> {
           ),
         ),
         title: Text(
-          voice.displayName,
+          localizeFormText(context, voice.displayName),
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: isSelected ? FontWeight.w600 : null,
           ),
         ),
         subtitle: Text(
-          voice.gender.label,
+          localizeFormText(context, voice.gender.label),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

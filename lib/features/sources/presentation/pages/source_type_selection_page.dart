@@ -59,7 +59,7 @@ class SourceTypeSelectionPage extends ConsumerWidget {
         children: [
           // 存储类源
           if (_hasStorageCategories) ...[
-            _buildSectionHeader(context, '存储类源'),
+            _buildSectionHeader(context, context.l10n.sourceTypeSelectionStorageSection),
             if (_shouldShowCategory(SourceCategory.nasDevices))
               _buildCategorySection(
                 context,
@@ -94,7 +94,7 @@ class SourceTypeSelectionPage extends ConsumerWidget {
 
           // 服务类源
           if (_hasServiceCategories) ...[
-            _buildSectionHeader(context, '服务类源'),
+            _buildSectionHeader(context, context.l10n.sourceTypeSelectionServiceSection),
             if (_shouldShowCategory(SourceCategory.downloadTools))
               _buildCategorySection(
                 context,

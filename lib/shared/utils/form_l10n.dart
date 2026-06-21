@@ -364,6 +364,10 @@ String localizeFormText(BuildContext context, String? text) {
     '扬声器' => l.enl_1c59faa2,
     '未知' => l.enl_1622dc9b,
     '启用' => l.enl_7854b52a,
+    '男声' => l.ttsl_ed7a1146,
+    '女声' => l.ttsl_2c0e7722,
+    '中性' => l.ttsl_62731aaf,
+    '系统默认' => l.ttsl_a52f5c20,
     _ => text,
   };
 }

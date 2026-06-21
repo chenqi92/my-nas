@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_service.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/presentation/providers/tts_provider.dart';
@@ -452,18 +453,18 @@ class _VoiceSelectionPopup extends ConsumerWidget {
   ) {
     // Edge TTS 中文音色列表
     final voices = [
-      ('zh-CN-XiaoxiaoNeural', '晓晓（女声·温柔）'),
-      ('zh-CN-YunxiNeural', '云希（男声·活泼）'),
-      ('zh-CN-XiaoyiNeural', '晓依（女声·亲切）'),
-      ('zh-CN-YunjianNeural', '云健（男声·沉稳）'),
-      ('zh-CN-XiaochenNeural', '晓辰（女声·新闻）'),
-      ('zh-CN-YunyangNeural', '云扬（男声·新闻）'),
-      ('zh-CN-XiaoshuangNeural', '晓双（女声·童声）'),
-      ('zh-CN-YunxiaNeural', '云夏（男声·童声）'),
-      ('zh-TW-HsiaoChenNeural', '曉臻（台湾女声）'),
-      ('zh-TW-YunJheNeural', '雲哲（台湾男声）'),
-      ('zh-HK-HiuGaaiNeural', '曉佳（粤语女声）'),
-      ('zh-HK-WanLungNeural', '雲龍（粤语男声）'),
+      ('zh-CN-XiaoxiaoNeural', appL10n.bookTtsEdgeVoiceXiaoxiao),
+      ('zh-CN-YunxiNeural', appL10n.bookTtsEdgeVoiceYunxi),
+      ('zh-CN-XiaoyiNeural', appL10n.bookTtsEdgeVoiceXiaoyi),
+      ('zh-CN-YunjianNeural', appL10n.bookTtsEdgeVoiceYunjian),
+      ('zh-CN-XiaochenNeural', appL10n.bookTtsEdgeVoiceXiaochen),
+      ('zh-CN-YunyangNeural', appL10n.bookTtsEdgeVoiceYunyang),
+      ('zh-CN-XiaoshuangNeural', appL10n.bookTtsEdgeVoiceXiaoshuang),
+      ('zh-CN-YunxiaNeural', appL10n.bookTtsEdgeVoiceYunxia),
+      ('zh-TW-HsiaoChenNeural', appL10n.bookTtsEdgeVoiceHsiaoChen),
+      ('zh-TW-YunJheNeural', appL10n.bookTtsEdgeVoiceYunJhe),
+      ('zh-HK-HiuGaaiNeural', appL10n.bookTtsEdgeVoiceHiuGaai),
+      ('zh-HK-WanLungNeural', appL10n.bookTtsEdgeVoiceWanLung),
     ];
 
     return ListView.builder(

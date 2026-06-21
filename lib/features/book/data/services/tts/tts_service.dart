@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/tts/edge_tts_client.dart';
 import 'package:my_nas/features/book/data/services/tts/edge_tts_voices.dart';
@@ -403,7 +404,7 @@ class TTSService {
   Future<void> previewVoice(TTSVoice voice) async {
     final previousVoice = _currentVoice;
     await _tts.setVoice(voice.toFlutterTtsVoice());
-    await _tts.speak('你好，这是${voice.displayName}的试听效果。');
+    await _tts.speak(appL10n.ttsPreviewVoiceGreeting(voice.displayName));
 
     // 恢复之前的音色
     if (previousVoice != null) {

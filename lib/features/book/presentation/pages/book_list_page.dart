@@ -11,6 +11,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/media_scan_progress_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/book_database_service.dart';
@@ -378,7 +379,7 @@ class BookListNotifier extends StateNotifier<BookListState> {
         return;
       }
 
-      state = BookListLoading(fromCache: true, currentFolder: '加载数据...');
+      state = BookListLoading(fromCache: true, currentFolder: appL10n.bookListLoadingData);
 
       // 并行加载统计和数据
       final results = await Future.wait([
@@ -472,7 +473,7 @@ class BookListNotifier extends StateNotifier<BookListState> {
     }
 
     logger.i('BookListNotifier: 开始从 Hive 迁移 ${cache.books.length} 本图书');
-    state = BookListLoading(currentFolder: '正在迁移数据...', fromCache: true);
+    state = BookListLoading(currentFolder: appL10n.bookListMigratingData, fromCache: true);
 
     final entities = cache.books
         .map((entry) => BookEntity(
@@ -511,7 +512,7 @@ class BookListNotifier extends StateNotifier<BookListState> {
         if (config != null) break;
 
         if (updated.hasError) {
-          state = BookListError('加载媒体库配置失败');
+          state = BookListError(appL10n.bookListLoadConfigFailed);
           return;
         }
       }
@@ -597,7 +598,7 @@ class BookListNotifier extends StateNotifier<BookListState> {
     // 保存到 SQLite
     state = BookListLoading(
       progress: 1,
-      currentFolder: '保存数据...',
+      currentFolder: appL10n.bookListSavingData,
     );
 
     final entities = books
@@ -1113,10 +1114,10 @@ class _BookCacheInfoBar extends ConsumerWidget {
     final formatStats = state.formatStats;
     final cacheAge = DateTime.now().difference(cache.lastUpdated);
     final ageText = cacheAge.inHours < 1
-        ? '${cacheAge.inMinutes} 分钟前'
+        ? appL10n.bookCacheTimeMinutesAgo(cacheAge.inMinutes)
         : cacheAge.inHours < 24
-            ? '${cacheAge.inHours} 小时前'
-            : '${cacheAge.inDays} 天前';
+            ? appL10n.bookCacheTimeHoursAgo(cacheAge.inHours)
+            : appL10n.bookCacheTimeDaysAgo(cacheAge.inDays);
 
     return SliverToBoxAdapter(
       child: Container(

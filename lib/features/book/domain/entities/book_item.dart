@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 
 /// 支持的电子书格式
@@ -67,7 +68,7 @@ class BookItem {
   }
 
   /// 显示的作者
-  String get displayAuthor => author ?? '未知作者';
+  String get displayAuthor => author ?? appL10n.bookUnknownAuthor;
 
   /// 显示的文件大小
   String get displaySize {

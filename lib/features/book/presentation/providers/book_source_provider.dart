@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/book/data/services/sources/book_source_manager_service.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -92,7 +93,7 @@ Future<Map<String, List<BookSource>>> bookSourceGroups(Ref ref) async {
   for (final source in sources) {
     final groups = source.groups;
     if (groups.isEmpty) {
-      grouped.putIfAbsent('未分组', () => []).add(source);
+      grouped.putIfAbsent(appL10n.bookSourceUngrouped, () => []).add(source);
     } else {
       for (final group in groups) {
         grouped.putIfAbsent(group, () => []).add(source);

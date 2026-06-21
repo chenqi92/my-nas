@@ -12847,5 +12847,76 @@
         "type": "int"
       }
     }
-  }
+  },
+  "ttsVoiceDefaultChinese": "Default Chinese",
+  "ttsVoiceDefaultVoice": "Default Voice",
+  "ttsPreviewVoiceGreeting": "Hello, this is a preview of {voiceName}.",
+  "@ttsPreviewVoiceGreeting": {
+    "placeholders": {
+      "voiceName": {
+        "type": "String"
+      }
+    }
+  },
+  "nativeEbookLoadingDefault": "Loading...",
+  "nativeEbookLoadingGettingFile": "Getting file...",
+  "nativeEbookErrorUnableToGetFile": "Unable to get file",
+  "nativeEbookLoadingConvertingFormat": "Converting format...",
+  "nativeEbookErrorConversionFailed": "Conversion failed",
+  "nativeEbookLoadingParsingContent": "Parsing content...",
+  "nativeEbookLoadingPaginating": "Paginating...",
+  "nativeEbookErrorLoadFailed": "Loading failed: {error}",
+  "@nativeEbookErrorLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "nativeEbookLoadingDownloading": "Downloading...",
+  "bookListLoadingData": "Loading data...",
+  "bookListMigratingData": "Migrating data...",
+  "bookListLoadingConfig": "Loading configuration...",
+  "bookListLoadConfigFailed": "Failed to load media library configuration",
+  "bookListSavingData": "Saving data...",
+  "bookCacheTimeMinutesAgo": "{minutes} minute(s) ago",
+  "@bookCacheTimeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "bookCacheTimeHoursAgo": "{hours} hour(s) ago",
+  "@bookCacheTimeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "bookCacheTimeDaysAgo": "{days} day(s) ago",
+  "@bookCacheTimeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "bookTtsEdgeVoiceXiaoxiao": "Xiaoxiao (Female · Gentle)",
+  "bookTtsEdgeVoiceYunxi": "Yunxi (Male · Lively)",
+  "bookTtsEdgeVoiceXiaoyi": "Xiaoyi (Female · Intimate)",
+  "bookTtsEdgeVoiceYunjian": "Yunjian (Male · Steady)",
+  "bookTtsEdgeVoiceXiaochen": "Xiaochen (Female · News)",
+  "bookTtsEdgeVoiceYunyang": "Yunyang (Male · News)",
+  "bookTtsEdgeVoiceXiaoshuang": "Xiaoshuang (Female · Child)",
+  "bookTtsEdgeVoiceYunxia": "Yunxia (Male · Child)",
+  "bookTtsEdgeVoiceHsiaoChen": "Hsiao Chen (Female · Taiwan)",
+  "bookTtsEdgeVoiceYunJhe": "Yun Jhe (Male · Taiwan)",
+  "bookTtsEdgeVoiceHiuGaai": "Hiu Gaai (Female · Cantonese)",
+  "bookTtsEdgeVoiceWanLung": "Wan Lung (Male · Cantonese)",
+  "ttsl_ed7a1146": "Male",
+  "ttsl_2c0e7722": "Female",
+  "ttsl_62731aaf": "Neutral",
+  "ttsl_a52f5c20": "System Default"
 }
