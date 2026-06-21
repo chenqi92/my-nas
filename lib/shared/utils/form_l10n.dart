@@ -336,6 +336,12 @@ String localizeFormText(BuildContext context, String? text) {
     '清新现代，对应设计稿默认 accent' => l.srcd_42a2e81f,
     '专业稳重，对应设计稿 blue accent' => l.srcd_01f83197,
     '温暖活力，对应设计稿 amber accent' => l.srcd_78c54c0f,
+    '视频' => l.mtype_7fcf42ed,
+    '音乐' => l.mtype_95521bb7,
+    '照片' => l.mtype_d2fb1e3e,
+    '漫画' => l.mtype_fe148076,
+    '书籍' => l.mtype_72191b3a,
+    '笔记' => l.mtype_7051dc52,
     _ => text,
   };
 }

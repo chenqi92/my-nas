@@ -9672,5 +9672,56 @@
   "musicScraperDescKugou": "Chinese music platform, rich lyrics library",
   "musicScraperDescMigu": "China Mobile's music platform, rich lossless audio",
   "musicScraperDescTagWeb": "Self-hosted music scraping service, requires server config",
-  "translationProviderGoogleFree": "Google Translate (Free)"
+  "translationProviderGoogleFree": "Google Translate (Free)",
+  "mtype_7fcf42ed": "Video",
+  "mtype_95521bb7": "Music",
+  "mtype_d2fb1e3e": "Photos",
+  "mtype_fe148076": "Comics",
+  "mtype_72191b3a": "Books",
+  "mtype_7051dc52": "Notes",
+  "mediaSetupTitleNoSources": "No source added yet",
+  "mediaSetupTitleNotConnected": "Not connected to NAS",
+  "mediaSetupTitleNoLibraryPaths": "{type} directory not configured",
+  "@mediaSetupTitleNoLibraryPaths": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaSetupTitlePathsNotConnected": "Connection lost",
+  "mediaSetupTitleReady": "No {type} yet",
+  "@mediaSetupTitleReady": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaSetupMsgNoSources": "After adding a NAS, WebDAV or other source,\nyou can access your {type}",
+  "@mediaSetupMsgNoSources": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaSetupMsgNotConnected": "Please connect to a NAS server first",
+  "mediaSetupMsgNoLibraryPaths": "Select a directory for your {type}\nso MyNAS can scan them",
+  "@mediaSetupMsgNoLibraryPaths": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaSetupMsgPathsNotConnected": "The source for the configured directory is not connected.\nPlease reconnect or change the directory",
+  "mediaSetupMsgReady": "Add {type} to the configured directory and they'll appear here",
+  "@mediaSetupMsgReady": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  }
 }

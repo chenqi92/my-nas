@@ -5310,5 +5310,21 @@
   "musicScraperDescKugou": "国内音乐平台，歌词库丰富",
   "musicScraperDescMigu": "中国移动旗下音乐平台，无损音源丰富",
   "musicScraperDescTagWeb": "自托管音乐刮削服务，需配置服务器地址",
-  "translationProviderGoogleFree": "Google 翻译（免费）"
+  "translationProviderGoogleFree": "Google 翻译（免费）",
+  "mtype_7fcf42ed": "视频",
+  "mtype_95521bb7": "音乐",
+  "mtype_d2fb1e3e": "照片",
+  "mtype_fe148076": "漫画",
+  "mtype_72191b3a": "书籍",
+  "mtype_7051dc52": "笔记",
+  "mediaSetupTitleNoSources": "尚未添加连接源",
+  "mediaSetupTitleNotConnected": "未连接到 NAS",
+  "mediaSetupTitleNoLibraryPaths": "未配置{type}目录",
+  "mediaSetupTitlePathsNotConnected": "连接已断开",
+  "mediaSetupTitleReady": "暂无{type}",
+  "mediaSetupMsgNoSources": "添加 NAS、WebDAV 或其他源后\n即可访问您的{type}",
+  "mediaSetupMsgNotConnected": "请先连接到 NAS 服务器",
+  "mediaSetupMsgNoLibraryPaths": "请选择用于存放{type}的目录\n以便 MyNAS 扫描您的{type}",
+  "mediaSetupMsgPathsNotConnected": "配置的目录对应的源未连接\n请重新连接或更换目录",
+  "mediaSetupMsgReady": "在配置的目录中添加{type}后将显示在这里"
 }

@@ -7,6 +7,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// 媒体模块设置状态
 enum MediaSetupState {
@@ -141,12 +142,14 @@ class MediaSetupWidget extends ConsumerWidget {
   }
 
   Widget _buildTitle(BuildContext context, MediaSetupState state, bool isDark) {
+    final l = context.l10n;
+    final typeName = localizeFormText(context, mediaType.displayName);
     final title = switch (state) {
-      MediaSetupState.noSources => '尚未添加连接源',
-      MediaSetupState.notConnected => '未连接到 NAS',
-      MediaSetupState.noLibraryPaths => '未配置${mediaType.displayName}目录',
-      MediaSetupState.pathsNotConnected => '连接已断开',
-      MediaSetupState.ready => emptyTitle ?? '暂无${mediaType.displayName}',
+      MediaSetupState.noSources => l.mediaSetupTitleNoSources,
+      MediaSetupState.notConnected => l.mediaSetupTitleNotConnected,
+      MediaSetupState.noLibraryPaths => l.mediaSetupTitleNoLibraryPaths(typeName),
+      MediaSetupState.pathsNotConnected => l.mediaSetupTitlePathsNotConnected,
+      MediaSetupState.ready => emptyTitle ?? l.mediaSetupTitleReady(typeName),
     };
 
     return Text(
@@ -161,14 +164,14 @@ class MediaSetupWidget extends ConsumerWidget {
 
   Widget _buildMessage(
       BuildContext context, MediaSetupState state, bool isDark) {
+    final l = context.l10n;
+    final typeName = localizeFormText(context, mediaType.displayName);
     final message = switch (state) {
-      MediaSetupState.noSources => '添加 NAS、WebDAV 或其他源后\n即可访问您的${mediaType.displayName}',
-      MediaSetupState.notConnected => '请先连接到 NAS 服务器',
-      MediaSetupState.noLibraryPaths =>
-        '请选择用于存放${mediaType.displayName}的目录\n以便 MyNAS 扫描您的${mediaType.displayName}',
-      MediaSetupState.pathsNotConnected => '配置的目录对应的源未连接\n请重新连接或更换目录',
-      MediaSetupState.ready =>
-        emptyMessage ?? '在配置的目录中添加${mediaType.displayName}后将显示在这里',
+      MediaSetupState.noSources => l.mediaSetupMsgNoSources(typeName),
+      MediaSetupState.notConnected => l.mediaSetupMsgNotConnected,
+      MediaSetupState.noLibraryPaths => l.mediaSetupMsgNoLibraryPaths(typeName),
+      MediaSetupState.pathsNotConnected => l.mediaSetupMsgPathsNotConnected,
+      MediaSetupState.ready => emptyMessage ?? l.mediaSetupMsgReady(typeName),
     };
 
     return Text(
