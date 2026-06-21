@@ -1318,7 +1318,7 @@ hintText: context.l10n.nastoolSearchHint,
                                           )
                                         : null,
                                     title: Text(r.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-subtitle: Text('${r.year ?? ""} • ${r.torrents.length}个分组 • ${context.l10n.nastoolSearchResultGroupCount(torrentCount)}'),
+subtitle: Text('${r.year ?? ""} • ${context.l10n.nastoolSearchGroupsCount(r.torrents.length)} • ${context.l10n.nastoolSearchResultGroupCount(torrentCount)}'),
                                     trailing: const Icon(Icons.chevron_right_rounded),
                                     onTap: () => _showTorrentDetail(r),
                                   ),

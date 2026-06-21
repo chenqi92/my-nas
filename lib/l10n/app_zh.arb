@@ -5009,5 +5009,6 @@
   "stMsg_4d7ee1c7": "刮削完成",
   "stMsg_659e16da": "未知曲目",
   "stMsg_26b5bd49": "加载中...",
-  "mediaManagementTitle": "媒体管理"
+  "mediaManagementTitle": "媒体管理",
+  "nastoolSearchGroupsCount": "{count}个分组"
 }
