@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -455,7 +456,7 @@ class NfoScraperService {
       bytes.addAll(chunk);
       // 限制文件大小，防止读取超大文件
       if (bytes.length > 1024 * 1024) { // 1MB 限制
-        throw Exception('NFO 文件过大');
+        throw Exception(appL10n.nfoScraperServiceFileTooLarge);
       }
     }
     return utf8.decode(bytes);

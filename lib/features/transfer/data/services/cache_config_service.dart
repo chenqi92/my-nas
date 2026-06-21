@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
@@ -152,7 +153,7 @@ class CacheConfigService {
 
   /// 格式化 MB 大小显示
   static String formatSizeMB(int sizeMB) {
-    if (sizeMB == 0) return '无限制';
+    if (sizeMB == 0) return appL10n.cacheConfigServiceUnlimited;
     if (sizeMB < 1024) return '$sizeMB MB';
     return '${(sizeMB / 1024).toStringAsFixed(1)} GB';
   }

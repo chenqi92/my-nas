@@ -183,7 +183,7 @@ class AudioTrackService {
     }
 
     // 最后使用 id
-    return '音轨 ${track.id}';
+    return appL10n.audioTrackServiceDefaultTrackDisplay(track.id);
   }
 
   /// 将语言代码转换为显示名称

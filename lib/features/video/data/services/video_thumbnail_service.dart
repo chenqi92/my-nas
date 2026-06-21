@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -227,7 +228,7 @@ class VideoThumbnailService {
             try {
               await File(tempFilePath).delete();
             } on Exception catch (e, st) {
-              AppError.ignore(e, st, '清理上一级缩略图临时文件失败');
+              AppError.ignore(e, st, appL10n.videoThumbnailServiceCleanupPreviousFileFailed);
             }
           }
 
@@ -311,7 +312,7 @@ class VideoThumbnailService {
             logger.d('VideoThumbnailService: 已清理临时文件 $tempFilePath');
           }
         } on Exception catch (e, st) {
-          AppError.ignore(e, st, '清理临时文件失败（非关键错误）');
+          AppError.ignore(e, st, appL10n.videoThumbnailServiceCleanupTempFileFailed);
         }
       }
     }
@@ -365,7 +366,7 @@ class VideoThumbnailService {
         const Duration(seconds: 10),
         onTimeout: () {
           durationSubscription?.cancel();
-          throw TimeoutException('视频加载超时');
+          throw TimeoutException(appL10n.videoThumbnailServiceLoadTimeout);
         },
       );
 
@@ -402,7 +403,7 @@ class VideoThumbnailService {
       logger.d('VideoThumbnailService: 截图成功，大小: ${screenshot.length} bytes');
       return screenshot;
     } on TimeoutException catch (e, st) {
-      AppError.ignore(e, st, '视频帧提取超时（预期行为）');
+      AppError.ignore(e, st, appL10n.videoThumbnailServiceFrameExtractionTimeout);
       return null;
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'captureFrameWithMediaKit', {'videoPath': videoPath});
@@ -533,7 +534,7 @@ class VideoThumbnailService {
       try {
         await File(path).delete();
       } on Exception catch (e, st) {
-        AppError.ignore(e, st, '删除缩略图缓存失败（非关键错误）');
+        AppError.ignore(e, st, appL10n.videoThumbnailServiceDeleteCacheFailed);
       }
     }
   }
@@ -614,7 +615,7 @@ class VideoThumbnailService {
         await File(path).delete();
         logger.d('VideoThumbnailService: 进度截图已删除 $path');
       } on Exception catch (e, st) {
-        AppError.ignore(e, st, '删除进度截图失败（非关键错误）');
+        AppError.ignore(e, st, appL10n.videoThumbnailServiceDeleteProgressThumbnailFailed);
       }
     }
   }

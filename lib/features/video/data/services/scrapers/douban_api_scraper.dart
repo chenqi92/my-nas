@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_result.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
@@ -46,7 +47,7 @@ class DoubanApiScraper implements MediaScraper {
       .get(uri, headers: _headers)
       .timeout(
         _requestTimeout,
-        onTimeout: () => throw TimeoutException('豆瓣 API 请求超时: $uri'),
+        onTimeout: () => throw TimeoutException(appL10n.scraperDoubanApiTimeoutError(uri)),
       );
 
   @override
@@ -98,12 +99,12 @@ class DoubanApiScraper implements MediaScraper {
         return _parseSearchResult(data, isMovie: true);
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         throw ScraperAuthException(
-          '豆瓣 API 认证失败: ${response.statusCode}',
+          appL10n.scraperDoubanApiAuthError(response.statusCode),
           source: ScraperType.doubanApi,
         );
       } else if (response.statusCode == 429) {
-        throw const ScraperRateLimitException(
-          '豆瓣 API 请求过于频繁',
+        throw ScraperRateLimitException(
+          appL10n.scraperDoubanApiRateLimitError,
           source: ScraperType.doubanApi,
         );
       } else {

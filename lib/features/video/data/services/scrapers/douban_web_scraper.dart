@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_result.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
@@ -64,7 +65,7 @@ class DoubanWebScraper implements MediaScraper {
     await _waitForRateLimit();
     return http.get(uri, headers: _headers).timeout(
           _requestTimeout,
-          onTimeout: () => throw TimeoutException('豆瓣网页请求超时: $uri'),
+          onTimeout: () => throw TimeoutException(appL10n.videoScraperDoubanRequestTimeout(uri)),
         );
   }
 
@@ -118,8 +119,8 @@ class DoubanWebScraper implements MediaScraper {
       if (response.statusCode == 200) {
         return _parseSearchResult(response.body, isMovie: true, page: page);
       } else if (response.statusCode == 403) {
-        throw const ScraperAuthException(
-          '豆瓣 Cookie 无效或已过期',
+        throw ScraperAuthException(
+          appL10n.videoScraperDoubanAuthInvalid,
           source: ScraperType.doubanWeb,
         );
       } else {

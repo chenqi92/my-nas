@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:dlna_dart/dlna.dart';
 import 'package:dlna_dart/xmlParser.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/cast_device.dart';
 
@@ -159,7 +160,7 @@ class DlnaAdapter {
       // 尝试通过遍历查找（兼容旧版本数据）
       final foundDevice = _dlnaDevices.values.firstWhere(
         (d) => d.info.URLBase == deviceId || d.info.friendlyName == deviceId,
-        orElse: () => throw Exception('设备未找到: $deviceId'),
+        orElse: () => throw Exception(appL10n.dlnaDeviceNotFound(deviceId)),
       );
       _currentDevice = foundDevice;
     } else {

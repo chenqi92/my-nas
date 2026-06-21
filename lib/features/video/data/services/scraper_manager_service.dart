@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/scraper_factory.dart';
@@ -194,7 +195,7 @@ class ScraperManagerService {
     final sources = await getSources();
     final index = sources.indexWhere((s) => s.id == source.id);
     if (index == -1) {
-      throw Exception('刮削源不存在: ${source.id}');
+      throw Exception(appL10n.scraperManagerSourceNotFoundError(source.id));
     }
 
     sources[index] = source;

@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 /// 音频编码格式
 enum AudioCodec {
   /// PCM（无压缩）
@@ -187,7 +188,7 @@ class AudioPassthroughCapability {
 
   /// 获取能力描述文本
   String get description {
-    if (!isSupported) return '不支持直通';
+    if (!isSupported) return appL10n.audioCapabilityPassthroughUnsupported;
 
     final codecs = supportedCodecs.map((e) => e.displayName).join(', ');
     return '${outputDevice.displayName}: $codecs';

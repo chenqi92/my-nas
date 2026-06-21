@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/resolved_http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
@@ -39,7 +40,7 @@ class TmdbService {
   /// 防止网络不稳定时请求无限挂起。
   Future<http.Response> _httpGet(Uri uri) => ResolvedHttpClient.get(uri).timeout(
         _requestTimeout,
-        onTimeout: () => throw TimeoutException('TMDB API 请求超时: $uri'),
+        onTimeout: () => throw TimeoutException(appL10n.tmdbApiRequestTimeout(uri.toString())),
       );
 
   // 语言偏好缓存

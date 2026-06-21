@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_result.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
@@ -54,7 +55,7 @@ class TmdbScraper implements MediaScraper {
   /// 带超时的 HTTP GET 请求
   Future<http.Response> _httpGet(Uri uri) => http.get(uri).timeout(
         _requestTimeout,
-        onTimeout: () => throw TimeoutException('TMDB API 请求超时: $uri'),
+        onTimeout: () => throw TimeoutException(appL10n.tmdbScraperRequestTimeout(uri)),
       );
 
   @override
@@ -104,13 +105,13 @@ class TmdbScraper implements MediaScraper {
         final data = json.decode(response.body) as Map<String, dynamic>;
         return _parseSearchResult(data, isMovie: true);
       } else if (response.statusCode == 401) {
-        throw const ScraperAuthException(
-          'TMDB API Key 无效',
+        throw ScraperAuthException(
+          appL10n.tmdbScraperAuthenticationFailed,
           source: ScraperType.tmdb,
         );
       } else if (response.statusCode == 429) {
-        throw const ScraperRateLimitException(
-          'TMDB API 请求过于频繁',
+        throw ScraperRateLimitException(
+          appL10n.tmdbScraperRateLimited,
           source: ScraperType.tmdb,
         );
       } else {
@@ -155,13 +156,13 @@ class TmdbScraper implements MediaScraper {
         final data = json.decode(response.body) as Map<String, dynamic>;
         return _parseSearchResult(data, isMovie: false);
       } else if (response.statusCode == 401) {
-        throw const ScraperAuthException(
-          'TMDB API Key 无效',
+        throw ScraperAuthException(
+          appL10n.tmdbScraperAuthenticationFailed,
           source: ScraperType.tmdb,
         );
       } else if (response.statusCode == 429) {
-        throw const ScraperRateLimitException(
-          'TMDB API 请求过于频繁',
+        throw ScraperRateLimitException(
+          appL10n.tmdbScraperRateLimited,
           source: ScraperType.tmdb,
         );
       } else {

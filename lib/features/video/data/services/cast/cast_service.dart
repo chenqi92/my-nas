@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/cast/adapters/airplay_adapter.dart';
 import 'package:my_nas/features/video/data/services/cast/adapters/dlna_adapter.dart';
@@ -148,7 +149,7 @@ class CastService {
       if (videoUrl == null) {
         _proxyServer.unregisterStream(token);
         _currentStreamToken = null;
-        throw Exception('无法获取本机IP地址');
+        throw Exception(appL10n.castServiceNoLocalIpError);
       }
 
       final subtitleUrl = await _proxyServer.getSubtitleUrl(token);
@@ -396,7 +397,7 @@ class CastService {
         // 更新会话状态为错误
         _currentSession = _currentSession?.copyWith(
           playbackState: CastPlaybackState.error,
-          errorMessage: '连接已断开',
+          errorMessage: appL10n.castServiceConnectionDisconnected,
         );
         _sessionController.add(_currentSession);
 

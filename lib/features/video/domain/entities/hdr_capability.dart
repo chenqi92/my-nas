@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 /// HDR 类型
 enum HdrType {
   /// 无 HDR
@@ -132,7 +133,7 @@ class HdrCapability {
 
   /// 获取能力描述文本
   String get description {
-    if (!isSupported) return '不支持 HDR';
+    if (!isSupported) return appL10n.hdrCapabilityNotSupported;
 
     final types = supportedTypes.map((e) => e.displayName).join(', ');
     if (maxLuminance > 0) {

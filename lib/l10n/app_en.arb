@@ -11633,5 +11633,96 @@
   "acoustidScraperRateLimited": "Requests are too frequent, please try again later",
   "acoustidScraperNetworkError": "Network connection failed",
   "m3uParserUnknownChannel": "Unknown channel",
-  "m3uParserUncategorized": "Uncategorized"
+  "m3uParserUncategorized": "Uncategorized",
+  "audioTrackServiceDefaultTrackDisplay": "Audio track {id}",
+  "@audioTrackServiceDefaultTrackDisplay": {
+    "placeholders": {
+      "id": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoMetadataScrapeErrorBothDetailsRequired": "Must provide either movieDetail or tvDetail",
+  "tmdbApiRequestTimeout": "TMDB API request timeout: {uri}",
+  "@tmdbApiRequestTimeout": {
+    "placeholders": {
+      "uri": {
+        "type": "String"
+      }
+    }
+  },
+  "scraperManagerSourceNotFoundError": "Scraper source not found: {sourceId}",
+  "@scraperManagerSourceNotFoundError": {
+    "placeholders": {
+      "sourceId": {
+        "type": "String"
+      }
+    }
+  },
+  "videoThumbnailServiceCleanupPreviousFileFailed": "Failed to clean up previous thumbnail temp file",
+  "videoThumbnailServiceCleanupTempFileFailed": "Failed to clean up temp file (non-critical error)",
+  "videoThumbnailServiceLoadTimeout": "Video loading timeout",
+  "videoThumbnailServiceFrameExtractionTimeout": "Video frame extraction timeout (expected behavior)",
+  "videoThumbnailServiceDeleteCacheFailed": "Failed to delete thumbnail cache (non-critical error)",
+  "videoThumbnailServiceDeleteProgressThumbnailFailed": "Failed to delete progress thumbnail (non-critical error)",
+  "nfoScraperServiceFileTooLarge": "NFO file is too large",
+  "castServiceNoLocalIpError": "Unable to get local IP address",
+  "castServiceConnectionDisconnected": "Connection disconnected",
+  "dlnaDeviceNotFound": "Device not found: {deviceId}",
+  "@dlnaDeviceNotFound": {
+    "placeholders": {
+      "deviceId": {
+        "type": "Object"
+      }
+    }
+  },
+  "airplayAdapterDeviceNotFound": "Device not found: {deviceId}",
+  "@airplayAdapterDeviceNotFound": {
+    "placeholders": {
+      "deviceId": {
+        "type": "String"
+      }
+    }
+  },
+  "videoScraperDoubanRequestTimeout": "Douban web request timeout: {uri}",
+  "@videoScraperDoubanRequestTimeout": {
+    "placeholders": {
+      "uri": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoScraperDoubanAuthInvalid": "Douban Cookie is invalid or expired",
+  "tmdbScraperRequestTimeout": "TMDB API request timeout: {uri}",
+  "@tmdbScraperRequestTimeout": {
+    "placeholders": {
+      "uri": {
+        "type": "Object"
+      }
+    }
+  },
+  "tmdbScraperAuthenticationFailed": "TMDB API Key is invalid",
+  "tmdbScraperRateLimited": "TMDB API requests are too frequent",
+  "scraperDoubanApiTimeoutError": "Douban API request timeout: {uri}",
+  "@scraperDoubanApiTimeoutError": {
+    "placeholders": {
+      "uri": {
+        "type": "Object"
+      }
+    }
+  },
+  "scraperDoubanApiAuthError": "Douban API authentication failed: {code}",
+  "@scraperDoubanApiAuthError": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "scraperDoubanApiRateLimitError": "Douban API request too frequent",
+  "audioCapabilityPassthroughUnsupported": "Passthrough not supported",
+  "hdrCapabilityNotSupported": "HDR not supported",
+  "cacheConfigServiceUnlimited": "Unlimited",
+  "bookUnknownAuthor": "Unknown Author",
+  "bookUnknownSize": "Unknown Size"
 }

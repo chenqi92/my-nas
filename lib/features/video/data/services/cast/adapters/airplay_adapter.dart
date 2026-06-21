@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:bonsoir/bonsoir.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/cast_device.dart';
 
@@ -162,7 +163,7 @@ class AirPlayAdapter {
   }) async {
     final device = _devices[deviceId];
     if (device == null) {
-      throw Exception('设备未找到: $deviceId');
+      throw Exception(appL10n.airplayAdapterDeviceNotFound(deviceId));
     }
 
     try {

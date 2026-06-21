@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/background_task_pool.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/nfo_scraper_service.dart';
@@ -1058,7 +1059,7 @@ class VideoMetadataService {
     ScrapeOptions options = const ScrapeOptions(),
   }) async {
     if (movieDetail == null && tvDetail == null) {
-      throw ArgumentError('必须提供 movieDetail 或 tvDetail');
+      throw ArgumentError(appL10n.videoMetadataScrapeErrorBothDetailsRequired);
     }
 
     try {

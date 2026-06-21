@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_hook.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -51,11 +52,11 @@ class BookEntity {
   }
 
   /// 显示的作者
-  String get displayAuthor => author ?? '未知作者';
+  String get displayAuthor => author ?? appL10n.bookUnknownAuthor;
 
   /// 显示的文件大小
   String get displaySize {
-    if (size <= 0) return '未知大小';
+    if (size <= 0) return appL10n.bookUnknownSize;
     const units = ['B', 'KB', 'MB', 'GB'];
     var unitIndex = 0;
     var displaySize = size.toDouble();
