@@ -6174,5 +6174,6 @@
   "playMethodReasonContainer": "容器格式 {container} 不支持",
   "playMethodReasonBitrate": "码率超出设备限制，需要限速",
   "playMethodReasonDirectPlay": "设备完全支持，直接播放",
-  "playMethodReasonRemux": "需要重封装容器"
+  "playMethodReasonRemux": "需要重封装容器",
+  "appLockBiometricReason": "解锁 MyNAS"
 }

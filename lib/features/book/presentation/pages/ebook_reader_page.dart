@@ -451,14 +451,6 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
     _ => key,
   };
 
-  static const _allPageTurnModes = [
-    (icon: Icons.swap_horiz_rounded, label: '翻页', mode: BookPageTurnMode.scroll),
-    (icon: Icons.swap_vert_rounded, label: '滚动', mode: BookPageTurnMode.slide),
-    (icon: Icons.auto_stories_rounded, label: '仿真', mode: BookPageTurnMode.simulation),
-    (icon: Icons.flip_rounded, label: '覆盖', mode: BookPageTurnMode.cover),
-    (icon: Icons.article_rounded, label: '无动画', mode: BookPageTurnMode.none),
-  ];
-
   int _getPageTurnModeIndex(BookPageTurnMode mode) => switch (mode) {
         BookPageTurnMode.scroll => 0,
         BookPageTurnMode.slide => 1,
@@ -486,7 +478,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
               .toList(),
           selectedIndex: _getPageTurnModeIndex(settings.pageTurnMode),
           onSelect: (index) {
-            final mode = _allPageTurnModes[index].mode;
+            final mode = _pageTurnModeConfigs[index].mode;
             settingsNotifier.setPageTurnMode(mode);
             // 仿真和覆盖翻页由 Flutter 处理，Foliate 使用滑动模式
             _controller.setPageTurnStyle(_mapPageTurnMode(mode));

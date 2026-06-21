@@ -12375,5 +12375,6 @@
   },
   "playMethodReasonBitrate": "Bitrate exceeds device limit, throttling required",
   "playMethodReasonDirectPlay": "Device fully supports this, direct play",
-  "playMethodReasonRemux": "Container remux required"
+  "playMethodReasonRemux": "Container remux required",
+  "appLockBiometricReason": "Unlock MyNAS"
 }

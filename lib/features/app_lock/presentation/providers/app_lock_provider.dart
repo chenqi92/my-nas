@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/app_lock/data/services/app_lock_service.dart';
 import 'package:my_nas/features/app_lock/domain/app_lock_settings.dart';
 import 'package:my_nas/features/app_lock/domain/app_lock_state.dart';
@@ -111,7 +112,7 @@ class AppLockNotifier extends StateNotifier<AppLockState> {
 
   Future<bool> tryUnlockWithBiometric() async {
     if (!state.settings.biometricEnabled) return false;
-    final ok = await _service.authenticateBiometric(reason: '解锁 MyNAS');
+    final ok = await _service.authenticateBiometric(reason: appL10n.appLockBiometricReason);
     if (ok) {
       state = state.copyWith(
         phase: AppLockPhase.unlocked,
