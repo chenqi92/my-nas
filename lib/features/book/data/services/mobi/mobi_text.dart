@@ -8,6 +8,7 @@ import 'package:my_nas/core/i18n/app_l10n.dart';
 
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_header.dart';
+import 'package:my_nas/features/book/data/services/mobi/mobi_huffcdic.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_record.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_utils.dart';
 
@@ -25,6 +26,11 @@ class MobiTextExtractor {
 
     logger.d('提取文本: records $firstRecord-${lastRecord - 1}');
 
+    // HUFF/CDIC 压缩：先构建解码器（失败则保持 null，后续优雅降级为空）
+    final huffReader = header.compression == MobiCompression.huffCdic
+        ? _buildHuffCdicReader(header)
+        : null;
+
     for (var i = firstRecord; i < lastRecord && i < header.records.length; i++) {
       final record = header.records[i];
       var data = record.data;
@@ -33,7 +39,7 @@ class MobiTextExtractor {
       data = _removeTrailingData(data, header.extraDataFlags);
 
       // 解压缩
-      final decompressed = _decompress(data, header.compression);
+      final decompressed = _decompress(data, header.compression, huffReader);
       if (decompressed.isNotEmpty) {
         chunks.add(decompressed);
       }
@@ -52,49 +58,101 @@ class MobiTextExtractor {
     return decodeText(result, isUtf8: header.isUtf8);
   }
 
-  /// 移除记录尾部的额外数据
+  /// 移除记录尾部的额外数据（与 mobi_parser_service._removeTrailingEntries 一致）。
+  ///
+  /// 顺序很重要：先按 bit15..1 剥离后向变长编码的尾部数据块，最后才处理
+  /// bit0 的多字节字符重叠（其重叠计数要在 entries 已剥离后的末字节读取）。
   static Uint8List _removeTrailingData(Uint8List data, int extraDataFlags) {
     if (extraDataFlags == 0 || data.isEmpty) return data;
 
     var end = data.length;
 
-    // 处理各个额外数据标志位
-    // Bit 1 (0x1): 多字节字符重叠
-    if ((extraDataFlags & 0x1) != 0) {
-      // 最后一个字节包含重叠字节数
-      if (end > 0) {
-        final overlapByte = data[end - 1];
-        final overlapCount = overlapByte & 0x03;
-        end = end - 1 - overlapCount;
+    // bit1..bit15：后向变长编码的尾部数据块（不含 bit0 多字节重叠）
+    for (var bit = 15; bit >= 1; bit--) {
+      if ((extraDataFlags & (1 << bit)) != 0) {
+        final size = _sizeOfTrailingDataEntry(data, end);
+        end -= size;
+        if (end <= 0) return Uint8List(0);
       }
     }
 
-    // Bit 2-16: 其他尾部数据
-    for (var bit = 1; bit < 16; bit++) {
-      if ((extraDataFlags & (1 << bit)) != 0 && bit != 0) {
-        // 读取后向编码的长度
-        if (end > 0) {
-          final (size, bytesRead) = readVariableWidthIntBackward(data, end);
-          end = end - size;
-          if (end < 0) end = 0;
-        }
-      }
+    // bit0：多字节字符重叠，末字节低 2 位为重叠字节数（+1 含该计数字节）
+    if ((extraDataFlags & 0x1) != 0 && end > 0) {
+      final overlap = data[end - 1] & 0x03;
+      end = end - overlap - 1;
+      if (end < 0) end = 0;
     }
 
     return end < data.length ? data.sublist(0, end) : data;
   }
 
+  /// 计算尾部数据条目的总字节数（含其变长编码自身）。
+  /// 对应 KindleUnpack getSizeOfTrailingDataEntry：读末尾最多 4 字节，遇最高位为 1 的字节重置累加。
+  static int _sizeOfTrailingDataEntry(Uint8List data, int end) {
+    var num = 0;
+    final start = end - 4 < 0 ? 0 : end - 4;
+    for (var i = start; i < end; i++) {
+      final v = data[i];
+      if ((v & 0x80) != 0) num = 0;
+      num = (num << 7) | (v & 0x7F);
+    }
+    return num;
+  }
+
   /// 解压缩数据
-  static Uint8List _decompress(Uint8List data, MobiCompression compression) {
+  static Uint8List _decompress(
+    Uint8List data,
+    MobiCompression compression,
+    MobiHuffCdicReader? huffReader,
+  ) {
     switch (compression) {
       case MobiCompression.none:
         return data;
       case MobiCompression.palmDoc:
         return _decompressPalmDoc(data);
       case MobiCompression.huffCdic:
-        // HUFF/CDIC 暂不支持
-        logger.w('HUFF/CDIC 压缩暂不支持');
-        return Uint8List(0);
+        // HUFF/CDIC：解码器未就绪或单条记录解码异常时回退为空
+        if (huffReader == null || !huffReader.isReady) {
+          return Uint8List(0);
+        }
+        try {
+          return huffReader.unpack(data);
+        } on Object catch (e) {
+          logger.w('HUFF/CDIC 记录解压失败，跳过该记录', e);
+          return Uint8List(0);
+        }
+    }
+  }
+
+  /// 构建 HUFF/CDIC 解码器
+  ///
+  /// 从 header 定位 HUFF 记录（首条）与后续 CDIC 记录并加载码表/字典。
+  /// 任何异常都返回 null，由调用方优雅降级（返回空文本 + 警告）。
+  static MobiHuffCdicReader? _buildHuffCdicReader(MobiHeader header) {
+    try {
+      final first = header.huffmanFirstRecord;
+      final count = header.huffmanRecordCount;
+      if (first <= 0 || count <= 0 || first >= header.records.length) {
+        logger.w('HUFF/CDIC 记录定位无效: first=$first count=$count');
+        return null;
+      }
+
+      // 第一条为 HUFF 记录，其余为 CDIC 记录
+      final reader = MobiHuffCdicReader()..loadHuff(header.records[first].data);
+      for (var i = 1; i < count; i++) {
+        final idx = first + i;
+        if (idx >= header.records.length) break;
+        reader.loadCdic(header.records[idx].data);
+      }
+
+      if (!reader.isReady) {
+        logger.w('HUFF/CDIC 码表或字典为空');
+        return null;
+      }
+      return reader;
+    } on Object catch (e) {
+      logger.w('HUFF/CDIC 解码器构建失败，回退为不支持', e);
+      return null;
     }
   }
 

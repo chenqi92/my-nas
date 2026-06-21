@@ -320,4 +320,33 @@ class MusicScrobbleService {
 
   /// 工具：UI 设置页用，触发一次手动重试
   Future<void> retryNow() => _retryQueue();
+
+  // ----------------------------- Last.fm OAuth -----------------------------
+
+  /// OAuth 第一步：用给定 key/secret 取一次性 token（无需先保存设置）。
+  /// 失败返回 null，UI 据此降级回手动粘贴 sk。
+  Future<String?> lastfmFetchToken({
+    required String apiKey,
+    required String apiSecret,
+  }) async {
+    final p = LastFmProvider(apiKey: apiKey, apiSecret: apiSecret);
+    return p.fetchAuthToken();
+  }
+
+  /// OAuth 拼授权页 URL（由 UI 用 url_launcher 打开）。
+  String lastfmAuthorizeUrl({
+    required String apiKey,
+    required String token,
+  }) =>
+      LastFmProvider(apiKey: apiKey).buildAuthorizeUrl(token);
+
+  /// OAuth 第三步：用户授权后取回 sk。成功返回 sk，失败/未授权返回 null。
+  Future<String?> lastfmFetchSessionKey({
+    required String apiKey,
+    required String apiSecret,
+    required String token,
+  }) async {
+    final p = LastFmProvider(apiKey: apiKey, apiSecret: apiSecret);
+    return p.fetchSessionKey(token);
+  }
 }

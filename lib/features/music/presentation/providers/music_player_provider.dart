@@ -879,10 +879,22 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       final uri = Uri.tryParse(music.url);
       if (uri == null || !uri.hasScheme) return null;
 
-      // NCM 文件需要解密，暂时跳过预加载
+      // NCM 文件需要先解密为可播放的本地文件
+      // 复用与正常播放一致的解密 + 缓存逻辑（_getDecryptedNcmFile 内部会优先命中
+      // 已有的 mp3/flac 解密缓存，避免重复解密与临时文件泄漏）。
+      // 解密失败时回退 return null，保持原有“跳过预加载”行为，零破坏。
       if (_isNcmFile(music.path) || _isNcmFile(music.name)) {
-        logger.d('MusicPlayer: NCM 文件跳过预加载');
-        return null;
+        try {
+          final decryptedFile = await _getDecryptedNcmFile(music);
+          if (decryptedFile == null) {
+            logger.d('MusicPlayer: NCM 预加载解密失败，跳过预加载');
+            return null;
+          }
+          return Uri.file(decryptedFile.path).toString();
+        } on Exception catch (e) {
+          logger.w('MusicPlayer: NCM 预加载异常，跳过预加载: $e');
+          return null;
+        }
       }
 
       if (music.sourceId != null) {

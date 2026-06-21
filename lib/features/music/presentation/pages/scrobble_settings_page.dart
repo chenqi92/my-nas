@@ -30,6 +30,13 @@ class _ScrobbleSettingsPageState
   bool _enabled = false;
   bool _loaded = false;
 
+  /// 应用内 OAuth 状态：取到 token 后保存，等用户授权后用它换 sk。
+  String? _pendingToken;
+  // 取 token 时配对的凭证，第二步换 sk 必须用同一组（token 与 api_key 绑定）
+  String? _pendingKey;
+  String? _pendingSecret;
+  bool _oauthBusy = false;
+
   @override
   void initState() {
     super.initState();
@@ -88,6 +95,80 @@ class _ScrobbleSettingsPageState
     if (uri == null) return;
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _toast(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  /// OAuth 第一步：校验 key/secret → 取 token → 打开授权页。
+  /// 任意一步失败都给提示并保留手动粘贴兜底。
+  Future<void> _startLastfmAuth() async {
+    final l = AppLocalizations.of(context);
+    final key = _lfApiKey.text.trim();
+    final secret = _lfApiSecret.text.trim();
+    if (key.isEmpty) {
+      _toast(l.musicScrobbleLastfmApiKeyRequired);
+      return;
+    }
+    if (secret.isEmpty) {
+      _toast(l.musicScrobbleLastfmSecretRequired);
+      return;
+    }
+    setState(() => _oauthBusy = true);
+    try {
+      final token = await _service.lastfmFetchToken(
+        apiKey: key,
+        apiSecret: secret,
+      );
+      if (token == null || token.isEmpty) {
+        _toast(l.musicScrobbleLastfmTokenFailed);
+        return;
+      }
+      _pendingToken = token;
+      _pendingKey = key;
+      _pendingSecret = secret;
+      final url = _service.lastfmAuthorizeUrl(apiKey: key, token: token);
+      await _openUrl(url);
+      _toast(l.musicScrobbleLastfmAuthOpened);
+    } finally {
+      if (mounted) setState(() => _oauthBusy = false);
+    }
+  }
+
+  /// OAuth 第三步：用户授权后取回 sk 并回填，成功后自动保存。
+  Future<void> _completeLastfmAuth() async {
+    final l = AppLocalizations.of(context);
+    final token = _pendingToken;
+    if (token == null || token.isEmpty) {
+      _toast(l.musicScrobbleLastfmNeedToken);
+      return;
+    }
+    // 用取 token 时配对的凭证换 sk，避免用户中途改了输入框导致 token/api_key 错配。
+    final key = _pendingKey ?? _lfApiKey.text.trim();
+    final secret = _pendingSecret ?? _lfApiSecret.text.trim();
+    if (key.isEmpty || secret.isEmpty) return;
+    setState(() => _oauthBusy = true);
+    try {
+      final sk = await _service.lastfmFetchSessionKey(
+        apiKey: key,
+        apiSecret: secret,
+        token: token,
+      );
+      if (sk == null || sk.isEmpty) {
+        _toast(l.musicScrobbleLastfmSessionFailed);
+        return;
+      }
+      _lfSessionKey.text = sk;
+      _pendingToken = null;
+      _pendingKey = null;
+      _pendingSecret = null;
+      await _save();
+      _toast(l.musicScrobbleLastfmAuthSuccess);
+    } finally {
+      if (mounted) setState(() => _oauthBusy = false);
     }
   }
 
@@ -242,33 +323,50 @@ class _ScrobbleSettingsPageState
           obscureText: true,
         ),
         const SizedBox(height: 12),
+        Text(
+          context.l10n.musicScrobbleSessionKeyDesc,
+          style: TextStyle(
+            fontSize: 11,
+            color: isDark ? Colors.white60 : Colors.black54,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // 应用内 OAuth：授权 → 我已授权完成（自动取回 sk）
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            FilledButton.tonalIcon(
+              icon: _oauthBusy
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.open_in_new_rounded, size: 16),
+              label: Text(context.l10n.musicScrobbleAuthorizeButton),
+              onPressed: _oauthBusy ? null : _startLastfmAuth,
+            ),
+            TextButton.icon(
+              icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
+              label: Text(context.l10n.musicScrobbleLastfmAuthCompleteButton),
+              onPressed:
+                  (_oauthBusy || _pendingToken == null) ? null : _completeLastfmAuth,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: Text(
-                context.l10n.musicScrobbleSessionKeyDesc,
+                context.l10n.musicScrobbleLastfmManualHint,
                 style: TextStyle(
                   fontSize: 11,
                   color: isDark ? Colors.white60 : Colors.black54,
                 ),
               ),
-            ),
-            TextButton.icon(
-              icon: const Icon(Icons.open_in_new_rounded, size: 16),
-              label: Text(context.l10n.musicScrobbleAuthorizeButton),
-              onPressed: () {
-                final key = _lfApiKey.text.trim();
-                if (key.isEmpty) {
-                  final l = AppLocalizations.of(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l.musicScrobbleLastfmApiKeyRequired)),
-                  );
-                  return;
-                }
-                _openUrl(
-                  'https://www.last.fm/api/auth/?api_key=$key',
-                );
-              },
             ),
             IconButton(
               icon: const Icon(Icons.paste_rounded, size: 18),

@@ -8,6 +8,7 @@ import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/features/book/data/services/mobi/mobi_huffcdic.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_to_epub.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -565,6 +566,22 @@ $htmlContent
         }
       }
 
+      // HUFF/CDIC 压缩（17480/0x4448）：尝试构建解码器，失败则回退到旧的报错提示
+      MobiHuffCdicReader? huffReader;
+      var extraDataFlags = 0;
+      if (compression == 17480) {
+        if (record0.length >= 244) {
+          extraDataFlags = _readUint16(record0, 242);
+        }
+        huffReader = _buildHuffCdicReader(record0, recordOffsets, bytes);
+        if (huffReader == null) {
+          // 无法解码（缺失记录/码表异常），保持原有行为：提示用其他工具
+          return MobiParseResult.failure(
+            appL10n.bookMobiHuffCompressionError(_getCalibreInstallHint()),
+          );
+        }
+      }
+
       // 解压文本记录
       final textBuffer = StringBuffer();
       final textRecordCount = recordCount < recordOffsets.length
@@ -587,8 +604,20 @@ $htmlContent
           // PalmDOC 压缩
           final decompressed = _decompressPalmDoc(recordData);
           text = await _decodeText(decompressed, textEncoding);
+        } else if (compression == 17480 && huffReader != null) {
+          // HUFF/CDIC 压缩
+          final trimmed = _removeTrailingEntries(recordData, extraDataFlags);
+          Uint8List decompressed;
+          try {
+            decompressed = huffReader.unpack(trimmed);
+          } on Object catch (e) {
+            // 单条记录解码失败：跳过该记录，避免破坏整体解析
+            logger.w('HUFF/CDIC 记录解压失败，跳过', e);
+            continue;
+          }
+          text = await _decodeText(decompressed, textEncoding);
         } else {
-          // HUFF/CDIC 压缩，暂不支持
+          // 未知压缩类型，保持原有行为
           return MobiParseResult.failure(
             appL10n.bookMobiHuffCompressionError(_getCalibreInstallHint()),
           );
@@ -783,6 +812,91 @@ $htmlContent
     }
 
     return Uint8List.fromList(output);
+  }
+
+  /// 构建 HUFF/CDIC 解码器
+  ///
+  /// 从 record0（偏移 112/116）定位 HUFF 记录与 CDIC 记录并加载码表/字典。
+  /// 任何异常都返回 null，由调用方回退到原有“不支持”提示。
+  MobiHuffCdicReader? _buildHuffCdicReader(
+    Uint8List record0,
+    List<int> recordOffsets,
+    Uint8List bytes,
+  ) {
+    try {
+      if (record0.length < 120) return null;
+      final first = _readUint32(record0, 112);
+      final count = _readUint32(record0, 116);
+      if (first <= 0 || count <= 0 || first >= recordOffsets.length) {
+        logger.w('HUFF/CDIC 记录定位无效: first=$first count=$count');
+        return null;
+      }
+
+      Uint8List recordAt(int idx) {
+        final start = recordOffsets[idx];
+        final end =
+            idx + 1 < recordOffsets.length ? recordOffsets[idx + 1] : bytes.length;
+        return bytes.sublist(start, end);
+      }
+
+      final reader = MobiHuffCdicReader()..loadHuff(recordAt(first));
+      for (var i = 1; i < count; i++) {
+        final idx = first + i;
+        if (idx >= recordOffsets.length) break;
+        reader.loadCdic(recordAt(idx));
+      }
+
+      if (!reader.isReady) {
+        logger.w('HUFF/CDIC 码表或字典为空');
+        return null;
+      }
+      return reader;
+    } on Object catch (e) {
+      logger.w('HUFF/CDIC 解码器构建失败', e);
+      return null;
+    }
+  }
+
+  /// 移除文本记录尾部的额外数据条目（multibyte/trailing entries）
+  ///
+  /// HUFF/CDIC 与新格式 MOBI 的文本记录尾部可能附带额外数据，
+  /// 需在解压前剥离，否则位流末尾会混入垃圾字节。
+  Uint8List _removeTrailingEntries(Uint8List data, int extraDataFlags) {
+    if (extraDataFlags == 0 || data.isEmpty) return data;
+    var end = data.length;
+
+    // bit1..bit15：后向变长编码的尾部数据块（不含 bit0 多字节重叠）
+    for (var bit = 15; bit >= 1; bit--) {
+      if ((extraDataFlags & (1 << bit)) != 0) {
+        final size = _sizeOfTrailingDataEntry(data, end);
+        end -= size;
+        if (end <= 0) return Uint8List(0);
+      }
+    }
+
+    // bit0：多字节字符重叠，末字节低 2 位为重叠字节数（+1 含该计数字节）
+    if ((extraDataFlags & 0x1) != 0 && end > 0) {
+      final overlap = data[end - 1] & 0x03;
+      end = end - overlap - 1;
+      if (end < 0) end = 0;
+    }
+
+    return end < data.length ? Uint8List.sublistView(data, 0, end) : data;
+  }
+
+  /// 计算尾部数据条目的总字节数（含其变长编码自身）
+  ///
+  /// 对应 KindleUnpack getSizeOfTrailingDataEntry：读取末尾最多 4 字节，
+  /// 遇到最高位为 1 的字节时重置累加值。
+  int _sizeOfTrailingDataEntry(Uint8List data, int end) {
+    var num = 0;
+    final start = end - 4 < 0 ? 0 : end - 4;
+    for (var i = start; i < end; i++) {
+      final v = data[i];
+      if ((v & 0x80) != 0) num = 0;
+      num = (num << 7) | (v & 0x7F);
+    }
+    return num;
   }
 
   /// 解析 EXTH 头部中的作者信息

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -19,9 +20,26 @@ import 'package:synchronized/synchronized.dart';
 ///   因为 ftpconnect 不暴露原生流式下载；调用方应注意大文件会占用本地存储
 /// - search / 缩略图等不支持，直接返回空
 class FtpFileSystem implements NasFileSystem {
-  FtpFileSystem({required FTPConnect ftp}) : _ftp = ftp;
+  FtpFileSystem({
+    required FTPConnect ftp,
+    String? host,
+    int port = 21,
+    String? user,
+    String? pass,
+  })  : _ftp = ftp,
+        _host = host,
+        _port = port,
+        _user = user,
+        _pass = pass;
 
   final FTPConnect _ftp;
+
+  /// 原生 FTP REST 流式下载所需的连接参数（用于 range 读取，避免整文件下载）。
+  /// _host 为空时 range 读取回退到「整文件下载后本地 seek」。仅支持明文 FTP。
+  final String? _host;
+  final int _port;
+  final String? _user;
+  final String? _pass;
 
   /// 串行化所有 FTP 调用——FTP 控制连接是单线程
   final _lock = Lock();
@@ -86,46 +104,179 @@ class FtpFileSystem implements NasFileSystem {
   Future<Stream<List<int>>> getFileStream(
     String path, {
     FileRange? range,
-  }) =>
-      _withLock('getFileStream', () async {
-        final tempDir = await getTemporaryDirectory();
-        _tempCounter++;
-        final tempFile = File(p.join(
-          tempDir.path,
-          'ftp_stream_${DateTime.now().millisecondsSinceEpoch}_$_tempCounter',
-        ));
-        _pendingTempFiles.add(tempFile);
+  }) async {
+    final normalized = _normalize(path);
+    // 带 range 时优先用原生 FTP REST+RETR 流式（只取所需字节，不整文件下载）
+    if (range != null && _host != null) {
+      final restStream =
+          await _tryRestRangeStream(normalized, range.start, range.end);
+      if (restStream != null) return restStream;
+    }
+    // 回退：整文件下载到临时文件后本地读取（妥协路径，零破坏）
+    return _withLock(
+      'getFileStream',
+      () => _downloadWholeFileStream(normalized, range),
+    );
+  }
 
-        final ok = await _ftp.downloadFile(_normalize(path), tempFile);
-        if (!ok || !tempFile.existsSync()) {
-          throw Exception(appL10n.ftpFileSystemDownloadFailed(path));
+  /// 回退路径：整文件下载后本地 seek（ftpconnect 不支持 REST 时）。
+  Future<Stream<List<int>>> _downloadWholeFileStream(
+    String normalizedPath,
+    FileRange? range,
+  ) async {
+    final tempDir = await getTemporaryDirectory();
+    _tempCounter++;
+    final tempFile = File(p.join(
+      tempDir.path,
+      'ftp_stream_${DateTime.now().millisecondsSinceEpoch}_$_tempCounter',
+    ));
+    _pendingTempFiles.add(tempFile);
+
+    final ok = await _ftp.downloadFile(normalizedPath, tempFile);
+    if (!ok || !tempFile.existsSync()) {
+      throw Exception(appL10n.ftpFileSystemDownloadFailed(normalizedPath));
+    }
+
+    Stream<List<int>> stream;
+    if (range != null) {
+      // 范围读取：跳过前 N 字节
+      final raf = await tempFile.open();
+      await raf.setPosition(range.start);
+      final length = (range.end ?? await tempFile.length()) - range.start;
+      final bytes = await raf.read(length);
+      await raf.close();
+      stream = Stream.value(bytes);
+    } else {
+      stream = tempFile.openRead();
+    }
+
+    // 等流被消费完后清理临时文件
+    return stream.transform(StreamTransformer.fromHandlers(
+      handleDone: (sink) async {
+        sink.close();
+        _scheduleCleanup(tempFile);
+      },
+      handleError: (error, st, sink) {
+        sink.addError(error, st);
+        _scheduleCleanup(tempFile);
+      },
+    ));
+  }
+
+  /// 用原生 FTP REST+RETR 实现 range 流式读取（不整文件下载）。
+  ///
+  /// 仅支持明文 FTP（与当前 ftpconnect 配置一致）。流程：另开一条控制连接
+  /// 登录 → TYPE I → PASV → REST start → RETR path，从被动数据连接读取
+  /// `[start, end)`。任何步骤失败都返回 null 以回退到整文件路径（零破坏）。
+  Future<Stream<List<int>>?> _tryRestRangeStream(
+    String path,
+    int start,
+    int? end,
+  ) async {
+    final host = _host;
+    if (host == null) return null;
+    const timeout = Duration(seconds: 15);
+    Socket? control;
+    Socket? data;
+    _FtpControlReader? reader;
+
+    Future<Stream<List<int>>?> fail() async {
+      data?.destroy();
+      control?.destroy();
+      reader?.dispose();
+      return null;
+    }
+
+    try {
+      control = await Socket.connect(host, _port, timeout: timeout);
+      reader = _FtpControlReader(control);
+
+      if ((await reader.readReply(timeout)).code != 220) return fail();
+
+      control.add(utf8.encode('USER ${_user ?? 'anonymous'}\r\n'));
+      final userReply = await reader.readReply(timeout);
+      if (userReply.code == 331) {
+        control.add(utf8.encode('PASS ${_pass ?? ''}\r\n'));
+        if ((await reader.readReply(timeout)).code != 230) return fail();
+      } else if (userReply.code != 230) {
+        return fail();
+      }
+
+      control.add(utf8.encode('TYPE I\r\n'));
+      if ((await reader.readReply(timeout)).code != 200) return fail();
+
+      control.add(utf8.encode('PASV\r\n'));
+      final pasv = await reader.readReply(timeout);
+      if (pasv.code != 227) return fail();
+      final endpoint = _parsePasv(pasv.text);
+      if (endpoint == null) return fail();
+
+      data = await Socket.connect(endpoint.$1, endpoint.$2, timeout: timeout);
+
+      if (start > 0) {
+        control.add(utf8.encode('REST $start\r\n'));
+        if ((await reader.readReply(timeout)).code != 350) return fail();
+      }
+
+      control.add(utf8.encode('RETR $path\r\n'));
+      final retr = await reader.readReply(timeout);
+      if (retr.code != 150 && retr.code != 125) return fail();
+
+      final limit = end != null ? end - start : null;
+      return _dataStreamWithCleanup(data, control, reader, limit);
+    } on Object catch (e, st) {
+      AppError.ignore(e, st, 'FtpFileSystem REST 流式失败，回退整文件');
+      return fail();
+    }
+  }
+
+  /// 从被动数据连接读取字节（可选限制为 [limit] 字节），结束时清理控制/数据连接。
+  Stream<List<int>> _dataStreamWithCleanup(
+    Socket data,
+    Socket control,
+    _FtpControlReader reader,
+    int? limit,
+  ) async* {
+    var sent = 0;
+    try {
+      await for (final chunk in data) {
+        if (limit == null) {
+          yield chunk;
+          continue;
         }
-
-        Stream<List<int>> stream;
-        if (range != null) {
-          // 范围读取：跳过前 N 字节
-          final raf = await tempFile.open();
-          await raf.setPosition(range.start);
-          final length = (range.end ?? await tempFile.length()) - range.start;
-          final bytes = await raf.read(length);
-          await raf.close();
-          stream = Stream.value(bytes);
+        if (sent >= limit) break;
+        final remaining = limit - sent;
+        if (chunk.length <= remaining) {
+          sent += chunk.length;
+          yield chunk;
         } else {
-          stream = tempFile.openRead();
+          sent += remaining;
+          yield chunk.sublist(0, remaining);
+          break;
         }
+      }
+    } finally {
+      data.destroy();
+      // 尽力读取 226 完成响应并退出，忽略超时/异常
+      try {
+        await reader.readReply(const Duration(seconds: 5));
+        control.add(utf8.encode('QUIT\r\n'));
+      } on Object {
+        // ignore
+      }
+      control.destroy();
+      reader.dispose();
+    }
+  }
 
-        // 等流被消费完后清理临时文件
-        return stream.transform(StreamTransformer.fromHandlers(
-          handleDone: (sink) async {
-            sink.close();
-            _scheduleCleanup(tempFile);
-          },
-          handleError: (error, st, sink) {
-            sink.addError(error, st);
-            _scheduleCleanup(tempFile);
-          },
-        ));
-      });
+  /// 解析 PASV 应答 "227 ... (h1,h2,h3,h4,p1,p2)" 为 (host, port)。
+  (String, int)? _parsePasv(String text) {
+    final m = RegExp(r'(\d+),(\d+),(\d+),(\d+),(\d+),(\d+)').firstMatch(text);
+    if (m == null) return null;
+    final host = '${m[1]}.${m[2]}.${m[3]}.${m[4]}';
+    final port = (int.parse(m[5]!) << 8) + int.parse(m[6]!);
+    return (host, port);
+  }
 
   void _scheduleCleanup(File f) {
     Future<void>.delayed(const Duration(seconds: 5), () async {
@@ -249,5 +400,77 @@ class FtpFileSystem implements NasFileSystem {
     }
     _pendingTempFiles.clear();
     logger.d('FtpFileSystem: 已释放临时资源');
+  }
+}
+
+/// 一条 FTP 控制应答（三位状态码 + 文本）。
+class _FtpReply {
+  _FtpReply(this.code, this.text);
+  final int code;
+  final String text;
+}
+
+/// 按需读取 FTP 控制连接应答（处理多行应答，以 "NNN " 行结束）。
+class _FtpControlReader {
+  _FtpControlReader(Socket socket) {
+    _sub = socket.listen(
+      (data) {
+        _buffer += String.fromCharCodes(data);
+        _tryComplete();
+      },
+      onError: _failAll,
+      onDone: () => _failAll(const SocketException('FTP control closed')),
+      cancelOnError: false,
+    );
+  }
+
+  late final StreamSubscription<Uint8List> _sub;
+  String _buffer = '';
+  Completer<_FtpReply>? _pending;
+
+  /// 读取下一条完整应答（带超时）。
+  Future<_FtpReply> readReply(Duration timeout) {
+    final completer = Completer<_FtpReply>();
+    _pending = completer;
+    _tryComplete();
+    return completer.future.timeout(timeout);
+  }
+
+  void _tryComplete() {
+    final pending = _pending;
+    if (pending == null || pending.isCompleted) return;
+    final reply = _extractReply();
+    if (reply != null) {
+      _pending = null;
+      pending.complete(reply);
+    }
+  }
+
+  _FtpReply? _extractReply() {
+    final lines = _buffer.split('\n');
+    final collected = <String>[];
+    // 最后一段是未完成行（无结尾 \n），只遍历已完成的行
+    for (var i = 0; i < lines.length - 1; i++) {
+      final line = lines[i].replaceAll('\r', '');
+      collected.add(line);
+      final match = RegExp(r'^(\d{3}) ').firstMatch(line);
+      if (match != null) {
+        _buffer = lines.sublist(i + 1).join('\n');
+        return _FtpReply(int.parse(match.group(1)!), collected.join('\n'));
+      }
+    }
+    return null;
+  }
+
+  void _failAll(Object error) {
+    final pending = _pending;
+    if (pending != null && !pending.isCompleted) {
+      _pending = null;
+      pending.completeError(error);
+    }
+  }
+
+  void dispose() {
+    _sub.cancel();
   }
 }

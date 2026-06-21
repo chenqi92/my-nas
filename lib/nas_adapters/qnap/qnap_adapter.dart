@@ -8,6 +8,7 @@ import 'package:my_nas/nas_adapters/base/nas_connection.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/qnap/api/qnap_api.dart';
 import 'package:my_nas/nas_adapters/qnap/qnap_file_system.dart';
+import 'package:my_nas/nas_adapters/qnap/qnap_media_service.dart';
 
 /// 威联通 QNAP NAS 适配器
 class QnapAdapter implements NasAdapter {
@@ -20,6 +21,7 @@ class QnapAdapter implements NasAdapter {
   late final DioClient _dioClient;
   late final QnapApi _api;
   late QnapFileSystem _fileSystem;
+  QnapMediaService? _mediaService;
 
   ConnectionConfig? _config;
   ServerInfo? _serverInfo;
@@ -30,9 +32,9 @@ class QnapAdapter implements NasAdapter {
         type: NasAdapterType.qnap,
         name: 'QNAP NAS',
         version: AppConstants.appVersion,
-        // QNAP Media Library 尚未实现（mediaService 返回 null），
-        // 暂不声明支持，避免上层调用空服务
-        supportsMediaService: false,
+        // 基于 File Station HTTP API（get_list 媒体过滤 + get_viewer 流地址）
+        // 实现媒体库浏览与播放，无需依赖已停更的 Music/Photo/Video Station 套件
+        supportsMediaService: true,
       );
 
   @override
@@ -109,6 +111,7 @@ class QnapAdapter implements NasAdapter {
   Future<ConnectionResult> _handleLoginSuccess(String sid) async {
     _connected = true;
     _fileSystem = QnapFileSystem(api: _api);
+    _mediaService = QnapMediaService(_api);
 
     // 获取服务器信息
     try {
@@ -137,6 +140,7 @@ class QnapAdapter implements NasAdapter {
     _connected = false;
     _config = null;
     _serverInfo = null;
+    _mediaService = null;
   }
 
   @override
@@ -172,7 +176,7 @@ class QnapAdapter implements NasAdapter {
   }
 
   @override
-  MediaService? get mediaService => null; // TODO: 实现 QNAP Media Library
+  MediaService? get mediaService => _connected ? _mediaService : null;
 
   @override
   ToolsService? get toolsService => null;

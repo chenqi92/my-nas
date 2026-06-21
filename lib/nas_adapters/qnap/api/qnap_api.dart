@@ -280,6 +280,73 @@ class QnapApi {
     return '${_dio.options.baseUrl}/cgi-bin/filemanager/utilRequest.cgi?$queryString';
   }
 
+  /// 列出指定目录下的媒体文件
+  ///
+  /// 复用 File Station 的 `get_list`，通过 `type` 参数按媒体类型过滤：
+  /// 1=音乐, 2=视频, 3=照片（QNAP File Station HTTP API 文档定义）。
+  /// 仅返回文件（不含子目录），用于媒体库浏览。
+  Future<List<QnapFile>> listMediaFiles({
+    required String folderPath,
+    required QnapMediaType mediaType,
+    int start = 0,
+    int limit = 100,
+    String sortBy = 'filename',
+    String sortDirection = 'ASC',
+  }) async {
+    final response = await _request(
+      '/cgi-bin/filemanager/utilRequest.cgi',
+      params: {
+        'func': 'get_list',
+        'path': folderPath,
+        'list_mode': 'all',
+        'type': mediaType.code.toString(),
+        'start': start.toString(),
+        'limit': limit.toString(),
+        'sort': sortBy,
+        'dir': sortDirection,
+        'is_iso': '0',
+        'hidden_file': '0',
+      },
+    );
+
+    final data = response as Map<String, dynamic>? ?? {};
+    final datas = data['datas'] as List<dynamic>? ?? [];
+
+    return datas
+        .map((item) => QnapFile.fromJson(item as Map<String, dynamic>))
+        .where((f) => !f.isDir)
+        .toList();
+  }
+
+  /// 构造媒体播放/转码流 URL
+  ///
+  /// 使用 File Station 文档中的 `get_viewer` 接口。`format` 为空时返回原始
+  /// 文件流（直接 download），否则请求转码格式（mp4_360 / mp4_720 / flv_720）。
+  /// URL 中携带当前 sid，可直接交给播放器加载。
+  String getMediaStreamUrl(
+    String path, {
+    String? format,
+  }) {
+    final lastSlash = path.lastIndexOf('/');
+    final sourcePath = lastSlash > 0 ? path.substring(0, lastSlash) : '/';
+    final sourceFile = lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
+
+    final params = <String, String>{
+      'func': 'get_viewer',
+      'source_path': sourcePath,
+      'source_file': sourceFile,
+      'player': '1',
+      'sid': _sid ?? '',
+      if (format != null && format.isNotEmpty) 'format': format,
+    };
+
+    final queryString = params.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+
+    return '${_dio.options.baseUrl}/cgi-bin/filemanager/utilRequest.cgi?$queryString';
+  }
+
   /// 获取缩略图链接
   String getThumbnailUrl(String path, {String size = 'small'}) {
     final sizeValue = switch (size) {
@@ -499,6 +566,19 @@ class QnapAuthFailure extends QnapAuthResult {
 
 class QnapAuthRequires2FA extends QnapAuthResult {
   const QnapAuthRequires2FA();
+}
+
+/// QNAP File Station 媒体类型过滤值
+///
+/// 对应 `get_list` 的 `type` 参数：1=音乐 2=视频 3=照片。
+enum QnapMediaType {
+  music(1),
+  video(2),
+  photo(3);
+
+  const QnapMediaType(this.code);
+
+  final int code;
 }
 
 /// QNAP 系统信息

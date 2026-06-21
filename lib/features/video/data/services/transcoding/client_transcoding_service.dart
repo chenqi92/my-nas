@@ -1034,12 +1034,25 @@ class ClientTranscodingService implements NasTranscodingService {
     // 通用设置：确保 8-bit 标准像素格式（某些硬件编码器需要）
     args.addAll(['-pix_fmt', 'yuv420p']);
 
-    // 分辨率缩放
+    // 是否需要烧录字幕
+    final burnSubtitle = task.subtitleStreamIndex != null && task.subtitleStreamIndex! >= 0;
+
+    // 视频滤镜链（缩放 + 字幕烧录）合并到单个 -vf
+    // 注意：FFmpeg 只允许一个 -vf，若同时有缩放和字幕必须合并为逗号分隔的滤镜链
+    final videoFilters = <String>[];
     if (!task.quality.isOriginal && task.quality.maxWidth != null && task.quality.maxHeight != null) {
-      args.addAll([
-        '-vf',
+      videoFilters.add(
         'scale=${task.quality.maxWidth}:${task.quality.maxHeight}:force_original_aspect_ratio=decrease',
-      ]);
+      );
+    }
+    if (burnSubtitle) {
+      final subtitleFilter = _buildSubtitleBurnFilter(task);
+      if (subtitleFilter != null) {
+        videoFilters.add(subtitleFilter);
+      }
+    }
+    if (videoFilters.isNotEmpty) {
+      args.addAll(['-vf', videoFilters.join(',')]);
     }
 
     // 码率
@@ -1057,23 +1070,64 @@ class ClientTranscodingService implements NasTranscodingService {
       args.addAll(['-map', '0:v:0', '-map', '0:a:${task.audioStreamIndex}']);
     }
 
-    // 字幕烧录
-    if (task.subtitleStreamIndex != null && task.subtitleStreamIndex! >= 0) {
-      // 需要处理字幕烧录，这里简化处理
-      args.addAll(['-sn']); // 暂时不处理字幕
-    } else {
-      args.addAll(['-sn']); // 不包含字幕
-    }
-
+    // 字幕处理：
+    // - 烧录模式下已通过 subtitles 滤镜把字幕画进视频，输出仍不应包含独立字幕流，加 -sn
+    // - 无字幕需求时同样加 -sn 丢弃字幕（保持原有行为）
     // 输出格式 - 使用 MKV 格式支持流式播放（边转边播）
     // MKV 格式可以在转码过程中被播放，且 MPV 能正确处理增长中的文件
     args
+      ..add('-sn')
       ..addAll(['-f', 'matroska'])
       // 输出文件
       ..add(task.outputPath);
 
     return args;
   }
+
+  /// 构建字幕烧录滤镜（subtitles 滤镜）
+  ///
+  /// 使用 `-vf "subtitles='输入路径':si=字幕序号"` 把内嵌字幕流烧录进画面。
+  /// 返回 null 表示该输入不适合用 subtitles 滤镜（如网络流），调用方应跳过烧录、
+  /// 优雅降级为不烧录字幕（输出仍可正常播放）。
+  ///
+  /// 注意 subtitles 滤镜对 libass 而言需要可被 lavfi/libavformat 读取的本地文件；
+  /// 对 http/https 网络流，subtitles 滤镜通常无法直接打开输入，故跳过烧录。
+  String? _buildSubtitleBurnFilter(_TranscodingTask task) {
+    final input = task.inputPath;
+
+    // 网络流：subtitles 滤镜无法可靠地用文件名方式重新打开输入读取字幕，
+    // 优雅降级为不烧录（见 needsVerification / blockers 说明）。
+    final lower = input.toLowerCase();
+    if (lower.startsWith('http://') ||
+        lower.startsWith('https://') ||
+        lower.startsWith('rtsp://') ||
+        lower.startsWith('rtmp://') ||
+        lower.startsWith('ftp://') ||
+        lower.startsWith('smb://')) {
+      logger.w('ClientTranscoding: 输入为网络流，subtitles 滤镜无法直接读取，跳过字幕烧录');
+      return null;
+    }
+
+    // 去掉 file:// 前缀，subtitles 滤镜需要的是本地文件系统路径
+    var path = input;
+    if (lower.startsWith('file://')) {
+      path = Uri.parse(input).toFilePath();
+    }
+
+    final escaped = _escapeSubtitlesFilterPath(path);
+    final si = task.subtitleStreamIndex!;
+    logger.d('ClientTranscoding: 烧录字幕 si=$si');
+    return "subtitles='$escaped':si=$si";
+  }
+
+  /// 转义 subtitles 滤镜文件名路径。
+  ///
+  /// 返回值预期被放进单引号内：subtitles='<返回值>'。按 FFmpeg 的引用规则，
+  /// 单引号内除了单引号本身，其它字符（含 ':'、'\'、'['、']'、','、';'）都按
+  /// 字面解析，不能再加反斜杠转义——否则会把字面反斜杠注入路径，破坏 Windows
+  /// 路径或含冒号的路径。因此这里只处理单引号：先闭合、写一个转义单引号、再重开。
+  String _escapeSubtitlesFilterPath(String path) =>
+      path.replaceAll("'", r"'\''");
 
   /// 解析 FFmpeg 进度输出
   void _parseProgress(_TranscodingTask task, String line) {

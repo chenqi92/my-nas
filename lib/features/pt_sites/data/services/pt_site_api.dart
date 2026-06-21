@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:html/dom.dart' as html_dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
@@ -882,6 +883,16 @@ class GenericPTSiteApi extends PTSiteApi {
         params['cat'] = category;
       }
 
+      // 透传排序参数到 NexusPHP torrents.php 的 sort/type 列号。
+      // 列号映射依据 NexusPHP 通用 torrents.php 实现：
+      // 1=name 4=added(发布时间) 5=size 6=times_completed 7=seeders 8=leechers。
+      // 无法可靠映射的排序项（如部分站点不暴露的列）保持默认排序（按 id 倒序）。
+      final sortColumn = _nexusPHPSortColumn(sortBy);
+      if (sortColumn != null) {
+        params['sort'] = sortColumn;
+        params['type'] = descending ? 'desc' : 'asc';
+      }
+
       final uri = Uri.parse('$baseUrl/torrents.php').replace(queryParameters: params);
       _logger..d('GenericPTSiteApi.getTorrents: 请求 URL = $uri')
       ..d('GenericPTSiteApi.getTorrents: headers = $headers');
@@ -1094,7 +1105,7 @@ class GenericPTSiteApi extends PTSiteApi {
           seeders: seeders,
           leechers: leechers,
           snatched: snatched,
-          uploadTime: DateTime.now(), // HTML 中时间格式复杂，暂时用当前时间
+          uploadTime: _parseNexusPHPTime(row),
           smallDescr: (smallDescr?.isNotEmpty ?? false) ? smallDescr : null,
           detailUrl: '$baseUrl/details.php?id=$id',
           status: PTTorrentStatus(
@@ -1113,6 +1124,135 @@ class GenericPTSiteApi extends PTSiteApi {
     }
 
     return torrents;
+  }
+
+  /// 将 [PTTorrentSortBy] 映射到 NexusPHP torrents.php 的 sort 列号。
+  /// 返回 null 表示无可靠映射，应保持站点默认排序（零破坏）。
+  String? _nexusPHPSortColumn(PTTorrentSortBy sortBy) => switch (sortBy) {
+        PTTorrentSortBy.name => '1',
+        PTTorrentSortBy.uploadTime => '4', // added
+        PTTorrentSortBy.size => '5',
+        PTTorrentSortBy.snatched => '6', // times_completed
+        PTTorrentSortBy.seeders => '7',
+        PTTorrentSortBy.leechers => '8',
+      };
+
+  /// 从 NexusPHP 种子行中解析发布时间。
+  /// 优先级：
+  /// 1. 含绝对时间 (yyyy-MM-dd HH:mm:ss / yyyy-MM-dd HH:mm) 的 span title 属性；
+  /// 2. 单元格文本中的绝对时间；
+  /// 3. 相对时间（"3天前"、"2小时前"、"5 mins ago" 等）转换为 DateTime；
+  /// 解析失败回退 [DateTime.now]（零破坏，不影响列表展示）。
+  DateTime _parseNexusPHPTime(html_dom.Element row) {
+    try {
+      // 1. 优先取语义明确的时间元素 title（timealive 模式：<span title="yyyy-MM-dd HH:mm:ss">3天前</span>）。
+      for (final el in row.querySelectorAll('span[title], time[title]')) {
+        final abs = _parseAbsoluteDateTime(el.attributes['title'] ?? '');
+        if (abs != null) return abs;
+      }
+      // 1b. 兜底：行内任意带绝对时间 title 的元素（放最后，避免优先命中促销到期等 title）。
+      for (final el in row.querySelectorAll('*[title]')) {
+        final abs = _parseAbsoluteDateTime(el.attributes['title'] ?? '');
+        if (abs != null) return abs;
+      }
+
+      // 候选时间单元格：排除种子名/标题列（含 details.php 链接或 name/torrentname class），
+      // 避免把片名（如 "13 Hours"、"28 Weeks Later"）误解析为相对时间。
+      bool isNameCell(html_dom.Element cell) {
+        final cls = (cell.attributes['class'] ?? '').toLowerCase();
+        if (cls.contains('name') ||
+            cls.contains('torrentname') ||
+            cls.contains('embedded')) {
+          return true;
+        }
+        return cell.querySelector('a[href*="details.php"]') != null;
+      }
+
+      final timeCells =
+          row.querySelectorAll('td').where((c) => !isNameCell(c)).toList();
+
+      // 2. 绝对时间（默认显示模式直接渲染 yyyy-MM-dd HH:mm:ss）。
+      for (final cell in timeCells) {
+        final abs = _parseAbsoluteDateTime(cell.text);
+        if (abs != null) return abs;
+      }
+
+      // 3. 相对时间解析。
+      for (final cell in timeCells) {
+        final rel = _parseRelativeTime(cell.text.trim());
+        if (rel != null) return rel;
+      }
+    } on Object catch (e, st) {
+      AppError.ignore(e, st, 'NexusPHP 发布时间解析失败');
+    }
+    // 零破坏回退。
+    return DateTime.now();
+  }
+
+  /// 从任意文本中提取绝对时间 yyyy-MM-dd HH:mm[:ss]，返回本地时间。
+  DateTime? _parseAbsoluteDateTime(String text) {
+    final match = RegExp(
+      r'(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?',
+    ).firstMatch(text);
+    if (match == null) return null;
+    final year = int.tryParse(match.group(1) ?? '');
+    final month = int.tryParse(match.group(2) ?? '');
+    final day = int.tryParse(match.group(3) ?? '');
+    final hour = int.tryParse(match.group(4) ?? '');
+    final minute = int.tryParse(match.group(5) ?? '');
+    final second = int.tryParse(match.group(6) ?? '0') ?? 0;
+    if (year == null || month == null || day == null || hour == null || minute == null) {
+      return null;
+    }
+    try {
+      return DateTime(year, month, day, hour, minute, second);
+    } on Object {
+      return null;
+    }
+  }
+
+  /// 解析相对时间为 DateTime（基于当前时间回推）。
+  /// 支持中文（年/月/周/天/日/小时/时/分钟/分/秒）与英文（year/month/week/day/hour/min/sec）。
+  /// 形如 "3天前"、"2 小时 30 分钟前"、"5 mins ago"。无法识别返回 null。
+  DateTime? _parseRelativeTime(String text) {
+    if (text.isEmpty) return null;
+    // 必须明显是相对时间，避免把无关数字误判（要求含 前/ago 或时间单位）。
+    final lower = text.toLowerCase();
+    final looksRelative = text.contains('前') ||
+        lower.contains('ago') ||
+        RegExp(r'\d+\s*(年|个?月|周|星期|天|日|小时|时|分钟|分|秒|year|month|week|day|hour|hr|min|sec)',
+                caseSensitive: false)
+            .hasMatch(text);
+    if (!looksRelative) return null;
+
+    var totalSeconds = 0;
+    var matched = false;
+    final unitMatches = RegExp(
+      r'(\d+)\s*(年|个月|月|周|星期|天|日|小时|时|分钟|分|秒|years?|months?|weeks?|days?|hours?|hrs?|h|mins?|minutes?|m|secs?|seconds?|s)',
+      caseSensitive: false,
+    ).allMatches(text);
+
+    for (final m in unitMatches) {
+      final value = int.tryParse(m.group(1) ?? '');
+      final unit = (m.group(2) ?? '').toLowerCase();
+      if (value == null) continue;
+      final factor = switch (unit) {
+        '年' || 'year' || 'years' => 365 * 24 * 3600,
+        '个月' || '月' || 'month' || 'months' => 30 * 24 * 3600,
+        '周' || '星期' || 'week' || 'weeks' => 7 * 24 * 3600,
+        '天' || '日' || 'day' || 'days' => 24 * 3600,
+        '小时' || '时' || 'hour' || 'hours' || 'hr' || 'hrs' || 'h' => 3600,
+        '分钟' || '分' || 'min' || 'mins' || 'minute' || 'minutes' || 'm' => 60,
+        '秒' || 'sec' || 'secs' || 'second' || 'seconds' || 's' => 1,
+        _ => 0,
+      };
+      if (factor > 0) {
+        totalSeconds += value * factor;
+        matched = true;
+      }
+    }
+    if (!matched) return null;
+    return DateTime.now().subtract(Duration(seconds: totalSeconds));
   }
 
   /// HTML 实体解码

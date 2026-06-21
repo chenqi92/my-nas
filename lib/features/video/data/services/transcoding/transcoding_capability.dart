@@ -21,8 +21,11 @@ class TranscodingCapabilityService {
         // NAS 设备支持服务端转码
         SourceType.synology => TranscodingCapability.serverSide,
         SourceType.qnap => TranscodingCapability.serverSide,
-        // 绿联和飞牛 NAS - 需要检查是否有转码 API
-        // TODO: 实现 ugreen/fnos 转码服务后改为 serverSide
+        // 绿联(UGOS)和飞牛(fnOS) NAS：原生转码能力封装在各自的影视中心/飞牛影视
+        // 闭源应用内部，未公开可调用的服务端转码/转封装 HTTP 接口（现有适配器仅覆盖
+        // 文件管理类端点，且均为逆向试探得到）。在缺乏可靠公开转码 API 前，统一降级为
+        // 客户端 FFmpeg 转码以保证可播放。若官方/社区给出确切转码端点，可新增对应
+        // serverSide 转码服务并改回 serverSide。
         SourceType.ugreen => TranscodingCapability.clientSide,
         SourceType.fnos => TranscodingCapability.clientSide,
         // 媒体服务器支持服务端转码

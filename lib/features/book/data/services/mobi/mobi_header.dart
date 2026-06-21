@@ -35,6 +35,8 @@ class MobiHeader {
     this.hasKf8 = false,
     this.kf8BoundaryRecord,
     this.extraDataFlags = 0,
+    this.huffmanFirstRecord = 0,
+    this.huffmanRecordCount = 0,
   });
 
   /// 书籍标题
@@ -94,6 +96,12 @@ class MobiHeader {
 
   /// 额外数据标志
   final int extraDataFlags;
+
+  /// 第一个 HUFF/CDIC 压缩记录索引（仅 HUFF/CDIC 压缩时有效）
+  final int huffmanFirstRecord;
+
+  /// HUFF/CDIC 压缩记录数量（1 个 HUFF + 若干 CDIC）
+  final int huffmanRecordCount;
 
   /// 是否有 NCX 目录
   bool get hasNcx => ncxIndex != null && ncxIndex! > 0;
@@ -167,6 +175,8 @@ class MobiHeaderParser {
       int? fullNameOffset;
       int? fullNameLength;
       var extraDataFlags = 0;
+      var huffmanFirstRecord = 0;
+      var huffmanRecordCount = 0;
 
       String? author;
       String? publisher;
@@ -196,6 +206,13 @@ class MobiHeaderParser {
           if (record0.length >= 112) {
             firstImageRecord = readUint32BE(record0, 108);
           }
+          // HUFF/CDIC 压缩记录定位（绝对偏移，自 record0 起始）
+          // 0x70=112: 第一个 HUFF/CDIC 记录索引
+          // 0x74=116: HUFF/CDIC 记录数量
+          if (record0.length >= 120) {
+            huffmanFirstRecord = readUint32BE(record0, 112);
+            huffmanRecordCount = readUint32BE(record0, 116);
+          }
           if (record0.length >= 132) {
             exthFlags = readUint32BE(record0, 128);
           }
@@ -209,8 +226,9 @@ class MobiHeaderParser {
               ncxIndex = null;
             }
           }
-          if (record0.length >= 242) {
-            extraDataFlags = readUint16BE(record0, 240);
+          // Extra Record Data Flags 是 0xF0 起的 4 字节字段，有效标志位在低 16 位（大端 → 0xF2=242）
+          if (record0.length >= 244) {
+            extraDataFlags = readUint16BE(record0, 242);
           }
 
           logger.d('MOBI: type=${mobiType.label}, encoding=${encoding.label}, '
@@ -299,6 +317,8 @@ class MobiHeaderParser {
         hasKf8: hasKf8,
         kf8BoundaryRecord: kf8BoundaryRecord,
         extraDataFlags: extraDataFlags,
+        huffmanFirstRecord: huffmanFirstRecord,
+        huffmanRecordCount: huffmanRecordCount,
       );
     } on Exception catch (e, st) {
       logger.e('MOBI 头部解析失败', e, st);

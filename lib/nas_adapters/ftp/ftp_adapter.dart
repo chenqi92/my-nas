@@ -66,7 +66,13 @@ class FtpAdapter implements NasAdapter {
         return ConnectionFailure(error: appL10n.ftpAdapterConnectionAuthFailed);
       }
 
-      _fileSystem = FtpFileSystem(ftp: _ftp!);
+      _fileSystem = FtpFileSystem(
+        ftp: _ftp!,
+        host: config.host,
+        port: config.port == 0 ? 21 : config.port,
+        user: config.username.isEmpty ? 'anonymous' : config.username,
+        pass: config.password,
+      );
       _connected = true;
 
       logger.i('FtpAdapter: 连接成功');

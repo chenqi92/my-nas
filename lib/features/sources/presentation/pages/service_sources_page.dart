@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/aria2/presentation/pages/aria2_detail_page.dart';
+import 'package:my_nas/features/moviepilot/presentation/pages/moviepilot_detail_page.dart';
 import 'package:my_nas/features/nastool/presentation/pages/nastool_main_page.dart';
 import 'package:my_nas/features/pt_sites/presentation/pages/pt_site_detail_page.dart';
 import 'package:my_nas/features/qbittorrent/presentation/pages/qbittorrent_detail_page.dart';
@@ -278,12 +279,12 @@ class _ReorderableServiceCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 source.type.icon,
-                color: Colors.blue,
+                color: theme.colorScheme.primary,
               ),
             ),
             const SizedBox(width: 16),
@@ -318,32 +319,35 @@ class _ReorderableServiceCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.blue.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.touch_app,
-              size: 14,
-              color: Colors.blue,
+  Widget _buildStatusChip(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.touch_app,
+            size: 14,
+            color: primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            context.l10n.sourcesClickToEnter,
+            style: TextStyle(
+              color: primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(width: 4),
-            Text(
-              context.l10n.sourcesClickToEnter,
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 服务源卡片
@@ -381,12 +385,12 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   widget.source.type.icon,
-                  color: Colors.blue,
+                  color: theme.colorScheme.primary,
                 ),
               ),
               const SizedBox(width: 16),
@@ -422,32 +426,35 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
     );
   }
 
-  Widget _buildStatusChip(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.blue.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.touch_app,
-              size: 14,
-              color: Colors.blue,
+  Widget _buildStatusChip(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.touch_app,
+            size: 14,
+            color: primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            context.l10n.sourcesClickToEnter,
+            style: TextStyle(
+              color: primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(width: 4),
-            Text(
-              context.l10n.sourcesClickToEnter,
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showSourceOptions(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
@@ -595,7 +602,12 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
         }
       case SourceType.moviepilot:
         if (context.mounted) {
-          context.showInfoToast(context.l10n.sourcesMoviePilotDevelopingToast);
+          await Navigator.push<void>(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => MoviePilotDetailPage(source: widget.source),
+            ),
+          );
         }
       default:
         // 其它已注册但未列出的服务类源：保持沉默，不弹错误
