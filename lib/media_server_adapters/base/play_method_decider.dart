@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/media_server_adapters/base/media_server_entities.dart';
 
 /// 设备播放能力
@@ -218,25 +219,25 @@ class PlayMethodDecider {
         containerCompatible &&
         resolutionCompatible &&
         bitrateCompatible) {
-      return const PlayMethodDecision(
+      return PlayMethodDecision(
         playMethod: MediaPlayMethod.directPlay,
-        reason: '设备完全支持，直接播放',
+        reason: appL10n.playMethodReasonDirectPlay,
       );
     }
 
     // 视频和音频兼容，只是容器不兼容 -> 直接流
     if (videoCompatible && audioCompatible && resolutionCompatible) {
       if (!containerCompatible) {
-        return const PlayMethodDecision(
+        return PlayMethodDecision(
           playMethod: MediaPlayMethod.directStream,
-          reason: '需要重封装容器',
+          reason: appL10n.playMethodReasonRemux,
           containerConversion: true,
         );
       }
       if (!bitrateCompatible) {
-        return const PlayMethodDecision(
+        return PlayMethodDecision(
           playMethod: MediaPlayMethod.directStream,
-          reason: '码率超出设备限制，需要限速',
+          reason: appL10n.playMethodReasonBitrate,
         );
       }
     }
@@ -244,17 +245,17 @@ class PlayMethodDecider {
     // 需要转码
     final reasons = <String>[];
     if (!videoCompatible) {
-      reasons.add('视频编码 ${videoStream.codec} 不支持');
+      reasons.add(appL10n.playMethodReasonVideoCodec(videoStream.codec ?? ''));
     }
     if (!audioCompatible) {
-      reasons.add('音频编码 ${audioStream.codec} 不支持');
+      reasons.add(appL10n.playMethodReasonAudioCodec(audioStream.codec ?? ''));
     }
     if (!resolutionCompatible) {
       reasons.add(
-        '分辨率 ${videoStream.width}x${videoStream.height} 超出设备限制',
+        appL10n.playMethodReasonResolution(videoStream.width ?? 0, videoStream.height ?? 0),
       );
     }
-    if (!containerCompatible) reasons.add('容器格式 $container 不支持');
+    if (!containerCompatible) reasons.add(appL10n.playMethodReasonContainer(container ?? ''));
 
     return PlayMethodDecision(
       playMethod: MediaPlayMethod.transcode,

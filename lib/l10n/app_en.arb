@@ -12337,5 +12337,43 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "playMethodReasonVideoCodec": "Video codec {codec} not supported",
+  "@playMethodReasonVideoCodec": {
+    "placeholders": {
+      "codec": {
+        "type": "Object"
+      }
+    }
+  },
+  "playMethodReasonAudioCodec": "Audio codec {codec} not supported",
+  "@playMethodReasonAudioCodec": {
+    "placeholders": {
+      "codec": {
+        "type": "Object"
+      }
+    }
+  },
+  "playMethodReasonResolution": "Resolution {width}x{height} exceeds device limit",
+  "@playMethodReasonResolution": {
+    "placeholders": {
+      "width": {
+        "type": "Object"
+      },
+      "height": {
+        "type": "Object"
+      }
+    }
+  },
+  "playMethodReasonContainer": "Container format {container} not supported",
+  "@playMethodReasonContainer": {
+    "placeholders": {
+      "container": {
+        "type": "Object"
+      }
+    }
+  },
+  "playMethodReasonBitrate": "Bitrate exceeds device limit, throttling required",
+  "playMethodReasonDirectPlay": "Device fully supports this, direct play",
+  "playMethodReasonRemux": "Container remux required"
 }

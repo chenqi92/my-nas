@@ -6167,5 +6167,12 @@
   "fileBrowserDateDaysAgo": "{days} 天前",
   "musicScraperSearchFailed": "[{source}] 搜索失败: {error}",
   "musicScraperCoverFailed": "[{source}] 获取封面失败: {error}",
-  "musicScraperLyricsFailed": "[{source}] 获取歌词失败: {error}"
+  "musicScraperLyricsFailed": "[{source}] 获取歌词失败: {error}",
+  "playMethodReasonVideoCodec": "视频编码 {codec} 不支持",
+  "playMethodReasonAudioCodec": "音频编码 {codec} 不支持",
+  "playMethodReasonResolution": "分辨率 {width}x{height} 超出设备限制",
+  "playMethodReasonContainer": "容器格式 {container} 不支持",
+  "playMethodReasonBitrate": "码率超出设备限制，需要限速",
+  "playMethodReasonDirectPlay": "设备完全支持，直接播放",
+  "playMethodReasonRemux": "需要重封装容器"
 }
