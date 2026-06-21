@@ -24,6 +24,7 @@ import 'package:my_nas/service_adapters/qbittorrent/api/qbittorrent_api.dart';
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/source_defaults_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// 表单模式
 enum SourceFormMode { create, edit }
@@ -341,14 +342,14 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             key: _sectionKeys.putIfAbsent(section.title, GlobalKey.new),
             child: ExpansionTile(
               title: Text(
-                section.title,
+                localizeFormText(context, section.title),
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
               ),
               subtitle: section.description != null
                   ? Text(
-                      section.description!,
+                      localizeFormText(context, section.description),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -412,7 +413,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           Padding(
             padding: const EdgeInsets.only(top: 16, bottom: 8),
             child: Text(
-              section.title,
+              localizeFormText(context, section.title),
               style: theme.textTheme.titleSmall?.copyWith(
                 color: colorScheme.primary,
                 fontWeight: FontWeight.w500,
@@ -449,15 +450,15 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       TextFormField(
         controller: _controllers[field.key],
         decoration: InputDecoration(
-          labelText: field.label,
-          hintText: field.placeholder,
-          helperText: field.helpText,
+          labelText: localizeFormText(context, field.label),
+          hintText: localizeFormText(context, field.placeholder),
+          helperText: localizeFormText(context, field.helpText),
           helperMaxLines: 2,
           prefixIcon: _getFieldIcon(field.key),
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return context.l10n.sourceFormFieldRequired(field.label);
+            return context.l10n.sourceFormFieldRequired(localizeFormText(context, field.label));
           }
           return field.validator?.call(value);
         },
@@ -474,10 +475,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         obscureText: _obscurePasswords,
         decoration: InputDecoration(
           labelText: widget.mode == SourceFormMode.edit
-              ? '${field.label}${context.l10n.sourceFormPasswordEditModeHint}'
-              : field.label,
-          hintText: field.placeholder,
-          helperText: field.helpText,
+              ? '${localizeFormText(context, field.label)}${context.l10n.sourceFormPasswordEditModeHint}'
+              : localizeFormText(context, field.label),
+          hintText: localizeFormText(context, field.placeholder),
+          helperText: localizeFormText(context, field.helpText),
           helperMaxLines: 2,
           prefixIcon: _getFieldIcon(field.key),
           suffixIcon: IconButton(
@@ -499,7 +500,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             if (widget.mode == SourceFormMode.edit) {
               return null;
             }
-            return context.l10n.sourceFormPasswordRequired(field.label);
+            return context.l10n.sourceFormPasswordRequired(localizeFormText(context, field.label));
           }
           return field.validator?.call(value);
         },
@@ -516,15 +517,15 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         keyboardType: TextInputType.number,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         decoration: InputDecoration(
-          labelText: field.label,
-          hintText: field.placeholder,
-          helperText: field.helpText,
+          labelText: localizeFormText(context, field.label),
+          hintText: localizeFormText(context, field.placeholder),
+          helperText: localizeFormText(context, field.helpText),
           helperMaxLines: 2,
           prefixIcon: _getFieldIcon(field.key),
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return context.l10n.sourceFormFieldRequired(field.label);
+            return context.l10n.sourceFormFieldRequired(localizeFormText(context, field.label));
           }
           if (value != null && value.isNotEmpty) {
             final number = int.tryParse(value);
@@ -546,8 +547,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
 
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(field.label),
-      subtitle: field.helpText != null ? Text(field.helpText!) : null,
+      title: Text(localizeFormText(context, field.label)),
+      subtitle: field.helpText != null ? Text(localizeFormText(context, field.helpText)) : null,
       value: value,
       onChanged: (newValue) {
         setState(() {
@@ -564,14 +565,14 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     return DropdownButtonFormField<String>(
       initialValue: currentValue.isNotEmpty ? currentValue : null,
       decoration: InputDecoration(
-        labelText: field.label,
-        helperText: field.helpText,
+        labelText: localizeFormText(context, field.label),
+        helperText: localizeFormText(context, field.helpText),
         helperMaxLines: 2,
         prefixIcon: _getFieldIcon(field.key),
       ),
       items: field.options
           ?.map(
-            (option) => DropdownMenuItem(value: option, child: Text(option)),
+            (option) => DropdownMenuItem(value: option, child: Text(localizeFormText(context, option))),
           )
           .toList(),
       onChanged: (value) {
@@ -622,7 +623,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         Row(
           children: [
             Expanded(
-              child: Text(field.label, style: theme.textTheme.titleSmall),
+              child: Text(localizeFormText(context, field.label), style: theme.textTheme.titleSmall),
             ),
             TextButton.icon(
               onPressed: () {
@@ -640,7 +641,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
-              field.helpText!,
+              localizeFormText(context, field.helpText),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

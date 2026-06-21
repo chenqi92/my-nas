@@ -8,6 +8,7 @@ import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart'
 import 'package:my_nas/features/music/presentation/providers/music_scraper_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 音乐刮削源表单页面
@@ -241,7 +242,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      section.description!,
+                      localizeFormText(context, section.description),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -260,7 +261,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
       children: [
         const SizedBox(height: 16),
         Text(
-          section.title,
+          localizeFormText(context, section.title),
           style: theme.textTheme.titleSmall?.copyWith(
             color: theme.colorScheme.primary,
             fontWeight: FontWeight.w600,
@@ -269,7 +270,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
         if (section.description != null) ...[
           const SizedBox(height: 4),
           Text(
-            section.description!,
+            localizeFormText(context, section.description),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -301,15 +302,15 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
         child: TextFormField(
           controller: _controllers[field.key],
           decoration: InputDecoration(
-            labelText: field.label,
-            hintText: field.placeholder,
-            helperText: field.helpText,
+            labelText: localizeFormText(context, field.label),
+            hintText: localizeFormText(context, field.placeholder),
+            helperText: localizeFormText(context, field.helpText),
             helperMaxLines: 3,
             border: const OutlineInputBorder(),
           ),
           validator: (value) {
             if (field.required && (value == null || value.isEmpty)) {
-              return '${field.label}不能为空';
+              return '${localizeFormText(context, field.label)}不能为空';
             }
             return field.validator?.call(value);
           },
@@ -323,9 +324,9 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
           controller: _controllers[field.key],
           obscureText: _obscurePasswords,
           decoration: InputDecoration(
-            labelText: field.label,
-            hintText: field.placeholder,
-            helperText: field.helpText,
+            labelText: localizeFormText(context, field.label),
+            hintText: localizeFormText(context, field.placeholder),
+            helperText: localizeFormText(context, field.helpText),
             helperMaxLines: 3,
             border: const OutlineInputBorder(),
             suffixIcon: IconButton(
@@ -339,7 +340,7 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
           ),
           validator: (value) {
             if (field.required && (value == null || value.isEmpty)) {
-              return '${field.label}不能为空';
+              return '${localizeFormText(context, field.label)}不能为空';
             }
             return field.validator?.call(value);
           },
@@ -353,15 +354,15 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
           controller: _controllers[field.key],
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
-            labelText: field.label,
-            hintText: field.placeholder,
-            helperText: field.helpText,
+            labelText: localizeFormText(context, field.label),
+            hintText: localizeFormText(context, field.placeholder),
+            helperText: localizeFormText(context, field.helpText),
             helperMaxLines: 3,
             border: const OutlineInputBorder(),
           ),
           validator: (value) {
             if (field.required && (value == null || value.isEmpty)) {
-              return '${field.label}不能为空';
+              return '${localizeFormText(context, field.label)}不能为空';
             }
             if (value != null && value.isNotEmpty && int.tryParse(value) == null) {
               return context.l10n.musicScraperFormPageValidationNumberInvalid;
@@ -378,15 +379,15 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
           controller: _controllers[field.key],
           keyboardType: TextInputType.url,
           decoration: InputDecoration(
-            labelText: field.label,
-            hintText: field.placeholder,
-            helperText: field.helpText,
+            labelText: localizeFormText(context, field.label),
+            hintText: localizeFormText(context, field.placeholder),
+            helperText: localizeFormText(context, field.helpText),
             helperMaxLines: 3,
             border: const OutlineInputBorder(),
           ),
           validator: (value) {
             if (field.required && (value == null || value.isEmpty)) {
-              return '${field.label}不能为空';
+              return '${localizeFormText(context, field.label)}不能为空';
             }
             if (value != null && value.isNotEmpty) {
               final uri = Uri.tryParse(value);
@@ -406,8 +407,8 @@ class _MusicScraperFormPageState extends ConsumerState<MusicScraperFormPage>
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: SwitchListTile(
-        title: Text(field.label),
-        subtitle: field.helpText != null ? Text(field.helpText!) : null,
+        title: Text(localizeFormText(context, field.label)),
+        subtitle: field.helpText != null ? Text(localizeFormText(context, field.helpText)) : null,
         value: value,
         onChanged: (newValue) {
           setState(() {

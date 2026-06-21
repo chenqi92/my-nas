@@ -7,6 +7,7 @@ import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 刮削源表单页面
@@ -166,7 +167,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
       children: [
         const SizedBox(height: 16),
         Text(
-          section.title,
+          localizeFormText(context, section.title),
           style: theme.textTheme.titleSmall?.copyWith(
             color: theme.colorScheme.primary,
             fontWeight: FontWeight.w600,
@@ -175,7 +176,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         if (section.description != null) ...[
           const SizedBox(height: 4),
           Text(
-            section.description!,
+            localizeFormText(context, section.description),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -209,15 +210,15 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
       child: TextFormField(
         controller: _controllers[field.key],
         decoration: InputDecoration(
-          labelText: field.label,
-          hintText: field.placeholder,
-          helperText: field.helpText,
+          labelText: localizeFormText(context, field.label),
+          hintText: localizeFormText(context, field.placeholder),
+          helperText: localizeFormText(context, field.helpText),
           helperMaxLines: 3,
           border: const OutlineInputBorder(),
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return context.l10n.scraperFormFieldRequiredError(field.label);
+            return context.l10n.scraperFormFieldRequiredError(localizeFormText(context, field.label));
           }
           return field.validator?.call(value);
         },
@@ -231,9 +232,9 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         controller: _controllers[field.key],
         obscureText: _obscurePasswords,
         decoration: InputDecoration(
-          labelText: field.label,
-          hintText: field.placeholder,
-          helperText: field.helpText,
+          labelText: localizeFormText(context, field.label),
+          hintText: localizeFormText(context, field.placeholder),
+          helperText: localizeFormText(context, field.helpText),
           helperMaxLines: 3,
           border: const OutlineInputBorder(),
           suffixIcon: IconButton(
@@ -247,7 +248,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return context.l10n.scraperFormFieldRequiredError(field.label);
+            return context.l10n.scraperFormFieldRequiredError(localizeFormText(context, field.label));
           }
           return field.validator?.call(value);
         },
@@ -261,15 +262,15 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         controller: _controllers[field.key],
         keyboardType: TextInputType.number,
         decoration: InputDecoration(
-          labelText: field.label,
-          hintText: field.placeholder,
-          helperText: field.helpText,
+          labelText: localizeFormText(context, field.label),
+          hintText: localizeFormText(context, field.placeholder),
+          helperText: localizeFormText(context, field.helpText),
           helperMaxLines: 3,
           border: const OutlineInputBorder(),
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return context.l10n.scraperFormFieldRequiredError(field.label);
+            return context.l10n.scraperFormFieldRequiredError(localizeFormText(context, field.label));
           }
           if (value != null && value.isNotEmpty && int.tryParse(value) == null) {
             return context.l10n.scraperFormNumberInvalidError;
@@ -286,15 +287,15 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         controller: _controllers[field.key],
         keyboardType: TextInputType.url,
         decoration: InputDecoration(
-          labelText: field.label,
-          hintText: field.placeholder,
-          helperText: field.helpText,
+          labelText: localizeFormText(context, field.label),
+          hintText: localizeFormText(context, field.placeholder),
+          helperText: localizeFormText(context, field.helpText),
           helperMaxLines: 3,
           border: const OutlineInputBorder(),
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return context.l10n.scraperFormFieldRequiredError(field.label);
+            return context.l10n.scraperFormFieldRequiredError(localizeFormText(context, field.label));
           }
           if (value != null && value.isNotEmpty) {
             final uri = Uri.tryParse(value);
@@ -314,8 +315,8 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: SwitchListTile(
-        title: Text(field.label),
-        subtitle: field.helpText != null ? Text(field.helpText!) : null,
+        title: Text(localizeFormText(context, field.label)),
+        subtitle: field.helpText != null ? Text(localizeFormText(context, field.helpText)) : null,
         value: value,
         onChanged: (newValue) {
           setState(() {
@@ -336,8 +337,8 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
       child: DropdownButtonFormField<String>(
         initialValue: options.any((o) => o.value == currentValue) ? currentValue : options.firstOrNull?.value,
         decoration: InputDecoration(
-          labelText: field.label,
-          helperText: field.helpText,
+          labelText: localizeFormText(context, field.label),
+          helperText: localizeFormText(context, field.helpText),
           helperMaxLines: 3,
           border: const OutlineInputBorder(),
         ),
@@ -347,10 +348,10 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(option.label),
+              Text(localizeFormText(context, option.label)),
               if (option.description != null)
                 Text(
-                  option.description!,
+                  localizeFormText(context, option.description),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -367,7 +368,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         },
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return context.l10n.scraperFormFieldRequiredError(field.label);
+            return context.l10n.scraperFormFieldRequiredError(localizeFormText(context, field.label));
           }
           return field.validator?.call(value);
         },
