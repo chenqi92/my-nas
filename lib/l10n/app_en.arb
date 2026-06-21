@@ -9487,5 +9487,19 @@
   "glassSearchBarCancelButton": "Cancel",
   "glassSearchBarHintText": "Search",
   "glassFloatingBackButtonTooltip": "Back",
-  "glassFloatingSearchBarCloseTooltip": "Close search"
+  "glassFloatingSearchBarCloseTooltip": "Close search",
+  "jumpListOpenMusic": "Open Music",
+  "jumpListOpenMusicLibrary": "Open Music Library",
+  "jumpListOpenVideoLibrary": "Open Video Library",
+  "jumpListOpenFileBrowser": "Open File Browser",
+  "jumpListOpenSettings": "Open Settings",
+  "dioErrorConnectionTimeout": "Connection timeout",
+  "dioErrorNetworkFailed": "Network connection failed",
+  "dioErrorCancelled": "Request cancelled",
+  "dioErrorUnknown": "Unknown error",
+  "dioErrorAuthFailed": "Authentication failed",
+  "dioErrorForbidden": "Insufficient permissions",
+  "dioErrorNotFound": "Resource not found",
+  "dioErrorServer": "Server error",
+  "dioErrorRequestFailed": "Request failed"
 }

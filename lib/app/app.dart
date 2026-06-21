@@ -68,8 +68,8 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
             children: [
               const Icon(Icons.error_outline_rounded, size: 48, color: Colors.red),
               const SizedBox(height: 16),
-              const Text(
-                '发生错误',
+              Text(
+                appL10n.appErrorWidgetTitle,
                 style: TextStyle(fontSize: 20, color: Colors.red, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),

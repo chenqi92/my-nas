@@ -5146,5 +5146,19 @@
   "glassSearchBarCancelButton": "取消",
   "glassSearchBarHintText": "搜索",
   "glassFloatingBackButtonTooltip": "返回",
-  "glassFloatingSearchBarCloseTooltip": "关闭搜索"
+  "glassFloatingSearchBarCloseTooltip": "关闭搜索",
+  "jumpListOpenMusic": "打开音乐",
+  "jumpListOpenMusicLibrary": "打开音乐库",
+  "jumpListOpenVideoLibrary": "打开视频库",
+  "jumpListOpenFileBrowser": "打开文件浏览器",
+  "jumpListOpenSettings": "打开设置",
+  "dioErrorConnectionTimeout": "连接超时",
+  "dioErrorNetworkFailed": "网络连接失败",
+  "dioErrorCancelled": "请求已取消",
+  "dioErrorUnknown": "未知错误",
+  "dioErrorAuthFailed": "认证失败",
+  "dioErrorForbidden": "权限不足",
+  "dioErrorNotFound": "资源不存在",
+  "dioErrorServer": "服务器错误",
+  "dioErrorRequestFailed": "请求失败"
 }

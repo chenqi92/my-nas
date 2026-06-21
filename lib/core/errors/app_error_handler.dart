@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:my_nas/core/errors/exceptions.dart';
 import 'package:my_nas/core/errors/failures.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 统一错误处理工具类
@@ -264,73 +265,75 @@ class AppError {
   /// 获取用户友好的错误提示
   static String getUserFriendlyMessage(Object error, [BuildContext? context]) {
     final category = _categorizeError(error);
+    final l = context != null ? context.l10n : appL10n;
 
     switch (category) {
       case ErrorCategory.network:
         if (error is DioException) {
           return switch (error.type) {
-            DioExceptionType.connectionTimeout => context?.l10n.errorNetworkConnectionTimeout ?? '连接超时，请检查网络',
-            DioExceptionType.sendTimeout => context?.l10n.errorNetworkSendTimeout ?? '发送超时，请稍后重试',
-            DioExceptionType.receiveTimeout => context?.l10n.errorNetworkReceiveTimeout ?? '接收超时，请稍后重试',
-            DioExceptionType.connectionError => context?.l10n.errorNetworkConnectionFailed ?? '网络连接失败，请检查网络设置',
+            DioExceptionType.connectionTimeout => l.errorNetworkConnectionTimeout,
+            DioExceptionType.sendTimeout => l.errorNetworkSendTimeout,
+            DioExceptionType.receiveTimeout => l.errorNetworkReceiveTimeout,
+            DioExceptionType.connectionError => l.errorNetworkConnectionFailed,
             DioExceptionType.badResponse => _getHttpErrorMessage(error.response?.statusCode, context),
-            DioExceptionType.cancel => context?.l10n.errorNetworkRequestCancelled ?? '请求已取消',
-            _ => context?.l10n.errorNetworkGeneric ?? '网络错误，请稍后重试',
+            DioExceptionType.cancel => l.errorNetworkRequestCancelled,
+            _ => l.errorNetworkGeneric,
           };
         }
         if (error is SocketException) {
-          return context?.l10n.errorNetworkConnectionFailed ?? '网络连接失败，请检查网络设置';
+          return l.errorNetworkConnectionFailed;
         }
-        return context?.l10n.errorNetworkGeneric ?? '网络错误，请稍后重试';
+        return l.errorNetworkGeneric;
 
       case ErrorCategory.server:
-        return context?.l10n.errorServerGeneric ?? '服务器错误，请稍后重试';
+        return l.errorServerGeneric;
 
       case ErrorCategory.validation:
         if (error is ValidationException || error is ValidationFailure) {
           return error.toString();
         }
-        return context?.l10n.errorValidationInput ?? '输入数据有误，请检查后重试';
+        return l.errorValidationInput;
 
       case ErrorCategory.security:
-        return context?.l10n.errorAuthenticationFailed ?? '认证失败，请重新登录';
+        return l.errorAuthenticationFailed;
 
       case ErrorCategory.resource:
         if (error is FileSystemException) {
-          return context?.l10n.errorFileOperationFailed(error.message) ?? '文件操作失败: ${error.message}';
+          return l.errorFileOperationFailed(error.message);
         }
-        return context?.l10n.errorResourceAccessFailed ?? '资源访问失败';
+        return l.errorResourceAccessFailed;
 
       case ErrorCategory.data:
-        return context?.l10n.errorDataProcessingFailed ?? '数据处理失败';
+        return l.errorDataProcessingFailed;
 
       case ErrorCategory.cancelled:
-        return context?.l10n.errorOperationCancelled ?? '操作已取消';
+        return l.errorOperationCancelled;
 
       case ErrorCategory.userAction:
-        return context?.l10n.errorOperationFailed ?? '操作失败，请重试';
+        return l.errorOperationFailed;
 
       case ErrorCategory.fatal:
-        return context?.l10n.errorFatalCritical ?? '发生严重错误，请重启应用';
+        return l.errorFatalCritical;
 
       case ErrorCategory.unknown:
-        return context?.l10n.errorUnknown ?? '发生未知错误';
+        return l.errorUnknown;
     }
   }
 
   /// 获取HTTP状态码对应的错误提示
   static String _getHttpErrorMessage(int? statusCode, [BuildContext? context]) {
-    if (statusCode == null) return context?.l10n.errorServerResponseAbnormal ?? '服务器响应异常';
+    final l = context != null ? context.l10n : appL10n;
+    if (statusCode == null) return l.errorServerResponseAbnormal;
 
     return switch (statusCode) {
-      400 => context?.l10n.errorHttpBadRequest ?? '请求参数错误',
-      401 => context?.l10n.errorHttpUnauthorized ?? '未授权，请重新登录',
-      403 => context?.l10n.errorHttpForbidden ?? '访问被拒绝',
-      404 => context?.l10n.errorHttpNotFound ?? '资源不存在',
-      408 => context?.l10n.errorHttpRequestTimeout ?? '请求超时',
-      429 => context?.l10n.errorHttpTooManyRequests ?? '请求过于频繁，请稍后重试',
-      >= 500 && < 600 => context?.l10n.errorHttpServerError ?? '服务器错误，请稍后重试',
-      _ => context?.l10n.errorHttpFailure(statusCode) ?? '请求失败 ($statusCode)',
+      400 => l.errorHttpBadRequest,
+      401 => l.errorHttpUnauthorized,
+      403 => l.errorHttpForbidden,
+      404 => l.errorHttpNotFound,
+      408 => l.errorHttpRequestTimeout,
+      429 => l.errorHttpTooManyRequests,
+      >= 500 && < 600 => l.errorHttpServerError,
+      _ => l.errorHttpFailure(statusCode),
     };
   }
 

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/errors/exceptions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 class DioClient {
@@ -102,20 +103,20 @@ class _ErrorInterceptor extends Interceptor {
       DioExceptionType.sendTimeout ||
       DioExceptionType.receiveTimeout =>
         NetworkException(
-          message: '连接超时',
+          message: appL10n.dioErrorConnectionTimeout,
           stackTrace: err.stackTrace,
         ),
       DioExceptionType.connectionError => NetworkException(
-          message: '网络连接失败',
+          message: appL10n.dioErrorNetworkFailed,
           stackTrace: err.stackTrace,
         ),
       DioExceptionType.badResponse => _handleBadResponse(err),
       DioExceptionType.cancel => NetworkException(
-          message: '请求已取消',
+          message: appL10n.dioErrorCancelled,
           stackTrace: err.stackTrace,
         ),
       _ => ServerException(
-          message: err.message ?? '未知错误',
+          message: err.message ?? appL10n.dioErrorUnknown,
           stackTrace: err.stackTrace,
           statusCode: err.response?.statusCode,
         ),
@@ -135,25 +136,25 @@ class _ErrorInterceptor extends Interceptor {
     final statusCode = err.response?.statusCode;
     return switch (statusCode) {
       401 => AuthException(
-          message: '认证失败',
+          message: appL10n.dioErrorAuthFailed,
           stackTrace: err.stackTrace,
         ),
       403 => AuthException(
-          message: '权限不足',
+          message: appL10n.dioErrorForbidden,
           stackTrace: err.stackTrace,
         ),
       404 => ServerException(
-          message: '资源不存在',
+          message: appL10n.dioErrorNotFound,
           statusCode: statusCode,
           stackTrace: err.stackTrace,
         ),
       final code when code != null && code >= 500 => ServerException(
-          message: '服务器错误',
+          message: appL10n.dioErrorServer,
           statusCode: code,
           stackTrace: err.stackTrace,
         ),
       _ => ServerException(
-          message: err.message ?? '请求失败',
+          message: err.message ?? appL10n.dioErrorRequestFailed,
           statusCode: statusCode,
           stackTrace: err.stackTrace,
         ),

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/router/app_router.dart';
 import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/platform/jump_list_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_favorites_service.dart';
@@ -100,27 +101,27 @@ class JumpListController {
 
   // ---------------- Tasks ----------------
 
-  List<JumpListItem> _buildStaticTasks() => const [
+  List<JumpListItem> _buildStaticTasks() => [
         JumpListItem(
-          label: '打开音乐',
+          label: appL10n.jumpListOpenMusic,
           args: 'mynas://music',
-          tooltip: '打开音乐库',
+          tooltip: appL10n.jumpListOpenMusicLibrary,
         ),
         JumpListItem(
-          label: '打开视频库',
+          label: appL10n.jumpListOpenVideoLibrary,
           args: 'mynas://video',
-          tooltip: '打开视频库',
+          tooltip: appL10n.jumpListOpenVideoLibrary,
         ),
         JumpListItem(
-          label: '打开文件浏览器',
+          label: appL10n.jumpListOpenFileBrowser,
           // 文件浏览器目前挂在 mine 页内；如果未来独立成路由，改这里即可。
           args: 'mynas://mine',
-          tooltip: '打开文件浏览器',
+          tooltip: appL10n.jumpListOpenFileBrowser,
         ),
         JumpListItem(
-          label: '打开设置',
+          label: appL10n.jumpListOpenSettings,
           args: 'mynas://mine',
-          tooltip: '打开设置',
+          tooltip: appL10n.jumpListOpenSettings,
         ),
       ];
 
