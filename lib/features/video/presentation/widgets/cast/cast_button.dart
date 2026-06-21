@@ -103,7 +103,7 @@ class _CastButtonState extends ConsumerState<CastButton> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(context.l10n.videoCastCastingTo, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                        Text(context.l10n.videoCastCastingToLabel, style: const TextStyle(color: Colors.white54, fontSize: 12)),
                         Text(
                           castState.session?.device.name ?? context.l10n.videoCastUnknownDevice,
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -386,7 +386,7 @@ class _CastControlSheet extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.l10n.videoCastCastingTo,
+                        context.l10n.videoCastCastingToLabel,
                         style: VideoPlayerColors.subtitleTextStyle,
                       ),
                       Text(

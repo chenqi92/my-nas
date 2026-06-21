@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/cast_device.dart';
 import 'package:my_nas/features/video/presentation/providers/cast_provider.dart';
 import 'package:my_nas/features/video/presentation/theme/video_player_colors.dart';
@@ -85,7 +86,7 @@ class CastControlOverlay extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    '投屏至 ${session.device.name}',
+                    context.l10n.videoCastCastingTo(session.device.name),
                     style: VideoPlayerColors.subtitleTextStyle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -103,7 +104,7 @@ class CastControlOverlay extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 播放状态指示
-            _buildStatusIndicator(session),
+            _buildStatusIndicator(session, context),
             const SizedBox(height: 24),
 
             // 播放控制按钮
@@ -158,14 +159,14 @@ class CastControlOverlay extends ConsumerWidget {
         ),
       );
 
-  Widget _buildStatusIndicator(CastSession session) {
+  Widget _buildStatusIndicator(CastSession session, BuildContext context) {
     final (text, color) = switch (session.playbackState) {
-      CastPlaybackState.loading => ('加载中...', VideoPlayerColors.secondary),
-      CastPlaybackState.playing => ('播放中', VideoPlayerColors.primary),
-      CastPlaybackState.paused => ('已暂停', VideoPlayerColors.secondary),
-      CastPlaybackState.stopped => ('已停止', VideoPlayerColors.disabled),
-      CastPlaybackState.error => (session.errorMessage ?? '播放出错', VideoPlayerColors.error),
-      CastPlaybackState.idle => ('已连接', VideoPlayerColors.secondary),
+      CastPlaybackState.loading => (context.l10n.videoCastStateLoading, VideoPlayerColors.secondary),
+      CastPlaybackState.playing => (context.l10n.videoCastStatePlaying, VideoPlayerColors.primary),
+      CastPlaybackState.paused => (context.l10n.videoCastStatePaused, VideoPlayerColors.secondary),
+      CastPlaybackState.stopped => (context.l10n.videoCastStateStopped, VideoPlayerColors.disabled),
+      CastPlaybackState.error => (session.errorMessage ?? context.l10n.videoCastStateError, VideoPlayerColors.error),
+      CastPlaybackState.idle => (context.l10n.videoCastStateConnected, VideoPlayerColors.secondary),
     };
 
     return Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/grid_helper.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
@@ -261,7 +262,7 @@ class _PosterCardState extends State<PosterCard> with SingleTickerProviderStateM
                       child: Text(
                         widget.metadata.seasonNumber != null
                             ? 'S${widget.metadata.seasonNumber}'
-                            : '剧集',
+                            : context.l10n.videoPosterCardTvShow,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 9,
@@ -421,7 +422,7 @@ class PosterRow extends StatelessWidget {
                 TextButton(
                   onPressed: onSeeAllTap,
                   child: Text(
-                    '查看全部',
+                    context.l10n.videoViewAll,
                     style: TextStyle(
                       color: AppColors.primary,
                       fontSize: 13,

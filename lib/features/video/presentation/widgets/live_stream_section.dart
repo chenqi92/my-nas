@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/live_stream_models.dart';
 import 'package:my_nas/features/video/presentation/pages/live_channel_list_page.dart';
 import 'package:my_nas/features/video/presentation/pages/live_player_page.dart';
@@ -58,7 +59,7 @@ class LiveStreamSection extends ConsumerWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '直播',
+                  context.l10n.videoLiveStreamSectionTitle,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -79,7 +80,7 @@ class LiveStreamSection extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '查看全部 (${allChannels.length})',
+                      context.l10n.videoLiveStreamViewAllButton(allChannels.length),
                       style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 13,

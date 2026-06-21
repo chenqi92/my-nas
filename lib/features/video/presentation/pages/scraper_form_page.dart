@@ -92,7 +92,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: Text(widget.isEditMode ? '编辑${widget.type.displayName}' : '添加${widget.type.displayName}'),
+        title: Text(widget.isEditMode ? context.l10n.scraperFormEditTitle(widget.type.displayName) : context.l10n.scraperFormAddTitle(widget.type.displayName)),
       ),
       body: Form(
         key: _formKey,
@@ -217,7 +217,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return '${field.label}不能为空';
+            return context.l10n.scraperFormFieldRequiredError(field.label);
           }
           return field.validator?.call(value);
         },
@@ -247,7 +247,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return '${field.label}不能为空';
+            return context.l10n.scraperFormFieldRequiredError(field.label);
           }
           return field.validator?.call(value);
         },
@@ -269,10 +269,10 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return '${field.label}不能为空';
+            return context.l10n.scraperFormFieldRequiredError(field.label);
           }
           if (value != null && value.isNotEmpty && int.tryParse(value) == null) {
-            return '请输入有效的数字';
+            return context.l10n.scraperFormNumberInvalidError;
           }
           return field.validator?.call(value);
         },
@@ -294,12 +294,12 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return '${field.label}不能为空';
+            return context.l10n.scraperFormFieldRequiredError(field.label);
           }
           if (value != null && value.isNotEmpty) {
             final uri = Uri.tryParse(value);
             if (uri == null || !uri.hasScheme) {
-              return '请输入有效的 URL（包含 http:// 或 https://）';
+              return context.l10n.scraperFormUrlInvalidError;
             }
           }
           return field.validator?.call(value);
@@ -367,7 +367,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
         },
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return '${field.label}不能为空';
+            return context.l10n.scraperFormFieldRequiredError(field.label);
           }
           return field.validator?.call(value);
         },
@@ -404,7 +404,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.wifi_tethering),
-                  label: const Text('测试'),
+                  label: Text(context.l10n.scraperFormTestButton),
                 ),
               ),
             if (_formConfig.testConnectionSupported) const SizedBox(width: 16),
@@ -424,7 +424,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
                         ),
                       )
                     : const Icon(Icons.save_rounded),
-                label: Text(widget.isEditMode ? '保存' : '添加'),
+                label: Text(widget.isEditMode ? context.l10n.scraperFormSaveButton : context.l10n.scraperFormAddButton),
               ),
             ),
           ],
@@ -464,7 +464,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(success ? '连接成功' : '连接失败'),
+          content: Text(success ? context.l10n.scraperFormConnectionSuccessToast : context.l10n.scraperFormConnectionFailedToast),
           backgroundColor: success ? AppColors.success : AppColors.error,
         ),
       );
@@ -520,7 +520,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(widget.isEditMode ? '已更新刮削源' : '已添加刮削源'),
+          content: Text(widget.isEditMode ? context.l10n.scraperFormUpdateSuccessToast : context.l10n.scraperFormAddSuccessToast),
         ),
       );
 
@@ -528,7 +528,7 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
     } on Exception catch (e) {
       if (!mounted) return;
 
-      context.showErrorToast('操作失败: $e');
+      context.showErrorToast(context.l10n.scraperFormOperationFailedToast(e));
     } finally {
       if (mounted) {
         setState(() {
@@ -552,8 +552,8 @@ class _ScraperFormPageState extends ConsumerState<ScraperFormPage>
       };
 
   String _getTypeDescription(ScraperType type) => switch (type) {
-        ScraperType.tmdb => '全球最大的影视数据库，提供丰富的电影和电视剧信息',
-        ScraperType.doubanApi => '通过第三方 API 服务获取豆瓣影视数据',
-        ScraperType.doubanWeb => '直接解析豆瓣网页获取数据，需要登录后的 Cookie',
+        ScraperType.tmdb => context.l10n.scraperFormTypeTmdbDescription,
+        ScraperType.doubanApi => context.l10n.scraperFormTypeDoubanApiDescription,
+        ScraperType.doubanWeb => context.l10n.scraperFormTypeDoubanWebDescription,
       };
 }

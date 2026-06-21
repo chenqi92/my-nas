@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/data/services/video_scanner_service.dart';
 
@@ -167,7 +168,7 @@ class _GlobalScrapeIndicatorState extends State<GlobalScrapeIndicator>
             if (stats.failed > 0) ...[
               const SizedBox(height: 4),
               Text(
-                '${stats.completed} 成功 · ${stats.failed} 失败',
+                context.l10n.videoScrapeIndicatorStats(stats.completed, stats.failed),
                 style: TextStyle(
                   fontSize: 11,
                   color: isDark ? Colors.grey[500] : Colors.grey[600],

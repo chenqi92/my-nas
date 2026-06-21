@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/quality/quality_selector_sheet.dart';
@@ -39,7 +40,7 @@ class QualityButton extends ConsumerWidget {
       offset: const Offset(0, -280),
       color: Colors.black87,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      tooltip: '画质',
+      tooltip: context.l10n.videoQualityButtonTooltip,
       enabled: !qualityState.isLoading,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -203,7 +204,7 @@ class QualityIconButton extends ConsumerWidget {
             ),
         ],
       ),
-      tooltip: '画质: ${qualityState.currentQuality.label}',
+      tooltip: context.l10n.videoQualityButtonTooltipWithLabel(qualityState.currentQuality.label),
     );
   }
 }

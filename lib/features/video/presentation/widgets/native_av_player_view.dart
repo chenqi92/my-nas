@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 
 /// 原生 AVPlayer 视频视图
 ///
@@ -25,8 +26,8 @@ class NativeAVPlayerView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!Platform.isIOS && !Platform.isMacOS) {
-      return const Center(
-        child: Text('NativeAVPlayerView 仅支持 iOS 和 macOS'),
+      return Center(
+        child: Text(context.l10n.nativeAvPlayerViewUnsupported),
       );
     }
 

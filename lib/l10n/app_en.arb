@@ -7893,7 +7893,7 @@
   "videoPlayerCacheView": "View",
   "videoCastCasting": "Casting",
   "videoCastIdle": "Cast",
-  "videoCastCastingTo": "Casting to",
+  "videoCastCastingTo": "Casting to {name}",
   "videoCastUnknownDevice": "Unknown device",
   "videoCastStopCasting": "Stop casting",
   "videoCastSelectDevice": "Select cast device",
@@ -8025,5 +8025,185 @@
   "videoQualitySelectorUnsupportedTitle": "This source doesn't support quality switching",
   "videoQualitySelectorUnsupportedDesc": "Can only play original quality",
   "videoQualitySelectorHintServerTranscoding": "Real-time server-side transcoding, switching may take a few seconds",
-  "videoQualitySelectorHintClientTranscoding": "Using client-side transcoding, may increase device load"
+  "videoQualitySelectorHintClientTranscoding": "Using client-side transcoding, may increase device load",
+  "scraperFormEditTitle": "Edit {type}",
+  "@scraperFormEditTitle": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "scraperFormAddTitle": "Add {type}",
+  "@scraperFormAddTitle": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "scraperFormFieldRequiredError": "{field} cannot be empty",
+  "@scraperFormFieldRequiredError": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "scraperFormNumberInvalidError": "Please enter a valid number",
+  "scraperFormUrlInvalidError": "Please enter a valid URL (including http:// or https://)",
+  "scraperFormTestButton": "Test",
+  "scraperFormSaveButton": "Save",
+  "scraperFormAddButton": "Add",
+  "scraperFormConnectionSuccessToast": "Connection successful",
+  "scraperFormConnectionFailedToast": "Connection failed",
+  "scraperFormUpdateSuccessToast": "Scraper source updated",
+  "scraperFormAddSuccessToast": "Scraper source added",
+  "scraperFormOperationFailedToast": "Operation failed: {error}",
+  "@scraperFormOperationFailedToast": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "scraperFormTypeTmdbDescription": "The world's largest film database with rich movie and TV series information",
+  "scraperFormTypeDoubanApiDescription": "Fetch Douban film and TV data through third-party API services",
+  "scraperFormTypeDoubanWebDescription": "Directly parse Douban web pages to fetch data, requires Cookie after login",
+  "videoAudioTrackSelectorTitle": "Audio Tracks",
+  "videoAudioTrackEmpty": "No audio tracks available",
+  "videoAudioTrackFallback": "Track {id}",
+  "@videoAudioTrackFallback": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "videoAudioLanguageChi": "Chinese",
+  "videoAudioLanguageChs": "Simplified Chinese",
+  "videoAudioLanguageCht": "Traditional Chinese",
+  "videoAudioLanguageZho": "Chinese",
+  "videoAudioLanguageZh": "Chinese",
+  "videoAudioLanguageZhCn": "Simplified Chinese",
+  "videoAudioLanguageZhTw": "Traditional Chinese",
+  "videoAudioLanguageZhHk": "Cantonese",
+  "videoAudioLanguageEng": "English",
+  "videoAudioLanguageEn": "English",
+  "videoAudioLanguageJpn": "Japanese",
+  "videoAudioLanguageJa": "Japanese",
+  "videoAudioLanguageKor": "Korean",
+  "videoAudioLanguageKo": "Korean",
+  "videoAudioLanguageFra": "French",
+  "videoAudioLanguageFr": "French",
+  "videoAudioLanguageDeu": "German",
+  "videoAudioLanguageDe": "German",
+  "videoAudioLanguageSpa": "Spanish",
+  "videoAudioLanguageEs": "Spanish",
+  "videoAudioLanguageIta": "Italian",
+  "videoAudioLanguageIt": "Italian",
+  "videoAudioLanguageRus": "Russian",
+  "videoAudioLanguageRu": "Russian",
+  "videoAudioLanguagePor": "Portuguese",
+  "videoAudioLanguagePt": "Portuguese",
+  "videoAudioLanguageAra": "Arabic",
+  "videoAudioLanguageAr": "Arabic",
+  "videoAudioLanguageHin": "Hindi",
+  "videoAudioLanguageHi": "Hindi",
+  "videoAudioLanguageTha": "Thai",
+  "videoAudioLanguageTh": "Thai",
+  "videoAudioLanguageVie": "Vietnamese",
+  "videoAudioLanguageVi": "Vietnamese",
+  "videoAudioLanguageUnd": "Unknown Language",
+  "videoAudioChannelMono": "Mono",
+  "videoAudioChannelStereo": "Stereo",
+  "videoAudioChannel51": "5.1 Surround",
+  "videoAudioChannel71": "7.1 Surround",
+  "videoAudioChannelMulti": "{channels}-channel",
+  "@videoAudioChannelMulti": {
+    "placeholders": {
+      "channels": {
+        "type": "int"
+      }
+    }
+  },
+  "videoPosterCardMovie": "Movie",
+  "videoScrapeIndicatorTitle": "Scraping video metadata...",
+  "videoScrapeIndicatorStats": "{completed} successful · {failed} failed",
+  "@videoScrapeIndicatorStats": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "videoLiveStreamSectionTitle": "Live",
+  "videoLiveStreamViewAllButton": "View all ({count})",
+  "@videoLiveStreamViewAllButton": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoQualityButtonTooltip": "Quality",
+  "videoQualityButtonTooltipWithLabel": "Quality: {label}",
+  "@videoQualityButtonTooltipWithLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "videoAspectRatioTitle": "Aspect Ratio",
+  "videoAspectRatioDescAuto": "Adjust automatically based on video",
+  "videoAspectRatioDescFill": "Stretch to fill screen",
+  "videoAspectRatioDescContain": "Display completely, may have letterbox",
+  "videoAspectRatioDescCover": "Crop to fill, may cut off part of image",
+  "videoAspectRatioDesc16x9": "Widescreen ratio",
+  "videoAspectRatioDesc4x3": "Traditional TV ratio",
+  "videoAspectRatioDesc21x9": "Ultrawide/cinema ratio",
+  "videoAspectRatioDesc1x1": "Square",
+  "nativeAvPlayerViewUnsupported": "NativeAVPlayerView is only supported on iOS and macOS",
+  "videoDetailHeroScrapingCompletedEpisodes": "Completed {successCount} episodes",
+  "@videoDetailHeroScrapingCompletedEpisodes": {
+    "placeholders": {
+      "successCount": {
+        "type": "int"
+      }
+    }
+  },
+  "videoDetailHeroScrapingFailed": "Failed",
+  "videoDetailHeroPlayContinue": "Resume",
+  "videoDetailHeroPlayStart": "Play",
+  "videoDetailHeroMarkUnwatched": "Mark as unwatched",
+  "videoDetailHeroMarkWatched": "Mark as watched",
+  "videoDetailHeroRemoveFavorite": "Remove from favorites",
+  "videoDetailHeroAddFavorite": "Add to favorites",
+  "videoDetailHeroManualScrape": "Manual scrape",
+  "videoDetailHeroRuntimeMinutes": "{minutes} minutes",
+  "@videoDetailHeroRuntimeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "videoCastStateLoading": "Loading…",
+  "videoCastStatePlaying": "Playing",
+  "videoCastStatePaused": "Paused",
+  "videoCastStateStopped": "Stopped",
+  "videoCastStateError": "Playback Error",
+  "videoCastStateConnected": "Connected",
+  "@videoCastCastingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "videoCastCastingToLabel": "Casting to"
 }

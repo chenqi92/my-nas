@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/services/nas_file_system_registry.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
@@ -234,7 +235,7 @@ class _HeroBannerItem extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      metadata.category == MediaCategory.tvShow ? '剧集' : '电影',
+                      metadata.category == MediaCategory.tvShow ? context.l10n.videoPosterCardTvShow : context.l10n.videoPosterCardMovie,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
@@ -375,9 +376,9 @@ class _HeroBannerItem extends StatelessWidget {
                         ),
                       ),
                       icon: const Icon(Icons.play_arrow_rounded, size: 24),
-                      label: const Text(
-                        '播放',
-                        style: TextStyle(
+                      label: Text(
+                        context.l10n.videoPageActionPlay,
+                        style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
@@ -399,9 +400,9 @@ class _HeroBannerItem extends StatelessWidget {
                         ),
                       ),
                       icon: const Icon(Icons.info_outline_rounded, size: 20),
-                      label: const Text(
-                        '详情',
-                        style: TextStyle(
+                      label: Text(
+                        context.l10n.videoPageActionDetails,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),

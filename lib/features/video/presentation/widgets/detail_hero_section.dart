@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart'
     show ScrapingStatus, ScrapingTaskState;
@@ -146,8 +147,8 @@ class DetailHeroSection extends StatelessWidget {
                 vertical: 16,
               ),
               child: isWide
-                  ? _buildWideLayout(isDark, hasPoster, displayPoster, hasOverview, displayOverview)
-                  : _buildNarrowLayout(isDark, hasPoster, displayPoster, hasOverview, displayOverview),
+                  ? _buildWideLayout(context, isDark, hasPoster, displayPoster, hasOverview, displayOverview)
+                  : _buildNarrowLayout(context, isDark, hasPoster, displayPoster, hasOverview, displayOverview),
             ),
           ),
 
@@ -156,7 +157,7 @@ class DetailHeroSection extends StatelessWidget {
             Positioned(
               top: MediaQuery.of(context).padding.top + 8,
               right: 16,
-              child: _buildScrapingIndicator(scrapingTask!),
+              child: _buildScrapingIndicator(context, scrapingTask!),
             ),
         ],
       ),
@@ -164,7 +165,7 @@ class DetailHeroSection extends StatelessWidget {
   }
 
   /// 构建刮削进度指示器（紧凑版，放在右上角）
-  Widget _buildScrapingIndicator(ScrapingTaskState task) {
+  Widget _buildScrapingIndicator(BuildContext context, ScrapingTaskState task) {
     final isCompleted = task.isCompleted;
     final isScraping = task.isScraping;
 
@@ -210,8 +211,8 @@ class DetailHeroSection extends StatelessWidget {
               isScraping
                   ? '${task.progress}/${task.total}'
                   : (task.status == ScrapingStatus.completed
-                      ? '完成 ${task.successCount}集'
-                      : '失败'),
+                      ? context.l10n.videoDetailHeroScrapingCompletedEpisodes(task.successCount)
+                      : context.l10n.videoDetailHeroScrapingFailed),
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -235,6 +236,7 @@ class DetailHeroSection extends StatelessWidget {
 
   /// 宽屏布局 (海报在左，信息在右)
   Widget _buildWideLayout(
+    BuildContext context,
     bool isDark,
     bool hasPoster,
     String? displayPoster,
@@ -281,7 +283,7 @@ class DetailHeroSection extends StatelessWidget {
                 _buildTitleSection(isDark, large: true),
                 const SizedBox(height: 8),
                 // 元数据标签
-                _buildMetadataRow(isDark),
+                _buildMetadataRow(context, isDark),
                 // 标语
                 if (tagline != null && tagline!.isNotEmpty) ...[
                   const SizedBox(height: 12),
@@ -294,7 +296,7 @@ class DetailHeroSection extends StatelessWidget {
                 ],
                 const SizedBox(height: 20),
                 // 操作按钮
-                _buildActionButtons(isDark, large: true),
+                _buildActionButtons(context, isDark, large: true),
               ],
             ),
           ),
@@ -303,6 +305,7 @@ class DetailHeroSection extends StatelessWidget {
 
   /// 窄屏布局 (垂直排列)
   Widget _buildNarrowLayout(
+    BuildContext context,
     bool isDark,
     bool hasPoster,
     String? displayPoster,
@@ -352,7 +355,7 @@ class DetailHeroSection extends StatelessWidget {
                   children: [
                     _buildTitleSection(isDark),
                     const SizedBox(height: 6),
-                    _buildMetadataRow(isDark),
+                    _buildMetadataRow(context, isDark),
                   ],
                 ),
               ),
@@ -370,7 +373,7 @@ class DetailHeroSection extends StatelessWidget {
           ],
           const SizedBox(height: 16),
           // 操作按钮
-          _buildActionButtons(isDark),
+          _buildActionButtons(context, isDark),
         ],
       );
 
@@ -412,7 +415,7 @@ class DetailHeroSection extends StatelessWidget {
       ],
     );
 
-  Widget _buildMetadataRow(bool isDark) {
+  Widget _buildMetadataRow(BuildContext context, bool isDark) {
     final items = <Widget>[];
 
     // 年份
@@ -422,7 +425,7 @@ class DetailHeroSection extends StatelessWidget {
 
     // 时长
     if (metadata.runtime != null && metadata.runtime! > 0) {
-      items.add(_buildMetadataChip(text: _formatRuntime(metadata.runtime!)));
+      items.add(_buildMetadataChip(text: _formatRuntime(metadata.runtime!, context)));
     }
 
     // 内容分级（PG-13, R 等）
@@ -657,7 +660,7 @@ class DetailHeroSection extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(bool isDark, {bool large = false}) {
+  Widget _buildActionButtons(BuildContext context, bool isDark, {bool large = false}) {
     final buttonHeight = large ? 48.0 : 42.0;
     final fontSize = large ? 15.0 : 14.0;
 
@@ -681,8 +684,8 @@ class DetailHeroSection extends StatelessWidget {
               icon: const Icon(Icons.play_arrow_rounded, size: 24),
               label: Text(
                 watchProgress != null && watchProgress! > 0.05
-                    ? '继续播放'
-                    : '播放',
+                    ? context.l10n.videoDetailHeroPlayContinue
+                    : context.l10n.videoDetailHeroPlayStart,
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.w600,
@@ -718,7 +721,7 @@ class DetailHeroSection extends StatelessWidget {
             width: buttonHeight,
             child: IconButton.filled(
               onPressed: onToggleWatched,
-              tooltip: isWatched ? '标记为未观看' : '标记为已观看',
+              tooltip: isWatched ? context.l10n.videoDetailHeroMarkUnwatched : context.l10n.videoDetailHeroMarkWatched,
               style: IconButton.styleFrom(
                 backgroundColor: isWatched
                     ? AppColors.primary.withValues(alpha: 0.3)
@@ -740,7 +743,7 @@ class DetailHeroSection extends StatelessWidget {
             width: buttonHeight,
             child: IconButton.filled(
               onPressed: onFavorite,
-              tooltip: isFavorite ? '取消收藏' : '收藏',
+              tooltip: isFavorite ? context.l10n.videoDetailHeroRemoveFavorite : context.l10n.videoDetailHeroAddFavorite,
               style: IconButton.styleFrom(
                 backgroundColor: Colors.white.withValues(alpha: 0.15),
                 foregroundColor: Colors.white,
@@ -760,7 +763,7 @@ class DetailHeroSection extends StatelessWidget {
             width: buttonHeight,
             child: IconButton.filled(
               onPressed: onScrape,
-              tooltip: '手动刮削',
+              tooltip: context.l10n.videoDetailHeroManualScrape,
               style: IconButton.styleFrom(
                 backgroundColor: Colors.white.withValues(alpha: 0.15),
                 foregroundColor: Colors.white,
@@ -832,9 +835,9 @@ class DetailHeroSection extends StatelessWidget {
     );
   }
 
-  String _formatRuntime(int minutes) {
+  String _formatRuntime(int minutes, BuildContext context) {
     if (minutes < 60) {
-      return '$minutes分钟';
+      return context.l10n.videoDetailHeroRuntimeMinutes(minutes);
     }
     final hours = minutes ~/ 60;
     final mins = minutes % 60;

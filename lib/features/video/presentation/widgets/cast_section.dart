@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/data/services/tmdb_service.dart';
 import 'package:my_nas/features/video/presentation/widgets/cast_card.dart';
 
@@ -178,7 +179,7 @@ class CastAndCrewSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            '演职人员',
+            context.l10n.videoCastCrewLabel,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
