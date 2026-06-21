@@ -150,7 +150,7 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
       child: Scaffold(
         appBar: AppBar(
           leading: const RoundedBackButton(),
-          title: const Text('媒体库'),
+          title: Text(context.l10n.mediaLibraryPageTitle),
           actions: [
             _buildPerformanceModeButton(context, isMobile),
           ],
@@ -166,7 +166,7 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
     final theme = Theme.of(context);
 
     return Tooltip(
-      message: _isPerformanceMode ? '性能模式已开启' : '性能模式已关闭',
+      message: _isPerformanceMode ? context.l10n.mediaLibraryPerformanceTooltipOn : context.l10n.mediaLibraryPerformanceTooltipOff,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () => _togglePerformanceMode(context, isMobile),
@@ -194,7 +194,7 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
               ),
               const SizedBox(width: 4),
               Text(
-                '性能',
+                context.l10n.mediaLibraryPerformanceLabel,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: _isPerformanceMode ? FontWeight.bold : FontWeight.normal,
@@ -217,25 +217,25 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
       final confirm = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
               Icon(Icons.warning_amber_rounded, color: AppColors.warning),
               SizedBox(width: 8),
-              Text('开启性能模式'),
+              Text(context.l10n.mediaLibraryPerformanceDialogTitle),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('性能模式会大幅提高刮削速度，但可能导致：'),
+              Text(context.l10n.mediaLibraryPerformanceDialogContent),
               const SizedBox(height: 12),
-              _buildWarningItem(Icons.thermostat, '设备发热'),
-              _buildWarningItem(Icons.battery_alert, '电池消耗加快'),
-              _buildWarningItem(Icons.memory, '内存占用增加'),
+              _buildWarningItem(Icons.thermostat, context.l10n.mediaLibraryPerformanceDialogHeatWarning),
+              _buildWarningItem(Icons.battery_alert, context.l10n.mediaLibraryPerformanceDialogBatteryWarning),
+              _buildWarningItem(Icons.memory, context.l10n.mediaLibraryPerformanceDialogMemoryWarning),
               const SizedBox(height: 12),
               Text(
-                '建议在充电时使用',
+                context.l10n.mediaLibraryPerformanceDialogRecommendation,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w500,
@@ -246,12 +246,12 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
+              child: Text(context.l10n.mediaLibraryPerformanceDialogCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
               style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
-              child: const Text('开启'),
+              child: Text(context.l10n.mediaLibraryPerformanceDialogConfirm),
             ),
           ],
         ),
@@ -265,10 +265,10 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
     if (context.mounted) {
       context.showSuccessToast(
         newValue
-            ? '性能模式已开启 (${SmbPoolConfig.maxBackgroundTasks} 并发)'
-            : '性能模式已关闭 (${SmbPoolConfig.maxBackgroundTasks} 并发)',
+            ? context.l10n.mediaLibraryPerformanceOnToast(SmbPoolConfig.maxBackgroundTasks)
+            : context.l10n.mediaLibraryPerformanceOffToast(SmbPoolConfig.maxBackgroundTasks),
         action: () => _showConfigDetails(context),
-        actionLabel: '详情',
+        actionLabel: context.l10n.mediaLibraryPerformanceDetailsActionLabel,
       );
     }
   }
@@ -285,24 +285,24 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
               color: _isPerformanceMode ? AppColors.warning : null,
             ),
             const SizedBox(width: 8),
-            Text(_isPerformanceMode ? '性能模式配置' : '普通模式配置'),
+            Text(_isPerformanceMode ? context.l10n.mediaLibraryPerformanceModeConfigTitle : context.l10n.mediaLibraryNormalModeConfigTitle),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildConfigRow('刮削并发数', '${SmbPoolConfig.maxBackgroundTasks}'),
-            _buildConfigRow('SMB 连接数', '${SmbPoolConfig.maxConnections}'),
-            _buildConfigRow('专用连接数', '${SmbPoolConfig.maxDedicatedConnections}'),
-            _buildConfigRow('传输块大小', '${SmbPoolConfig.streamChunkSize ~/ 1024}KB'),
-            _buildConfigRow('CPU 核心数', '${SmbPoolConfig.cpuCores}'),
-            _buildConfigRow('平台', SmbPoolConfig.isDesktop ? '桌面端' : '移动端'),
+            _buildConfigRow(context.l10n.mediaLibraryConfigScrapeConcurrency, '${SmbPoolConfig.maxBackgroundTasks}'),
+            _buildConfigRow(context.l10n.mediaLibraryConfigSmbConnections, '${SmbPoolConfig.maxConnections}'),
+            _buildConfigRow(context.l10n.mediaLibraryConfigDedicatedConnections, '${SmbPoolConfig.maxDedicatedConnections}'),
+            _buildConfigRow(context.l10n.mediaLibraryConfigStreamChunkSize, '${SmbPoolConfig.streamChunkSize ~/ 1024}KB'),
+            _buildConfigRow(context.l10n.mediaLibraryConfigCpuCores, '${SmbPoolConfig.cpuCores}'),
+            _buildConfigRow(context.l10n.mediaLibraryConfigPlatform, SmbPoolConfig.isDesktop ? context.l10n.mediaLibraryConfigPlatformDesktop : context.l10n.mediaLibraryConfigPlatformMobile),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(context.l10n.mediaLibraryConfigDialogClose),
           ),
         ],
       ),
@@ -360,13 +360,13 @@ class _MediaTypeTab extends ConsumerWidget {
 
     return configAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('加载失败: $e')),
+      error: (e, st) => Center(child: Text(context.l10n.mediaLibraryLoadingFailed(e))),
       data: (config) {
         final paths = config.getPathsForType(mediaType);
 
         return sourcesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, st) => Center(child: Text('加载失败: $e')),
+          error: (e, st) => Center(child: Text(context.l10n.mediaLibraryLoadingFailed(e))),
           data: (sources) {
             // 桌面端如果没有源则显示提示（本机源由系统自动创建）
             final isMobile = !kIsWeb && (Platform.isIOS || Platform.isAndroid);
@@ -385,7 +385,7 @@ class _MediaTypeTab extends ConsumerWidget {
                       onPressed: () =>
                           _addPath(context, ref, sources, connections, paths),
                       icon: const Icon(Icons.add_rounded),
-                      label: const Text('添加目录'),
+                      label: Text(context.l10n.mediaLibraryAddDirectoryButton),
                     ),
                   ),
                 ),
@@ -403,7 +403,7 @@ class _MediaTypeTab extends ConsumerWidget {
                         final source = sources.firstWhere(
                           (s) => s.id == path.sourceId,
                           orElse: () => SourceEntity(
-                            name: '未知源',
+                            name: context.l10n.mediaLibraryUnknownSource,
                             type: SourceType.synology,
                             host: '',
                             username: '',
@@ -442,10 +442,10 @@ class _MediaTypeTab extends ConsumerWidget {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
-          Text('尚未添加任何源', style: Theme.of(context).textTheme.titleMedium),
+          Text(context.l10n.mediaLibraryNoSourcesTitle, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
-            '请先在设置中添加 NAS 或其他源',
+            context.l10n.mediaLibraryNoSourcesHint,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -468,12 +468,12 @@ class _MediaTypeTab extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            '未配置${mediaType.displayName}目录',
+            context.l10n.mediaLibraryEmptyPathTitle(mediaType.displayName),
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
           Text(
-            '点击上方按钮添加目录',
+            context.l10n.mediaLibraryEmptyPathHint,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -524,7 +524,7 @@ class _MediaTypeTab extends ConsumerWidget {
     }).toList();
 
     if (connectedSources.isEmpty) {
-      context.showSuccessToast('没有已连接的源，请先连接一个源');
+      context.showSuccessToast(context.l10n.mediaLibraryNoConnectedSourcesToast);
       return;
     }
 
@@ -565,7 +565,7 @@ class _MediaTypeTab extends ConsumerWidget {
                   title: Text(localSource.displayName),
                   subtitle: Text(localSource.type.description),
                   trailing: alreadyAdded
-                      ? const Chip(label: Text('已添加'))
+                      ? Chip(label: Text(context.l10n.mediaLibrarySourceSelectionChip))
                       : const Icon(Icons.chevron_right),
                   enabled: !alreadyAdded,
                   onTap: alreadyAdded
@@ -582,12 +582,12 @@ class _MediaTypeTab extends ConsumerWidget {
 
             // 远程源（需要选择目录）
             if (remoteSources.isNotEmpty) ...[
-              const Padding(
+              Padding(
                 padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    '远程存储',
+                    context.l10n.mediaLibraryRemoteStorageLabel,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -598,8 +598,8 @@ class _MediaTypeTab extends ConsumerWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.snippet_folder_outlined),
-                title: const Text('选择目录...'),
-                subtitle: const Text('从 NAS 或网络存储选择'),
+                title: Text(context.l10n.mediaLibrarySelectDirectoryButton),
+                subtitle: Text(context.l10n.mediaLibrarySelectDirectorySubtitle),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.pop(context);
@@ -670,14 +670,14 @@ class _MediaTypeTab extends ConsumerWidget {
             // ignore: avoid_print
             print('🟠 MediaLibrary: 相册权限结果=$hasPermission');
             if (!hasPermission && context.mounted) {
-              context.showErrorToast('需要相册访问权限才能添加本机相册');
+              context.showErrorToast(context.l10n.mediaLibraryGalleryPermissionError);
               return;
             }
           case MediaType.music:
             // 请求音乐库权限
             hasPermission = await adapter.requestMusicPermission();
             if (!hasPermission && context.mounted) {
-              context.showErrorToast('需要音乐库访问权限才能添加本机音乐');
+              context.showErrorToast(context.l10n.mediaLibraryMusicPermissionError);
               return;
             }
           case MediaType.book:
@@ -693,9 +693,9 @@ class _MediaTypeTab extends ConsumerWidget {
 
       // 根据媒体类型选择路径前缀（photo/video/music）
       final (path, displayName) = switch (mediaType) {
-        MediaType.photo || MediaType.video => ('/gallery', '本机相册'),
-        MediaType.music => ('/music', '本机音乐'),
-        MediaType.book || MediaType.comic || MediaType.note => ('/files', '本机文件'),
+        MediaType.photo || MediaType.video => ('/gallery', context.l10n.mediaLibraryLocalPhotoPath),
+        MediaType.music => ('/music', context.l10n.mediaLibraryLocalMusicPath),
+        MediaType.book || MediaType.comic || MediaType.note => ('/files', context.l10n.mediaLibraryLocalFilesPath),
       };
 
       final newPath = MediaLibraryPath(
@@ -712,14 +712,14 @@ class _MediaTypeTab extends ConsumerWidget {
       _autoScanPath(ref, mediaType, newPath, connections);
 
       if (context.mounted) {
-        context.showSuccessToast('已添加$displayName，正在扫描...');
+        context.showSuccessToast(context.l10n.mediaLibraryAddedToastWithScan(displayName));
       }
     } on Exception catch (e, st) {
       // ignore: avoid_print
       print('🟠 MediaLibrary: ❌ 添加本机失败: $e');
       logger.e('添加本机失败', e, st);
       if (context.mounted) {
-        context.showErrorToast('添加失败: $e');
+        context.showErrorToast(context.l10n.mediaLibraryAddError(e));
       }
     }
   }
@@ -738,9 +738,9 @@ class _MediaTypeTab extends ConsumerWidget {
     };
 
     final typeDisplayName = switch (mediaType) {
-      MediaType.book => '书籍',
-      MediaType.comic => '漫画',
-      _ => '文档',
+      MediaType.book => context.l10n.mediaLibraryBookTypeName,
+      MediaType.comic => context.l10n.mediaLibraryComicTypeName,
+      _ => context.l10n.mediaLibraryDocumentTypeName,
     };
 
     await showAdaptiveModalSheet<void>(
@@ -768,8 +768,8 @@ class _MediaTypeTab extends ConsumerWidget {
                 ),
                 child: const Icon(Icons.snippet_folder_outlined, color: Colors.blue),
               ),
-              title: const Text('从文件导入'),
-              subtitle: Text('从 iCloud、其他云盘或本地选择$typeDisplayName文件'),
+              title: Text(context.l10n.mediaLibraryImportFromFilesOption),
+              subtitle: Text(context.l10n.mediaLibraryImportFromFilesSubtitle(typeDisplayName)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 Navigator.pop(context);
@@ -787,8 +787,8 @@ class _MediaTypeTab extends ConsumerWidget {
                 ),
                 child: Icon(Icons.refresh_rounded, color: AppColors.success),
               ),
-              title: const Text('扫描已有文件'),
-              subtitle: const Text('扫描之前导入到应用的文件'),
+              title: Text(context.l10n.mediaLibraryScanExistingOption),
+              subtitle: Text(context.l10n.mediaLibraryScanExistingSubtitle),
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 Navigator.pop(context);
@@ -817,7 +817,7 @@ class _MediaTypeTab extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '导入的文件会保存到应用目录，可在"文件" App 中管理',
+                        context.l10n.mediaLibraryImportHint,
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -864,7 +864,7 @@ class _MediaTypeTab extends ConsumerWidget {
 
       if (importedFiles.isEmpty) {
         if (context.mounted) {
-          context.showInfoToast('未选择文件');
+          context.showInfoToast(context.l10n.mediaLibraryNoFilesSelectedToast);
         }
         return;
       }
@@ -873,12 +873,12 @@ class _MediaTypeTab extends ConsumerWidget {
       await _addFilesPathToLibrary(context, ref, localSource, connections, importType);
 
       if (context.mounted) {
-        context.showSuccessToast('已导入 ${importedFiles.length} 个$typeDisplayName，正在扫描...');
+        context.showSuccessToast(context.l10n.mediaLibraryImportSuccessToast(importedFiles.length, typeDisplayName));
       }
     } on Exception catch (e, st) {
       logger.e('导入文件失败', e, st);
       if (context.mounted) {
-        context.showErrorToast('导入失败: $e');
+        context.showErrorToast(context.l10n.mediaLibraryImportError(e));
       }
     }
   }
@@ -898,9 +898,9 @@ class _MediaTypeTab extends ConsumerWidget {
       final subPath = FileImportService.instance.getVirtualPathPrefix(importType);
       final virtualPathPrefix = '/files$subPath';
       final displayName = switch (importType) {
-        FileImportType.book => '本机书籍',
-        FileImportType.comic => '本机漫画',
-        FileImportType.document => '本机文档',
+        FileImportType.book => context.l10n.mediaLibraryLocalBookPath,
+        FileImportType.comic => context.l10n.mediaLibraryLocalComicPath,
+        FileImportType.document => context.l10n.mediaLibraryLocalDocumentPath,
       };
 
       final newPath = MediaLibraryPath(
@@ -938,12 +938,12 @@ class _MediaTypeTab extends ConsumerWidget {
       _autoScanPath(ref, mediaType, newPath, connections);
 
       if (context.mounted) {
-        context.showSuccessToast('正在扫描$displayName...');
+        context.showSuccessToast(context.l10n.mediaLibraryAddedToastWithScan(displayName));
       }
     } on Exception catch (e, st) {
       logger.e('添加文件路径失败', e, st);
       if (context.mounted) {
-        context.showErrorToast('添加失败: $e');
+        context.showErrorToast(context.l10n.mediaLibraryAddError(e));
       }
     }
   }
@@ -973,7 +973,7 @@ class _MediaTypeTab extends ConsumerWidget {
               .addPath(mediaType, newPath);
           if (context.mounted) {
             Navigator.pop(context);
-            context.showSnackBar('已添加目录: $path，正在扫描...');
+            context.showSnackBar(context.l10n.mediaLibraryFolderPickerAddedToast(path));
 
             // 添加后自动扫描该路径
             _autoScanPath(ref, mediaType, newPath, connections);
@@ -1601,8 +1601,8 @@ class _PathCardState extends ConsumerState<_PathCard> {
                 isDark: isDark,
                 progress: _importProgress,
                 description: _importTotalCount > 1
-                    ? '正在导入 ($_importedCount/$_importTotalCount): ${_importDescription ?? ''}'
-                    : '正在导入: ${_importDescription ?? ''}',
+                    ? context.l10n.mediaLibraryImportingProgress(_importedCount, _importTotalCount, _importDescription ?? '')
+                    : context.l10n.mediaLibraryImportingSingle(_importDescription ?? ''),
                 color: Colors.blue,
               ),
             ],
@@ -1614,7 +1614,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                 theme: theme,
                 isDark: isDark,
                 progress: _scrapeProgress,
-                description: '正在刮削元数据...',
+                description: context.l10n.mediaLibraryScrapeMetadataDescription,
                 color: AppColors.warning,
               ),
             ],
@@ -1626,7 +1626,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                 theme: theme,
                 isDark: isDark,
                 progress: _musicScrapeProgress,
-                description: _musicScrapeDescription ?? '正在刮削...',
+                description: _musicScrapeDescription ?? context.l10n.mediaLibraryMusicScrapeDescription,
                 color: AppColors.fileAudio,
               ),
               const SizedBox(height: 4),
@@ -1634,7 +1634,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    '成功: $_musicScrapeSuccess  跳过: $_musicScrapeSkip  失败: $_musicScrapeFail',
+                    context.l10n.mediaLibraryMusicScrapeStats(_musicScrapeSuccess, _musicScrapeSkip, _musicScrapeFail),
                     style: TextStyle(
                       fontSize: 10,
                       color: isDark ? Colors.grey[500] : Colors.grey[500],
@@ -1655,7 +1655,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                 child: OutlinedButton.icon(
                   onPressed: _startScraping,
                   icon: const Icon(Icons.auto_fix_high_rounded, size: 16),
-                  label: Text('刮削元数据 ($_pendingScrapeCount 待处理)', style: const TextStyle(fontSize: 13)),
+                  label: Text(context.l10n.mediaLibraryScrapeButton(_pendingScrapeCount), style: const TextStyle(fontSize: 13)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.warning,
                     side: BorderSide(color: AppColors.warning),
@@ -1677,7 +1677,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                 child: OutlinedButton.icon(
                   onPressed: _retryScraping,
                   icon: const Icon(Icons.refresh_rounded, size: 16),
-                  label: Text('重试刮削 ($_retryableCount 失败/无数据)', style: const TextStyle(fontSize: 13)),
+                  label: Text(context.l10n.mediaLibraryRetryButton(_retryableCount), style: const TextStyle(fontSize: 13)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.error,
                     side: BorderSide(color: AppColors.error),
@@ -1698,7 +1698,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
       // 已刮削
       _buildCompactStatChip(
         icon: Icons.check_circle_outline,
-        label: '已刮削',
+        label: context.l10n.mediaLibraryScrapedLabel,
         value: _scrapedCount,
         color: AppColors.success,
         isDark: isDark,
@@ -1707,7 +1707,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
       // 待处理
       _buildCompactStatChip(
         icon: Icons.pending_outlined,
-        label: '待处理',
+        label: context.l10n.mediaLibraryPendingLabel,
         value: _pendingScrapeCount,
         color: _pendingScrapeCount > 0 ? AppColors.warning : AppColors.disabled,
         isDark: isDark,
@@ -1810,7 +1810,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                 color: isConnected && !isCurrentlyScanning ? null : Colors.grey,
               ),
               const SizedBox(width: 12),
-              Text(isCurrentlyScanning ? '扫描中...' : '扫描'),
+              Text(isCurrentlyScanning ? context.l10n.mediaLibraryScanningMenuLabel : context.l10n.mediaLibraryScanMenuLabel),
             ],
           ),
         ),
@@ -1831,7 +1831,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
               ),
               const SizedBox(width: 12),
               Text(
-                _isScraping ? '刮削中...' : '刮削元数据',
+                _isScraping ? context.l10n.mediaLibraryScrapingMenuLabel : context.l10n.mediaLibraryScrapeMenuLabel,
                 style: TextStyle(
                   color: isConnected && !_isScraping && _itemCount > 0
                       ? AppColors.warning
@@ -1850,7 +1850,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
               children: [
                 Icon(Icons.stop_rounded, color: AppColors.error),
                 SizedBox(width: 12),
-                Text('停止刮削', style: TextStyle(color: AppColors.error)),
+                Text(context.l10n.mediaLibraryStopScrapeMenuLabel, style: TextStyle(color: AppColors.error)),
               ],
             ),
           ));
@@ -1872,7 +1872,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
               ),
               const SizedBox(width: 12),
               Text(
-                _isMusicScraping ? '刮削中...' : '批量刮削',
+                _isMusicScraping ? context.l10n.mediaLibraryScrapingMenuLabel : context.l10n.mediaLibraryMusicBatchScrapeMenuLabel,
                 style: TextStyle(
                   color: isConnected && !isCurrentlyScanning && !_isMusicScraping
                       ? AppColors.fileAudio
@@ -1891,7 +1891,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
               children: [
                 Icon(Icons.stop_rounded, color: AppColors.error),
                 SizedBox(width: 12),
-                Text('停止刮削', style: TextStyle(color: AppColors.error)),
+                Text(context.l10n.mediaLibraryStopScrapeMenuLabel, style: TextStyle(color: AppColors.error)),
               ],
             ),
           ));
@@ -1907,9 +1907,9 @@ class _PathCardState extends ConsumerState<_PathCard> {
 
       if (isMobile && isLocalSource && isImportableType) {
         final importLabel = switch (widget.mediaType) {
-          MediaType.book => _isImporting ? '正在导入...' : '导入更多书籍',
-          MediaType.comic => _isImporting ? '正在导入...' : '导入更多漫画',
-          _ => _isImporting ? '正在导入...' : '导入更多文件',
+          MediaType.book => _isImporting ? context.l10n.mediaLibraryImportingMenuLabel : context.l10n.mediaLibraryImportMoreBooksMenuLabel,
+          MediaType.comic => _isImporting ? context.l10n.mediaLibraryImportingMenuLabel : context.l10n.mediaLibraryImportMoreComicsMenuLabel,
+          _ => _isImporting ? context.l10n.mediaLibraryImportingMenuLabel : context.l10n.mediaLibraryImportMoreFilesMenuLabel,
         };
         items.add(PopupMenuItem(
           value: 'import_more',
@@ -1938,7 +1938,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
             children: [
               Icon(widget.path.isEnabled ? Icons.visibility_off_rounded : Icons.visibility_rounded),
               const SizedBox(width: 12),
-              Text(widget.path.isEnabled ? '停用' : '启用'),
+              Text(widget.path.isEnabled ? context.l10n.mediaLibraryToggleDisableMenuLabel : context.l10n.mediaLibraryToggleEnableMenuLabel),
             ],
           ),
         ),
@@ -1948,7 +1948,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
             children: [
               Icon(Icons.delete_rounded, color: AppColors.error),
               SizedBox(width: 12),
-              Text('删除', style: TextStyle(color: AppColors.error)),
+              Text(context.l10n.mediaLibraryDeleteMenuLabel, style: TextStyle(color: AppColors.error)),
             ],
           ),
         ),
@@ -1980,16 +1980,16 @@ class _PathCardState extends ConsumerState<_PathCard> {
         final confirm = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('删除目录'),
-            content: Text('确定要从媒体库中移除 "${widget.path.displayName}" 吗？'),
+            title: Text(context.l10n.mediaLibraryDeleteConfirmTitle),
+            content: Text(context.l10n.mediaLibraryDeleteConfirmContent(widget.path.displayName)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('取消'),
+                child: Text(context.l10n.mediaLibraryDeleteConfirmCancel),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('删除'),
+                child: Text(context.l10n.mediaLibraryDeleteConfirmDelete),
               ),
             ],
           ),
@@ -2038,7 +2038,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
           );
           await _loadStats();
           if (mounted) {
-            context.showSuccessToast('扫描完成，共 $count 首音乐');
+            context.showSuccessToast(context.l10n.mediaLibraryScanCompleteMusic(count));
           }
         case MediaType.photo:
           if (!mounted) return;
@@ -2048,7 +2048,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
           );
           await _loadStats();
           if (mounted) {
-            context.showSuccessToast('扫描完成，共 $count 张照片');
+            context.showSuccessToast(context.l10n.mediaLibraryScanCompletePhotos(count));
           }
         case MediaType.comic:
           if (!mounted) return;
@@ -2058,7 +2058,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
           );
           await _loadStats();
           if (mounted) {
-            context.showSuccessToast('扫描完成，共 $count 本漫画');
+            context.showSuccessToast(context.l10n.mediaLibraryScanCompleteComics(count));
           }
         case MediaType.book:
           if (!mounted) return;
@@ -2068,7 +2068,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
           );
           await _loadStats();
           if (mounted) {
-            context.showSuccessToast('扫描完成，共 $count 本书');
+            context.showSuccessToast(context.l10n.mediaLibraryScanCompleteBooks(count));
           }
         case MediaType.note:
           break;
@@ -2077,7 +2077,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
     } catch (e, st) {
       // 使用通用 catch 捕获所有类型（SMB 库可能抛出 String 类型异常）
       if (mounted) {
-        context.handleError(e, st, '扫描失败');
+        context.handleError(e, st, context.l10n.mediaLibraryScanErrorToast);
       }
     }
     // 不需要在 finally 中重置 _isScanning，因为它通过 progressStream 管理
@@ -2086,7 +2086,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
   Future<void> _startScraping() async {
     // 检查是否已在刮削中
     if (VideoScannerService().isScraping) {
-      context.showInfoToast('刮削任务正在进行中...');
+      context.showInfoToast(context.l10n.mediaLibraryScrapeInProgressToast);
       return;
     }
 
@@ -2097,7 +2097,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
     final hasConnected = connections.values.any((c) => c.status == SourceStatus.connected);
     if (!hasConnected) {
       if (mounted) {
-        context.showWarningToast('没有可用连接，请先连接源');
+        context.showWarningToast(context.l10n.mediaLibraryNoConnectedSourcesWarningToast);
       }
       return;
     }
@@ -2114,12 +2114,12 @@ class _PathCardState extends ConsumerState<_PathCard> {
       await ref.read(videoListProvider.notifier).reloadFromCache();
       if (mounted) {
         setState(() => _isScraping = false);
-        context.showSuccessToast('元数据刮削完成');
+        context.showSuccessToast(context.l10n.mediaLibraryScrapeCompleteToast);
       }
     } on Exception catch (e) {
       if (mounted) {
         setState(() => _isScraping = false);
-        context.showErrorToast('刮削失败: $e');
+        context.showErrorToast(context.l10n.mediaLibraryScrapeErrorToast(e));
       }
     }
   }
@@ -2127,14 +2127,14 @@ class _PathCardState extends ConsumerState<_PathCard> {
   void _stopScraping() {
     VideoScannerService().stopScraping();
     setState(() => _isScraping = false);
-    context.showInfoToast('正在停止刮削...');
+    context.showInfoToast(context.l10n.mediaLibraryStopScrapeToast);
   }
 
   /// 重试刮削失败和无 TMDB 数据的视频
   Future<void> _retryScraping() async {
     // 检查是否已在刮削中
     if (VideoScannerService().isScraping) {
-      context.showInfoToast('刮削任务正在进行中...');
+      context.showInfoToast(context.l10n.mediaLibraryScrapeInProgressToast);
       return;
     }
 
@@ -2145,7 +2145,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
     final hasConnected = connections.values.any((c) => c.status == SourceStatus.connected);
     if (!hasConnected) {
       if (mounted) {
-        context.showWarningToast('没有可用连接，请先连接源');
+        context.showWarningToast(context.l10n.mediaLibraryNoConnectedSourcesWarningToast);
       }
       return;
     }
@@ -2168,11 +2168,11 @@ class _PathCardState extends ConsumerState<_PathCard> {
       if (!mounted) return;
 
       setState(() => _isScraping = false);
-      context.showSuccessToast('重试刮削完成');
+      context.showSuccessToast(context.l10n.mediaLibraryRetryCompleteToast);
     } on Exception catch (e) {
       if (mounted) {
         setState(() => _isScraping = false);
-        context.showErrorToast('重试刮削失败: $e');
+        context.showErrorToast(context.l10n.mediaLibraryRetryErrorToast(e));
       }
     }
   }
@@ -2182,26 +2182,26 @@ class _PathCardState extends ConsumerState<_PathCard> {
     // 检查连接状态
     if (widget.connection == null ||
         widget.connection!.status != SourceStatus.connected) {
-      context.showWarningToast('请先连接源');
+      context.showWarningToast(context.l10n.mediaLibraryMusicScrapeConnectionErrorToast);
       return;
     }
 
     // 检查是否有音乐
     if (_itemCount == 0) {
-      context.showInfoToast('没有可刮削的音乐，请先扫描');
+      context.showInfoToast(context.l10n.mediaLibraryMusicScrapeNoItemsToast);
       return;
     }
 
     // 检查是否已在刮削中
     final scrapeService = MusicScrapeService();
     if (scrapeService.isScraping) {
-      context.showInfoToast('刮削任务正在进行中...');
+      context.showInfoToast(context.l10n.mediaLibraryScrapeInProgressToast);
       return;
     }
 
     // 启动后台刮削
     setState(() => _isMusicScraping = true);
-    context.showSuccessToast('开始后台刮削，共 $_itemCount 首音乐');
+    context.showSuccessToast(context.l10n.mediaLibraryMusicScrapeStartToast(_itemCount));
 
     // 在后台执行刮削
     AppError.fireAndForget(
@@ -2218,7 +2218,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
   void _stopMusicScraping() {
     MusicScrapeService().stopScraping();
     setState(() => _isMusicScraping = false);
-    context.showInfoToast('正在停止刮削...');
+    context.showInfoToast(context.l10n.mediaLibraryStopScrapeToast);
   }
 
   /// 导入更多文件（本机书籍/漫画/文档）
@@ -2227,7 +2227,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
   Future<void> _importMoreFiles(BuildContext context) async {
     // 避免重复导入
     if (_isImporting) {
-      context.showInfoToast('正在导入中...');
+      context.showInfoToast(context.l10n.mediaLibraryImportMoreNoProgress);
       return;
     }
 
@@ -2276,7 +2276,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
 
       if (importedFiles.isEmpty) {
         if (context.mounted) {
-          context.showInfoToast('未选择文件');
+          context.showInfoToast(context.l10n.mediaLibraryNoFilesSelectedToast);
         }
         return;
       }
@@ -2285,7 +2285,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
       await _scanPath();
 
       if (context.mounted) {
-        context.showSuccessToast('已导入 ${importedFiles.length} 个$typeDisplayName');
+        context.showSuccessToast(context.l10n.mediaLibraryImportMoreCompleteToast(importedFiles.length, typeDisplayName));
       }
     } on Exception catch (e, st) {
       // 重置导入状态
@@ -2299,7 +2299,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
 
       logger.e('导入文件失败', e, st);
       if (context.mounted) {
-        context.showErrorToast('导入失败: $e');
+        context.showErrorToast(context.l10n.mediaLibraryImportError(e));
       }
     }
   }

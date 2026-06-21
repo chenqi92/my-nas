@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/scraper/scrape_source.dart';
 import 'package:my_nas/core/scraper/scrape_source_manager.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
@@ -46,7 +47,7 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
     if (added != null && added > 0 && mounted) {
       await _load();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已导入 $added 个刮削源')),
+        SnackBar(content: Text(context.l10n.scrapeSourcesPageImportedCount(added))),
       );
     }
   }
@@ -60,16 +61,16 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除刮削源'),
-        content: Text('确认删除「${s.displayName}」？'),
+        title: Text(context.l10n.scrapeSourcesPageDeleteTitle),
+        content: Text(context.l10n.scrapeSourcesPageDeleteConfirm(s.displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.scrapeSourcesPageCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('删除'),
+            child: Text(context.l10n.scrapeSourcesPageDelete),
           ),
         ],
       ),
@@ -81,10 +82,10 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
   }
 
   String _capLabel(String c) => switch (c) {
-        ScraperCapability.metadata => '元数据',
-        ScraperCapability.cover => '封面',
-        ScraperCapability.lyrics => '歌词',
-        ScraperCapability.lyricsWordLevel => '逐字歌词',
+        ScraperCapability.metadata => context.l10n.scrapeSourcesCapabilityMetadata,
+        ScraperCapability.cover => context.l10n.scrapeSourcesCapabilityCover,
+        ScraperCapability.lyrics => context.l10n.scrapeSourcesCapabilityLyrics,
+        ScraperCapability.lyricsWordLevel => context.l10n.scrapeSourcesCapabilityLyricsWordLevel,
         _ => c,
       };
 
@@ -92,12 +93,12 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('音乐元数据源'),
+        title: Text(context.l10n.scrapeSourcesPageTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.add_rounded),
             onPressed: _showImportSheet,
-            tooltip: '导入',
+            tooltip: context.l10n.scrapeSourcesPageImportTooltip,
           ),
         ],
       ),
@@ -117,7 +118,7 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('版本 ${s.version}'),
+                          Text(context.l10n.scrapeSourcesVersionPrefix(s.version.toString())),
                           if (s.capabilities.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
@@ -173,12 +174,12 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
               const Icon(Icons.code_rounded, size: 48),
               const SizedBox(height: 12),
               Text(
-                '暂无音乐元数据源',
+                context.l10n.scrapeSourcesEmptyTitle,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
               Text(
-                '本应用不内嵌任何源。点击右上角「+」导入用户提供的 JSON 配置。',
+                context.l10n.scrapeSourcesEmptyDesc,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
@@ -222,7 +223,7 @@ class _ImportSheetState extends State<_ImportSheet> {
       if (list.isEmpty) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('未解析到有效的刮削源 JSON')),
+          SnackBar(content: Text(context.l10n.scrapeSourcesImportNoValidJson)),
         );
         return;
       }
@@ -230,7 +231,7 @@ class _ImportSheetState extends State<_ImportSheet> {
       if (!mounted) return;
       Navigator.pop(context, added);
     } on Exception catch (e, st) {
-      AppError.handleWithUI(context, e, st, '导入失败', 'scrapeSource.import');
+      AppError.handleWithUI(context, e, st, context.l10n.scrapeSourcesImportFailed, 'scrapeSource.import');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -250,7 +251,7 @@ class _ImportSheetState extends State<_ImportSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '导入刮削源',
+                context.l10n.scrapeSourcesImportSheetTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 12),
@@ -260,17 +261,15 @@ class _ImportSheetState extends State<_ImportSheet> {
                   color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  '本应用仅提供解析引擎，不内置、不分发任何音乐元数据源。 '
-                  '导入的源由用户自行选择，您应确保来源合法、不侵犯第三方著作权。 '
-                  '本应用不对所导入源的内容负责。',
+                child: Text(
+                  context.l10n.scrapeSourcesImportDisclaimer,
                 ),
               ),
               const SizedBox(height: 16),
               SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(value: false, label: Text('粘贴 JSON')),
-                  ButtonSegment(value: true, label: Text('远端 URL')),
+                segments: [
+                  ButtonSegment(value: false, label: Text(context.l10n.scrapeSourcesImportJsonTab)),
+                  ButtonSegment(value: true, label: Text(context.l10n.scrapeSourcesImportUrlTab)),
                 ],
                 selected: {_isUrl},
                 onSelectionChanged: (s) => setState(() => _isUrl = s.first),
@@ -284,8 +283,8 @@ class _ImportSheetState extends State<_ImportSheet> {
                 decoration: InputDecoration(
                   border: const OutlineInputBorder(),
                   hintText: _isUrl
-                      ? 'https://example.com/scrape-sources.json'
-                      : '粘贴 JSON（单对象或数组）',
+                      ? context.l10n.scrapeSourcesImportUrlHint
+                      : context.l10n.scrapeSourcesImportJsonHint,
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.content_paste_rounded),
                     onPressed: _pasteFromClipboard,
@@ -301,7 +300,7 @@ class _ImportSheetState extends State<_ImportSheet> {
                         width: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('导入'),
+                    : Text(context.l10n.scrapeSourcesImportButton),
               ),
             ],
           ),

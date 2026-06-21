@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
@@ -40,12 +41,12 @@ class SourceTypeSelectionPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 根据允许的分类动态生成标题
     final title = allowedCategories == null
-        ? '添加连接源'
+        ? context.l10n.sourceTypeSelectionAddConnection
         : _hasStorageCategories && !_hasServiceCategories
-            ? '添加连接源'
+            ? context.l10n.sourceTypeSelectionAddConnection
             : !_hasStorageCategories && _hasServiceCategories
-                ? '添加服务'
-                : '添加连接源';
+                ? context.l10n.sourceTypeSelectionAddService
+                : context.l10n.sourceTypeSelectionAddConnection;
 
     return Scaffold(
       appBar: AppBar(
@@ -222,7 +223,7 @@ class SourceTypeSelectionPage extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                '即将推出',
+                context.l10n.sourceTypeSelectionComingSoon,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   fontSize: 10,

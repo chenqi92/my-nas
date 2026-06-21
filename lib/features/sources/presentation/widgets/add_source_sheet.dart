@@ -98,7 +98,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
             child: Row(
               children: [
                 Text(
-                  _isEditing ? '编辑源' : '添加源',
+                  _isEditing ? context.l10n.sourcesAddEditTitleEdit : context.l10n.sourcesAddEditTitleAdd,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const Spacer(),
@@ -123,7 +123,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                   children: [
                     // 源类型选择
                     Text(
-                      '源类型',
+                      context.l10n.sourcesSourceTypeLabel,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
@@ -134,10 +134,10 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        labelText: '名称（可选）',
+                        labelText: context.l10n.sourcesNameFieldLabel,
                         hintText: _sourceType == SourceType.local
-                            ? '例如：本地文件'
-                            : '给这个源起个名字',
+                            ? context.l10n.sourcesNameFieldHintLocal
+                            : context.l10n.sourcesNameFieldHintRemote,
                         prefixIcon: const Icon(Icons.label_outline),
                       ),
                     ),
@@ -158,8 +158,8 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                             Expanded(
                               child: Text(
                                 _isMobile
-                                    ? '本地存储将访问设备媒体库（照片、音乐等）和应用文档目录'
-                                    : '本地存储无需配置连接信息，将直接访问设备上的文件',
+                                    ? context.l10n.sourcesLocalStorageInfoMobile
+                                    : context.l10n.sourcesLocalStorageInfoDesktop,
                                 style: const TextStyle(color: Colors.blue),
                               ),
                             ),
@@ -176,12 +176,12 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                       TextFormField(
                         controller: _hostController,
                         decoration: InputDecoration(
-                          labelText: '主机地址',
+                          labelText: context.l10n.sourcesHostFieldLabel,
                           hintText: _sourceType == SourceType.smb
-                              ? '192.168.1.100（仅 IP 地址，无需端口）'
-                              : '192.168.1.100 或 nas.example.com',
+                              ? context.l10n.sourcesHostFieldHintSmb
+                              : context.l10n.sourcesHostFieldHintOther,
                           helperText: _sourceType == SourceType.smb
-                              ? 'SMB 使用端口 445，无需指定协议前缀'
+                              ? context.l10n.sourcesSmbHelperText
                               : null,
                           prefixIcon: const Icon(Icons.dns_outlined),
                         ),
@@ -189,7 +189,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                         validator: (value) {
                           if (_sourceType != SourceType.local &&
                               (value == null || value.isEmpty)) {
-                            return '请输入主机地址';
+                            return context.l10n.sourcesHostFieldValidationEmpty;
                           }
                           return null;
                         },
@@ -203,19 +203,19 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                             Expanded(
                               child: TextFormField(
                                 controller: _portController,
-                                decoration: const InputDecoration(
-                                  labelText: '端口',
-                                  prefixIcon: Icon(Icons.numbers),
+                                decoration: InputDecoration(
+                                  labelText: context.l10n.sourcesPortFieldLabel,
+                                  prefixIcon: const Icon(Icons.numbers),
                                 ),
                                 keyboardType: TextInputType.number,
                                 validator: (value) {
                                   if (_sourceType != SourceType.local) {
                                     if (value == null || value.isEmpty) {
-                                      return '请输入端口';
+                                      return context.l10n.sourcesPortFieldValidationEmpty;
                                     }
                                     final port = int.tryParse(value);
                                     if (port == null || port < 1 || port > 65535) {
-                                      return '无效端口';
+                                      return context.l10n.sourcesPortFieldValidationInvalid;
                                     }
                                   }
                                   return null;
@@ -225,7 +225,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                             const SizedBox(width: 16),
                             Column(
                               children: [
-                                const Text('SSL'),
+                                Text(context.l10n.sourcesSslLabel),
                                 Switch(
                                   value: _useSsl,
                                   onChanged: (v) => setState(() => _useSsl = v),
@@ -240,14 +240,14 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                       // 用户名
                       TextFormField(
                         controller: _usernameController,
-                        decoration: const InputDecoration(
-                          labelText: '用户名',
-                          prefixIcon: Icon(Icons.person_outline),
+                        decoration: InputDecoration(
+                          labelText: context.l10n.sourcesUsernameFieldLabel,
+                          prefixIcon: const Icon(Icons.person_outline),
                         ),
                         validator: (value) {
                           if (_sourceType != SourceType.local &&
                               (value == null || value.isEmpty)) {
-                            return '请输入用户名';
+                            return context.l10n.sourcesUsernameFieldValidationEmpty;
                           }
                           return null;
                         },
@@ -259,7 +259,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          labelText: _isEditing ? '密码（留空保持不变）' : '密码',
+                          labelText: _isEditing ? context.l10n.sourcesPasswordFieldLabelEdit : context.l10n.sourcesPasswordFieldLabel,
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -276,7 +276,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                           if (_sourceType != SourceType.local &&
                               !_isEditing &&
                               (value == null || value.isEmpty)) {
-                            return '请输入密码';
+                            return context.l10n.sourcesPasswordFieldValidationEmpty;
                           }
                           return null;
                         },
@@ -287,16 +287,16 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                     // 选项
                     if (_sourceType != SourceType.local)
                       SwitchListTile(
-                        title: const Text('自动连接'),
-                        subtitle: const Text('启动时自动连接此源'),
+                        title: Text(context.l10n.sourcesAutoConnectTitle),
+                        subtitle: Text(context.l10n.sourcesAutoConnectSubtitle),
                         value: _autoConnect,
                         onChanged: (v) => setState(() => _autoConnect = v),
                         contentPadding: EdgeInsets.zero,
                       ),
                     if (_sourceType != SourceType.local)
                       SwitchListTile(
-                        title: const Text('记住设备'),
-                        subtitle: const Text('跳过二次验证（如果支持）'),
+                        title: Text(context.l10n.sourcesRememberDeviceTitle),
+                        subtitle: Text(context.l10n.sourcesRememberDeviceSubtitle),
                         value: _rememberDevice,
                         onChanged: (v) => setState(() => _rememberDevice = v),
                         contentPadding: EdgeInsets.zero,
@@ -342,7 +342,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text(_isEditing ? '保存' : '添加并连接'),
+                            : Text(_isEditing ? context.l10n.sourcesSubmitButtonSave : context.l10n.sourcesSubmitButtonAdd),
                       ),
                     ),
                   ],
@@ -411,7 +411,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
       final source = SourceEntity(
         id: widget.source?.id,
         name: _nameController.text.trim().isEmpty && isLocal
-            ? '本地存储'
+            ? context.l10n.sourcesLocalStorageName
             : _nameController.text.trim(),
         type: _sourceType,
         host: isLocal ? 'localhost' : _hostController.text.trim(),
@@ -439,7 +439,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
 
         if (mounted) {
           Navigator.pop(context);
-          context.showSuccessToast('源已更新');
+          context.showSuccessToast(context.l10n.sourcesSuccessUpdated);
         }
       } else {
         // 先尝试连接，只有连接成功才保存源
@@ -460,7 +460,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
           }
           if (mounted) {
             Navigator.pop(context);
-            context.showSuccessToast('已连接到 ${source.displayName}');
+            context.showSuccessToast(context.l10n.sourcesSuccessConnected(source.displayName));
           }
         } else if (connection.status == SourceStatus.requires2FA) {
           // 需要二次验证（本地存储不会触发此分支）
@@ -494,13 +494,13 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                 }
                 if (mounted) {
                   Navigator.pop(context);
-                  context.showSuccessToast('已连接到 ${source.displayName}');
+                  context.showSuccessToast(context.l10n.sourcesSuccessConnected(source.displayName));
                 }
               } else {
                 // 2FA失败，断开临时连接
                 await ref.read(activeConnectionsProvider.notifier).disconnect(source.id);
                 setState(() {
-                  _errorMessage = verified.errorMessage ?? '二次验证失败';
+                  _errorMessage = verified.errorMessage ?? context.l10n.sourcesTwoFaVerificationFailed;
                 });
               }
             } else {
@@ -512,7 +512,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
           // 连接失败，断开临时连接
           await ref.read(activeConnectionsProvider.notifier).disconnect(source.id);
           setState(() {
-            _errorMessage = connection.errorMessage ?? '连接失败';
+            _errorMessage = connection.errorMessage ?? context.l10n.sourcesConnectionFailed;
           });
         }
       }
@@ -541,25 +541,25 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
       if (e.code == 'Unexpected security result code' ||
           (e.message?.contains('-34018') ?? false) ||
           (e.message?.contains('entitlement') ?? false)) {
-        return '安全存储不可用，无法保存登录信息。连接仍然成功，但下次需要重新输入密码。';
+        return context.l10n.sourcesSecurityStorageUnavailable;
       }
     }
 
     // 网络相关错误
     if (message.contains('Operation not permitted')) {
-      return '网络权限被拒绝，请检查系统设置';
+      return context.l10n.sourcesNetworkPermissionDenied;
     }
     if (message.contains('Connection refused')) {
-      return '连接被拒绝，请检查地址和端口';
+      return context.l10n.sourcesConnectionRefused;
     }
     if (message.contains('Connection timed out')) {
-      return '连接超时，请检查网络';
+      return context.l10n.sourcesConnectionTimeout;
     }
     if (message.contains('SocketException')) {
-      return '网络连接失败，请检查网络设置';
+      return context.l10n.sourcesNetworkConnectionFailed;
     }
     if (message.contains('HandshakeException')) {
-      return 'SSL 握手失败，请检查 SSL 设置';
+      return context.l10n.sourcesSslHandshakeFailed;
     }
 
     return message;

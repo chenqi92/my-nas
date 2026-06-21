@@ -71,12 +71,12 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
                 _isReorderMode = !_isReorderMode;
               });
             },
-            tooltip: _isReorderMode ? '完成排序' : '调整顺序',
+            tooltip: _isReorderMode ? context.l10n.sourcesSortCompletedTooltip : context.l10n.sourcesAdjustOrderTooltip,
           ),
           IconButton(
             icon: const Icon(Icons.add_rounded),
             onPressed: () => _showAddSourceSheet(context),
-            tooltip: '添加',
+            tooltip: context.l10n.sourcesAddTooltip,
           ),
         ],
       ),
@@ -88,11 +88,11 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
             children: [
               Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
               const SizedBox(height: 16),
-              Text('加载失败: $e'),
+              Text(context.l10n.sourcesLoadFailedMessage(e)),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => ref.read(sourcesProvider.notifier).refresh(),
-                child: const Text('重试'),
+                child: Text(context.l10n.sourcesRetryButton),
               ),
             ],
           ),
@@ -208,7 +208,7 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
               FilledButton.icon(
                 onPressed: () => _showAddSourceSheet(context),
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('添加'),
+                label: Text(context.l10n.sourcesAddButton),
               ),
             ],
           ),
@@ -222,7 +222,7 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
         .toList();
 
     if (supportedTypes.isEmpty) {
-      context.showInfoToast('该分类下暂无可用的源类型');
+      context.showInfoToast(context.l10n.sourcesNoAvailableTypesToast);
       return;
     }
 
@@ -310,14 +310,14 @@ class _ReorderableServiceCard extends StatelessWidget {
             ),
 
             // 状态标签
-            _buildStatusChip(),
+            _buildStatusChip(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusChip() => Container(
+  Widget _buildStatusChip(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.blue.withValues(alpha: 0.1),
@@ -333,7 +333,7 @@ class _ReorderableServiceCard extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              '点击进入',
+              context.l10n.sourcesClickToEnter,
               style: TextStyle(
                 color: Colors.blue,
                 fontSize: 12,
@@ -413,7 +413,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
               ),
 
               // 状态标签
-              _buildStatusChip(),
+              _buildStatusChip(context),
             ],
           ),
         ),
@@ -421,7 +421,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
     );
   }
 
-  Widget _buildStatusChip() => Container(
+  Widget _buildStatusChip(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.blue.withValues(alpha: 0.1),
@@ -437,7 +437,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
             ),
             const SizedBox(width: 4),
             Text(
-              '点击进入',
+              context.l10n.sourcesClickToEnter,
               style: TextStyle(
                 color: Colors.blue,
                 fontSize: 12,
@@ -461,7 +461,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
           const SheetDragHandle(),
           ListTile(
             leading: const Icon(Icons.open_in_new_rounded),
-            title: const Text('打开'),
+            title: Text(context.l10n.sourcesOpenOption),
             onTap: () {
               Navigator.pop(context);
               _openDetailPage(context);
@@ -469,7 +469,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
           ),
           ListTile(
             leading: const Icon(Icons.edit_rounded),
-            title: const Text('编辑'),
+            title: Text(context.l10n.sourcesEditOption),
             onTap: () {
               Navigator.pop(context);
               _editSource();
@@ -477,7 +477,7 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
           ),
           ListTile(
             leading: Icon(Icons.delete_rounded, color: AppColors.error),
-            title: Text('删除', style: TextStyle(color: AppColors.error)),
+            title: Text(context.l10n.sourcesDeleteOption, style: TextStyle(color: AppColors.error)),
             onTap: () {
               Navigator.pop(context);
               _deleteSource();
@@ -590,11 +590,11 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
         }
       case SourceType.trakt:
         if (context.mounted) {
-          context.showInfoToast('Trakt 详情页将随 OAuth 集成上线，敬请期待');
+          context.showInfoToast(context.l10n.sourcesTraktComingSoonToast);
         }
       case SourceType.moviepilot:
         if (context.mounted) {
-          context.showInfoToast('MoviePilot 详情页开发中，可在下载工具内先使用其它能力');
+          context.showInfoToast(context.l10n.sourcesMoviePilotDevelopingToast);
         }
       default:
         // 其它已注册但未列出的服务类源：保持沉默，不弹错误
@@ -607,24 +607,24 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('输入密码'),
+        title: Text(context.l10n.sourcesPasswordDialogTitle),
         content: TextField(
           controller: controller,
           obscureText: true,
           decoration: InputDecoration(
-            labelText: '密码',
-            hintText: '${widget.source.username} 的密码',
+            labelText: context.l10n.sourcesPasswordFieldLabel,
+            hintText: context.l10n.sourcesPasswordFieldHint(widget.source.username),
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.sourcesCancelButton),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('确定'),
+            child: Text(context.l10n.sourcesConfirmButton),
           ),
         ],
       ),
@@ -643,19 +643,19 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除'),
-        content: Text('确定要删除 "${widget.source.displayName}" 吗？'),
+        title: Text(context.l10n.sourcesDeleteDialogTitle),
+        content: Text(context.l10n.sourcesDeleteConfirmMessage(widget.source.displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.sourcesCancelButton),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: const Text('删除'),
+            child: Text(context.l10n.sourcesDeleteOption),
           ),
         ],
       ),
@@ -667,11 +667,11 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
             .read(sourcesProvider.notifier)
             .removeSource(widget.source.id);
         if (mounted) {
-          context.showSuccessToast('已删除 "${widget.source.displayName}"');
+          context.showSuccessToast(context.l10n.sourcesDeletedSuccessToast(widget.source.displayName));
         }
       } on Exception catch (e) {
         if (mounted) {
-          context.showErrorToast('删除失败: $e');
+          context.showErrorToast(context.l10n.sourcesDeleteFailedToast(e));
         }
       }
     }
@@ -711,7 +711,7 @@ class _SourceTypeBottomSheet extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '选择${category.displayName}类型',
+                    context.l10n.sourcesSelectTypeTitle(category.displayName),
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -722,13 +722,13 @@ class _SourceTypeBottomSheet extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close_rounded),
                     iconSize: 20,
-                    tooltip: '关闭',
+                    tooltip: context.l10n.sourcesSelectTypeCloseTooltip,
                   ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              '请选择要添加的服务类型',
+              context.l10n.sourcesSelectTypeInstructions,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

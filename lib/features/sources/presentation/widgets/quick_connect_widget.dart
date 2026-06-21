@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/media_server_adapters/jellyfin/api/jellyfin_api.dart';
 
@@ -103,7 +104,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
     if (!await _checkConnectivity()) {
       setState(() {
         _status = QuickConnectStatus.error;
-        _errorMessage = '网络不可用，请检查网络连接';
+        _errorMessage = context.l10n.quickConnectNetworkUnavailable;
         _isOffline = true;
       });
       return;
@@ -143,7 +144,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
       } else {
         setState(() {
           _status = QuickConnectStatus.unavailable;
-          _errorMessage = '服务器未启用 Quick Connect 功能';
+          _errorMessage = context.l10n.quickConnectServerNotSupported;
         });
       }
     } on Exception catch (e) {
@@ -151,7 +152,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
       if (mounted) {
         setState(() {
           _status = QuickConnectStatus.error;
-          _errorMessage = '无法连接到服务器';
+          _errorMessage = context.l10n.quickConnectServerConnectionFailed;
         });
       }
     }
@@ -177,7 +178,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
       } else {
         setState(() {
           _status = QuickConnectStatus.error;
-          _errorMessage = '无法获取 Quick Connect 代码';
+          _errorMessage = context.l10n.quickConnectCodeFetchFailed;
         });
       }
     } on Exception catch (e) {
@@ -185,7 +186,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
       if (mounted) {
         setState(() {
           _status = QuickConnectStatus.error;
-          _errorMessage = '初始化 Quick Connect 失败';
+          _errorMessage = context.l10n.quickConnectInitFailed;
         });
       }
     }
@@ -233,7 +234,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         if (mounted) {
           setState(() {
             _status = QuickConnectStatus.expired;
-            _errorMessage = 'Quick Connect 代码已过期';
+            _errorMessage = context.l10n.quickConnectCodeExpired;
           });
         }
         return;
@@ -312,8 +313,8 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('代码已复制到剪贴板'),
+        SnackBar(
+          content: Text(context.l10n.quickConnectCodeCopied),
           duration: Duration(seconds: 2),
         ),
       );
@@ -377,7 +378,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
     switch (_status) {
       case QuickConnectStatus.initial:
       case QuickConnectStatus.checking:
-        return _buildLoadingState(theme, '正在检查 Quick Connect 可用性...');
+        return _buildLoadingState(theme, context.l10n.quickConnectCheckingAvailability);
 
       case QuickConnectStatus.unavailable:
         return _buildErrorState(theme, _errorMessage ?? '不可用', canRetry: false);
@@ -421,7 +422,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '请在 Jellyfin 服务器上输入以下代码：',
+          context.l10n.quickConnectInputCodePrompt,
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 12),
@@ -468,7 +469,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
             ),
             const SizedBox(width: 8),
             Text(
-              '等待授权...',
+              context.l10n.quickConnectWaitingForAuth,
               style: theme.textTheme.bodySmall,
             ),
             const Spacer(),
@@ -494,7 +495,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         const SizedBox(height: 12),
         // 说明
         Text(
-          '打开 Jellyfin 控制面板 → 仪表盘 → Quick Connect，输入上述代码',
+          context.l10n.quickConnectInstruction,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.outline,
           ),
@@ -512,7 +513,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         const SizedBox(width: 12),
         Expanded(
           child: Text(
-            '认证成功！',
+            context.l10n.quickConnectAuthSuccess,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.green,
               fontWeight: FontWeight.bold,
@@ -551,7 +552,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
           OutlinedButton.icon(
             onPressed: _restart,
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('重试'),
+            label: Text(context.l10n.quickConnectRetry),
           ),
         ],
       ],

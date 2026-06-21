@@ -258,7 +258,7 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
                         ),
                         // 标题
                         Text(
-                          '二次验证',
+                          context.l10n.twoFATitle,
                           style: context.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -269,8 +269,8 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
                         // 副标题
                         Text(
                           widget.sourceName != null
-                              ? '正在连接「${widget.sourceName}」\n请输入验证器应用中的验证码'
-                              : '请输入验证器应用中的验证码',
+                              ? context.l10n.twoFASubtitleWithSource(widget.sourceName!)
+                              : context.l10n.twoFASubtitleDefault,
                           style: context.textTheme.bodyMedium?.copyWith(
                             color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                             height: 1.5,
@@ -309,7 +309,7 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '记住此设备',
+                                  context.l10n.twoFARememberDevice,
                                   style: context.textTheme.bodyMedium?.copyWith(
                                     color: _rememberDevice
                                         ? AppColors.accent
@@ -332,7 +332,7 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
                               const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 16),
                               const SizedBox(width: 4),
                               Text(
-                                '请输入完整的 6 位验证码',
+                                context.l10n.twoFAErrorIncomplete,
                                 style: context.textTheme.bodySmall?.copyWith(color: AppColors.error),
                               ),
                             ],
@@ -349,14 +349,14 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
                             ),
                             backgroundColor: AppColors.accent,
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.verified_user_rounded, size: 20),
-                              SizedBox(width: 8),
+                              const Icon(Icons.verified_user_rounded, size: 20),
+                              const SizedBox(width: 8),
                               Text(
-                                '验证',
-                                style: TextStyle(
+                                context.l10n.twoFAVerifyButton,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -372,7 +372,7 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
                             minimumSize: const Size(double.infinity, 48),
                           ),
                           child: Text(
-                            '取消',
+                            context.l10n.twoFACancelButton,
                             style: TextStyle(
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                             ),
@@ -577,7 +577,7 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
   Future<void> _submit() async {
     final code = _otpCode;
     if (code.length != 6) {
-      _showError('请输入完整的 6 位验证码');
+      _showError(context.l10n.twoFAErrorIncomplete);
       return;
     }
 
@@ -601,12 +601,12 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
           ),
         );
       } else {
-        _showError('验证码错误，请重新输入');
+        _showError(context.l10n.twoFAErrorWrongCode);
         _clearAndShake();
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      _showError('验证失败: $e');
+      _showError(context.l10n.twoFAErrorVerifyFailed(e));
       _clearAndShake();
     } finally {
       if (mounted) {
@@ -642,16 +642,16 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
       showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('取消验证'),
-          content: const Text('您可以选择先保存连接源，之后再进行二次验证。'),
+          title: Text(context.l10n.twoFACancelConfirmTitle),
+          content: Text(context.l10n.twoFACancelConfirmContent),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('返回验证'),
+              child: Text(context.l10n.twoFACancelConfirmBackButton),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('先保存'),
+              child: Text(context.l10n.twoFACancelConfirmSkipButton),
             ),
           ],
         ),
@@ -747,7 +747,7 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
                         ),
                         // 标题
                         Text(
-                          '二次验证',
+                          context.l10n.twoFATitle,
                           style: context.textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: isDark
@@ -760,8 +760,8 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
                         // 副标题
                         Text(
                           widget.sourceName != null
-                              ? '正在连接「${widget.sourceName}」\n请输入验证器应用中的验证码'
-                              : '请输入验证器应用中的验证码',
+                              ? context.l10n.twoFASubtitleWithSource(widget.sourceName!)
+                              : context.l10n.twoFASubtitleDefault,
                           style: context.textTheme.bodyMedium?.copyWith(
                             color: isDark
                                 ? AppColors.darkOnSurfaceVariant
@@ -810,7 +810,7 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '记住此设备',
+                                  context.l10n.twoFARememberDevice,
                                   style: context.textTheme.bodyMedium?.copyWith(
                                     color: _rememberDevice
                                         ? AppColors.accent
@@ -875,14 +875,14 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Row(
+                              : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.verified_user_rounded, size: 20),
-                                    SizedBox(width: 8),
+                                    const Icon(Icons.verified_user_rounded, size: 20),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      '验证',
-                                      style: TextStyle(
+                                      context.l10n.twoFAVerifyButton,
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -898,7 +898,7 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
                             minimumSize: const Size(double.infinity, 48),
                           ),
                           child: Text(
-                            widget.allowSkip ? '稍后验证' : '取消',
+                            widget.allowSkip ? context.l10n.twoFASkipLater : context.l10n.twoFACancelButton,
                             style: TextStyle(
                               color: isDark
                                   ? AppColors.darkOnSurfaceVariant

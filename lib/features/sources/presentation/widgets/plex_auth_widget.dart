@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/media_server_adapters/plex/api/plex_api.dart';
@@ -99,7 +100,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
     if (!await _checkConnectivity()) {
       setState(() {
         _status = PlexAuthStatus.error;
-        _errorMessage = '网络不可用，请检查网络连接';
+        _errorMessage = context.l10n.plexAuthNetworkUnavailable;
         _isOffline = true;
       });
       return;
@@ -198,7 +199,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
 
         setState(() {
           _status = PlexAuthStatus.error;
-          _errorMessage = isNetworkError ? '网络连接失败，请检查网络' : '无法获取 PIN 码';
+          _errorMessage = isNetworkError ? context.l10n.plexAuthNetworkFailed : context.l10n.plexAuthCannotOpenBrowser;
           _isOffline = isNetworkError;
         });
       }
@@ -247,7 +248,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
         if (mounted) {
           setState(() {
             _status = PlexAuthStatus.expired;
-            _errorMessage = 'PIN 码已过期';
+            _errorMessage = context.l10n.plexAuthPinExpired;
           });
         }
         return;
@@ -304,7 +305,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('无法打开浏览器')),
+            SnackBar(content: Text(context.l10n.plexAuthCannotOpenBrowser)),
           );
         }
       }
@@ -321,9 +322,9 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('PIN 码已复制到剪贴板'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(context.l10n.plexAuthPinCopied),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -346,7 +347,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
     if (!await _checkConnectivity()) {
       setState(() {
         _status = PlexAuthStatus.error;
-        _errorMessage = '网络不可用，请检查网络连接';
+        _errorMessage = context.l10n.plexAuthNetworkUnavailable;
         _isOffline = true;
       });
       return;
@@ -379,7 +380,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Plex 账号登录',
+                context.l10n.plexAuthTitle,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -397,7 +398,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
     switch (_status) {
       case PlexAuthStatus.initial:
       case PlexAuthStatus.gettingPin:
-        return _buildLoadingState(theme, '正在获取 PIN 码...');
+        return _buildLoadingState(theme, context.l10n.plexAuthGettingPin);
 
       case PlexAuthStatus.waitingForAuth:
       case PlexAuthStatus.polling:
@@ -407,11 +408,11 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
         return _buildSuccessState(theme);
 
       case PlexAuthStatus.expired:
-        return _buildErrorState(theme, _errorMessage ?? '已过期', canRetry: true);
+        return _buildErrorState(theme, _errorMessage ?? context.l10n.plexAuthExpired, canRetry: true);
 
       case PlexAuthStatus.error:
         return _buildErrorState(
-            theme, _errorMessage ?? '发生错误', canRetry: true);
+            theme, _errorMessage ?? context.l10n.plexAuthError, canRetry: true);
     }
   }
 
@@ -440,7 +441,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '请在 plex.tv/link 上输入以下 PIN 码：',
+          context.l10n.plexAuthPinInstructions,
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 12),
@@ -486,7 +487,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
           child: OutlinedButton.icon(
             onPressed: _openAuthUrl,
             icon: const Icon(Icons.open_in_browser_rounded),
-            label: const Text('打开 plex.tv/link'),
+            label: Text(context.l10n.plexAuthOpenLink),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFE5A00D),
               side: const BorderSide(color: Color(0xFFE5A00D)),
@@ -504,7 +505,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
             ),
             const SizedBox(width: 8),
             Text(
-              '等待授权...',
+              context.l10n.plexAuthWaitingForAuth,
               style: theme.textTheme.bodySmall,
             ),
             const Spacer(),
@@ -528,7 +529,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
         const SizedBox(height: 12),
         // 说明
         Text(
-          '或者在手机上打开 Plex App → 设置 → 链接设备，输入上述 PIN 码',
+          context.l10n.plexAuthAlternativeInstructions,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.outline,
           ),
@@ -546,7 +547,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '认证成功！',
+              context.l10n.plexAuthSuccess,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.green,
                 fontWeight: FontWeight.bold,
@@ -582,7 +583,7 @@ class _PlexAuthWidgetState extends State<PlexAuthWidget> {
           OutlinedButton.icon(
             onPressed: _restart,
             icon: Icon(_isOffline ? Icons.wifi_rounded : Icons.refresh_rounded),
-            label: Text(_isOffline ? '重新检查网络' : '重试'),
+            label: Text(_isOffline ? context.l10n.plexAuthRetryNetwork : context.l10n.plexAuthRetry),
           ),
         ],
       ],

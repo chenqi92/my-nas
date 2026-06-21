@@ -55,11 +55,11 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
           children: [
             Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('加载失败: $e'),
+            Text(context.l10n.sourcesPageLoadError(e.toString())),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () => ref.read(sourcesProvider.notifier).refresh(),
-              child: const Text('重试'),
+              child: Text(context.l10n.sourcesPageRetryButton),
             ),
           ],
         ),
@@ -94,7 +94,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
     return Scaffold(
       appBar: AppBar(
         leading: const RoundedBackButton(),
-        title: const Text('连接源'),
+        title: Text(context.l10n.sourcesPageTitle),
         actions: _buildActions(discoveryState, embedded: false),
       ),
       body: body,
@@ -116,19 +116,19 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
         onPressed: discoveryState.isDiscovering
             ? null
             : () => ref.read(networkDiscoveryProvider.notifier).startDiscovery(),
-        tooltip: '扫描局域网设备',
+        tooltip: context.l10n.sourcesPageScanButton,
         visualDensity: density,
       ),
       IconButton(
         icon: Icon(_isReorderMode ? Icons.done_rounded : Icons.reorder, size: iconSize),
         onPressed: () => setState(() => _isReorderMode = !_isReorderMode),
-        tooltip: _isReorderMode ? '完成排序' : '调整顺序',
+        tooltip: _isReorderMode ? context.l10n.sourcesPageReorderComplete : context.l10n.sourcesPageReorderStart,
         visualDensity: density,
       ),
       IconButton(
         icon: Icon(Icons.add_rounded, size: iconSize),
         onPressed: () => _showAddSourceSheet(context),
-        tooltip: '添加源',
+        tooltip: context.l10n.sourcesPageAddSource,
         visualDensity: density,
       ),
     ];
@@ -181,10 +181,10 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
         if (discoveryState.devices.isNotEmpty || discoveryState.isDiscovering) ...[
           _buildSectionHeader(
             context,
-            '发现的设备',
+            context.l10n.sourcesPageDiscoveredDevices,
             subtitle: discoveryState.isDiscovering
-                ? '正在扫描...'
-                : '点击添加到连接源',
+                ? context.l10n.sourcesPageDiscoveryScanning
+                : context.l10n.sourcesPageDiscoveryHint,
             // 移除重复的loading指示器，仅保留AppBar中的雷达按钮loading
           ),
           const SizedBox(height: 8),
@@ -196,7 +196,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
 
         // 已配置的连接源部分
         if (sources.isNotEmpty) ...[
-          _buildSectionHeader(context, '已配置的连接'),
+          _buildSectionHeader(context, context.l10n.sourcesPageConfiguredConnections),
           const SizedBox(height: 8),
           ...sources.map((source) {
             final connection = connections[source.id];
@@ -299,12 +299,12 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
             ),
             const SizedBox(height: 24),
             Text(
-              '尚未添加任何源',
+              context.l10n.sourcesPageEmptyStateTitle,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              '添加 NAS、WebDAV 或 SMB 源\n以开始浏览您的媒体文件',
+              context.l10n.sourcesPageEmptyStateDescription,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -314,7 +314,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
             FilledButton.icon(
               onPressed: () => _showAddSourceSheet(context),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('添加源'),
+              label: Text(context.l10n.sourcesPageAddSource),
             ),
           ],
         ),
@@ -329,7 +329,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
         .toList();
 
     if (supportedTypes.isEmpty) {
-      context.showInfoToast('暂无可用的连接源类型');
+      context.showInfoToast(context.l10n.sourcesPageNoSourceTypes);
       return;
     }
 
@@ -419,20 +419,20 @@ class _ReorderableSourceCard extends StatelessWidget {
             ),
 
             // 状态
-            _buildStatusChip(theme),
+            _buildStatusChip(context, theme),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusChip(ThemeData theme) {
+  Widget _buildStatusChip(BuildContext context, ThemeData theme) {
     final (label, color) = switch (_status) {
-      SourceStatus.connected => ('已连接', AppColors.success),
-      SourceStatus.connecting => ('连接中', AppColors.warning),
-      SourceStatus.requires2FA => ('需要验证', AppColors.warning),
-      SourceStatus.error => ('错误', AppColors.error),
-      SourceStatus.disconnected => ('未连接', AppColors.lightOnSurfaceVariant),
+      SourceStatus.connected => (context.l10n.sourcesPageStatusConnected, AppColors.success),
+      SourceStatus.connecting => (context.l10n.sourcesPageStatusConnecting, AppColors.warning),
+      SourceStatus.requires2FA => (context.l10n.sourcesPageStatusNeedsVerification, AppColors.warning),
+      SourceStatus.error => (context.l10n.sourcesPageStatusError, AppColors.error),
+      SourceStatus.disconnected => (context.l10n.sourcesPageStatusDisconnected, AppColors.lightOnSurfaceVariant),
     };
 
     return Container(
@@ -561,7 +561,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               else
-                _buildStatusChip(theme),
+                _buildStatusChip(context, theme),
             ],
           ),
         ),
@@ -569,13 +569,13 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
     );
   }
 
-  Widget _buildStatusChip(ThemeData theme) {
+  Widget _buildStatusChip(BuildContext context, ThemeData theme) {
     final (label, color) = switch (_status) {
-      SourceStatus.connected => ('已连接', AppColors.success),
-      SourceStatus.connecting => ('连接中', AppColors.warning),
-      SourceStatus.requires2FA => ('需要验证', AppColors.warning),
-      SourceStatus.error => ('错误', AppColors.error),
-      SourceStatus.disconnected => ('未连接', AppColors.lightOnSurfaceVariant),
+      SourceStatus.connected => (context.l10n.sourcesPageStatusConnected, AppColors.success),
+      SourceStatus.connecting => (context.l10n.sourcesPageStatusConnecting, AppColors.warning),
+      SourceStatus.requires2FA => (context.l10n.sourcesPageStatusNeedsVerification, AppColors.warning),
+      SourceStatus.error => (context.l10n.sourcesPageStatusError, AppColors.error),
+      SourceStatus.disconnected => (context.l10n.sourcesPageStatusDisconnected, AppColors.lightOnSurfaceVariant),
     };
 
     return Container(
@@ -614,7 +614,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
               _status == SourceStatus.connected ? Icons.link_off : Icons.link_rounded,
             ),
             title: Text(
-              _status == SourceStatus.connected ? '断开连接' : '连接',
+              _status == SourceStatus.connected ? context.l10n.sourcesPageMenuDisconnect : context.l10n.sourcesPageMenuConnect,
             ),
             onTap: () {
               Navigator.pop(context);
@@ -627,7 +627,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
           ),
           ListTile(
             leading: const Icon(Icons.edit_rounded),
-            title: const Text('编辑'),
+            title: Text(context.l10n.sourcesPageMenuEdit),
             onTap: () {
               Navigator.pop(context);
               _editSource();
@@ -635,7 +635,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
           ),
           ListTile(
             leading: Icon(Icons.delete_rounded, color: AppColors.error),
-            title: Text('删除', style: TextStyle(color: AppColors.error)),
+            title: Text(context.l10n.sourcesPageMenuDelete, style: TextStyle(color: AppColors.error)),
             onTap: () {
               Navigator.pop(context);
               _deleteSource();
@@ -736,24 +736,24 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('输入密码'),
+        title: Text(context.l10n.sourcesPagePasswordDialogTitle),
         content: TextField(
           controller: controller,
           obscureText: true,
           decoration: InputDecoration(
-            labelText: '密码',
-            hintText: '${widget.source.username} 的密码',
+            labelText: context.l10n.sourcesPagePasswordLabel,
+            hintText: context.l10n.sourcesPagePasswordHint(widget.source.username),
           ),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.sourcesPageCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('连接'),
+            child: Text(context.l10n.sourcesPageConnectButton),
           ),
         ],
       ),
@@ -778,19 +778,19 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除源'),
-        content: Text('确定要删除 "${widget.source.displayName}" 吗？\n相关的媒体库配置也会被删除。'),
+        title: Text(context.l10n.sourcesPageDeleteTitle),
+        content: Text(context.l10n.sourcesPageDeleteConfirm(widget.source.displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.sourcesPageCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.error,
             ),
-            child: const Text('删除'),
+            child: Text(context.l10n.sourcesPageDeleteButton),
           ),
         ],
       ),
@@ -800,11 +800,11 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
       try {
         await ref.read(sourcesProvider.notifier).removeSource(widget.source.id);
         if (mounted) {
-          context.showSuccessToast('已删除 "${widget.source.displayName}"');
+          context.showSuccessToast(context.l10n.sourcesPageDeleteSuccess(widget.source.displayName));
         }
       } on Exception catch (e) {
         if (mounted) {
-          context.showErrorSnackBar('删除失败: $e');
+          context.showErrorSnackBar(context.l10n.sourcesPageDeleteFailed(e));
         }
       }
     }
@@ -840,14 +840,14 @@ class _SourceTypeBottomSheet extends StatelessWidget {
 
             // 标题
             Text(
-              '添加连接源',
+              context.l10n.sourcesPageAddTypeTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '选择要添加的连接源类型',
+              context.l10n.sourcesPageAddTypeSubtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -1016,7 +1016,7 @@ class _DiscoveredDeviceCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '发现',
+                                context.l10n.sourcesPageDiscoveryBadge,
                                 style: TextStyle(
                                   color: accentColor,
                                   fontWeight: FontWeight.w600,
@@ -1042,7 +1042,7 @@ class _DiscoveredDeviceCard extends StatelessWidget {
                   TextButton.icon(
                     onPressed: () => _onDeviceTap(context),
                     icon: const Icon(Icons.add_rounded, size: 16),
-                    label: const Text('添加'),
+                    label: Text(context.l10n.sourcesPageAddDeviceButton),
                     style: TextButton.styleFrom(
                       foregroundColor: accentColor,
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -1131,7 +1131,7 @@ class _DiscoveredDeviceCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                '发现',
+                context.l10n.sourcesPageDiscoveryBadge,
                 style: TextStyle(
                   color: accentColor.withValues(alpha: isDark ? 1.0 : 0.85),
                   fontWeight: FontWeight.w600,
@@ -1160,14 +1160,14 @@ class _DiscoveredDeviceCard extends StatelessWidget {
               ),
             ],
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.add_rounded, size: 16, color: Colors.white),
-              SizedBox(width: 4),
+              const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+              const SizedBox(width: 4),
               Text(
-                '添加',
-                style: TextStyle(
+                context.l10n.sourcesPageAddDeviceButton,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 12,

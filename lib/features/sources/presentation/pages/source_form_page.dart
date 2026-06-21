@@ -263,7 +263,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         leading: context.isDesktopLayout
             ? IconButton(
                 icon: const Icon(Icons.close_rounded),
-                tooltip: '关闭',
+                tooltip: context.l10n.sourceFormCloseButton,
                 onPressed: () => Navigator.of(context).maybePop(),
               )
             : null,
@@ -279,7 +279,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('测试'),
+                  : Text(context.l10n.sourceFormTestButton),
             ),
         ],
       ),
@@ -457,7 +457,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return '请输入${field.label}';
+            return context.l10n.sourceFormFieldRequired(field.label);
           }
           return field.validator?.call(value);
         },
@@ -524,12 +524,12 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return '请输入${field.label}';
+            return context.l10n.sourceFormFieldRequired(field.label);
           }
           if (value != null && value.isNotEmpty) {
             final number = int.tryParse(value);
             if (number == null) {
-              return '请输入有效的数字';
+              return context.l10n.sourceFormInvalidNumber;
             }
           }
           return field.validator?.call(value);
@@ -632,7 +632,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                 });
               },
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('添加'),
+              label: Text(context.l10n.sourceFormAddButton),
             ),
           ],
         ),
@@ -660,7 +660,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             ),
             child: Center(
               child: Text(
-                '点击「添加」按钮添加请求头',
+                context.l10n.sourceFormKeyValueEmptyHint,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -705,7 +705,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                       initialValue: item['value'],
                       decoration: InputDecoration(
                         labelText: 'Value',
-                        hintText: '值',
+                        hintText: context.l10n.sourceFormKeyValueValueHint,
                         isDense: true,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -775,7 +775,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '请先填写服务器地址和端口，然后再使用 Quick Connect',
+                context.l10n.sourceFormQuickConnectRequiresHostPort,
                 style: theme.textTheme.bodyMedium,
               ),
             ),
@@ -814,7 +814,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '点击「添加并连接」完成配置',
+                    context.l10n.sourceFormCompleteConfiguration,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -824,7 +824,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             ),
             TextButton(
               onPressed: _resetQuickConnect,
-              child: const Text('重新认证'),
+              child: Text(context.l10n.sourceFormReAuthenticateButton),
             ),
           ],
         ),
@@ -848,7 +848,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       final l = AppLocalizations.of(context);
       _showSuccessSnackBar(l.sourceFormQuickConnectAuthSuccess);
     } else {
-      _showErrorSnackBar(result.errorMessage ?? 'Quick Connect 认证失败');
+      _showErrorSnackBar(result.errorMessage ?? context.l10n.sourceFormQuickConnectAuthFailed);
     }
   }
 
@@ -899,7 +899,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '点击「添加并连接」完成配置',
+                    context.l10n.sourceFormCompleteConfiguration,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -907,7 +907,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                 ],
               ),
             ),
-            TextButton(onPressed: _resetPlexAuth, child: const Text('重新授权')),
+            TextButton(onPressed: _resetPlexAuth, child: Text(context.l10n.sourceFormReauthorizeButton)),
           ],
         ),
       );
@@ -968,7 +968,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                 color: Colors.white,
               ),
             )
-          : Text(widget.mode == SourceFormMode.edit ? '保存' : '添加并连接'),
+          : Text(widget.mode == SourceFormMode.edit ? context.l10n.sourceFormSaveButton : context.l10n.sourceFormAddAndConnectButton),
     ),
   );
 
@@ -979,13 +979,13 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
 
     // 检查 Quick Connect 认证状态
     if (_shouldShowQuickConnect && !_quickConnectAuthorized) {
-      _showErrorSnackBar('请先完成 Quick Connect 认证');
+      _showErrorSnackBar(context.l10n.sourceFormCompleteQuickConnectAuth);
       return;
     }
 
     // 检查 Plex PIN 认证状态
     if (_shouldShowPlexAuth && !_plexAuthAuthorized) {
-      _showErrorSnackBar('请先完成 Plex 账号授权');
+      _showErrorSnackBar(context.l10n.sourceFormCompletePlexAuth);
       return;
     }
 
@@ -1028,9 +1028,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           // 断开测试连接
           await sourceManager.disconnect(source.id);
         case SourceStatus.requires2FA:
-          _showWarningSnackBar('需要二次验证，请保存后完成验证');
+          _showWarningSnackBar(context.l10n.sourceFormRequires2FA);
         case SourceStatus.error:
-          _showErrorSnackBar('连接失败: ${connection.errorMessage ?? "未知错误"}');
+          _showErrorSnackBar(context.l10n.sourceFormConnectionFailed(connection.errorMessage ?? context.l10n.sourceFormUnknownError));
         default:
           final l = AppLocalizations.of(context);
           _showErrorSnackBar(l.sourceFormConnectionStatusError);
@@ -1058,9 +1058,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       if (!mounted) return;
 
       if (connected) {
-        _showSuccessSnackBar('连接测试成功');
+        _showSuccessSnackBar(context.l10n.sourceFormConnectionTestSuccess);
       } else {
-        _showErrorSnackBar('连接失败，请检查认证信息');
+        _showErrorSnackBar(context.l10n.sourceFormConnectionCheckFailed);
       }
     } on Exception catch (e) {
       if (!mounted) return;
@@ -1082,9 +1082,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       if (!mounted) return;
 
       if (connected) {
-        _showSuccessSnackBar('连接测试成功');
+        _showSuccessSnackBar(context.l10n.sourceFormConnectionTestSuccess);
       } else {
-        _showErrorSnackBar('连接失败，请检查认证信息');
+        _showErrorSnackBar(context.l10n.sourceFormConnectionCheckFailed);
       }
     } on Exception catch (e) {
       if (!mounted) return;
@@ -1326,13 +1326,13 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
 
     // 检查 Quick Connect 认证状态
     if (_shouldShowQuickConnect && !_quickConnectAuthorized) {
-      _showErrorSnackBar('请先完成 Quick Connect 认证');
+      _showErrorSnackBar(context.l10n.sourceFormCompleteQuickConnectAuth);
       return;
     }
 
     // 检查 Plex PIN 认证状态
     if (_shouldShowPlexAuth && !_plexAuthAuthorized) {
-      _showErrorSnackBar('请先完成 Plex 账号授权');
+      _showErrorSnackBar(context.l10n.sourceFormCompletePlexAuth);
       return;
     }
 
@@ -1359,14 +1359,14 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         }
 
         if (!mounted) return;
-        _showSuccessAndPop(source, '源已更新');
+        _showSuccessAndPop(source, context.l10n.sourceFormUpdateSuccess);
       } else {
         // 创建模式 - 先验证连接再保存源
         await _submitNewSource(source, password);
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar('保存失败: $e');
+      _showErrorSnackBar(context.l10n.sourceFormSaveFailed(e.toString()));
     } finally {
       if (mounted) {
         setState(() {
@@ -1412,7 +1412,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           await ref
               .read(activeConnectionsProvider.notifier)
               .connect(source, password: password);
-          _showSuccessAndPop(source, '已连接到 ${source.displayName}');
+          _showSuccessAndPop(source, context.l10n.sourceFormConnectSuccess(source.displayName));
         }
 
       case SourceStatus.requires2FA:
@@ -1423,12 +1423,12 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         // 连接失败
         // 断开临时连接
         await sourceManager.disconnect(source.id);
-        _showErrorSnackBar('连接失败: ${connection.errorMessage ?? "未知错误"}');
+        _showErrorSnackBar(context.l10n.sourceFormConnectionFailed(connection.errorMessage ?? context.l10n.sourceFormUnknownError));
 
       default:
         // 其他状态
         await sourceManager.disconnect(source.id);
-        _showErrorSnackBar('连接状态异常');
+        _showErrorSnackBar(context.l10n.sourceFormConnectionStatusError);
     }
   }
 
@@ -1457,10 +1457,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         }
 
         if (mounted) {
-          _showSuccessAndPop(source, '已添加 ${source.displayName}');
+          _showSuccessAndPop(source, context.l10n.sourceFormAddSuccess(source.displayName));
         }
       } else {
-        _showErrorSnackBar('连接失败，请检查认证信息');
+        _showErrorSnackBar(context.l10n.sourceFormConnectionCheckFailed);
       }
     } on _ConnectionValidationNotImplementedException catch (e) {
       // 该源类型不支持表单内一键自动验证（如 Trakt 走交互式 OAuth 设备码授权，
@@ -1483,7 +1483,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar('连接失败: $e');
+      _showErrorSnackBar(context.l10n.sourceFormConnectionFailed(e.toString()));
     }
   }
 
@@ -1503,14 +1503,14 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         // 连接成功，保存源
         await sourcesNotifier.addSource(source);
         if (mounted) {
-          _showSuccessAndPop(source, '已添加 ${source.displayName}');
+          _showSuccessAndPop(source, context.l10n.sourceFormAddSuccess(source.displayName));
         }
       } else {
-        _showErrorSnackBar('连接失败，请检查认证信息');
+        _showErrorSnackBar(context.l10n.sourceFormConnectionCheckFailed);
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar('连接失败: $e');
+      _showErrorSnackBar(context.l10n.sourceFormConnectionFailed(e.toString()));
     }
   }
 
@@ -1554,7 +1554,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         // 刷新连接状态（verify2FA 已经更新了底层状态为 connected）
         ref.read(activeConnectionsProvider.notifier).refresh();
         if (mounted) {
-          _showSuccessAndPop(source, '已连接到 ${source.displayName}');
+          _showSuccessAndPop(source, context.l10n.sourceFormConnectSuccess(source.displayName));
         }
 
       case TwoFAResultType.skipped:
@@ -1569,7 +1569,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         // 更新连接状态（状态为 requires2FA）
         ref.read(activeConnectionsProvider.notifier).refresh();
         if (mounted) {
-          _showWarningSnackBar('源已添加，需要完成二次验证后才能使用');
+          _showWarningSnackBar(context.l10n.sourceFormAddSuccessRequires2FA);
           Navigator.pop(context, source);
           if (widget.popTwice && mounted && Navigator.canPop(context)) {
             Navigator.pop(context);

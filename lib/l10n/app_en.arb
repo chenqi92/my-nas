@@ -3285,5 +3285,658 @@
   "downloaderListPageEmptySubtitle": "Add qBittorrent, Transmission or Aria2\nto manage your download tasks",
   "mediaManagementPageTitle": "Media Management",
   "mediaManagementEmptyTitle": "No tools added yet",
-  "mediaManagementEmptySubtitle": "Add NASTool, MoviePilot or similar tools\nto automate your media library management"
+  "mediaManagementEmptySubtitle": "Add NASTool, MoviePilot or similar tools\nto automate your media library management",
+  "scrapeSourcesPageTitle": "Music Metadata Sources",
+  "scrapeSourcesPageImportTooltip": "Import",
+  "scrapeSourcesPageImportedCount": "Imported {count} scrape sources",
+  "@scrapeSourcesPageImportedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scrapeSourcesPageDeleteTitle": "Delete Scrape Source",
+  "scrapeSourcesPageDeleteConfirm": "Delete \"{name}\"?",
+  "@scrapeSourcesPageDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scrapeSourcesPageCancel": "Cancel",
+  "scrapeSourcesPageDelete": "Delete",
+  "scrapeSourcesCapabilityMetadata": "Metadata",
+  "scrapeSourcesCapabilityCover": "Cover",
+  "scrapeSourcesCapabilityLyrics": "Lyrics",
+  "scrapeSourcesCapabilityLyricsWordLevel": "Word-level Lyrics",
+  "scrapeSourcesVersionPrefix": "Version {version}",
+  "@scrapeSourcesVersionPrefix": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "scrapeSourcesEmptyTitle": "No Music Metadata Sources",
+  "scrapeSourcesEmptyDesc": "This app does not include any built-in sources. Click the \"+\" button in the top right to import JSON configurations provided by users.",
+  "scrapeSourcesImportSheetTitle": "Import Scrape Source",
+  "scrapeSourcesImportDisclaimer": "This app only provides a parsing engine and does not include or distribute any music metadata sources. The imported sources are selected by users, and you should ensure their legality and that they do not infringe on third-party copyrights. This app is not responsible for the content of the imported sources.",
+  "scrapeSourcesImportJsonTab": "Paste JSON",
+  "scrapeSourcesImportUrlTab": "Remote URL",
+  "scrapeSourcesImportJsonHint": "Paste JSON (single object or array)",
+  "scrapeSourcesImportUrlHint": "https://example.com/scrape-sources.json",
+  "scrapeSourcesImportNoValidJson": "No valid scrape source JSON found",
+  "scrapeSourcesImportFailed": "Import failed",
+  "scrapeSourcesImportButton": "Import",
+  "sourceFormCloseButton": "Close",
+  "sourceFormTestButton": "Test",
+  "sourceFormFieldRequired": "Please enter {label}",
+  "@sourceFormFieldRequired": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceFormInvalidNumber": "Please enter a valid number",
+  "sourceFormAddButton": "Add",
+  "sourceFormKeyValueValueHint": "value",
+  "sourceFormReAuthenticateButton": "Re-authenticate",
+  "sourceFormQuickConnectAuthFailed": "Quick Connect authentication failed",
+  "sourceFormReauthorizeButton": "Re-authorize",
+  "sourceFormSaveButton": "Save",
+  "sourceFormAddAndConnectButton": "Add and Connect",
+  "sourceFormCompleteQuickConnectAuth": "Please complete Quick Connect authentication first",
+  "sourceFormCompletePlexAuth": "Please complete Plex account authorization first",
+  "sourceFormRequires2FA": "Two-factor authentication required. Please save and complete verification.",
+  "sourceFormConnectionFailed": "Connection failed: {error}",
+  "@sourceFormConnectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceFormUnknownError": "Unknown error",
+  "sourceFormConnectionCheckFailed": "Connection failed. Please check your credentials.",
+  "sourceFormUpdateSuccess": "Source updated",
+  "sourceFormSaveFailed": "Failed to save: {error}",
+  "@sourceFormSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceFormConnectSuccess": "Connected to {name}",
+  "@sourceFormConnectSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceFormAddSuccess": "Added {name}",
+  "@sourceFormAddSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceFormAddSuccessRequires2FA": "Source added. Complete two-factor authentication to use it.",
+  "sourceFormKeyValueEmptyHint": "Click \"Add\" button to add request headers",
+  "sourceFormQuickConnectRequiresHostPort": "Please enter server address and port first, then use Quick Connect",
+  "sourceFormCompleteConfiguration": "Click \"Add and Connect\" to complete the configuration",
+  "sourcesSortCompletedTooltip": "Finish sorting",
+  "sourcesAdjustOrderTooltip": "Adjust order",
+  "sourcesAddTooltip": "Add",
+  "sourcesLoadFailedMessage": "Failed to load: {error}",
+  "@sourcesLoadFailedMessage": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "sourcesRetryButton": "Retry",
+  "sourcesAddButton": "Add",
+  "sourcesNoAvailableTypesToast": "No available source types in this category",
+  "sourcesClickToEnter": "Click to enter",
+  "sourcesOpenOption": "Open",
+  "sourcesEditOption": "Edit",
+  "sourcesDeleteOption": "Delete",
+  "sourcesTraktComingSoonToast": "Trakt details page will be available with OAuth integration, stay tuned",
+  "sourcesMoviePilotDevelopingToast": "MoviePilot details page is under development, you can use other features in download tools first",
+  "sourcesPasswordDialogTitle": "Enter password",
+  "sourcesPasswordFieldLabel": "Password",
+  "sourcesPasswordFieldHint": "Password for {username}",
+  "@sourcesPasswordFieldHint": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesCancelButton": "Cancel",
+  "sourcesConfirmButton": "Confirm",
+  "sourcesDeleteDialogTitle": "Delete",
+  "sourcesDeleteConfirmMessage": "Are you sure you want to delete \"{displayName}\"?",
+  "@sourcesDeleteConfirmMessage": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesDeletedSuccessToast": "Deleted \"{displayName}\"",
+  "@sourcesDeletedSuccessToast": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesDeleteFailedToast": "Failed to delete: {error}",
+  "@sourcesDeleteFailedToast": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "sourcesSelectTypeTitle": "Select {categoryName} type",
+  "@sourcesSelectTypeTitle": {
+    "placeholders": {
+      "categoryName": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesSelectTypeCloseTooltip": "Close",
+  "sourcesSelectTypeInstructions": "Please select the service type you want to add",
+  "sourceTypeSelectionAddConnection": "Add Connection Source",
+  "sourceTypeSelectionAddService": "Add Service",
+  "sourceTypeSelectionStorageSection": "Storage Sources",
+  "sourceTypeSelectionServiceSection": "Service Sources",
+  "sourceTypeSelectionComingSoon": "Coming Soon",
+  "sourcesPageRetryButton": "Retry",
+  "sourcesPageDiscoveredDevices": "Discovered Devices",
+  "sourcesPageDiscoveryScanning": "Scanning...",
+  "sourcesPageDiscoveryHint": "Click to add to connection sources",
+  "sourcesPageConfiguredConnections": "Configured Connections",
+  "sourcesPageEmptyStateTitle": "No sources added yet",
+  "sourcesPageEmptyStateDescription": "Add a NAS, WebDAV, or SMB source\nto start browsing your media files",
+  "sourcesPageScanButton": "Scan LAN Devices",
+  "sourcesPageReorderComplete": "Done Sorting",
+  "sourcesPageReorderStart": "Adjust Order",
+  "sourcesPageStatusNeedsVerification": "Needs Verification",
+  "sourcesPageMenuDisconnect": "Disconnect",
+  "sourcesPageMenuConnect": "Connect",
+  "sourcesPageDeleteButton": "Delete",
+  "sourcesPageDeleteSuccess": "Deleted \"{name}\"",
+  "@sourcesPageDeleteSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageDeleteFailed": "Delete failed: {error}",
+  "@sourcesPageDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "sourcesPageNoSourceTypes": "No available connection source types",
+  "sourcesPagePasswordDialogTitle": "Enter Password",
+  "sourcesPagePasswordLabel": "Password",
+  "sourcesPagePasswordHint": "Password for {username}",
+  "@sourcesPagePasswordHint": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesPageConnectButton": "Connect",
+  "sourcesPageAddTypeTitle": "Add Connection Source",
+  "sourcesPageAddTypeSubtitle": "Select the connection source type to add",
+  "sourcesPageDiscoveryBadge": "Discovered",
+  "sourcesPageAddDeviceButton": "Add",
+  "mediaLibraryPageTitle": "Media Library",
+  "mediaLibraryPerformanceTooltipOn": "Performance mode enabled",
+  "mediaLibraryPerformanceTooltipOff": "Performance mode disabled",
+  "mediaLibraryPerformanceLabel": "Performance",
+  "mediaLibraryPerformanceDialogTitle": "Enable Performance Mode",
+  "mediaLibraryPerformanceDialogContent": "Performance mode significantly improves scraping speed, but may cause:",
+  "mediaLibraryPerformanceDialogHeatWarning": "Device heat",
+  "mediaLibraryPerformanceDialogBatteryWarning": "Faster battery drain",
+  "mediaLibraryPerformanceDialogMemoryWarning": "Increased memory usage",
+  "mediaLibraryPerformanceDialogRecommendation": "Recommended to use while charging",
+  "mediaLibraryPerformanceDialogCancel": "Cancel",
+  "mediaLibraryPerformanceDialogConfirm": "Enable",
+  "mediaLibraryPerformanceOnToast": "Performance mode enabled ({concurrency} concurrent)",
+  "@mediaLibraryPerformanceOnToast": {
+    "placeholders": {
+      "concurrency": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryPerformanceOffToast": "Performance mode disabled ({concurrency} concurrent)",
+  "@mediaLibraryPerformanceOffToast": {
+    "placeholders": {
+      "concurrency": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryPerformanceDetailsActionLabel": "Details",
+  "mediaLibraryPerformanceModeConfigTitle": "Performance Mode Config",
+  "mediaLibraryNormalModeConfigTitle": "Normal Mode Config",
+  "mediaLibraryConfigScrapeConcurrency": "Scrape concurrency",
+  "mediaLibraryConfigSmbConnections": "SMB connections",
+  "mediaLibraryConfigDedicatedConnections": "Dedicated connections",
+  "mediaLibraryConfigStreamChunkSize": "Transfer chunk size",
+  "mediaLibraryConfigCpuCores": "CPU cores",
+  "mediaLibraryConfigPlatform": "Platform",
+  "mediaLibraryConfigPlatformDesktop": "Desktop",
+  "mediaLibraryConfigPlatformMobile": "Mobile",
+  "mediaLibraryConfigDialogClose": "Close",
+  "mediaLibraryLoadingFailed": "Loading failed: {error}",
+  "@mediaLibraryLoadingFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "mediaLibraryAddDirectoryButton": "Add Directory",
+  "mediaLibraryNoSourcesTitle": "No sources added yet",
+  "mediaLibraryNoSourcesHint": "Please add NAS or other sources in settings first",
+  "mediaLibraryEmptyPathTitle": "No {type} directory configured",
+  "@mediaLibraryEmptyPathTitle": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryEmptyPathHint": "Click the button above to add a directory",
+  "mediaLibrarySourceSelectionTitle": "Select data source",
+  "mediaLibrarySourceSelectionChip": "Added",
+  "mediaLibraryRemoteStorageLabel": "Remote Storage",
+  "mediaLibrarySelectDirectoryButton": "Select directory...",
+  "mediaLibrarySelectDirectorySubtitle": "Select from NAS or network storage",
+  "mediaLibraryNoConnectedSourcesToast": "No connected sources available, please connect one first",
+  "mediaLibraryGalleryPermissionError": "Gallery access permission is required to add local photos",
+  "mediaLibraryMusicPermissionError": "Music library access permission is required to add local music",
+  "mediaLibraryLocalPhotoPath": "Local Photos",
+  "mediaLibraryLocalMusicPath": "Local Music",
+  "mediaLibraryLocalFilesPath": "Local Files",
+  "mediaLibraryAddedToastWithScan": "Added {displayName}, scanning...",
+  "@mediaLibraryAddedToastWithScan": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryAddError": "Failed to add: {error}",
+  "@mediaLibraryAddError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "mediaLibraryImportOptionsDialogTitle": "Add local {typeDisplayName}",
+  "@mediaLibraryImportOptionsDialogTitle": {
+    "placeholders": {
+      "typeDisplayName": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryImportFromFilesOption": "Import from Files",
+  "mediaLibraryImportFromFilesSubtitle": "Select {typeDisplayName} files from iCloud, cloud drives, or local storage",
+  "@mediaLibraryImportFromFilesSubtitle": {
+    "placeholders": {
+      "typeDisplayName": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryScanExistingOption": "Scan existing files",
+  "mediaLibraryScanExistingSubtitle": "Scan files previously imported to the app",
+  "mediaLibraryImportHint": "Imported files will be saved to the app directory and can be managed in the Files app",
+  "mediaLibraryNoFilesSelectedToast": "No files selected",
+  "mediaLibraryImportSuccessToast": "Imported {count} {typeDisplayName}, scanning...",
+  "@mediaLibraryImportSuccessToast": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "typeDisplayName": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryImportError": "Import failed: {error}",
+  "@mediaLibraryImportError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "mediaLibraryFolderPickerAddedToast": "Added directory: {path}, scanning...",
+  "@mediaLibraryFolderPickerAddedToast": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryUnknownSource": "Unknown source",
+  "mediaLibraryBookTypeName": "books",
+  "mediaLibraryComicTypeName": "comics",
+  "mediaLibraryDocumentTypeName": "files",
+  "mediaLibraryLocalBookPath": "Local Books",
+  "mediaLibraryLocalComicPath": "Local Comics",
+  "mediaLibraryLocalDocumentPath": "Local Documents",
+  "mediaLibraryScanningDescription": "Scanning...",
+  "mediaLibraryScrapedLabel": "Scraped",
+  "mediaLibraryPendingLabel": "Pending",
+  "mediaLibraryImportingProgress": "Importing ({current}/{total}): {fileName}",
+  "@mediaLibraryImportingProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryImportingSingle": "Importing: {fileName}",
+  "@mediaLibraryImportingSingle": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryScrapeMetadataDescription": "Scraping metadata...",
+  "mediaLibraryMusicScrapeDescription": "Scraping...",
+  "mediaLibraryMusicScrapeStats": "Success: {success}  Skip: {skip}  Failed: {failed}",
+  "@mediaLibraryMusicScrapeStats": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "skip": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryScrapeButton": "Scrape metadata ({count} pending)",
+  "@mediaLibraryScrapeButton": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryRetryButton": "Retry scrape ({count} failed/no data)",
+  "@mediaLibraryRetryButton": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryScanMenuLabel": "Scan",
+  "mediaLibraryScanningMenuLabel": "Scanning...",
+  "mediaLibraryScrapeMenuLabel": "Scrape metadata",
+  "mediaLibraryScrapingMenuLabel": "Scraping...",
+  "mediaLibraryStopScrapeMenuLabel": "Stop scraping",
+  "mediaLibraryMusicBatchScrapeMenuLabel": "Batch scrape",
+  "mediaLibraryImportMoreBooksMenuLabel": "Import more books",
+  "mediaLibraryImportMoreComicsMenuLabel": "Import more comics",
+  "mediaLibraryImportMoreFilesMenuLabel": "Import more files",
+  "mediaLibraryImportingMenuLabel": "Importing...",
+  "mediaLibraryToggleDisableMenuLabel": "Disable",
+  "mediaLibraryToggleEnableMenuLabel": "Enable",
+  "mediaLibraryDeleteMenuLabel": "Delete",
+  "mediaLibraryDeleteConfirmTitle": "Delete directory",
+  "mediaLibraryDeleteConfirmContent": "Are you sure you want to remove \"{pathName}\" from the media library?",
+  "@mediaLibraryDeleteConfirmContent": {
+    "placeholders": {
+      "pathName": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryDeleteConfirmCancel": "Cancel",
+  "mediaLibraryDeleteConfirmDelete": "Delete",
+  "mediaLibraryScanCompleteVideos": "Scan complete, {count} videos, starting metadata scraping...",
+  "@mediaLibraryScanCompleteVideos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryScanCompleteMusic": "Scan complete, {count} music tracks",
+  "@mediaLibraryScanCompleteMusic": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryScanCompletePhotos": "Scan complete, {count} photos",
+  "@mediaLibraryScanCompletePhotos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryScanCompleteComics": "Scan complete, {count} comics",
+  "@mediaLibraryScanCompleteComics": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryScanCompleteBooks": "Scan complete, {count} books",
+  "@mediaLibraryScanCompleteBooks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryScrapeInProgressToast": "Scraping task in progress...",
+  "mediaLibraryNoConnectedSourcesWarningToast": "No available connections, please connect a source first",
+  "mediaLibraryScrapeCompleteToast": "Metadata scraping complete",
+  "mediaLibraryScrapeErrorToast": "Scraping failed: {error}",
+  "@mediaLibraryScrapeErrorToast": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "mediaLibraryStopScrapeToast": "Stopping scraping...",
+  "mediaLibraryRetryStartToast": "Starting retry scraping {count} videos...",
+  "@mediaLibraryRetryStartToast": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryRetryCompleteToast": "Retry scraping complete",
+  "mediaLibraryRetryErrorToast": "Retry scraping failed: {error}",
+  "@mediaLibraryRetryErrorToast": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "mediaLibraryMusicScrapeConnectionErrorToast": "Please connect to a source first",
+  "mediaLibraryMusicScrapeNoItemsToast": "No music to scrape, please scan first",
+  "mediaLibraryMusicScrapeStartToast": "Starting background scraping, {count} music tracks",
+  "@mediaLibraryMusicScrapeStartToast": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaLibraryImportMoreNoProgress": "Importing...",
+  "mediaLibraryImportMoreCompleteToast": "Imported {count} {typeDisplayName}",
+  "@mediaLibraryImportMoreCompleteToast": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "typeDisplayName": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaLibraryImportMoreErrorToast": "Import failed: {error}",
+  "@mediaLibraryImportMoreErrorToast": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "mediaLibraryScanErrorToast": "Scan failed",
+  "plexAuthNetworkUnavailable": "Network unavailable, please check your connection",
+  "plexAuthNetworkFailed": "Network connection failed, please check your connection",
+  "plexAuthPinExpired": "PIN code expired",
+  "plexAuthCannotOpenBrowser": "Cannot open browser",
+  "plexAuthPinCopied": "PIN code copied to clipboard",
+  "plexAuthTitle": "Plex Account Login",
+  "plexAuthGettingPin": "Getting PIN code...",
+  "plexAuthExpired": "Expired",
+  "plexAuthError": "An error occurred",
+  "plexAuthPinInstructions": "Enter the PIN code below on plex.tv/link:",
+  "plexAuthOpenLink": "Open plex.tv/link",
+  "plexAuthWaitingForAuth": "Waiting for authorization...",
+  "plexAuthAlternativeInstructions": "Or open Plex App on your phone → Settings → Link Device and enter the PIN code above",
+  "plexAuthSuccess": "Authentication successful!",
+  "plexAuthRetryNetwork": "Check Network Again",
+  "plexAuthRetry": "Retry",
+  "folderPickerSelectTitle": "Select directory",
+  "folderPickerSelectSource": "Select source",
+  "folderPickerBackToParent": "Back to parent",
+  "folderPickerSelect": "Select",
+  "folderPickerRetry": "Retry",
+  "folderPickerEmptyDirectory": "This directory is empty",
+  "quickConnectNetworkUnavailable": "Network unavailable, please check your connection",
+  "quickConnectServerNotSupported": "Server does not support Quick Connect feature",
+  "quickConnectServerConnectionFailed": "Unable to connect to server",
+  "quickConnectCodeFetchFailed": "Unable to obtain Quick Connect code",
+  "quickConnectInitFailed": "Failed to initialize Quick Connect",
+  "quickConnectCodeExpired": "Quick Connect code has expired",
+  "quickConnectCodeCopied": "Code copied to clipboard",
+  "quickConnectCheckingAvailability": "Checking Quick Connect availability...",
+  "quickConnectInputCodePrompt": "Enter the following code on your Jellyfin server:",
+  "quickConnectWaitingForAuth": "Waiting for authorization...",
+  "quickConnectInstruction": "Open Jellyfin Dashboard → Dashboard → Quick Connect and enter the code above",
+  "quickConnectAuthSuccess": "Authentication successful!",
+  "quickConnectRetry": "Retry",
+  "twoFATitle": "Two-Factor Authentication",
+  "twoFASubtitleWithSource": "Connecting to 「{sourceName}」\nPlease enter the verification code from your authenticator app",
+  "@twoFASubtitleWithSource": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "twoFASubtitleDefault": "Please enter the verification code from your authenticator app",
+  "twoFARememberDevice": "Remember this device",
+  "twoFAErrorIncomplete": "Please enter a complete 6-digit verification code",
+  "twoFAVerifyButton": "Verify",
+  "twoFACancelButton": "Cancel",
+  "twoFAErrorWrongCode": "Incorrect verification code. Please try again.",
+  "twoFAErrorVerifyFailed": "Verification failed: {error}",
+  "@twoFAErrorVerifyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "twoFACancelConfirmTitle": "Cancel Verification",
+  "twoFACancelConfirmContent": "You can save the connection source first and complete two-factor authentication later.",
+  "twoFACancelConfirmBackButton": "Return to Verification",
+  "twoFACancelConfirmSkipButton": "Save First",
+  "twoFASkipLater": "Verify Later",
+  "sourcesAddEditTitleEdit": "Edit Source",
+  "sourcesAddEditTitleAdd": "Add Source",
+  "sourcesSourceTypeLabel": "Source Type",
+  "sourcesNameFieldLabel": "Name (Optional)",
+  "sourcesNameFieldHintLocal": "e.g.: Local Storage",
+  "sourcesNameFieldHintRemote": "Give this source a name",
+  "sourcesLocalStorageInfoMobile": "Local storage will access device media library (photos, music, etc.) and app documents directory",
+  "sourcesLocalStorageInfoDesktop": "Local storage requires no connection setup, and will access files directly on the device",
+  "sourcesHostFieldLabel": "Host Address",
+  "sourcesHostFieldHintSmb": "192.168.1.100 (IP only, no port needed)",
+  "sourcesHostFieldHintOther": "192.168.1.100 or nas.example.com",
+  "sourcesSmbHelperText": "SMB uses port 445, no protocol prefix needed",
+  "sourcesHostFieldValidationEmpty": "Please enter host address",
+  "sourcesPortFieldLabel": "Port",
+  "sourcesPortFieldValidationEmpty": "Please enter port",
+  "sourcesPortFieldValidationInvalid": "Invalid port",
+  "sourcesSslLabel": "SSL",
+  "sourcesUsernameFieldLabel": "Username",
+  "sourcesUsernameFieldValidationEmpty": "Please enter username",
+  "sourcesPasswordFieldLabelEdit": "Password (Leave empty to keep unchanged)",
+  "sourcesPasswordFieldValidationEmpty": "Please enter password",
+  "sourcesAutoConnectTitle": "Auto Connect",
+  "sourcesAutoConnectSubtitle": "Auto connect to this source on startup",
+  "sourcesRememberDeviceTitle": "Remember Device",
+  "sourcesRememberDeviceSubtitle": "Skip two-factor authentication (if supported)",
+  "sourcesSubmitButtonAdd": "Add & Connect",
+  "sourcesSubmitButtonSave": "Save",
+  "sourcesSuccessUpdated": "Source updated",
+  "sourcesSuccessConnected": "Connected to {sourceName}",
+  "@sourcesSuccessConnected": {
+    "placeholders": {
+      "sourceName": {
+        "type": "String"
+      }
+    }
+  },
+  "sourcesLocalStorageName": "Local Storage",
+  "sourcesTwoFaVerificationFailed": "Two-factor verification failed",
+  "sourcesConnectionFailed": "Connection failed",
+  "sourcesSecurityStorageUnavailable": "Secure storage unavailable, unable to save login info. Connection still successful, but you'll need to re-enter password next time.",
+  "sourcesNetworkPermissionDenied": "Network permission denied, please check system settings",
+  "sourcesConnectionRefused": "Connection refused, please check address and port",
+  "sourcesConnectionTimeout": "Connection timeout, please check network",
+  "sourcesNetworkConnectionFailed": "Network connection failed, please check network settings",
+  "sourcesSslHandshakeFailed": "SSL handshake failed, please check SSL settings"
 }
