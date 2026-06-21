@@ -33,23 +33,19 @@ class MobileMusicFileSystem implements NasFileSystem {
   /// iOS 需要 NSAppleMusicUsageDescription 权限声明才能访问 Apple Music 库
   /// Android 需要 READ_EXTERNAL_STORAGE 权限
   Future<bool> requestPermission() async {
-    // ignore: avoid_print
-    print('🎵 MobileMusicFileSystem: 请求音乐库权限...');
+    logger.d('🎵 MobileMusicFileSystem: 请求音乐库权限...');
     // iOS 和 Android 都需要请求权限
     final hasPermission = await _audioQuery.permissionsStatus();
-    // ignore: avoid_print
-    print('🎵 MobileMusicFileSystem: 当前权限状态: $hasPermission');
+    logger.d('🎵 MobileMusicFileSystem: 当前权限状态: $hasPermission');
     if (!hasPermission) {
       final granted = await _audioQuery.permissionsRequest();
-      // ignore: avoid_print
-      print('🎵 MobileMusicFileSystem: 权限请求结果: $granted');
+      logger.d('🎵 MobileMusicFileSystem: 权限请求结果: $granted');
       if (!granted) {
         logger.w('MobileMusicFileSystem: 权限被拒绝 (${Platform.operatingSystem})');
         return false;
       }
     }
-    // ignore: avoid_print
-    print('🎵 MobileMusicFileSystem: ✓ 权限已获取');
+    logger.d('🎵 MobileMusicFileSystem: ✓ 权限已获取');
     return true;
   }
 
@@ -63,24 +59,20 @@ class MobileMusicFileSystem implements NasFileSystem {
 
   /// 获取所有歌曲
   Future<List<SongModel>> _getSongs() async {
-    // ignore: avoid_print
-    print('🎵 MobileMusicFileSystem: _getSongs() 被调用, _cachedSongs=${_cachedSongs?.length}');
+    logger.d('🎵 MobileMusicFileSystem: _getSongs() 被调用, _cachedSongs=${_cachedSongs?.length}');
     if (_cachedSongs != null) {
-      // ignore: avoid_print
-      print('🎵 MobileMusicFileSystem: 使用缓存歌曲列表，数量: ${_cachedSongs!.length}');
+      logger.d('🎵 MobileMusicFileSystem: 使用缓存歌曲列表，数量: ${_cachedSongs!.length}');
       return _cachedSongs!;
     }
 
-    // ignore: avoid_print
-    print('🎵 MobileMusicFileSystem: 开始查询歌曲...');
+    logger.d('🎵 MobileMusicFileSystem: 开始查询歌曲...');
     _cachedSongs = await _audioQuery.querySongs(
       sortType: SongSortType.DATE_ADDED,
       orderType: OrderType.DESC_OR_GREATER,
       uriType: UriType.EXTERNAL,
     );
 
-    // ignore: avoid_print
-    print('🎵 MobileMusicFileSystem: querySongs 返回 ${_cachedSongs!.length} 首歌曲');
+    logger.d('🎵 MobileMusicFileSystem: querySongs 返回 ${_cachedSongs!.length} 首歌曲');
 
     // 缓存歌曲
     for (final song in _cachedSongs!) {
@@ -90,13 +82,11 @@ class MobileMusicFileSystem implements NasFileSystem {
     // 打印前几首歌曲的信息用于调试
     for (var i = 0; i < _cachedSongs!.length && i < 3; i++) {
       final song = _cachedSongs![i];
-      // ignore: avoid_print
-      print('🎵   - ${song.displayName} (ext: ${song.fileExtension}, size: ${song.size})');
+      logger.d('🎵   - ${song.displayName} (ext: ${song.fileExtension}, size: ${song.size})');
     }
 
     if (_cachedSongs!.isEmpty) {
-      // ignore: avoid_print
-      print('🎵 MobileMusicFileSystem: ⚠️ 歌曲列表为空！');
+      logger.w('🎵 MobileMusicFileSystem: ⚠️ 歌曲列表为空！');
     }
 
     return _cachedSongs!;
@@ -128,14 +118,11 @@ class MobileMusicFileSystem implements NasFileSystem {
 
   @override
   Future<List<FileItem>> listDirectory(String path) async {
-    // ignore: avoid_print
-    print('🎵 MobileMusicFileSystem: listDirectory("$path")');
     logger.d('MobileMusicFileSystem: listDirectory - $path');
 
     // 根目录
     if (path == '/' || path.isEmpty) {
-      // ignore: avoid_print
-      print('🎵 MobileMusicFileSystem: → 调用 _listRoot()');
+      logger.d('🎵 MobileMusicFileSystem: → 调用 _listRoot()');
       return _listRoot();
     }
 
@@ -192,14 +179,12 @@ class MobileMusicFileSystem implements NasFileSystem {
 
   /// 列出根目录
   Future<List<FileItem>> _listRoot() async {
-    // ignore: avoid_print
-    print('🎵 MobileMusicFileSystem: _listRoot() 开始');
+    logger.d('🎵 MobileMusicFileSystem: _listRoot() 开始');
     final songs = await _getSongs();
     final albums = await _getAlbums();
     final artists = await _getArtists();
 
-    // ignore: avoid_print
-    print('🎵 MobileMusicFileSystem: _listRoot() 返回 songs=${songs.length}, albums=${albums.length}, artists=${artists.length}');
+    logger.d('🎵 MobileMusicFileSystem: _listRoot() 返回 songs=${songs.length}, albums=${albums.length}, artists=${artists.length}');
 
     return [
       FileItem(

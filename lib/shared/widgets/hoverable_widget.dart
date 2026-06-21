@@ -577,10 +577,9 @@ class _HoverCardState extends State<HoverCard>
   @override
   Widget build(BuildContext context) {
     final isDesktop = PlatformCapabilities.isDesktop;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
-    final backgroundColor = widget.backgroundColor ??
-        (isDark ? const Color(0xFF1E1E1E) : Colors.white);
+    final backgroundColor = widget.backgroundColor ?? cs.surface;
 
     Widget card = AnimatedBuilder(
       animation: _controller,

@@ -136,6 +136,14 @@ abstract final class AppColors {
     return ratingLow;
   }
 
+  // 认证/启动页背景渐变（固定）- startup_page 与 connection_page 共用
+  static const List<Color> authBackgroundGradient = [
+    Color(0xFF0F0F1A),
+    Color(0xFF1A1A2E),
+    Color(0xFF16213E),
+    Color(0xFF0F0F1A),
+  ];
+
   // 玻璃效果颜色（固定）
   static const Color glassLight = Color(0x1AFFFFFF);
   static const Color glassDark = Color(0x1A000000);

@@ -10,6 +10,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
@@ -584,7 +585,7 @@ Future<T?> _showNativeListSheet<T>({
     return null;
   } catch (e) {
     // 回退到 Flutter 实现
-    debugPrint('Native list sheet failed: $e, falling back to Flutter implementation');
+    logger.w('Native list sheet failed, falling back to Flutter implementation', e);
     return showAdaptiveModalSheet<T>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -736,7 +737,7 @@ Future<FilterResult?> _showNativeFilterSheetImpl({
     }
     return null;
   } catch (e) {
-    debugPrint('Native filter sheet failed: $e, falling back to Flutter');
+    logger.w('Native filter sheet failed, falling back to Flutter', e);
     // 回退到 Flutter 实现
     return showAdaptiveModalSheet<FilterResult>(
       context: context,
@@ -787,13 +788,13 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
       ),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        color: cs.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -805,7 +806,7 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: isDark ? Colors.white24 : Colors.black12,
+              color: cs.outlineVariant,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -820,7 +821,7 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
+                    color: cs.onSurface,
                   ),
                 ),
                 if (widget.showResetButton)
@@ -848,7 +849,7 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white70 : Colors.black54,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -874,17 +875,13 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Colors.blue
-                                    : isDark
-                                        ? Colors.white.withValues(alpha: 0.1)
-                                        : Colors.black.withValues(alpha: 0.05),
+                                    ? cs.primary
+                                    : cs.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
-                                      ? Colors.blue
-                                      : isDark
-                                          ? Colors.white24
-                                          : Colors.black12,
+                                      ? cs.primary
+                                      : cs.outlineVariant,
                                 ),
                               ),
                               child: Text(
@@ -892,10 +889,8 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: isSelected
-                                      ? Colors.white
-                                      : isDark
-                                          ? Colors.white
-                                          : Colors.black87,
+                                      ? cs.onPrimary
+                                      : cs.onSurface,
                                 ),
                               ),
                             ),
@@ -917,10 +912,10 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
               16 + MediaQuery.of(context).padding.bottom,
             ),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+              color: cs.surface,
               border: Border(
                 top: BorderSide(
-                  color: isDark ? Colors.white12 : Colors.black12,
+                  color: cs.outlineVariant,
                 ),
               ),
             ),
@@ -929,8 +924,8 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(FilterResult(_selectedValues)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
+                  backgroundColor: cs.primary,
+                  foregroundColor: cs.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -1293,7 +1288,7 @@ Future<SectionedSheetResult<T>?> _showNativeSectionedSheet<T>({
     }
     return null;
   } catch (e) {
-    debugPrint('Native sectioned sheet failed: $e');
+    logger.w('Native sectioned sheet failed', e);
     return null;
   }
 }
@@ -1498,7 +1493,7 @@ Future<T?> _showNativeOptionsBottomSheet<T>({
     return null;
   } catch (e) {
     // 回退到 Flutter 实现
-    debugPrint('Native bottom sheet failed: $e, falling back to Flutter implementation');
+    logger.w('Native bottom sheet failed, falling back to Flutter implementation', e);
     return showAppBottomSheet<T>(
       context: context,
       title: title,

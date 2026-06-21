@@ -32,13 +32,9 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
   /// 请求相册访问权限
   Future<bool> requestPermission() async {
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: 请求相册权限...');
     logger.i('MobileGalleryFileSystem: 请求相册权限...');
 
     final permission = await pm.PhotoManager.requestPermissionExtend();
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: 权限请求结果 - $permission, isAuth=${permission.isAuth}');
     logger.i('MobileGalleryFileSystem: 权限请求结果 - $permission');
 
     if (permission.isAuth) {
@@ -59,18 +55,13 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
   /// 获取所有相册
   Future<List<pm.AssetPathEntity>> _getAlbums() async {
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: _getAlbums() 被调用, _cachedAlbums=${_cachedAlbums?.length}');
+    logger.d('🔵 MobileGalleryFileSystem: _getAlbums() 被调用, _cachedAlbums=${_cachedAlbums?.length}');
 
     if (_cachedAlbums != null) {
-      // ignore: avoid_print
-      print('🔵 MobileGalleryFileSystem: 使用缓存相册列表，数量: ${_cachedAlbums!.length}');
       logger.d('MobileGalleryFileSystem: 使用缓存相册列表，数量: ${_cachedAlbums!.length}');
       return _cachedAlbums!;
     }
 
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: 开始调用 PhotoManager.getAssetPathList...');
     logger.i('MobileGalleryFileSystem: 开始获取相册列表...');
 
     try {
@@ -80,28 +71,20 @@ class MobileGalleryFileSystem implements NasFileSystem {
         onlyAll: false,
       );
 
-      // ignore: avoid_print
-      print('🔵 MobileGalleryFileSystem: getAssetPathList 返回 ${_cachedAlbums!.length} 个相册');
       logger.i('MobileGalleryFileSystem: 获取到 ${_cachedAlbums!.length} 个相册');
 
       // 打印每个相册的详细信息用于调试
       for (final album in _cachedAlbums!) {
         final count = await album.assetCountAsync;
-        // ignore: avoid_print
-        print('🔵   - ${album.name} (id: ${album.id}, isAll: ${album.isAll}): $count 个资源');
         logger.d('  - ${album.name} (id: ${album.id}, isAll: ${album.isAll}): $count 个资源');
       }
 
       if (_cachedAlbums!.isEmpty) {
-        // ignore: avoid_print
-        print('🔵 MobileGalleryFileSystem: ⚠️ 相册列表为空！');
         logger.w('MobileGalleryFileSystem: 相册列表为空，可能没有权限或没有媒体文件');
       }
 
       return _cachedAlbums!;
     } on Exception catch (e, st) {
-      // ignore: avoid_print
-      print('🔵 MobileGalleryFileSystem: ❌ 获取相册列表失败: $e');
       logger.e('MobileGalleryFileSystem: 获取相册列表失败', e, st);
       _cachedAlbums = [];
       return _cachedAlbums!;
@@ -116,28 +99,23 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
   @override
   Future<List<FileItem>> listDirectory(String path) async {
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: listDirectory("$path")');
     logger.d('MobileGalleryFileSystem: listDirectory - $path');
 
     // 根目录
     if (path == '/' || path.isEmpty) {
-      // ignore: avoid_print
-      print('🔵 MobileGalleryFileSystem: → 调用 _listRoot()');
+      logger.d('🔵 MobileGalleryFileSystem: → 调用 _listRoot()');
       return _listRoot();
     }
 
     // 相册列表
     if (path == '/albums' || path == '/albums/') {
-      // ignore: avoid_print
-      print('🔵 MobileGalleryFileSystem: → 调用 _listAlbums()');
+      logger.d('🔵 MobileGalleryFileSystem: → 调用 _listAlbums()');
       return _listAlbums();
     }
 
     // 所有照片
     if (path == '/all' || path == '/all/') {
-      // ignore: avoid_print
-      print('🔵 MobileGalleryFileSystem: → 调用 _listAllAssets()');
+      logger.d('🔵 MobileGalleryFileSystem: → 调用 _listAllAssets()');
       return _listAllAssets();
     }
 
@@ -156,13 +134,11 @@ class MobileGalleryFileSystem implements NasFileSystem {
         return [];
       }
 
-      // ignore: avoid_print
-      print('🔵 MobileGalleryFileSystem: → 调用 _listAlbumAssets("$albumId")');
+      logger.d('🔵 MobileGalleryFileSystem: → 调用 _listAlbumAssets("$albumId")');
       return _listAlbumAssets(albumId);
     }
 
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: 路径不匹配任何规则，返回空列表');
+    logger.d('🔵 MobileGalleryFileSystem: 路径不匹配任何规则，返回空列表');
     return [];
   }
 
@@ -184,12 +160,8 @@ class MobileGalleryFileSystem implements NasFileSystem {
   /// 注意：只返回 isAll=true 的相册（"所有照片"），避免重复扫描。
   /// iOS 的智能相册（Screenshots、Favorites 等）中的照片都已包含在 isAll 相册中。
   Future<List<FileItem>> _listAlbums() async {
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: _listAlbums() 开始');
     logger.i('MobileGalleryFileSystem: _listAlbums 开始');
     final albums = await _getAlbums();
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: _listAlbums() 获取到 ${albums.length} 个相册');
     logger.i('MobileGalleryFileSystem: _listAlbums 获取到 ${albums.length} 个相册');
 
     final items = <FileItem>[];
@@ -204,8 +176,6 @@ class MobileGalleryFileSystem implements NasFileSystem {
       final count = await album.assetCountAsync;
       // 对 album ID 进行编码，避免包含斜杠导致路径解析错误
       final encodedId = _encodeId(album.id);
-      // ignore: avoid_print
-      print('🔵 MobileGalleryFileSystem: 相册 "${album.name}" (id: ${album.id}, isAll: ${album.isAll}) 有 $count 个资源');
       logger.d('MobileGalleryFileSystem: 相册 "${album.name}" (id: ${album.id}) 有 $count 个资源');
       items.add(FileItem(
         name: album.name,
@@ -215,8 +185,6 @@ class MobileGalleryFileSystem implements NasFileSystem {
       ));
     }
 
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: _listAlbums() 返回 ${items.length} 个相册（仅 isAll=true）');
     logger.i('MobileGalleryFileSystem: _listAlbums 返回 ${items.length} 个相册');
     return items;
   }
@@ -241,18 +209,12 @@ class MobileGalleryFileSystem implements NasFileSystem {
   /// 2. 不在列表时获取文件信息，延迟到需要时再获取
   /// 3. Live Photo 视频路径延迟加载
   Future<List<FileItem>> _listAlbumAssets(String albumId) async {
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: _listAlbumAssets("$albumId") 开始');
     logger.d('MobileGalleryFileSystem: _listAlbumAssets - albumId: $albumId');
 
     final albums = await _getAlbums();
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: _listAlbumAssets 获取到 ${albums.length} 个相册');
     logger.d('MobileGalleryFileSystem: 可用相册数量: ${albums.length}');
 
     if (albums.isEmpty) {
-      // ignore: avoid_print
-      print('🔵 MobileGalleryFileSystem: ⚠️ 相册列表为空，返回空列表');
       logger.w('MobileGalleryFileSystem: 相册列表为空，可能没有权限或没有照片');
       return [];
     }
@@ -260,8 +222,6 @@ class MobileGalleryFileSystem implements NasFileSystem {
     final album = albums.firstWhere(
       (a) => a.id == albumId,
       orElse: () {
-        // ignore: avoid_print
-        print('🔵 MobileGalleryFileSystem: ❌ 找不到相册 $albumId');
         logger
           ..w('MobileGalleryFileSystem: 找不到相册 $albumId')
           ..d('可用相册 ID: ${albums.map((a) => a.id).join(', ')}');
@@ -269,12 +229,9 @@ class MobileGalleryFileSystem implements NasFileSystem {
       },
     );
 
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: ✓ 找到相册 "${album.name}" (id: ${album.id})');
+    logger.d('🔵 MobileGalleryFileSystem: ✓ 找到相册 "${album.name}" (id: ${album.id})');
 
     final count = await album.assetCountAsync;
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: 相册 "${album.name}" 共有 $count 个资源');
     logger.i('MobileGalleryFileSystem: 相册 "${album.name}" 共有 $count 个资源');
 
     // 对 album ID 进行编码
@@ -351,8 +308,7 @@ class MobileGalleryFileSystem implements NasFileSystem {
       await Future<void>.delayed(Duration.zero);
     }
 
-    // ignore: avoid_print
-    print('🔵 MobileGalleryFileSystem: _listAlbumAssets 返回 ${items.length} 个资源');
+    logger.d('🔵 MobileGalleryFileSystem: _listAlbumAssets 返回 ${items.length} 个资源');
     return items;
   }
 

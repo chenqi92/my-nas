@@ -53,20 +53,15 @@ class MobileCompositeFileSystem implements NasFileSystem {
   ///
   /// 仅在用户将本机添加到照片或视频媒体库时调用
   Future<bool> requestGalleryPermission() async {
-    // ignore: avoid_print
-    print('🟢 MobileCompositeFileSystem: requestGalleryPermission() 被调用, 已授权=$_galleryPermissionGranted');
+    logger.d('🟢 MobileCompositeFileSystem: requestGalleryPermission() 被调用, 已授权=$_galleryPermissionGranted');
     if (_galleryPermissionGranted) return true;
 
     final granted = await _galleryFileSystem.requestPermission();
     _galleryPermissionGranted = granted;
 
     if (!granted) {
-      // ignore: avoid_print
-      print('🟢 MobileCompositeFileSystem: ⚠️ 相册权限被拒绝');
       logger.w('MobileCompositeFileSystem: 相册权限被拒绝');
     } else {
-      // ignore: avoid_print
-      print('🟢 MobileCompositeFileSystem: ✓ 相册权限已获取');
       logger.i('MobileCompositeFileSystem: 相册权限已获取');
     }
 
@@ -151,24 +146,19 @@ class MobileCompositeFileSystem implements NasFileSystem {
 
   @override
   Future<List<FileItem>> listDirectory(String path) async {
-    // ignore: avoid_print
-    print('🟢 MobileCompositeFileSystem: listDirectory("$path")');
     logger.d('MobileCompositeFileSystem: listDirectory - $path');
 
     // 根目录：显示所有可用的文件系统
     if (path == '/' || path.isEmpty) {
-      // ignore: avoid_print
-      print('🟢 MobileCompositeFileSystem: → 返回根目录列表');
+      logger.d('🟢 MobileCompositeFileSystem: → 返回根目录列表');
       return _listRoot();
     }
 
     final fs = _getFileSystem(path);
     final transformedPath = _transformPath(path);
-    // ignore: avoid_print
-    print('🟢 MobileCompositeFileSystem: 转换路径 "$path" → "$transformedPath", 使用 ${fs.runtimeType}');
+    logger.d('🟢 MobileCompositeFileSystem: 转换路径 "$path" → "$transformedPath", 使用 ${fs.runtimeType}');
     final items = await fs.listDirectory(transformedPath.isEmpty ? '/' : transformedPath);
-    // ignore: avoid_print
-    print('🟢 MobileCompositeFileSystem: 返回 ${items.length} 个项目');
+    logger.d('🟢 MobileCompositeFileSystem: 返回 ${items.length} 个项目');
 
     // 为返回的项目添加前缀
     final prefix = _getPrefix(path);

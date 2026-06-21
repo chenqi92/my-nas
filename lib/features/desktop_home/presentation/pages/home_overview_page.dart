@@ -438,11 +438,10 @@ class _SystemPulse extends ConsumerWidget {
                   ),
                   _PulseRow(
                     icon: Icons.image_search_rounded,
-                    iconColor: const Color(0xFFFB923C),
+                    iconColor: t.warn,
                     title: l.homePulsePhotoScanTitle,
                     subtitle: l.homePulsePhotoScanIdle,
-                    trailing:
-                        const _MiniRing(value: 0, color: Color(0xFFFB923C)),
+                    trailing: _MiniRing(value: 0, color: t.warn),
                   ),
                   _PulseRow(
                     icon: Icons.cast_rounded,

@@ -51,9 +51,10 @@ class _HostsMappingPageState extends State<HostsMappingPage>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
+      backgroundColor: cs.surface,
       appBar: AppBar(
         leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
@@ -74,7 +75,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
                 _buildDohBar(isDark),
                 Expanded(
                   child: _entries.isEmpty
-                      ? _buildEmpty(context, isDark)
+                      ? _buildEmpty(context)
                       : _buildList(isDark),
                 ),
               ],
@@ -305,34 +306,36 @@ class _HostsMappingPageState extends State<HostsMappingPage>
         ),
       );
 
-  Widget _buildEmpty(BuildContext context, bool isDark) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.dns_outlined,
-              size: 64,
-              color: isDark ? Colors.grey[700] : Colors.grey[400],
+  Widget _buildEmpty(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.dns_outlined,
+            size: 64,
+            color: cs.outline,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            context.l10n.hostsMappingEmpty,
+            style: textTheme.bodyLarge?.copyWith(
+              color: cs.onSurfaceVariant,
             ),
-            const SizedBox(height: 16),
-            Text(
-              context.l10n.hostsMappingEmpty,
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark ? Colors.grey[500] : Colors.grey[600],
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.hostsMappingEmptyMobileDesc,
+            style: textTheme.bodySmall?.copyWith(
+              color: cs.onSurfaceVariant,
             ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.hostsMappingEmptyMobileDesc,
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.grey[600] : Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildList(bool isDark) => ListView.separated(
         padding: const EdgeInsets.all(16),
@@ -410,7 +413,13 @@ class _HostsMappingPageState extends State<HostsMappingPage>
       context.showSuccessToast(context.l10n.hostsMappingResolveSuccess(results.length));
     } on Exception catch (e, st) {
       if (!mounted) return;
-      AppError.handleWithUI(context, e, st, 'DoH 解析失败', 'HostsMappingPage.resolveAll');
+      AppError.handleWithUI(
+        context,
+        e,
+        st,
+        context.l10n.hostsMappingResolveFailed,
+        'HostsMappingPage.resolveAll',
+      );
     } finally {
       if (mounted) setState(() => _isResolving = false);
     }
@@ -434,6 +443,7 @@ class _HostMappingTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final sourceColor = entry.source == HostMappingSource.doh
         ? AppColors.accent
         : AppColors.info;
@@ -482,7 +492,7 @@ class _HostMappingTile extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontFamily: 'monospace',
-                        color: isDark ? Colors.grey[500] : Colors.grey[600],
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                   ],

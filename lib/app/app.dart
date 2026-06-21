@@ -61,16 +61,16 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       logger.e('Flutter Error: ${details.exception}', details.exception, details.stack);
       return Material(
         child: Container(
-          color: Colors.red.shade100,
+          color: AppColors.errorLight,
           padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded, size: 48, color: Colors.red),
+              const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
               const SizedBox(height: 16),
               Text(
                 appL10n.appErrorWidgetTitle,
-                style: TextStyle(fontSize: 20, color: Colors.red, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 20, color: AppColors.error, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(

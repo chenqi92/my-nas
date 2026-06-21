@@ -53,14 +53,14 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
   @override
   Widget build(BuildContext context) {
     final connection = ref.watch(aria2ConnectionProvider(widget.source.id));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : null,
+      backgroundColor: cs.surface,
       body: Column(
         children: [
-          _buildHeader(context, isDark, connection),
-          Expanded(child: _buildBody(context, isDark, connection)),
+          _buildHeader(context, connection),
+          Expanded(child: _buildBody(context, connection)),
         ],
       ),
       floatingActionButton: connection?.status == Aria2ConnectionStatus.connected
@@ -75,19 +75,17 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
 
   Widget _buildHeader(
     BuildContext context,
-    bool isDark,
     Aria2Connection? connection,
   ) {
+    final cs = Theme.of(context).colorScheme;
     final stats = ref.watch(aria2StatsAutoRefreshProvider(widget.source.id));
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : context.colorScheme.surface,
+        color: cs.surface,
         border: Border(
           bottom: BorderSide(
-            color: isDark
-                ? AppColors.darkOutline.withValues(alpha: 0.2)
-                : context.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            color: cs.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
       ),
@@ -113,7 +111,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                         widget.source.displayName,
                         style: context.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.darkOnSurface : null,
+                          color: cs.onSurface,
                         ),
                       ),
                     ),
@@ -136,7 +134,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                   PopupMenuButton<String>(
                     icon: Icon(
                       Icons.more_vert_rounded,
-                      color: isDark ? AppColors.darkOnSurface : null,
+                      color: cs.onSurface,
                     ),
                     onSelected: (value) => _handleMenuAction(value, context),
                     itemBuilder: (context) => [
@@ -193,7 +191,6 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                         count: stats.numActive,
                         countLabel: context.l10n.aria2SpeedCardActiveLabel,
                         color: AppColors.success,
-                        isDark: isDark,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -205,7 +202,6 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                         count: stats.numWaiting,
                         countLabel: context.l10n.aria2SpeedCardWaitingLabel,
                         color: AppColors.primary,
-                        isDark: isDark,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -221,7 +217,6 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
 
   Widget _buildBody(
     BuildContext context,
-    bool isDark,
     Aria2Connection? connection,
   ) {
     if (connection == null || connection.status == Aria2ConnectionStatus.connecting) {
@@ -268,7 +263,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
       );
     }
 
-    return _DownloadList(sourceId: widget.source.id, isDark: isDark);
+    return _DownloadList(sourceId: widget.source.id);
   }
 
   void _handleMenuAction(String action, BuildContext context) {
@@ -320,13 +315,13 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
   }
 
   void _showVersionInfoDialog(BuildContext context, Aria2Connection connection) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final info = connection.adapter.info;
 
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppColors.darkSurface : null,
+        backgroundColor: cs.surface,
         title: Row(
           children: [
             Container(
@@ -348,19 +343,16 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
             _InfoRow(
               label: context.l10n.aria2ServiceNameLabel,
               value: widget.source.displayName,
-              isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
               label: context.l10n.aria2VersionLabel,
               value: info.version ?? context.l10n.aria2UnknownVersion,
-              isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
               label: context.l10n.aria2ServerAddressLabel,
               value: '${widget.source.host}:${widget.source.port}',
-              isDark: isDark,
             ),
           ],
         ),
@@ -384,7 +376,6 @@ class _SpeedCard extends StatelessWidget {
     required this.count,
     required this.countLabel,
     required this.color,
-    required this.isDark,
   });
 
   final IconData icon;
@@ -393,15 +384,14 @@ class _SpeedCard extends StatelessWidget {
   final int count;
   final String countLabel;
   final Color color;
-  final bool isDark;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
-            : color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -423,15 +413,13 @@ class _SpeedCard extends StatelessWidget {
                   _formatSpeed(speed),
                   style: context.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.darkOnSurface : color,
+                    color: color,
                   ),
                 ),
                 Text(
                   '$countLabel: $count',
                   style: context.textTheme.bodySmall?.copyWith(
-                    color: isDark
-                        ? AppColors.darkOnSurfaceVariant
-                        : AppColors.lightOnSurfaceVariant,
+                    color: cs.onSurfaceVariant,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -441,6 +429,7 @@ class _SpeedCard extends StatelessWidget {
         ],
       ),
     );
+  }
 }
 
 /// 信息行组件
@@ -448,15 +437,15 @@ class _InfoRow extends StatelessWidget {
   const _InfoRow({
     required this.label,
     required this.value,
-    required this.isDark,
   });
 
   final String label;
   final String value;
-  final bool isDark;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
@@ -464,7 +453,7 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: cs.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
@@ -473,7 +462,7 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             value,
             style: TextStyle(
-              color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+              color: cs.onSurface,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -481,14 +470,14 @@ class _InfoRow extends StatelessWidget {
         ),
       ],
     );
+  }
 }
 
 /// 下载列表
 class _DownloadList extends ConsumerWidget {
-  const _DownloadList({required this.sourceId, required this.isDark});
+  const _DownloadList({required this.sourceId});
 
   final String sourceId;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -540,7 +529,6 @@ class _DownloadList extends ConsumerWidget {
         child: _DownloadTile(
           download: filtered[index],
           sourceId: sourceId,
-          isDark: isDark,
         ),
       ),
     );
@@ -565,7 +553,7 @@ class _DownloadList extends ConsumerWidget {
           Text(
             context.l10n.aria2EmptyDownloadTasksHint,
             style: context.textTheme.bodyMedium?.copyWith(
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -578,26 +566,23 @@ class _DownloadTile extends ConsumerWidget {
   const _DownloadTile({
     required this.download,
     required this.sourceId,
-    required this.isDark,
   });
 
   final Aria2Download download;
   final String sourceId;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cardColor = _getCardColor();
+    final cs = Theme.of(context).colorScheme;
+    final cardColor = _getCardColor(context);
 
     return Card(
       margin: EdgeInsets.zero,
       color: cardColor,
-      elevation: isDark ? 0 : 1,
+      elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: isDark
-            ? BorderSide(color: AppColors.darkOutline.withValues(alpha: 0.2))
-            : BorderSide.none,
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.2)),
       ),
       child: InkWell(
         onTap: () => _showDownloadDetails(context, ref),
@@ -617,7 +602,7 @@ class _DownloadTile extends ConsumerWidget {
                       download.name,
                       style: context.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.darkOnSurface : null,
+                        color: cs.onSurface,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -632,9 +617,7 @@ class _DownloadTile extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: download.progress,
-                  backgroundColor: isDark
-                      ? AppColors.darkOutline.withValues(alpha: 0.3)
-                      : AppColors.lightOutline.withValues(alpha: 0.3),
+                  backgroundColor: cs.outlineVariant.withValues(alpha: 0.3),
                   valueColor: AlwaysStoppedAnimation(_getProgressColor()),
                   minHeight: 6,
                 ),
@@ -654,12 +637,12 @@ class _DownloadTile extends ConsumerWidget {
                   const SizedBox(width: 12),
                   // 大小
                   Icon(Icons.folder_outlined, size: 14,
-                      color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
+                      color: cs.onSurfaceVariant),
                   const SizedBox(width: 4),
                   Text(
                     '${_formatSize(download.completedLength)} / ${_formatSize(download.totalLength)}',
                     style: context.textTheme.bodySmall?.copyWith(
-                      color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
                   const Spacer(),
@@ -694,7 +677,7 @@ class _DownloadTile extends ConsumerWidget {
                     Text(
                       '${context.l10n.aria2UploadedLabel}${_formatSize(download.uploadLength)}',
                       style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -707,12 +690,12 @@ class _DownloadTile extends ConsumerWidget {
     );
   }
 
-  Color _getCardColor() {
-    if (download.hasError) return AppColors.error.withValues(alpha: isDark ? 0.08 : 0.05);
-    if (download.isComplete) return AppColors.success.withValues(alpha: isDark ? 0.08 : 0.05);
-    if (download.isActive) return AppColors.primary.withValues(alpha: isDark ? 0.08 : 0.05);
-    if (download.isPaused) return AppColors.warning.withValues(alpha: isDark ? 0.08 : 0.05);
-    return isDark ? AppColors.darkSurface : Colors.white;
+  Color _getCardColor(BuildContext context) {
+    if (download.hasError) return AppColors.error.withValues(alpha: 0.08);
+    if (download.isComplete) return AppColors.success.withValues(alpha: 0.08);
+    if (download.isActive) return AppColors.primary.withValues(alpha: 0.08);
+    if (download.isPaused) return AppColors.warning.withValues(alpha: 0.08);
+    return Theme.of(context).colorScheme.surface;
   }
 
   Color _getProgressColor() {
@@ -808,7 +791,7 @@ class _DownloadTile extends ConsumerWidget {
   }
 
   void _showDownloadDetails(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     showAdaptiveModalSheet<void>(
       context: context,
@@ -820,7 +803,7 @@ class _DownloadTile extends ConsumerWidget {
         expand: false,
         builder: (context, scrollController) => DecoratedBox(
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : Colors.white,
+            color: cs.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
@@ -890,7 +873,7 @@ class _DetailItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -902,7 +885,7 @@ class _DetailItem extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                color: cs.onSurfaceVariant,
               ),
             ),
           ),
@@ -922,7 +905,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(aria2SortSettingsProvider(sourceId));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.4,
@@ -931,7 +914,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
       expand: false,
       builder: (context, scrollController) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
+          color: cs.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -989,7 +972,7 @@ class _SortOptionsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(aria2SortSettingsProvider(sourceId));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.5,
@@ -998,7 +981,7 @@ class _SortOptionsSheet extends ConsumerWidget {
       expand: false,
       builder: (context, scrollController) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
+          color: cs.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -1082,7 +1065,7 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.5,
@@ -1090,7 +1073,7 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
       maxChildSize: 0.95,
       builder: (context, scrollController) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
+          color: cs.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Form(
@@ -1123,7 +1106,7 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                           Text(
                             context.l10n.aria2AddDownloadDialogSubtitle,
                             style: context.textTheme.bodySmall?.copyWith(
-                              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -1163,14 +1146,10 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                       decoration: InputDecoration(
                         hintText: context.l10n.aria2DownloadLinkHint,
                         hintStyle: TextStyle(
-                          color: isDark
-                              ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.5)
-                              : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.5),
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.5),
                         ),
                         filled: true,
-                        fillColor: isDark
-                            ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
-                            : AppColors.lightSurfaceVariant.withValues(alpha: 0.5),
+                        fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,

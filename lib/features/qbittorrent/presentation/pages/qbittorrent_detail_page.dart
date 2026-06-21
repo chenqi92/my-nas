@@ -54,14 +54,12 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
   @override
   Widget build(BuildContext context) {
     final connection = ref.watch(qbittorrentConnectionProvider(widget.source.id));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : null,
       body: Column(
         children: [
-          _buildHeader(context, isDark, connection),
-          Expanded(child: _buildBody(context, isDark, connection)),
+          _buildHeader(context, connection),
+          Expanded(child: _buildBody(context, connection)),
         ],
       ),
       floatingActionButton: connection?.status == QBConnectionStatus.connected
@@ -76,20 +74,18 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
 
   Widget _buildHeader(
     BuildContext context,
-    bool isDark,
     QBittorrentConnection? connection,
   ) {
+    final cs = context.colorScheme;
     final transferInfo = ref.watch(qbTransferInfoAutoRefreshProvider(widget.source.id));
     final prefsAsync = ref.watch(qbPreferencesProvider(widget.source.id));
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : context.colorScheme.surface,
+        color: cs.surface,
         border: Border(
           bottom: BorderSide(
-            color: isDark
-                ? AppColors.darkOutline.withValues(alpha: 0.2)
-                : context.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            color: cs.outlineVariant.withValues(alpha: 0.5),
           ),
         ),
       ),
@@ -115,7 +111,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                         widget.source.displayName,
                         style: context.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.darkOnSurface : null,
+                          color: cs.onSurface,
                         ),
                       ),
                     ),
@@ -147,7 +143,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                   PopupMenuButton<String>(
                     icon: Icon(
                       Icons.more_vert_rounded,
-                      color: isDark ? AppColors.darkOnSurface : null,
+                      color: cs.onSurface,
                     ),
                     onSelected: (value) => _handleMenuAction(value, context),
                     itemBuilder: (context) => [
@@ -204,7 +200,6 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                         total: transferInfo.dlInfoData,
                         limit: prefsAsync.valueOrNull?.dlLimit ?? 0,
                         color: AppColors.success,
-                        isDark: isDark,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -216,7 +211,6 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                         total: transferInfo.upInfoData,
                         limit: prefsAsync.valueOrNull?.upLimit ?? 0,
                         color: AppColors.primary,
-                        isDark: isDark,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -232,7 +226,6 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
 
   Widget _buildBody(
     BuildContext context,
-    bool isDark,
     QBittorrentConnection? connection,
   ) {
     if (connection == null || connection.status == QBConnectionStatus.connecting) {
@@ -279,7 +272,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
       );
     }
 
-    return _TorrentList(sourceId: widget.source.id, isDark: isDark);
+    return _TorrentList(sourceId: widget.source.id);
   }
 
   void _handleMenuAction(String action, BuildContext context) {
@@ -347,13 +340,11 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
   }
 
   void _showVersionInfoDialog(BuildContext context, QBittorrentConnection connection) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final info = connection.adapter.info;
 
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Row(
           children: [
             Container(
@@ -375,19 +366,16 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
             _InfoRow(
               label: context.l10n.qbDetailVersionInfoServiceName,
               value: widget.source.displayName,
-              isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
               label: context.l10n.qbDetailVersionInfoVersion,
               value: info.version ?? context.l10n.qbDetailVersionInfoUnknown,
-              isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
               label: context.l10n.qbDetailVersionInfoServerAddress,
               value: '${widget.source.host}:${widget.source.port}',
-              isDark: isDark,
             ),
           ],
         ),
@@ -410,7 +398,6 @@ class _SpeedCard extends StatelessWidget {
     required this.speed,
     required this.total,
     required this.color,
-    required this.isDark,
     this.limit = 0,
   });
 
@@ -420,15 +407,14 @@ class _SpeedCard extends StatelessWidget {
   final int total;
   final int limit;
   final Color color;
-  final bool isDark;
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final cs = context.colorScheme;
+    return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
-            : color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -450,7 +436,7 @@ class _SpeedCard extends StatelessWidget {
                   _formatSpeed(speed),
                   style: context.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.darkOnSurface : color,
+                    color: color,
                   ),
                 ),
                 Text(
@@ -458,9 +444,7 @@ class _SpeedCard extends StatelessWidget {
                       ? '$label: ${_formatSize(total)} (${context.l10n.qbSpeedCardSpeedLimitLabel}: ${_formatSpeed(limit)})'
                       : '$label: ${_formatSize(total)}',
                   style: context.textTheme.bodySmall?.copyWith(
-                    color: isDark
-                        ? AppColors.darkOnSurfaceVariant
-                        : AppColors.lightOnSurfaceVariant,
+                    color: cs.onSurfaceVariant,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -470,6 +454,7 @@ class _SpeedCard extends StatelessWidget {
         ],
       ),
     );
+  }
 }
 
 /// 信息行组件（用于版本信息弹框）
@@ -477,15 +462,15 @@ class _InfoRow extends StatelessWidget {
   const _InfoRow({
     required this.label,
     required this.value,
-    required this.isDark,
   });
 
   final String label;
   final String value;
-  final bool isDark;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) {
+    final cs = context.colorScheme;
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
@@ -493,7 +478,7 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: cs.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
@@ -502,7 +487,7 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             value,
             style: TextStyle(
-              color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+              color: cs.onSurface,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -510,14 +495,14 @@ class _InfoRow extends StatelessWidget {
         ),
       ],
     );
+  }
 }
 
 /// Torrent 列表
 class _TorrentList extends ConsumerWidget {
-  const _TorrentList({required this.sourceId, required this.isDark});
+  const _TorrentList({required this.sourceId});
 
   final String sourceId;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -591,7 +576,6 @@ class _TorrentList extends ConsumerWidget {
                 return _TorrentTile(
                   torrent: filtered[index],
                   sourceId: sourceId,
-                  isDark: isDark,
                 );
               },
             ),
@@ -612,9 +596,7 @@ class _TorrentList extends ConsumerWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: isDark
-          ? AppColors.primary.withValues(alpha: 0.1)
-          : AppColors.primary.withValues(alpha: 0.05),
+      color: AppColors.primary.withValues(alpha: 0.1),
       child: Row(
         children: [
           Icon(Icons.filter_alt, size: 16, color: AppColors.primary),
@@ -656,7 +638,7 @@ class _TorrentList extends ConsumerWidget {
           Text(
             context.l10n.qbDetailEmptyStateHint,
             style: context.textTheme.bodyMedium?.copyWith(
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: context.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -669,20 +651,19 @@ class _TorrentTile extends ConsumerWidget {
   const _TorrentTile({
     required this.torrent,
     required this.sourceId,
-    required this.isDark,
   });
 
   final QBTorrent torrent;
   final String sourceId;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final cs = context.colorScheme;
     final (statusColor, statusIcon) = _getStatusInfo();
     final tagList = torrent.tags?.split(',').where((t) => t.isNotEmpty).toList() ?? [];
 
     // 根据完成状态确定卡片背景色
-    final cardColor = _getCardColor();
+    final cardColor = _getCardColor(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -690,9 +671,7 @@ class _TorrentTile extends ConsumerWidget {
         color: cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark
-              ? AppColors.darkOutline.withValues(alpha: 0.2)
-              : AppColors.lightOutline.withValues(alpha: 0.3),
+          color: cs.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
       child: InkWell(
@@ -725,7 +704,7 @@ class _TorrentTile extends ConsumerWidget {
                           torrent.name,
                           style: context.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w500,
-                            color: isDark ? AppColors.darkOnSurface : null,
+                            color: cs.onSurface,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -736,9 +715,7 @@ class _TorrentTile extends ConsumerWidget {
                             Text(
                               _formatSize(torrent.size),
                               style: context.textTheme.bodySmall?.copyWith(
-                                color: isDark
-                                    ? AppColors.darkOnSurfaceVariant
-                                    : AppColors.lightOnSurfaceVariant,
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
                             if (torrent.category != null && torrent.category!.isNotEmpty) ...[
@@ -793,9 +770,7 @@ class _TorrentTile extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: torrent.progress,
-                    backgroundColor: isDark
-                        ? AppColors.darkSurfaceElevated
-                        : AppColors.lightSurfaceVariant,
+                    backgroundColor: cs.surfaceContainerHigh,
                     valueColor: AlwaysStoppedAnimation<Color>(statusColor),
                     minHeight: 6,
                   ),
@@ -855,7 +830,7 @@ class _TorrentTile extends ConsumerWidget {
                     Text(
                       context.l10n.qbDetailTileShareRatio(torrent.ratio?.toStringAsFixed(2) ?? '-'),
                       style: context.textTheme.bodySmall?.copyWith(
-                        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                     if (torrent.uploaded != null && torrent.uploaded! > 0) ...[
@@ -865,7 +840,7 @@ class _TorrentTile extends ConsumerWidget {
                       Text(
                         '${context.l10n.qbDetailTileUploadedLabel}: ${_formatSize(torrent.uploaded!)}',
                         style: context.textTheme.bodySmall?.copyWith(
-                          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -885,39 +860,29 @@ class _TorrentTile extends ConsumerWidget {
     if (torrent.isDownloading) return (AppColors.success, Icons.downloading);
     if (torrent.isUploading) return (AppColors.primary, Icons.upload_rounded);
     if (torrent.isCompleted) return (AppColors.success, Icons.check_circle);
-    return (Colors.grey, Icons.help_outline_rounded);
+    return (AppColors.disabled, Icons.help_outline_rounded);
   }
 
   /// 根据种子状态获取卡片背景色
-  Color _getCardColor() {
+  Color _getCardColor(BuildContext context) {
     if (torrent.hasError) {
       // 错误状态 - 红色调
-      return isDark
-          ? AppColors.error.withValues(alpha: 0.08)
-          : AppColors.error.withValues(alpha: 0.05);
+      return AppColors.error.withValues(alpha: 0.08);
     }
     if (torrent.isCompleted) {
       // 已完成 - 绿色调
-      return isDark
-          ? AppColors.success.withValues(alpha: 0.08)
-          : AppColors.success.withValues(alpha: 0.05);
+      return AppColors.success.withValues(alpha: 0.08);
     }
     if (torrent.isDownloading) {
       // 下载中 - 蓝色调
-      return isDark
-          ? AppColors.primary.withValues(alpha: 0.08)
-          : AppColors.primary.withValues(alpha: 0.05);
+      return AppColors.primary.withValues(alpha: 0.08);
     }
     if (torrent.isPaused) {
       // 暂停 - 橙色调
-      return isDark
-          ? AppColors.warning.withValues(alpha: 0.08)
-          : AppColors.warning.withValues(alpha: 0.05);
+      return AppColors.warning.withValues(alpha: 0.08);
     }
     // 默认颜色
-    return isDark
-        ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
-        : AppColors.lightSurface;
+    return context.colorScheme.surfaceContainerHighest;
   }
 
   Widget _buildQuickAction(BuildContext context, WidgetRef ref) {
@@ -1369,9 +1334,7 @@ class _DetailItem extends StatelessWidget {
             child: Text(
               label,
               style: context.textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.darkOnSurfaceVariant
-                    : AppColors.lightOnSurfaceVariant,
+                color: context.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -1393,7 +1356,7 @@ class _AltSpeedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = context.colorScheme;
 
     return IconButton(
       onPressed: onPressed,
@@ -1412,9 +1375,7 @@ class _AltSpeedButton extends StatelessWidget {
         child: Icon(
           isEnabled ? Icons.rocket_launch : Icons.speed_outlined,
           size: 20,
-          color: isEnabled
-              ? AppColors.warning
-              : (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface),
+          color: isEnabled ? AppColors.warning : cs.onSurface,
         ),
       ),
     );
@@ -1432,7 +1393,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
     final settings = ref.watch(qbSortSettingsProvider(sourceId));
     final categoriesAsync = ref.watch(qbCategoriesProvider(sourceId));
     final tagsAsync = ref.watch(qbTagsProvider(sourceId));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = context.colorScheme;
 
     final categories = categoriesAsync.valueOrNull?.keys.toList() ?? [];
     final tags = tagsAsync.valueOrNull ?? [];
@@ -1444,7 +1405,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
       expand: false,
       builder: (context, scrollController) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
+          color: cs.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -1486,7 +1447,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                     Text(
                       context.l10n.qbDetailFilterCategoryLabel,
                       style: context.textTheme.titleSmall?.copyWith(
-                        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1517,7 +1478,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                     Text(
                       context.l10n.qbDetailFilterTagLabel,
                       style: context.textTheme.titleSmall?.copyWith(
-                        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                        color: cs.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1551,20 +1512,20 @@ class _FilterOptionsSheet extends ConsumerWidget {
                             Icon(
                               Icons.filter_alt_off,
                               size: 48,
-                              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                              color: cs.onSurfaceVariant,
                             ),
                             const SizedBox(height: 16),
                             Text(
                               context.l10n.qbDetailNoFilterOptions,
                               style: context.textTheme.bodyMedium?.copyWith(
-                                color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               context.l10n.qbDetailNoFilterOptionsHint,
                               style: context.textTheme.bodySmall?.copyWith(
-                                color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -1595,7 +1556,7 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = context.colorScheme;
 
     return GestureDetector(
       onTap: onTap,
@@ -1604,7 +1565,7 @@ class _FilterChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.15)
-              : (isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant),
+              : cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(20),
           border: isSelected
               ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
@@ -1615,9 +1576,7 @@ class _FilterChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected
-                ? AppColors.primary
-                : (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface),
+            color: isSelected ? AppColors.primary : cs.onSurface,
           ),
         ),
       ),
@@ -1634,7 +1593,6 @@ class _SortOptionsSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(qbSortSettingsProvider(sourceId));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
@@ -1643,7 +1601,7 @@ class _SortOptionsSheet extends ConsumerWidget {
       expand: false,
       builder: (context, scrollController) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
+          color: context.colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -1770,7 +1728,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = context.colorScheme;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.55,
@@ -1778,7 +1736,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
       maxChildSize: 0.85,
       builder: (context, scrollController) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
+          color: cs.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -1817,9 +1775,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                         Text(
                           context.l10n.qbDetailSpeedLimitSubtitle,
                           style: context.textTheme.bodySmall?.copyWith(
-                            color: isDark
-                                ? AppColors.darkOnSurfaceVariant
-                                : AppColors.lightOnSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -1864,9 +1820,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                   Text(
                     context.l10n.qbDetailSpeedLimitZeroMeansUnlimited,
                     style: context.textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? AppColors.darkOnSurfaceVariant
-                          : AppColors.lightOnSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1878,7 +1832,6 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                           label: context.l10n.qbDetailSpeedInputDownloadLabel,
                           icon: Icons.download_rounded,
                           color: AppColors.success,
-                          isDark: isDark,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1888,7 +1841,6 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                           label: context.l10n.qbDetailSpeedInputUploadLabel,
                           icon: Icons.upload_rounded,
                           color: AppColors.primary,
-                          isDark: isDark,
                         ),
                       ),
                     ],
@@ -1905,9 +1857,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                   Text(
                     context.l10n.qbDetailAlternativeSpeedLimitHint,
                     style: context.textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? AppColors.darkOnSurfaceVariant
-                          : AppColors.lightOnSurfaceVariant,
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -1919,7 +1869,6 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                           label: context.l10n.qbDetailSpeedInputDownloadLabel,
                           icon: Icons.download_rounded,
                           color: AppColors.warning,
-                          isDark: isDark,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1929,7 +1878,6 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                           label: context.l10n.qbDetailSpeedInputUploadLabel,
                           icon: Icons.upload_rounded,
                           color: AppColors.warning,
-                          isDark: isDark,
                         ),
                       ),
                     ],
@@ -1948,7 +1896,6 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
     required String label,
     required IconData icon,
     required Color color,
-    required bool isDark,
   }) => TextField(
       controller: controller,
       decoration: InputDecoration(
@@ -1956,9 +1903,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
         hintText: '0',
         prefixIcon: Icon(icon, color: color, size: 20),
         filled: true,
-        fillColor: isDark
-            ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
-            : AppColors.lightSurfaceVariant.withValues(alpha: 0.5),
+        fillColor: context.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -2027,7 +1972,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(qbCategoriesProvider(widget.sourceId));
     final categories = categoriesAsync.valueOrNull?.keys.toList() ?? [];
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = context.colorScheme;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
@@ -2035,7 +1980,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
       maxChildSize: 0.95,
       builder: (context, scrollController) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : Colors.white,
+          color: cs.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Form(
@@ -2076,9 +2021,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                           Text(
                             context.l10n.qbDetailAddTorrentSubtitle,
                             style: context.textTheme.bodySmall?.copyWith(
-                              color: isDark
-                                  ? AppColors.darkOnSurfaceVariant
-                                  : AppColors.lightOnSurfaceVariant,
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -2125,14 +2068,10 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                       decoration: InputDecoration(
                         hintText: context.l10n.qbDetailAddTorrentLinkHintMagnetOrUrl,
                         hintStyle: TextStyle(
-                          color: isDark
-                              ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.5)
-                              : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.5),
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.5),
                         ),
                         filled: true,
-                        fillColor: isDark
-                            ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
-                            : AppColors.lightSurfaceVariant.withValues(alpha: 0.5),
+                        fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -2241,9 +2180,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                     // 选项
                     DecoratedBox(
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
-                            : AppColors.lightSurfaceVariant.withValues(alpha: 0.5),
+                        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Material(
@@ -2274,9 +2211,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                                       Text(
                                         _paused ? context.l10n.qbDetailAddAfterPauseNotStarting : context.l10n.qbDetailAddAfterPauseStarting,
                                         style: context.textTheme.bodySmall?.copyWith(
-                                          color: isDark
-                                              ? AppColors.darkOnSurfaceVariant
-                                              : AppColors.lightOnSurfaceVariant,
+                                          color: cs.onSurfaceVariant,
                                         ),
                                       ),
                                     ],
@@ -2317,7 +2252,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = context.colorScheme;
 
     return GestureDetector(
       onTap: onTap,
@@ -2326,9 +2261,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.15)
-              : (isDark
-                  ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
-                  : AppColors.lightSurfaceVariant),
+              : cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(18),
           border: isSelected
               ? Border.all(color: AppColors.primary.withValues(alpha: 0.5))
@@ -2339,9 +2272,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected
-                ? AppColors.primary
-                : (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface),
+            color: isSelected ? AppColors.primary : cs.onSurface,
           ),
         ),
       ),

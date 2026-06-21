@@ -999,15 +999,12 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
     VoidCallback? onBatchFound,
   }) async {
     try {
-      // ignore: avoid_print
-      print('📷 PhotoScan: 扫描目录 "$path"');
+      logger.d('📷 PhotoScan: 扫描目录 "$path"');
       final files = await fileSystem.listDirectory(path);
-      // ignore: avoid_print
-      print('📷 PhotoScan: 目录 "$path" 返回 ${files.length} 个文件');
+      logger.d('📷 PhotoScan: 目录 "$path" 返回 ${files.length} 个文件');
 
       for (final file in files) {
-        // ignore: avoid_print
-        print('📷 PhotoScan:   - ${file.name} (isDir=${file.isDirectory}, type=${file.type}, ext=${file.extension})');
+        logger.d('📷 PhotoScan:   - ${file.name} (isDir=${file.isDirectory}, type=${file.type}, ext=${file.extension})');
 
         if (file.type == FileType.image) {
           // 优先使用已有的缩略图 URL
@@ -1480,7 +1477,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
       backgroundColor: uiStyle.isGlass
           ? tintColor
           : (isDark
-              ? const Color(0xFF1A2E1A) // 深绿色调
+              ? AppColors.darkSurface
               : AppColors.success.withValues(alpha: 0.08)),
       child: Padding(
         padding: isDesktop

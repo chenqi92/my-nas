@@ -1205,46 +1205,6 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
       logger.d('WebView 内容: $htmlLength 字符');
     }
 
-    // 内容处理中时显示加载提示（仅在非 WebView 模式下阻塞）
-    // WebView 模式可以直接渲染原始内容，不需要等待处理完成
-    // 注：这个加载阻塞仅用于传统分页模式，因为传统分页需要清理后的 HTML
-    // WebView 使用 CSS multi-column 分页，可以处理原始 HTML
-    /*
-    if (!_isContentProcessed) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(
-              color: settings.theme.textColor.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '正在处理内容...',
-              style: TextStyle(
-                color: settings.theme.textColor.withValues(alpha: 0.5),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // 添加跳过按钮，允许用户直接查看内容
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _isContentProcessed = true;
-                });
-              },
-              child: Text(
-                '跳过处理',
-                style: TextStyle(
-                  color: settings.theme.textColor.withValues(alpha: 0.7),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    */
 
     // 计算顶部和底部栏的高度
     const topBarHeight = 40.0; // _buildFixedHeader 的大致高度
@@ -1509,30 +1469,6 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
 
       logger.i('快速分页完成: ${quickResult.pages.length} 页');
 
-      // 第二阶段(可选): 后台优化分页
-      // 注释掉以提高性能,如需要可取消注释
-      /*
-      logger.i('开始后台优化分页...');
-      final refinedResult = await ProgressivePagination.refinePagination(
-        initialResult: quickResult,
-        context: context,
-        settings: settings,
-        onProgress: (progress) {
-          logger.d('优化进度: ${(progress * 100).toStringAsFixed(0)}%');
-        },
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        _pages = refinedResult.pages;
-        _chapterPageMap = refinedResult.chapterPageMap;
-        // 保持当前页码位置
-        _currentPage = _currentPage.clamp(0, _pages.length - 1);
-      });
-
-      logger.i('分页优化完成: ${quickResult.pages.length} -> ${refinedResult.pages.length} 页');
-      */
     } on Exception catch (e, st) {
       logger.e('分页失败', e, st);
       // 失败时使用整个内容作为单页
@@ -1750,7 +1686,9 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
         onTap: () {}, // 防止点击穿透
         child: Container(
           width: MediaQuery.of(context).size.width * 0.75,
-          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          color: isDark
+              ? const Color(0xFF1A1A1A)
+              : Theme.of(context).colorScheme.surface,
           child: SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

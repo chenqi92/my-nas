@@ -81,12 +81,7 @@ class _StartupPageState extends ConsumerState<StartupPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F0F1A),
-              Color(0xFF1A1A2E),
-              Color(0xFF16213E),
-              Color(0xFF0F0F1A),
-            ],
+            colors: AppColors.authBackgroundGradient,
             stops: [0.0, 0.3, 0.7, 1.0],
           ),
         ),

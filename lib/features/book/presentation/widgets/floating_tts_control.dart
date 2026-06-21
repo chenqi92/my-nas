@@ -101,7 +101,7 @@ class _FloatingTTSControlState extends ConsumerState<FloatingTTSControl>
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       decoration: BoxDecoration(
         color: (widget.backgroundColor ??
-                (isDark ? const Color(0xFF1E1E1E) : Colors.white))
+                Theme.of(context).colorScheme.surface)
             .withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [

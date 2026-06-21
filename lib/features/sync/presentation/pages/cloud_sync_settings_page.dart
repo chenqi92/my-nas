@@ -812,9 +812,9 @@ class _CloudSyncSettingsPageState
       case CloudSyncOutcome.pushed:
         return AppColors.primary;
       case CloudSyncOutcome.skipped:
-        return Colors.green;
+        return AppColors.success;
       case CloudSyncOutcome.failed:
-        return Colors.red;
+        return AppColors.error;
     }
   }
 

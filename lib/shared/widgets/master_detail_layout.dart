@@ -191,6 +191,7 @@ class _MasterDetailLayoutState<T> extends State<MasterDetailLayout<T>> {
   /// 构建详情面板
   Widget _buildDetailPane(BuildContext context) {
     final selectedItem = widget.selectedItem;
+    final cs = Theme.of(context).colorScheme;
 
     return AnimatedSwitcher(
       duration: widget.config.animationDuration,
@@ -207,11 +208,11 @@ class _MasterDetailLayoutState<T> extends State<MasterDetailLayout<T>> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.touch_app_outlined, size: 64, color: Colors.grey),
+                    Icon(Icons.touch_app_outlined, size: 64, color: cs.onSurfaceVariant),
                     SizedBox(height: 16),
                     Text(
                       context.l10n.masterDetailLayoutSelectItem,
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                      style: TextStyle(color: cs.onSurfaceVariant, fontSize: 16),
                     ),
                   ],
                 ),
@@ -420,6 +421,7 @@ class _MasterDetailScaffoldState<T> extends State<MasterDetailScaffold<T>> {
   Widget _buildDetailPane(BuildContext context) {
     final selectedItem = _selectedItem;
     final config = widget.config;
+    final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dividerColor = config.dividerColor ??
         (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1));
@@ -464,11 +466,11 @@ class _MasterDetailScaffoldState<T> extends State<MasterDetailScaffold<T>> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.touch_app_outlined, size: 64, color: Colors.grey),
+                    Icon(Icons.touch_app_outlined, size: 64, color: cs.onSurfaceVariant),
                     SizedBox(height: 16),
                     Text(
                       context.l10n.masterDetailLayoutSelectItem,
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                      style: TextStyle(color: cs.onSurfaceVariant, fontSize: 16),
                     ),
                   ],
                 ),

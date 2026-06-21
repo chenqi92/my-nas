@@ -326,7 +326,12 @@ class _MediaLibraryPageState extends ConsumerState<MediaLibraryPage>
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: Colors.grey)),
+        Builder(
+          builder: (context) => Text(
+            label,
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
+        ),
         Text(
           value,
           style: TextStyle(
@@ -592,7 +597,7 @@ class _MediaTypeTab extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -648,14 +653,12 @@ class _MediaTypeTab extends ConsumerWidget {
     SourceEntity localSource,
     Map<String, SourceConnection> connections,
   ) async {
-    // ignore: avoid_print
-    print('🟠 MediaLibrary: _addLocalSourceToLibrary 开始, mediaType=$mediaType');
+    logger.d('🟠 MediaLibrary: _addLocalSourceToLibrary 开始, mediaType=$mediaType');
     try {
       // 获取 LocalAdapter 以请求权限
       final conn = connections[localSource.id];
       final adapter = conn?.adapter;
-      // ignore: avoid_print
-      print('🟠 MediaLibrary: adapter=${adapter?.runtimeType}');
+      logger.d('🟠 MediaLibrary: adapter=${adapter?.runtimeType}');
 
       // 根据媒体类型请求对应权限
       if (adapter is LocalAdapter) {
@@ -665,11 +668,9 @@ class _MediaTypeTab extends ConsumerWidget {
           case MediaType.photo:
           case MediaType.video:
             // 请求相册权限
-            // ignore: avoid_print
-            print('🟠 MediaLibrary: 请求相册权限...');
+            logger.d('🟠 MediaLibrary: 请求相册权限...');
             hasPermission = await adapter.requestGalleryPermission();
-            // ignore: avoid_print
-            print('🟠 MediaLibrary: 相册权限结果=$hasPermission');
+            logger.d('🟠 MediaLibrary: 相册权限结果=$hasPermission');
             if (!hasPermission && context.mounted) {
               context.showErrorToast(context.l10n.mediaLibraryGalleryPermissionError);
               return;
@@ -708,17 +709,16 @@ class _MediaTypeTab extends ConsumerWidget {
       await ref.read(mediaLibraryConfigProvider.notifier).addPath(mediaType, newPath);
 
       // 触发扫描
-      // ignore: avoid_print
-      print('🟠 MediaLibrary: 触发扫描, path="${newPath.path}", sourceId="${newPath.sourceId}"');
+      logger.d('🟠 MediaLibrary: 触发扫描, path="${newPath.path}", sourceId="${newPath.sourceId}"');
       _autoScanPath(ref, mediaType, newPath, connections);
 
       if (context.mounted) {
         context.showSuccessToast(context.l10n.mediaLibraryAddedToastWithScan(displayName));
       }
     } on Exception catch (e, st) {
-      // ignore: avoid_print
-      print('🟠 MediaLibrary: ❌ 添加本机失败: $e');
-      logger.e('添加本机失败', e, st);
+      logger
+        ..w('🟠 MediaLibrary: ❌ 添加本机失败: $e')
+        ..e('添加本机失败', e, st);
       if (context.mounted) {
         context.showErrorToast(context.l10n.mediaLibraryAddError(e));
       }
@@ -764,10 +764,10 @@ class _MediaTypeTab extends ConsumerWidget {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.snippet_folder_outlined, color: Colors.blue),
+                child: Icon(Icons.snippet_folder_outlined, color: Theme.of(context).colorScheme.primary),
               ),
               title: Text(context.l10n.mediaLibraryImportFromFilesOption),
               subtitle: Text(context.l10n.mediaLibraryImportFromFilesSubtitle(typeDisplayName)),
@@ -1343,43 +1343,6 @@ class _PathCardState extends ConsumerState<_PathCard> {
   /// 返回: (是否正在扫描, 进度, 描述, 已扫描数量)
   (bool isLoading, double progress, String? description, int scannedCount) _getOtherMediaScanState() => (_isScanning, _scanProgress, _scanDescription, _scannedCount);
 
-  // 以下代码保留用于引用但不再使用
-  // ignore: unused_element
-  (bool, double, String?, int) _legacyGetOtherMediaScanState() {
-    switch (widget.mediaType) {
-      case MediaType.music:
-        final state = ref.watch(musicListProvider);
-        if (state is MusicListLoading) {
-          final desc = state.currentFolder ??
-              (state.phase == MusicScanPhase.metadata ? '提取元数据...' : '扫描文件...');
-          return (true, state.metadataProgress > 0 ? state.metadataProgress : state.progress, desc, state.scannedCount);
-        }
-        return (false, 0, null, 0);
-      case MediaType.photo:
-        final state = ref.watch(photoListProvider);
-        if (state is PhotoListLoading) {
-          final desc = state.currentFolder ?? '扫描照片...';
-          return (true, state.progress, desc, state.scannedCount);
-        }
-        return (false, 0, null, 0);
-      case MediaType.book:
-        final state = ref.watch(bookListProvider);
-        if (state is BookListLoading) {
-          final desc = state.currentFolder ?? '扫描书籍...';
-          return (true, state.progress, desc, state.scannedCount);
-        }
-        return (false, 0, null, 0);
-      case MediaType.comic:
-        final state = ref.watch(comicListProvider);
-        if (state is ComicListLoading) {
-          final desc = state.currentFolder ?? '扫描漫画...';
-          return (true, state.progress, desc, state.scannedCount);
-        }
-        return (false, 0, null, 0);
-      default:
-        return (false, 0, null, 0);
-    }
-  }
 
   /// 获取实时的媒体数量（扫描中使用扫描数量，否则使用数据库数量）
   int _getDisplayCount(bool isScanning, int scannedCount) {
@@ -1479,13 +1442,13 @@ class _PathCardState extends ConsumerState<_PathCard> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: (widget.path.isEnabled ? _getMediaColor() : Colors.grey)
+                    color: (widget.path.isEnabled ? _getMediaColor() : AppColors.disabled)
                         .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     _getMediaIcon(),
-                    color: widget.path.isEnabled ? _getMediaColor() : Colors.grey,
+                    color: widget.path.isEnabled ? _getMediaColor() : AppColors.disabled,
                     size: 20,
                   ),
                 ),
@@ -1502,7 +1465,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                               widget.path.displayName,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: widget.path.isEnabled ? null : Colors.grey,
+                                color: widget.path.isEnabled ? null : AppColors.disabled,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1604,7 +1567,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                 description: _importTotalCount > 1
                     ? context.l10n.mediaLibraryImportingProgress(_importedCount, _importTotalCount, _importDescription ?? '')
                     : context.l10n.mediaLibraryImportingSingle(_importDescription ?? ''),
-                color: Colors.blue,
+                color: theme.colorScheme.primary,
               ),
             ],
 
@@ -1638,7 +1601,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
                     context.l10n.mediaLibraryMusicScrapeStats(_musicScrapeSuccess, _musicScrapeSkip, _musicScrapeFail),
                     style: TextStyle(
                       fontSize: 10,
-                      color: isDark ? Colors.grey[500] : Colors.grey[500],
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -1808,7 +1771,7 @@ class _PathCardState extends ConsumerState<_PathCard> {
             children: [
               Icon(
                 isCurrentlyScanning ? Icons.hourglass_empty : Icons.refresh_rounded,
-                color: isConnected && !isCurrentlyScanning ? null : Colors.grey,
+                color: isConnected && !isCurrentlyScanning ? null : AppColors.disabled,
               ),
               const SizedBox(width: 12),
               Text(isCurrentlyScanning ? context.l10n.mediaLibraryScanningMenuLabel : context.l10n.mediaLibraryScanMenuLabel),
@@ -1919,12 +1882,12 @@ class _PathCardState extends ConsumerState<_PathCard> {
             children: [
               Icon(
                 _isImporting ? Icons.hourglass_empty : Icons.add_circle_outline,
-                color: _isImporting ? Colors.grey : Colors.blue,
+                color: _isImporting ? AppColors.disabled : Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(width: 12),
               Text(
                 importLabel,
-                style: TextStyle(color: _isImporting ? Colors.grey : Colors.blue),
+                style: TextStyle(color: _isImporting ? AppColors.disabled : Theme.of(context).colorScheme.primary),
               ),
             ],
           ),

@@ -156,7 +156,7 @@ class _DraggableListState<T> extends State<DraggableList<T>> {
     int index,
     Animation<double> animation,
   ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return AnimatedBuilder(
       animation: animation,
@@ -170,7 +170,7 @@ class _DraggableListState<T> extends State<DraggableList<T>> {
           child: Material(
             elevation: 8 * animation.value,
             shadowColor: Colors.black.withValues(alpha: 0.2),
-            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+            color: cs.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(8),
             child: child,
           ),

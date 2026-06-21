@@ -9,6 +9,12 @@ import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/toast_overlay.dart';
 
+/// iOS 原生 UITabBar 标准高度（玻璃风格下叠加在安全区之上）。
+const double _kIosGlassTabBarHeight = 49;
+
+/// 经典模式底部导航栏高度（MainScaffold extendBody:true 时需补偿）。
+const double _kIosClassicTabBarHeight = 56;
+
 extension BuildContextExtensions on BuildContext {
   // 本地化
   AppLocalizations get l10n => AppLocalizations.of(this);
@@ -47,19 +53,19 @@ extension BuildContextExtensions on BuildContext {
         final uiStyle = container.read(uiStyleProvider);
         if (uiStyle.isGlass) {
           // UITabBar 标准高度约 49pt
-          padding += 49;
+          padding += _kIosGlassTabBarHeight;
         } else {
           // 经典模式：Flutter 底部导航栏高度（56 + SafeArea）
           // 由于 MainScaffold 使用 extendBody: true，需要添加导航栏高度
-          padding += 56;
+          padding += _kIosClassicTabBarHeight;
         }
       } on Exception catch (_) {
         // 如果无法访问 provider，使用默认值（经典模式假设）
-        padding += 56;
+        padding += _kIosClassicTabBarHeight;
       }
     } else if (!kIsWeb && Platform.isAndroid) {
       // Android 经典模式也需要添加导航栏高度
-      padding += 56;
+      padding += _kIosClassicTabBarHeight;
     }
     // 桌面端使用侧边导航栏，不需要额外底部 padding
 
@@ -93,12 +99,11 @@ extension BuildContextExtensions on BuildContext {
   Color ratingColor(double rating) => AppColors.ratingColor(rating);
 
   /// 占位符/骨架屏背景色（亮暗模式自适应）
-  Color get placeholderColor =>
-      isDarkMode ? colorScheme.surfaceContainerHighest : const Color(0xFFE0E0E0);
+  Color get placeholderColor => colorScheme.surfaceContainerHighest;
 
   /// 占位符/骨架屏高亮色（亮暗模式自适应）
   Color get placeholderHighlightColor =>
-      isDarkMode ? colorScheme.surface : const Color(0xFFF5F5F5);
+      isDarkMode ? colorScheme.surface : colorScheme.surfaceContainerHigh;
 
   // MediaQuery
   MediaQueryData get mediaQuery => MediaQuery.of(this);

@@ -1799,6 +1799,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(videoListProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final uiStyle = ref.watch(uiStyleProvider);
     final safeTop = MediaQuery.of(context).padding.top;
     final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
@@ -1807,7 +1808,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
     // iOS 26 Liquid Glass 风格：悬浮布局
     if (uiStyle.isGlass) {
       return Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+        backgroundColor: cs.surface,
         body: Stack(
           children: [
             // 主内容（包含大标题）
@@ -1864,7 +1865,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
 
     // 经典模式：传统布局
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+      backgroundColor: cs.surface,
       body: Column(
         children: [
           _buildHeader(context, ref, isDark, state),
@@ -3696,7 +3697,7 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
       case MediaFileAction.share:
       case MediaFileAction.download:
         // 视频不在菜单中提供分享/下载（文件过大）；showXxx 默认 false。
-        debugPrint('[VideoList] MediaFileAction.${action.name} 尚未实现');
+        logger.d('[VideoList] MediaFileAction.${action.name} 尚未实现');
     }
   }
 }
@@ -6184,6 +6185,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final width = MediaQuery.of(context).size.width;
     final isWide = width > 600;
 
@@ -6192,9 +6194,9 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
     final filteredItems = _sortedAndFilteredItems;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        backgroundColor: cs.surfaceContainer,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
@@ -6468,9 +6470,10 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
     }
 
     // 经典模式使用 Flutter 底部弹框
+    final cs = Theme.of(context).colorScheme;
     unawaited(showAdaptiveModalSheet<void>(
       context: context,
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+      backgroundColor: cs.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -6636,9 +6639,10 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
     }
 
     // 经典模式使用 Flutter 底部弹框
+    final cs = Theme.of(context).colorScheme;
     unawaited(showAdaptiveModalSheet<void>(
       context: context,
-      backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+      backgroundColor: cs.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -7203,13 +7207,14 @@ class _TvShowsFullPageState extends ConsumerState<_TvShowsFullPage>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+      backgroundColor: cs.surface,
       appBar: AppBar(
         leading: const RoundedBackButton(),
         title: Text(widget.title),
-        backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+        backgroundColor: cs.surface,
         elevation: 0,
       ),
       body: GridView.builder(
@@ -7464,13 +7469,14 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final uiStyle = ref.watch(uiStyleProvider);
     final safeTop = MediaQuery.of(context).padding.top;
 
     // iOS 26 玻璃模式：使用悬浮头部
     if (uiStyle.isGlass) {
       return Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+        backgroundColor: cs.surface,
         body: Stack(
           children: [
             // 主内容区域
@@ -7511,9 +7517,9 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
 
     // 经典模式：保留原有 AppBar
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        backgroundColor: cs.surfaceContainer,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
@@ -7769,7 +7775,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -7923,7 +7929,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
       maxHeight: MediaQuery.of(context).size.height * 0.7,
     ),
     decoration: BoxDecoration(
-      color: widget.isDark ? const Color(0xFF1A1A2E) : Colors.white,
+      color: Theme.of(context).colorScheme.surfaceContainer,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
     ),
     child: Column(
@@ -8091,7 +8097,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
             16 + MediaQuery.of(context).padding.bottom,
           ),
           decoration: BoxDecoration(
-            color: widget.isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            color: Theme.of(context).colorScheme.surfaceContainer,
             border: Border(
               top: BorderSide(
                 color: widget.isDark ? Colors.white12 : Colors.black12,
@@ -8366,7 +8372,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -8427,13 +8433,14 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final uiStyle = ref.watch(uiStyleProvider);
     final safeTop = MediaQuery.of(context).padding.top;
 
     // iOS 26 玻璃模式：使用悬浮头部
     if (uiStyle.isGlass) {
       return Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+        backgroundColor: cs.surface,
         body: Stack(
           children: [
             // 主内容区域
@@ -8473,9 +8480,9 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
 
     // 经典模式：保留 AppBar
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        backgroundColor: cs.surfaceContainer,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
@@ -8816,7 +8823,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -8875,6 +8882,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final uiStyle = ref.watch(uiStyleProvider);
     final safeTop = MediaQuery.of(context).padding.top;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -8892,7 +8900,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
     // iOS 26 玻璃模式
     if (uiStyle.isGlass) {
       return Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+        backgroundColor: cs.surface,
         body: Stack(
           children: [
             // 主内容 - 使用 CustomScrollView 让内容滚动到按钮下方
@@ -8980,9 +8988,9 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
 
     // 经典模式
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+      backgroundColor: cs.surface,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        backgroundColor: cs.surfaceContainer,
         title: Text(
           context.l10n.videoOthersCategoryCountFormat(_totalCount),
           style: TextStyle(
@@ -9373,13 +9381,14 @@ class _MovieCollectionsFullPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final uiStyle = ref.watch(uiStyleProvider);
     final safeTop = MediaQuery.of(context).padding.top;
 
     // iOS 26 玻璃模式
     if (uiStyle.isGlass) {
       return Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+        backgroundColor: cs.surface,
         body: Stack(
           children: [
             // 主内容
@@ -9414,11 +9423,11 @@ class _MovieCollectionsFullPage extends ConsumerWidget {
 
     // 经典模式
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+      backgroundColor: cs.surface,
       appBar: AppBar(
         leading: const RoundedBackButton(),
         title: Text(context.l10n.videoCollectionTitle(collections.length)),
-        backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+        backgroundColor: cs.surface,
         elevation: 0,
       ),
       body: GridView.builder(
@@ -9570,6 +9579,7 @@ class _MovieCollectionPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final localMovies = collection.movies;
     final isTmdbCollection = collection.id > 0; // 正数 ID 是 TMDB 系列
 
@@ -9579,11 +9589,11 @@ class _MovieCollectionPage extends ConsumerWidget {
         : const AsyncValue<TmdbCollection?>.data(null);
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0D0D1A) : Colors.grey[50],
+      backgroundColor: cs.surface,
       body: CustomScrollView(
         slivers: [
           // 顶部 AppBar 带背景图
-          _buildAppBar(isDark, tmdbCollectionAsync),
+          _buildAppBar(isDark, cs, tmdbCollectionAsync),
           // 电影数量标签
           _buildMovieCountLabel(context, isDark, tmdbCollectionAsync),
           // 电影列表
@@ -9595,7 +9605,11 @@ class _MovieCollectionPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildAppBar(bool isDark, AsyncValue<TmdbCollection?> tmdbAsync) {
+  Widget _buildAppBar(
+    bool isDark,
+    ColorScheme cs,
+    AsyncValue<TmdbCollection?> tmdbAsync,
+  ) {
     // 优先使用 TMDB 的背景图，其次本地背景图，最后使用海报作为回退
     final backdropUrl =
         tmdbAsync.valueOrNull?.backdropUrl ??
@@ -9606,7 +9620,7 @@ class _MovieCollectionPage extends ConsumerWidget {
     return SliverAppBar(
       expandedHeight: hasBackground ? 200 : 120,
       pinned: true,
-      backgroundColor: isDark ? const Color(0xFF0D0D1A) : Colors.white,
+      backgroundColor: cs.surface,
       flexibleSpace: FlexibleSpaceBar(
         title: Text(
           collection.name,
@@ -9624,9 +9638,8 @@ class _MovieCollectionPage extends ConsumerWidget {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          (isDark ? const Color(0xFF0D0D1A) : Colors.white)
-                              .withValues(alpha: 0.8),
-                          if (isDark) const Color(0xFF0D0D1A) else Colors.white,
+                          cs.surface.withValues(alpha: 0.8),
+                          cs.surface,
                         ],
                       ),
                     ),
@@ -9640,7 +9653,7 @@ class _MovieCollectionPage extends ConsumerWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       AppColors.primary.withValues(alpha: 0.3),
-                      if (isDark) const Color(0xFF0D0D1A) else Colors.white,
+                      cs.surface,
                     ],
                   ),
                 ),
@@ -10330,7 +10343,7 @@ class _FilteredVideosPaginatedPageState
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -10389,13 +10402,14 @@ class _FilteredVideosPaginatedPageState
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final uiStyle = ref.watch(uiStyleProvider);
     final safeTop = MediaQuery.of(context).padding.top;
 
     // iOS 26 玻璃模式：使用悬浮头部
     if (uiStyle.isGlass) {
       return Scaffold(
-        backgroundColor: isDark ? const Color(0xFF0D0D0D) : Colors.grey[50],
+        backgroundColor: cs.surface,
         body: Stack(
           children: [
             // 主内容 - 使用滚动边距，无固定顶栏

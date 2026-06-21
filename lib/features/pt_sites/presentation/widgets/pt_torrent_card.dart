@@ -131,7 +131,7 @@ class PTTorrentCard extends StatelessWidget {
                   _buildStatChip(
                     Icons.check_circle_outline,
                     '${torrent.snatched}',
-                    Colors.blue,
+                    theme.colorScheme.primary,
                   ),
                   const Spacer(),
                   // 下载按钮

@@ -335,7 +335,8 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
 
     showAdaptiveModalSheet<void>(
       context: context,
-      backgroundColor: isDarkBg ? const Color(0xFF1A1A1A) : Colors.white,
+      backgroundColor:
+          isDarkBg ? const Color(0xFF1A1A1A) : Theme.of(context).colorScheme.surface,
       isScrollControlled: true,
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.6,

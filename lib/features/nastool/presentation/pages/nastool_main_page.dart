@@ -724,14 +724,14 @@ _StatCard(
                   icon: Icons.animation_rounded,
                   label: context.l10n.nastoolDashboardStatsAnime,
                   value: '${stats?.animeCount ?? 0}',
-                  color: const Color(0xFF9C27B0),
+                  color: AppColors.fileAudio,
                   isDark: isDark,
                   width: cardWidth),
 _StatCard(
                   icon: Icons.bookmark_rounded,
                   label: context.l10n.nastoolDashboardStatsSubscriptions,
                   value: '${stats?.subscribeCount ?? 0}',
-                  color: const Color(0xFF009688),
+                  color: AppColors.fileCode,
                   isDark: isDark,
                   width: cardWidth),
 _StatCard(
@@ -766,7 +766,7 @@ _buildDataItem(context, Icons.upload_rounded, context.l10n.nastoolDashboardTotal
 _buildDataItem(context, Icons.download_rounded, context.l10n.nastoolDashboardTotalDownload,
               _formatBytes(totalDown), AppColors.primary),
 _buildDataItem(context, Icons.language_rounded, context.l10n.nastoolDashboardSiteCount,
-              '${sites.length}', Colors.purple),
+              '${sites.length}', AppColors.fileAudio),
         ];
         return Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -1838,8 +1838,8 @@ error: (e, _) => Center(child: Text(context.l10n.nastoolDashboardLoadFailed(e.to
                   child: ListTile(
                     leading: Container(
                       width: 40, height: 40,
-                      decoration: BoxDecoration(color: Colors.purple.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.extension_rounded, color: Colors.purple),
+                      decoration: BoxDecoration(color: AppColors.fileAudio.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.extension_rounded, color: AppColors.fileAudio),
                     ),
                     title: Text(p.name),
                     subtitle: Text(p.version ?? ''),

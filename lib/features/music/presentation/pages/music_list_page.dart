@@ -8419,17 +8419,7 @@ class _ModernMusicTile extends ConsumerWidget {
 
   List<Color> _getGradientForTitle(String title) {
     final hash = title.hashCode;
-    final gradients = [
-      [const Color(0xFF667eea), const Color(0xFF764ba2)],
-      [const Color(0xFFf093fb), const Color(0xFFf5576c)],
-      [const Color(0xFF4facfe), const Color(0xFF00f2fe)],
-      [const Color(0xFF43e97b), const Color(0xFF38f9d7)],
-      [const Color(0xFFfa709a), const Color(0xFFfee140)],
-      [const Color(0xFF30cfd0), const Color(0xFF330867)],
-      [const Color(0xFFa8edea), const Color(0xFFfed6e3)],
-      [const Color(0xFFff9a9e), const Color(0xFFfecfef)],
-    ];
-    return gradients[hash.abs() % gradients.length];
+    return _kMusicCoverGradients[hash.abs() % _kMusicCoverGradients.length];
   }
 
   Future<void> _playTrack(BuildContext context, WidgetRef ref) async {
@@ -9476,17 +9466,18 @@ Widget _buildEmptyView(String message, IconData icon, bool isDark) => Center(
     ),
   );
 
+/// 音乐封面占位渐变色板（多处复用，色值固定）
+const List<List<Color>> _kMusicCoverGradients = [
+  [Color(0xFF667eea), Color(0xFF764ba2)], // 紫色渐变
+  [Color(0xFFf093fb), Color(0xFFf5576c)], // 粉红渐变
+  [Color(0xFF4facfe), Color(0xFF00f2fe)], // 蓝色渐变
+  [Color(0xFF43e97b), Color(0xFF38f9d7)], // 绿色渐变
+  [Color(0xFFfa709a), Color(0xFFfee140)], // 橙粉渐变
+  [Color(0xFF30cfd0), Color(0xFF330867)], // 青紫渐变
+  [Color(0xFFa8edea), Color(0xFFfed6e3)], // 浅色渐变
+  [Color(0xFFff9a9e), Color(0xFFfecfef)], // 粉红浅色
+];
+
 /// 根据索引获取渐变色
-List<Color> _getGradientColorsForIndex(int index) {
-  const colorPairs = [
-    [Color(0xFF667eea), Color(0xFF764ba2)], // 紫色渐变
-    [Color(0xFFf093fb), Color(0xFFf5576c)], // 粉红渐变
-    [Color(0xFF4facfe), Color(0xFF00f2fe)], // 蓝色渐变
-    [Color(0xFF43e97b), Color(0xFF38f9d7)], // 绿色渐变
-    [Color(0xFFfa709a), Color(0xFFfee140)], // 橙粉渐变
-    [Color(0xFF30cfd0), Color(0xFF330867)], // 青紫渐变
-    [Color(0xFFa8edea), Color(0xFFfed6e3)], // 浅色渐变
-    [Color(0xFFff9a9e), Color(0xFFfecfef)], // 粉红浅色
-  ];
-  return colorPairs[index % colorPairs.length];
-}
+List<Color> _getGradientColorsForIndex(int index) =>
+    _kMusicCoverGradients[index % _kMusicCoverGradients.length];

@@ -483,7 +483,7 @@ class MinePage extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: (connectedCount > 0
                         ? AppColors.success
-                        : Colors.grey)
+                        : context.colorScheme.onSurfaceVariant)
                     .withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
               ),
@@ -494,8 +494,9 @@ class MinePage extends ConsumerWidget {
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color:
-                          connectedCount > 0 ? AppColors.success : Colors.grey,
+                      color: connectedCount > 0
+                          ? AppColors.success
+                          : context.colorScheme.onSurfaceVariant,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -568,7 +569,9 @@ class MinePage extends ConsumerWidget {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: connectedCount > 0 ? AppColors.success : Colors.grey,
+                        color: connectedCount > 0
+                            ? AppColors.success
+                            : context.colorScheme.onSurfaceVariant,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -980,7 +983,7 @@ class _TransferCard extends ConsumerWidget {
                 : cacheCount > 0
                     ? context.l10n.mineTransferCacheItems(cacheCount, cacheSizeText)
                     : context.l10n.mineTransferCacheNoTasks,
-            color: Colors.teal,
+            color: AppColors.info,
             isActive: cachingCount > 0,
             onTap: () => Navigator.push(
               context,
@@ -1164,10 +1167,10 @@ class _MediaTrackingTile extends ConsumerWidget {
       context,
       isDark: isDark,
       icon: Icons.track_changes_rounded,
-      iconColor: Colors.purple,
+      iconColor: AppColors.fileAudio,
       title: context.l10n.mineMediaTracking,
       subtitle: context.l10n.mineMediaTrackingDesc,
-      trailing: count > 0 ? _mineCountBadge('$count', Colors.purple) : null,
+      trailing: count > 0 ? _mineCountBadge('$count', AppColors.fileAudio) : null,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute<void>(builder: (_) => const MediaTrackingListPage()),
@@ -1191,10 +1194,10 @@ class _MediaManagementTile extends ConsumerWidget {
       context,
       isDark: isDark,
       icon: Icons.construction_rounded,
-      iconColor: Colors.teal,
+      iconColor: AppColors.fileCode,
       title: context.l10n.mineMediaManagement,
       subtitle: context.l10n.mineMediaManagementDesc,
-      trailing: count > 0 ? _mineCountBadge('$count', Colors.teal) : null,
+      trailing: count > 0 ? _mineCountBadge('$count', AppColors.fileCode) : null,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute<void>(builder: (_) => const MediaManagementListPage()),
@@ -1245,10 +1248,10 @@ class _LiveStreamingTile extends ConsumerWidget {
       context,
       isDark: isDark,
       icon: Icons.live_tv_rounded,
-      iconColor: Colors.red,
+      iconColor: AppColors.error,
       title: context.l10n.mineLiveStreaming,
       subtitle: context.l10n.mineLiveStreamingDesc,
-      trailing: count > 0 ? _mineCountBadge('$count', Colors.red) : null,
+      trailing: count > 0 ? _mineCountBadge('$count', AppColors.error) : null,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute<void>(builder: (_) => const LiveStreamSettingsPage()),
@@ -1272,10 +1275,10 @@ class _PTSitesTile extends ConsumerWidget {
       context,
       isDark: isDark,
       icon: Icons.rss_feed_rounded,
-      iconColor: Colors.indigo,
+      iconColor: AppColors.fileDocument,
       title: context.l10n.minePTSites,
       subtitle: context.l10n.minePTSitesDesc,
-      trailing: count > 0 ? _mineCountBadge('$count', Colors.indigo) : null,
+      trailing: count > 0 ? _mineCountBadge('$count', AppColors.fileDocument) : null,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute<void>(builder: (_) => const PTSitesListPage()),
@@ -1615,7 +1618,7 @@ class _BookSettingsTile extends StatelessWidget {
         context,
         isDark: isDark,
         icon: Icons.auto_stories_rounded,
-        iconColor: Colors.amber,
+        iconColor: AppColors.fileFolder,
         title: context.l10n.mineBookSettings,
         subtitle: context.l10n.mineBookSettingsDesc,
         onTap: () => Navigator.push(

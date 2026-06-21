@@ -104,7 +104,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
   Widget build(BuildContext context) {
     final connection = ref.watch(ptSiteConnectionProvider(widget.source.id));
     final torrentListState = ref.watch(ptTorrentListProvider(widget.source.id));
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -117,13 +117,11 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                   hintText: context.l10n.ptSiteDetailSearchHint,
                   border: InputBorder.none,
                   hintStyle: TextStyle(
-                    color: isDark
-                        ? AppColors.darkOnSurfaceVariant
-                        : AppColors.lightOnSurfaceVariant,
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
                 style: TextStyle(
-                  color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                  color: cs.onSurface,
                 ),
                 onSubmitted: (value) {
                   ref
@@ -217,14 +215,14 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
           ),
         ],
       ),
-      body: _buildBody(connection, torrentListState, isDark),
+      body: _buildBody(connection, torrentListState, cs),
     );
   }
 
   Widget _buildBody(
     PTSiteConnection connection,
     PTTorrentListState torrentListState,
-    bool isDark,
+    ColorScheme cs,
   ) {
     // 连接中
     if (connection.status == PTSiteConnectionStatus.connecting) {
@@ -249,7 +247,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
             Icon(
               Icons.error_outline_rounded,
               size: 48,
-              color: isDark ? AppColors.errorLight : AppColors.error,
+              color: AppColors.error,
             ),
             const SizedBox(height: 16),
             Text(
@@ -263,9 +261,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                 connection.errorMessage ?? context.l10n.ptSiteDetailUnknownError,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ),
@@ -318,17 +314,13 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
             Icon(
               Icons.inbox_outlined,
               size: 48,
-              color: isDark
-                  ? AppColors.darkOnSurfaceVariant
-                  : AppColors.lightOnSurfaceVariant,
+              color: cs.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
             Text(
               torrentListState.keyword != null ? context.l10n.ptSiteDetailNoMatchTorrent : context.l10n.ptSiteDetailNoTorrent,
               style: TextStyle(
-                color: isDark
-                    ? AppColors.darkOnSurfaceVariant
-                    : AppColors.lightOnSurfaceVariant,
+                color: cs.onSurfaceVariant,
               ),
             ),
           ],
@@ -384,10 +376,10 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
             maxChildSize: 0.8,
             expand: false,
             builder: (context, scrollController) {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final cs = Theme.of(context).colorScheme;
               return DecoratedBox(
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : Colors.white,
+                  color: cs.surface,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Column(
@@ -435,14 +427,14 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                               decoration: BoxDecoration(
                                 color: currentState.category == null
                                     ? AppColors.primary.withValues(alpha: 0.12)
-                                    : (isDark ? Colors.white10 : Colors.grey[100]),
+                                    : cs.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
                                 Icons.all_inclusive,
                                 color: currentState.category == null
                                     ? AppColors.primary
-                                    : (isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
+                                    : cs.onSurfaceVariant,
                                 size: 18,
                               ),
                             ),
@@ -477,14 +469,14 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                     decoration: BoxDecoration(
                                       color: isSelected
                                           ? AppColors.primary.withValues(alpha: 0.12)
-                                          : (isDark ? Colors.white10 : Colors.grey[100]),
+                                          : cs.surfaceContainerHighest,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Icon(
                                       Icons.folder_rounded,
                                       color: isSelected
                                           ? AppColors.primary
-                                          : (isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
+                                          : cs.onSurfaceVariant,
                                       size: 18,
                                     ),
                                   ),
@@ -547,10 +539,10 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
             maxChildSize: 0.8,
             expand: false,
             builder: (context, scrollController) {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final cs = Theme.of(context).colorScheme;
               return DecoratedBox(
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : Colors.white,
+                  color: cs.surface,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Column(
@@ -625,14 +617,14 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppColors.primary.withValues(alpha: 0.12)
-                                    : (isDark ? Colors.white10 : Colors.grey[100]),
+                                    : cs.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
                                 item.$3,
                                 color: isSelected
                                     ? AppColors.primary
-                                    : (isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
+                                    : cs.onSurfaceVariant,
                                 size: 18,
                               ),
                             ),
@@ -687,10 +679,10 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
             maxChildSize: 0.9,
             expand: false,
             builder: (context, scrollController) {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final cs = Theme.of(context).colorScheme;
               return DecoratedBox(
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : Colors.white,
+                  color: cs.surface,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
                 child: Column(
@@ -794,11 +786,11 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           const SizedBox(height: 24),
 
                           // 分享数据统计
-                          _buildSectionHeader(context, context.l10n.ptSiteDetailDataOverview, isDark),
+                          _buildSectionHeader(context, context.l10n.ptSiteDetailDataOverview),
                           const SizedBox(height: 8),
                           DecoratedBox(
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.white10 : Colors.grey[50],
+                              color: cs.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
@@ -809,25 +801,22 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                   iconColor: AppColors.success,
                                   label: context.l10n.ptSiteDetailUploadAmount,
                                   value: userInfo.formattedUploaded,
-                                  isDark: isDark,
                                 ),
-                                Divider(height: 1, indent: 56, color: isDark ? Colors.white10 : Colors.grey[200]),
+                                Divider(height: 1, indent: 56, color: cs.outlineVariant),
                                 _buildUserInfoTile(
                                   context,
                                   icon: Icons.download_rounded,
                                   iconColor: AppColors.primary,
                                   label: context.l10n.ptSiteDetailDownloadAmount,
                                   value: userInfo.formattedDownloaded,
-                                  isDark: isDark,
                                 ),
-                                Divider(height: 1, indent: 56, color: isDark ? Colors.white10 : Colors.grey[200]),
+                                Divider(height: 1, indent: 56, color: cs.outlineVariant),
                                 _buildUserInfoTile(
                                   context,
                                   icon: Icons.swap_horiz,
                                   iconColor: AppColors.warning,
                                   label: context.l10n.ptSiteDetailShareRatio,
                                   value: userInfo.formattedRatio,
-                                  isDark: isDark,
                                 ),
                               ],
                             ),
@@ -835,11 +824,11 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           const SizedBox(height: 16),
 
                           // 活动数据
-                          _buildSectionHeader(context, context.l10n.ptSiteDetailActivityData, isDark),
+                          _buildSectionHeader(context, context.l10n.ptSiteDetailActivityData),
                           const SizedBox(height: 8),
                           DecoratedBox(
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.white10 : Colors.grey[50],
+                              color: cs.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
@@ -847,38 +836,34 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                 _buildUserInfoTile(
                                   context,
                                   icon: Icons.auto_awesome,
-                                  iconColor: Colors.purple,
+                                  iconColor: AppColors.fileAudio,
                                   label: context.l10n.ptSiteDetailBonus,
                                   value: userInfo.formattedBonus,
-                                  isDark: isDark,
                                 ),
-                                Divider(height: 1, indent: 56, color: isDark ? Colors.white10 : Colors.grey[200]),
+                                Divider(height: 1, indent: 56, color: cs.outlineVariant),
                                 _buildUserInfoTile(
                                   context,
                                   icon: Icons.cloud_upload,
                                   iconColor: AppColors.success,
                                   label: context.l10n.ptSiteDetailSeedingCount,
                                   value: userInfo.seedingCount.toString(),
-                                  isDark: isDark,
                                 ),
-                                Divider(height: 1, indent: 56, color: isDark ? Colors.white10 : Colors.grey[200]),
+                                Divider(height: 1, indent: 56, color: cs.outlineVariant),
                                 _buildUserInfoTile(
                                   context,
                                   icon: Icons.cloud_download,
                                   iconColor: AppColors.primary,
                                   label: context.l10n.ptSiteDetailLeechingCount,
                                   value: userInfo.leechingCount.toString(),
-                                  isDark: isDark,
                                 ),
                                 if (userInfo.invites > 0) ...[
-                                  Divider(height: 1, indent: 56, color: isDark ? Colors.white10 : Colors.grey[200]),
+                                  Divider(height: 1, indent: 56, color: cs.outlineVariant),
                                   _buildUserInfoTile(
                                     context,
                                     icon: Icons.card_giftcard,
-                                    iconColor: Colors.teal,
+                                    iconColor: AppColors.info,
                                     label: context.l10n.ptSiteDetailInviteCount,
                                     value: userInfo.invites.toString(),
-                                    isDark: isDark,
                                   ),
                                 ],
                               ],
@@ -888,11 +873,11 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           // 账户信息（如果有日期数据）
                           if (userInfo.joinTime != null || userInfo.lastAccess != null) ...[
                             const SizedBox(height: 16),
-                            _buildSectionHeader(context, context.l10n.ptSiteDetailAccountInfo, isDark),
+                            _buildSectionHeader(context, context.l10n.ptSiteDetailAccountInfo),
                             const SizedBox(height: 8),
                             DecoratedBox(
                               decoration: BoxDecoration(
-                                color: isDark ? Colors.white10 : Colors.grey[50],
+                                color: cs.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Column(
@@ -901,21 +886,19 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                                     _buildUserInfoTile(
                                       context,
                                       icon: Icons.calendar_today,
-                                      iconColor: Colors.blue,
+                                      iconColor: AppColors.info,
                                       label: context.l10n.ptSiteDetailJoinTime,
                                       value: userInfo.formattedJoinTime ?? '-',
-                                      isDark: isDark,
                                     ),
                                   if (userInfo.joinTime != null && userInfo.lastAccess != null)
-                                    Divider(height: 1, indent: 56, color: isDark ? Colors.white10 : Colors.grey[200]),
+                                    Divider(height: 1, indent: 56, color: cs.outlineVariant),
                                   if (userInfo.lastAccess != null)
                                     _buildUserInfoTile(
                                       context,
                                       icon: Icons.access_time,
-                                      iconColor: Colors.grey,
+                                      iconColor: cs.onSurfaceVariant,
                                       label: context.l10n.ptSiteDetailLastAccess,
                                       value: userInfo.formattedLastAccess ?? '-',
-                                      isDark: isDark,
                                     ),
                                 ],
                               ),
@@ -937,14 +920,14 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, bool isDark) => Padding(
+  Widget _buildSectionHeader(BuildContext context, String title) => Padding(
       padding: const EdgeInsets.only(left: 4),
       child: Text(
         title,
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -956,9 +939,9 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
     required Color iconColor,
     required String label,
     required String value,
-    required bool isDark,
-  }) =>
-      Padding(
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         child: Row(
           children: [
@@ -976,9 +959,7 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
               child: Text(
                 label,
                 style: TextStyle(
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ),
@@ -986,17 +967,18 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
               value,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                color: cs.onSurface,
               ),
             ),
           ],
         ),
       );
+  }
 
 
 
   void _showTorrentDetail(BuildContext context, PTTorrent torrent) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     showAdaptiveModalSheet<void>(
       context: context,
@@ -1093,18 +1075,14 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                           context.l10n.ptSiteDetailIntroduction,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? AppColors.darkOnSurface
-                                : AppColors.lightOnSurface,
+                            color: cs.onSurface,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           torrent.smallDescr!,
                           style: TextStyle(
-                            color: isDark
-                                ? AppColors.darkOnSurfaceVariant
-                                : AppColors.lightOnSurfaceVariant,
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -1328,7 +1306,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return GestureDetector(
       onTap: () => Navigator.of(context).pop(),
@@ -1342,7 +1320,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
           expand: false,
           builder: (context, scrollController) => DecoratedBox(
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : Colors.white,
+              color: cs.surface,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Column(
@@ -1404,7 +1382,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                 const Divider(height: 1),
                 // 内容
                 Expanded(
-                  child: _buildContent(isDark, scrollController),
+                  child: _buildContent(scrollController),
                 ),
               ],
             ),
@@ -1414,7 +1392,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
     );
   }
 
-  Widget _buildContent(bool isDark, ScrollController scrollController) {
+  Widget _buildContent(ScrollController scrollController) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -1427,7 +1405,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
             Icon(
               Icons.error_outline_rounded,
               size: 48,
-              color: isDark ? AppColors.errorLight : AppColors.error,
+              color: AppColors.error,
             ),
             const SizedBox(height: 16),
             Text(_error!),
@@ -1452,16 +1430,18 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
       padding: const EdgeInsets.all(16),
       children: [
         // 数据总览（固定显示）
-        _buildOverviewSection(stats, isDark),
+        _buildOverviewSection(stats),
         const SizedBox(height: 16),
         // 种子列表（根据类型切换）
-        _buildLogsSection(stats, isDark),
+        _buildLogsSection(stats),
         const SizedBox(height: 16),
       ],
     );
   }
 
-  Widget _buildOverviewSection(PTTransferStats stats, bool isDark) => DecoratedBox(
+  Widget _buildOverviewSection(PTTransferStats stats) {
+    final cs = Theme.of(context).colorScheme;
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -1483,7 +1463,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                color: cs.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 12),
@@ -1496,7 +1476,6 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                     iconColor: AppColors.success,
                     label: context.l10n.ptSiteDetailTransferTotalUpload,
                     value: stats.formattedTotalUploaded,
-                    isDark: isDark,
                   ),
                 ),
                 Expanded(
@@ -1505,7 +1484,6 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                     iconColor: AppColors.primary,
                     label: context.l10n.ptSiteDetailTransferTotalDownload,
                     value: stats.formattedTotalDownloaded,
-                    isDark: isDark,
                   ),
                 ),
                 Expanded(
@@ -1514,7 +1492,6 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                     iconColor: AppColors.warning,
                     label: context.l10n.ptSiteDetailShareRatio,
                     value: stats.formattedTotalRatio,
-                    isDark: isDark,
                   ),
                 ),
               ],
@@ -1526,19 +1503,17 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                 Expanded(
                   child: _buildStatItem(
                     icon: Icons.cloud_upload,
-                    iconColor: Colors.teal,
+                    iconColor: AppColors.success,
                     label: context.l10n.ptSiteDetailTransferSeeding,
                     value: '${stats.seedingCount}',
-                    isDark: isDark,
                   ),
                 ),
                 Expanded(
                   child: _buildStatItem(
                     icon: Icons.cloud_download,
-                    iconColor: Colors.blue,
+                    iconColor: AppColors.primary,
                     label: context.l10n.ptSiteDetailTransferLeeching,
                     value: '${stats.leechingCount}',
-                    isDark: isDark,
                   ),
                 ),
                 const Expanded(child: SizedBox()), // 占位
@@ -1548,8 +1523,11 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
         ),
       ),
     );
+  }
 
-  Widget _buildLogsSection(PTTransferStats stats, bool isDark) => Column(
+  Widget _buildLogsSection(PTTransferStats stats) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -1557,7 +1535,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+            color: cs.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 8),
@@ -1570,28 +1548,31 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
                 Icon(
                   Icons.inbox_outlined,
                   size: 48,
-                  color: isDark ? Colors.grey[600] : Colors.grey[400],
+                  color: cs.onSurfaceVariant,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   context.l10n.ptSiteDetailNoData(_selectedType.label),
                   style: TextStyle(
-                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                    color: cs.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           )
         else
-          ...stats.logs.map((log) => _buildLogItem(log, isDark)),
+          ...stats.logs.map(_buildLogItem),
       ],
     );
+  }
 
-  Widget _buildLogItem(PTTransferLog log, bool isDark) => Container(
+  Widget _buildLogItem(PTTransferLog log) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white10 : Colors.grey[50],
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -1612,12 +1593,13 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
               const SizedBox(width: 16),
               _buildMiniStat('R', log.formattedRatio, AppColors.warning),
               const SizedBox(width: 16),
-              _buildMiniStat('T', log.formattedSeedTime, Colors.purple),
+              _buildMiniStat('T', log.formattedSeedTime, AppColors.fileAudio),
             ],
           ),
         ],
       ),
     );
+  }
 
   Widget _buildMiniStat(String prefix, String value, Color color) => Row(
       mainAxisSize: MainAxisSize.min,
@@ -1643,7 +1625,6 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
     required Color iconColor,
     required String label,
     required String value,
-    required bool isDark,
   }) =>
       Column(
         children: [
@@ -1669,7 +1650,7 @@ class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],

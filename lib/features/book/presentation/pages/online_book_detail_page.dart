@@ -355,27 +355,26 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     );
 
   Future<void> _addToShelf() async {
-    debugPrint('[在线书架] _addToShelf 被调用, 书名: ${widget.book.name}');
+    logger.d('[在线书架] _addToShelf 被调用, 书名: ${widget.book.name}');
     if (_isInShelf) {
-      debugPrint('[在线书架] 已在书架中, 跳过');
+      logger.d('[在线书架] 已在书架中, 跳过');
       context.showToast(context.l10n.bookDetailAlreadyInShelf);
       return;
     }
     
     try {
-      debugPrint('[在线书架] 调用 addBook...');
+      logger.d('[在线书架] 调用 addBook...');
       final item = await OnlineBookShelfService.instance.addBook(widget.book);
-      debugPrint('[在线书架] addBook 成功返回, item.id: ${item.id}, item.name: ${item.name}');
+      logger.d('[在线书架] addBook 成功返回, item.id: ${item.id}, item.name: ${item.name}');
       if (mounted) {
         setState(() => _isInShelf = true);
         // 刷新书架 Provider 状态
         unawaited(ref.read(onlineBookShelfProvider.notifier).onBookAdded());
         context.showToast(context.l10n.bookDetailAddedToShelf(_displayName));
-        debugPrint('[在线书架] 已刷新 Provider 并显示 toast');
+        logger.d('[在线书架] 已刷新 Provider 并显示 toast');
       }
     } catch (e, st) {
-      debugPrint('[在线书架] addBook 异常: $e');
-      debugPrint('[在线书架] 堆栈: $st');
+      logger.e('[在线书架] addBook 异常', e, st);
       if (mounted) {
         context.showToast(context.l10n.bookDetailAddToShelfFailed);
       }
