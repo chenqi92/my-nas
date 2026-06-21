@@ -40,7 +40,7 @@ class TaskListWidget extends StatelessWidget {
 
         // 待完成任务
         if (pendingTasks.isNotEmpty) ...[
-          _buildSectionHeader(context, '待完成', pendingTasks.length),
+          _buildSectionHeader(context, context.l10n.taskListPendingSectionTitle, pendingTasks.length),
           ...pendingTasks.entries.map((e) => _TaskTile(
                 task: e.value,
                 index: e.key,
@@ -52,7 +52,7 @@ class TaskListWidget extends StatelessWidget {
 
         // 已完成任务
         if (completedTasks.isNotEmpty) ...[
-          _buildSectionHeader(context, '已完成', completedTasks.length),
+          _buildSectionHeader(context, context.l10n.taskListCompletedSectionTitle, completedTasks.length),
           ...completedTasks.entries.map((e) => _TaskTile(
                 task: e.value,
                 index: e.key,
@@ -93,7 +93,7 @@ class TaskListWidget extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '任务进度',
+                    context.l10n.taskListProgressTitle,
                     style: context.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? AppColors.darkOnSurface : null,
@@ -101,7 +101,7 @@ class TaskListWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$completed / $total 已完成',
+                    context.l10n.taskListCompletedCount(completed, total),
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark ? AppColors.darkOnSurfaceVariant : null,
                     ),
@@ -231,7 +231,7 @@ class _TaskTile extends StatelessWidget {
                         children: [
                           // 优先级标签
                           if (task.priority > 0) ...[
-                            _buildPriorityBadge(),
+                            _buildPriorityBadge(context),
                             const SizedBox(width: 8),
                           ],
                           // 内容
@@ -326,7 +326,7 @@ class _TaskTile extends StatelessWidget {
           : null,
     );
 
-  Widget _buildPriorityBadge() {
+  Widget _buildPriorityBadge(BuildContext context) {
     final isUrgent = task.priority == 2;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -346,7 +346,7 @@ class _TaskTile extends StatelessWidget {
           ),
           const SizedBox(width: 2),
           Text(
-            isUrgent ? '紧急' : '重要',
+            isUrgent ? context.l10n.taskListPriorityUrgent : context.l10n.taskListPriorityImportant,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -366,9 +366,9 @@ class _TaskTile extends StatelessWidget {
 
     String text;
     if (isToday) {
-      text = '今天';
+      text = context.l10n.taskListDueDateToday;
     } else if (isTomorrow) {
-      text = '明天';
+      text = context.l10n.taskListDueDateTomorrow;
     } else {
       text = '${date.month}/${date.day}';
     }

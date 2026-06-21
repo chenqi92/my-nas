@@ -131,7 +131,7 @@ class MinePage extends ConsumerWidget {
     bool isDark,
   ) => [
       _MineSection(
-        title: '连接',
+        title: context.l10n.mineSectionConnection,
         icon: Icons.lan_rounded,
         tilesBuilder: (ctx) => [
           _buildSourcesTile(context, ref, isDark),
@@ -141,8 +141,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.folder_special_rounded,
             iconColor: AppColors.accent,
-            title: '媒体库',
-            subtitle: '配置视频、音乐、漫画等目录',
+            title: context.l10n.mineMediaLibrary,
+            subtitle: context.l10n.mineMediaLibraryDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
@@ -151,7 +151,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '我的内容',
+        title: context.l10n.mineSectionMyContent,
         icon: Icons.bookmark_rounded,
         tilesBuilder: (ctx) => [
           _buildSettingsTile(
@@ -159,8 +159,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.favorite_rounded,
             iconColor: AppColors.error,
-            title: '我的收藏',
-            subtitle: '已收藏的视频、照片、笔记、图书、漫画',
+            title: context.l10n.mineFavorites,
+            subtitle: context.l10n.mineFavoritesDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(builder: (_) => const FavoritesPage()),
@@ -169,7 +169,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '视频',
+        title: context.l10n.mineSectionVideo,
         icon: Icons.movie_rounded,
         tilesBuilder: (ctx) => [
           _buildSettingsTile(
@@ -177,8 +177,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.play_circle_rounded,
             iconColor: AppColors.primary,
-            title: '播放器设置',
-            subtitle: '清晰度、投屏、转码等',
+            title: context.l10n.mineVideoPlayerSettings,
+            subtitle: context.l10n.mineVideoPlayerSettingsDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -203,7 +203,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '音乐',
+        title: context.l10n.mineSectionMusic,
         icon: Icons.music_note_rounded,
         tilesBuilder: (ctx) => [
           _buildSettingsTile(
@@ -211,8 +211,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.play_circle_rounded,
             iconColor: AppColors.primary,
-            title: '播放器设置',
-            subtitle: '播放引擎、音量、淡入淡出等',
+            title: context.l10n.mineMusicPlayerSettings,
+            subtitle: context.l10n.mineMusicPlayerSettingsDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -226,8 +226,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.bar_chart_rounded,
             iconColor: AppColors.primary,
-            title: '听歌统计',
-            subtitle: '本周/本月/本年 Top 歌曲、艺术家、专辑',
+            title: context.l10n.mineListeningStats,
+            subtitle: context.l10n.mineListeningStatsDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -241,8 +241,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.content_copy_rounded,
             iconColor: AppColors.primary,
-            title: '重复歌曲',
-            subtitle: '检测同首歌的多个版本（mp3 + flac 等）',
+            title: context.l10n.mineDuplicateSongs,
+            subtitle: context.l10n.mineDuplicateSongsDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -256,8 +256,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.delete_outline_rounded,
             iconColor: AppColors.primary,
-            title: '回收站',
-            subtitle: '已删除的播放列表保留 30 天，可恢复',
+            title: context.l10n.mineRecycleBin,
+            subtitle: context.l10n.mineRecycleBinDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -271,8 +271,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.cast_rounded,
             iconColor: AppColors.primary,
-            title: 'Scrobble 上报',
-            subtitle: 'Last.fm / ListenBrainz 听歌历史同步',
+            title: context.l10n.mineScrobbleReporting,
+            subtitle: context.l10n.mineScrobbleReportingDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -285,7 +285,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '图书',
+        title: context.l10n.mineSectionBook,
         icon: Icons.auto_stories_rounded,
         tilesBuilder: (ctx) => [
           _BookSourcesTile(isDark: isDark),
@@ -294,14 +294,14 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '站点',
+        title: context.l10n.mineSectionSites,
         icon: Icons.rss_feed_rounded,
         tilesBuilder: (ctx) => [
           _PTSitesTile(isDark: isDark),
         ],
       ),
       _MineSection(
-        title: '传输',
+        title: context.l10n.mineSectionTransfer,
         icon: Icons.swap_vert_rounded,
         useCardWrapper: false,
         tilesBuilder: (ctx) => [
@@ -309,7 +309,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '外观',
+        title: context.l10n.mineSectionAppearance,
         icon: Icons.palette_outlined,
         tilesBuilder: (ctx) => [
           _buildSettingsTile(
@@ -317,8 +317,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.palette_rounded,
             iconColor: Theme.of(context).colorScheme.primary,
-            title: '外观设置',
-            subtitle: '主题、配色、UI 风格',
+            title: context.l10n.mineAppearanceSettings,
+            subtitle: context.l10n.mineAppearanceSettingsDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -329,7 +329,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '隐私与安全',
+        title: context.l10n.mineSectionPrivacySecurity,
         icon: Icons.lock_outline_rounded,
         tilesBuilder: (ctx) => [
           _buildSettingsTile(
@@ -337,8 +337,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.lock_rounded,
             iconColor: AppColors.primary,
-            title: '应用锁',
-            subtitle: '通过 PIN 或生物识别保护应用',
+            title: context.l10n.mineAppLock,
+            subtitle: context.l10n.mineAppLockDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -349,7 +349,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '云同步',
+        title: context.l10n.mineSectionCloudSync,
         icon: Icons.cloud_sync_rounded,
         tilesBuilder: (ctx) => [
           _buildSettingsTile(
@@ -357,8 +357,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.cloud_sync_rounded,
             iconColor: AppColors.primary,
-            title: 'WebDAV 同步',
-            subtitle: '跨设备同步歌单 / 阅读进度等',
+            title: context.l10n.mineWebDAVSync,
+            subtitle: context.l10n.mineWebDAVSyncDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -369,7 +369,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '高级',
+        title: context.l10n.mineSectionAdvanced,
         icon: Icons.tune_rounded,
         tilesBuilder: (ctx) => [
           _buildSettingsTile(
@@ -377,8 +377,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.dns_rounded,
             iconColor: AppColors.accent,
-            title: 'Hosts 映射',
-            subtitle: '指定域名走特定 IP，绕过 DNS 污染',
+            title: context.l10n.mineHostsMapping,
+            subtitle: context.l10n.mineHostsMappingDesc,
             onTap: () => Navigator.push(
               ctx,
               MaterialPageRoute<void>(
@@ -393,8 +393,8 @@ class MinePage extends ConsumerWidget {
               isDark,
               icon: Icons.search_rounded,
               iconColor: AppColors.info,
-              title: 'Spotlight 索引',
-              subtitle: '让系统聚焦能搜到 MyNAS 数据',
+              title: context.l10n.mineSpotlightIndexing,
+              subtitle: context.l10n.mineSpotlightIndexingDesc,
               onTap: () => Navigator.push(
                 ctx,
                 MaterialPageRoute<void>(
@@ -406,7 +406,7 @@ class MinePage extends ConsumerWidget {
         ],
       ),
       _MineSection(
-        title: '关于',
+        title: context.l10n.mineSectionAbout,
         icon: Icons.info_outline_rounded,
         tilesBuilder: (ctx) => [
           _VersionTile(isDark: isDark),
@@ -418,8 +418,8 @@ class MinePage extends ConsumerWidget {
             isDark,
             icon: Icons.article_rounded,
             iconColor: AppColors.info,
-            title: '开源许可证',
-            subtitle: '查看第三方开源库声明',
+            title: context.l10n.mineOpenSourceLicenses,
+            subtitle: context.l10n.mineOpenSourceLicensesDesc,
             onTap: () => _showOpenSourceLicenses(context),
           ),
         ],
@@ -469,7 +469,7 @@ class MinePage extends ConsumerWidget {
         child: Row(
           children: [
             Text(
-              '设置',
+              context.l10n.mineHeaderSettings,
               style: context.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: isDark ? AppColors.darkOnSurface : null,
@@ -501,8 +501,8 @@ class MinePage extends ConsumerWidget {
                   const SizedBox(width: 6),
                   Text(
                     connectedCount > 0
-                        ? '$connectedCount / $totalCount 已连接'
-                        : '未连接',
+                        ? context.l10n.mineConnectionStatusConnected(connectedCount, totalCount)
+                        : context.l10n.mineConnectionStatusDisconnected,
                     style: context.textTheme.bodySmall?.copyWith(
                       color: connectedCount > 0
                           ? AppColors.success
@@ -574,8 +574,8 @@ class MinePage extends ConsumerWidget {
                     const SizedBox(width: 6),
                     Text(
                       connectedCount > 0
-                          ? '$connectedCount / $totalCount 已连接'
-                          : '未连接',
+                          ? context.l10n.mineConnectionStatusConnected(connectedCount, totalCount)
+                          : context.l10n.mineConnectionStatusDisconnected,
                       style: context.textTheme.bodyMedium?.copyWith(
                         color: isDark
                             ? AppColors.darkOnSurfaceVariant
@@ -722,8 +722,8 @@ class MinePage extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.storage_rounded,
       iconColor: AppColors.info,
-      title: '连接源',
-      subtitle: '管理 NAS、WebDAV、SMB 等连接',
+      title: context.l10n.mineConnectionSources,
+      subtitle: context.l10n.mineConnectionSourcesDesc,
       trailing: trailing,
       onTap: () => Navigator.push(
         context,
@@ -741,14 +741,7 @@ class MinePage extends ConsumerWidget {
         padding: const EdgeInsets.all(8),
         child: Image.asset('assets/logo.png', width: 64, height: 64),
       ),
-      applicationLegalese: '© 2024 MyNAS. All rights reserved.\n\n'
-          '本应用使用了以下开源软件：\n\n'
-          '• FFmpeg - 视频转码（GPL v3）\n'
-          '  https://ffmpeg.org\n'
-          '  源代码：https://github.com/FFmpeg/FFmpeg\n\n'
-          '• media_kit - 媒体播放\n'
-          '• Flutter 及其相关库\n\n'
-          '完整的开源许可证信息请查看下方列表。',
+      applicationLegalese: context.l10n.mineLicenseContent,
     );
   }
 }
@@ -765,12 +758,13 @@ class _VersionTile extends StatefulWidget {
 }
 
 class _VersionTileState extends State<_VersionTile> {
-  String _version = '加载中...';
+  late String _version;
   String _buildNumber = '';
 
   @override
   void initState() {
     super.initState();
+    _version = context.l10n.mineLoadingStatus;
     _loadVersion();
   }
 
@@ -790,7 +784,7 @@ class _VersionTileState extends State<_VersionTile> {
         isDark: widget.isDark,
         icon: Icons.info_rounded,
         iconColor: AppColors.secondary,
-        title: '版本',
+        title: context.l10n.mineVersion,
         subtitle: _buildNumber.isNotEmpty ? '$_version ($_buildNumber)' : _version,
         showChevronWhenNoTrailing: false,
       );
@@ -811,14 +805,14 @@ class _VideoScraperSourcesTile extends ConsumerWidget {
         final enabledCount = sources.where((s) => s.isEnabled).length;
         final totalCount = ScraperType.values.length;
         return (
-          '管理 TMDB、豆瓣等视频刮削源',
+          context.l10n.mineVideoScraperDesc,
           enabledCount > 0
               ? _mineCountBadge('$enabledCount/$totalCount', AppColors.success)
               : null,
         );
       },
-      loading: () => ('加载中...', null),
-      error: (_, _) => ('加载中...', null),
+      loading: () => (context.l10n.mineLoadingStatus, null),
+      error: (_, _) => (context.l10n.mineLoadingStatus, null),
     );
 
     return _mineTileRow(
@@ -826,7 +820,7 @@ class _VideoScraperSourcesTile extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.video_library_rounded,
       iconColor: AppColors.fileVideo,
-      title: '刮削源',
+      title: context.l10n.mineScraperSources,
       subtitle: subtitle,
       trailing: trailing,
       onTap: () => Navigator.push(
@@ -853,18 +847,18 @@ class _SubtitleSourcesTile extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.subtitles_rounded,
       iconColor: AppColors.success,
-      title: '字幕源',
-      subtitle: '管理 OpenSubtitles 等字幕下载源',
+      title: context.l10n.mineSubtitleSources,
+      subtitle: context.l10n.mineSubtitleSourcesDesc,
       trailing: count > 0 ? _mineCountBadge('$count', AppColors.success) : null,
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => const ServiceSourcesPage(
-            title: '字幕源',
+          builder: (_) => ServiceSourcesPage(
+            title: context.l10n.mineSubtitleSources,
             category: SourceCategory.subtitleSites,
             emptyIcon: Icons.subtitles_rounded,
-            emptyTitle: '暂无字幕源',
-            emptySubtitle: '添加 OpenSubtitles 等字幕源来下载字幕',
+            emptyTitle: context.l10n.mineEmptySubtitleTitle,
+            emptySubtitle: context.l10n.mineEmptySubtitleDesc,
           ),
         ),
       ),
@@ -889,8 +883,8 @@ class _MusicScraperSourcesTile extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.library_music_rounded,
       iconColor: AppColors.fileAudio,
-      title: '刮削源',
-      subtitle: '管理 MusicBrainz、网易云等音乐刮削源',
+      title: context.l10n.mineScraperSources,
+      subtitle: context.l10n.mineMusicScraperDesc,
       trailing: enabledCount > 0
           ? _mineCountBadge('$enabledCount/$totalCount', AppColors.success)
           : null,
@@ -927,8 +921,8 @@ class _TransferCard extends ConsumerWidget {
         final totalSize = stats.values.fold(0, (sum, s) => sum + s.size);
         return _formatBytes(totalSize);
       },
-      loading: () => '计算中...',
-      error: (_, _) => '未知',
+      loading: () => context.l10n.mineCalculatingStatus,
+      error: (_, _) => context.l10n.mineUnknownStatus,
     );
 
     // 使用自适应玻璃容器 - 自动根据平台选择原生/Flutter实现
@@ -942,11 +936,11 @@ class _TransferCard extends ConsumerWidget {
           _buildTransferItem(
             context,
             icon: Icons.download_rounded,
-            label: '下载',
+            label: context.l10n.mineTransferDownload,
             count: downloadingCount,
             subtitle: downloadingCount > 0
-                ? '$downloadingCount 个任务进行中'
-                : '暂无下载任务',
+                ? context.l10n.mineTransferDownloadTasksActive(downloadingCount)
+                : context.l10n.mineTransferDownloadNoTasks,
             color: AppColors.primary,
             isActive: downloadingCount > 0,
             onTap: () => Navigator.push(
@@ -960,11 +954,11 @@ class _TransferCard extends ConsumerWidget {
           _buildTransferItem(
             context,
             icon: Icons.upload_rounded,
-            label: '上传',
+            label: context.l10n.mineTransferUpload,
             count: uploadingCount,
             subtitle: uploadingCount > 0
-                ? '$uploadingCount 个任务进行中'
-                : '暂无上传任务',
+                ? context.l10n.mineTransferUploadTasksActive(uploadingCount)
+                : context.l10n.mineTransferUploadNoTasks,
             color: AppColors.accent,
             isActive: uploadingCount > 0,
             onTap: () => Navigator.push(
@@ -978,13 +972,13 @@ class _TransferCard extends ConsumerWidget {
           _buildTransferItem(
             context,
             icon: Icons.storage_rounded,
-            label: '缓存',
+            label: context.l10n.mineTransferCache,
             count: cachingCount > 0 ? cachingCount : null,
             subtitle: cachingCount > 0
-                ? '$cachingCount 个任务进行中'
+                ? context.l10n.mineTransferCacheTasksActive(cachingCount)
                 : cacheCount > 0
-                    ? '$cacheCount 个缓存 ($cacheSizeText)'
-                    : '暂无缓存',
+                    ? context.l10n.mineTransferCacheItems(cacheCount, cacheSizeText)
+                    : context.l10n.mineTransferCacheNoTasks,
             color: Colors.teal,
             isActive: cachingCount > 0,
             onTap: () => Navigator.push(
@@ -1170,8 +1164,8 @@ class _MediaTrackingTile extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.track_changes_rounded,
       iconColor: Colors.purple,
-      title: '媒体追踪',
-      subtitle: '管理 Trakt 等媒体追踪工具',
+      title: context.l10n.mineMediaTracking,
+      subtitle: context.l10n.mineMediaTrackingDesc,
       trailing: count > 0 ? _mineCountBadge('$count', Colors.purple) : null,
       onTap: () => Navigator.push(
         context,
@@ -1197,8 +1191,8 @@ class _MediaManagementTile extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.construction_rounded,
       iconColor: Colors.teal,
-      title: '媒体管理',
-      subtitle: '管理 NASTool、MoviePilot 等工具',
+      title: context.l10n.mineMediaManagement,
+      subtitle: context.l10n.mineMediaManagementDesc,
       trailing: count > 0 ? _mineCountBadge('$count', Colors.teal) : null,
       onTap: () => Navigator.push(
         context,
@@ -1224,8 +1218,8 @@ class _DownloaderTile extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.download_for_offline_rounded,
       iconColor: AppColors.warning,
-      title: '远程任务',
-      subtitle: '管理远程下载任务和服务',
+      title: context.l10n.mineDownloader,
+      subtitle: context.l10n.mineDownloaderDesc,
       trailing: count > 0 ? _mineCountBadge('$count', AppColors.warning) : null,
       onTap: () => Navigator.push(
         context,
@@ -1251,8 +1245,8 @@ class _LiveStreamingTile extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.live_tv_rounded,
       iconColor: Colors.red,
-      title: '直播源',
-      subtitle: '管理 IPTV、M3U 播放列表等直播源',
+      title: context.l10n.mineLiveStreaming,
+      subtitle: context.l10n.mineLiveStreamingDesc,
       trailing: count > 0 ? _mineCountBadge('$count', Colors.red) : null,
       onTap: () => Navigator.push(
         context,
@@ -1278,8 +1272,8 @@ class _PTSitesTile extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.rss_feed_rounded,
       iconColor: Colors.indigo,
-      title: '资源站点',
-      subtitle: '管理资源站点连接',
+      title: context.l10n.minePTSites,
+      subtitle: context.l10n.minePTSitesDesc,
       trailing: count > 0 ? _mineCountBadge('$count', Colors.indigo) : null,
       onTap: () => Navigator.push(
         context,
@@ -1304,13 +1298,13 @@ class _LanguagePreferenceTile extends ConsumerWidget {
       isDark: isDark,
       icon: Icons.language_rounded,
       iconColor: AppColors.info,
-      title: '语言偏好',
-      subtitle: _getPreferenceSummary(preference),
+      title: context.l10n.mineLanguagePreference,
+      subtitle: _getPreferenceSummary(context, preference),
       onTap: () => _showLanguageSettingsSheet(context, ref),
     );
   }
 
-  String _getPreferenceSummary(LanguagePreference preference) {
+  String _getPreferenceSummary(BuildContext context, LanguagePreference preference) {
     final metadata = preference.getPreferredLanguage(LanguageType.metadata);
     final audio = preference.getPreferredLanguage(LanguageType.audio);
     final subtitle = preference.getPreferredLanguage(LanguageType.subtitle);
@@ -1320,7 +1314,7 @@ class _LanguagePreferenceTile extends ConsumerWidget {
         subtitle == LanguageOption.auto;
 
     if (isAllAuto) {
-      return '全部自动';
+      return context.l10n.mineLanguagePreferenceAllAuto;
     }
 
     final parts = <String>[];
@@ -1334,7 +1328,7 @@ class _LanguagePreferenceTile extends ConsumerWidget {
       parts.add('字幕: ${subtitle.displayName}');
     }
 
-    return parts.isEmpty ? '全部自动' : parts.join(' | ');
+    return parts.isEmpty ? context.l10n.mineLanguagePreferenceAllAuto : parts.join(' | ');
   }
 
   void _showLanguageSettingsSheet(BuildContext context, WidgetRef ref) {
@@ -1400,7 +1394,7 @@ class _LanguageSettingsSheet extends ConsumerWidget {
                     AppSpacing.sm,
                   ),
                   child: Text(
-                    '语言偏好设置',
+                    context.l10n.mineLanguagePreferenceSettings,
                     style: context.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -1410,7 +1404,7 @@ class _LanguageSettingsSheet extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   child: Text(
-                    '设置影片元数据、音频和字幕的默认显示语言',
+                    context.l10n.mineLanguagePreferenceDesc,
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark
                           ? AppColors.darkOnSurfaceVariant
@@ -1426,8 +1420,8 @@ class _LanguageSettingsSheet extends ConsumerWidget {
                   context,
                   ref,
                   type: LanguageType.metadata,
-                  title: '元数据语言',
-                  subtitle: '影片标题、简介、演员信息',
+                  title: context.l10n.mineMetadataLanguage,
+                  subtitle: context.l10n.mineMetadataLanguageDesc,
                   icon: Icons.description_rounded,
                   iconColor: AppColors.primary,
                   currentValue: preference.getPreferredLanguage(LanguageType.metadata),
@@ -1441,8 +1435,8 @@ class _LanguageSettingsSheet extends ConsumerWidget {
                   context,
                   ref,
                   type: LanguageType.audio,
-                  title: '音频语言',
-                  subtitle: '默认播放的音轨语言',
+                  title: context.l10n.mineAudioLanguage,
+                  subtitle: context.l10n.mineAudioLanguageDesc,
                   icon: Icons.audiotrack_rounded,
                   iconColor: AppColors.accent,
                   currentValue: preference.getPreferredLanguage(LanguageType.audio),
@@ -1456,8 +1450,8 @@ class _LanguageSettingsSheet extends ConsumerWidget {
                   context,
                   ref,
                   type: LanguageType.subtitle,
-                  title: '字幕语言',
-                  subtitle: '默认显示的字幕语言',
+                  title: context.l10n.mineSubtitleLanguage,
+                  subtitle: context.l10n.mineSubtitleLanguageDesc,
                   icon: Icons.subtitles_rounded,
                   iconColor: AppColors.fileVideo,
                   currentValue: preference.getPreferredLanguage(LanguageType.subtitle),
@@ -1600,8 +1594,8 @@ class _BookSourcesTile extends StatelessWidget {
         isDark: isDark,
         icon: Icons.library_books_rounded,
         iconColor: AppColors.primary,
-        title: '书源管理',
-        subtitle: '导入和管理在线书源',
+        title: context.l10n.mineBookSources,
+        subtitle: context.l10n.mineBookSourcesDesc,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute<void>(builder: (_) => const BookSourcesPage()),
@@ -1621,8 +1615,8 @@ class _BookSettingsTile extends StatelessWidget {
         isDark: isDark,
         icon: Icons.auto_stories_rounded,
         iconColor: Colors.amber,
-        title: '阅读器设置',
-        subtitle: '选择阅读引擎、翻页方式等',
+        title: context.l10n.mineBookSettings,
+        subtitle: context.l10n.mineBookSettingsDesc,
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute<void>(builder: (_) => const BookSettingsPage()),

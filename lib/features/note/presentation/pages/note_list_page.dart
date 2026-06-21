@@ -673,8 +673,8 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
         final confirmed = await showDeleteConfirmDialog(
           // ignore: use_build_context_synchronously
           context: context,
-          title: '删除笔记',
-          content: '确定要删除"${node.displayName}"吗？此操作将删除源文件，无法恢复！',
+          title: context.l10n.noteListDeleteConfirmTitle,
+          content: context.l10n.noteListDeleteConfirmContent(node.displayName),
         );
         if (confirmed && context.mounted) {
           await ref.read(notePageProvider.notifier).deleteFromSource(
@@ -706,17 +706,17 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
       title: node.displayName,
       subtitle: '笔记',
       entries: [
-        MediaInfoEntry(label: '文件名', value: node.name),
+        MediaInfoEntry(label: context.l10n.noteListInfoLabelFileName, value: node.name),
         MediaInfoEntry(
-          label: '修改时间',
+          label: context.l10n.noteListInfoLabelModifiedTime,
           value: node.fileItem?.modifiedTime?.toLocal().toString() ?? '',
         ),
         MediaInfoEntry(
-          label: '文件大小',
+          label: context.l10n.noteListInfoLabelFileSize,
           value: node.fileItem?.displaySize ?? '',
         ),
-        MediaInfoEntry(label: '来源 ID', value: node.sourceId, copyable: true),
-        MediaInfoEntry(label: '路径', value: node.path, copyable: true),
+        MediaInfoEntry(label: context.l10n.noteListInfoLabelSourceId, value: node.sourceId, copyable: true),
+        MediaInfoEntry(label: context.l10n.noteListInfoLabelPath, value: node.path, copyable: true),
       ],
     );
   }
@@ -726,7 +726,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
     final connection = connections[node.sourceId];
     if (connection == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+        SnackBar(content: Text(context.l10n.noteListDownloadNoConnection)),
       );
       return;
     }
@@ -758,7 +758,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
     } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('分享失败：$e')),
+        SnackBar(content: Text(context.l10n.noteListShareFailed(e))),
       );
     }
   }
@@ -839,7 +839,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            '笔记库为空',
+            context.l10n.noteListEmptyTitle,
             style: context.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: isDark ? Colors.white : null,
@@ -847,7 +847,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            '请在媒体库设置中配置笔记目录并扫描',
+            context.l10n.noteListEmptyMessage,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? Colors.grey[400] : Colors.grey,
             ),
@@ -860,7 +860,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
               MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
             ),
             icon: const Icon(Icons.folder_open_rounded),
-            label: const Text('媒体库设置'),
+            label: Text(context.l10n.noteListMediaLibraryButton),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -874,7 +874,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
               MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
             ),
             icon: const Icon(Icons.cloud_rounded),
-            label: const Text('连接管理'),
+            label: Text(context.l10n.noteListConnectionManagementButton),
             style: TextButton.styleFrom(foregroundColor: AppColors.primary),
           ),
         ],
@@ -912,7 +912,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
           child: Row(
             children: [
               Text(
-                '笔记',
+                context.l10n.noteListTitle,
                 style: context.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: isDark ? AppColors.darkOnSurface : null,
@@ -943,7 +943,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
                 icon: Icons.refresh_rounded,
                 onTap: () => ref.read(notePageProvider.notifier).loadTree(),
                 isDark: isDark,
-                tooltip: '刷新',
+                tooltip: context.l10n.noteListRefreshTooltip,
               ),
             ],
           ),
@@ -1144,7 +1144,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
                 Icons.arrow_back_rounded,
                 color: isDark ? AppColors.darkOnSurface : null,
               ),
-              tooltip: '返回目录',
+              tooltip: context.l10n.noteListBackToDirectoryTooltip,
             ),
             const SizedBox(width: 4),
             // 文件图标
@@ -1278,7 +1278,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.all(AppSpacing.md),
                 border: InputBorder.none,
-                hintText: '开始编写 Markdown...',
+                hintText: context.l10n.noteListEditorPlaceholder,
                 hintStyle: TextStyle(
                   color: isDark
                       ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.5)
@@ -1321,7 +1321,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '预览',
+                        context.l10n.noteListPreviewLabel,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -1414,7 +1414,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
           children: [
             _buildModeButton(
               icon: Icons.visibility_rounded,
-              label: '预览',
+              label: context.l10n.noteListPreviewLabel,
               isSelected: !state.isEditing,
               onTap: () =>
                   ref.read(notePageProvider.notifier).setEditing(editing: false),
@@ -1422,7 +1422,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
             ),
             _buildModeButton(
               icon: Icons.edit_rounded,
-              label: '编辑',
+              label: context.l10n.noteListEditLabel,
               isSelected: state.isEditing,
               onTap: () => ref.read(notePageProvider.notifier).setEditing(editing: true),
               isDark: isDark,
@@ -1466,7 +1466,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
             ),
             const SizedBox(width: 4),
             Text(
-              '分屏',
+              context.l10n.noteListSplitScreenTooltip,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: state.livePreview
@@ -1614,7 +1614,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.all(AppSpacing.md),
                       border: InputBorder.none,
-                      hintText: '开始编写 Markdown...',
+                      hintText: context.l10n.noteListEditorPlaceholder,
                       hintStyle: TextStyle(
                         color: isDark
                             ? AppColors.darkOnSurfaceVariant.withValues(
@@ -1739,7 +1739,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.all(AppSpacing.md),
               border: InputBorder.none,
-              hintText: '开始编写...',
+              hintText: context.l10n.noteListEditorMinimalPlaceholder,
               hintStyle: TextStyle(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.5)
@@ -1772,44 +1772,44 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
       children: [
         _buildToolButton(
           icon: Icons.format_bold_rounded,
-          tooltip: '粗体',
+          tooltip: context.l10n.noteListToolBoldTooltip,
           onTap: () => _insertMarkdown('**', '**'),
         ),
         _buildToolButton(
           icon: Icons.format_italic_rounded,
-          tooltip: '斜体',
+          tooltip: context.l10n.noteListToolItalicTooltip,
           onTap: () => _insertMarkdown('*', '*'),
         ),
         _buildToolButton(
           icon: Icons.strikethrough_s_rounded,
-          tooltip: '删除线',
+          tooltip: context.l10n.noteListToolStrikethroughTooltip,
           onTap: () => _insertMarkdown('~~', '~~'),
         ),
         const VerticalDivider(width: 16),
         _buildToolButton(
           icon: Icons.title_rounded,
-          tooltip: '标题',
+          tooltip: context.l10n.noteListToolHeadingTooltip,
           onTap: () => _insertMarkdown('## ', ''),
         ),
         _buildToolButton(
           icon: Icons.format_list_bulleted_rounded,
-          tooltip: '列表',
+          tooltip: context.l10n.noteListToolListTooltip,
           onTap: () => _insertMarkdown('- ', ''),
         ),
         _buildToolButton(
           icon: Icons.check_box_outlined,
-          tooltip: '任务',
+          tooltip: context.l10n.noteListToolTaskTooltip,
           onTap: () => _insertMarkdown('- [ ] ', ''),
         ),
         const VerticalDivider(width: 16),
         _buildToolButton(
           icon: Icons.code_rounded,
-          tooltip: '代码',
+          tooltip: context.l10n.noteListToolCodeTooltip,
           onTap: () => _insertMarkdown('`', '`'),
         ),
         _buildToolButton(
           icon: Icons.link_rounded,
-          tooltip: '链接',
+          tooltip: context.l10n.noteListToolLinkTooltip,
           onTap: () => _insertMarkdown('[', '](url)'),
         ),
       ],
@@ -2015,8 +2015,8 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
         final confirmed = await showDeleteConfirmDialog(
           // ignore: use_build_context_synchronously
           context: context,
-          title: '删除笔记',
-          content: '确定要删除"${node.displayName}"吗？此操作将删除源文件，无法恢复！',
+          title: context.l10n.noteListDeleteConfirmTitle,
+          content: context.l10n.noteListDeleteConfirmContent(node.displayName),
         );
         if (confirmed && context.mounted) {
           await ref.read(notePageProvider.notifier).deleteFromSource(
@@ -2048,17 +2048,17 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
       title: node.displayName,
       subtitle: '笔记',
       entries: [
-        MediaInfoEntry(label: '文件名', value: node.name),
+        MediaInfoEntry(label: context.l10n.noteListInfoLabelFileName, value: node.name),
         MediaInfoEntry(
-          label: '修改时间',
+          label: context.l10n.noteListInfoLabelModifiedTime,
           value: node.fileItem?.modifiedTime?.toLocal().toString() ?? '',
         ),
         MediaInfoEntry(
-          label: '文件大小',
+          label: context.l10n.noteListInfoLabelFileSize,
           value: node.fileItem?.displaySize ?? '',
         ),
-        MediaInfoEntry(label: '来源 ID', value: node.sourceId, copyable: true),
-        MediaInfoEntry(label: '路径', value: node.path, copyable: true),
+        MediaInfoEntry(label: context.l10n.noteListInfoLabelSourceId, value: node.sourceId, copyable: true),
+        MediaInfoEntry(label: context.l10n.noteListInfoLabelPath, value: node.path, copyable: true),
       ],
     );
   }
@@ -2068,7 +2068,7 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
     final connection = connections[node.sourceId];
     if (connection == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+        SnackBar(content: Text(context.l10n.noteListDownloadNoConnection)),
       );
       return;
     }
@@ -2100,7 +2100,7 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
     } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('分享失败：$e')),
+        SnackBar(content: Text(context.l10n.noteListShareFailed(e))),
       );
     }
   }
@@ -2135,10 +2135,10 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
         onRetry: () => ref.read(notePageProvider.notifier).loadTree(),
       ),
       NotePageLoaded(:final treeNodes) when treeNodes.isEmpty =>
-        const EmptyWidget(
+        EmptyWidget(
           icon: Icons.note_outlined,
-          title: '暂无笔记',
-          message: '在配置的目录中添加 Markdown 文件后将显示在这里',
+          title: context.l10n.noteListEmptyNoteLibrary,
+          message: context.l10n.noteListEmptyNoteMessage,
         ),
       NotePageLoaded() => _buildMainLayout(context, state, isDark),
     };
@@ -2192,7 +2192,7 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          '从左侧选择笔记查看 / 编辑',
+                          context.l10n.noteListSelectNoteHint,
                           style: context.textTheme.bodyMedium?.copyWith(
                             color: isDark
                                 ? AppColors.darkOnSurfaceVariant
@@ -2282,7 +2282,7 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
               Icons.arrow_back_rounded,
               color: isDark ? AppColors.darkOnSurface : null,
             ),
-            tooltip: '返回目录',
+            tooltip: context.l10n.noteListBackToDirectoryTooltip,
           ),
           const SizedBox(width: 4),
           // 文件图标
@@ -2313,7 +2313,7 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
               Icons.refresh_rounded,
               color: isDark ? AppColors.darkOnSurfaceVariant : Colors.grey[700],
             ),
-            tooltip: '刷新',
+            tooltip: context.l10n.noteListRefreshTooltip,
           ),
         ],
       ),

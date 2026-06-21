@@ -288,7 +288,7 @@ class MonthGrid extends ConsumerWidget {
                           ),
                           if (hasPhotos)
                             Text(
-                              '${monthData.count}张',
+                              context.l10n.photoTimelinePhotoCount(monthData.count),
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.8),
                                 fontSize: 11,
@@ -440,7 +440,7 @@ class TimelineNavigatorPanel extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '时间线',
+                        context.l10n.photoTimelineNavigatorTitle,
                         style: context.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -544,7 +544,7 @@ class TimelineFilterBottomSheet extends ConsumerWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '时间筛选',
+                    context.l10n.photoTimelineFilterTitle,
                     style: context.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
@@ -564,8 +564,8 @@ class TimelineFilterBottomSheet extends ConsumerWidget {
                         children: [
                           Text(
                             currentMonth != null
-                                ? '$currentYear年$currentMonth月'
-                                : '$currentYear年',
+                                ? context.l10n.photoTimelineYearMonthLabel(currentYear!, currentMonth!)
+                                : context.l10n.photoTimelineYearLabel(currentYear!),
                             style: TextStyle(
                               color: AppColors.primary,
                               fontWeight: FontWeight.w600,
@@ -635,7 +635,7 @@ class TimelineFilterBottomSheet extends ConsumerWidget {
           padding: const EdgeInsets.all(32),
           child: Center(
             child: Text(
-              '暂无照片数据',
+              context.l10n.photoTimelineNoDataPlaceholder,
               style: TextStyle(
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
@@ -716,7 +716,7 @@ class TimelineFilterBottomSheet extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '${yearGroup.totalCount}张',
+                        context.l10n.photoTimelinePhotoCount(yearGroup.totalCount),
                         style: TextStyle(
                           fontSize: 11,
                           color: isSelectedYear
@@ -774,7 +774,7 @@ class TimelineFilterBottomSheet extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            '${monthData.month}月',
+                            context.l10n.photoTimelineMonthLabel(monthData.month),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: isSelectedMonth ? FontWeight.bold : FontWeight.w500,

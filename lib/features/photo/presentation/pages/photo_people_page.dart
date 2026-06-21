@@ -107,7 +107,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
         .toList();
 
     if (connectedSources.isEmpty) {
-      context.showWarningToast('请先连接到 NAS');
+      context.showWarningToast(context.l10n.photoPeoplePageConnectNasFirst);
       return;
     }
 
@@ -152,11 +152,11 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
     final newName = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('命名人物'),
+        title: Text(context.l10n.photoPeoplePageNamingTitle),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: '输入名字',
+          decoration: InputDecoration(
+            hintText: context.l10n.photoPeoplePageNamingHint,
             border: OutlineInputBorder(),
           ),
           autofocus: true,
@@ -165,11 +165,11 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.photoPeoplePageScanCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('确定'),
+            child: Text(context.l10n.photoPeoplePageMergeConfirmButton),
           ),
         ],
       ),
@@ -188,14 +188,14 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : Colors.grey[50],
       appBar: AppBar(
-        title: const Text('人物'),
+        title: Text(context.l10n.photoPeoplePageTitle),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         actions: [
           if (!_isScanning && !_isClustering)
             IconButton(
               onPressed: _startScan,
               icon: const Icon(Icons.face_retouching_natural),
-              tooltip: '扫描人脸',
+              tooltip: context.l10n.photoPeoplePageScanTooltip,
             ),
         ],
       ),
@@ -219,7 +219,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadData,
-              child: const Text('重试'),
+              child: Text(context.l10n.photoPeoplePageRetry),
             ),
           ],
         ),
@@ -301,19 +301,19 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
                 Expanded(
                   child: Text(
                     _isScanning
-                        ? '正在扫描人脸...'
+                        ? context.l10n.photoPeoplePageScanningFaces
                         : progress?.status == FaceProcessStatus.completed
-                            ? '扫描完成'
+                            ? context.l10n.photoPeoplePageScanComplete
                             : progress?.status == FaceProcessStatus.cancelled
-                                ? '已取消'
-                                : '扫描出错',
+                                ? context.l10n.photoPeoplePageScanCancelled
+                                : context.l10n.photoPeoplePageScanError,
                     style: context.textTheme.titleMedium,
                   ),
                 ),
                 if (_isScanning)
                   TextButton(
                     onPressed: _cancelScan,
-                    child: const Text('取消'),
+                    child: Text(context.l10n.photoPeoplePageScanCancel),
                   ),
               ],
             ),
@@ -322,7 +322,11 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
               LinearProgressIndicator(value: progress.progress),
               const SizedBox(height: 8),
               Text(
-                '已处理 ${progress.processed}/${progress.total} 张照片，发现 ${progress.facesFound} 张人脸',
+                context.l10n.photoPeoplePageScanProgressText(
+                  progress.processed,
+                  progress.total,
+                  progress.facesFound,
+                ),
                 style: context.textTheme.bodySmall?.copyWith(
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                 ),
@@ -348,7 +352,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
             ),
             const SizedBox(width: 12),
             Text(
-              '正在分析人物...',
+              context.l10n.photoPeoplePageAnalyzing,
               style: context.textTheme.titleMedium,
             ),
           ],
@@ -367,12 +371,12 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            _buildStatItem('人物', '${stats.totalPersons}', Icons.person_rounded, isDark),
+            _buildStatItem(context.l10n.photoPeoplePageStatsLabelPeople, '${stats.totalPersons}', Icons.person_rounded, isDark),
             const SizedBox(width: 24),
-            _buildStatItem('人脸', '${stats.totalFaces}', Icons.face, isDark),
+            _buildStatItem(context.l10n.photoPeoplePageStatsLabelFaces, '${stats.totalFaces}', Icons.face, isDark),
             const SizedBox(width: 24),
             _buildStatItem(
-              '待分组',
+              context.l10n.photoPeoplePageStatsLabelUnassigned,
               '${stats.unassignedFaces}',
               Icons.help_outline_rounded,
               isDark,
@@ -422,14 +426,14 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
             ),
             const SizedBox(height: 16),
             Text(
-              '还没有发现人物',
+              context.l10n.photoPeoplePageEmptyStateTitle,
               style: context.textTheme.titleMedium?.copyWith(
                 color: isDark ? Colors.white : null,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '点击右上角按钮扫描照片中的人脸',
+              context.l10n.photoPeoplePageEmptyStateDescription,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -438,7 +442,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
             ElevatedButton.icon(
               onPressed: _startScan,
               icon: const Icon(Icons.face_retouching_natural),
-              label: const Text('开始扫描'),
+              label: Text(context.l10n.photoPeoplePageScanButton),
             ),
           ],
         ),
@@ -502,7 +506,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    '${person.photoCount} 张照片',
+                    context.l10n.photoPeoplePagePhotoCountLabel(person.photoCount),
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                     ),
@@ -556,7 +560,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
           children: [
             ListTile(
               leading: const Icon(Icons.edit_rounded),
-              title: const Text('重命名'),
+              title: Text(context.l10n.photoPeoplePageRename),
               onTap: () {
                 Navigator.pop(context);
                 _renamePerson(person);
@@ -564,7 +568,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
             ),
             ListTile(
               leading: const Icon(Icons.merge),
-              title: const Text('合并到其他人物'),
+              title: Text(context.l10n.photoPeoplePageMerge),
               onTap: () {
                 Navigator.pop(context);
                 _mergePerson(person);
@@ -572,7 +576,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
             ),
             ListTile(
               leading: Icon(Icons.delete_rounded, color: AppColors.error),
-              title: Text('删除人物', style: TextStyle(color: AppColors.error)),
+              title: Text(context.l10n.photoPeoplePageDelete, style: TextStyle(color: AppColors.error)),
               onTap: () {
                 Navigator.pop(context);
                 _deletePerson(person);
@@ -587,14 +591,14 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
   Future<void> _mergePerson(PersonEntity person) async {
     final otherPersons = _persons.where((p) => p.id != person.id).toList();
     if (otherPersons.isEmpty) {
-      context.showInfoToast('没有其他人物可以合并');
+      context.showInfoToast(context.l10n.photoPeoplePageMergeNoOthersHint);
       return;
     }
 
     final targetPerson = await showDialog<PersonEntity>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('选择要合并到的人物'),
+        title: Text(context.l10n.photoPeoplePageMergeSelectTitle),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -605,7 +609,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
               return ListTile(
                 leading: const CircleAvatar(child: Icon(Icons.person_rounded)),
                 title: Text(p.displayName),
-                subtitle: Text('${p.photoCount} 张照片'),
+                subtitle: Text(context.l10n.photoPeoplePagePhotoCountLabel(p.photoCount)),
                 onTap: () => Navigator.pop(context, p),
               );
             },
@@ -614,7 +618,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.photoPeoplePageScanCancel),
           ),
         ],
       ),
@@ -624,7 +628,12 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
       await _faceDb.mergePersons(targetPerson.id, person.id);
       await _loadData();
       if (mounted) {
-        context.showSuccessToast('已将 ${person.displayName} 合并到 ${targetPerson.displayName}');
+        context.showSuccessToast(
+          context.l10n.photoPeoplePageMergeSuccess(
+            person.displayName,
+            targetPerson.displayName,
+          ),
+        );
       }
     }
   }
@@ -633,18 +642,21 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除 ${person.displayName} 吗？\n'
-            '这只会删除人物分组，不会删除照片。'),
+        title: Text(context.l10n.photoPeoplePageDeleteConfirmTitle),
+        content: Text(
+          context.l10n.photoPeoplePageDeleteConfirmMessage(
+            person.displayName,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.photoPeoplePageScanCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(context.l10n.photoPeoplePageDelete),
           ),
         ],
       ),
@@ -712,7 +724,7 @@ class _PersonPhotosPageState extends ConsumerState<_PersonPhotosPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _photos.isEmpty
-              ? const Center(child: Text('暂无照片'))
+              ? Center(child: Text(context.l10n.photoPeoplePhotosPageEmptyMessage))
               : GridView.builder(
                   padding: const EdgeInsets.all(4),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

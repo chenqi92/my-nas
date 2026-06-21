@@ -1517,13 +1517,13 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             Icons.close_rounded,
             color: isDark ? Colors.white : Colors.black87,
           ),
-          tooltip: '取消',
+          tooltip: context.l10n.photoListCancel,
         ),
         Expanded(
           child: Text(
             state.selectedPaths.isEmpty
-                ? '选择照片'
-                : '已选择 ${state.selectedPaths.length} 张',
+                ? context.l10n.photoListSelectPhotos
+                : context.l10n.photoListSelectedCount(state.selectedPaths.length),
             style: context.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
               color: isDark ? Colors.white : Colors.black87,
@@ -1535,7 +1535,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
               ? () => ref.read(photoListProvider.notifier).clearSelection()
               : () => ref.read(photoListProvider.notifier).selectAll(),
           child: Text(
-            state.selectedPaths.length == state.displayPhotos.length ? '取消全选' : '全选',
+            state.selectedPaths.length == state.displayPhotos.length ? context.l10n.photoListDeselectAll : context.l10n.photoListSelectAll,
           ),
         ),
       ],
@@ -1596,53 +1596,53 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             GlassGroupIconButton(
               icon: Icons.search_rounded,
               onPressed: () => setState(() => _showSearch = true),
-              tooltip: '搜索',
+              tooltip: context.l10n.photoListSearch,
             ),
             if (state is PhotoListLoaded) ...[
               GlassGroupIconButton(
                 icon: Icons.check_circle_outline_rounded,
                 onPressed: () => ref.read(photoListProvider.notifier).enterSelectMode(),
-                tooltip: '多选',
+                tooltip: context.l10n.photoListMultiSelect,
               ),
               GlassGroupIconButton(
                 icon: state.viewMode == PhotoViewMode.grid
                     ? Icons.view_timeline_rounded
                     : Icons.grid_view_rounded,
                 onPressed: () => ref.read(photoListProvider.notifier).toggleViewMode(),
-                tooltip: state.viewMode == PhotoViewMode.grid ? '时间线' : '网格',
+                tooltip: state.viewMode == PhotoViewMode.grid ? context.l10n.photoListTimeline : context.l10n.photoListGrid,
               ),
             ],
             GlassGroupPopupMenuButton<String>(
               icon: Icons.more_vert_rounded,
-              tooltip: '更多',
+              tooltip: context.l10n.photoListMore,
               itemBuilder: (context) => [
                 PopupMenuItem(
                   value: 'duplicates',
                   child: Row(
-                    children: const [
-                      Icon(Icons.content_copy_rounded, size: 20),
-                      SizedBox(width: 12),
-                      Text('重复照片'),
+                    children: [
+                      const Icon(Icons.content_copy_rounded, size: 20),
+                      const SizedBox(width: 12),
+                      Text(context.l10n.photoListDuplicates),
                     ],
                   ),
                 ),
                 PopupMenuItem(
                   value: 'library',
                   child: Row(
-                    children: const [
-                      Icon(Icons.settings_rounded, size: 20),
-                      SizedBox(width: 12),
-                      Text('媒体库设置'),
+                    children: [
+                      const Icon(Icons.settings_rounded, size: 20),
+                      const SizedBox(width: 12),
+                      Text(context.l10n.photoListLibrarySettings),
                     ],
                   ),
                 ),
                 PopupMenuItem(
                   value: 'sources',
                   child: Row(
-                    children: const [
-                      Icon(Icons.cloud_rounded, size: 20),
-                      SizedBox(width: 12),
-                      Text('连接源管理'),
+                    children: [
+                      const Icon(Icons.cloud_rounded, size: 20),
+                      const SizedBox(width: 12),
+                      Text(context.l10n.photoListSourceManagement),
                     ],
                   ),
                 ),
@@ -1672,7 +1672,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             autofocus: true,
             style: TextStyle(color: isDark ? Colors.white : Colors.black87),
             decoration: InputDecoration(
-              hintText: '搜索照片...',
+              hintText: context.l10n.photoListSearchPhotos,
               hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1700,7 +1700,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
               Icons.close_rounded,
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
-            tooltip: '清除',
+            tooltip: context.l10n.photoListClear,
           ),
       ],
     );
@@ -1721,7 +1721,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
         GlassGroupIconButton(
           icon: Icons.search_rounded,
           onPressed: () => setState(() => _showSearch = true),
-          tooltip: '搜索',
+          tooltip: context.l10n.photoListSearch,
         ),
         // 多选按钮 - 始终显示，但只有在加载完成后才启用
         GlassGroupIconButton(
@@ -1729,7 +1729,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
           onPressed: isLoaded
               ? () => ref.read(photoListProvider.notifier).enterSelectMode()
               : null,
-          tooltip: '多选',
+          tooltip: context.l10n.photoListMultiSelect,
         ),
         // 视图切换按钮 - 始终显示，但只有在加载完成后才启用
         GlassGroupIconButton(
@@ -1739,11 +1739,11 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
           onPressed: isLoaded
               ? () => ref.read(photoListProvider.notifier).toggleViewMode()
               : null,
-          tooltip: viewMode == PhotoViewMode.grid ? '时间线' : '网格',
+          tooltip: viewMode == PhotoViewMode.grid ? context.l10n.photoListTimeline : context.l10n.photoListGrid,
         ),
         GlassGroupPopupMenuButton<String>(
           icon: Icons.more_vert_rounded,
-          tooltip: '更多',
+          tooltip: context.l10n.photoListMore,
           itemBuilder: (context) => [
             PopupMenuItem(
               value: 'duplicates',
@@ -1819,7 +1819,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
 
     return GlassFloatingSearchBar(
       controller: _searchController,
-      hintText: '搜索照片...',
+      hintText: context.l10n.photoListSearchPhotos,
       width: searchWidth,
       onChanged: (query) {
         ref.read(photoListProvider.notifier).setSearchQuery(query);
@@ -1867,13 +1867,13 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32),
-                tooltip: '取消',
+                tooltip: context.l10n.photoListCancel,
               ),
               const SizedBox(width: 4),
               Text(
                 state.selectedPaths.isEmpty
-                    ? '选择照片'
-                    : '已选择 ${state.selectedPaths.length} 张',
+                    ? context.l10n.photoListSelectPhotos
+                    : context.l10n.photoListSelectedCount(state.selectedPaths.length),
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -1891,7 +1891,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 child: Text(
-                  state.selectedPaths.length == state.displayPhotos.length ? '取消全选' : '全选',
+                  state.selectedPaths.length == state.displayPhotos.length ? context.l10n.photoListDeselectAll : context.l10n.photoListSelectAll,
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.success,
@@ -2083,7 +2083,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '正在扫描... 已找到 $scannedCount 张照片',
+                        context.l10n.photoListScanning(scannedCount),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -2195,7 +2195,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            fromCache ? '加载缓存...' : '扫描照片中...',
+            fromCache ? context.l10n.photoListLoadingCache : context.l10n.photoListScanningPhotos,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -2258,7 +2258,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             ),
             const SizedBox(height: 24),
             Text(
-              '照片库为空',
+              context.l10n.photoListEmpty,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : null,
@@ -2266,7 +2266,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '请在媒体库设置中配置照片目录并扫描',
+              context.l10n.photoListEmptyDesc,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark ? Colors.grey[400] : Colors.grey,
               ),
@@ -2306,7 +2306,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                 MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
               ),
               icon: const Icon(Icons.folder_open_rounded),
-              label: const Text('媒体库设置'),
+              label: Text(context.l10n.photoListLibrarySettings),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -2320,7 +2320,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                 MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
               ),
               icon: const Icon(Icons.cloud_rounded),
-              label: const Text('连接管理'),
+              label: Text(context.l10n.photoListSourceManagement),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,
               ),
@@ -2352,7 +2352,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             ),
             const SizedBox(height: 24),
             Text(
-              '未连接到 NAS',
+              context.l10n.photoListNotConnected,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? AppColors.darkOnSurface : null,
@@ -2360,7 +2360,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '请先在设置中配置并连接到 NAS 服务器',
+              context.l10n.photoListNotConnectedDesc,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant
@@ -2480,7 +2480,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             if (hasLocalSelected)
               _buildActionButton(
                 icon: Icons.upload_rounded,
-                label: '上传 (${state.selectedLocalCount})',
+                label: context.l10n.photoListUpload(state.selectedLocalCount),
                 onPressed: () => _handleUploadSelected(context, ref, state),
                 isDark: isDark,
               ),
@@ -2488,14 +2488,14 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
             if (hasRemoteSelected)
               _buildActionButton(
                 icon: Icons.download_rounded,
-                label: '下载 (${state.selectedRemoteCount})',
+                label: context.l10n.photoListDownload(state.selectedRemoteCount),
                 onPressed: () => _handleDownloadSelected(context, ref, state),
                 isDark: isDark,
               ),
             // 删除按钮
             _buildActionButton(
               icon: Icons.delete_outline_rounded,
-              label: '删除',
+              label: context.l10n.photoListDelete,
               onPressed: () => _handleDeleteSelected(context, ref, state),
               isDark: isDark,
               isDestructive: true,
@@ -2551,7 +2551,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     final target = await TargetPickerSheet.show(
       context,
       mediaType: MediaType.photo,
-      title: '选择上传目标',
+      title: context.l10n.photoListSelectUploadTarget,
     );
 
     if (target == null || !context.mounted) return;
@@ -2579,10 +2579,10 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('已添加 $addedCount 个上传任务'),
+          content: Text(context.l10n.photoListUploadTasksAdded(addedCount)),
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
-            label: '查看',
+            label: context.l10n.photoListView,
             onPressed: () => showTransferUploads(context),
           ),
         ),
@@ -2625,10 +2625,10 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('已添加 $addedCount 个下载任务'),
+          content: Text(context.l10n.photoListDownloadTasksAdded(addedCount)),
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
-            label: '查看',
+            label: context.l10n.photoListView,
             onPressed: () => showTransferDownloads(context),
           ),
         ),
@@ -2645,8 +2645,8 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
   ) async {
     final confirmed = await showDeleteConfirmDialog(
       context: context,
-      title: '删除照片',
-      content: '确定要删除选中的 ${state.selectedPaths.length} 张照片吗？\n\n此操作将同时删除源文件，无法恢复。',
+      title: context.l10n.photoListDeleteConfirmTitle,
+      content: context.l10n.photoListDeleteConfirmContent(state.selectedPaths.length),
     );
 
     if (!confirmed || !context.mounted) return;
@@ -2662,7 +2662,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('已删除 $successCount 张照片'),
+          content: Text(context.l10n.photoListPhotosDeleted(successCount)),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -2721,7 +2721,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
                           ? (state.filterMonth != null
                               ? '${state.filterYear}年${state.filterMonth}月'
                               : '${state.filterYear}年')
-                          : '按时间筛选',
+                          : context.l10n.photoListTimelineFilter,
                       style: TextStyle(
                         color: hasFilter
                             ? AppColors.primary
@@ -2765,7 +2765,7 @@ class _PhotoListPageState extends ConsumerState<PhotoListPage> {
           const SizedBox(width: 8),
           // 照片数量
           Text(
-            '${state.displayPhotos.length}张',
+            context.l10n.photoListPhotoCount(state.displayPhotos.length),
             style: TextStyle(
               fontSize: 13,
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -3111,9 +3111,9 @@ class _PhotoGridItem extends ConsumerWidget {
       case MediaFileAction.removeFromLibrary:
         final confirmed = await showDeleteConfirmDialog(
           context: context,
-          title: '从媒体库移除',
-          content: '确定要从媒体库移除「${photo.name}」吗？\n\n这只会移除索引记录，源文件不会被删除。',
-          confirmText: '移除',
+          title: context.l10n.photoListRemoveFromLibrary,
+          content: context.l10n.photoListRemoveFromLibraryConfirm(photo.name),
+          confirmText: context.l10n.photoListRemoveFromLibraryButton,
           isDestructive: false,
         );
         if (confirmed && context.mounted) {
@@ -3121,7 +3121,7 @@ class _PhotoGridItem extends ConsumerWidget {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(success ? '已从媒体库移除' : '移除失败'),
+                content: Text(success ? context.l10n.photoListRemoveFromLibrarySuccess : context.l10n.photoListRemoveFromLibraryFailed),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -3130,15 +3130,15 @@ class _PhotoGridItem extends ConsumerWidget {
       case MediaFileAction.deleteFromSource:
         final confirmed = await showDeleteConfirmDialog(
           context: context,
-          title: '删除源文件',
-          content: '确定要删除「${photo.name}」的源文件吗？\n\n⚠️ 此操作不可恢复！文件将从 NAS 中永久删除。',
+          title: context.l10n.photoListDeleteSourceTitle,
+          content: context.l10n.photoListDeleteSourceConfirm(photo.name),
         );
         if (confirmed && context.mounted) {
           final success = await ref.read(photoListProvider.notifier).deleteFromSource(photoEntity!);
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(success ? '已删除源文件' : '删除失败，请检查连接状态'),
+                content: Text(success ? context.l10n.photoListDeleteSourceSuccess : context.l10n.photoListDeleteSourceFailed),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -3158,15 +3158,15 @@ class _PhotoGridItem extends ConsumerWidget {
         await MediaInfoSheet.show(
           context: context,
           title: photo.name,
-          subtitle: '照片',
+          subtitle: context.l10n.photoListPhoto,
           entries: [
-            MediaInfoEntry(label: '文件大小', value: photo.file.displaySize),
+            MediaInfoEntry(label: context.l10n.photoListFileSize, value: photo.file.displaySize),
             MediaInfoEntry(
-              label: '修改时间',
+              label: context.l10n.photoListModifiedTime,
               value: photo.modifiedTime?.toLocal().toString() ?? '',
             ),
-            MediaInfoEntry(label: '来源 ID', value: photo.sourceId, copyable: true),
-            MediaInfoEntry(label: '路径', value: photo.path, copyable: true),
+            MediaInfoEntry(label: context.l10n.photoListSourceId, value: photo.sourceId, copyable: true),
+            MediaInfoEntry(label: context.l10n.photoListPath, value: photo.path, copyable: true),
           ],
         );
       case MediaFileAction.download:
@@ -3231,7 +3231,7 @@ class _PhotoGridItem extends ConsumerWidget {
     if (!context.mounted) return;
     if (result.isFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.photoShareFailed(result.error ?? '未知原因'))),
+        SnackBar(content: Text(l.photoShareFailed(result.error ?? context.l10n.photoListUnknownReason))),
       );
     }
   }

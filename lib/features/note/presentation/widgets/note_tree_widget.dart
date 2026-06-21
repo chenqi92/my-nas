@@ -87,7 +87,7 @@ class NoteTreeWidget extends StatelessWidget {
     if (nodes.isEmpty) {
       return Center(
         child: Text(
-          '无笔记文件',
+          context.l10n.noteTreeEmptyMessage,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurfaceVariant : Colors.grey,
           ),
@@ -227,9 +227,9 @@ class _NoteTreeItem extends StatelessWidget {
                     color: AppColors.warning.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text(
-                    'Task',
-                    style: TextStyle(
+                  child: Text(
+                    context.l10n.noteTreeTaskLabel,
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: AppColors.warning,

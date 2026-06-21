@@ -57,10 +57,10 @@ class _HostsMappingPageState extends State<HostsMappingPage>
       appBar: AppBar(
         leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
-        title: const Text('Hosts 映射', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(context.l10n.hostsMappingPageTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            tooltip: '添加映射',
+            tooltip: context.l10n.hostsMappingAddButton,
             icon: const Icon(Icons.add_rounded),
             onPressed: () => _showEditSheet(null),
           ),
@@ -70,11 +70,11 @@ class _HostsMappingPageState extends State<HostsMappingPage>
           ? _buildDesktopBody(context)
           : Column(
               children: [
-                _buildHeader(isDark),
+                _buildHeader(context, isDark),
                 _buildDohBar(isDark),
                 Expanded(
                   child: _entries.isEmpty
-                      ? _buildEmpty(isDark)
+                      ? _buildEmpty(context, isDark)
                       : _buildList(isDark),
                 ),
               ],
@@ -96,11 +96,11 @@ class _HostsMappingPageState extends State<HostsMappingPage>
             children: [
               SetHead(
                 icon: Icons.dns_rounded,
-                title: '主机映射',
-                subtitle: '自定义域名到 IP 的解析（DoH / 手动），用于直连内网或加速。',
+                title: context.l10n.hostsMappingDesktopTitle,
+                subtitle: context.l10n.hostsMappingDesktopSubtitle,
                 actions: [
                   AppButton(
-                    label: '添加映射',
+                    label: context.l10n.hostsMappingAddButton,
                     icon: Icons.add_rounded,
                     variant: AppButtonVariant.primary,
                     onPressed: () => _showEditSheet(null),
@@ -108,11 +108,11 @@ class _HostsMappingPageState extends State<HostsMappingPage>
                 ],
               ),
               SetSection(
-                title: 'DoH 解析',
+                title: context.l10n.hostsMappingDohSection,
                 children: [
                   SetRow(
-                    title: 'DoH 提供商',
-                    desc: '通过加密 DNS 解析常用域名，绕过本地 DNS 污染。',
+                    title: context.l10n.hostsMappingDohProvider,
+                    desc: context.l10n.hostsMappingDohProviderDesc,
                     last: true,
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -120,7 +120,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
                         _buildDohDropdown(t),
                         const SizedBox(width: 12),
                         AppButton(
-                          label: _isResolving ? '解析中…' : '一键解析常用域名',
+                          label: _isResolving ? context.l10n.hostsMappingResolving : context.l10n.hostsMappingResolveAll,
                           icon: _isResolving ? null : Icons.cloud_download_rounded,
                           onPressed: _isResolving ? null : _resolveAllViaDoh,
                         ),
@@ -131,20 +131,20 @@ class _HostsMappingPageState extends State<HostsMappingPage>
               ),
               if (_entries.isEmpty)
                 SetSection(
-                  title: '映射条目',
+                  title: context.l10n.hostsMappingEntriesSection,
                   bottomMargin: false,
-                  children: const [
+                  children: [
                     SetRow(
-                      title: '暂无映射',
-                      desc: '点右上角「添加映射」手动添加，或用上方 DoH 自动解析。',
+                      title: context.l10n.hostsMappingEmpty,
+                      desc: context.l10n.hostsMappingEmptyDesc,
                       last: true,
                     ),
                   ],
                 )
               else
                 SetSection(
-                  title: '映射条目',
-                  hint: '${_entries.length} 条',
+                  title: context.l10n.hostsMappingEntriesSection,
+                  hint: '${_entries.length} ${context.l10n.hostsMappingEntriesSection}',
                   bottomMargin: false,
                   children: [
                     for (var i = 0; i < _entries.length; i++)
@@ -192,7 +192,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
 
   Widget _buildDesktopEntryRow(HostMappingEntry entry, {required bool last}) {
     final t = DesignTokens.of(context);
-    final sourceLabel = entry.source == HostMappingSource.doh ? 'DoH' : '手动';
+    final sourceLabel = entry.source == HostMappingSource.doh ? 'DoH' : context.l10n.hostsMappingSourceManual;
     return SetRow(
       title: entry.host,
       desc: entry.ip,
@@ -209,13 +209,13 @@ class _HostsMappingPageState extends State<HostsMappingPage>
           ),
           const SizedBox(width: 6),
           IconButton(
-            tooltip: '编辑',
+            tooltip: context.l10n.hostsMappingEditTooltip,
             icon: Icon(Icons.edit_outlined, size: 18, color: t.text2),
             visualDensity: VisualDensity.compact,
             onPressed: () => _showEditSheet(entry),
           ),
           IconButton(
-            tooltip: '删除',
+            tooltip: context.l10n.hostsMappingDeleteTooltip,
             icon: Icon(Icons.delete_outline_rounded, size: 18, color: t.text2),
             visualDensity: VisualDensity.compact,
             onPressed: () => _confirmDelete(entry),
@@ -225,7 +225,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
     );
   }
 
-  Widget _buildHeader(bool isDark) => Container(
+  Widget _buildHeader(BuildContext context, bool isDark) => Container(
         width: double.infinity,
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         padding: const EdgeInsets.all(12),
@@ -241,8 +241,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                '应用内 hosts 表，类似系统 /etc/hosts 但只影响 MyNAS 内部网络请求。 '
-                'HTTPS 仍按原域名做 SNI 与证书校验，不会破坏证书。',
+                context.l10n.hostsMappingInfoText,
                 style: TextStyle(
                   fontSize: 12,
                   height: 1.5,
@@ -297,7 +296,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.cloud_download_rounded, size: 16),
-              label: Text(_isResolving ? '解析中...' : '一键解析常用域名'),
+              label: Text(_isResolving ? context.l10n.hostsMappingResolving : context.l10n.hostsMappingResolveAll),
               style: FilledButton.styleFrom(
                 visualDensity: VisualDensity.compact,
               ),
@@ -306,7 +305,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
         ),
       );
 
-  Widget _buildEmpty(bool isDark) => Center(
+  Widget _buildEmpty(BuildContext context, bool isDark) => Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -317,7 +316,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无映射',
+              context.l10n.hostsMappingEmpty,
               style: TextStyle(
                 fontSize: 16,
                 color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -325,7 +324,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
             ),
             const SizedBox(height: 8),
             Text(
-              '点右上角 + 手动添加，或用上方 DoH 自动解析',
+              context.l10n.hostsMappingEmptyMobileDesc,
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? Colors.grey[600] : Colors.grey[500],
@@ -365,17 +364,17 @@ class _HostsMappingPageState extends State<HostsMappingPage>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除映射'),
-        content: Text('确定删除 ${entry.host} 的映射吗？'),
+        title: Text(context.l10n.hostsMappingDeleteConfirmTitle),
+        content: Text(context.l10n.hostsMappingDeleteConfirmContent(entry.host)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.hostsMappingCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(context.l10n.hostsMappingDelete),
           ),
         ],
       ),
@@ -394,7 +393,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
       );
       if (results.isEmpty) {
         if (!mounted) return;
-        context.showErrorToast('DoH 解析失败，请检查网络');
+        context.showErrorToast(context.l10n.hostsMappingDohResolveFailed);
         return;
       }
       final now = DateTime.now();
@@ -408,7 +407,7 @@ class _HostsMappingPageState extends State<HostsMappingPage>
       );
       await HostsResolverService.instance.upsertBatch(entries);
       if (!mounted) return;
-      context.showSuccessToast('已解析 ${results.length} 个域名');
+      context.showSuccessToast(context.l10n.hostsMappingResolveSuccess(results.length));
     } on Exception catch (e, st) {
       if (!mounted) return;
       AppError.handleWithUI(context, e, st, 'DoH 解析失败', 'HostsMappingPage.resolveAll');
@@ -438,7 +437,7 @@ class _HostMappingTile extends StatelessWidget {
     final sourceColor = entry.source == HostMappingSource.doh
         ? AppColors.accent
         : AppColors.info;
-    final sourceLabel = entry.source == HostMappingSource.doh ? 'DoH' : '手动';
+    final sourceLabel = entry.source == HostMappingSource.doh ? 'DoH' : context.l10n.hostsMappingSourceManual;
 
     return Material(
       color: isDark ? AppColors.darkSurfaceElevated : Colors.white,
@@ -490,7 +489,7 @@ class _HostMappingTile extends StatelessWidget {
                 ),
               ),
               IconButton(
-                tooltip: '删除',
+                tooltip: context.l10n.hostsMappingDeleteTooltip,
                 icon: const Icon(Icons.delete_outline_rounded, size: 20),
                 onPressed: onDelete,
                 visualDensity: VisualDensity.compact,
@@ -556,17 +555,17 @@ class _HostMappingEditSheetState extends State<_HostMappingEditSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isNew ? '添加映射' : '编辑映射',
+                  isNew ? context.l10n.hostsMappingEditSheetAddTitle : context.l10n.hostsMappingEditSheetEditTitle,
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _hostCtrl,
                   enabled: isNew, // 编辑时不允许改 host（host 是主键）
-                  decoration: const InputDecoration(
-                    labelText: '域名',
-                    hintText: '例如 api.themoviedb.org',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.hostsMappingDomainLabel,
+                    hintText: context.l10n.hostsMappingDomainHint,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -576,10 +575,10 @@ class _HostMappingEditSheetState extends State<_HostMappingEditSheet> {
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9a-fA-F\.:]')),
                   ],
-                  decoration: const InputDecoration(
-                    labelText: 'IP 地址',
-                    hintText: 'IPv4 / IPv6，例如 18.165.83.6',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.hostsMappingIpLabel,
+                    hintText: context.l10n.hostsMappingIpHint,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -588,14 +587,14 @@ class _HostMappingEditSheetState extends State<_HostMappingEditSheet> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('取消'),
+                        child: Text(context.l10n.hostsMappingCancel),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: FilledButton(
                         onPressed: _handleSave,
-                        child: const Text('保存'),
+                        child: Text(context.l10n.hostsMappingSave),
                       ),
                     ),
                   ],
@@ -620,7 +619,7 @@ class _HostMappingEditSheetState extends State<_HostMappingEditSheet> {
     }
     if (!_isValidIp(ip)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('IP 格式不合法'), behavior: SnackBarBehavior.floating),
+        SnackBar(content: Text(context.l10n.hostsMappingInvalidIp), behavior: SnackBarBehavior.floating),
       );
       return;
     }

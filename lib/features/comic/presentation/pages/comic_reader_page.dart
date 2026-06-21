@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/comic/data/services/archive_extract_service.dart';
@@ -350,7 +351,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
               child: Row(
                 children: [
                   Text(
-                    '页面列表',
+                    context.l10n.comicReaderPageListTitle,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -463,7 +464,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
   void _showSettingsSheet() {
     showReaderSettingsSheet(
       context,
-      title: '漫画设置',
+      title: context.l10n.comicReaderSettingsTitle,
       icon: Icons.menu_book_rounded,
       iconColor: AppColors.secondary,
       contentBuilder: (context) => Consumer(
@@ -558,18 +559,18 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
   void _showKeyboardHelp() {
     KeyboardShortcutsHelpDialog.show(
       context,
-      title: '漫画阅读快捷键',
+      title: context.l10n.comicReaderKeyboardHelpTitle,
       shortcuts: [
-        (key: '←', description: '上一页'),
-        (key: '→', description: '下一页'),
-        (key: 'Page Up', description: '上一页'),
-        (key: 'Page Down', description: '下一页'),
-        (key: 'Home', description: '第一页'),
-        (key: 'End', description: '最后一页'),
-        (key: 'Space', description: '显示/隐藏控制栏'),
-        (key: ',', description: '打开设置'),
-        (key: 'Esc', description: '返回'),
-        (key: '?', description: '显示此帮助'),
+        (key: '←', description: context.l10n.comicReaderPreviousPage),
+        (key: '→', description: context.l10n.comicReaderNextPage),
+        (key: 'Page Up', description: context.l10n.comicReaderPreviousPage),
+        (key: 'Page Down', description: context.l10n.comicReaderNextPage),
+        (key: 'Home', description: context.l10n.comicReaderFirstPage),
+        (key: 'End', description: context.l10n.comicReaderLastPage),
+        (key: 'Space', description: context.l10n.comicReaderToggleControls),
+        (key: ',', description: context.l10n.comicReaderOpenSettings),
+        (key: 'Esc', description: context.l10n.comicReaderBack),
+        (key: '?', description: context.l10n.comicReaderShowHelp),
       ],
     );
   }
@@ -708,7 +709,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('返回'),
+              child: Text(context.l10n.comicReaderBack),
             ),
           ],
         ),
@@ -716,10 +717,10 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
     }
 
     if (state.pages.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          '没有找到图片',
-          style: TextStyle(color: Colors.white70),
+          context.l10n.comicReaderNoImagesFound,
+          style: const TextStyle(color: Colors.white70),
         ),
       );
     }
@@ -1273,7 +1274,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                             }
                           }
                         : null,
-                    tooltip: '上一页',
+                    tooltip: context.l10n.comicReaderPreviousPage,
                   ),
                   IconButton(
                     icon: const Icon(Icons.first_page, color: Colors.white),
@@ -1281,12 +1282,12 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                       notifier.goToPage(0);
                       _pageController?.jumpToPage(0);
                     },
-                    tooltip: '第一页',
+                    tooltip: context.l10n.comicReaderFirstPage,
                   ),
                   IconButton(
                     icon: const Icon(Icons.settings_outlined, color: Colors.white),
                     onPressed: _showSettingsSheet,
-                    tooltip: '设置',
+                    tooltip: context.l10n.comicReaderSettings,
                   ),
                   IconButton(
                     icon: const Icon(Icons.last_page, color: Colors.white),
@@ -1299,7 +1300,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                             : lastPage,
                       );
                     },
-                    tooltip: '最后一页',
+                    tooltip: context.l10n.comicReaderLastPage,
                   ),
                   IconButton(
                     icon: Icon(
@@ -1316,7 +1317,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                             }
                           }
                         : null,
-                    tooltip: '下一页',
+                    tooltip: context.l10n.comicReaderNextPage,
                   ),
                 ],
               ),
@@ -1331,31 +1332,31 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
     final settingsNotifier = ref.read(comicReaderSettingsProvider.notifier);
 
     // 阅读模式选项
-    const readingModes = [
-      (icon: Icons.crop_portrait, label: '单页'),
-      (icon: Icons.menu_book, label: '双页'),
-      (icon: Icons.view_day, label: '长条'),
+    final readingModes = [
+      (icon: Icons.crop_portrait, label: context.l10n.comicReaderSinglePage),
+      (icon: Icons.menu_book, label: context.l10n.comicReaderDoublePage),
+      (icon: Icons.view_day, label: context.l10n.comicReaderWebtoon),
     ];
 
     // 阅读方向选项
-    const readingDirections = [
-      (icon: Icons.arrow_forward, label: '从左到右'),
-      (icon: Icons.arrow_back_rounded, label: '从右到左'),
+    final readingDirections = [
+      (icon: Icons.arrow_forward, label: context.l10n.comicReaderLeftToRight),
+      (icon: Icons.arrow_back_rounded, label: context.l10n.comicReaderRightToLeft),
     ];
 
     // 缩放模式选项
-    const scaleModes = [
-      (icon: Icons.width_normal, label: '适应宽度'),
-      (icon: Icons.height, label: '适应高度'),
-      (icon: Icons.fit_screen, label: '适应屏幕'),
-      (icon: Icons.crop_original, label: '原始大小'),
+    final scaleModes = [
+      (icon: Icons.width_normal, label: context.l10n.comicReaderFitWidth),
+      (icon: Icons.height, label: context.l10n.comicReaderFitHeight),
+      (icon: Icons.fit_screen, label: context.l10n.comicReaderFitScreen),
+      (icon: Icons.crop_original, label: context.l10n.comicReaderOriginalSize),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 阅读模式 - 横向滑动
-        const SettingSectionTitle(title: '阅读模式'),
+        SettingSectionTitle(title: context.l10n.comicReaderReadingMode),
         SettingPageTurnModePicker(
           modes: readingModes,
           selectedIndex: settings.readingMode.index,
@@ -1367,7 +1368,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         const SizedBox(height: 24),
 
         // 阅读方向 - 横向滑动
-        const SettingSectionTitle(title: '阅读方向'),
+        SettingSectionTitle(title: context.l10n.comicReaderReadingDirection),
         SettingPageTurnModePicker(
           modes: readingDirections,
           selectedIndex: settings.readingDirection.index,
@@ -1376,7 +1377,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         const SizedBox(height: 24),
 
         // 缩放模式 - 横向滑动
-        const SettingSectionTitle(title: '缩放模式'),
+        SettingSectionTitle(title: context.l10n.comicReaderScaleMode),
         SettingPageTurnModePicker(
           modes: scaleModes,
           selectedIndex: settings.scaleMode.index,
@@ -1385,7 +1386,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         const SizedBox(height: 24),
 
         // 背景颜色
-        const SettingSectionTitle(title: '背景颜色'),
+        SettingSectionTitle(title: context.l10n.comicReaderBackgroundColor),
         SettingColorPicker(
           colors: ComicBackgroundColor.values.map((c) => c.color).toList(),
           selectedIndex: ComicBackgroundColor.values.indexOf(settings.backgroundColor),
@@ -1407,14 +1408,14 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         ],
 
         // 开关选项
-        const SettingSectionTitle(title: '其他设置'),
+        SettingSectionTitle(title: context.l10n.comicReaderOtherSettings),
         SettingSwitchRow(
-          title: '显示页码',
+          title: context.l10n.comicReaderShowPageNumber,
           value: settings.showPageNumber,
           onChanged: (value) => settingsNotifier.setShowPageNumber(value: value),
         ),
         SettingSwitchRow(
-          title: '屏幕常亮',
+          title: context.l10n.comicReaderKeepScreenOn,
           value: settings.keepScreenOn,
           onChanged: (value) async {
             settingsNotifier.setKeepScreenOn(value: value);
@@ -1426,8 +1427,8 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
           },
         ),
         SettingSwitchRow(
-          title: '点击翻页',
-          subtitle: '左侧上翻，右侧下翻',
+          title: context.l10n.comicReaderTapToTurn,
+          subtitle: context.l10n.comicReaderTapToTurnDescription,
           value: settings.tapToTurn,
           onChanged: (value) => settingsNotifier.setTapToTurn(value: value),
         ),

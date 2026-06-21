@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
@@ -166,7 +167,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('收藏操作失败: $e'),
+            content: Text(context.l10n.photoViewerFavoriteToggleFailed(e)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -444,7 +445,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
         ),
         const SizedBox(height: 16),
         Text(
-          '加载失败',
+          context.l10n.photoViewerLoadFailed,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.7),
             fontSize: 16,
@@ -468,7 +469,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
             setState(() {});
           },
           icon: const Icon(Icons.refresh_rounded, color: Colors.white70),
-          label: const Text('重试', style: TextStyle(color: Colors.white70)),
+          label: Text(context.l10n.photoViewerRetry, style: const TextStyle(color: Colors.white70)),
         ),
       ],
     );
@@ -501,17 +502,17 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
   void _showKeyboardHelp() {
     KeyboardShortcutsHelpDialog.show(
       context,
-      title: '照片查看快捷键',
+      title: context.l10n.photoViewerKeyboardHelpTitle,
       shortcuts: [
-        (key: '←', description: '上一张'),
-        (key: '→', description: '下一张'),
-        (key: 'Home', description: '第一张'),
-        (key: 'End', description: '最后一张'),
-        (key: 'Space', description: '显示/隐藏控制栏'),
-        (key: 'L', description: '收藏/取消收藏'),
-        (key: 'I', description: '显示照片信息'),
-        (key: 'Esc', description: '返回'),
-        (key: '?', description: '显示此帮助'),
+        (key: '←', description: context.l10n.photoViewerKeyboardPrevious),
+        (key: '→', description: context.l10n.photoViewerKeyboardNext),
+        (key: 'Home', description: context.l10n.photoViewerKeyboardFirst),
+        (key: 'End', description: context.l10n.photoViewerKeyboardLast),
+        (key: 'Space', description: context.l10n.photoViewerKeyboardToggleControls),
+        (key: 'L', description: context.l10n.photoViewerKeyboardToggleFavorite),
+        (key: 'I', description: context.l10n.photoViewerKeyboardInfo),
+        (key: 'Esc', description: context.l10n.photoViewerKeyboardExit),
+        (key: '?', description: context.l10n.photoViewerKeyboardHelp),
       ],
     );
   }
@@ -725,7 +726,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   size: 32,
                 ),
                 onPressed: () => Navigator.of(context).pop(),
-                tooltip: '返回',
+                tooltip: context.l10n.photoViewerTooltipBack,
               ),
               // 页码指示器（居中显示）
               Expanded(
@@ -829,7 +830,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   // 详细信息
                   _ActionButton(
                     icon: Icons.info_outline,
-                    label: '信息',
+                    label: context.l10n.photoViewerActionInfo,
                     onTap: () {
                       _startAutoHideTimer();
                       _showPhotoInfo(context, photo);
@@ -838,7 +839,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   // 收藏
                   _ActionButton(
                     icon: _isFavorite ? Icons.favorite_rounded : Icons.favorite_border,
-                    label: _isFavorite ? '已收藏' : '收藏',
+                    label: _isFavorite ? context.l10n.photoViewerActionFavorited : context.l10n.photoViewerActionFavorite,
                     onTap: _isTogglingFavorite
                         ? null
                         : () {
@@ -849,7 +850,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   // 下载（所有平台都支持，桌面端用文件选择器，移动端保存到相册）
                   _ActionButton(
                     icon: Icons.download_outlined,
-                    label: PlatformCapabilities.isMobile ? '保存' : '下载',
+                    label: PlatformCapabilities.isMobile ? context.l10n.photoViewerActionSave : context.l10n.photoViewerActionDownload,
                     onTap: () {
                       _startAutoHideTimer();
                       _downloadPhoto(context, photo);
@@ -859,7 +860,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   if (PlatformCapabilities.canShare)
                     _ActionButton(
                       icon: Icons.share_outlined,
-                      label: '分享',
+                      label: context.l10n.photoViewerActionShare,
                       onTap: () {
                         _startAutoHideTimer();
                         _sharePhoto(context, photo);
@@ -868,7 +869,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   // 删除
                   _ActionButton(
                     icon: Icons.delete_outline,
-                    label: '删除',
+                    label: context.l10n.photoViewerActionDelete,
                     onTap: () {
                       _startAutoHideTimer();
                       _confirmDelete(context, photo);
@@ -900,9 +901,9 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                 children: [
                   const Icon(Icons.info_outline, color: Colors.white),
                   const SizedBox(width: 12),
-                  const Text(
-                    '照片信息',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.photoViewerInfoTitle,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -916,29 +917,29 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                 ],
               ),
               const SizedBox(height: 16),
-              _InfoRow(label: '文件名', value: photo.name),
-              _InfoRow(label: '路径', value: photo.path),
+              _InfoRow(label: context.l10n.photoViewerInfoFileName, value: photo.name),
+              _InfoRow(label: context.l10n.photoViewerInfoPath, value: photo.path),
               if (photo.size > 0)
-                _InfoRow(label: '大小', value: photo.displaySize),
+                _InfoRow(label: context.l10n.photoViewerInfoSize, value: photo.displaySize),
               if (photo.displayResolution != null)
-                _InfoRow(label: '分辨率', value: photo.displayResolution!),
+                _InfoRow(label: context.l10n.photoViewerInfoResolution, value: photo.displayResolution!),
               if (photo.isLivePhoto)
-                _InfoRow(label: '类型', value: 'Live Photo（长按播放）'),
+                _InfoRow(label: context.l10n.photoViewerInfoType, value: context.l10n.photoViewerInfoTypeLivePhoto),
               if (photo.modifiedAt != null)
                 _InfoRow(
-                  label: '修改时间',
+                  label: context.l10n.photoViewerInfoModifiedTime,
                   value: DateFormat('yyyy-MM-dd HH:mm:ss').format(photo.modifiedAt!),
                 ),
               if (photo.takenAt != null)
                 _InfoRow(
-                  label: '拍摄时间',
+                  label: context.l10n.photoViewerInfoTakenTime,
                   value: DateFormat('yyyy-MM-dd HH:mm:ss').format(photo.takenAt!),
                 ),
               if (photo.cameraInfo != null)
-                _InfoRow(label: '相机', value: photo.cameraInfo!),
+                _InfoRow(label: context.l10n.photoViewerInfoCamera, value: photo.cameraInfo!),
               if (photo.hasLocation)
                 _InfoRow(
-                  label: '位置',
+                  label: context.l10n.photoViewerInfoLocation,
                   value: '${photo.latitude?.toStringAsFixed(6)}, ${photo.longitude?.toStringAsFixed(6)}',
                 ),
             ],
@@ -954,7 +955,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
     // 获取当前照片的 URL
     final url = _loadedUrls[photo.path] ?? photo.url;
     if (url.isEmpty) {
-      _showErrorSnackBar(context, '无法获取照片地址');
+      _showErrorSnackBar(context, context.l10n.photoViewerDownloadNoUrl);
       return;
     }
 
@@ -967,7 +968,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       final hasPermission = await saveService.requestGalleryPermission();
       if (!hasPermission) {
         if (!context.mounted) return;
-        _showErrorSnackBar(context, '需要相册访问权限才能保存照片');
+        _showErrorSnackBar(context, context.l10n.photoViewerDownloadNoPermission);
         return;
       }
     }
@@ -1031,8 +1032,8 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   valueListenable: progressNotifier,
                   builder: (context, progress, _) => Text(
                     progress > 0
-                        ? (saveService.isMobile ? '正在保存到相册...' : '正在下载...')
-                        : '正在连接...',
+                        ? (saveService.isMobile ? context.l10n.photoViewerDownloadingSaving : context.l10n.photoViewerDownloadingProgress)
+                        : context.l10n.photoViewerDownloadConnecting,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 14,
@@ -1045,7 +1046,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () {
-                      cancelToken.cancel('用户取消');
+                      cancelToken.cancel(context.l10n.photoViewerDownloadCancel);
                       if (isDialogOpen) {
                         isDialogOpen = false;
                         Navigator.of(dialogContext).pop();
@@ -1059,7 +1060,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text('取消'),
+                    child: Text(context.l10n.photoViewerDownloadCancel),
                   ),
                 ),
               ],
@@ -1105,7 +1106,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
     final url = _loadedUrls[photo.path] ?? photo.url;
 
     if (url.isEmpty) {
-      _showErrorSnackBar(context, '无法获取照片地址');
+      _showErrorSnackBar(context, context.l10n.photoViewerShareNoUrl);
       return;
     }
 
@@ -1115,7 +1116,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
     // 检查分享功能是否可用
     final saveService = PhotoSaveService();
     if (!saveService.canShare) {
-      _showErrorSnackBar(context, '当前平台不支持分享功能');
+      _showErrorSnackBar(context, context.l10n.photoViewerShareNotSupported);
       return;
     }
 
@@ -1197,7 +1198,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   ValueListenableBuilder<double>(
                     valueListenable: progressNotifier,
                     builder: (context, progress, _) => Text(
-                      progress > 0 ? '正在准备分享...' : '正在连接...',
+                      progress > 0 ? context.l10n.photoViewerSharePreparing : context.l10n.photoViewerShareConnecting,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
@@ -1210,7 +1211,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                     width: double.infinity,
                     child: OutlinedButton(
                       onPressed: () {
-                        cancelToken.cancel('用户取消');
+                        cancelToken.cancel(context.l10n.photoViewerDownloadCancel);
                         if (isDialogOpen) {
                           isDialogOpen = false;
                           Navigator.of(dialogContext).pop();
@@ -1224,7 +1225,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: const Text('取消'),
+                      child: Text(context.l10n.photoViewerDownloadCancel),
                     ),
                   ),
                 ],
@@ -1259,7 +1260,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
     if (!context.mounted || result.isCancelled) return;
 
     if (result.isFailure) {
-      _showErrorSnackBar(context, result.error ?? '分享失败');
+      _showErrorSnackBar(context, result.error ?? context.l10n.photoViewerShareFailed);
     }
   }
 
@@ -1280,17 +1281,17 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
     String copyContent;
 
     if (isHttpUrl) {
-      copyTitle = '复制链接';
-      copySubtitle = '将照片链接复制到剪贴板';
+      copyTitle = context.l10n.photoViewerShareCopyLink;
+      copySubtitle = context.l10n.photoViewerShareCopyLinkSubtitle;
       copyContent = url;
     } else if (isLocalFile) {
-      copyTitle = '复制路径';
-      copySubtitle = '将文件路径复制到剪贴板';
+      copyTitle = context.l10n.photoViewerShareCopyPath;
+      copySubtitle = context.l10n.photoViewerShareCopyPathSubtitle;
       copyContent = Uri.parse(url).toFilePath();
     } else {
       // SMB/WebDAV 等
-      copyTitle = '复制路径';
-      copySubtitle = '将文件路径复制到剪贴板';
+      copyTitle = context.l10n.photoViewerShareCopyPath;
+      copySubtitle = context.l10n.photoViewerShareCopyPathSubtitle;
       copyContent = photo.path;
     }
 
@@ -1311,9 +1312,9 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                 children: [
                   const Icon(Icons.share_outlined, color: Colors.white),
                   const SizedBox(width: 12),
-                  const Text(
-                    '分享照片',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.photoViewerShareOptionsTitle,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -1335,15 +1336,15 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                 onTap: () {
                   Navigator.pop(sheetContext);
                   Clipboard.setData(ClipboardData(text: copyContent));
-                  _showSuccessSnackBar(context, '$copyTitle已复制');
+                  _showSuccessSnackBar(context, context.l10n.photoViewerShareCopied(copyTitle));
                 },
               ),
               const Divider(color: Colors.white24),
               // 分享文件
               _ShareOptionTile(
                 icon: Icons.file_present_outlined,
-                title: '分享文件',
-                subtitle: isLocalFile ? '使用系统分享功能' : '下载后使用系统分享功能',
+                title: context.l10n.photoViewerShareFile,
+                subtitle: isLocalFile ? context.l10n.photoViewerShareFileSubtitleLocal : context.l10n.photoViewerShareFileSubtitleRemote,
                 onTap: () async {
                   Navigator.pop(sheetContext);
                   await _executeSmartShare(context, photo, url, fileSystem);
@@ -1395,7 +1396,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
 
     // 检查是否可以删除
     if (fileSystem == null) {
-      _showErrorSnackBar(context, '无法获取文件系统，无法删除');
+      _showErrorSnackBar(context, context.l10n.photoViewerDeleteNoFileSystem);
       return;
     }
 
@@ -1403,23 +1404,23 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text(
-          '删除照片',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          context.l10n.photoViewerDeleteConfirmTitle,
+          style: const TextStyle(color: Colors.white),
         ),
         content: Text(
-          '确定要删除 "${photo.name}" 吗？\n此操作不可恢复。',
+          context.l10n.photoViewerDeleteConfirmContent(photo.name),
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('取消'),
+            child: Text(context.l10n.photoViewerDeleteCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(context.l10n.photoViewerDeleteConfirm),
           ),
         ],
       ),
@@ -1489,7 +1490,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       }
 
       // 显示成功消息
-      _showSuccessSnackBar(context, '照片已删除');
+      _showSuccessSnackBar(context, context.l10n.photoViewerDeletedSuccess);
 
       // 从列表中移除并更新视图
       setState(() {
@@ -1510,7 +1511,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       }
 
       if (!context.mounted) return;
-      _showErrorSnackBar(context, '删除失败: $e');
+      _showErrorSnackBar(context, context.l10n.photoViewerDeleteFailed(e));
     }
   }
 }

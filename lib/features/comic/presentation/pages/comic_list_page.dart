@@ -808,7 +808,7 @@ class _ComicListContentState extends ConsumerState<ComicListContent> {
             ),
             const SizedBox(height: 24),
             Text(
-              '漫画库为空',
+              context.l10n.comicListEmptyTitle,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : null,
@@ -816,7 +816,7 @@ class _ComicListContentState extends ConsumerState<ComicListContent> {
             ),
             const SizedBox(height: 12),
             Text(
-              '请在媒体库设置中配置漫画目录并扫描',
+              context.l10n.comicListEmptySubtitle,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark ? Colors.grey[400] : Colors.grey,
               ),
@@ -855,7 +855,7 @@ class _ComicListContentState extends ConsumerState<ComicListContent> {
                 MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
               ),
               icon: const Icon(Icons.folder_open_rounded),
-              label: const Text('媒体库设置'),
+              label: Text(context.l10n.comicListEmptyMediaLibraryButton),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -869,7 +869,7 @@ class _ComicListContentState extends ConsumerState<ComicListContent> {
                 MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
               ),
               icon: const Icon(Icons.cloud_rounded),
-              label: const Text('连接管理'),
+              label: Text(context.l10n.comicListEmptyConnectionButton),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,
               ),
@@ -900,7 +900,7 @@ class _ComicListContentState extends ConsumerState<ComicListContent> {
           ),
           const SizedBox(height: 24),
           Text(
-            fromCache ? '加载缓存...' : '扫描漫画中...',
+            fromCache ? context.l10n.comicListLoadingFromCache : context.l10n.comicListLoadingScanning,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -1014,7 +1014,7 @@ class _ComicCard extends ConsumerWidget {
                                 ? comic.displaySize.isNotEmpty
                                     ? comic.displaySize
                                     : comic.type.name.toUpperCase()
-                                : '${comic.pageCount} 页',
+                                : context.l10n.comicListPageCountFormat(comic.pageCount),
                             style: TextStyle(
                               fontSize: 10,
                               color: isDark ? AppColors.darkOnSurfaceVariant : Colors.grey[600],
@@ -1094,9 +1094,9 @@ class _ComicCard extends ConsumerWidget {
       case MediaFileAction.removeFromLibrary:
         final confirmed = await showDeleteConfirmDialog(
           context: context,
-          title: '从媒体库移除',
-          content: '确定要将"${comic.folderName}"从媒体库中移除吗？这只会删除缓存数据，不会影响源文件。',
-          confirmText: '移除',
+          title: context.l10n.comicListRemoveFromLibraryTitle,
+          content: context.l10n.comicListRemoveFromLibraryContent(comic.folderName),
+          confirmText: context.l10n.comicListRemoveFromLibraryConfirm,
           isDestructive: false,
         );
         if (confirmed && context.mounted) {
@@ -1109,8 +1109,8 @@ class _ComicCard extends ConsumerWidget {
       case MediaFileAction.deleteFromSource:
         final confirmed = await showDeleteConfirmDialog(
           context: context,
-          title: '删除源文件',
-          content: '确定要删除"${comic.folderName}"吗？此操作将同时删除源文件，无法恢复！',
+          title: context.l10n.comicListDeleteFromSourceTitle,
+          content: context.l10n.comicListDeleteFromSourceContent(comic.folderName),
         );
         if (confirmed && context.mounted) {
           await ref.read(comicListProvider.notifier).deleteFromSource(
@@ -1133,19 +1133,19 @@ class _ComicCard extends ConsumerWidget {
         await MediaInfoSheet.show(
           context: context,
           title: comic.folderName,
-          subtitle: '漫画 · ${comic.type.name.toUpperCase()}',
+          subtitle: context.l10n.comicListInfoSubtitleFormat(comic.type.name.toUpperCase()),
           entries: [
             MediaInfoEntry(
-              label: '页数',
-              value: comic.pageCount > 0 ? '${comic.pageCount} 页' : '',
+              label: context.l10n.comicListInfoLabelPageCount,
+              value: comic.pageCount > 0 ? context.l10n.comicListPageCountFormat(comic.pageCount) : '',
             ),
-            MediaInfoEntry(label: '文件大小', value: comic.displaySize),
+            MediaInfoEntry(label: context.l10n.comicListInfoLabelFileSize, value: comic.displaySize),
             MediaInfoEntry(
-              label: '修改时间',
+              label: context.l10n.comicListInfoLabelModifiedTime,
               value: comic.modifiedTime?.toLocal().toString() ?? '',
             ),
-            MediaInfoEntry(label: '来源 ID', value: comic.sourceId, copyable: true),
-            MediaInfoEntry(label: '路径', value: comic.folderPath, copyable: true),
+            MediaInfoEntry(label: context.l10n.comicListInfoLabelSourceId, value: comic.sourceId, copyable: true),
+            MediaInfoEntry(label: context.l10n.comicListInfoLabelPath, value: comic.folderPath, copyable: true),
           ],
         );
       case MediaFileAction.download:
@@ -1159,7 +1159,7 @@ class _ComicCard extends ConsumerWidget {
     final connection = connections[comic.sourceId];
     if (connection == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+        SnackBar(content: Text(context.l10n.comicListNotConnectedError)),
       );
       return;
     }
@@ -1178,7 +1178,7 @@ class _ComicCard extends ConsumerWidget {
     if (!context.mounted) return;
     if (result.isFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('分享失败：${result.error ?? "未知原因"}')),
+        SnackBar(content: Text(context.l10n.comicListShareFailedWithError(result.error ?? context.l10n.comicListShareFailedUnknownReason))),
       );
     }
   }
@@ -1189,7 +1189,7 @@ class _ComicCard extends ConsumerWidget {
     final connection = connections[comic.sourceId];
     if (connection == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('未连接到对应源，请先建立连接')),
+        SnackBar(content: Text(context.l10n.comicListNotConnectedError)),
       );
       return;
     }

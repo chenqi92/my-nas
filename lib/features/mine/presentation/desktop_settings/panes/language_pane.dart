@@ -97,8 +97,8 @@ class _InterfaceLanguageControl extends ConsumerWidget {
 
     return AppSegmented<String>(
       options: [
-        const AppSegmentedOption(value: 'zh', label: '简体中文'),
-        const AppSegmentedOption(value: 'en', label: 'English'),
+        AppSegmentedOption(value: 'zh', label: l.paneLanguageOptionZh),
+        AppSegmentedOption(value: 'en', label: l.paneLanguageOptionEn),
         AppSegmentedOption(value: _system, label: l.paneLanguageFollowSystem),
       ],
       value: current,

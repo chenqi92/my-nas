@@ -45,7 +45,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
         leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
-          '外观设置',
+          context.l10n.appearanceSettingsPageTitle,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
@@ -61,7 +61,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
               padding: AppSpacing.paddingMd,
               children: [
                 // 主题模式
-                _buildSectionHeader(context, '主题模式', Icons.brightness_6_rounded, isDark),
+                _buildSectionHeader(context, context.l10n.appearanceSettingsSectionThemeMode, Icons.brightness_6_rounded, isDark),
                 const SizedBox(height: AppSpacing.sm),
                 _buildSettingsCard(
                   context,
@@ -77,7 +77,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                 const SizedBox(height: AppSpacing.xl),
 
                 // UI 风格
-                _buildSectionHeader(context, 'UI 风格', Icons.dashboard_customize_rounded, isDark),
+                _buildSectionHeader(context, context.l10n.appearanceSettingsSectionUiStyle, Icons.dashboard_customize_rounded, isDark),
                 const SizedBox(height: AppSpacing.sm),
                 _buildSettingsCard(
                   context,
@@ -93,7 +93,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                 const SizedBox(height: AppSpacing.xl),
 
                 // 配色方案
-                _buildSectionHeader(context, '配色方案', Icons.color_lens_rounded, isDark),
+                _buildSectionHeader(context, context.l10n.appearanceSettingsSectionColorScheme, Icons.color_lens_rounded, isDark),
                 const SizedBox(height: AppSpacing.sm),
                 _buildColorSchemeGrid(context, colorPreset, isDark),
 
@@ -120,31 +120,31 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SetHead(
+              SetHead(
                 icon: Icons.palette_outlined,
-                title: '外观',
-                subtitle: '主题、配色与 UI 风格。Glass / Classic 为实时全局开关。',
+                title: context.l10n.appearanceSettingsDesktopTitle,
+                subtitle: context.l10n.appearanceSettingsDesktopSubtitle,
               ),
               SetSection(
-                title: '主题与配色',
+                title: context.l10n.appearanceSettingsThemeSectionTitle,
                 hint: 'theme_mode · color_scheme_preset',
                 children: [
                   SetRow(
-                    title: '主题模式',
-                    desc: '浅色 / 深色 / 跟随系统',
+                    title: context.l10n.appearanceSettingsThemeModeTitle,
+                    desc: context.l10n.appearanceSettingsThemeModeDesc,
                     trailing: AppSegmented<ThemeMode>(
                       value: themeMode,
                       onChanged: ref.read(themeModeProvider.notifier).setThemeMode,
-                      options: const [
-                        AppSegmentedOption(value: ThemeMode.light, label: '浅色'),
-                        AppSegmentedOption(value: ThemeMode.dark, label: '深色'),
-                        AppSegmentedOption(value: ThemeMode.system, label: '系统'),
+                      options: [
+                        AppSegmentedOption(value: ThemeMode.light, label: context.l10n.appearanceSettingsThemeModeLight),
+                        AppSegmentedOption(value: ThemeMode.dark, label: context.l10n.appearanceSettingsThemeModeDark),
+                        AppSegmentedOption(value: ThemeMode.system, label: context.l10n.appearanceSettingsThemeModeSystem),
                       ],
                     ),
                   ),
                   SetRow(
-                    title: 'UI 风格',
-                    desc: '玻璃材质 / 经典卡片 — 实时切换',
+                    title: context.l10n.appearanceSettingsUiStyleTitle,
+                    desc: context.l10n.appearanceSettingsUiStyleDesc,
                     trailing: AppSegmented<UIStyle>(
                       value: uiStyle,
                       onChanged: ref.read(uiStyleProvider.notifier).setStyle,
@@ -158,8 +158,8 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                     ),
                   ),
                   SetRow(
-                    title: '强调色',
-                    desc: '预设方案，可被封面动态取色临时覆盖',
+                    title: context.l10n.appearanceSettingsAccentColorTitle,
+                    desc: context.l10n.appearanceSettingsAccentColorDesc,
                     trailing: Wrap(
                       spacing: 9,
                       runSpacing: 9,
@@ -170,8 +170,8 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                     ),
                   ),
                   SetRow(
-                    title: '动态取色氛围光',
-                    desc: '播放时外壳氛围光随封面 / 台标取色',
+                    title: context.l10n.appearanceSettingsDynamicAmbientTitle,
+                    desc: context.l10n.appearanceSettingsDynamicAmbientDesc,
                     last: true,
                     trailing: AppSwitch(
                       value: ref.watch(dynamicAmbientProvider),
@@ -195,12 +195,12 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
   Widget _buildGlassSection(DesignTokens t, UIStyle uiStyle) {
     if (!uiStyle.isGlass) {
       return SetSection(
-        title: '玻璃材质参数',
+        title: context.l10n.appearanceSettingsGlassSectionTitle,
         hint: 'glass_blur_scale · glass_opacity_scale · glass_blur_enabled',
         children: [
           SetRow(
-            title: '已停用',
-            desc: 'Classic 风格下玻璃参数已停用，切换到 Glass 风格后可调。',
+            title: context.l10n.appearanceSettingsGlassDisabledTitle,
+            desc: context.l10n.appearanceSettingsGlassDisabledDesc,
             last: true,
           ),
         ],
@@ -212,12 +212,12 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
     final blurEnabled = ref.watch(glassBlurEnabledProvider);
 
     return SetSection(
-      title: '玻璃材质参数',
+      title: context.l10n.appearanceSettingsGlassSectionTitle,
       hint: 'glass_blur_scale · glass_opacity_scale · glass_blur_enabled',
       children: [
         SetRow(
-          title: '模糊强度',
-          desc: '玻璃面板高斯模糊半径缩放（${blurScale.toStringAsFixed(2)}×）',
+          title: context.l10n.appearanceSettingsGlassBlurTitle,
+          desc: context.l10n.appearanceSettingsGlassBlurDesc(blurScale.toStringAsFixed(2)),
           trailing: _buildGlassSlider(
             t,
             value: blurScale,
@@ -227,8 +227,8 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
           ),
         ),
         SetRow(
-          title: '材质不透明度',
-          desc: '玻璃面板背景不透明度缩放（${opacityScale.toStringAsFixed(2)}×）',
+          title: context.l10n.appearanceSettingsGlassOpacityTitle,
+          desc: context.l10n.appearanceSettingsGlassOpacityDesc(opacityScale.toStringAsFixed(2)),
           trailing: _buildGlassSlider(
             t,
             value: opacityScale,
@@ -237,8 +237,8 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
           ),
         ),
         SetRow(
-          title: '平台玻璃优化',
-          desc: '关闭后玻璃面板不再做模糊，仅保留半透明材质',
+          title: context.l10n.appearanceSettingsGlassPlatformOptTitle,
+          desc: context.l10n.appearanceSettingsGlassPlatformOptDesc,
           last: true,
           trailing: AppSwitch(
             value: blurEnabled,
@@ -380,10 +380,10 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
 
   // ─── Theme Mode ──────────────────────────────────────────
 
-  String _getThemeModeText(ThemeMode mode) => switch (mode) {
-        ThemeMode.system => '跟随系统',
-        ThemeMode.light => '浅色模式',
-        ThemeMode.dark => '深色模式',
+  String _getThemeModeText(ThemeMode mode, BuildContext context) => switch (mode) {
+        ThemeMode.system => context.l10n.appearanceSettingsThemeModeSystemLabel,
+        ThemeMode.light => context.l10n.appearanceSettingsThemeModeLightLabel,
+        ThemeMode.dark => context.l10n.appearanceSettingsThemeModeDarkLabel,
       };
 
   IconData _getThemeModeIcon(ThemeMode mode) => switch (mode) {
@@ -434,7 +434,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
-                  _getThemeModeText(mode),
+                  _getThemeModeText(mode, context),
                   style: context.textTheme.bodyLarge?.copyWith(
                     color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -634,7 +634,7 @@ class _AppearanceSettingsPageState extends ConsumerState<AppearanceSettingsPage>
                         Icon(Icons.check_rounded, size: 12, color: preset.primary),
                         const SizedBox(width: 2),
                         Text(
-                          '当前',
+                          context.l10n.appearanceSettingsCurrentBadge,
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,

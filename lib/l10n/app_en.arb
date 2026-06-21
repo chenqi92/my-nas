@@ -4522,5 +4522,793 @@
   "connPageOtpHint": "6 digits",
   "connPageRememberDeviceDesc2FA": "Skip two-factor verification on next login",
   "connPageVerifyButton": "Verify",
-  "connPageBackButton": "Back"
+  "connPageBackButton": "Back",
+  "photoListCancel": "Cancel",
+  "photoListSearch": "Search",
+  "photoListMultiSelect": "Multi-select",
+  "photoListTimeline": "Timeline",
+  "photoListGrid": "Grid",
+  "photoListMore": "More",
+  "photoListDuplicates": "Duplicate Photos",
+  "photoListLibrarySettings": "Library Settings",
+  "photoListSourceManagement": "Source Management",
+  "photoListSearchPhotos": "Search photos...",
+  "photoListClear": "Clear",
+  "photoListSelectPhotos": "Select photos",
+  "photoListSelectedCount": "Selected {count}",
+  "@photoListSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListDeselectAll": "Deselect all",
+  "photoListSelectAll": "Select all",
+  "photoListScanning": "Scanning... Found {count} photos",
+  "@photoListScanning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListLoadingCache": "Loading cache...",
+  "photoListScanningPhotos": "Scanning photos...",
+  "photoListEmpty": "Photo library is empty",
+  "photoListEmptyDesc": "Configure photo directories and scan in library settings",
+  "photoListNotConnected": "Not connected to NAS",
+  "photoListNotConnectedDesc": "Please configure and connect to a NAS server in settings",
+  "photoListAddConnection": "Add Connection",
+  "photoListUpload": "Upload ({count})",
+  "@photoListUpload": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListDownload": "Download ({count})",
+  "@photoListDownload": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListDelete": "Delete",
+  "photoListSelectUploadTarget": "Select upload target",
+  "photoListUploadTasksAdded": "Added {count} upload tasks",
+  "@photoListUploadTasksAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListView": "View",
+  "photoListDownloadTasksAdded": "Added {count} download tasks",
+  "@photoListDownloadTasksAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListDeleteConfirmTitle": "Delete photos",
+  "photoListDeleteConfirmContent": "Delete {count} selected photos? This will permanently delete the source files and cannot be undone.",
+  "@photoListDeleteConfirmContent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListPhotosDeleted": "Deleted {count} photos",
+  "@photoListPhotosDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListTimelineFilter": "Filter by date",
+  "photoListPhotoCount": "{count} photos",
+  "@photoListPhotoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListRemoveFromLibrary": "Remove from library",
+  "photoListRemoveFromLibraryConfirm": "Remove \"{name}\" from library? This only removes the index record; the source file will not be deleted.",
+  "@photoListRemoveFromLibraryConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "photoListRemoveFromLibraryButton": "Remove",
+  "photoListRemoveFromLibrarySuccess": "Removed from library",
+  "photoListRemoveFromLibraryFailed": "Failed to remove",
+  "photoListDeleteSourceTitle": "Delete source file",
+  "photoListDeleteSourceConfirm": "Delete source file \"{name}\"? This action is irreversible! File will be permanently deleted from NAS.",
+  "@photoListDeleteSourceConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "photoListDeleteSourceSuccess": "Source file deleted",
+  "photoListDeleteSourceFailed": "Delete failed, please check connection status",
+  "photoListPhoto": "Photo",
+  "photoListFileSize": "File size",
+  "photoListModifiedTime": "Modified time",
+  "photoListSourceId": "Source ID",
+  "photoListPath": "Path",
+  "photoListUnknownReason": "Unknown reason",
+  "photoListFilterLocal": "Local",
+  "photoListFilterRemote": "NAS",
+  "photoViewerTooltipBack": "Back",
+  "photoViewerLoadFailed": "Loading failed",
+  "photoViewerRetry": "Retry",
+  "photoViewerKeyboardHelpTitle": "Photo Viewer Shortcuts",
+  "photoViewerKeyboardPrevious": "Previous photo",
+  "photoViewerKeyboardNext": "Next photo",
+  "photoViewerKeyboardFirst": "First photo",
+  "photoViewerKeyboardLast": "Last photo",
+  "photoViewerKeyboardToggleControls": "Show/hide controls",
+  "photoViewerKeyboardToggleFavorite": "Add/remove favorite",
+  "photoViewerKeyboardInfo": "Show photo info",
+  "photoViewerKeyboardExit": "Exit",
+  "photoViewerKeyboardHelp": "Show this help",
+  "photoViewerActionInfo": "Info",
+  "photoViewerActionFavorited": "Favorited",
+  "photoViewerActionFavorite": "Favorite",
+  "photoViewerActionSave": "Save",
+  "photoViewerActionDownload": "Download",
+  "photoViewerActionShare": "Share",
+  "photoViewerActionDelete": "Delete",
+  "photoViewerInfoTitle": "Photo Information",
+  "photoViewerInfoFileName": "File name",
+  "photoViewerInfoPath": "Path",
+  "photoViewerInfoSize": "Size",
+  "photoViewerInfoResolution": "Resolution",
+  "photoViewerInfoType": "Type",
+  "photoViewerInfoTypeLivePhoto": "Live Photo (long press to play)",
+  "photoViewerInfoModifiedTime": "Modified time",
+  "photoViewerInfoTakenTime": "Taken time",
+  "photoViewerInfoCamera": "Camera",
+  "photoViewerInfoLocation": "Location",
+  "photoViewerDownloadNoUrl": "Unable to get photo URL",
+  "photoViewerDownloadNoPermission": "Gallery access permission required to save photos",
+  "photoViewerDownloadConnecting": "Connecting...",
+  "photoViewerDownloadingSaving": "Saving to gallery...",
+  "photoViewerDownloadingProgress": "Downloading...",
+  "photoViewerDownloadCancel": "Cancel",
+  "photoViewerShareNoUrl": "Unable to get photo URL",
+  "photoViewerShareNotSupported": "Share is not supported on current platform",
+  "photoViewerShareOptionsTitle": "Share Photo",
+  "photoViewerShareCopyLink": "Copy Link",
+  "photoViewerShareCopyLinkSubtitle": "Copy photo link to clipboard",
+  "photoViewerShareCopyPath": "Copy Path",
+  "photoViewerShareCopyPathSubtitle": "Copy file path to clipboard",
+  "photoViewerShareFile": "Share File",
+  "photoViewerShareFileSubtitleLocal": "Use system share",
+  "photoViewerShareFileSubtitleRemote": "Download and share using system share",
+  "photoViewerSharePreparing": "Preparing for sharing...",
+  "photoViewerShareConnecting": "Connecting...",
+  "photoViewerShareCopied": "{title} copied",
+  "@photoViewerShareCopied": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "photoViewerDeleteConfirmTitle": "Delete Photo",
+  "photoViewerDeleteConfirmContent": "Are you sure you want to delete \"{name}\"?\nThis action cannot be undone.",
+  "@photoViewerDeleteConfirmContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "photoViewerDeleteCancel": "Cancel",
+  "photoViewerDeleteConfirm": "Delete",
+  "photoViewerDeleting": "Deleting...",
+  "photoViewerDeletedSuccess": "Photo deleted",
+  "photoViewerDeleteNoFileSystem": "Unable to get file system, cannot delete",
+  "photoViewerDeleteFailed": "Delete failed: {error}",
+  "@photoViewerDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoViewerFavoriteToggleFailed": "Favorite action failed: {error}",
+  "@photoViewerFavoriteToggleFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoViewerDownloadSuccess": "{message}",
+  "@photoViewerDownloadSuccess": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "photoViewerDownloadFailed": "{message}",
+  "@photoViewerDownloadFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "photoViewerShareFailed": "Share failed",
+  "photoPeoplePageTitle": "People",
+  "photoPeoplePageLoadError": "Load failed: {error}",
+  "@photoPeoplePageLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoPeoplePageConnectNasFirst": "Please connect to NAS first",
+  "photoPeoplePageNamingTitle": "Name the person",
+  "photoPeoplePageNamingHint": "Enter name",
+  "photoPeoplePageRetry": "Retry",
+  "photoPeoplePageScanTooltip": "Scan faces",
+  "photoPeoplePageScanningFaces": "Scanning faces...",
+  "photoPeoplePageScanComplete": "Scan complete",
+  "photoPeoplePageScanCancelled": "Cancelled",
+  "photoPeoplePageScanError": "Scan error",
+  "photoPeoplePageScanCancel": "Cancel",
+  "photoPeoplePageScanProgressText": "Processed {processed}/{total} photos, found {facesFound} faces",
+  "@photoPeoplePageScanProgressText": {
+    "placeholders": {
+      "processed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "facesFound": {
+        "type": "int"
+      }
+    }
+  },
+  "photoPeoplePageAnalyzing": "Analyzing people...",
+  "photoPeoplePageStatsLabelPeople": "People",
+  "photoPeoplePageStatsLabelFaces": "Faces",
+  "photoPeoplePageStatsLabelUnassigned": "To be grouped",
+  "photoPeoplePageEmptyStateTitle": "No people found yet",
+  "photoPeoplePageEmptyStateDescription": "Click the button in the top-right corner to scan faces in photos",
+  "photoPeoplePageScanButton": "Start scanning",
+  "photoPeoplePagePhotoCountLabel": "{count} photos",
+  "@photoPeoplePagePhotoCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoPeoplePageRename": "Rename",
+  "photoPeoplePageMerge": "Merge to another person",
+  "photoPeoplePageDelete": "Delete person",
+  "photoPeoplePageMergeNoOthersHint": "No other people to merge with",
+  "photoPeoplePageMergeSelectTitle": "Select person to merge with",
+  "photoPeoplePageMergeConfirmButton": "Confirm",
+  "photoPeoplePageMergeSuccess": "Merged {fromPerson} into {toPerson}",
+  "@photoPeoplePageMergeSuccess": {
+    "placeholders": {
+      "fromPerson": {
+        "type": "String"
+      },
+      "toPerson": {
+        "type": "String"
+      }
+    }
+  },
+  "photoPeoplePageDeleteConfirmTitle": "Confirm deletion",
+  "photoPeoplePageDeleteConfirmMessage": "Are you sure you want to delete {personName}?\nThis only removes the person group, not the photos.",
+  "@photoPeoplePageDeleteConfirmMessage": {
+    "placeholders": {
+      "personName": {
+        "type": "String"
+      }
+    }
+  },
+  "photoPeoplePageDeleteConfirmButton": "Delete",
+  "photoPeoplePhotosPageEmptyMessage": "No photos",
+  "photoTimelineNavigatorTitle": "Timeline",
+  "photoTimelineFilterTitle": "Time Filter",
+  "photoTimelineNoDataPlaceholder": "No photo data",
+  "photoTimelinePhotoCount": "{count}",
+  "@photoTimelinePhotoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "photoTimelineYearLabel": "{year}",
+  "@photoTimelineYearLabel": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "photoTimelineMonthLabel": "{month}",
+  "@photoTimelineMonthLabel": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "photoTimelineYearMonthLabel": "{year}/{month}",
+  "@photoTimelineYearMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "comicListEmptyTitle": "No Comics",
+  "comicListEmptySubtitle": "Configure comic directory in Media Library settings and scan",
+  "comicListEmptyMediaLibraryButton": "Media Library Settings",
+  "comicListEmptyConnectionButton": "Connection Management",
+  "comicListLoadingFromCache": "Loading cache...",
+  "comicListLoadingScanning": "Scanning comics...",
+  "comicListPageCountFormat": "{count} pages",
+  "@comicListPageCountFormat": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "comicListRemoveFromLibraryTitle": "Remove from Media Library",
+  "comicListRemoveFromLibraryContent": "Are you sure you want to remove \"{name}\" from the media library? This will only delete the cached data and will not affect the source file.",
+  "@comicListRemoveFromLibraryContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "comicListRemoveFromLibraryConfirm": "Remove",
+  "comicListDeleteFromSourceTitle": "Delete Source File",
+  "comicListDeleteFromSourceContent": "Are you sure you want to delete \"{name}\"? This operation will delete the source file and cannot be recovered!",
+  "@comicListDeleteFromSourceContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "comicListInfoSubtitleFormat": "Comic · {type}",
+  "@comicListInfoSubtitleFormat": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "comicListInfoLabelPageCount": "Pages",
+  "comicListInfoLabelFileSize": "File Size",
+  "comicListInfoLabelModifiedTime": "Modified Time",
+  "comicListInfoLabelSourceId": "Source ID",
+  "comicListInfoLabelPath": "Path",
+  "comicListNotConnectedError": "Not connected to the corresponding source, please establish a connection first",
+  "comicListShareFailedWithError": "Share failed: {error}",
+  "@comicListShareFailedWithError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "comicListShareFailedUnknownReason": "Unknown reason",
+  "comicReaderPageListTitle": "Page List",
+  "comicReaderSettingsTitle": "Comic Settings",
+  "comicReaderKeyboardHelpTitle": "Comic Reading Shortcuts",
+  "comicReaderPreviousPage": "Previous Page",
+  "comicReaderNextPage": "Next Page",
+  "comicReaderFirstPage": "First Page",
+  "comicReaderLastPage": "Last Page",
+  "comicReaderToggleControls": "Show/Hide Controls",
+  "comicReaderOpenSettings": "Open Settings",
+  "comicReaderBack": "Back",
+  "comicReaderShowHelp": "Show This Help",
+  "comicReaderNoImagesFound": "No images found",
+  "comicReaderSettings": "Settings",
+  "comicReaderSinglePage": "Single Page",
+  "comicReaderDoublePage": "Double Page",
+  "comicReaderWebtoon": "Webtoon",
+  "comicReaderLeftToRight": "Left to Right",
+  "comicReaderRightToLeft": "Right to Left",
+  "comicReaderFitWidth": "Fit Width",
+  "comicReaderFitHeight": "Fit Height",
+  "comicReaderFitScreen": "Fit Screen",
+  "comicReaderOriginalSize": "Original Size",
+  "comicReaderReadingMode": "Reading Mode",
+  "comicReaderReadingDirection": "Reading Direction",
+  "comicReaderScaleMode": "Scale Mode",
+  "comicReaderBackgroundColor": "Background Color",
+  "comicReaderPageGap": "Page Gap",
+  "comicReaderOtherSettings": "Other Settings",
+  "comicReaderShowPageNumber": "Show Page Number",
+  "comicReaderKeepScreenOn": "Keep Screen On",
+  "comicReaderTapToTurn": "Tap to Turn",
+  "comicReaderTapToTurnDescription": "Left previous, right next",
+  "noteListLoadingTreeMessage": "Loading directory structure...",
+  "noteListLoadMediaLibraryConfigFailed": "Failed to load media library configuration",
+  "noteListLoadContentFailed": "Failed to load: {error}",
+  "@noteListLoadContentFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "noteListReadNodeError": "Can only read file nodes",
+  "noteListConnectionDisconnected": "Connection disconnected",
+  "noteListFileNotFound": "File not found",
+  "noteListLoadContentHttpError": "Failed to load: {statusCode}",
+  "@noteListLoadContentHttpError": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "noteListDeleteConfirmTitle": "Delete Note",
+  "noteListDeleteConfirmContent": "Are you sure you want to delete \"{displayName}\"? This action will delete the source file and cannot be recovered!",
+  "@noteListDeleteConfirmContent": {
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+  "noteListInfoLabelFileName": "File name",
+  "noteListInfoLabelModifiedTime": "Modified",
+  "noteListInfoLabelFileSize": "File size",
+  "noteListInfoLabelSourceId": "Source ID",
+  "noteListInfoLabelPath": "Path",
+  "noteListDownloadNoConnection": "Not connected to the corresponding source. Please establish a connection first",
+  "noteListShareFailed": "Failed to share: {error}",
+  "@noteListShareFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "noteListEmptyTitle": "Note library is empty",
+  "noteListEmptyMessage": "Configure a note directory in media library settings and scan",
+  "noteListMediaLibraryButton": "Media Library Settings",
+  "noteListConnectionManagementButton": "Connection Management",
+  "noteListTitle": "Notes",
+  "noteListRefreshTooltip": "Refresh",
+  "noteListSelectNoteHint": "Select a note from the left to view / edit",
+  "noteListBackToDirectoryTooltip": "Back to directory",
+  "noteListEditorPlaceholder": "Start writing Markdown...",
+  "noteListPreviewLabel": "Preview",
+  "noteListSplitScreenTooltip": "Split screen",
+  "noteListEditLabel": "Edit",
+  "noteListLivePreviewLabel": "Live preview",
+  "noteListEditorMinimalPlaceholder": "Start writing...",
+  "noteListToolBoldTooltip": "Bold",
+  "noteListToolItalicTooltip": "Italic",
+  "noteListToolStrikethroughTooltip": "Strikethrough",
+  "noteListToolHeadingTooltip": "Heading",
+  "noteListToolListTooltip": "List",
+  "noteListToolTaskTooltip": "Task",
+  "noteListToolCodeTooltip": "Code",
+  "noteListToolLinkTooltip": "Link",
+  "noteListEmptyNoteLibrary": "No notes yet",
+  "noteListEmptyNoteMessage": "Markdown files added to configured directories will appear here",
+  "noteEditorTabPreview": "Preview",
+  "noteEditorTabTasks": "Tasks",
+  "noteEditorTabEdit": "Edit",
+  "noteEditorLoading": "Loading...",
+  "noteEditorNoTasks": "No pending tasks",
+  "noteEditorTaskHint": "Add tasks using - [ ] syntax",
+  "noteEditorBoldTooltip": "Bold",
+  "noteEditorItalicTooltip": "Italic",
+  "noteEditorStrikethroughTooltip": "Strikethrough",
+  "noteEditorHeadingTooltip": "Heading",
+  "noteEditorListTooltip": "List",
+  "noteEditorTaskTooltip": "Task",
+  "noteEditorCodeTooltip": "Code",
+  "noteEditorLinkTooltip": "Link",
+  "noteEditorHintText": "Start writing...",
+  "taskListProgressTitle": "Task Progress",
+  "taskListPendingSectionTitle": "Pending",
+  "taskListCompletedSectionTitle": "Completed",
+  "taskListCompletedCount": "{completed} / {total} Completed",
+  "@taskListCompletedCount": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "taskListPriorityUrgent": "Urgent",
+  "taskListPriorityImportant": "Important",
+  "taskListDueDateToday": "Today",
+  "taskListDueDateTomorrow": "Tomorrow",
+  "noteTreeEmptyMessage": "No notes",
+  "noteTreeTaskLabel": "Task",
+  "paneLanguageOptionZh": "Simplified Chinese",
+  "paneLanguageOptionEn": "English",
+  "spotlightSettingsPageTitle": "Spotlight Indexing",
+  "spotlightSettingsEnableToggleTitle": "Enable Spotlight Indexing",
+  "spotlightSettingsEnableToggleSubtitle": "Write video, music, book, comic, and note titles to macOS system search; disabled by default to avoid stutter on first scan.",
+  "spotlightSettingsRebuildTitle": "Rebuild Spotlight Index",
+  "spotlightSettingsRebuildingStatus": "Rebuilding…",
+  "spotlightSettingsRebuildIdleStatus": "Rewrite all known items to system index",
+  "spotlightSettingsHintText": "Tip: After enabling or rebuilding, you can search for MyNAS data in System Spotlight (⌘ + Space); clicking results will return to the corresponding entry in the app.",
+  "spotlightSettingsSummaryNoEntries": "Last rebuild: no items",
+  "spotlightSettingsSummaryWithCount": "Last rebuild {total} items ({parts})",
+  "@spotlightSettingsSummaryWithCount": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "parts": {
+        "type": "String"
+      }
+    }
+  },
+  "spotlightItemKindVideo": "Videos",
+  "spotlightItemKindMusic": "Music",
+  "spotlightItemKindBook": "Books",
+  "spotlightItemKindComic": "Comics",
+  "spotlightItemKindNote": "Notes",
+  "spotlightSettingsNotSupportedHint": "Spotlight indexing is only available on macOS.",
+  "hostsMappingPageTitle": "Hosts Mapping",
+  "hostsMappingAddButton": "Add Mapping",
+  "hostsMappingDesktopTitle": "Host Mapping",
+  "hostsMappingDesktopSubtitle": "Custom domain-to-IP resolution (DoH / Manual) for direct internal network access or acceleration.",
+  "hostsMappingDohSection": "DoH Resolution",
+  "hostsMappingDohProvider": "DoH Provider",
+  "hostsMappingDohProviderDesc": "Resolve common domains via encrypted DNS, bypass local DNS pollution.",
+  "hostsMappingResolving": "Resolving…",
+  "hostsMappingResolveAll": "Resolve Common Domains in One Click",
+  "hostsMappingEntriesSection": "Mappings",
+  "hostsMappingEmpty": "No mappings",
+  "hostsMappingEmptyDesc": "Tap \"Add Mapping\" to add manually, or use DoH above to auto-resolve.",
+  "hostsMappingSourceManual": "Manual",
+  "hostsMappingEditTooltip": "Edit",
+  "hostsMappingDeleteTooltip": "Delete",
+  "hostsMappingInfoText": "In-app hosts table, similar to system /etc/hosts but only affects MyNAS internal network requests. HTTPS still validates SNI and certificates by original domain, won't break certificates.",
+  "hostsMappingEmptyMobileDesc": "Tap + to add manually, or use DoH above to auto-resolve",
+  "hostsMappingDeleteConfirmTitle": "Delete Mapping",
+  "hostsMappingDeleteConfirmContent": "Delete the mapping for {host}?",
+  "@hostsMappingDeleteConfirmContent": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "hostsMappingCancel": "Cancel",
+  "hostsMappingDelete": "Delete",
+  "hostsMappingDohResolveFailed": "DoH resolution failed, check your network",
+  "hostsMappingResolveSuccess": "Resolved {count} domains",
+  "@hostsMappingResolveSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hostsMappingEditSheetAddTitle": "Add Mapping",
+  "hostsMappingEditSheetEditTitle": "Edit Mapping",
+  "hostsMappingDomainLabel": "Domain",
+  "hostsMappingDomainHint": "e.g. api.themoviedb.org",
+  "hostsMappingIpLabel": "IP Address",
+  "hostsMappingIpHint": "IPv4 / IPv6, e.g. 18.165.83.6",
+  "hostsMappingSave": "Save",
+  "hostsMappingInvalidIp": "Invalid IP format",
+  "appearanceSettingsPageTitle": "Appearance Settings",
+  "appearanceSettingsSectionThemeMode": "Theme Mode",
+  "appearanceSettingsSectionUiStyle": "UI Style",
+  "appearanceSettingsSectionColorScheme": "Color Scheme",
+  "appearanceSettingsDesktopTitle": "Appearance",
+  "appearanceSettingsDesktopSubtitle": "Theme, color scheme, and UI style. Glass / Classic are real-time global switches.",
+  "appearanceSettingsThemeSectionTitle": "Theme & Color",
+  "appearanceSettingsThemeModeDesc": "Light / Dark / System",
+  "appearanceSettingsThemeModeLight": "Light",
+  "appearanceSettingsThemeModeDark": "Dark",
+  "appearanceSettingsThemeModeSystem": "System",
+  "appearanceSettingsUiStyleDesc": "Glass / Classic Cards — Real-time switching",
+  "appearanceSettingsAccentColorTitle": "Accent Color",
+  "appearanceSettingsAccentColorDesc": "Preset schemes, can be temporarily overridden by dynamic colors",
+  "appearanceSettingsDynamicAmbientTitle": "Dynamic Ambient Light",
+  "appearanceSettingsDynamicAmbientDesc": "Shell ambient light follows album art / channel logo color when playing",
+  "appearanceSettingsGlassSectionTitle": "Glass Material Parameters",
+  "appearanceSettingsGlassDisabledTitle": "Disabled",
+  "appearanceSettingsGlassDisabledDesc": "Glass parameters are disabled in Classic style. Switch to Glass style to adjust.",
+  "appearanceSettingsGlassBlurTitle": "Blur Intensity",
+  "appearanceSettingsGlassBlurDesc": "Gaussian blur radius scale for glass panels ({scale}×)",
+  "@appearanceSettingsGlassBlurDesc": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appearanceSettingsGlassOpacityTitle": "Material Opacity",
+  "appearanceSettingsGlassOpacityDesc": "Background opacity scale for glass panels ({scale}×)",
+  "@appearanceSettingsGlassOpacityDesc": {
+    "placeholders": {
+      "scale": {
+        "type": "String"
+      }
+    }
+  },
+  "appearanceSettingsGlassPlatformOptTitle": "Platform Glass Optimization",
+  "appearanceSettingsGlassPlatformOptDesc": "When disabled, glass panels no longer blur, only keeping the translucent material",
+  "appearanceSettingsThemeModeSystemLabel": "Follow System",
+  "appearanceSettingsThemeModeLightLabel": "Light Mode",
+  "appearanceSettingsThemeModeDarkLabel": "Dark Mode",
+  "appearanceSettingsCurrentBadge": "Current",
+  "mineSectionConnection": "Connections",
+  "mineMediaLibrary": "Media Library",
+  "mineMediaLibraryDesc": "Configure video, music, comic and other directories",
+  "mineSectionMyContent": "My Content",
+  "mineFavorites": "Favorites",
+  "mineFavoritesDesc": "Favorited videos, photos, notes, books, comics",
+  "mineSectionVideo": "Video",
+  "mineVideoPlayerSettings": "Player Settings",
+  "mineVideoPlayerSettingsDesc": "Quality, casting, transcoding, etc.",
+  "mineScraperSources": "Scraper Sources",
+  "mineVideoScraperDesc": "Manage video scraper sources like TMDB and Douban",
+  "mineSubtitleSources": "Subtitle Sources",
+  "mineSubtitleSourcesDesc": "Manage subtitle download sources like OpenSubtitles",
+  "mineLanguagePreference": "Language Preference",
+  "mineLanguagePreferenceSettings": "Language Preference Settings",
+  "mineLanguagePreferenceDesc": "Set default display language for movie metadata, audio and subtitles",
+  "mineMetadataLanguage": "Metadata Language",
+  "mineMetadataLanguageDesc": "Movie title, synopsis, cast information",
+  "mineAudioLanguage": "Audio Language",
+  "mineAudioLanguageDesc": "Default audio track language for playback",
+  "mineSubtitleLanguage": "Subtitle Language",
+  "mineSubtitleLanguageDesc": "Default subtitle language for display",
+  "mineLanguagePreferenceAllAuto": "All Auto",
+  "mineMediaTracking": "Media Tracking",
+  "mineMediaTrackingDesc": "Manage media tracking tools like Trakt",
+  "mineMediaManagement": "Media Management",
+  "mineMediaManagementDesc": "Manage tools like NASTool, MoviePilot",
+  "mineDownloader": "Remote Tasks",
+  "mineDownloaderDesc": "Manage remote download tasks and services",
+  "mineLiveStreaming": "Live Streaming Sources",
+  "mineLiveStreamingDesc": "Manage live streaming sources like IPTV, M3U playlists",
+  "mineSectionMusic": "Music",
+  "mineMusicPlayerSettings": "Player Settings",
+  "mineMusicPlayerSettingsDesc": "Playback engine, volume, fade-in/out, etc.",
+  "mineListeningStats": "Listening Stats",
+  "mineListeningStatsDesc": "Weekly/monthly/yearly top songs, artists, albums",
+  "mineDuplicateSongs": "Duplicate Songs",
+  "mineDuplicateSongsDesc": "Detect multiple versions of the same song (mp3, flac, etc.)",
+  "mineRecycleBin": "Recycle Bin",
+  "mineRecycleBinDesc": "Deleted playlists retained for 30 days and can be recovered",
+  "mineScrobbleReporting": "Scrobble Reporting",
+  "mineScrobbleReportingDesc": "Sync listening history to Last.fm / ListenBrainz",
+  "mineMusicScraperSources": "Scraper Sources",
+  "mineMusicScraperDesc": "Manage music scraper sources like MusicBrainz, NetEase",
+  "mineSectionBook": "Books",
+  "mineBookSources": "Book Sources",
+  "mineBookSourcesDesc": "Import and manage online book sources",
+  "mineBookSettings": "Reader Settings",
+  "mineBookSettingsDesc": "Select reading engine, page turning method, etc.",
+  "mineSectionSites": "Sites",
+  "minePTSites": "Resource Sites",
+  "minePTSitesDesc": "Manage resource site connections",
+  "mineSectionTransfer": "Transfer",
+  "mineTransferDownload": "Download",
+  "mineTransferUpload": "Upload",
+  "mineTransferCache": "Cache",
+  "mineTransferDownloadTasksActive": "{count} tasks in progress",
+  "@mineTransferDownloadTasksActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mineTransferDownloadNoTasks": "No download tasks",
+  "mineTransferUploadTasksActive": "{count} tasks in progress",
+  "@mineTransferUploadTasksActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mineTransferUploadNoTasks": "No upload tasks",
+  "mineTransferCacheTasksActive": "{count} tasks in progress",
+  "@mineTransferCacheTasksActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mineTransferCacheNoTasks": "No cache",
+  "mineTransferCacheItems": "{count} cache items ({size})",
+  "@mineTransferCacheItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "mineSectionAppearance": "Appearance",
+  "mineAppearanceSettings": "Appearance Settings",
+  "mineAppearanceSettingsDesc": "Theme, color scheme, UI style",
+  "mineSectionPrivacySecurity": "Privacy & Security",
+  "mineAppLock": "App Lock",
+  "mineAppLockDesc": "Protect the app with PIN or biometrics",
+  "mineSectionCloudSync": "Cloud Sync",
+  "mineWebDAVSync": "WebDAV Sync",
+  "mineWebDAVSyncDesc": "Sync playlists, reading progress, etc. across devices",
+  "mineSectionAdvanced": "Advanced",
+  "mineHostsMapping": "Hosts Mapping",
+  "mineHostsMappingDesc": "Specify domain to specific IP, bypass DNS pollution",
+  "mineSpotlightIndexing": "Spotlight Indexing",
+  "mineSpotlightIndexingDesc": "Let system Spotlight search MyNAS data",
+  "mineSectionAbout": "About",
+  "mineVersion": "Version",
+  "mineOpenSourceLicenses": "Open Source Licenses",
+  "mineOpenSourceLicensesDesc": "View third-party open source library declarations",
+  "mineConnectionSources": "Connection Sources",
+  "mineConnectionSourcesDesc": "Manage connections like NAS, WebDAV, SMB",
+  "mineHeaderSettings": "Settings",
+  "mineConnectionStatusConnected": "{connected} / {total} Connected",
+  "@mineConnectionStatusConnected": {
+    "placeholders": {
+      "connected": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "mineConnectionStatusDisconnected": "Not Connected",
+  "mineLoadingStatus": "Loading...",
+  "mineCalculatingStatus": "Calculating...",
+  "mineUnknownStatus": "Unknown",
+  "mineLicenseContent": "This app uses the following open source software:\n\n• FFmpeg - Video transcoding (GPL v3)\n  https://ffmpeg.org\n  Source code: https://github.com/FFmpeg/FFmpeg\n\n• media_kit - Media playback\n• Flutter and related libraries\n\nFor complete open source license information, see the list below.",
+  "mineEmptySubtitleTitle": "No Subtitle Sources",
+  "mineEmptySubtitleDesc": "Add subtitle sources like OpenSubtitles to download subtitles",
+  "appearanceSettingsThemeModeTitle": "Theme Mode",
+  "appearanceSettingsUiStyleTitle": "UI Style"
 }
