@@ -5,6 +5,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/aria2/presentation/providers/aria2_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/service_adapters/aria2/api/aria2_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
@@ -120,14 +121,14 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                   if (connection?.status == Aria2ConnectionStatus.connected)
                     IconButton(
                       icon: const Icon(Icons.filter_alt_rounded),
-                      tooltip: '筛选',
+                      tooltip: context.l10n.aria2FilterTooltip,
                       onPressed: () => _showFilterDialog(context),
                     ),
                   // 排序按钮
                   if (connection?.status == Aria2ConnectionStatus.connected)
                     IconButton(
                       icon: const Icon(Icons.swap_vert_rounded),
-                      tooltip: '排序',
+                      tooltip: context.l10n.aria2SortTooltip,
                       onPressed: () => _showSortDialog(context),
                     ),
                   // 更多操作菜单
@@ -138,37 +139,37 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                     ),
                     onSelected: (value) => _handleMenuAction(value, context),
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'pause_all',
                         child: ListTile(
-                          leading: Icon(Icons.pause_rounded),
-                          title: Text('全部暂停'),
+                          leading: const Icon(Icons.pause_rounded),
+                          title: Text(context.l10n.aria2PauseAllMenuLabel),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'resume_all',
                         child: ListTile(
-                          leading: Icon(Icons.play_arrow_rounded),
-                          title: Text('全部恢复'),
+                          leading: const Icon(Icons.play_arrow_rounded),
+                          title: Text(context.l10n.aria2ResumeAllMenuLabel),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
                       const PopupMenuDivider(),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'purge',
                         child: ListTile(
-                          leading: Icon(Icons.cleaning_services),
-                          title: Text('清除已完成'),
+                          leading: const Icon(Icons.cleaning_services),
+                          title: Text(context.l10n.aria2PurgeMenuLabel),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
                       const PopupMenuDivider(),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'refresh',
                         child: ListTile(
-                          leading: Icon(Icons.refresh_rounded),
-                          title: Text('刷新'),
+                          leading: const Icon(Icons.refresh_rounded),
+                          title: Text(context.l10n.aria2RefreshMenuLabel),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
@@ -186,10 +187,10 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                     Expanded(
                       child: _SpeedCard(
                         icon: Icons.download_rounded,
-                        label: '下载',
+                        label: context.l10n.aria2SpeedCardDownloadLabel,
                         speed: stats.downloadSpeed,
                         count: stats.numActive,
-                        countLabel: '活动',
+                        countLabel: context.l10n.aria2SpeedCardActiveLabel,
                         color: AppColors.success,
                         isDark: isDark,
                       ),
@@ -198,10 +199,10 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                     Expanded(
                       child: _SpeedCard(
                         icon: Icons.upload_rounded,
-                        label: '上传',
+                        label: context.l10n.aria2SpeedCardUploadLabel,
                         speed: stats.uploadSpeed,
                         count: stats.numWaiting,
-                        countLabel: '等待',
+                        countLabel: context.l10n.aria2SpeedCardWaitingLabel,
                         color: AppColors.primary,
                         isDark: isDark,
                       ),
@@ -223,13 +224,13 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
     Aria2Connection? connection,
   ) {
     if (connection == null || connection.status == Aria2ConnectionStatus.connecting) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('正在连接...'),
+            Text(context.l10n.aria2ConnectingStatus),
           ],
         ),
       );
@@ -242,7 +243,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
           children: [
             Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('连接失败', style: context.textTheme.titleLarge),
+            Text(context.l10n.aria2ConnectionFailedTitle, style: context.textTheme.titleLarge),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -259,7 +260,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
                 _connect();
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重试'),
+              label: Text(context.l10n.aria2RetryButton),
             ),
           ],
         ),
@@ -336,7 +337,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
               child: Icon(Icons.info_outline, color: AppColors.primary),
             ),
             const SizedBox(width: 12),
-            const Text('版本信息'),
+            Text(context.l10n.aria2VersionInfoDialogTitle),
           ],
         ),
         content: Column(
@@ -344,19 +345,19 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _InfoRow(
-              label: '服务名称',
+              label: context.l10n.aria2ServiceNameLabel,
               value: widget.source.displayName,
               isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
-              label: '版本',
-              value: info.version ?? '未知',
+              label: context.l10n.aria2VersionLabel,
+              value: info.version ?? context.l10n.aria2UnknownVersion,
               isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
-              label: '服务器地址',
+              label: context.l10n.aria2ServerAddressLabel,
               value: '${widget.source.host}:${widget.source.port}',
               isDark: isDark,
             ),
@@ -365,7 +366,7 @@ class _Aria2DetailPageState extends ConsumerState<Aria2DetailPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(context.l10n.aria2CloseButton),
           ),
         ],
       ),
@@ -558,10 +559,10 @@ class _DownloadList extends ConsumerWidget {
             child: Icon(Icons.download_rounded, size: 48, color: AppColors.primary),
           ),
           const SizedBox(height: 24),
-          Text('暂无下载任务', style: context.textTheme.titleMedium),
+          Text(context.l10n.aria2EmptyDownloadTasksTitle, style: context.textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
-            '点击右下角按钮添加任务',
+            context.l10n.aria2EmptyDownloadTasksHint,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -621,7 +622,7 @@ class _DownloadTile extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  _buildActionButtons(ref),
+                  _buildActionButtons(context, ref),
                 ],
               ),
               const SizedBox(height: 8),
@@ -690,7 +691,7 @@ class _DownloadTile extends ConsumerWidget {
                     Icon(Icons.cloud_upload_outlined, size: 14, color: AppColors.primary),
                     const SizedBox(width: 4),
                     Text(
-                      '已上传: ${_formatSize(download.uploadLength)}',
+                      '${context.l10n.aria2UploadedLabel}${_formatSize(download.uploadLength)}',
                       style: context.textTheme.bodySmall?.copyWith(
                         color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                       ),
@@ -747,7 +748,7 @@ class _DownloadTile extends ConsumerWidget {
     return Icon(icon, size: 20, color: color);
   }
 
-  Widget _buildActionButtons(WidgetRef ref) {
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
     final actions = ref.read(aria2ActionsProvider(sourceId));
 
     return Row(
@@ -757,7 +758,7 @@ class _DownloadTile extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.play_arrow_rounded, size: 20),
             onPressed: () => actions.resume(download.gid),
-            tooltip: '恢复',
+            tooltip: context.l10n.aria2ResumeTooltip,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           )
@@ -765,14 +766,14 @@ class _DownloadTile extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.pause_rounded, size: 20),
             onPressed: () => actions.pause(download.gid),
-            tooltip: '暂停',
+            tooltip: context.l10n.aria2PauseTooltip,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
         IconButton(
           icon: const Icon(Icons.delete_outline, size: 20),
           onPressed: () => _showDeleteDialog(ref),
-          tooltip: '删除',
+          tooltip: context.l10n.aria2DeleteTooltip,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         ),
@@ -785,12 +786,12 @@ class _DownloadTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除任务'),
-        content: Text('确定要删除 "${download.name}" 吗？'),
+        title: Text(context.l10n.aria2DeleteTaskDialogTitle),
+        content: Text(context.l10n.aria2DeleteTaskDialogContent(download.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.aria2CancelButton),
           ),
           FilledButton(
             onPressed: () {
@@ -798,7 +799,7 @@ class _DownloadTile extends ConsumerWidget {
               Navigator.pop(context);
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(context.l10n.aria2DeleteButton),
           ),
         ],
       ),
@@ -847,17 +848,17 @@ class _DownloadTile extends ConsumerWidget {
                   controller: scrollController,
                   padding: const EdgeInsets.all(16),
                   children: [
-                    _DetailItem(label: '状态', value: _getStatusText()),
-                    _DetailItem(label: '大小', value: _formatSize(download.totalLength)),
-                    _DetailItem(label: '已下载', value: _formatSize(download.completedLength)),
-                    _DetailItem(label: '进度', value: '${(download.progress * 100).toStringAsFixed(1)}%'),
+                    _DetailItem(label: context.l10n.aria2DetailItemStatusLabel, value: _getStatusText(context.l10n)),
+                    _DetailItem(label: context.l10n.aria2DetailItemSizeLabel, value: _formatSize(download.totalLength)),
+                    _DetailItem(label: context.l10n.aria2DetailItemDownloadedLabel, value: _formatSize(download.completedLength)),
+                    _DetailItem(label: context.l10n.aria2DetailItemProgressLabel, value: '${(download.progress * 100).toStringAsFixed(1)}%'),
                     if (download.uploadLength > 0)
-                      _DetailItem(label: '已上传', value: _formatSize(download.uploadLength)),
+                      _DetailItem(label: context.l10n.aria2DetailItemUploadedLabel, value: _formatSize(download.uploadLength)),
                     if (download.dir != null)
-                      _DetailItem(label: '保存位置', value: download.dir!),
-                    _DetailItem(label: 'GID', value: download.gid),
+                      _DetailItem(label: context.l10n.aria2DetailItemSavePathLabel, value: download.dir!),
+                    _DetailItem(label: context.l10n.aria2DetailItemGidLabel, value: download.gid),
                     if (download.hasError && download.errorMessage != null)
-                      _DetailItem(label: '错误', value: download.errorMessage!),
+                      _DetailItem(label: context.l10n.aria2DetailItemErrorLabel, value: download.errorMessage!),
                   ],
                 ),
               ),
@@ -868,13 +869,13 @@ class _DownloadTile extends ConsumerWidget {
     );
   }
 
-  String _getStatusText() {
-    if (download.hasError) return '错误';
-    if (download.isComplete) return '已完成';
-    if (download.isActive) return '下载中';
-    if (download.isPaused) return '已暂停';
-    if (download.isWaiting) return '等待中';
-    if (download.isRemoved) return '已移除';
+  String _getStatusText(AppLocalizations l10n) {
+    if (download.hasError) return l10n.aria2StatusError;
+    if (download.isComplete) return l10n.aria2StatusComplete;
+    if (download.isActive) return l10n.aria2StatusDownloading;
+    if (download.isPaused) return l10n.aria2StatusPaused;
+    if (download.isWaiting) return l10n.aria2StatusWaiting;
+    if (download.isRemoved) return l10n.aria2StatusRemoved;
     return download.status;
   }
 }
@@ -941,7 +942,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                 children: [
                   const Icon(Icons.filter_alt_rounded),
                   const SizedBox(width: 8),
-                  Text('筛选状态', style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(context.l10n.aria2FilterSheetTitle, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -1008,14 +1009,14 @@ class _SortOptionsSheet extends ConsumerWidget {
                 children: [
                   const Icon(Icons.swap_vert_rounded),
                   const SizedBox(width: 8),
-                  Text('排序方式', style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(context.l10n.aria2SortSheetTitle, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const Spacer(),
                   TextButton.icon(
                     onPressed: () {
                       ref.read(aria2SortSettingsProvider(sourceId).notifier).toggleReverse();
                     },
                     icon: Icon(settings.reverse ? Icons.arrow_downward : Icons.arrow_upward, size: 18),
-                    label: Text(settings.reverse ? '降序' : '升序'),
+                    label: Text(settings.reverse ? context.l10n.aria2SortDescending : context.l10n.aria2SortAscending),
                   ),
                 ],
               ),
@@ -1115,11 +1116,11 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '添加下载任务',
+                            context.l10n.aria2AddDownloadDialogTitle,
                             style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            '支持 HTTP/FTP/Magnet 链接',
+                            context.l10n.aria2AddDownloadDialogSubtitle,
                             style: context.textTheme.bodySmall?.copyWith(
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                             ),
@@ -1140,7 +1141,7 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                               ),
                             )
                           : const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('添加'),
+                      label: Text(context.l10n.aria2AddButton),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
@@ -1154,12 +1155,12 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                   controller: scrollController,
                   padding: const EdgeInsets.all(20),
                   children: [
-                    Text('下载链接', style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(context.l10n.aria2DownloadLinkLabel, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _controller,
                       decoration: InputDecoration(
-                        hintText: 'http://... 或 magnet:?xt=urn:btih:...',
+                        hintText: context.l10n.aria2DownloadLinkHint,
                         hintStyle: TextStyle(
                           color: isDark
                               ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.5)
@@ -1188,7 +1189,7 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                               )
                             : IconButton(
                                 icon: const Icon(Icons.content_paste_rounded, size: 18),
-                                tooltip: '粘贴',
+                                tooltip: context.l10n.aria2PasteTooltip,
                                 onPressed: () async {
                                   final data = await Clipboard.getData(Clipboard.kTextPlain);
                                   if (data?.text != null) {
@@ -1203,12 +1204,12 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
                       style: context.textTheme.bodyMedium?.copyWith(fontFamily: 'monospace', fontSize: 13),
                       onChanged: (_) => setState(() {}),
                       validator: (value) {
-                        if (value == null || value.isEmpty) return '请输入链接';
+                        if (value == null || value.isEmpty) return context.l10n.aria2ValidationEmptyLink;
                         if (!value.startsWith('magnet:') &&
                             !value.startsWith('http://') &&
                             !value.startsWith('https://') &&
                             !value.startsWith('ftp://')) {
-                          return '请输入有效的下载链接';
+                          return context.l10n.aria2ValidationInvalidLink;
                         }
                         return null;
                       },
@@ -1260,11 +1261,11 @@ class _AddDownloadDialogState extends ConsumerState<_AddDownloadDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Text('任务已添加'),
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(context.l10n.aria2TaskAddedSnackbar),
               ],
             ),
             backgroundColor: AppColors.success,

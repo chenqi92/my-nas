@@ -140,7 +140,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    userSettings?.username ?? '未知用户',
+                    userSettings?.username ?? context.l10n.traktConnectionUnknownUser,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -167,7 +167,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                         Icon(Icons.check_circle, size: 16, color: AppColors.success),
                         const SizedBox(width: 6),
                         Text(
-                          '已连接',
+                          context.l10n.traktConnectionConnectedStatus,
                           style: TextStyle(
                             color: AppColors.success,
                             fontWeight: FontWeight.w500,
@@ -197,7 +197,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '同步统计',
+                    context.l10n.traktConnectionSyncStats,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -207,22 +207,22 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                     children: [
                       Expanded(
                         child: _buildStatItem(
-                            context, Icons.movie_outlined, '电影',
+                            context, Icons.movie_outlined, context.l10n.traktConnectionStatMovies,
                             '${state.stats?.moviesWatched ?? 0}'),
                       ),
                       Expanded(
                         child: _buildStatItem(
-                            context, Icons.tv_outlined, '剧集',
+                            context, Icons.tv_outlined, context.l10n.traktConnectionStatEpisodes,
                             '${state.stats?.episodesWatched ?? 0}'),
                       ),
                       Expanded(
                         child: _buildStatItem(
-                            context, Icons.subscriptions_outlined, '节目',
+                            context, Icons.subscriptions_outlined, context.l10n.traktConnectionStatShows,
                             '${state.stats?.showsWatched ?? 0}'),
                       ),
                       Expanded(
                         child: _buildStatItem(
-                            context, Icons.bookmark_border, '待看',
+                            context, Icons.bookmark_border, context.l10n.traktConnectionStatWatchlist,
                             '${state.stats?.watchlistCount ?? 0}'),
                       ),
                     ],
@@ -280,7 +280,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '同步设置',
+              context.l10n.traktConnectionSyncSettings,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -289,9 +289,9 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
             // Scrobble 开关
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('自动 Scrobble'),
+              title: Text(context.l10n.traktConnectionAutoScrobble),
               subtitle: Text(
-                '播放时自动上报进度到 Trakt',
+                context.l10n.traktConnectionAutoScrobbleDesc,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -315,7 +315,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '播放进度 ≥80% 时自动标记为已观看',
+                      context.l10n.traktConnectionProgressThreshold,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -354,7 +354,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
               children: [
                 Expanded(
                   child: Text(
-                    '继续观看',
+                    context.l10n.traktConnectionContinueWatching,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -374,7 +374,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                         ..read(traktSyncProvider.notifier).refreshPlaybackProgress()
                         ..invalidate(combinedContinueWatchingProvider);
                     },
-                    tooltip: '刷新',
+                    tooltip: context.l10n.traktConnectionRefresh,
                     visualDensity: VisualDensity.compact,
                   ),
               ],
@@ -387,7 +387,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Center(
                       child: Text(
-                        '暂无未完成的播放',
+                        context.l10n.traktConnectionEmptyList,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -404,7 +404,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                       Center(
                         child: TextButton(
                           onPressed: () => _showAllContinueWatching(context, items),
-                          child: Text('查看全部 (${items.length})'),
+                          child: Text(context.l10n.traktConnectionViewAll(items.length)),
                         ),
                       ),
                   ],
@@ -418,7 +418,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Center(
                   child: Text(
-                    '加载失败',
+                    context.l10n.traktConnectionLoadFailed,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.error,
                     ),
@@ -449,7 +449,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
     }
 
     // 添加来源标识
-    final sourceLabel = item.source == ContinueWatchingSource.trakt ? 'Trakt' : '本地';
+    final sourceLabel = item.source == ContinueWatchingSource.trakt ? context.l10n.traktConnectionSourceTrakt : context.l10n.traktConnectionSourceLocal;
 
     return InkWell(
       onTap: item.isPlayable ? () => _playContinueWatchingItem(context, item) : null,
@@ -548,7 +548,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                   ref.read(traktSyncProvider.notifier).deleteProgress(item.traktProgress!.id);
                   ref.invalidate(combinedContinueWatchingProvider);
                 },
-                tooltip: '删除进度',
+                tooltip: context.l10n.traktConnectionDeleteProgress,
                 visualDensity: VisualDensity.compact,
               ),
           ],
@@ -662,14 +662,14 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
               child: Row(
                 children: [
                   Text(
-                    '继续观看',
+                    context.l10n.traktConnectionContinueWatching,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const Spacer(),
                   Text(
-                    '共 ${items.length} 项',
+                    context.l10n.traktConnectionAllItems(items.length),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -698,19 +698,19 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('注销 Trakt'),
-        content: const Text('确定要注销吗？这将清除所有保存的认证信息。'),
+        title: Text(context.l10n.traktConnectionLogoutTitle),
+        content: Text(context.l10n.traktConnectionLogoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.traktConnectionCancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
               ref.read(traktConnectionProvider.notifier).logout();
             },
-            child: const Text('注销'),
+            child: Text(context.l10n.traktConnectionLogout),
           ),
         ],
       ),
@@ -811,7 +811,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
             ),
             const SizedBox(height: 8),
             Text(
-              '自动同步观看记录到云端\n跨设备追踪电影和剧集进度',
+              context.l10n.traktConnectionDesc,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
@@ -857,7 +857,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '访问以下网址',
+                    context.l10n.traktConnectionDeviceCodeStep1,
                     style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
                   ),
                 ),
@@ -913,7 +913,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '输入验证码',
+                    context.l10n.traktConnectionDeviceCodeStep2,
                     style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
                   ),
                 ),
@@ -985,7 +985,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
               onPressed: () {
                 ref.read(traktConnectionProvider.notifier).cancelDeviceCodeFlow();
               },
-              child: const Text('取消'),
+              child: Text(context.l10n.traktConnectionCancel),
             ),
           ],
         ),
@@ -1014,7 +1014,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.login_rounded),
-            label: const Text('连接 Trakt 账号'),
+            label: Text(context.l10n.traktConnectionConnectAccount),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
@@ -1022,7 +1022,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
           const SizedBox(height: 12),
           // 简洁的说明文字
           Text(
-            '点击后将显示验证码，在任意设备浏览器中输入即可完成连接',
+            context.l10n.traktConnectionDeviceCodeDesc,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
@@ -1041,7 +1041,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                 foregroundColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 textStyle: theme.textTheme.bodySmall,
               ),
-              child: const Text('使用自定义 API 凭证'),
+              child: Text(context.l10n.traktConnectionCustomCredentials),
             ),
           ),
         ] else ...[
@@ -1072,7 +1072,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                 });
               },
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
-              label: const Text('返回'),
+              label: Text(context.l10n.traktConnectionBack),
             ),
           ),
           const SizedBox(height: 8),
@@ -1093,7 +1093,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                   Icon(Icons.code_rounded, color: colorScheme.primary, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    '开发者选项',
+                    context.l10n.traktConnectionDeveloperOption,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -1102,7 +1102,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
               ),
               const SizedBox(height: 8),
               Text(
-                '使用自己在 trakt.tv/oauth/applications 创建的应用凭证',
+                context.l10n.traktConnectionCustomCredentialsDesc,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -1121,7 +1121,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return '请输入 Client ID';
+              return context.l10n.traktConnectionClientIdValidation;
             }
             return null;
           },
@@ -1146,7 +1146,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return '请输入 Client Secret';
+              return context.l10n.traktConnectionClientSecretValidation;
             }
             return null;
           },
@@ -1162,7 +1162,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.login_rounded),
-          label: const Text('连接'),
+          label: Text(context.l10n.traktConnectionButtonConnect),
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
@@ -1177,7 +1177,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
       await ref.read(traktConnectionProvider.notifier).startDeviceCodeFlow();
     } on Exception catch (e) {
       if (mounted) {
-        context.showErrorToast('启动授权失败: $e');
+        context.showErrorToast(context.l10n.traktConnectionStartFailedToast(e));
       }
     }
   }
@@ -1196,7 +1196,7 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
           );
     } on Exception catch (e) {
       if (mounted) {
-        context.showErrorToast('启动授权失败: $e');
+        context.showErrorToast(context.l10n.traktConnectionStartFailedToast(e));
       }
     }
   }

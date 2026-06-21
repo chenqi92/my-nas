@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/services/toast_service.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/toast_overlay.dart';
 
 extension BuildContextExtensions on BuildContext {
+  // 本地化
+  AppLocalizations get l10n => AppLocalizations.of(this);
+
   // Theme
   ThemeData get theme => Theme.of(this);
   ColorScheme get colorScheme => theme.colorScheme;

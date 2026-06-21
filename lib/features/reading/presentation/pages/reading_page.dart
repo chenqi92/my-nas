@@ -176,11 +176,11 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
           children: [
             Icon(Icons.error_outline_rounded, size: 48, color: Colors.grey[400]),
             const SizedBox(height: 16),
-            Text('加载失败', style: TextStyle(color: Colors.grey[600])),
+            Text(context.l10n.readingOnlineShelfLoadFailed, style: TextStyle(color: Colors.grey[600])),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => ref.read(onlineBookShelfProvider.notifier).refresh(),
-              child: const Text('重试'),
+              child: Text(context.l10n.readingOnlineShelfRetry),
             ),
           ],
         ),
@@ -206,7 +206,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '在线书架为空',
+                  context.l10n.readingOnlineShelfEmpty,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -215,7 +215,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '搜索并添加在线书籍开始阅读',
+                  context.l10n.readingOnlineShelfEmptyDesc,
                   style: TextStyle(
                     fontSize: 13,
                     color: isDark ? Colors.grey[500] : Colors.grey[500],
@@ -252,7 +252,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         final fullSource = await BookSourceManagerService.instance.getSourceById(item.sourceId);
         if (fullSource == null) {
           if (mounted) {
-            context.showErrorToast('书源不存在，可能已被删除');
+            context.showErrorToast(context.l10n.readingBookSourceNotFound);
           }
           return;
         }
@@ -321,7 +321,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
           ),
           // 作者
           Text(
-            item.author.isNotEmpty ? item.author : '佚名',
+            item.author.isNotEmpty ? item.author : context.l10n.readingUnknownAuthor,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -351,12 +351,12 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: isDark ? Colors.grey[850] : null,
-        title: const Text('删除书籍'),
-        content: Text('确定要将《${item.name}》从书架中移除吗？'),
+        title: Text(context.l10n.readingDeleteBook),
+        content: Text(context.l10n.readingDeleteBookConfirm(item.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(context.l10n.readingCancel),
           ),
           TextButton(
             onPressed: () async {
@@ -365,14 +365,14 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                 await OnlineBookShelfService.instance.removeBook(item.id);
                 unawaited(ref.read(onlineBookShelfProvider.notifier).onBookRemoved());
                 if (mounted) {
-                  this.context.showSuccessToast('已从书架移除');
+                  this.context.showSuccessToast(context.l10n.readingDeleteBookRemoveSuccess);
                 }
               } catch (e, st) {
-                AppError.handleWithUI(this.context, e, st, '删除失败');
+                AppError.handleWithUI(this.context, e, st, context.l10n.readingDeleteBookFailed);
               }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(context.l10n.readingDeleteConfirm),
           ),
         ],
       ),
@@ -396,7 +396,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              '输入关键词搜索书源',
+              context.l10n.readingSearchHint,
               style: TextStyle(
                 color: isDark ? Colors.grey[500] : Colors.grey[600],
                 fontSize: 16,
@@ -416,7 +416,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
             const CircularProgressIndicator(color: Colors.amber),
             const SizedBox(height: 16),
             Text(
-              '正在搜索书源...',
+              context.l10n.readingSearchingBookSource,
               style: TextStyle(
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
@@ -439,7 +439,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              '搜索出错: ${searchState.error}',
+              context.l10n.readingSearchError(searchState.error.toString()),
               style: TextStyle(
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
@@ -463,7 +463,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              '未找到相关书籍',
+              context.l10n.readingSearchNoResults,
               style: TextStyle(
                 color: isDark ? Colors.grey[500] : Colors.grey[600],
                 fontSize: 16,
@@ -483,7 +483,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
           child: Row(
             children: [
               Text(
-                '找到 ${searchState.results.length} 本书',
+                context.l10n.readingSearchResultsCount(searchState.results.length),
                 style: TextStyle(
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
                   fontSize: 13,
@@ -588,7 +588,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                 const SizedBox(height: 4),
                 // 作者 - 更柔和的样式
                 Text(
-                  book.author.isNotEmpty ? book.author : '佚名',
+                  book.author.isNotEmpty ? book.author : context.l10n.readingUnknownAuthor,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -609,13 +609,13 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
   String _filterDisplayName(String name) {
     // 如果名称只是日期格式，返回"未知书名"
     if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(name.trim())) {
-      return '未知书名';
+      return context.l10n.readingUnknownTitle;
     }
     // 如果名称以日期开头，尝试移除日期部分
     final datePrefix = RegExp(r'^\d{4}-\d{2}-\d{2}\s*');
     if (datePrefix.hasMatch(name)) {
       final cleaned = name.replaceFirst(datePrefix, '').trim();
-      return cleaned.isNotEmpty ? cleaned : '未知书名';
+      return cleaned.isNotEmpty ? cleaned : context.l10n.readingUnknownTitle;
     }
     return name;
   }
@@ -665,8 +665,8 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         GlassFloatingSearchBar(
           controller: _searchController,
           hintText: currentTab == 0 && _bookSearchMode == BookSearchMode.online
-              ? '搜索书源...'
-              : '搜索${ReadingContentType.values[currentTab].label}...',
+              ? context.l10n.readingSearchHintOnline
+              : context.l10n.readingSearchHintGeneric(ReadingContentType.values[currentTab].label),
           width: searchWidth,
           onChanged: (query) {
             setState(() {}); // 触发重建以更新模式切换可见性
@@ -722,12 +722,12 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                       color: Colors.amber,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.search_rounded, size: 14, color: Colors.white),
                         SizedBox(width: 4),
-                        Text('搜索', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                        Text(context.l10n.readingSearchButtonText, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
                       ],
                     ),
                   ),
@@ -748,7 +748,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         if (currentTab == 0)
           GlassGroupIconButton(
             icon: Icons.search_rounded,
-            tooltip: '搜索',
+            tooltip: context.l10n.readingSearchTooltip,
             onPressed: () => _triggerSearch(currentTab),
           ),
         // 本地/在线切换按钮（仅在图书页显示）
@@ -758,8 +758,8 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                 ? Icons.cloud_rounded 
                 : Icons.folder_rounded,
             tooltip: _bookSearchMode == BookSearchMode.online 
-                ? '查看本地图书' 
-                : '查看在线书架',
+                ? context.l10n.readingViewLocalBooks
+                : context.l10n.readingViewOnlineShelf,
             onPressed: () {
               setState(() {
                 _bookSearchMode = _bookSearchMode == BookSearchMode.online
@@ -771,7 +771,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
         // 内容类型切换
         GlassGroupPopupMenuButton<int>(
           icon: ReadingContentType.values[currentTab].icon,
-          tooltip: '切换内容类型',
+          tooltip: context.l10n.readingContentTypeSwitch,
           itemBuilder: (context) => ReadingContentType.values.asMap().entries.map((entry) {
             final index = entry.key;
             final type = entry.value;
@@ -915,7 +915,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
             children: [
               _buildStatChip(
                 icon: Icons.menu_book_rounded,
-                label: '$bookCount 本',
+                label: context.l10n.readingBookCountLabel(bookCount),
                 color: Colors.amber[700]!,
                 isDark: isDark,
                 isActive: currentTab == 0,
@@ -923,7 +923,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
               const SizedBox(width: 12),
               _buildStatChip(
                 icon: Icons.collections_bookmark_rounded,
-                label: '$comicCount 部',
+                label: context.l10n.readingComicCountLabel(comicCount),
                 color: Colors.orange[600]!,
                 isDark: isDark,
                 isActive: currentTab == 1,
@@ -931,7 +931,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
               const SizedBox(width: 12),
               _buildStatChip(
                 icon: Icons.note_alt_rounded,
-                label: '$noteCount 篇',
+                label: context.l10n.readingNoteCountLabel(noteCount),
                 color: Colors.green[600]!,
                 isDark: isDark,
                 isActive: currentTab == 2,
@@ -1081,8 +1081,8 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                             style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                             decoration: InputDecoration(
                               hintText: currentTab == 0 && _bookSearchMode == BookSearchMode.online
-                                  ? '搜索书源...'
-                                  : '搜索${ReadingContentType.values[currentTab].label}...',
+                                  ? context.l10n.readingSearchHintOnline
+                                  : context.l10n.readingSearchHintGeneric(ReadingContentType.values[currentTab].label),
                               hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1173,7 +1173,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                                     color: Colors.amber,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.search_rounded, size: 14, color: Colors.white),
@@ -1202,7 +1202,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                   // 搜索按钮
                   GlassGroupIconButton(
                     icon: Icons.search_rounded,
-                    tooltip: '搜索',
+                    tooltip: context.l10n.readingSearchTooltip,
                     onPressed: () => _triggerSearch(currentTab),
                   ),
                   // 本地/在线切换按钮（仅在图书页显示）
@@ -1212,8 +1212,8 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                           ? Icons.cloud_rounded 
                           : Icons.folder_rounded,
                       tooltip: _bookSearchMode == BookSearchMode.online 
-                          ? '查看本地图书' 
-                          : '查看在线书架',
+                          ? context.l10n.readingViewLocalBooks
+                          : context.l10n.readingViewOnlineShelf,
                       onPressed: () {
                         setState(() {
                           _bookSearchMode = _bookSearchMode == BookSearchMode.online 
@@ -1225,7 +1225,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
                   // 类型切换按钮
                   GlassGroupDynamicButton(
                     icon: ReadingContentType.values[currentTab].icon,
-                    tooltip: '切换内容类型',
+                    tooltip: context.l10n.readingContentTypeSwitch,
                     showDropdownIndicator: true,
                     onPressed: () => _showTypeSwitcherMenu(context, isDark, currentTab),
                   ),
@@ -1363,13 +1363,13 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 6) return '夜深了';
-    if (hour < 9) return '早上好';
-    if (hour < 12) return '上午好';
-    if (hour < 14) return '中午好';
-    if (hour < 18) return '下午好';
-    if (hour < 22) return '晚上好';
-    return '夜深了';
+    if (hour < 6) return context.l10n.readingGreetingNight;
+    if (hour < 9) return context.l10n.readingGreetingMorning;
+    if (hour < 12) return context.l10n.readingGreetingMid;
+    if (hour < 14) return context.l10n.readingGreetingNoon;
+    if (hour < 18) return context.l10n.readingGreetingAfternoon;
+    if (hour < 22) return context.l10n.readingGreetingEvening;
+    return context.l10n.readingGreetingNight;
   }
 
   Widget _buildTypeSwitcher(BuildContext context, bool isDark, int currentTab) {

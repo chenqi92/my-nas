@@ -121,14 +121,14 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                   if (connection?.status == TransmissionConnectionStatus.connected)
                     IconButton(
                       icon: const Icon(Icons.filter_alt_rounded),
-                      tooltip: '筛选',
+                      tooltip: context.l10n.transmissionFilterButtonTooltip,
                       onPressed: () => _showFilterDialog(context),
                     ),
                   // 排序按钮
                   if (connection?.status == TransmissionConnectionStatus.connected)
                     IconButton(
                       icon: const Icon(Icons.swap_vert_rounded),
-                      tooltip: '排序',
+                      tooltip: context.l10n.transmissionSortButtonTooltip,
                       onPressed: () => _showSortDialog(context),
                     ),
                   // 更多操作菜单
@@ -139,28 +139,28 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                     ),
                     onSelected: (value) => _handleMenuAction(value, context),
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'stop_all',
                         child: ListTile(
                           leading: Icon(Icons.pause_rounded),
-                          title: Text('全部停止'),
+                          title: Text(context.l10n.transmissionMenuStopAll),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'start_all',
                         child: ListTile(
                           leading: Icon(Icons.play_arrow_rounded),
-                          title: Text('全部开始'),
+                          title: Text(context.l10n.transmissionMenuStartAll),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
                       const PopupMenuDivider(),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'refresh',
                         child: ListTile(
                           leading: Icon(Icons.refresh_rounded),
-                          title: Text('刷新'),
+                          title: Text(context.l10n.transmissionMenuRefresh),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
@@ -178,7 +178,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                     Expanded(
                       child: _SpeedCard(
                         icon: Icons.download_rounded,
-                        label: '下载',
+                        label: context.l10n.transmissionSpeedCardDownload,
                         speed: stats.downloadSpeed,
                         total: stats.currentStats?.downloadedBytes ?? 0,
                         color: AppColors.success,
@@ -189,7 +189,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                     Expanded(
                       child: _SpeedCard(
                         icon: Icons.upload_rounded,
-                        label: '上传',
+                        label: context.l10n.transmissionSpeedCardUpload,
                         speed: stats.uploadSpeed,
                         total: stats.currentStats?.uploadedBytes ?? 0,
                         color: AppColors.primary,
@@ -213,13 +213,13 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
     TransmissionConnection? connection,
   ) {
     if (connection == null || connection.status == TransmissionConnectionStatus.connecting) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('正在连接...'),
+            Text(context.l10n.transmissionConnecting),
           ],
         ),
       );
@@ -232,12 +232,12 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
           children: [
             Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('连接失败', style: context.textTheme.titleLarge),
+            Text(context.l10n.transmissionConnectionFailed, style: context.textTheme.titleLarge),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                connection.errorMessage ?? '未知错误',
+                connection.errorMessage ?? context.l10n.transmissionUnknownError,
                 textAlign: TextAlign.center,
                 style: context.textTheme.bodyMedium?.copyWith(color: AppColors.error),
               ),
@@ -249,7 +249,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
                 _connect();
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重试'),
+              label: Text(context.l10n.transmissionRetryButton),
             ),
           ],
         ),
@@ -324,7 +324,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
               child: Icon(Icons.info_outline, color: AppColors.primary),
             ),
             const SizedBox(width: 12),
-            const Text('版本信息'),
+            Text(context.l10n.transmissionVersionInfoTitle),
           ],
         ),
         content: Column(
@@ -332,19 +332,19 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _InfoRow(
-              label: '服务名称',
+              label: context.l10n.transmissionServiceName,
               value: widget.source.displayName,
               isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
-              label: '版本',
+              label: context.l10n.transmissionVersion,
               value: info.version ?? '未知',
               isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
-              label: '服务器地址',
+              label: context.l10n.transmissionServerAddress,
               value: '${widget.source.host}:${widget.source.port}',
               isDark: isDark,
             ),
@@ -353,7 +353,7 @@ class _TransmissionDetailPageState extends ConsumerState<TransmissionDetailPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(context.l10n.transmissionCloseButton),
           ),
         ],
       ),
@@ -545,10 +545,10 @@ class _TorrentList extends ConsumerWidget {
             child: Icon(Icons.download_rounded, size: 48, color: AppColors.primary),
           ),
           const SizedBox(height: 24),
-          Text('暂无下载任务', style: context.textTheme.titleMedium),
+          Text(context.l10n.transmissionEmptyState, style: context.textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
-            '点击右下角按钮添加任务',
+            context.l10n.transmissionEmptyStateHint,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -608,7 +608,7 @@ class _TorrentTile extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  _buildActionButtons(ref),
+                  _buildActionButtons(context, ref),
                 ],
               ),
               const SizedBox(height: 8),
@@ -744,7 +744,7 @@ class _TorrentTile extends ConsumerWidget {
     return Icon(icon, size: 20, color: color);
   }
 
-  Widget _buildActionButtons(WidgetRef ref) {
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
     final actions = ref.read(transmissionActionsProvider(sourceId));
 
     return Row(
@@ -754,7 +754,7 @@ class _TorrentTile extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.play_arrow_rounded, size: 20),
             onPressed: () => actions.start([torrent.id]),
-            tooltip: '开始',
+            tooltip: context.l10n.transmissionStartTooltip,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           )
@@ -762,14 +762,14 @@ class _TorrentTile extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.pause_rounded, size: 20),
             onPressed: () => actions.stop([torrent.id]),
-            tooltip: '停止',
+            tooltip: context.l10n.transmissionStopTooltip,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
           ),
         IconButton(
           icon: const Icon(Icons.delete_outline, size: 20),
           onPressed: () => _showDeleteDialog(ref),
-          tooltip: '删除',
+          tooltip: context.l10n.transmissionDeleteTooltip,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         ),
@@ -782,25 +782,25 @@ class _TorrentTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除任务'),
+        title: Text(context.l10n.transmissionDeleteDialogTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('确定要删除 "${torrent.name}" 吗？'),
+            Text(context.l10n.transmissionDeleteDialogMessage(torrent.name)),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.transmissionDeleteCancel),
           ),
           TextButton(
             onPressed: () {
               ref.read(transmissionActionsProvider(sourceId)).remove([torrent.id]);
               Navigator.pop(context);
             },
-            child: const Text('仅删除任务'),
+            child: Text(context.l10n.transmissionDeleteTaskOnly),
           ),
           FilledButton(
             onPressed: () {
@@ -808,7 +808,7 @@ class _TorrentTile extends ConsumerWidget {
               Navigator.pop(context);
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('删除任务和文件'),
+            child: Text(context.l10n.transmissionDeleteTaskAndFiles),
           ),
         ],
       ),
@@ -862,30 +862,30 @@ class _TorrentTile extends ConsumerWidget {
                   controller: scrollController,
                   padding: const EdgeInsets.all(16),
                   children: [
-                    _DetailItem(label: '状态', value: _getStatusText()),
-                    _DetailItem(label: '大小', value: _formatSize(torrent.totalSize)),
-                    _DetailItem(label: '进度', value: '${(torrent.percentDone * 100).toStringAsFixed(1)}%'),
+                    _DetailItem(label: context.l10n.transmissionDetailStatus, value: _getStatusText(context)),
+                    _DetailItem(label: context.l10n.transmissionDetailSize, value: _formatSize(torrent.totalSize)),
+                    _DetailItem(label: context.l10n.transmissionDetailProgress, value: '${(torrent.percentDone * 100).toStringAsFixed(1)}%'),
                     if (torrent.downloadedEver != null)
-                      _DetailItem(label: '已下载', value: _formatSize(torrent.downloadedEver!)),
+                      _DetailItem(label: context.l10n.transmissionDetailDownloaded, value: _formatSize(torrent.downloadedEver!)),
                     if (torrent.uploadedEver != null)
-                      _DetailItem(label: '已上传', value: _formatSize(torrent.uploadedEver!)),
+                      _DetailItem(label: context.l10n.transmissionDetailUploaded, value: _formatSize(torrent.uploadedEver!)),
                     if (torrent.downloadedEver != null && torrent.downloadedEver! > 0)
                       _DetailItem(
-                        label: '分享率',
+                        label: context.l10n.transmissionDetailRatio,
                         value: ((torrent.uploadedEver ?? 0) / torrent.downloadedEver!).toStringAsFixed(2),
                       ),
                     if (torrent.eta != null && torrent.eta! > 0)
-                      _DetailItem(label: '剩余时间', value: _formatEta(torrent.eta!)),
+                      _DetailItem(label: context.l10n.transmissionDetailTimeRemaining, value: _formatEta(torrent.eta!)),
                     if (torrent.addedDate != null)
                       _DetailItem(
-                        label: '添加时间',
+                        label: context.l10n.transmissionDetailAddedTime,
                         value: DateTime.fromMillisecondsSinceEpoch(torrent.addedDate! * 1000).toString().substring(0, 19),
                       ),
                     if (torrent.downloadDir != null)
-                      _DetailItem(label: '保存位置', value: torrent.downloadDir!),
+                      _DetailItem(label: context.l10n.transmissionDetailSavePath, value: torrent.downloadDir!),
                     _DetailItem(label: 'Hash', value: torrent.hashString),
                     if (torrent.peersConnected != null)
-                      _DetailItem(label: '连接数', value: torrent.peersConnected.toString()),
+                      _DetailItem(label: context.l10n.transmissionDetailPeerCount, value: torrent.peersConnected.toString()),
                   ],
                 ),
               ),
@@ -896,14 +896,14 @@ class _TorrentTile extends ConsumerWidget {
     );
   }
 
-  String _getStatusText() => switch (torrent.statusEnum) {
-    TransmissionTorrentStatus.stopped => '已停止',
-    TransmissionTorrentStatus.checkWait => '等待校验',
-    TransmissionTorrentStatus.check => '校验中',
-    TransmissionTorrentStatus.downloadWait => '等待下载',
-    TransmissionTorrentStatus.download => '下载中',
-    TransmissionTorrentStatus.seedWait => '等待做种',
-    TransmissionTorrentStatus.seed => '做种中',
+  String _getStatusText(BuildContext context) => switch (torrent.statusEnum) {
+    TransmissionTorrentStatus.stopped => context.l10n.transmissionStatusStopped,
+    TransmissionTorrentStatus.checkWait => context.l10n.transmissionStatusCheckWait,
+    TransmissionTorrentStatus.check => context.l10n.transmissionStatusCheck,
+    TransmissionTorrentStatus.downloadWait => context.l10n.transmissionStatusDownloadWait,
+    TransmissionTorrentStatus.download => context.l10n.transmissionStatusDownloading,
+    TransmissionTorrentStatus.seedWait => context.l10n.transmissionStatusSeedWait,
+    TransmissionTorrentStatus.seed => context.l10n.transmissionStatusSeeding,
   };
 }
 
@@ -951,11 +951,11 @@ class _FilterOptionsSheet extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final statuses = [
-      (null, '全部'),
-      (TransmissionTorrentStatus.download, '下载中'),
-      (TransmissionTorrentStatus.seed, '做种中'),
-      (TransmissionTorrentStatus.stopped, '已停止'),
-      (TransmissionTorrentStatus.check, '校验中'),
+      (null, context.l10n.transmissionFilterStatusAll),
+      (TransmissionTorrentStatus.download, context.l10n.transmissionFilterStatusDownloading),
+      (TransmissionTorrentStatus.seed, context.l10n.transmissionFilterStatusSeeding),
+      (TransmissionTorrentStatus.stopped, context.l10n.transmissionFilterStatusStopped),
+      (TransmissionTorrentStatus.check, context.l10n.transmissionFilterStatusChecking),
     ];
 
     return DraggableScrollableSheet(
@@ -977,7 +977,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                 children: [
                   const Icon(Icons.filter_alt_rounded),
                   const SizedBox(width: 8),
-                  Text('筛选状态', style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(context.l10n.transmissionFilterOptionsTitle, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -1045,14 +1045,14 @@ class _SortOptionsSheet extends ConsumerWidget {
                 children: [
                   const Icon(Icons.swap_vert_rounded),
                   const SizedBox(width: 8),
-                  Text('排序方式', style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(context.l10n.transmissionSortOptionsTitle, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const Spacer(),
                   TextButton.icon(
                     onPressed: () {
                       ref.read(transmissionSortSettingsProvider(sourceId).notifier).toggleReverse();
                     },
                     icon: Icon(settings.reverse ? Icons.arrow_downward : Icons.arrow_upward, size: 18),
-                    label: Text(settings.reverse ? '降序' : '升序'),
+                    label: Text(settings.reverse ? context.l10n.transmissionSortDescending : context.l10n.transmissionSortAscending),
                   ),
                 ],
               ),
@@ -1156,11 +1156,11 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '添加下载任务',
+                            context.l10n.transmissionAddTorrentTitle,
                             style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            '粘贴 Magnet 链接或 Torrent URL',
+                            context.l10n.transmissionAddTorrentSubtitle,
                             style: context.textTheme.bodySmall?.copyWith(
                               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                             ),
@@ -1181,7 +1181,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                               ),
                             )
                           : const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('添加'),
+                      label: Text(context.l10n.transmissionAddButton),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
@@ -1195,12 +1195,12 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                   controller: scrollController,
                   padding: const EdgeInsets.all(20),
                   children: [
-                    Text('下载链接', style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(context.l10n.transmissionLinkLabel, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _controller,
                       decoration: InputDecoration(
-                        hintText: 'magnet:?xt=urn:btih:... 或 https://...',
+                        hintText: context.l10n.transmissionLinkHint,
                         hintStyle: TextStyle(
                           color: isDark
                               ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.5)
@@ -1229,7 +1229,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                               )
                             : IconButton(
                                 icon: const Icon(Icons.content_paste_rounded, size: 18),
-                                tooltip: '粘贴',
+                                tooltip: context.l10n.transmissionPasteTooltip,
                                 onPressed: () async {
                                   final data = await Clipboard.getData(Clipboard.kTextPlain);
                                   if (data?.text != null) {
@@ -1244,11 +1244,11 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                       style: context.textTheme.bodyMedium?.copyWith(fontFamily: 'monospace', fontSize: 13),
                       onChanged: (_) => setState(() {}),
                       validator: (value) {
-                        if (value == null || value.isEmpty) return '请输入链接';
+                        if (value == null || value.isEmpty) return context.l10n.transmissionLinkValidator;
                         if (!value.startsWith('magnet:') &&
                             !value.startsWith('http://') &&
                             !value.startsWith('https://')) {
-                          return '请输入有效的 Magnet 链接或 HTTP URL';
+                          return context.l10n.transmissionLinkValidatorFormat;
                         }
                         return null;
                       },
@@ -1299,9 +1299,9 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text('添加后暂停', style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+                                      Text(context.l10n.transmissionPauseAfterAddTitle, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
                                       Text(
-                                        _paused ? '任务将不会自动开始下载' : '任务将立即开始下载',
+                                        _paused ? context.l10n.transmissionPauseAfterAddDescPaused : context.l10n.transmissionPauseAfterAddDescPlaying,
                                         style: context.textTheme.bodySmall?.copyWith(
                                           color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                                         ),
@@ -1352,9 +1352,9 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
       if (mounted) {
         Navigator.pop(context);
         if (result.isDuplicate) {
-          context.showWarningSnackBar('任务已存在');
+          context.showWarningSnackBar(context.l10n.transmissionTaskDuplicateSnackbar);
         } else {
-          context.showSuccessSnackBar('任务已添加');
+          context.showSuccessSnackBar(context.l10n.transmissionTaskAddedSnackbar);
         }
       }
     } on Exception catch (e) {

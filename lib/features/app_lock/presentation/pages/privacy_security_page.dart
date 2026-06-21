@@ -131,19 +131,18 @@ class _PrivacySecurityPageState extends ConsumerState<PrivacySecurityPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SetHead(
+              SetHead(
                 icon: Icons.shield_outlined,
-                title: '隐私与安全',
-                subtitle:
-                    '应用锁、PIN、生物识别与自动锁定。凭据通过系统安全存储；失败时静默降级，不阻塞使用。',
+                title: context.l10n.privacySecurityHeadTitle,
+                subtitle: context.l10n.privacySecurityHeadSubtitle,
               ),
               SetSection(
-                title: '应用锁',
+                title: context.l10n.privacySecuritySectionAppLock,
                 hint: 'app_lock_settings',
                 children: [
                   SetRow(
-                    title: '启用应用锁',
-                    desc: '启动与从后台恢复时要求验证',
+                    title: context.l10n.privacySecurityEnableTitle,
+                    desc: context.l10n.privacySecurityEnableDesc,
                     last: !settings.enabled,
                     trailing: AppSwitch(
                       value: settings.enabled,
@@ -152,8 +151,8 @@ class _PrivacySecurityPageState extends ConsumerState<PrivacySecurityPage> {
                   ),
                   if (settings.enabled)
                     SetRow(
-                      title: 'PIN 码',
-                      desc: '4–6 位数字',
+                      title: context.l10n.privacySecurityPinTitle,
+                      desc: context.l10n.privacySecurityPinDesc,
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -170,7 +169,7 @@ class _PrivacySecurityPageState extends ConsumerState<PrivacySecurityPage> {
                           ],
                           const SizedBox(width: 12),
                           AppButton(
-                            label: '修改 PIN',
+                            label: context.l10n.privacySecurityChangePinButton,
                             icon: Icons.password_rounded,
                             dense: true,
                             onPressed: _onChangePin,
@@ -180,8 +179,8 @@ class _PrivacySecurityPageState extends ConsumerState<PrivacySecurityPage> {
                     ),
                   if (settings.enabled && _biometricAvailable)
                     SetRow(
-                      title: '生物识别',
-                      desc: 'Face ID / Touch ID 解锁',
+                      title: context.l10n.privacySecurityBiometricTitle,
+                      desc: context.l10n.privacySecurityBiometricDesc,
                       trailing: AppSwitch(
                         value: settings.biometricEnabled,
                         onChanged: (v) => ref
@@ -191,8 +190,8 @@ class _PrivacySecurityPageState extends ConsumerState<PrivacySecurityPage> {
                     ),
                   if (settings.enabled)
                     SetRow(
-                      title: '自动锁定',
-                      desc: '闲置超时后自动上锁',
+                      title: context.l10n.privacySecurityAutoLockTitle,
+                      desc: context.l10n.privacySecurityAutoLockDesc,
                       last: true,
                       trailing: AppSegmented<AppLockTimeout>(
                         options: [

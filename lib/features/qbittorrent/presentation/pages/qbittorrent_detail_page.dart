@@ -132,14 +132,14 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                   if (connection?.status == QBConnectionStatus.connected)
                     IconButton(
                       icon: const Icon(Icons.filter_alt_rounded),
-                      tooltip: '筛选',
+                      tooltip: context.l10n.qbDetailFilterTooltip,
                       onPressed: () => _showFilterDialog(context),
                     ),
                   // 排序按钮
                   if (connection?.status == QBConnectionStatus.connected)
                     IconButton(
                       icon: const Icon(Icons.swap_vert_rounded),
-                      tooltip: '排序',
+                      tooltip: context.l10n.qbDetailSortTooltip,
                       onPressed: () => _showSortDialog(context),
                     ),
                   // 更多操作菜单
@@ -150,37 +150,37 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                     ),
                     onSelected: (value) => _handleMenuAction(value, context),
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'pause_all',
                         child: ListTile(
                           leading: Icon(Icons.pause_rounded),
-                          title: Text('全部暂停'),
+                          title: Text(context.l10n.qbDetailMenuPauseAll),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'resume_all',
                         child: ListTile(
                           leading: Icon(Icons.play_arrow_rounded),
-                          title: Text('全部开始'),
+                          title: Text(context.l10n.qbDetailMenuResumeAll),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
                       const PopupMenuDivider(),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'speed_limit',
                         child: ListTile(
                           leading: Icon(Icons.tune_rounded),
-                          title: Text('速度限制设置'),
+                          title: Text(context.l10n.qbDetailMenuSpeedLimit),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
                       const PopupMenuDivider(),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'refresh',
                         child: ListTile(
                           leading: Icon(Icons.refresh_rounded),
-                          title: Text('刷新'),
+                          title: Text(context.l10n.qbDetailMenuRefresh),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
@@ -198,7 +198,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                     Expanded(
                       child: _SpeedCard(
                         icon: Icons.download_rounded,
-                        label: '下载',
+                        label: context.l10n.qbSpeedCardLabelDownload,
                         speed: transferInfo.dlInfoSpeed,
                         total: transferInfo.dlInfoData,
                         limit: prefsAsync.valueOrNull?.dlLimit ?? 0,
@@ -210,7 +210,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                     Expanded(
                       child: _SpeedCard(
                         icon: Icons.upload_rounded,
-                        label: '上传',
+                        label: context.l10n.qbSpeedCardLabelUpload,
                         speed: transferInfo.upInfoSpeed,
                         total: transferInfo.upInfoData,
                         limit: prefsAsync.valueOrNull?.upLimit ?? 0,
@@ -235,13 +235,13 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
     QBittorrentConnection? connection,
   ) {
     if (connection == null || connection.status == QBConnectionStatus.connecting) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('正在连接...'),
+            Text(context.l10n.qbDetailConnecting),
           ],
         ),
       );
@@ -254,12 +254,12 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
           children: [
             Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('连接失败', style: context.textTheme.titleLarge),
+            Text(context.l10n.qbDetailConnectionFailed, style: context.textTheme.titleLarge),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                connection.errorMessage ?? '未知错误',
+                connection.errorMessage ?? context.l10n.qbDetailUnknownError,
                 textAlign: TextAlign.center,
                 style: context.textTheme.bodyMedium?.copyWith(color: AppColors.error),
               ),
@@ -271,7 +271,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
                 _connect();
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('重试'),
+              label: Text(context.l10n.qbDetailRetryButton),
             ),
           ],
         ),
@@ -364,7 +364,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
               child: Icon(Icons.info_outline, color: AppColors.primary),
             ),
             const SizedBox(width: 12),
-            const Text('版本信息'),
+            Text(context.l10n.qbDetailVersionInfoTitle),
           ],
         ),
         content: Column(
@@ -372,19 +372,19 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _InfoRow(
-              label: '服务名称',
+              label: context.l10n.qbDetailVersionInfoServiceName,
               value: widget.source.displayName,
               isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
-              label: '版本',
-              value: info.version ?? '未知',
+              label: context.l10n.qbDetailVersionInfoVersion,
+              value: info.version ?? context.l10n.qbDetailVersionInfoUnknown,
               isDark: isDark,
             ),
             const SizedBox(height: 12),
             _InfoRow(
-              label: '服务器地址',
+              label: context.l10n.qbDetailVersionInfoServerAddress,
               value: '${widget.source.host}:${widget.source.port}',
               isDark: isDark,
             ),
@@ -393,7 +393,7 @@ class _QBittorrentDetailPageState extends ConsumerState<QBittorrentDetailPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(context.l10n.qbDetailCloseButton),
           ),
         ],
       ),
@@ -650,10 +650,10 @@ class _TorrentList extends ConsumerWidget {
             child: Icon(Icons.download_done, size: 48, color: AppColors.primary),
           ),
           const SizedBox(height: 24),
-          Text('暂无下载任务', style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
+          Text(context.l10n.qbDetailEmptyState, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           Text(
-            '点击右下角按钮添加任务',
+            context.l10n.qbDetailEmptyStateHint,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -926,7 +926,7 @@ class _TorrentTile extends ConsumerWidget {
       return IconButton(
         icon: const Icon(Icons.play_arrow_rounded),
         onPressed: () => actions.resume([torrent.hash]),
-        tooltip: '继续',
+        tooltip: context.l10n.qbDetailTileResumeTooltip,
       );
     }
 
@@ -934,7 +934,7 @@ class _TorrentTile extends ConsumerWidget {
       return IconButton(
         icon: const Icon(Icons.pause_rounded),
         onPressed: () => actions.pause([torrent.hash]),
-        tooltip: '暂停',
+        tooltip: context.l10n.qbDetailTilePauseTooltip,
       );
     }
 
@@ -963,28 +963,28 @@ class _TorrentTile extends ConsumerWidget {
               style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _DetailItem(label: '大小', value: _formatSize(torrent.size)),
-            _DetailItem(label: '进度', value: '${(torrent.progress * 100).toStringAsFixed(1)}%'),
-            _DetailItem(label: '状态', value: torrent.state),
+            _DetailItem(label: context.l10n.qbDetailLabelSize, value: _formatSize(torrent.size)),
+            _DetailItem(label: context.l10n.qbDetailLabelProgress, value: '${(torrent.progress * 100).toStringAsFixed(1)}%'),
+            _DetailItem(label: context.l10n.qbDetailLabelStatus, value: torrent.state),
             if (torrent.dlSpeed > 0)
-              _DetailItem(label: '下载速度', value: _formatSpeed(torrent.dlSpeed)),
+              _DetailItem(label: context.l10n.qbDetailLabelDownloadSpeed, value: _formatSpeed(torrent.dlSpeed)),
             if (torrent.upSpeed > 0)
-              _DetailItem(label: '上传速度', value: _formatSpeed(torrent.upSpeed)),
+              _DetailItem(label: context.l10n.qbDetailLabelUploadSpeed, value: _formatSpeed(torrent.upSpeed)),
             if (torrent.ratio != null)
-              _DetailItem(label: '分享率', value: torrent.ratio!.toStringAsFixed(2)),
+              _DetailItem(label: context.l10n.qbDetailLabelRatio, value: torrent.ratio!.toStringAsFixed(2)),
             if (torrent.numSeeds != null)
-              _DetailItem(label: '种子数', value: torrent.numSeeds.toString()),
+              _DetailItem(label: context.l10n.qbDetailLabelSeeds, value: torrent.numSeeds.toString()),
             if (torrent.numLeechers != null)
-              _DetailItem(label: '下载者', value: torrent.numLeechers.toString()),
+              _DetailItem(label: context.l10n.qbDetailLabelLeechers, value: torrent.numLeechers.toString()),
             if (torrent.category != null && torrent.category!.isNotEmpty)
-              _DetailItem(label: '分类', value: torrent.category!),
+              _DetailItem(label: context.l10n.qbDetailLabelCategory, value: torrent.category!),
             if (torrent.tags != null && torrent.tags!.isNotEmpty)
-              _DetailItem(label: '标签', value: torrent.tags!),
+              _DetailItem(label: context.l10n.qbDetailLabelTags, value: torrent.tags!),
             if (torrent.savePath != null)
-              _DetailItem(label: '保存路径', value: torrent.savePath!),
+              _DetailItem(label: context.l10n.qbDetailLabelSavePath, value: torrent.savePath!),
             if (torrent.addedOn != null)
               _DetailItem(
-                label: '添加时间',
+                label: context.l10n.qbDetailLabelAddedTime,
                 value: DateTime.fromMillisecondsSinceEpoch(torrent.addedOn! * 1000)
                     .toString()
                     .substring(0, 19),
@@ -999,7 +999,7 @@ class _TorrentTile extends ConsumerWidget {
                       context.showSuccessToast('已复制 Hash');
                     },
                     icon: const Icon(Icons.copy_rounded),
-                    label: const Text('复制 Hash'),
+                    label: Text(context.l10n.qbDetailCopyHashButton),
                   ),
                 ),
               ],
@@ -1020,7 +1020,7 @@ class _TorrentTile extends ConsumerWidget {
             const SheetDragHandle(),
             ListTile(
               leading: Icon(torrent.isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
-              title: Text(torrent.isPaused ? '继续' : '暂停'),
+              title: Text(torrent.isPaused ? context.l10n.qbDetailTileResumeTooltip : context.l10n.qbDetailTilePauseTooltip),
               onTap: () {
                 Navigator.pop(context);
                 final actions = ref.read(qbittorrentActionsProvider(sourceId));
@@ -1033,7 +1033,7 @@ class _TorrentTile extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.drive_file_rename_outline),
-              title: const Text('重命名'),
+              title: Text(context.l10n.qbDetailActionRename),
               onTap: () {
                 Navigator.pop(context);
                 _showRenameDialog(context, ref);
@@ -1041,7 +1041,7 @@ class _TorrentTile extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.folder_open_rounded),
-              title: const Text('更改保存位置'),
+              title: Text(context.l10n.qbDetailActionChangeLocation),
               onTap: () {
                 Navigator.pop(context);
                 _showLocationDialog(context, ref);
@@ -1049,7 +1049,7 @@ class _TorrentTile extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.category),
-              title: const Text('修改分类'),
+              title: Text(context.l10n.qbDetailActionChangeCategory),
               onTap: () {
                 Navigator.pop(context);
                 _showCategoryDialog(context, ref);
@@ -1057,7 +1057,7 @@ class _TorrentTile extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.label),
-              title: const Text('管理标签'),
+              title: Text(context.l10n.qbDetailActionManageTags),
               onTap: () {
                 Navigator.pop(context);
                 _showTagsDialog(context, ref);
@@ -1066,7 +1066,7 @@ class _TorrentTile extends ConsumerWidget {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.delete_outline),
-              title: const Text('删除任务'),
+              title: Text(context.l10n.qbDetailActionDelete),
               onTap: () {
                 Navigator.pop(context);
                 _confirmDelete(context, ref, deleteFiles: false);
@@ -1074,7 +1074,7 @@ class _TorrentTile extends ConsumerWidget {
             ),
             ListTile(
               leading: Icon(Icons.delete_forever, color: AppColors.error),
-              title: Text('删除任务和文件', style: TextStyle(color: AppColors.error)),
+              title: Text(context.l10n.qbDetailActionDeleteWithFiles, style: TextStyle(color: AppColors.error)),
               onTap: () {
                 Navigator.pop(context);
                 _confirmDelete(context, ref, deleteFiles: true);
@@ -1092,16 +1092,16 @@ class _TorrentTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('重命名'),
+        title: Text(context.l10n.qbDetailRenameTitle),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: '新名称'),
+          decoration: InputDecoration(labelText: context.l10n.qbDetailRenameNewName),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.qbDetailCancelButton),
           ),
           FilledButton(
             onPressed: () {
@@ -1111,7 +1111,7 @@ class _TorrentTile extends ConsumerWidget {
                     controller.text,
                   );
             },
-            child: const Text('确定'),
+            child: Text(context.l10n.qbDetailConfirmButton),
           ),
         ],
       ),
@@ -1123,11 +1123,11 @@ class _TorrentTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('更改保存位置'),
+        title: Text(context.l10n.qbDetailActionChangeLocation),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: '保存路径',
+          decoration: InputDecoration(
+            labelText: context.l10n.qbDetailLabelSavePath,
             hintText: '/path/to/save',
           ),
           autofocus: true,
@@ -1135,7 +1135,7 @@ class _TorrentTile extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.qbDetailCancelButton),
           ),
           FilledButton(
             onPressed: () {
@@ -1145,7 +1145,7 @@ class _TorrentTile extends ConsumerWidget {
                 controller.text,
               );
             },
-            child: const Text('确定'),
+            child: Text(context.l10n.qbDetailConfirmButton),
           ),
         ],
       ),
@@ -1163,7 +1163,7 @@ class _TorrentTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text('无分类'),
+              title: Text(context.l10n.qbDetailCategoryNone),
               onTap: () {
                 Navigator.pop(context);
                 ref.read(qbittorrentActionsProvider(sourceId)).setCategory([torrent.hash], '');
@@ -1181,7 +1181,7 @@ class _TorrentTile extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.add_rounded),
-              title: const Text('创建新分类'),
+              title: Text(context.l10n.qbDetailCreateNewCategory),
               onTap: () {
                 Navigator.pop(context);
                 _showCreateCategoryDialog(context, ref);
@@ -1199,20 +1199,20 @@ class _TorrentTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('创建分类'),
+        title: Text(context.l10n.qbDetailCreateCategoryTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: '分类名称'),
+              decoration: InputDecoration(labelText: context.l10n.qbDetailCategoryNameLabel),
               autofocus: true,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: pathController,
-              decoration: const InputDecoration(
-                labelText: '保存路径（可选）',
+              decoration: InputDecoration(
+                labelText: context.l10n.qbDetailCategorySavePathLabel,
                 hintText: '/path/to/save',
               ),
             ),
@@ -1221,7 +1221,7 @@ class _TorrentTile extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.qbDetailCancelButton),
           ),
           FilledButton(
             onPressed: () async {
@@ -1233,7 +1233,7 @@ class _TorrentTile extends ConsumerWidget {
               );
               await actions.setCategory([torrent.hash], nameController.text);
             },
-            child: const Text('创建'),
+            child: Text(context.l10n.qbDetailCreateButton),
           ),
         ],
       ),
@@ -1252,9 +1252,9 @@ class _TorrentTile extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(16),
-                child: Text('选择标签', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(context.l10n.qbDetailSelectTags, style: TextStyle(fontWeight: FontWeight.bold)),
               ),
               ...allTags.map(
                 (tag) => CheckboxListTile(
@@ -1274,7 +1274,7 @@ class _TorrentTile extends ConsumerWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.add_rounded),
-                title: const Text('创建新标签'),
+                title: Text(context.l10n.qbDetailCreateNewTag),
                 onTap: () {
                   Navigator.pop(context);
                   _showCreateTagDialog(context, ref);
@@ -1293,16 +1293,16 @@ class _TorrentTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('创建标签'),
+        title: Text(context.l10n.qbDetailCreateTagTitle),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: '标签名称'),
+          decoration: InputDecoration(labelText: context.l10n.qbDetailTagNameLabel),
           autofocus: true,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.qbDetailCancelButton),
           ),
           FilledButton(
             onPressed: () async {
@@ -1311,7 +1311,7 @@ class _TorrentTile extends ConsumerWidget {
               await actions.createTags([controller.text]);
               await actions.addTags([torrent.hash], [controller.text]);
             },
-            child: const Text('创建'),
+            child: Text(context.l10n.qbDetailCreateButton),
           ),
         ],
       ),
@@ -1322,16 +1322,16 @@ class _TorrentTile extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
+        title: Text(context.l10n.qbDetailConfirmDeleteTitle),
         content: Text(
           deleteFiles
-              ? '确定要删除 "${torrent.name}" 及其文件吗？\n此操作不可恢复。'
-              : '确定要删除 "${torrent.name}" 吗？\n文件将保留在磁盘上。',
+              ? context.l10n.qbDetailConfirmDeleteWithFiles(torrent.name)
+              : context.l10n.qbDetailConfirmDeleteWithoutFiles(torrent.name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(context.l10n.qbDetailCancelButton),
           ),
           FilledButton(
             onPressed: () {
@@ -1342,7 +1342,7 @@ class _TorrentTile extends ConsumerWidget {
               );
             },
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(context.l10n.qbDetailDeleteButton),
           ),
         ],
       ),
@@ -1396,7 +1396,7 @@ class _AltSpeedButton extends StatelessWidget {
 
     return IconButton(
       onPressed: onPressed,
-      tooltip: isEnabled ? '恢复全局速度' : '启用备用限速',
+      tooltip: isEnabled ? context.l10n.qbDetailAltSpeedRestoreGlobal : context.l10n.qbDetailAltSpeedEnable,
       icon: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
@@ -1468,7 +1468,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                         ref.read(qbSortSettingsProvider(sourceId).notifier).setFilterCategory(null);
                         ref.read(qbSortSettingsProvider(sourceId).notifier).setFilterTag(null);
                       },
-                      child: const Text('清除'),
+                      child: Text(context.l10n.qbDetailFilterClear),
                     ),
                 ],
               ),
@@ -1494,14 +1494,14 @@ class _FilterOptionsSheet extends ConsumerWidget {
                       runSpacing: 8,
                       children: [
                         _FilterChip(
-                          label: '全部',
+                          label: context.l10n.qbDetailFilterAll,
                           isSelected: settings.filterCategory == null,
                           onTap: () {
                             ref.read(qbSortSettingsProvider(sourceId).notifier).setFilterCategory(null);
                           },
                         ),
                         ...categories.map((c) => _FilterChip(
-                          label: c.isEmpty ? '(未分类)' : c,
+                          label: c.isEmpty ? context.l10n.qbDetailFilterUncategorized : c,
                           isSelected: settings.filterCategory == c,
                           onTap: () {
                             ref.read(qbSortSettingsProvider(sourceId).notifier).setFilterCategory(c);
@@ -1525,7 +1525,7 @@ class _FilterOptionsSheet extends ConsumerWidget {
                       runSpacing: 8,
                       children: [
                         _FilterChip(
-                          label: '全部',
+                          label: context.l10n.qbDetailFilterAll,
                           isSelected: settings.filterTag == null,
                           onTap: () {
                             ref.read(qbSortSettingsProvider(sourceId).notifier).setFilterTag(null);
@@ -1554,14 +1554,14 @@ class _FilterOptionsSheet extends ConsumerWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              '暂无可用的筛选选项',
+                              context.l10n.qbDetailNoFilterOptions,
                               style: context.textTheme.bodyMedium?.copyWith(
                                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              '添加分类或标签后可在此筛选',
+                              context.l10n.qbDetailNoFilterOptionsHint,
                               style: context.textTheme.bodySmall?.copyWith(
                                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                               ),
@@ -1670,7 +1670,7 @@ class _SortOptionsSheet extends ConsumerWidget {
                       settings.reverse ? Icons.arrow_downward : Icons.arrow_upward,
                       size: 18,
                     ),
-                    label: Text(settings.reverse ? '降序' : '升序'),
+                    label: Text(settings.reverse ? context.l10n.qbDetailSortDescending : context.l10n.qbDetailSortAscending),
                   ),
                 ],
               ),
@@ -1808,13 +1808,13 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '速度限制设置',
+                          context.l10n.qbDetailSpeedLimitTitle,
                           style: context.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
-                          '设置全局和备用速度限制',
+                          context.l10n.qbDetailSpeedLimitSubtitle,
                           style: context.textTheme.bodySmall?.copyWith(
                             color: isDark
                                 ? AppColors.darkOnSurfaceVariant
@@ -1837,7 +1837,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                             ),
                           )
                         : const Icon(Icons.check_rounded, size: 18),
-                    label: const Text('保存'),
+                    label: Text(context.l10n.qbDetailSaveButton),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     ),
@@ -1854,14 +1854,14 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                 children: [
                   // 全局限速
                   Text(
-                    '全局限速',
+                    context.l10n.qbDetailGlobalSpeedLimit,
                     style: context.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '设置为 0 表示不限速',
+                    context.l10n.qbDetailSpeedLimitZeroMeansUnlimited,
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark
                           ? AppColors.darkOnSurfaceVariant
@@ -1895,14 +1895,14 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
                   const SizedBox(height: 24),
                   // 备用限速
                   Text(
-                    '备用限速',
+                    context.l10n.qbDetailAlternativeSpeedLimit,
                     style: context.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '可通过快捷按钮临时切换到备用限速',
+                    context.l10n.qbDetailAlternativeSpeedLimitHint,
                     style: context.textTheme.bodySmall?.copyWith(
                       color: isDark
                           ? AppColors.darkOnSurfaceVariant
@@ -1988,7 +1988,7 @@ class _SpeedLimitSheetState extends ConsumerState<_SpeedLimitSheet> {
 
       if (mounted) {
         Navigator.pop(context);
-        context.showSuccessSnackBar('速度限制已保存');
+        context.showSuccessSnackBar(context.l10n.qbDetailSpeedLimitSaved);
       }
     } finally {
       if (mounted) {
@@ -2067,13 +2067,13 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '添加下载任务',
+                            context.l10n.qbDetailAddTorrentTitle,
                             style: context.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '粘贴 Magnet 链接或 Torrent URL',
+                            context.l10n.qbDetailAddTorrentSubtitle,
                             style: context.textTheme.bodySmall?.copyWith(
                               color: isDark
                                   ? AppColors.darkOnSurfaceVariant
@@ -2096,7 +2096,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                               ),
                             )
                           : const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('添加'),
+                      label: Text(context.l10n.qbDetailAddButton),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
@@ -2113,7 +2113,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                   children: [
                     // 链接输入框
                     Text(
-                      '下载链接',
+                      context.l10n.qbDetailDownloadLinkLabel,
                       style: context.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -2155,7 +2155,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                               )
                             : IconButton(
                                 icon: const Icon(Icons.content_paste_rounded, size: 18),
-                                tooltip: '粘贴',
+                                tooltip: context.l10n.qbDetailPasteTooltip,
                                 onPressed: () async {
                                   final data = await Clipboard.getData(Clipboard.kTextPlain);
                                   if (data?.text != null) {
@@ -2173,11 +2173,11 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                       ),
                       onChanged: (_) => setState(() {}),
                       validator: (value) {
-                        if (value == null || value.isEmpty) return '请输入链接';
+                        if (value == null || value.isEmpty) return context.l10n.qbDetailLinkValidationError;
                         if (!value.startsWith('magnet:') &&
                             !value.startsWith('http://') &&
                             !value.startsWith('https://')) {
-                          return '请输入有效的 Magnet 链接或 HTTP URL';
+                          return context.l10n.qbDetailLinkFormatError;
                         }
                         return null;
                       },
@@ -2265,13 +2265,13 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '添加后暂停',
+                                        context.l10n.qbDetailAddAfterPauseLabel,
                                         style: context.textTheme.bodyMedium?.copyWith(
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                       Text(
-                                        _paused ? '任务将不会自动开始下载' : '任务将立即开始下载',
+                                        _paused ? context.l10n.qbDetailAddAfterPauseNotStarting : context.l10n.qbDetailAddAfterPauseStarting,
                                         style: context.textTheme.bodySmall?.copyWith(
                                           color: isDark
                                               ? AppColors.darkOnSurfaceVariant
@@ -2363,7 +2363,7 @@ class _AddTorrentDialogState extends ConsumerState<_AddTorrentDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        context.showSuccessSnackBar('任务已添加');
+        context.showSuccessSnackBar(context.l10n.qbDetailTaskAdded);
       }
     } on Exception catch (e) {
       if (mounted) {

@@ -83,7 +83,7 @@ class DownloadPage extends ConsumerWidget {
               ),
               error: (error, _) => Center(
                 child: Text(
-                  '错误: $error',
+                  context.l10n.downloadErrorDisplay(error),
                   style: TextStyle(
                     color: isDark ? AppColors.darkOnSurfaceVariant : null,
                   ),
@@ -114,7 +114,7 @@ class DownloadPage extends ConsumerWidget {
           child: Row(
             children: [
               Text(
-                '下载',
+                context.l10n.downloadPageTitle,
                 style: context.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: isDark ? AppColors.darkOnSurface : null,
@@ -160,7 +160,7 @@ class DownloadPage extends ConsumerWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                '清除已完成',
+                context.l10n.downloadClearCompleted,
                 style: context.textTheme.labelMedium?.copyWith(
                   color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                   fontWeight: FontWeight.w500,
@@ -217,7 +217,7 @@ class DownloadPage extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            '暂无下载任务',
+            context.l10n.downloadEmptyTitle,
             style: context.textTheme.titleLarge?.copyWith(
               color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
               fontWeight: FontWeight.w600,
@@ -225,7 +225,7 @@ class DownloadPage extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '在文件浏览器中选择文件下载\n下载的文件将显示在这里',
+            context.l10n.downloadEmptyDescription,
             textAlign: TextAlign.center,
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -288,7 +288,7 @@ class _DownloadTaskTile extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _getStatusText(),
+                        _getStatusText(context),
                         style: context.textTheme.bodySmall?.copyWith(
                           color: _getStatusColor(),
                         ),
@@ -373,13 +373,13 @@ class _DownloadTaskTile extends ConsumerWidget {
     );
   }
 
-  String _getStatusText() => switch (task.status) {
-        DownloadStatus.pending => '等待中',
-        DownloadStatus.downloading => '下载中...',
-        DownloadStatus.paused => '已暂停',
-        DownloadStatus.completed => '已完成',
-        DownloadStatus.failed => '下载失败',
-        DownloadStatus.cancelled => '已取消',
+  String _getStatusText(BuildContext context) => switch (task.status) {
+        DownloadStatus.pending => context.l10n.downloadStatusPending,
+        DownloadStatus.downloading => context.l10n.downloadStatusDownloading,
+        DownloadStatus.paused => context.l10n.downloadStatusPaused,
+        DownloadStatus.completed => context.l10n.downloadStatusCompleted,
+        DownloadStatus.failed => context.l10n.downloadStatusFailed,
+        DownloadStatus.cancelled => context.l10n.downloadStatusCancelled,
       };
 
   Color _getStatusColor() => switch (task.status) {
@@ -429,22 +429,22 @@ class _DownloadTaskTile extends ConsumerWidget {
     final (icon, tooltip, onTap) = switch (task.status) {
       DownloadStatus.pending => (
           Icons.play_arrow_rounded,
-          '开始',
+          context.l10n.downloadActionStart,
           () => service.startDownload(task.id),
         ),
       DownloadStatus.downloading => (
           Icons.pause_rounded,
-          '暂停',
+          context.l10n.downloadActionPause,
           () => service.pauseDownload(task.id),
         ),
       DownloadStatus.paused => (
           Icons.play_arrow_rounded,
-          '继续',
+          context.l10n.downloadActionResume,
           () => service.resumeDownload(task.id),
         ),
       DownloadStatus.completed => (
           Icons.folder_open_rounded,
-          '打开',
+          context.l10n.downloadActionOpen,
           () async {
             final result = await service.openFile(task.id);
             if (!result.success && context.mounted && result.message != null) {
@@ -454,12 +454,12 @@ class _DownloadTaskTile extends ConsumerWidget {
         ),
       DownloadStatus.failed => (
           Icons.refresh_rounded,
-          '重试',
+          context.l10n.downloadActionRetry,
           () => service.retryDownload(task.id),
         ),
       DownloadStatus.cancelled => (
           Icons.delete_rounded,
-          '删除',
+          context.l10n.downloadActionDelete,
           () => service.removeTask(task.id),
         ),
     };

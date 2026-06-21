@@ -99,7 +99,7 @@ class _CloudSyncSettingsPageState
     if (mounted) {
       setState(() {
         _testingConnection = false;
-        _statusMessage = ok ? '连接成功' : '连接失败：检查 endpoint / 用户名 / 密码';
+        _statusMessage = ok ? context.l10n.syncSettingsTestSuccess : context.l10n.syncSettingsTestFailure;
       });
     }
   }
@@ -122,8 +122,7 @@ class _CloudSyncSettingsPageState
             reports.where((r) => r.outcome == CloudSyncOutcome.pushed).length;
         final failed =
             reports.where((r) => r.outcome == CloudSyncOutcome.failed).length;
-        _statusMessage =
-            '完成：拉取 $pulled / 推送 $pushed / 失败 $failed';
+        _statusMessage = context.l10n.syncSettingsSyncComplete(pulled, pushed, failed);
       });
     }
   }
@@ -138,7 +137,7 @@ class _CloudSyncSettingsPageState
         leading: const RoundedBackButton(),
         backgroundColor: isDark ? AppColors.darkSurface : null,
         title: Text(
-          '云同步',
+          context.l10n.syncSettingsPageTitle,
           style: TextStyle(
             color: isDark ? AppColors.darkOnSurface : null,
             fontWeight: FontWeight.bold,
@@ -151,7 +150,7 @@ class _CloudSyncSettingsPageState
           if (_loaded)
             TextButton(
               onPressed: _saveSettings,
-              child: const Text('保存'),
+              child: Text(context.l10n.syncSettingsSaveButton),
             ),
         ],
       ),
@@ -197,11 +196,10 @@ class _CloudSyncSettingsPageState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SetHead(
+                SetHead(
                   icon: Icons.sync_rounded,
-                  title: '云同步',
-                  subtitle:
-                      '基于 WebDAV 的跨设备同步（非云厂商专有）。冲突按 manifest 时间戳最后修改优先，失败自动重试 3 次。',
+                  title: context.l10n.syncSettingsPageTitle,
+                  subtitle: context.l10n.syncSettingsDesktopSubtitle,
                 ),
                 _buildDesktopBackendSection(),
                 _buildGated(
@@ -236,11 +234,11 @@ class _CloudSyncSettingsPageState
       );
 
   Widget _buildDesktopBackendSection() => SetSection(
-      title: 'WebDAV 后端',
+      title: context.l10n.syncSettingsBackendSection,
       hint: 'cloud_sync_settings',
       children: [
         SetRow(
-          title: '启用云同步',
+          title: context.l10n.syncSettingsEnableTitle,
           trailing: AppSwitch(
             value: _desktopSyncOn,
             onChanged: (v) => setState(() => _desktopSyncOn = v),
@@ -264,12 +262,12 @@ class _CloudSyncSettingsPageState
                       children: [
                         Expanded(
                           child: _buildDesktopField(
-                              label: '用户名', controller: _username),
+                              label: context.l10n.syncSettingsUsernameLabel, controller: _username),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: _buildDesktopField(
-                            label: '密码',
+                            label: context.l10n.syncSettingsPasswordLabel,
                             controller: _password,
                             obscure: true,
                           ),
@@ -277,7 +275,7 @@ class _CloudSyncSettingsPageState
                       ],
                     ),
                     const SizedBox(height: 14),
-                    _buildDesktopField(label: '根目录', controller: _rootPath),
+                    _buildDesktopField(label: context.l10n.syncSettingsRootPathLabel, controller: _rootPath),
                   ],
                 ),
               ),
@@ -339,7 +337,7 @@ class _CloudSyncSettingsPageState
   Widget _buildDesktopConnectionRow() {
     final t = DesignTokens.of(context);
     return SetRow(
-      title: '连接状态',
+      title: context.l10n.syncSettingsConnectionStatus,
       last: true,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -347,12 +345,12 @@ class _CloudSyncSettingsPageState
           const StatusDot(DotStatus.ok),
           const SizedBox(width: 8),
           Text(
-            _statusMessage ?? '已连接 · 健康检查通过',
+            _statusMessage ?? context.l10n.syncSettingsConnectionHealthy,
             style: TextStyle(fontSize: 12, color: t.text2),
           ),
           const SizedBox(width: 12),
           AppButton(
-            label: _testingConnection ? '测试中…' : '测试连接',
+            label: _testingConnection ? context.l10n.syncSettingsTestingButton : context.l10n.syncSettingsTestButton,
             icon: Icons.link_rounded,
             dense: true,
             onPressed: _testingConnection ? null : _test,
@@ -374,8 +372,8 @@ class _CloudSyncSettingsPageState
       );
     }
     return SetSection(
-      title: '同步范围',
-      hint: '按模块开关',
+      title: context.l10n.syncSettingsModulesSection,
+      hint: context.l10n.syncSettingsModulesHint,
       bottomMargin: false,
       children: [
         Padding(
@@ -473,13 +471,13 @@ class _CloudSyncSettingsPageState
     final autoOn = ref.watch(cloudSyncAutoEnabledProvider);
     final interval = ref.watch(cloudSyncIntervalProvider);
     return SetSection(
-      title: '自动化',
+      title: context.l10n.syncSettingsAutomationSection,
       hint: 'cloud_sync',
       bottomMargin: false,
       children: [
         SetRow(
-          title: '自动同步',
-          desc: '开启后在 app 运行期间按周期自动同步（不含后台 / 系统级调度）',
+          title: context.l10n.syncSettingsAutoSyncTitle,
+          desc: context.l10n.syncSettingsAutoSyncDesc,
           trailing: AppSwitch(
             value: autoOn,
             onChanged: (v) => ref
@@ -490,15 +488,15 @@ class _CloudSyncSettingsPageState
         _buildGated(
           on: autoOn,
           child: SetRow(
-            title: '同步周期',
-            desc: '两次自动同步之间的最短间隔',
+            title: context.l10n.syncSettingsIntervalTitle,
+            desc: context.l10n.syncSettingsIntervalDesc,
             trailing: AppSegmented<int>(
               value: interval,
-              options: const [
-                AppSegmentedOption(value: 15, label: '15 分钟'),
-                AppSegmentedOption(value: 30, label: '30 分钟'),
-                AppSegmentedOption(value: 60, label: '1 小时'),
-                AppSegmentedOption(value: 360, label: '6 小时'),
+              options: [
+                AppSegmentedOption(value: 15, label: context.l10n.syncSettingsInterval15),
+                AppSegmentedOption(value: 30, label: context.l10n.syncSettingsInterval30),
+                AppSegmentedOption(value: 60, label: context.l10n.syncSettingsInterval60),
+                AppSegmentedOption(value: 360, label: context.l10n.syncSettingsInterval360),
               ],
               onChanged: (v) =>
                   ref.read(cloudSyncIntervalProvider.notifier).setMinutes(v),
@@ -506,11 +504,11 @@ class _CloudSyncSettingsPageState
           ),
         ),
         SetRow(
-          title: '立即同步',
-          desc: '手动触发一次全量同步',
+          title: context.l10n.syncSettingsSyncNowTitle,
+          desc: context.l10n.syncSettingsSyncNowDesc,
           last: true,
           trailing: AppButton(
-            label: _syncing ? '同步中…' : '立即同步',
+            label: _syncing ? context.l10n.syncSettingsSyncingButton : context.l10n.syncSettingsSyncNowButton,
             icon: Icons.sync_rounded,
             variant: AppButtonVariant.primary,
             onPressed: _syncing ? null : _sync,
@@ -561,7 +559,7 @@ class _CloudSyncSettingsPageState
                     size: 18, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Text(
-                  '通过 WebDAV 同步',
+                  context.l10n.syncSettingsIntroTitle,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppColors.primary,
@@ -571,7 +569,7 @@ class _CloudSyncSettingsPageState
             ),
             const SizedBox(height: 8),
             Text(
-              '使用你已有的 WebDAV 服务（Nextcloud、Synology、坚果云等）跨设备同步。每个模块对应一份 JSON 文件，按 last-write-wins 合并。密码字段不会被同步。',
+              context.l10n.syncSettingsIntroDesc,
               style: TextStyle(
                 fontSize: 12,
                 color: isDark ? Colors.white70 : Colors.black87,
@@ -594,7 +592,7 @@ class _CloudSyncSettingsPageState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'WebDAV 凭证',
+              context.l10n.syncSettingsCredentialsSection,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -613,27 +611,27 @@ class _CloudSyncSettingsPageState
             const SizedBox(height: 8),
             TextField(
               controller: _username,
-              decoration: const InputDecoration(
-                labelText: '用户名',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n.syncSettingsUsernameLabel,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _password,
-              decoration: const InputDecoration(
-                labelText: '密码',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n.syncSettingsPasswordLabel,
+                border: const OutlineInputBorder(),
               ),
               obscureText: true,
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _rootPath,
-              decoration: const InputDecoration(
-                labelText: '根目录',
+              decoration: InputDecoration(
+                labelText: context.l10n.syncSettingsRootPathLabel,
                 hintText: '/my-nas-sync',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -652,7 +650,7 @@ class _CloudSyncSettingsPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '同步范围',
+            context.l10n.syncSettingsModulesSection,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -663,7 +661,7 @@ class _CloudSyncSettingsPageState
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Text(
-                '当前还没有模块注册到同步系统',
+                context.l10n.syncSettingsNoModules,
                 style: TextStyle(
                   fontSize: 12,
                   color: isDark ? Colors.white60 : Colors.black54,
@@ -708,7 +706,7 @@ class _CloudSyncSettingsPageState
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.network_check_rounded),
-              label: const Text('测试连接'),
+              label: Text(context.l10n.syncSettingsTestButton),
             ),
           ),
           const SizedBox(width: 12),
@@ -721,7 +719,7 @@ class _CloudSyncSettingsPageState
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.sync_rounded),
-              label: const Text('立即同步'),
+              label: Text(context.l10n.syncSettingsSyncNowButton),
             ),
           ),
         ],
@@ -756,7 +754,7 @@ class _CloudSyncSettingsPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '本次同步详情',
+            context.l10n.syncSettingsSyncDetails,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -823,13 +821,13 @@ class _CloudSyncSettingsPageState
   String _labelFor(CloudSyncOutcome o) {
     switch (o) {
       case CloudSyncOutcome.pulled:
-        return '已拉取';
+        return context.l10n.syncSettingsOutcomePulled;
       case CloudSyncOutcome.pushed:
-        return '已推送';
+        return context.l10n.syncSettingsOutcomePushed;
       case CloudSyncOutcome.skipped:
-        return '已是最新';
+        return context.l10n.syncSettingsOutcomeSkipped;
       case CloudSyncOutcome.failed:
-        return '失败';
+        return context.l10n.syncSettingsOutcomeFailed;
     }
   }
 }

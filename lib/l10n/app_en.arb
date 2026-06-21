@@ -2805,5 +2805,485 @@
         "type": "String"
       }
     }
-  }
+  },
+  "qbDetailFilterTooltip": "Filter",
+  "qbDetailSortTooltip": "Sort",
+  "qbDetailMenuPauseAll": "Pause All",
+  "qbDetailMenuResumeAll": "Resume All",
+  "qbDetailMenuSpeedLimit": "Speed Limit Settings",
+  "qbDetailMenuRefresh": "Refresh",
+  "qbSpeedCardLabelDownload": "Download",
+  "qbSpeedCardLabelUpload": "Upload",
+  "qbDetailConnecting": "Connecting...",
+  "qbDetailConnectionFailed": "Connection Failed",
+  "qbDetailUnknownError": "Unknown Error",
+  "qbDetailRetryButton": "Retry",
+  "qbDetailVersionInfoTitle": "Version Info",
+  "qbDetailVersionInfoServiceName": "Service Name",
+  "qbDetailVersionInfoVersion": "Version",
+  "qbDetailVersionInfoUnknown": "Unknown",
+  "qbDetailVersionInfoServerAddress": "Server Address",
+  "qbDetailCloseButton": "Close",
+  "qbDetailEmptyState": "No Download Tasks",
+  "qbDetailEmptyStateHint": "Click the button at the bottom right to add a task",
+  "qbDetailTileResumeTooltip": "Resume",
+  "qbDetailTilePauseTooltip": "Pause",
+  "qbDetailLabelSize": "Size",
+  "qbDetailLabelProgress": "Progress",
+  "qbDetailLabelStatus": "Status",
+  "qbDetailLabelDownloadSpeed": "Download Speed",
+  "qbDetailLabelUploadSpeed": "Upload Speed",
+  "qbDetailLabelRatio": "Ratio",
+  "qbDetailLabelSeeds": "Seeds",
+  "qbDetailLabelLeechers": "Leechers",
+  "qbDetailLabelCategory": "Category",
+  "qbDetailLabelTags": "Tags",
+  "qbDetailLabelSavePath": "Save Path",
+  "qbDetailLabelAddedTime": "Added Time",
+  "qbDetailCopyHashButton": "Copy Hash",
+  "qbDetailActionRename": "Rename",
+  "qbDetailActionChangeLocation": "Change Save Location",
+  "qbDetailActionChangeCategory": "Change Category",
+  "qbDetailActionManageTags": "Manage Tags",
+  "qbDetailActionDelete": "Delete Task",
+  "qbDetailActionDeleteWithFiles": "Delete Task and Files",
+  "qbDetailRenameTitle": "Rename",
+  "qbDetailRenameNewName": "New Name",
+  "qbDetailCancelButton": "Cancel",
+  "qbDetailConfirmButton": "Confirm",
+  "qbDetailCategoryNone": "No Category",
+  "qbDetailCreateNewCategory": "Create New Category",
+  "qbDetailCreateCategoryTitle": "Create Category",
+  "qbDetailCategoryNameLabel": "Category Name",
+  "qbDetailCategorySavePathLabel": "Save Path (Optional)",
+  "qbDetailCreateButton": "Create",
+  "qbDetailSelectTags": "Select Tags",
+  "qbDetailCreateNewTag": "Create New Tag",
+  "qbDetailCreateTagTitle": "Create Tag",
+  "qbDetailTagNameLabel": "Tag Name",
+  "qbDetailConfirmDeleteTitle": "Confirm Delete",
+  "qbDetailConfirmDeleteWithFiles": "Are you sure you want to delete \"{torrentName}\" and its files?\nThis action cannot be undone.",
+  "@qbDetailConfirmDeleteWithFiles": {
+    "placeholders": {
+      "torrentName": {
+        "type": "String"
+      }
+    }
+  },
+  "qbDetailConfirmDeleteWithoutFiles": "Are you sure you want to delete \"{torrentName}\"?\nFiles will be kept on disk.",
+  "@qbDetailConfirmDeleteWithoutFiles": {
+    "placeholders": {
+      "torrentName": {
+        "type": "String"
+      }
+    }
+  },
+  "qbDetailDeleteButton": "Delete",
+  "qbDetailAltSpeedRestoreGlobal": "Restore Global Speed",
+  "qbDetailAltSpeedEnable": "Enable Alternative Speed Limit",
+  "qbDetailFilterClear": "Clear",
+  "qbDetailFilterAll": "All",
+  "qbDetailFilterUncategorized": "(Uncategorized)",
+  "qbDetailNoFilterOptions": "No filter options available",
+  "qbDetailNoFilterOptionsHint": "You can filter here after adding categories or tags",
+  "qbDetailSortDescending": "Descending",
+  "qbDetailSortAscending": "Ascending",
+  "qbDetailSpeedLimitTitle": "Speed Limit Settings",
+  "qbDetailSpeedLimitSubtitle": "Set global and alternative speed limits",
+  "qbDetailSaveButton": "Save",
+  "qbDetailGlobalSpeedLimit": "Global Speed Limit",
+  "qbDetailSpeedLimitZeroMeansUnlimited": "Set to 0 means no limit",
+  "qbDetailAlternativeSpeedLimit": "Alternative Speed Limit",
+  "qbDetailAlternativeSpeedLimitHint": "Use the quick button to temporarily switch to alternative speed limit",
+  "qbDetailSpeedLimitSaved": "Speed limit settings saved",
+  "qbDetailAddTorrentTitle": "Add Download Task",
+  "qbDetailAddTorrentSubtitle": "Paste a Magnet link or Torrent URL",
+  "qbDetailAddButton": "Add",
+  "qbDetailDownloadLinkLabel": "Download Link",
+  "qbDetailPasteTooltip": "Paste",
+  "qbDetailLinkValidationError": "Please enter a link",
+  "qbDetailLinkFormatError": "Please enter a valid Magnet link or HTTP URL",
+  "qbDetailCategorySelectionLabel": "No Category",
+  "qbDetailAddAfterPauseLabel": "Add Paused",
+  "qbDetailAddAfterPauseNotStarting": "Task will not start automatically",
+  "qbDetailAddAfterPauseStarting": "Task will start downloading immediately",
+  "qbDetailTaskAdded": "Task added",
+  "transmissionFilterButtonTooltip": "Filter",
+  "transmissionSortButtonTooltip": "Sort",
+  "transmissionMenuStopAll": "Stop All",
+  "transmissionMenuStartAll": "Start All",
+  "transmissionMenuRefresh": "Refresh",
+  "transmissionSpeedCardDownload": "Download",
+  "transmissionSpeedCardUpload": "Upload",
+  "transmissionConnecting": "Connecting...",
+  "transmissionConnectionFailed": "Connection Failed",
+  "transmissionUnknownError": "Unknown Error",
+  "transmissionRetryButton": "Retry",
+  "transmissionEmptyState": "No Download Tasks",
+  "transmissionEmptyStateHint": "Tap the button in the bottom right to add a task",
+  "transmissionStartTooltip": "Start",
+  "transmissionStopTooltip": "Stop",
+  "transmissionDeleteTooltip": "Delete",
+  "transmissionDeleteDialogTitle": "Delete Task",
+  "transmissionDeleteDialogMessage": "Are you sure you want to delete \"{name}\"?",
+  "@transmissionDeleteDialogMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transmissionDeleteCancel": "Cancel",
+  "transmissionDeleteTaskOnly": "Delete Task Only",
+  "transmissionDeleteTaskAndFiles": "Delete Task and Files",
+  "transmissionVersionInfoTitle": "Version Information",
+  "transmissionServiceName": "Service Name",
+  "transmissionVersion": "Version",
+  "transmissionServerAddress": "Server Address",
+  "transmissionCloseButton": "Close",
+  "transmissionDetailStatus": "Status",
+  "transmissionDetailSize": "Size",
+  "transmissionDetailProgress": "Progress",
+  "transmissionDetailDownloaded": "Downloaded",
+  "transmissionDetailUploaded": "Uploaded",
+  "transmissionDetailRatio": "Share Ratio",
+  "transmissionDetailTimeRemaining": "Time Remaining",
+  "transmissionDetailAddedTime": "Added Time",
+  "transmissionDetailSavePath": "Save Path",
+  "transmissionDetailPeerCount": "Connected Peers",
+  "transmissionStatusStopped": "Stopped",
+  "transmissionStatusCheckWait": "Waiting for Check",
+  "transmissionStatusCheck": "Checking",
+  "transmissionStatusDownloadWait": "Waiting to Download",
+  "transmissionStatusDownloading": "Downloading",
+  "transmissionStatusSeedWait": "Waiting to Seed",
+  "transmissionStatusSeeding": "Seeding",
+  "transmissionFilterStatusAll": "All",
+  "transmissionFilterStatusDownloading": "Downloading",
+  "transmissionFilterStatusSeeding": "Seeding",
+  "transmissionFilterStatusStopped": "Stopped",
+  "transmissionFilterStatusChecking": "Checking",
+  "transmissionFilterOptionsTitle": "Filter Status",
+  "transmissionSortOptionsTitle": "Sort Method",
+  "transmissionSortDescending": "Descending",
+  "transmissionSortAscending": "Ascending",
+  "transmissionAddTorrentTitle": "Add Download Task",
+  "transmissionAddTorrentSubtitle": "Paste Magnet Link or Torrent URL",
+  "transmissionAddButton": "Add",
+  "transmissionLinkLabel": "Download Link",
+  "transmissionLinkHint": "magnet:?xt=urn:btih:... or https://...",
+  "transmissionPasteTooltip": "Paste",
+  "transmissionLinkValidator": "Please enter a link",
+  "transmissionLinkValidatorFormat": "Please enter a valid Magnet link or HTTP URL",
+  "transmissionPauseAfterAddTitle": "Pause After Adding",
+  "transmissionPauseAfterAddDescPaused": "Task will not start downloading automatically",
+  "transmissionPauseAfterAddDescPlaying": "Task will start downloading immediately",
+  "transmissionTaskDuplicateSnackbar": "Task already exists",
+  "transmissionTaskAddedSnackbar": "Task added",
+  "aria2FilterTooltip": "Filter",
+  "aria2SortTooltip": "Sort",
+  "aria2PauseAllMenuLabel": "Pause all",
+  "aria2ResumeAllMenuLabel": "Resume all",
+  "aria2PurgeMenuLabel": "Clear completed",
+  "aria2RefreshMenuLabel": "Refresh",
+  "aria2SpeedCardDownloadLabel": "Download",
+  "aria2SpeedCardActiveLabel": "Active",
+  "aria2SpeedCardUploadLabel": "Upload",
+  "aria2SpeedCardWaitingLabel": "Waiting",
+  "aria2ConnectingStatus": "Connecting...",
+  "aria2ConnectionFailedTitle": "Connection failed",
+  "aria2UnknownError": "Unknown error",
+  "aria2RetryButton": "Retry",
+  "aria2VersionInfoDialogTitle": "Version info",
+  "aria2ServiceNameLabel": "Service name",
+  "aria2VersionLabel": "Version",
+  "aria2UnknownVersion": "Unknown",
+  "aria2ServerAddressLabel": "Server address",
+  "aria2CloseButton": "Close",
+  "aria2EmptyDownloadTasksTitle": "No download tasks",
+  "aria2EmptyDownloadTasksHint": "Tap the button at bottom right to add a task",
+  "aria2UploadedLabel": "Uploaded: ",
+  "aria2ResumeTooltip": "Resume",
+  "aria2PauseTooltip": "Pause",
+  "aria2DeleteTooltip": "Delete",
+  "aria2DeleteTaskDialogTitle": "Delete task",
+  "aria2DeleteTaskDialogContent": "Delete \"{name}\"?",
+  "@aria2DeleteTaskDialogContent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aria2CancelButton": "Cancel",
+  "aria2DeleteButton": "Delete",
+  "aria2StatusError": "Error",
+  "aria2StatusComplete": "Completed",
+  "aria2StatusDownloading": "Downloading",
+  "aria2StatusPaused": "Paused",
+  "aria2StatusWaiting": "Waiting",
+  "aria2StatusRemoved": "Removed",
+  "aria2FilterSheetTitle": "Filter status",
+  "aria2SortSheetTitle": "Sort by",
+  "aria2SortDescending": "Descending",
+  "aria2SortAscending": "Ascending",
+  "aria2AddDownloadDialogTitle": "Add download task",
+  "aria2AddDownloadDialogSubtitle": "Support HTTP/FTP/Magnet links",
+  "aria2AddButton": "Add",
+  "aria2DownloadLinkLabel": "Download link",
+  "aria2DownloadLinkHint": "http://... or magnet:?xt=urn:btih:...",
+  "aria2PasteTooltip": "Paste",
+  "aria2ValidationEmptyLink": "Please enter a link",
+  "aria2ValidationInvalidLink": "Please enter a valid download link",
+  "aria2TaskAddedSnackbar": "Task added",
+  "aria2DetailItemStatusLabel": "Status",
+  "aria2DetailItemSizeLabel": "Size",
+  "aria2DetailItemDownloadedLabel": "Downloaded",
+  "aria2DetailItemProgressLabel": "Progress",
+  "aria2DetailItemUploadedLabel": "Uploaded",
+  "aria2DetailItemSavePathLabel": "Save path",
+  "aria2DetailItemGidLabel": "GID",
+  "aria2DetailItemErrorLabel": "Error",
+  "traktConnectionConnectedStatus": "Connected",
+  "traktConnectionSyncStats": "Sync Statistics",
+  "traktConnectionStatMovies": "Movies",
+  "traktConnectionStatEpisodes": "Episodes",
+  "traktConnectionStatShows": "Shows",
+  "traktConnectionStatWatchlist": "Watchlist",
+  "traktConnectionSyncSettings": "Sync Settings",
+  "traktConnectionAutoScrobble": "Auto Scrobble",
+  "traktConnectionAutoScrobbleDesc": "Auto report playback progress to Trakt",
+  "traktConnectionProgressThreshold": "Auto mark as watched when playback progress ≥80%",
+  "traktConnectionContinueWatching": "Continue Watching",
+  "traktConnectionRefresh": "Refresh",
+  "traktConnectionEmptyList": "No incomplete playback",
+  "traktConnectionViewAll": "View All ({count})",
+  "@traktConnectionViewAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "traktConnectionLogoutTitle": "Disconnect Trakt",
+  "traktConnectionLogoutConfirm": "Are you sure you want to disconnect? This will clear all saved authentication information.",
+  "traktConnectionCancel": "Cancel",
+  "traktConnectionLogout": "Disconnect",
+  "traktConnectionUnknownUser": "Unknown User",
+  "traktConnectionDesc": "Auto sync watch history to cloud\nTrack movies and TV shows progress across devices",
+  "traktConnectionDeviceCodeStep1": "Visit the following URL",
+  "traktConnectionDeviceCodeStep2": "Enter verification code",
+  "traktConnectionWaitingAuth": "Waiting for authorization…",
+  "traktConnectionConnectAccount": "Connect Trakt Account",
+  "traktConnectionDeviceCodeDesc": "After clicking, a verification code will be displayed. Enter it in any device's browser to complete the connection",
+  "traktConnectionCustomCredentials": "Use custom API credentials",
+  "traktConnectionBack": "Back",
+  "traktConnectionDeveloperOption": "Developer Option",
+  "traktConnectionCustomCredentialsDesc": "Use app credentials created on trakt.tv/oauth/applications",
+  "traktConnectionClientIdValidation": "Please enter Client ID",
+  "traktConnectionClientSecretValidation": "Please enter Client Secret",
+  "traktConnectionButtonConnect": "Connect",
+  "traktConnectionStartFailedToast": "Failed to start authorization: {error}",
+  "@traktConnectionStartFailedToast": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "traktConnectionSourceTrakt": "Trakt",
+  "traktConnectionSourceLocal": "Local",
+  "traktConnectionDeleteProgress": "Delete progress",
+  "traktConnectionCodeCopied": "Verification code copied",
+  "traktConnectionAllItems": "Total {count} items",
+  "@traktConnectionAllItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "traktConnectionLoadFailed": "Load failed",
+  "syncSettingsPageTitle": "Cloud Sync",
+  "syncSettingsSaveButton": "Save",
+  "syncSettingsTestSuccess": "Connection successful",
+  "syncSettingsTestFailure": "Connection failed: check endpoint / username / password",
+  "syncSettingsSyncComplete": "Done: {pulled} pulled / {pushed} pushed / {failed} failed",
+  "@syncSettingsSyncComplete": {
+    "placeholders": {
+      "pulled": {
+        "type": "int"
+      },
+      "pushed": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "syncSettingsDesktopSubtitle": "WebDAV-based cross-device sync (no vendor lock-in). Conflicts resolved by manifest last-modified timestamp; failures retry up to 3 times automatically.",
+  "syncSettingsBackendSection": "WebDAV Backend",
+  "syncSettingsEnableTitle": "Enable cloud sync",
+  "syncSettingsUsernameLabel": "Username",
+  "syncSettingsPasswordLabel": "Password",
+  "syncSettingsRootPathLabel": "Root path",
+  "syncSettingsConnectionStatus": "Connection status",
+  "syncSettingsConnectionHealthy": "Connected · health check passed",
+  "syncSettingsTestingButton": "Testing…",
+  "syncSettingsTestButton": "Test connection",
+  "syncSettingsModulesSection": "Sync scope",
+  "syncSettingsModulesHint": "Per-module toggles",
+  "syncSettingsNoModules": "No modules registered with the sync system yet",
+  "syncSettingsAutomationSection": "Automation",
+  "syncSettingsAutoSyncTitle": "Auto sync",
+  "syncSettingsAutoSyncDesc": "Sync periodically while the app is running (no background or system-level scheduling)",
+  "syncSettingsIntervalTitle": "Sync interval",
+  "syncSettingsIntervalDesc": "Minimum interval between two auto syncs",
+  "syncSettingsInterval15": "15 min",
+  "syncSettingsInterval30": "30 min",
+  "syncSettingsInterval60": "1 hour",
+  "syncSettingsInterval360": "6 hours",
+  "syncSettingsSyncNowTitle": "Sync now",
+  "syncSettingsSyncNowDesc": "Manually trigger a full sync",
+  "syncSettingsSyncingButton": "Syncing…",
+  "syncSettingsSyncNowButton": "Sync now",
+  "syncSettingsIntroTitle": "Sync via WebDAV",
+  "syncSettingsIntroDesc": "Use your existing WebDAV service (Nextcloud, Synology, Jianguo Cloud, etc.) to sync across devices. Each module corresponds to one JSON file, merged by last-write-wins. Password fields are not synced.",
+  "syncSettingsCredentialsSection": "WebDAV Credentials",
+  "syncSettingsSyncDetails": "This sync details",
+  "syncSettingsOutcomePulled": "Pulled",
+  "syncSettingsOutcomePushed": "Pushed",
+  "syncSettingsOutcomeSkipped": "Up to date",
+  "syncSettingsOutcomeFailed": "Failed",
+  "readingBookSearchModeLocal": "Local",
+  "readingBookSearchModeOnline": "Book Source",
+  "readingContentTypeBook": "Books",
+  "readingContentTypeComic": "Comics",
+  "readingContentTypeNote": "Notes",
+  "readingOnlineShelfLoadFailed": "Failed to load",
+  "readingOnlineShelfRetry": "Retry",
+  "readingOnlineShelfEmpty": "Online shelf is empty",
+  "readingOnlineShelfEmptyDesc": "Search and add online books to start reading",
+  "readingBookSourceNotFound": "Book source not found, may have been deleted",
+  "readingDeleteBook": "Delete Book",
+  "readingDeleteBookConfirm": "Remove \"{name}\" from shelf?",
+  "@readingDeleteBookConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "readingCancel": "Cancel",
+  "readingDeleteBookRemoveSuccess": "Removed from shelf",
+  "readingDeleteBookFailed": "Delete failed",
+  "readingDeleteConfirm": "Delete",
+  "readingSearchHint": "Enter keywords to search",
+  "readingSearchingBookSource": "Searching book sources...",
+  "readingSearchError": "Search error: {error}",
+  "@readingSearchError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "readingSearchNoResults": "No related books found",
+  "readingSearchResultsCount": "Found {count} books",
+  "@readingSearchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "readingSearchButtonText": "Search",
+  "readingSearchTooltip": "Search",
+  "readingSearchHintOnline": "Search book sources...",
+  "readingSearchHintGeneric": "Search {type}...",
+  "@readingSearchHintGeneric": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "readingViewLocalBooks": "View local books",
+  "readingViewOnlineShelf": "View online shelf",
+  "readingContentTypeSwitch": "Switch content type",
+  "readingUnknownAuthor": "Anonymous",
+  "readingUnknownTitle": "Unknown title",
+  "readingGreetingNight": "It's late",
+  "readingGreetingMorning": "Good morning",
+  "readingGreetingMid": "Good morning",
+  "readingGreetingNoon": "Good afternoon",
+  "readingGreetingAfternoon": "Good afternoon",
+  "readingGreetingEvening": "Good evening",
+  "readingBookCountLabel": "{count} books",
+  "@readingBookCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "readingComicCountLabel": "{count} comics",
+  "@readingComicCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "readingNoteCountLabel": "{count} notes",
+  "@readingNoteCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "privacySecurityHeadTitle": "Privacy & Security",
+  "privacySecurityHeadSubtitle": "App lock, PIN, biometrics and auto-lock. Credentials are kept in the system secure store; on failure it degrades silently without blocking use.",
+  "privacySecuritySectionAppLock": "App Lock",
+  "privacySecurityEnableTitle": "Enable App Lock",
+  "privacySecurityEnableDesc": "Require verification when launching or resuming from background",
+  "privacySecurityPinTitle": "PIN Code",
+  "privacySecurityPinDesc": "4–6 digits",
+  "privacySecurityChangePinButton": "Change PIN",
+  "privacySecurityBiometricTitle": "Biometrics",
+  "privacySecurityBiometricDesc": "Face ID / Touch ID unlock",
+  "privacySecurityAutoLockTitle": "Auto-Lock",
+  "privacySecurityAutoLockDesc": "Automatically lock after idle timeout",
+  "downloadSectionDownloading": "Downloading",
+  "downloadSectionCompleted": "Completed",
+  "downloadSectionFailed": "Failed",
+  "downloadErrorDisplay": "Error: {error}",
+  "@downloadErrorDisplay": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "downloadPageTitle": "Downloads",
+  "downloadClearCompleted": "Clear Completed",
+  "downloadEmptyTitle": "No download tasks",
+  "downloadEmptyDescription": "Select files in the file browser to download\nDownloaded files will appear here",
+  "downloadStatusPending": "Waiting",
+  "downloadStatusFailed": "Download failed",
+  "downloadStatusCancelled": "Cancelled",
+  "downloadActionStart": "Start",
+  "downloadActionPause": "Pause",
+  "downloadActionResume": "Resume",
+  "downloadActionOpen": "Open",
+  "downloadActionRetry": "Retry",
+  "downloadActionDelete": "Delete",
+  "downloaderListPageTitle": "Downloader",
+  "downloaderListPageEmptyTitle": "No downloader added yet",
+  "downloaderListPageEmptySubtitle": "Add qBittorrent, Transmission or Aria2\nto manage your download tasks",
+  "mediaManagementPageTitle": "Media Management",
+  "mediaManagementEmptyTitle": "No tools added yet",
+  "mediaManagementEmptySubtitle": "Add NASTool, MoviePilot or similar tools\nto automate your media library management"
 }
