@@ -6154,5 +6154,18 @@
   "videoEpisodeSelectorRuntimeHoursMinutes": "{hours}小时{mins}分钟",
   "videoEpisodeSelectorRuntimeHours": "{hours}小时",
   "videoEpisodeSelectorDisplayTitleFull": "{show}第{season}季第{episode}集",
-  "videoEpisodeSelectorDisplayTitleEpisodeOnly": "第{episode}集"
+  "videoEpisodeSelectorDisplayTitleEpisodeOnly": "第{episode}集",
+  "videoCacheStatsSummary": "{count} 个影视 · {size} 缓存",
+  "mineLangPrefMetadata": "元数据: {name}",
+  "mineLangPrefAudio": "音频: {name}",
+  "mineLangPrefSubtitle": "字幕: {name}",
+  "sourceFormValidationNotImplemented": "{name} 连接验证尚未实现",
+  "videoTrackDefaultMark": "(默认)",
+  "videoTrackForcedMark": "(强制)",
+  "fileBrowserDateToday": "今天 {time}",
+  "fileBrowserDateYesterday": "昨天",
+  "fileBrowserDateDaysAgo": "{days} 天前",
+  "musicScraperSearchFailed": "[{source}] 搜索失败: {error}",
+  "musicScraperCoverFailed": "[{source}] 获取封面失败: {error}",
+  "musicScraperLyricsFailed": "[{source}] 获取歌词失败: {error}"
 }

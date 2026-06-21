@@ -1975,7 +1975,7 @@ class VideoDatabaseService {
     final dbSize = await _getDatabaseSize();
     final sizeText = _formatSize(dbSize);
 
-    return '$totalCount 个影视 · $sizeText 缓存';
+    return appL10n.videoCacheStatsSummary(totalCount, sizeText);
   }
 
   /// 获取数据库文件大小（字节）

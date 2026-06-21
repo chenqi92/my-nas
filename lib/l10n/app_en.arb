@@ -12242,5 +12242,100 @@
         "type": "int"
       }
     }
+  },
+  "videoCacheStatsSummary": "{count} videos · {size} cached",
+  "@videoCacheStatsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "mineLangPrefMetadata": "Metadata: {name}",
+  "@mineLangPrefMetadata": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mineLangPrefAudio": "Audio: {name}",
+  "@mineLangPrefAudio": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "mineLangPrefSubtitle": "Subtitle: {name}",
+  "@mineLangPrefSubtitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sourceFormValidationNotImplemented": "{name} connection validation is not implemented yet",
+  "@sourceFormValidationNotImplemented": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "videoTrackDefaultMark": "(Default)",
+  "videoTrackForcedMark": "(Forced)",
+  "fileBrowserDateToday": "Today {time}",
+  "@fileBrowserDateToday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fileBrowserDateYesterday": "Yesterday",
+  "fileBrowserDateDaysAgo": "{days} days ago",
+  "@fileBrowserDateDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "musicScraperSearchFailed": "[{source}] Search failed: {error}",
+  "@musicScraperSearchFailed": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicScraperCoverFailed": "[{source}] Failed to get cover: {error}",
+  "@musicScraperCoverFailed": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicScraperLyricsFailed": "[{source}] Failed to get lyrics: {error}",
+  "@musicScraperLyricsFailed": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "error": {
+        "type": "Object"
+      }
+    }
   }
 }

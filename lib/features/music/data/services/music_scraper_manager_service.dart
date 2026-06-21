@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/data/services/music_scraper_factory.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
@@ -725,7 +726,7 @@ class MusicScraperManagerService {
           detail = await scraper.getDetail(searchResult.items.first.externalId);
         }
       } on Exception catch (e) {
-        errors.add('[${source.type.displayName}] 搜索失败: $e');
+        errors.add(appL10n.musicScraperSearchFailed(source.type.displayName, e));
       }
     }
 
@@ -756,7 +757,7 @@ class MusicScraperManagerService {
             }
           }
         } on Exception catch (e) {
-          errors.add('[${source.type.displayName}] 获取封面失败: $e');
+          errors.add(appL10n.musicScraperCoverFailed(source.type.displayName, e));
         }
       }
     }
@@ -778,7 +779,7 @@ class MusicScraperManagerService {
             lyrics = await scraper.getLyrics(searchResult.items.first.externalId);
           }
         } on Exception catch (e) {
-          errors.add('[${source.type.displayName}] 获取歌词失败: $e');
+          errors.add(appL10n.musicScraperLyricsFailed(source.type.displayName, e));
         }
       }
     }

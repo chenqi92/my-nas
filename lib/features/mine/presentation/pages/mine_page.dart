@@ -1319,13 +1319,13 @@ class _LanguagePreferenceTile extends ConsumerWidget {
 
     final parts = <String>[];
     if (metadata != LanguageOption.auto) {
-      parts.add('元数据: ${metadata.displayName}');
+      parts.add(context.l10n.mineLangPrefMetadata(metadata.displayName));
     }
     if (audio != LanguageOption.auto) {
-      parts.add('音频: ${audio.displayName}');
+      parts.add(context.l10n.mineLangPrefAudio(audio.displayName));
     }
     if (subtitle != LanguageOption.auto) {
-      parts.add('字幕: ${subtitle.displayName}');
+      parts.add(context.l10n.mineLangPrefSubtitle(subtitle.displayName));
     }
 
     return parts.isEmpty ? context.l10n.mineLanguagePreferenceAllAuto : parts.join(' | ');

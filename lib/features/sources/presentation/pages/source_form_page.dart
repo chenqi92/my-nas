@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/pt_sites/data/services/pt_site_api.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -39,7 +40,7 @@ class _ConnectionValidationNotImplementedException implements Exception {
   final String sourceTypeName;
 
   @override
-  String toString() => '$sourceTypeName 连接验证尚未实现';
+  String toString() => appL10n.sourceFormValidationNotImplemented(sourceTypeName);
 }
 
 /// 源表单页面

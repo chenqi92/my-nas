@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// 音轨信息
 class AudioTrackInfo {
@@ -72,10 +73,10 @@ class SubtitleTrackInfo {
       parts.add('[$language]');
     }
     if (isDefault) {
-      parts.add('(默认)');
+      parts.add(appL10n.videoTrackDefaultMark);
     }
     if (isForced) {
-      parts.add('(强制)');
+      parts.add(appL10n.videoTrackForcedMark);
     }
     return parts.isEmpty ? 'Subtitle ${index + 1}' : parts.join(' ');
   }

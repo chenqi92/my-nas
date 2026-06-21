@@ -312,11 +312,11 @@ class FileItemWidget extends StatelessWidget {
     final diff = now.difference(date);
 
     if (diff.inDays == 0) {
-      return '今天 ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      return appL10n.fileBrowserDateToday('${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}');
     } else if (diff.inDays == 1) {
-      return '昨天';
+      return appL10n.fileBrowserDateYesterday;
     } else if (diff.inDays < 7) {
-      return '${diff.inDays} 天前';
+      return appL10n.fileBrowserDateDaysAgo(diff.inDays);
     } else {
       return '${date.month}/${date.day}';
     }
