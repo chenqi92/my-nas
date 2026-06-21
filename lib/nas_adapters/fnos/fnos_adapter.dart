@@ -29,7 +29,7 @@ class FnOSAdapter implements NasAdapter {
   @override
   NasAdapterInfo get info => NasAdapterInfo(
         type: NasAdapterType.fnos,
-        name: '飞牛 fnOS',
+        name: appL10n.fnosAdapterName,
         version: AppConstants.appVersion,
       );
 

@@ -265,7 +265,7 @@ class MobileGalleryFileSystem implements NasFileSystem {
         logger
           ..w('MobileGalleryFileSystem: 找不到相册 $albumId')
           ..d('可用相册 ID: ${albums.map((a) => a.id).join(', ')}');
-        throw Exception('Album not found: $albumId');
+        throw Exception(appL10n.galleryAlbumNotFound(albumId));
       },
     );
 

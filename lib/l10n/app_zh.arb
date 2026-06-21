@@ -6486,5 +6486,13 @@
   "fnl_b5e59f00": "无衬线",
   "fnl_b7bbbad6": "等宽",
   "fnl_3d2eccf3": "手写体",
-  "fnl_c04ee2df": "苹方"
+  "fnl_c04ee2df": "苹方",
+  "localFileApiRootDirectoryName": "根目录",
+  "localFileApiDocumentsName": "文档",
+  "localFileApiAppDataName": "应用数据",
+  "localFileApiDownloadsName": "下载",
+  "localFileApiLocalDiskName": "本地磁盘 ({letter}:)",
+  "localFileApiPersonalName": "个人",
+  "localFileApiHomeName": "主目录",
+  "fnosAdapterName": "飞牛 fnOS"
 }

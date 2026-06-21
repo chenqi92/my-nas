@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -41,7 +42,7 @@ class LocalFileApi {
 
     return [
       LocalRootDirectory(
-        name: '根目录',
+        name: appL10n.localFileApiRootDirectoryName,
         path: '/',
         type: RootDirectoryType.system,
       ),
@@ -72,7 +73,7 @@ class LocalFileApi {
       // 应用文档目录
       final docDir = await getApplicationDocumentsDirectory();
       roots.add(LocalRootDirectory(
-        name: '文档',
+        name: appL10n.localFileApiDocumentsName,
         path: docDir.path,
         type: RootDirectoryType.documents,
       ));
@@ -81,7 +82,7 @@ class LocalFileApi {
       final extDir = await getExternalStorageDirectory();
       if (extDir != null) {
         roots.add(LocalRootDirectory(
-          name: '应用数据',
+          name: appL10n.localFileApiAppDataName,
           path: extDir.path,
           type: RootDirectoryType.storage,
         ));
@@ -91,7 +92,7 @@ class LocalFileApi {
       final downloadDir = await getDownloadsDirectory();
       if (downloadDir != null) {
         roots.add(LocalRootDirectory(
-          name: '下载',
+          name: appL10n.localFileApiDownloadsName,
           path: downloadDir.path,
           type: RootDirectoryType.downloads,
         ));
@@ -117,7 +118,7 @@ class LocalFileApi {
       try {
         if (await dir.exists()) {
           drives.add(LocalRootDirectory(
-            name: '本地磁盘 ($letter:)',
+            name: appL10n.localFileApiLocalDiskName(letter),
             path: path,
             type: RootDirectoryType.drive,
           ));
@@ -138,7 +139,7 @@ class LocalFileApi {
     final homeDir = Platform.environment['HOME'];
     if (homeDir != null) {
       roots.add(LocalRootDirectory(
-        name: '个人',
+        name: appL10n.localFileApiPersonalName,
         path: homeDir,
         type: RootDirectoryType.home,
       ));
@@ -177,7 +178,7 @@ class LocalFileApi {
     final homeDir = Platform.environment['HOME'];
     if (homeDir != null) {
       roots.add(LocalRootDirectory(
-        name: '主目录',
+        name: appL10n.localFileApiHomeName,
         path: homeDir,
         type: RootDirectoryType.home,
       ));
@@ -224,7 +225,7 @@ class LocalFileApi {
       // 应用文档目录
       final docDir = await getApplicationDocumentsDirectory();
       roots.add(LocalRootDirectory(
-        name: '文档',
+        name: appL10n.localFileApiDocumentsName,
         path: docDir.path,
         type: RootDirectoryType.documents,
       ));
@@ -233,7 +234,7 @@ class LocalFileApi {
       final downloadDir = await getDownloadsDirectory();
       if (downloadDir != null) {
         roots.add(LocalRootDirectory(
-          name: '下载',
+          name: appL10n.localFileApiDownloadsName,
           path: downloadDir.path,
           type: RootDirectoryType.downloads,
         ));

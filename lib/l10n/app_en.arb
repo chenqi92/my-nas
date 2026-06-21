@@ -13000,5 +13000,20 @@
   "fnl_b5e59f00": "Sans-serif",
   "fnl_b7bbbad6": "Monospace",
   "fnl_3d2eccf3": "Cursive",
-  "fnl_c04ee2df": "PingFang"
+  "fnl_c04ee2df": "PingFang",
+  "localFileApiRootDirectoryName": "Root",
+  "localFileApiDocumentsName": "Documents",
+  "localFileApiAppDataName": "App Data",
+  "localFileApiDownloadsName": "Downloads",
+  "localFileApiLocalDiskName": "Local Disk ({letter}:)",
+  "@localFileApiLocalDiskName": {
+    "placeholders": {
+      "letter": {
+        "type": "String"
+      }
+    }
+  },
+  "localFileApiPersonalName": "Personal",
+  "localFileApiHomeName": "Home",
+  "fnosAdapterName": "FlyNAS fnOS"
 }
