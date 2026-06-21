@@ -7,9 +7,9 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
-import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// `showModalBottomSheet` 的桌面自适应替代。
 ///
@@ -206,10 +206,13 @@ Future<bool?> showAdaptiveConfirmDialog({
   required BuildContext context,
   required String title,
   String? message,
-  String confirmText = '确定',
-  String cancelText = '取消',
+  String? confirmText,
+  String? cancelText,
   bool isDestructive = false,
-}) => showAdaptiveSheet<bool>(
+}) {
+  final effectiveConfirmText = confirmText ?? appL10n.adaptiveSheetConfirm;
+  final effectiveCancelText = cancelText ?? appL10n.adaptiveSheetCancel;
+  return showAdaptiveSheet<bool>(
     context: context,
     title: title,
     size: AdaptiveSheetSize.small,
@@ -227,7 +230,7 @@ Future<bool?> showAdaptiveConfirmDialog({
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context, false),
-        child: Text(cancelText),
+        child: Text(effectiveCancelText),
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, true),
@@ -236,10 +239,11 @@ Future<bool?> showAdaptiveConfirmDialog({
                 backgroundColor: AppColors.error,
               )
             : null,
-        child: Text(confirmText),
+        child: Text(effectiveConfirmText),
       ),
     ],
   );
+}
 
 /// 显示自适应选项菜单
 Future<T?> showAdaptiveOptions<T>({
@@ -674,7 +678,7 @@ class _DesktopDialog extends ConsumerWidget {
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close_rounded),
                 iconSize: 20,
-                tooltip: localizeFormText(context, '关闭'),
+                tooltip: appL10n.adaptiveSheetClose,
               ),
           ],
         ),
@@ -786,7 +790,7 @@ class _DesktopSidePanel extends ConsumerWidget {
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.close_rounded),
                 iconSize: 20,
-                tooltip: localizeFormText(context, '关闭'),
+                tooltip: appL10n.adaptiveSheetClose,
               ),
             const SizedBox(width: AppSpacing.sm),
             if (titleWidget != null)

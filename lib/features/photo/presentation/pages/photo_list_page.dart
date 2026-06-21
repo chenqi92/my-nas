@@ -9,6 +9,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/media_scan_progress_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
@@ -624,7 +625,7 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
       return;
     }
 
-    state = PhotoListLoading(fromCache: true, currentFolder: '加载数据...');
+    state = PhotoListLoading(fromCache: true, currentFolder: appL10n.photoListLoadingDataMessage);
 
     // 并行加载统计和数据
     final results = await Future.wait([
@@ -694,7 +695,7 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
     }
 
     logger.i('PhotoListNotifier: 开始从 Hive 迁移 ${cache.photos.length} 张照片');
-    state = PhotoListLoading(currentFolder: '正在迁移数据...', fromCache: true);
+    state = PhotoListLoading(currentFolder: appL10n.photoListMigratingDataMessage, fromCache: true);
 
     final entities = cache.photos
         .map((entry) => PhotoEntity(
@@ -724,7 +725,7 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
 
     var config = configAsync.valueOrNull;
     if (config == null) {
-      state = PhotoListLoading(currentFolder: '正在加载配置...');
+      state = PhotoListLoading(currentFolder: appL10n.photoListLoadingConfigMessage);
 
       for (var i = 0; i < 10; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -733,7 +734,7 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
         if (config != null) break;
 
         if (updated.hasError) {
-          state = PhotoListError('加载媒体库配置失败');
+          state = PhotoListError(appL10n.photoListLoadMediaLibraryConfigFailed);
           return;
         }
       }
@@ -819,7 +820,7 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
 
       state = PhotoListLoading(
         progress: scannedFolders / totalFolders,
-        currentFolder: scannedFolders < totalFolders ? '继续扫描...' : '扫描完成',
+        currentFolder: scannedFolders < totalFolders ? appL10n.photoListContinueScanningMessage : appL10n.photoListScanCompleteMessage,
         partialPhotos: List.from(photos),
         scannedCount: photos.length,
       );
@@ -830,7 +831,7 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
     // 保存到 SQLite
     state = PhotoListLoading(
       progress: 1,
-      currentFolder: '保存数据...',
+      currentFolder: appL10n.photoListSavingDataMessage,
       partialPhotos: photos,
       scannedCount: photos.length,
     );

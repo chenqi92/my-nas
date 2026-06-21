@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/data/services/video_library_cache_service.dart';
@@ -19,7 +20,7 @@ class StartupPage extends ConsumerStatefulWidget {
 }
 
 class _StartupPageState extends ConsumerState<StartupPage> {
-  final String _statusMessage = '正在启动...';
+  final String _statusMessage = appL10n.startupPageLoadingMessage;
   final bool _isLoading = true;
 
   /// 启动画面最小显示时间（毫秒）

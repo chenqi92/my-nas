@@ -9,6 +9,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
@@ -652,22 +653,25 @@ class FilterResult {
 Future<FilterResult?> showNativeFilterSheet({
   required BuildContext context,
   required List<FilterSection> sections,
-  String title = '筛选',
+  String? title,
   Map<String, String>? initialSelectedValues,
   bool showResetButton = true,
-  String applyButtonText = '应用',
-  String resetButtonText = '重置',
+  String? applyButtonText,
+  String? resetButtonText,
 }) async {
+  final effTitle = title ?? context.l10n.bottomSheetFilterDefaultTitle;
+  final effApply = applyButtonText ?? context.l10n.bottomSheetApplyButtonText;
+  final effReset = resetButtonText ?? context.l10n.bottomSheetResetButtonText;
   // iOS 平台使用原生实现
   if (!kIsWeb && Platform.isIOS) {
     return _showNativeFilterSheetImpl(
       context: context,
       sections: sections,
-      title: title,
+      title: effTitle,
       initialSelectedValues: initialSelectedValues,
       showResetButton: showResetButton,
-      applyButtonText: applyButtonText,
-      resetButtonText: resetButtonText,
+      applyButtonText: effApply,
+      resetButtonText: effReset,
     );
   }
 
@@ -678,11 +682,11 @@ Future<FilterResult?> showNativeFilterSheet({
     backgroundColor: Colors.transparent,
     builder: (context) => _FlutterFilterSheet(
       sections: sections,
-      title: title,
+      title: effTitle,
       initialSelectedValues: initialSelectedValues ?? {},
       showResetButton: showResetButton,
-      applyButtonText: applyButtonText,
-      resetButtonText: resetButtonText,
+      applyButtonText: effApply,
+      resetButtonText: effReset,
     ),
   );
 }
@@ -1023,7 +1027,7 @@ class _FlutterListSheet<T> extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    emptyMessage ?? '无可用选项',
+                    emptyMessage ?? appL10n.bottomSheetEmptyMessage,
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 16,

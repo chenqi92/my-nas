@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 class EmptyWidget extends StatelessWidget {
   const EmptyWidget({
@@ -67,7 +68,7 @@ class EmptyWidget extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              title ?? '暂无内容',
+              title ?? appL10n.emptyWidgetDefaultTitle,
               style: context.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: isDark

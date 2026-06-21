@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/media_server_adapters/jellyfin/api/jellyfin_api.dart';
 
@@ -281,7 +282,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         } else {
           setState(() {
             _status = QuickConnectStatus.error;
-            _errorMessage = '认证失败';
+            _errorMessage = appL10n.quickConnectAuthenticationFailed;
           });
         }
       } else {
@@ -381,7 +382,7 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         return _buildLoadingState(theme, context.l10n.quickConnectCheckingAvailability);
 
       case QuickConnectStatus.unavailable:
-        return _buildErrorState(theme, _errorMessage ?? '不可用', canRetry: false);
+        return _buildErrorState(theme, _errorMessage ?? appL10n.quickConnectUnavailable, canRetry: false);
 
       case QuickConnectStatus.waitingForCode:
       case QuickConnectStatus.polling:
@@ -391,10 +392,10 @@ class _QuickConnectWidgetState extends State<QuickConnectWidget> {
         return _buildSuccessState(theme);
 
       case QuickConnectStatus.expired:
-        return _buildErrorState(theme, _errorMessage ?? '已过期', canRetry: true);
+        return _buildErrorState(theme, _errorMessage ?? appL10n.quickConnectExpired, canRetry: true);
 
       case QuickConnectStatus.error:
-        return _buildErrorState(theme, _errorMessage ?? '发生错误', canRetry: true);
+        return _buildErrorState(theme, _errorMessage ?? appL10n.quickConnectError, canRetry: true);
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/photo/data/services/face_database_service.dart';
 import 'package:my_nas/features/photo/data/services/face_recognition_service.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
@@ -94,7 +95,7 @@ class _PhotoPeoplePageState extends ConsumerState<PhotoPeoplePage>
       });
     } on Exception catch (e) {
       setState(() {
-        _errorMessage = '加载失败: $e';
+        _errorMessage = appL10n.photoPeoplePageLoadFailure(e);
         _isLoading = false;
       });
     }

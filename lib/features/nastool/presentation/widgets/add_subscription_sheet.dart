@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/subscription_poster.dart';
 import 'package:my_nas/service_adapters/nastool/models/search_result_models.dart';
@@ -41,7 +42,7 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
               .searchMediaResources(q);
       if (mounted) setState(() => _results = results);
     } on Object catch (e) {
-      if (mounted) context.showErrorToast(context.l10n.nastoolAddSubscriptionSearchError(e));
+      if (mounted) context.showErrorToast(appL10n.nastoolAddSubscriptionSearchError(e));
     } finally {
       if (mounted) setState(() => _searching = false);
     }
@@ -71,12 +72,12 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
       ref.invalidate(nastoolSubscribesProvider(widget.sourceId));
       if (mounted) {
         Navigator.of(context).pop();
-        context.showSuccessToast(context.l10n.nastoolAddSubscriptionSuccess(r.title));
+        context.showSuccessToast(appL10n.nastoolAddSubscriptionSuccess(r.title));
       }
     } on Object catch (e) {
       if (mounted) {
         setState(() => _addingKey = null);
-        context.showErrorToast(context.l10n.nastoolAddSubscriptionError(e));
+        context.showErrorToast(appL10n.nastoolAddSubscriptionError(e));
       }
     }
   }
@@ -107,7 +108,7 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        context.l10n.nastoolAddSubscriptionSheetTitle,
+                        appL10n.nastoolAddSubscriptionSheetTitle,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -129,12 +130,12 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
                   autofocus: true,
                   onSubmitted: (_) => _search(),
                   decoration: InputDecoration(
-                    hintText: context.l10n.nastoolAddSubscriptionSearchHint,
+                    hintText: appL10n.nastoolAddSubscriptionSearchHint,
                     hintStyle: TextStyle(color: t.text3, fontSize: 13),
                     prefixIcon:
                         Icon(Icons.search_rounded, size: 18, color: t.text2),
                     suffixIcon: TextButton(
-                        onPressed: _search, child: Text(context.l10n.nastoolAddSubscriptionSearchButton)),
+                        onPressed: _search, child: Text(appL10n.nastoolAddSubscriptionSearchButton)),
                     filled: true,
                     fillColor: t.insetBg,
                     isDense: true,
@@ -165,7 +166,7 @@ class _AddSubscriptionSheetState extends ConsumerState<AddSubscriptionSheet> {
                             height: 200,
                             child: Center(
                               child: Text(
-                                context.l10n.nastoolAddSubscriptionEmptyHint,
+                                appL10n.nastoolAddSubscriptionEmptyHint,
                                 style:
                                     TextStyle(fontSize: 13, color: t.text2),
                               ),
@@ -241,8 +242,8 @@ class _ResultRow extends StatelessWidget {
                     if (result.type != null)
                       AppTag(
                         (result.type!).toUpperCase().contains('TV')
-                            ? context.l10n.nastoolAddSubscriptionTagSeries
-                            : context.l10n.nastoolAddSubscriptionTagMovie,
+                            ? appL10n.nastoolAddSubscriptionTagSeries
+                            : appL10n.nastoolAddSubscriptionTagMovie,
                         variant: TagVariant.neutral,
                       ),
                     if (result.vote != null && result.vote!.isNotEmpty)
@@ -274,7 +275,7 @@ class _ResultRow extends StatelessWidget {
                   onPressed: onAdd,
                   icon: Icon(Icons.add_circle_outline_rounded,
                       color: t.accent),
-                  tooltip: context.l10n.nastoolAddSubscriptionTooltip,
+                  tooltip: appL10n.nastoolAddSubscriptionTooltip,
                 ),
         ],
       ),

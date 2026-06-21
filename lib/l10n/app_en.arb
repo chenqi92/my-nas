@@ -12918,5 +12918,57 @@
   "ttsl_ed7a1146": "Male",
   "ttsl_2c0e7722": "Female",
   "ttsl_62731aaf": "Neutral",
-  "ttsl_a52f5c20": "System Default"
+  "ttsl_a52f5c20": "System Default",
+  "quickConnectAuthenticationFailed": "Authentication failed",
+  "quickConnectUnavailable": "Unavailable",
+  "quickConnectExpired": "Expired",
+  "quickConnectError": "An error occurred",
+  "startupPageLoadingMessage": "Starting up...",
+  "facePersonDisplayNameUnnamed": "Person {id}",
+  "@facePersonDisplayNameUnnamed": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "photoListLoadingDataMessage": "Loading data...",
+  "photoListMigratingDataMessage": "Migrating data...",
+  "photoListLoadingConfigMessage": "Loading configuration...",
+  "photoListLoadMediaLibraryConfigFailed": "Failed to load media library configuration",
+  "photoListContinueScanningMessage": "Continuing scan...",
+  "photoListScanCompleteMessage": "Scan complete",
+  "photoListSavingDataMessage": "Saving data...",
+  "photoPeoplePageLoadFailure": "Load failed: {error}",
+  "@photoPeoplePageLoadFailure": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "glassMaterialBlurScaleSettingName": "Glass blur strength",
+  "glassMaterialOpacityScaleSettingName": "Glass material opacity",
+  "glassMaterialPlatformOptSettingName": "Platform glass optimization",
+  "glassMaterialLoadSettingFailed": "Failed to load {setting} settings, using default",
+  "@glassMaterialLoadSettingFailed": {
+    "placeholders": {
+      "setting": {
+        "type": "String"
+      }
+    }
+  },
+  "glassMaterialSaveSettingFailed": "Failed to save {setting} settings",
+  "@glassMaterialSaveSettingFailed": {
+    "placeholders": {
+      "setting": {
+        "type": "String"
+      }
+    }
+  },
+  "emptyWidgetDefaultTitle": "No content",
+  "bottomSheetFilterDefaultTitle": "Filter",
+  "bottomSheetApplyButtonText": "Apply",
+  "bottomSheetResetButtonText": "Reset",
+  "bottomSheetEmptyMessage": "No available options"
 }

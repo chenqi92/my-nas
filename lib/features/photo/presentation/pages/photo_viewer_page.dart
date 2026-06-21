@@ -1446,13 +1446,13 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
         canPop: false,
         child: AlertDialog(
           backgroundColor: Colors.grey[900],
-          content: const Column(
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(color: Colors.white),
               SizedBox(height: 16),
               Text(
-                '正在删除...',
+                context.l10n.photoViewerDeleting,
                 style: TextStyle(color: Colors.white70),
               ),
             ],

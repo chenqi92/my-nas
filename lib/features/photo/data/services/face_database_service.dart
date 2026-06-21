@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -106,7 +107,7 @@ class PersonEntity {
   final DateTime? updatedAt;
 
   /// 显示名称
-  String get displayName => name ?? '人物 $id';
+  String get displayName => name ?? appL10n.facePersonDisplayNameUnnamed(id);
 
   PersonEntity copyWith({
     int? id,

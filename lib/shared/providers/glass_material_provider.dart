@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 
 /// 玻璃材质参数（仅 Glass 风格下生效）。三项独立持久化于 settings box：
@@ -15,7 +16,7 @@ final glassBlurScaleProvider =
     defaultValue: 1.0,
     min: 0.5,
     max: 1.5,
-    failHint: '玻璃模糊强度',
+    failHint: appL10n.glassMaterialBlurScaleSettingName,
   ),
 );
 
@@ -27,7 +28,7 @@ final glassOpacityScaleProvider =
     defaultValue: 1.0,
     min: 0.5,
     max: 1.5,
-    failHint: '玻璃材质不透明度',
+    failHint: appL10n.glassMaterialOpacityScaleSettingName,
   ),
 );
 
@@ -37,7 +38,7 @@ final glassBlurEnabledProvider =
   (ref) => _BoolSettingNotifier(
     key: 'glass_blur_enabled',
     defaultValue: true,
-    failHint: '平台玻璃优化',
+    failHint: appL10n.glassMaterialPlatformOptSettingName,
   ),
 );
 
@@ -63,7 +64,7 @@ class _DoubleSettingNotifier extends StateNotifier<double> {
       final v = box.get(key);
       if (v is num) state = v.toDouble().clamp(min, max);
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '加载$failHint设置失败，使用默认值');
+      AppError.ignore(e, st, appL10n.glassMaterialLoadSettingFailed(failHint));
     }
   }
 
@@ -74,7 +75,7 @@ class _DoubleSettingNotifier extends StateNotifier<double> {
       final box = await HiveUtils.getSettingsBox();
       await box.put(key, clamped);
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '保存$failHint设置失败');
+      AppError.ignore(e, st, appL10n.glassMaterialSaveSettingFailed(failHint));
     }
   }
 }
@@ -97,7 +98,7 @@ class _BoolSettingNotifier extends StateNotifier<bool> {
       final v = box.get(key) as bool?;
       if (v != null) state = v;
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '加载$failHint设置失败，使用默认值');
+      AppError.ignore(e, st, appL10n.glassMaterialLoadSettingFailed(failHint));
     }
   }
 
@@ -107,7 +108,7 @@ class _BoolSettingNotifier extends StateNotifier<bool> {
       final box = await HiveUtils.getSettingsBox();
       await box.put(key, enabled);
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '保存$failHint设置失败');
+      AppError.ignore(e, st, appL10n.glassMaterialSaveSettingFailed(failHint));
     }
   }
 }
