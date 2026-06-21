@@ -1,12 +1,19 @@
 import 'package:flutter/widgets.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/l10n/app_localizations.dart';
 
 /// 把数据源/刮削源「表单配置」里硬编码的中文文案在渲染时映射到本地化文本。
 /// 配置定义在 domain 层（const 数据，无 BuildContext），这里在渲染处解析；
 /// 未命中的字符串原样返回（中文兜底）。
-String localizeFormText(BuildContext context, String? text) {
+String localizeFormText(BuildContext context, String? text) =>
+    _localizeForm(context.l10n, text);
+
+/// 无 BuildContext 场景（service/notifier 层）下的解析器，使用全局 appL10n。
+String localizeFormTextGlobal(String? text) => _localizeForm(appL10n, text);
+
+String _localizeForm(AppLocalizations l, String? text) {
   if (text == null || text.isEmpty) return text ?? '';
-  final l = context.l10n;
   return switch (text) {
     '连接配置' => l.cfgForm_61f8a011,
     '主机地址' => l.cfgForm_aeb5271e,
@@ -396,6 +403,46 @@ String localizeFormText(BuildContext context, String? text) {
     '艺术家' => l.dll_dbf5a551,
     '进度' => l.dll_c7bff79d,
     '错误' => l.dll_7030ff64,
+    '下载封面' => l.eml_d4792843,
+    '下载歌词' => l.eml_914cd427,
+    '人声' => l.eml_a5b57034,
+    '使用影片原始语言' => l.eml_1ff4e247,
+    '俄语' => l.eml_fc909679,
+    '保存中' => l.eml_7cbf2d09,
+    '原产地' => l.eml_660e78d2,
+    '古典' => l.eml_ddbdb5a8,
+    '夜间' => l.eml_c6828f99,
+    '失败' => l.eml_acd5cb84,
+    '平直' => l.eml_509b6ee9,
+    '德语' => l.eml_a9f4df3d,
+    '意大利语' => l.eml_dfbd9374,
+    '护眼' => l.eml_7ed74a3c,
+    '搜索中' => l.eml_9bc4c05a,
+    '摇滚' => l.eml_41782238,
+    '日语' => l.eml_671c0d80,
+    '法语' => l.eml_8607ec08,
+    '泰语' => l.eml_88ee569d,
+    '流行' => l.eml_6fc01ace,
+    '深灰' => l.eml_8cd9cf0f,
+    '灰色' => l.eml_fca97e78,
+    '爵士' => l.eml_b2bc63e3,
+    '白色' => l.eml_2fc96b27,
+    '空闲' => l.eml_87bb5bbc,
+    '简体中文' => l.eml_d688a3a4,
+    '繁体中文' => l.eml_dd16f5f4,
+    '纯黑' => l.eml_3a5c90c2,
+    '绿色' => l.eml_b2c712c7,
+    '英语' => l.eml_4145d4c1,
+    '获取详情' => l.eml_1f0136f6,
+    '葡萄牙语' => l.eml_4f4ac771,
+    '西班牙语' => l.eml_d43fa139,
+    '识别声纹' => l.eml_d92c772f,
+    '越南语' => l.eml_8a5f8bac,
+    '跟随系统语言' => l.eml_7f14927f,
+    '重低音' => l.eml_247e5d76,
+    '韩语' => l.eml_bf3c5b2d,
+    '高音' => l.eml_269a8de4,
+    '黑色' => l.eml_9d2d1f62,
     _ => text,
   };
 }

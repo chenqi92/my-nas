@@ -13066,5 +13066,63 @@
   },
   "musicPreparingMetadata": "Preparing to extract metadata…",
   "musicExtractingMetadata": "Extracting metadata",
-  "musicUpdateMetadataFailed": "Failed to update track metadata"
+  "musicUpdateMetadataFailed": "Failed to update track metadata",
+  "eml_d4792843": "Downloading cover",
+  "eml_914cd427": "Downloading lyrics",
+  "eml_a5b57034": "Vocal",
+  "eml_1ff4e247": "Use original language",
+  "eml_fc909679": "Russian",
+  "eml_7cbf2d09": "Saving",
+  "eml_660e78d2": "Original",
+  "eml_ddbdb5a8": "Classical",
+  "eml_c6828f99": "Night",
+  "eml_acd5cb84": "Failed",
+  "eml_509b6ee9": "Flat",
+  "eml_a9f4df3d": "German",
+  "eml_dfbd9374": "Italian",
+  "eml_7ed74a3c": "Sepia",
+  "eml_9bc4c05a": "Searching",
+  "eml_41782238": "Rock",
+  "eml_671c0d80": "Japanese",
+  "eml_8607ec08": "French",
+  "eml_88ee569d": "Thai",
+  "eml_6fc01ace": "Pop",
+  "eml_8cd9cf0f": "Dark Gray",
+  "eml_fca97e78": "Gray",
+  "eml_b2bc63e3": "Jazz",
+  "eml_2fc96b27": "White",
+  "eml_87bb5bbc": "Idle",
+  "eml_d688a3a4": "Simplified Chinese",
+  "eml_dd16f5f4": "Traditional Chinese",
+  "eml_3a5c90c2": "Pure Black",
+  "eml_b2c712c7": "Green",
+  "eml_4145d4c1": "English",
+  "eml_1f0136f6": "Fetching details",
+  "eml_4f4ac771": "Portuguese",
+  "eml_d43fa139": "Spanish",
+  "eml_d92c772f": "Fingerprinting",
+  "eml_8a5f8bac": "Vietnamese",
+  "eml_7f14927f": "Follow system language",
+  "eml_247e5d76": "Bass",
+  "eml_bf3c5b2d": "Korean",
+  "eml_269a8de4": "Treble",
+  "eml_9d2d1f62": "Black",
+  "scraperCheckingMetadata": "Checking metadata…",
+  "scraperTmdbKeyMissing": "TMDB API Key not configured",
+  "scraperMovieItem": "Movie: {title}",
+  "@scraperMovieItem": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  },
+  "scraperTvItem": "TV Show: {title}",
+  "@scraperTvItem": {
+    "placeholders": {
+      "title": {
+        "type": "Object"
+      }
+    }
+  }
 }

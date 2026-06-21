@@ -281,7 +281,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 icon: Icons.language_rounded,
                 iconColor: AppColors.primary,
                 title: context.l10n.videoPlayerSettingsDefaultTargetLanguage,
-                subtitle: translation.targetLangEnum.displayName,
+                subtitle: localizeFormText(context, translation.targetLangEnum.displayName),
                 onTap: () => _showTranslationLangPicker(
                   context,
                   ref,
@@ -379,7 +379,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
                 for (final lang in TranslationLang.values)
                   RadioListTile<TranslationLang>(
                     value: lang,
-                    title: Text(lang.displayName),
+                    title: Text(localizeFormText(context, lang.displayName)),
                     subtitle: Text(lang.bcp47),
                   ),
               ],

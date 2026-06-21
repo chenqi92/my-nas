@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/audio_effects_service.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 
 /// 均衡器与音效设置页
@@ -115,7 +116,7 @@ class _AudioEffectsPageState extends State<AudioEffectsPage> {
         children: [
           for (final p in kEqPresets)
             ChoiceChip(
-              label: Text(p.name),
+              label: Text(localizeFormText(context, p.name)),
               selected: _state.presetId == p.id,
               onSelected: _state.enabled ? (_) => _applyPreset(p.id) : null,
             ),

@@ -2731,7 +2731,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            theme.label,
+            localizeFormText(context, theme.label),
             style: TextStyle(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,

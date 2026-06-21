@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
@@ -832,7 +833,7 @@ class MetadataEnrichmentNotifier extends StateNotifier<MetadataEnrichmentState> 
       state = MetadataEnrichmentState(
         isRunning: true,
         total: totalItems,
-        currentItem: '正在检查元数据...',
+        currentItem: appL10n.scraperCheckingMetadata,
       );
 
       final tmdbService = TmdbService();
@@ -840,7 +841,7 @@ class MetadataEnrichmentNotifier extends StateNotifier<MetadataEnrichmentState> 
         logger.w('TMDB API Key 未配置，无法增强元数据');
         state = state.copyWith(
           isRunning: false,
-          lastError: 'TMDB API Key 未配置',
+          lastError: appL10n.scraperTmdbKeyMissing,
         );
         return;
       }
@@ -855,7 +856,7 @@ class MetadataEnrichmentNotifier extends StateNotifier<MetadataEnrichmentState> 
 
         state = state.copyWith(
           progress: progress,
-          currentItem: '电影: ${movie.displayTitle}',
+          currentItem: appL10n.scraperMovieItem(movie.displayTitle),
         );
 
         try {
@@ -939,7 +940,7 @@ class MetadataEnrichmentNotifier extends StateNotifier<MetadataEnrichmentState> 
 
         state = state.copyWith(
           progress: progress,
-          currentItem: '剧集: ${tvShow.displayTitle}',
+          currentItem: appL10n.scraperTvItem(tvShow.displayTitle),
         );
 
         try {

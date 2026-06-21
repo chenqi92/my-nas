@@ -16,6 +16,7 @@ import 'package:my_nas/features/reading/data/services/reader_settings_service.da
 import 'package:my_nas/features/reading/presentation/providers/reader_settings_provider.dart';
 import 'package:my_nas/features/reading/presentation/widgets/page_flip_effect.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -742,7 +743,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
         ),
         child: Center(
           child: Text(
-            theme.label,
+            localizeFormText(context, theme.label),
             style: TextStyle(
               color: theme.textColor,
               fontSize: 12,

@@ -10,6 +10,7 @@ import 'package:my_nas/features/video/data/services/subtitle_translation/subtitl
 import 'package:my_nas/features/video/data/services/subtitle_translation/subtitle_translation_service.dart';
 import 'package:my_nas/features/video/presentation/providers/subtitle_translation_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_player_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// 翻译字幕协调器：UI 调一次 [translateCurrent]，剩下的丢给 service 后台处理，
 /// 并把进度 / 注入回播放器。
@@ -92,7 +93,7 @@ class SubtitleTranslationController {
     final notifier = _ref.read(videoPlayerControllerProvider.notifier);
     await notifier.setInlineSubtitleData(
       session.currentContent(),
-      title: appL10n.subtitleTranslatedLabel(targetLang.displayName),
+      title: appL10n.subtitleTranslatedLabel(localizeFormTextGlobal(targetLang.displayName)),
     );
   }
 

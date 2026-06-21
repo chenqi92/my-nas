@@ -43,6 +43,7 @@ import 'package:my_nas/features/video/presentation/providers/scraper_provider.da
 import 'package:my_nas/shared/pages/favorites_page.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -1319,13 +1320,13 @@ class _LanguagePreferenceTile extends ConsumerWidget {
 
     final parts = <String>[];
     if (metadata != LanguageOption.auto) {
-      parts.add(context.l10n.mineLangPrefMetadata(metadata.displayName));
+      parts.add(context.l10n.mineLangPrefMetadata(localizeFormText(context, metadata.displayName)));
     }
     if (audio != LanguageOption.auto) {
-      parts.add(context.l10n.mineLangPrefAudio(audio.displayName));
+      parts.add(context.l10n.mineLangPrefAudio(localizeFormText(context, audio.displayName)));
     }
     if (subtitle != LanguageOption.auto) {
-      parts.add(context.l10n.mineLangPrefSubtitle(subtitle.displayName));
+      parts.add(context.l10n.mineLangPrefSubtitle(localizeFormText(context, subtitle.displayName)));
     }
 
     return parts.isEmpty ? context.l10n.mineLanguagePreferenceAllAuto : parts.join(' | ');
@@ -1564,7 +1565,7 @@ class _LanguageSettingsSheet extends ConsumerWidget {
                       ),
                       items: availableLanguages.map((lang) => DropdownMenuItem(
                         value: lang,
-                        child: Text(lang.displayName),
+                        child: Text(localizeFormText(context, lang.displayName)),
                       )).toList(),
                       onChanged: (value) {
                         if (value != null) {
