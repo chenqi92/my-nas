@@ -8,6 +8,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/media_scan_progress_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/comic/data/services/comic_library_cache_service.dart';
@@ -254,7 +255,7 @@ class ComicListNotifier extends StateNotifier<ComicListState> {
   Future<void> _loadFromCacheImmediately() async {
     final cache = _cacheService.getCache();
     if (cache != null && cache.comics.isNotEmpty) {
-      state = ComicListLoading(fromCache: true, currentFolder: '加载缓存...');
+      state = ComicListLoading(fromCache: true, currentFolder: appL10n.comicListLoadingCachingMessage);
 
       final comics = cache.comics.map(ComicItem.fromCacheEntry).toList();
 
@@ -271,14 +272,14 @@ class ComicListNotifier extends StateNotifier<ComicListState> {
 
     var config = configAsync.valueOrNull;
     if (config == null) {
-      state = ComicListLoading(currentFolder: '正在加载配置...');
+      state = ComicListLoading(currentFolder: appL10n.comicListLoadingConfigMessage);
       for (var i = 0; i < 10; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 500));
         final updated = _ref.read(mediaLibraryConfigProvider);
         config = updated.valueOrNull;
         if (config != null) break;
         if (updated.hasError) {
-          state = ComicListError('加载媒体库配置失败');
+          state = ComicListError(appL10n.comicListConfigLoadError);
           return;
         }
       }
@@ -312,7 +313,7 @@ class ComicListNotifier extends StateNotifier<ComicListState> {
     if (!forceRefresh && _cacheService.isCacheValid(sourceIds)) {
       final cache = _cacheService.getCache();
       if (cache != null) {
-        state = ComicListLoading(fromCache: true, currentFolder: '加载缓存...');
+        state = ComicListLoading(fromCache: true, currentFolder: appL10n.comicListLoadingCachingMessage);
 
         final comics = cache.comics.map(ComicItem.fromCacheEntry).toList();
 

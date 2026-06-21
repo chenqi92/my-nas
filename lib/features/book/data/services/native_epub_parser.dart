@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:epub_plus/epub_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 解析后的电子书
@@ -158,7 +159,7 @@ class NativeEpubParser {
       final chapter = book.chapters[i];
       chapters.add(EbookChapter(
         index: i,
-        title: chapter.title ?? '第 ${i + 1} 章',
+        title: chapter.title ?? appL10n.ebookDefaultChapterTitle(i + 1),
         htmlContent: _processHtmlContent(chapter.htmlContent ?? ''),
         href: '',
       ));

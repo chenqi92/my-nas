@@ -189,7 +189,7 @@ class MTeamApi extends PTSiteApi {
           return true;
         }
         // API 返回错误
-        final message = data['message'] as String? ?? '未知错误';
+        final message = data['message'] as String? ?? appL10n.ptSiteUnknownErrorMessage;
         _logger.w('MTeamApi.testConnection: API 返回错误 - code=$code, message=$message');
         AppError.ignore(
           Exception(appL10n.ptSiteApiResponseError(message)),

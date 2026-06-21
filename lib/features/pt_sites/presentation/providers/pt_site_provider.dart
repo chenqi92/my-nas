@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/pt_sites/data/services/pt_site_api.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -79,7 +80,7 @@ class PTSiteConnectionNotifier extends StateNotifier<PTSiteConnection> {
       if (!connected) {
         state = state.copyWith(
           status: PTSiteConnectionStatus.error,
-          errorMessage: '连接失败，请检查认证信息',
+          errorMessage: appL10n.ptSiteConnectionFailedCheckAuth,
         );
         return;
       }

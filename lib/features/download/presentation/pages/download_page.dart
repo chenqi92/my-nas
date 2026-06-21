@@ -48,7 +48,7 @@ class DownloadPage extends ConsumerWidget {
                   padding: const EdgeInsets.all(AppSpacing.md),
                   children: [
                     if (downloading.isNotEmpty) ...[
-                      _buildSectionHeader(context, '下载中', Icons.downloading_rounded, isDark),
+                      _buildSectionHeader(context, context.l10n.downloadSectionDownloading, Icons.downloading_rounded, isDark),
                       const SizedBox(height: AppSpacing.sm),
                       ...downloading.map((task) => _DownloadTaskTile(
                             task: task,
@@ -57,7 +57,7 @@ class DownloadPage extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.lg),
                     ],
                     if (completed.isNotEmpty) ...[
-                      _buildSectionHeader(context, '已完成', Icons.check_circle_rounded, isDark),
+                      _buildSectionHeader(context, context.l10n.downloadSectionCompleted, Icons.check_circle_rounded, isDark),
                       const SizedBox(height: AppSpacing.sm),
                       ...completed.map((task) => _DownloadTaskTile(
                             task: task,
@@ -66,7 +66,7 @@ class DownloadPage extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.lg),
                     ],
                     if (failed.isNotEmpty) ...[
-                      _buildSectionHeader(context, '失败', Icons.error_rounded, isDark),
+                      _buildSectionHeader(context, context.l10n.downloadSectionFailed, Icons.error_rounded, isDark),
                       const SizedBox(height: AppSpacing.sm),
                       ...failed.map((task) => _DownloadTaskTile(
                             task: task,

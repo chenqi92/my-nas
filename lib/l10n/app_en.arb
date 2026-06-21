@@ -12822,5 +12822,30 @@
   "enl_01b6f87b": "Headphones",
   "enl_1c59faa2": "Speaker",
   "enl_1622dc9b": "Unknown",
-  "enl_7854b52a": "Enabled"
+  "enl_7854b52a": "Enabled",
+  "transferMediaCacheCheckStatusFailed": "Failed to check cache status",
+  "transferMediaCacheGetPathFailed": "Failed to get cache path",
+  "transferMediaCacheDeleteFailed": "Failed to delete cache",
+  "transferMediaCacheGetSizeFailed": "Failed to get cache size",
+  "transferMediaCacheGetCountFailed": "Failed to get cache count",
+  "transferMediaCacheGetListFailed": "Failed to get cache list",
+  "transferMediaCacheCleanupQuotaFailed": "Failed to cleanup cache quota",
+  "transferMediaCacheCleanupInvalidFailed": "Failed to cleanup invalid cache",
+  "traktSyncUnknownMovie": "Unknown movie",
+  "traktSyncUnknownShow": "Unknown TV show",
+  "traktSyncUnknownVideo": "Unknown video",
+  "ptSiteUnknownErrorMessage": "Unknown error",
+  "ptSiteConnectionFailedCheckAuth": "Connection failed, please check authentication info",
+  "comicListLoadingCachingMessage": "Loading cache...",
+  "comicListLoadingConfigMessage": "Loading configuration...",
+  "comicListConfigLoadError": "Failed to load media library configuration",
+  "bookPaginatorNoContent": "No content",
+  "ebookDefaultChapterTitle": "Chapter {number}",
+  "@ebookDefaultChapterTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  }
 }

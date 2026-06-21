@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 在线书籍分页后的页面
@@ -68,7 +69,7 @@ class NativeOnlinePaginator {
           OnlineBookPage(
             pageIndex: 0,
             chapterIndex: chapterIndex,
-            content: '暂无内容',
+            content: appL10n.bookPaginatorNoContent,
             progress: 1.0,
           ),
         ],

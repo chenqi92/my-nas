@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/media_tracking/presentation/providers/trakt_provider.dart';
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
@@ -344,9 +345,9 @@ class ContinueWatchingItem {
     // 最后使用 Trakt 原始标题
     if (traktProgress != null) {
       if (traktProgress!.type == 'movie') {
-        return traktProgress!.movie?.title ?? '未知电影';
+        return traktProgress!.movie?.title ?? appL10n.traktSyncUnknownMovie;
       } else {
-        final show = traktProgress!.show?.title ?? '未知剧集';
+        final show = traktProgress!.show?.title ?? appL10n.traktSyncUnknownShow;
         final ep = traktProgress!.episode;
         if (ep != null) {
           return '$show S${ep.season.toString().padLeft(2, '0')}E${ep.number.toString().padLeft(2, '0')}';
@@ -360,7 +361,7 @@ class ContinueWatchingItem {
       return localHistoryItem!.videoName;
     }
 
-    return videoPath ?? '未知视频';
+    return videoPath ?? appL10n.traktSyncUnknownVideo;
   }
 
   /// 格式化标题（添加剧集信息）

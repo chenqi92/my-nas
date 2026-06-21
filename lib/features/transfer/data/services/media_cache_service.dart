@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/data/services/cache_config_service.dart';
@@ -155,7 +156,7 @@ class MediaCacheService {
 
       return true;
     } catch (e, st) {
-      AppError.ignore(e, st, '检查缓存状态失败');
+      AppError.ignore(e, st, appL10n.transferMediaCacheCheckStatusFailed);
       return false;
     }
   }
@@ -180,7 +181,7 @@ class MediaCacheService {
 
       return cachePath;
     } catch (e, st) {
-      AppError.ignore(e, st, '获取缓存路径失败');
+      AppError.ignore(e, st, appL10n.transferMediaCacheGetPathFailed);
       return null;
     }
   }
@@ -208,7 +209,7 @@ class MediaCacheService {
 
       await _dbService.deleteCache(sourceId, sourcePath);
     } catch (e, st) {
-      AppError.ignore(e, st, '删除缓存失败');
+      AppError.ignore(e, st, appL10n.transferMediaCacheDeleteFailed);
     }
   }
 
@@ -219,7 +220,7 @@ class MediaCacheService {
     try {
       return await _dbService.getCacheSize(mediaType: mediaType?.name);
     } catch (e, st) {
-      AppError.ignore(e, st, '获取缓存大小失败');
+      AppError.ignore(e, st, appL10n.transferMediaCacheGetSizeFailed);
       return 0;
     }
   }
@@ -237,7 +238,7 @@ class MediaCacheService {
     try {
       return await _dbService.getCacheCount(mediaType: mediaType?.name);
     } catch (e, st) {
-      AppError.ignore(e, st, '获取缓存数量失败');
+      AppError.ignore(e, st, appL10n.transferMediaCacheGetCountFailed);
       return 0;
     }
   }
@@ -271,7 +272,7 @@ class MediaCacheService {
 
       return validItems;
     } catch (e, st) {
-      AppError.ignore(e, st, '获取缓存列表失败');
+      AppError.ignore(e, st, appL10n.transferMediaCacheGetListFailed);
       return [];
     }
   }
@@ -358,7 +359,7 @@ class MediaCacheService {
         );
       }
     } catch (e, st) {
-      AppError.ignore(e, st, '清理缓存配额失败');
+      AppError.ignore(e, st, appL10n.transferMediaCacheCleanupQuotaFailed);
     }
   }
 
@@ -403,7 +404,7 @@ class MediaCacheService {
         logger.i('MediaCacheService: 清理了 $cleanedCount 条无效缓存记录');
       }
     } catch (e, st) {
-      AppError.ignore(e, st, '清理无效缓存失败');
+      AppError.ignore(e, st, appL10n.transferMediaCacheCleanupInvalidFailed);
     }
 
     return cleanedCount;
