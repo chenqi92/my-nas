@@ -9,6 +9,7 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart'
 import 'package:enough_convert/enough_convert.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/ncm_decrypt_service.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
@@ -710,7 +711,7 @@ class MusicMetadataService {
 
     // 边界条件：空文件名
     if (filename.isEmpty) {
-      return const MusicMetadata(title: '未知曲目');
+      return MusicMetadata(title: appL10n.musicUnknownTrack);
     }
 
     String? title;

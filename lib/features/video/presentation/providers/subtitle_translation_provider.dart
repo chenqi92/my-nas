@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart' show SubtitleTrack;
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/translation/translation_provider.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/subtitle_translation/subtitle_format.dart';
@@ -91,7 +92,7 @@ class SubtitleTranslationController {
     final notifier = _ref.read(videoPlayerControllerProvider.notifier);
     await notifier.setInlineSubtitleData(
       session.currentContent(),
-      title: '${targetLang.displayName} (翻译)',
+      title: appL10n.subtitleTranslatedLabel(targetLang.displayName),
     );
   }
 

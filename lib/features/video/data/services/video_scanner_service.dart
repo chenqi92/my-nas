@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/background_task_service.dart';
 import 'package:my_nas/core/utils/background_task_pool.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -411,7 +412,7 @@ class VideoScannerService {
           state: BackgroundTaskState.completed,
           current: allVideos.length,
           total: allVideos.length,
-          message: '扫描完成，共 ${allVideos.length} 个视频',
+          message: appL10n.videoScanCompletedCount(allVideos.length),
         ),
       );
 
@@ -434,7 +435,7 @@ class VideoScannerService {
         BackgroundTaskProgress(
           taskType: BackgroundTaskType.videoScan,
           state: BackgroundTaskState.error,
-          message: '扫描失败: $e',
+          message: appL10n.videoScanFailedError(e),
         ),
       );
       rethrow;
@@ -722,7 +723,7 @@ class VideoScannerService {
             state: BackgroundTaskState.running,
             current: batchStats.processed,
             total: batchStats.total,
-            message: '正在刮削: ${pendingVideos.length} 个视频',
+            message: appL10n.videoScrapingCount(pendingVideos.length),
           ),
         );
 
@@ -800,7 +801,7 @@ class VideoScannerService {
         BackgroundTaskProgress(
           taskType: BackgroundTaskType.videoScrape,
           state: BackgroundTaskState.completed,
-          message: '刮削完成',
+          message: appL10n.videoScrapeCompleted,
         ),
       );
     } on Exception catch (e, st) {
@@ -820,7 +821,7 @@ class VideoScannerService {
         BackgroundTaskProgress(
           taskType: BackgroundTaskType.videoScrape,
           state: BackgroundTaskState.error,
-          message: '刮削失败: $e',
+          message: appL10n.videoScrapeFailedError(e),
         ),
       );
     } finally {

@@ -9215,5 +9215,97 @@
         "type": "int"
       }
     }
-  }
+  },
+  "videoScanCompletedCount": "Scan complete, {count} videos",
+  "@videoScanCompletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoScanFailedError": "Scan failed: {error}",
+  "@videoScanFailedError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "videoScrapingCount": "Scraping: {count} videos",
+  "@videoScrapingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "videoScrapeCompleted": "Scraping complete",
+  "videoScrapeFailedError": "Scraping failed: {error}",
+  "@videoScrapeFailedError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "pdfReaderLoadingSizeMb": "Loading... {size} MB",
+  "@pdfReaderLoadingSizeMb": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "connectErrorPermissionDenied": "Network permission denied, please check system settings",
+  "connectErrorRefused": "Connection refused, please check the address and port",
+  "connectErrorTimeout": "Connection timed out, please check your network",
+  "connectErrorNetwork": "Network connection failed",
+  "connectErrorSecureStorage": "Secure storage unavailable, cannot save login info",
+  "connectFailedWithReason": "Connection failed: {reason}",
+  "@connectFailedWithReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "connect2FAFailed": "Two-factor verification failed",
+  "subtitleTranslatedLabel": "{lang} (Translated)",
+  "@subtitleTranslatedLabel": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
+  "musicSongCountUnit": "{count} songs",
+  "@musicSongCountUnit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bookChapterTitle": "Chapter {number}",
+  "@bookChapterTitle": {
+    "placeholders": {
+      "number": {
+        "type": "Object"
+      }
+    }
+  },
+  "musicUnknownTrack": "Unknown Track",
+  "audioPassthroughDefaultOutput": "Will play using the default audio output.",
+  "audioPassthroughBluetoothStereo": "Bluetooth doesn't support surround passthrough; stereo will be played.",
+  "audioPassthroughEnabled": "Audio passthrough enabled; the external device will decode and play.",
+  "audioPassthroughUnsupportedCodec": "Current device doesn't support {codec} passthrough; will decode and play.",
+  "@audioPassthroughUnsupportedCodec": {
+    "placeholders": {
+      "codec": {
+        "type": "String"
+      }
+    }
+  },
+  "audioPassthroughDecode": "Will decode and play."
 }

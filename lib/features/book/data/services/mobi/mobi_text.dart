@@ -4,6 +4,7 @@
 // 基于 KindleUnpack 的解析逻辑移植到 Dart
 
 import 'dart:typed_data';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_header.dart';
@@ -199,7 +200,7 @@ class MobiChapterExtractor {
         if (chapters.length >= maxChapters) break;
 
         chapters.add(MobiChapter(
-          title: '第 $chapterNum 章',
+          title: appL10n.bookChapterTitle(chapterNum),
           startOffset: match.end,
           level: 1,
         ));

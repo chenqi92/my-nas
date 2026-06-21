@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
@@ -208,7 +209,7 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
         totalBytes += chunk.length;
 
         final sizeMB = (totalBytes / 1024 / 1024).toStringAsFixed(1);
-        state = PdfReaderLoading(message: '加载中... $sizeMB MB');
+        state = PdfReaderLoading(message: appL10n.pdfReaderLoadingSizeMb(sizeMB));
 
         // 当收集到至少 500KB 数据时，尝试早期解析（PDF 头部通常足够显示第一页）
         if (!hasTriedEarlyLoad && totalBytes > 512 * 1024) {

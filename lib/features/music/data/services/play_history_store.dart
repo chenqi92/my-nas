@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 
@@ -293,7 +294,7 @@ class PlayHistoryStore {
       return RankedItem(
         id: 'artist:${kv.key}',
         title: kv.key,
-        subtitle: '${uniqueSongs.length} 首',
+        subtitle: appL10n.musicSongCountUnit(uniqueSongs.length),
         playCount: kv.value.length,
         totalSec: total,
       );

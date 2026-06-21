@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/storage/auth_storage_service.dart';
 import 'package:my_nas/core/storage/storage_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -160,7 +161,7 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
         'port': port,
         'type': type.name,
       });
-      state = ConnectionError(message: '连接失败: ${_getErrorMessage(e)}');
+      state = ConnectionError(message: appL10n.connectFailedWithReason(_getErrorMessage(e)));
     }
   }
 
@@ -192,20 +193,20 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
   String _getErrorMessage(Object e) {
     final message = e.toString();
     if (message.contains('Operation not permitted')) {
-      return '网络权限被拒绝，请检查系统设置';
+      return appL10n.connectErrorPermissionDenied;
     }
     if (message.contains('Connection refused')) {
-      return '连接被拒绝，请检查地址和端口';
+      return appL10n.connectErrorRefused;
     }
     if (message.contains('Connection timed out')) {
-      return '连接超时，请检查网络';
+      return appL10n.connectErrorTimeout;
     }
     if (message.contains('SocketException')) {
-      return '网络连接失败';
+      return appL10n.connectErrorNetwork;
     }
     // Keychain 权限错误
     if (message.contains('-34018') || message.contains('entitlement')) {
-      return '安全存储不可用，无法保存登录信息';
+      return appL10n.connectErrorSecureStorage;
     }
     return message;
   }
@@ -257,7 +258,7 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
         case ConnectionFailure(:final error):
           state = ConnectionError(message: error);
         case ConnectionRequires2FA():
-          state = const ConnectionError(message: '二次验证失败');
+          state = ConnectionError(message: appL10n.connect2FAFailed);
       }
     }
   }

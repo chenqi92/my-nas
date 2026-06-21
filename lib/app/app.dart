@@ -9,6 +9,7 @@ import 'package:my_nas/app/theme/app_theme.dart';
 import 'package:my_nas/app/theme/color_scheme_preset.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/platform/jump_list_controller.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_deep_link_handler.dart';
 import 'package:my_nas/core/services/background_task_service.dart';
@@ -332,17 +333,21 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: appRouter,
       // 包装 ToastServiceProvider、ToastOverlay 和 AppLockGate
-      builder: (context, child) => ToastServiceProvider(
-        service: _toastService,
-        child: ToastOverlay(
-          toastService: _toastService,
-          child: AppLockLifecycleListener(
-            child: AppLockGate(
-              child: child ?? const SizedBox.shrink(),
+      builder: (context, child) {
+        // 更新全局 l10n，供无 BuildContext 的 service/notifier 层使用
+        appL10n = AppLocalizations.of(context);
+        return ToastServiceProvider(
+          service: _toastService,
+          child: ToastOverlay(
+            toastService: _toastService,
+            child: AppLockLifecycleListener(
+              child: AppLockGate(
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

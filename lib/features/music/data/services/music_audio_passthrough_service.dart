@@ -1,5 +1,6 @@
 import 'package:media_kit/media_kit.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/capability/audio_output_capability_service.dart';
 import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
@@ -179,44 +180,44 @@ class MusicAudioPassthroughService {
     // AirPlay 输出
     if (device == AudioOutputDevice.unknown) {
       // 无法检测设备类型
-      return const AudioOutputAdvice(
+      return AudioOutputAdvice(
         canPlayOriginal: false,
         degradedMode: false,
-        message: '将使用默认音频输出播放。',
+        message: appL10n.audioPassthroughDefaultOutput,
       );
     }
 
     // 蓝牙输出
     if (device == AudioOutputDevice.bluetooth) {
-      return const AudioOutputAdvice(
+      return AudioOutputAdvice(
         canPlayOriginal: false,
         degradedMode: true,
-        message: '蓝牙不支持环绕声直通，将播放立体声版本。',
+        message: appL10n.audioPassthroughBluetoothStereo,
       );
     }
 
     // HDMI/eARC 输出
     if (device == AudioOutputDevice.hdmi || device == AudioOutputDevice.arc) {
       if (sourceCodec != null && capability.supportedCodecs.contains(sourceCodec)) {
-        return const AudioOutputAdvice(
+        return AudioOutputAdvice(
           canPlayOriginal: true,
           degradedMode: false,
-          message: '已启用音频直通，将由外部设备解码播放。',
+          message: appL10n.audioPassthroughEnabled,
         );
       } else if (sourceCodec != null) {
         return AudioOutputAdvice(
           canPlayOriginal: false,
           degradedMode: false,
-          message: '当前设备不支持 ${sourceCodec.displayName} 直通，将解码后播放。',
+          message: appL10n.audioPassthroughUnsupportedCodec(sourceCodec.displayName),
         );
       }
     }
 
     // 默认
-    return const AudioOutputAdvice(
+    return AudioOutputAdvice(
       canPlayOriginal: false,
       degradedMode: false,
-      message: '将解码后播放。',
+      message: appL10n.audioPassthroughDecode,
     );
   }
 }
