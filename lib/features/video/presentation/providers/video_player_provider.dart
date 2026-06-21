@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/media_proxy_server.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/media_tracking/presentation/providers/trakt_sync_provider.dart';
@@ -647,7 +648,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       if (video.needsUrlResolution) {
         if (video.sourceId == null) {
           logger.e('VideoPlayer: 视频缺少 sourceId，无法获取 URL');
-          state = state.copyWith(errorMessage: '无法播放：缺少数据源信息');
+          state = state.copyWith(errorMessage: appL10n.videoPlayerErrorMissingSource);
           return;
         }
 
@@ -680,7 +681,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
             }
           } else {
             logger.e('VideoPlayer: 数据源未连接');
-            state = state.copyWith(errorMessage: '无法播放：数据源未连接');
+            state = state.copyWith(errorMessage: appL10n.videoPlayerErrorSourceNotConnected);
             return;
           }
 
@@ -693,7 +694,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
           logger.i('VideoPlayer: URL 已解析 => $resolvedUrl');
         } on Exception catch (e, st) {
           AppError.handle(e, st, 'VideoPlayer.resolveUrl', {'path': video.path});
-          state = state.copyWith(errorMessage: '无法获取视频地址');
+          state = state.copyWith(errorMessage: appL10n.videoPlayerErrorNoVideoUrl);
           return;
         }
       }
@@ -703,7 +704,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       if (resolvedVideo.needsProxy) {
         if (resolvedVideo.sourceId == null) {
           logger.e('VideoPlayer: SMB 视频缺少 sourceId，无法使用代理');
-          state = state.copyWith(errorMessage: '无法播放：缺少数据源信息');
+          state = state.copyWith(errorMessage: appL10n.videoPlayerErrorMissingSource);
           return;
         }
         try {
@@ -715,7 +716,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
           logger.i('VideoPlayer: 使用代理 URL => $playUrl');
         } on Exception catch (e, st) {
           AppError.handle(e, st, 'VideoPlayer.startProxyServer');
-          state = state.copyWith(errorMessage: '无法启动媒体代理服务');
+          state = state.copyWith(errorMessage: appL10n.videoPlayerErrorProxyStartFailed);
           return;
         }
       }
@@ -1087,7 +1088,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       logger.i('VideoPlayer: 转码流切换成功，偏移量=${positionOffset.inSeconds}s，原始时长=${originalDuration.inSeconds}s');
     } catch (e, st) {
       AppError.handle(e, st, 'switchToTranscodedStream');
-      state = state.copyWith(errorMessage: '切换清晰度失败: $e');
+      state = state.copyWith(errorMessage: appL10n.videoPlayerErrorSwitchQualityFailed(e));
     }
   }
 

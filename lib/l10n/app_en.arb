@@ -12376,5 +12376,17 @@
   "playMethodReasonBitrate": "Bitrate exceeds device limit, throttling required",
   "playMethodReasonDirectPlay": "Device fully supports this, direct play",
   "playMethodReasonRemux": "Container remux required",
-  "appLockBiometricReason": "Unlock MyNAS"
+  "appLockBiometricReason": "Unlock MyNAS",
+  "videoPlayerErrorMissingSource": "Cannot play: missing data source info",
+  "videoPlayerErrorSourceNotConnected": "Cannot play: data source not connected",
+  "videoPlayerErrorNoVideoUrl": "Unable to get video URL",
+  "videoPlayerErrorProxyStartFailed": "Unable to start media proxy service",
+  "videoPlayerErrorSwitchQualityFailed": "Failed to switch quality: {error}",
+  "@videoPlayerErrorSwitchQualityFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  }
 }

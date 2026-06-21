@@ -6175,5 +6175,10 @@
   "playMethodReasonBitrate": "码率超出设备限制，需要限速",
   "playMethodReasonDirectPlay": "设备完全支持，直接播放",
   "playMethodReasonRemux": "需要重封装容器",
-  "appLockBiometricReason": "解锁 MyNAS"
+  "appLockBiometricReason": "解锁 MyNAS",
+  "videoPlayerErrorMissingSource": "无法播放：缺少数据源信息",
+  "videoPlayerErrorSourceNotConnected": "无法播放：数据源未连接",
+  "videoPlayerErrorNoVideoUrl": "无法获取视频地址",
+  "videoPlayerErrorProxyStartFailed": "无法启动媒体代理服务",
+  "videoPlayerErrorSwitchQualityFailed": "切换清晰度失败: {error}"
 }
