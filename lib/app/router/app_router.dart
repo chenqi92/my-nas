@@ -86,11 +86,11 @@ final appRouter = GoRouter(
           children: [
             Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
-            Text('导航错误: ${state.uri}'),
+            Text(context.l10n.routerErrorMessagePrefix(state.uri.toString())),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => context.go(Routes.home),
-              child: const Text('返回首页'),
+              child: Text(context.l10n.routerErrorReturnHome),
             ),
           ],
         ),

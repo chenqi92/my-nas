@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/shared/providers/media_favorites_provider.dart';
 import 'package:my_nas/shared/services/media_favorites_service.dart';
@@ -11,6 +12,16 @@ import 'package:my_nas/shared/services/media_favorites_service.dart';
 /// 收藏的项目。每个 tab 列出对应类型的收藏，长按 / 滑动可取消收藏。
 ///
 /// 数据源：[mediaFavoritesProvider]，由 [MediaFavoritesService] 单 Hive box 提供。
+String _getTabLabel(BuildContext context, String keyName) => switch (keyName) {
+      'favoritesTabVideo' => context.l10n.favoritesTabVideo,
+      'favoritesTabPhoto' => context.l10n.favoritesTabPhoto,
+      'favoritesTabNote' => context.l10n.favoritesTabNote,
+      'favoritesTabBook' => context.l10n.favoritesTabBook,
+      'favoritesTabComic' => context.l10n.favoritesTabComic,
+      'favoritesTabMusic' => context.l10n.favoritesTabMusic,
+      _ => keyName,
+    };
+
 class FavoritesPage extends ConsumerStatefulWidget {
   const FavoritesPage({super.key});
 
@@ -24,11 +35,11 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
 
   /// 与 _tabs 顺序一致——索引对应一个 MediaType
   static const _tabs = <_FavoriteTab>[
-    _FavoriteTab(MediaType.video, '视频', Icons.movie_rounded),
-    _FavoriteTab(MediaType.photo, '照片', Icons.photo_rounded),
-    _FavoriteTab(MediaType.note, '笔记', Icons.note_alt_rounded),
-    _FavoriteTab(MediaType.book, '图书', Icons.menu_book_rounded),
-    _FavoriteTab(MediaType.comic, '漫画', Icons.collections_rounded),
+    _FavoriteTab(MediaType.video, 'favoritesTabVideo', Icons.movie_rounded),
+    _FavoriteTab(MediaType.photo, 'favoritesTabPhoto', Icons.photo_rounded),
+    _FavoriteTab(MediaType.note, 'favoritesTabNote', Icons.note_alt_rounded),
+    _FavoriteTab(MediaType.book, 'favoritesTabBook', Icons.menu_book_rounded),
+    _FavoriteTab(MediaType.comic, 'favoritesTabComic', Icons.collections_rounded),
   ];
 
   @override
@@ -46,13 +57,13 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
   @override
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
-        title: const Text('我的收藏'),
+        title: Text(context.l10n.favoritesPageTitle),
         centerTitle: false,
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
           tabs: _tabs
-              .map((t) => Tab(icon: Icon(t.icon), text: t.label))
+              .map((t) => Tab(icon: Icon(t.icon), text: _getTabLabel(context, t.label)))
               .toList(),
         ),
       ),
@@ -83,7 +94,7 @@ class _FavoriteListView extends ConsumerWidget {
 
     return asyncFavorites.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('加载失败：$e')),
+      error: (e, _) => Center(child: Text(context.l10n.favoritesLoadFailed(e))),
       data: (items) {
         if (items.isEmpty) return _buildEmpty(context);
         return ListView.separated(
@@ -109,14 +120,14 @@ class _FavoriteListView extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '还没有收藏任何${_labelOf(type)}',
+            context.l10n.favoritesEmptyMessage(_getMediaTypeLabel(context, type)),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            '在列表上长按 → 收藏',
+            context.l10n.favoritesEmptyHint,
             style: theme.textTheme.bodySmall?.copyWith(
               color:
                   theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -127,14 +138,17 @@ class _FavoriteListView extends ConsumerWidget {
     );
   }
 
-  static String _labelOf(MediaType t) => switch (t) {
-        MediaType.video => '视频',
-        MediaType.photo => '照片',
-        MediaType.note => '笔记',
-        MediaType.book => '图书',
-        MediaType.comic => '漫画',
-        MediaType.music => '音乐',
+  String _getMediaTypeLabel(BuildContext context, MediaType t) => switch (t) {
+        MediaType.video => context.l10n.favoritesTabVideo,
+        MediaType.photo => context.l10n.favoritesTabPhoto,
+        MediaType.note => context.l10n.favoritesTabNote,
+        MediaType.book => context.l10n.favoritesTabBook,
+        MediaType.comic => context.l10n.favoritesTabComic,
+        MediaType.music => context.l10n.favoritesTabMusic,
       };
+
+
+
 }
 
 class _FavoriteTile extends ConsumerWidget {
@@ -162,18 +176,18 @@ class _FavoriteTile extends ConsumerWidget {
             );
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('已取消收藏：${item.displayName}')),
+          SnackBar(content: Text(context.l10n.favoritesRemovedMessage(item.displayName))),
         );
       },
       child: ListTile(
         leading: Icon(_iconOf(item.type), color: theme.colorScheme.primary),
         title: Text(
-          item.displayName.isNotEmpty ? item.displayName : '(未命名)',
+          item.displayName.isNotEmpty ? item.displayName : context.l10n.favoritesUnnamedItem,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          '来源：${item.sourceId} · 收藏于 ${_formatDate(item.addedAt)}',
+          context.l10n.favoritesItemSubtitle(item.sourceId, _formatDate(item.addedAt)),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -182,7 +196,7 @@ class _FavoriteTile extends ConsumerWidget {
         ),
         trailing: IconButton(
           icon: const Icon(Icons.favorite_rounded, color: AppColors.error),
-          tooltip: '取消收藏',
+          tooltip: context.l10n.favoritesRemoveTooltip,
           onPressed: () async {
             await ref.read(mediaFavoritesActionsProvider).remove(
                   type: item.type,
@@ -191,7 +205,7 @@ class _FavoriteTile extends ConsumerWidget {
                 );
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('已取消收藏：${item.displayName}')),
+              SnackBar(content: Text(context.l10n.favoritesRemovedMessage(item.displayName))),
             );
           },
         ),

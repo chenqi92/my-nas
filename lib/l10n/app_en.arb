@@ -9307,5 +9307,185 @@
       }
     }
   },
-  "audioPassthroughDecode": "Will decode and play."
+  "audioPassthroughDecode": "Will decode and play.",
+  "appErrorWidgetTitle": "An error occurred",
+  "routerErrorMessagePrefix": "Navigation error: {uri}",
+  "@routerErrorMessagePrefix": {
+    "placeholders": {
+      "uri": {
+        "type": "String"
+      }
+    }
+  },
+  "routerErrorReturnHome": "Return to Home",
+  "errorNetworkConnectionTimeout": "Connection timeout, please check network",
+  "errorNetworkSendTimeout": "Send timeout, please try again later",
+  "errorNetworkReceiveTimeout": "Receive timeout, please try again later",
+  "errorNetworkConnectionFailed": "Network connection failed, please check network settings",
+  "errorNetworkRequestCancelled": "Request cancelled",
+  "errorNetworkGeneric": "Network error, please try again later",
+  "errorServerGeneric": "Server error, please try again later",
+  "errorValidationInput": "Invalid input, please check and try again",
+  "errorAuthenticationFailed": "Authentication failed, please log in again",
+  "errorFileOperationFailed": "File operation failed: {error}",
+  "@errorFileOperationFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "errorResourceAccessFailed": "Resource access failed",
+  "errorDataProcessingFailed": "Data processing failed",
+  "errorOperationCancelled": "Operation cancelled",
+  "errorOperationFailed": "Operation failed, please try again",
+  "errorFatalCritical": "A critical error occurred, please restart the app",
+  "errorUnknown": "An unknown error occurred",
+  "errorServerResponseAbnormal": "Server response error",
+  "errorHttpBadRequest": "Invalid request parameters",
+  "errorHttpUnauthorized": "Unauthorized, please log in again",
+  "errorHttpForbidden": "Access denied",
+  "errorHttpNotFound": "Resource not found",
+  "errorHttpRequestTimeout": "Request timeout",
+  "errorHttpTooManyRequests": "Too many requests, please try again later",
+  "errorHttpServerError": "Server error, please try again later",
+  "errorHttpFailure": "Request failed ({statusCode})",
+  "@errorHttpFailure": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "keyboardShortcutsHelpDialogClose": "Close",
+  "keyboardShortcutsHelpHintText": "Press this key to show/hide help",
+  "favoritesPageTitle": "My Favorites",
+  "favoritesTabVideo": "Video",
+  "favoritesTabPhoto": "Photo",
+  "favoritesTabNote": "Note",
+  "favoritesTabBook": "Book",
+  "favoritesTabComic": "Comic",
+  "favoritesTabMusic": "Music",
+  "favoritesLoadFailed": "Failed to load: {error}",
+  "@favoritesLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "favoritesEmptyMessage": "No {type} favorites yet",
+  "@favoritesEmptyMessage": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesEmptyHint": "Long press on a list -> Favorite",
+  "favoritesRemovedMessage": "Unfavorited: {name}",
+  "@favoritesRemovedMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesUnnamedItem": "(Unnamed)",
+  "favoritesItemSubtitle": "Source: {source} · Added on {date}",
+  "@favoritesItemSubtitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "favoritesRemoveTooltip": "Unfavorite",
+  "downloadServiceUnknownSize": "Unknown size",
+  "downloadServiceDownloadFailed": "Download failed: {statusCode}",
+  "@downloadServiceDownloadFailed": {
+    "placeholders": {
+      "statusCode": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadServiceDownloadFailedGeneric": "Download failed",
+  "downloadServiceTaskNotFound": "Task not found",
+  "downloadServiceFileNotCompleted": "File is not downloaded yet",
+  "downloadServiceFileNotFound": "File has been removed or path is invalid",
+  "downloadServiceDirectoryNotFound": "Download directory does not exist",
+  "downloadServiceMobileNotSupported": "Current platform does not support opening directories directly. Please access via the system file app.",
+  "adaptiveSheetConfirm": "Confirm",
+  "adaptiveSheetCancel": "Cancel",
+  "adaptiveSheetClose": "Close",
+  "mediaFileContextMenuViewDetails": "View Details",
+  "mediaFileContextMenuDownload": "Download",
+  "mediaFileContextMenuShare": "Share",
+  "mediaFileContextMenuAddToFavorites": "Add to Favorites",
+  "mediaFileContextMenuRemoveFromFavorites": "Remove from Favorites",
+  "mediaFileContextMenuRemoveFromLibrary": "Remove from Library",
+  "mediaFileContextMenuDeleteSourceFile": "Delete Source File",
+  "mediaInfoCopyTooltip": "Copy",
+  "mediaInfoCopied": "Copied",
+  "updateDialogTitle": "New Version Available",
+  "updateDialogBadgeNewVersion": "New Version",
+  "updateDialogFileSizeLabel": "File Size",
+  "updateDialogPlatformLabel": "Platform",
+  "updateDialogUnknownPlatform": "Unknown Platform",
+  "updateDialogReleaseNotesTitle": "Update Details",
+  "updateDialogDownloading": "Downloading...",
+  "updateDialogInstalling": "Installing...",
+  "updateDialogUnknownError": "Unknown Error",
+  "updateDialogButtonCancelDownload": "Cancel Download",
+  "updateDialogToastManualInstall": "Please manually install the downloaded update package",
+  "updateDialogButtonInstallNow": "Install Now",
+  "updateDialogButtonInstallLater": "Install Later",
+  "updateDialogButtonRetry": "Retry",
+  "updateDialogButtonGitHubDownload": "Download from GitHub",
+  "updateDialogButtonClose": "Close",
+  "updateDialogButtonGitHubDownloadIPA": "Download IPA from GitHub",
+  "updateDialogButtonRemindLater": "Remind Later",
+  "updateDialogButtonAppStore": "Go to App Store",
+  "updateDialogButtonViewDetails": "View Update Details",
+  "updateDialogButtonDownloadNow": "Download Now",
+  "updateDialogAlreadyLatest": "You are running the latest version",
+  "updateDialogCheckFailed": "Update check failed: {error}",
+  "@updateDialogCheckFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "updateTileTitle": "Check Update",
+  "updateTileStatusIdle": "Tap to check for new versions",
+  "updateTileStatusChecking": "Checking...",
+  "updateTileStatusAvailable": "New version found, tap to update",
+  "updateTileStatusNotAvailable": "You are running the latest version",
+  "updateTileStatusDownloading": "Downloading...",
+  "updateTileStatusReadyToInstall": "Download complete, tap to install",
+  "updateTileStatusInstalling": "Installing...",
+  "updateTileStatusError": "Check failed, tap to retry",
+  "breadcrumbBackTooltip": "Back",
+  "breadcrumbRootLabel": "Root",
+  "errorWidgetTitle": "Error Occurred",
+  "errorWidgetRetryButton": "Retry",
+  "masterDetailLayoutSelectItem": "Select an item to view details",
+  "masterDetailLayoutDetails": "Details",
+  "mainNavTabFilms": "Films",
+  "mainNavTabMusic": "Music",
+  "mainNavTabPhotos": "Photos",
+  "mainNavTabReading": "Reading",
+  "mainNavTabMe": "Me",
+  "downloadManagerTitle": "Download Manager",
+  "toolbarSearchHint": "Search",
+  "readerSettingsFontPreviewCharacter": "A",
+  "glassSearchBarCancelButton": "Cancel",
+  "glassSearchBarHintText": "Search",
+  "glassFloatingBackButtonTooltip": "Back",
+  "glassFloatingSearchBarCloseTooltip": "Close search"
 }

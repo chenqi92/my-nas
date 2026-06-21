@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 
 /// 面包屑项
@@ -466,7 +467,7 @@ class CompactBreadcrumb extends StatelessWidget {
               onPressed: onBack,
               icon: const Icon(Icons.arrow_back_rounded),
               iconSize: 20,
-              tooltip: '返回上级',
+              tooltip: context.l10n.breadcrumbBackTooltip,
             )
           else
             const SizedBox(width: 16),
@@ -530,7 +531,7 @@ class BreadcrumbBar extends StatelessWidget {
               onPressed: canGoBack ? onBack : null,
               icon: const Icon(Icons.arrow_back_rounded),
               iconSize: 20,
-              tooltip: '返回上级',
+              tooltip: context.l10n.breadcrumbBackTooltip,
               color: canGoBack
                   ? (isDark ? Colors.white70 : Colors.black54)
                   : (isDark ? Colors.white24 : Colors.black26),

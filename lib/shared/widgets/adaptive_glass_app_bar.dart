@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 
 /// 自适应玻璃顶栏 - 根据平台和 UI 风格自动选择最佳实现
@@ -2260,7 +2261,7 @@ class LiquidGlassPageLayout extends ConsumerWidget {
 class GlassSearchBar extends StatefulWidget {
   const GlassSearchBar({
     this.controller,
-    this.hintText = '搜索',
+    this.hintText = 'Search',
     this.onChanged,
     this.onSubmitted,
     this.onCancel,
@@ -2464,7 +2465,7 @@ class _GlassSearchBarState extends State<GlassSearchBar>
           GestureDetector(
             onTap: _handleCancel,
             child: Text(
-              '取消',
+              context.l10n.glassSearchBarCancelButton,
               style: TextStyle(
                 fontSize: 16,
                 color: AppColors.primary,
@@ -2697,7 +2698,7 @@ class GlassFloatingBackButton extends ConsumerWidget {
       return IconButton(
         onPressed: onTap,
         icon: Icon(icon, size: iconSize, color: iconColor),
-        tooltip: '返回',
+        tooltip: context.l10n.glassFloatingBackButtonTooltip,
       );
     }
 
@@ -3030,7 +3031,7 @@ class GlassFloatingSearchBar extends StatelessWidget {
             onChanged('');
             onClose();
           },
-          tooltip: '关闭搜索',
+          tooltip: context.l10n.glassFloatingSearchBarCloseTooltip,
         ),
       ],
     );

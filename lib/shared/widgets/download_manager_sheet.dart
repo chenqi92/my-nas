@@ -74,7 +74,7 @@ class DownloadManagerSheet extends ConsumerWidget {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        '下载管理',
+                        context.l10n.downloadManagerTitle,
                         style: context.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: isDark ? AppColors.darkOnSurface : null,
@@ -119,7 +119,7 @@ class DownloadManagerSheet extends ConsumerWidget {
                     ),
                     error: (error, _) => Center(
                       child: Text(
-                        '错误: $error',
+                        context.l10n.downloadErrorDisplay(error.toString()),
                         style: TextStyle(
                           color: isDark ? AppColors.darkOnSurfaceVariant : null,
                         ),
@@ -158,7 +158,7 @@ class DownloadManagerSheet extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            '清除已完成',
+            context.l10n.downloadClearCompleted,
             style: context.textTheme.labelMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               fontWeight: FontWeight.w500,
@@ -187,7 +187,7 @@ class DownloadManagerSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无下载任务',
+            context.l10n.downloadEmptyTitle,
             style: context.textTheme.titleMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
               fontWeight: FontWeight.w600,
@@ -195,7 +195,7 @@ class DownloadManagerSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '下载的文件将显示在这里',
+            context.l10n.downloadEmptyDescription.split('\n')[1],
             style: context.textTheme.bodyMedium?.copyWith(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -367,22 +367,22 @@ class _DownloadTaskTile extends ConsumerWidget {
     final (icon, tooltip, onTap) = switch (task.status) {
       DownloadStatus.pending => (
           Icons.play_arrow_rounded,
-          '开始',
+          context.l10n.downloadActionStart,
           () => service.startDownload(task.id),
         ),
       DownloadStatus.downloading => (
           Icons.pause_rounded,
-          '暂停',
+          context.l10n.downloadActionPause,
           () => service.pauseDownload(task.id),
         ),
       DownloadStatus.paused => (
           Icons.play_arrow_rounded,
-          '继续',
+          context.l10n.downloadActionResume,
           () => service.resumeDownload(task.id),
         ),
       DownloadStatus.completed => (
           Icons.folder_open_rounded,
-          '打开',
+          context.l10n.downloadActionOpen,
           () async {
             final result = await service.openFile(task.id);
             if (!result.success && context.mounted && result.message != null) {
@@ -392,12 +392,12 @@ class _DownloadTaskTile extends ConsumerWidget {
         ),
       DownloadStatus.failed => (
           Icons.refresh_rounded,
-          '重试',
+          context.l10n.downloadActionRetry,
           () => service.retryDownload(task.id),
         ),
       DownloadStatus.cancelled => (
           Icons.delete_rounded,
-          '删除',
+          context.l10n.downloadActionDelete,
           () => service.removeTask(task.id),
         ),
     };

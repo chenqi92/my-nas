@@ -116,7 +116,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     _Destination(
       icon: Icons.movie_filter_outlined,
       selectedIcon: Icons.movie_filter_rounded,
-      label: '影视',
+      labelKey: 'mainNavTabFilms',
       route: Routes.video,
       branchIndex: 1,
       sfSymbol: 'film',
@@ -124,7 +124,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     _Destination(
       icon: Icons.library_music_outlined,
       selectedIcon: Icons.library_music_rounded,
-      label: '曲库',
+      labelKey: 'mainNavTabMusic',
       route: Routes.music,
       branchIndex: 3,
       sfSymbol: 'music.note.list',
@@ -132,7 +132,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     _Destination(
       icon: Icons.photo_album_outlined,
       selectedIcon: Icons.photo_album_rounded,
-      label: '相册',
+      labelKey: 'mainNavTabPhotos',
       route: Routes.photo,
       branchIndex: 4,
       sfSymbol: 'photo.on.rectangle',
@@ -140,7 +140,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     _Destination(
       icon: Icons.menu_book_outlined,
       selectedIcon: Icons.menu_book_rounded,
-      label: '阅读',
+      labelKey: 'mainNavTabReading',
       route: Routes.reading,
       branchIndex: 5,
       sfSymbol: 'book',
@@ -148,7 +148,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     _Destination(
       icon: Icons.account_circle_outlined,
       selectedIcon: Icons.account_circle_rounded,
-      label: '我的',
+      labelKey: 'mainNavTabMe',
       route: Routes.mine,
       branchIndex: 6,
       sfSymbol: 'person.circle',
@@ -172,6 +172,16 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     final location = GoRouterState.of(context).uri.path;
     return _mainTabRoutes.contains(location);
   }
+
+  /// 获取本地化的导航标签
+  String _getLocalizedLabel(BuildContext context, String labelKey) => switch (labelKey) {
+      'mainNavTabFilms' => context.l10n.mainNavTabFilms,
+      'mainNavTabMusic' => context.l10n.mainNavTabMusic,
+      'mainNavTabPhotos' => context.l10n.mainNavTabPhotos,
+      'mainNavTabReading' => context.l10n.mainNavTabReading,
+      'mainNavTabMe' => context.l10n.mainNavTabMe,
+      _ => '',
+    };
 
   /// `index` 是 _destinations 列表的索引（0..4）。
   /// 通过 destination.branchIndex 映射到全局 branch index。
@@ -480,7 +490,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          dest.label,
+                          _getLocalizedLabel(context, dest.labelKey),
                           style: TextStyle(
                             fontSize: 10,
                             color: isSelected
@@ -524,7 +534,7 @@ class _Destination {
   const _Destination({
     required this.icon,
     required this.selectedIcon,
-    required this.label,
+    required this.labelKey,
     required this.route,
     required this.branchIndex,
     this.sfSymbol,
@@ -532,7 +542,7 @@ class _Destination {
 
   final IconData icon;
   final IconData selectedIcon;
-  final String label;
+  final String labelKey;
   final String route;
 
   /// 在 `StatefulShellRoute.branches` 中的全局索引（与 app_router 顺序一致）。

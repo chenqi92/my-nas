@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 
 /// 主从视图布局配置
@@ -202,14 +203,14 @@ class _MasterDetailLayoutState<T> extends State<MasterDetailLayout<T>> {
               ],
             )
           : widget.emptyDetailBuilder?.call(context) ??
-              const Center(
+              Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.touch_app_outlined, size: 64, color: Colors.grey),
                     SizedBox(height: 16),
                     Text(
-                      '选择一项查看详情',
+                      context.l10n.masterDetailLayoutSelectItem,
                       style: TextStyle(color: Colors.grey, fontSize: 16),
                     ),
                   ],
@@ -306,7 +307,7 @@ class _MasterDetailScaffoldState<T> extends State<MasterDetailScaffold<T>> {
 
   Widget _buildDetailPage(BuildContext context, T item) => Scaffold(
       appBar: AppBar(
-        title: Text(widget.detailTitle?.call(item) ?? '详情'),
+        title: Text(widget.detailTitle?.call(item) ?? context.l10n.masterDetailLayoutDetails),
         actions: widget.detailActions?.call(item),
       ),
       body: widget.detailBuilder(context, item),
@@ -444,7 +445,7 @@ class _MasterDetailScaffoldState<T> extends State<MasterDetailScaffold<T>> {
                   child: Row(
                     children: [
                       Text(
-                        widget.detailTitle?.call(selectedItem) ?? '详情',
+                        widget.detailTitle?.call(selectedItem) ?? context.l10n.masterDetailLayoutDetails,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -459,14 +460,14 @@ class _MasterDetailScaffoldState<T> extends State<MasterDetailScaffold<T>> {
               ],
             )
           : widget.emptyDetailBuilder?.call(context) ??
-              const Center(
+              Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.touch_app_outlined, size: 64, color: Colors.grey),
                     SizedBox(height: 16),
                     Text(
-                      '选择一项查看详情',
+                      context.l10n.masterDetailLayoutSelectItem,
                       style: TextStyle(color: Colors.grey, fontSize: 16),
                     ),
                   ],

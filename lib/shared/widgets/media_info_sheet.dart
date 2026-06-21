@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -163,13 +164,13 @@ class _MediaInfoRow extends StatelessWidget {
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  tooltip: '复制',
+                  tooltip: context.l10n.mediaInfoCopyTooltip,
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: entry.value));
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('已复制'),
+                      SnackBar(
+                        content: Text(context.l10n.mediaInfoCopied),
                         behavior: SnackBarBehavior.floating,
                         duration: Duration(seconds: 1),
                       ),

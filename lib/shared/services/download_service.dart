@@ -62,7 +62,7 @@ class DownloadTask {
   }
 
   String get sizeText {
-    if (totalBytes == 0) return '未知大小';
+    if (totalBytes == 0) return '未知大小'; // TODO: migrate to l10n via context
     return '${_formatBytes(downloadedBytes)} / ${_formatBytes(totalBytes)}';
   }
 
@@ -199,20 +199,20 @@ class DownloadService {
         _updateTask(
           taskId,
           status: DownloadStatus.failed,
-          errorMessage: '下载失败: ${response.statusCode}',
+          errorMessage: 'Download failed: ${response.statusCode}', // TODO: migrate to l10n via context in UI layer
         );
       }
     } on DioException catch (e, st) {
       if (e.type == DioExceptionType.cancel) {
         // 用户取消操作，不需要上报
-        AppError.ignore(e, st, '用户取消下载');
+        AppError.ignore(e, st, 'User cancelled download');
         return;
       }
       AppError.handle(e, st, 'startDownload', {'taskId': taskId, 'url': task.url});
       _updateTask(
         taskId,
         status: DownloadStatus.failed,
-        errorMessage: e.message ?? '下载失败',
+        errorMessage: e.message ?? 'Download failed', // TODO: migrate to l10n via context in UI layer
       );
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'startDownload', {'taskId': taskId, 'url': task.url});
@@ -260,7 +260,7 @@ class DownloadService {
           file.deleteSync();
         }
       } on Exception catch (e, st) {
-        AppError.ignore(e, st, '删除取消的下载文件失败');
+        AppError.ignore(e, st, 'Failed to delete cancelled download file');
       }
     }
   }
@@ -284,7 +284,7 @@ class DownloadService {
         await file.delete();
       }
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '删除失败的下载文件时出错');
+      AppError.ignore(e, st, 'Error deleting failed download file');
     }
 
     await startDownload(taskId);
@@ -298,15 +298,15 @@ class DownloadService {
   Future<DownloadOpenResult> openFile(String taskId) async {
     final task = _tasks[taskId];
     if (task == null) {
-      return const DownloadOpenResult(success: false, message: '任务不存在');
+      return const DownloadOpenResult(success: false, message: 'Task not found');
     }
     if (task.status != DownloadStatus.completed) {
-      return const DownloadOpenResult(success: false, message: '文件尚未下载完成');
+      return const DownloadOpenResult(success: false, message: 'File is not downloaded yet');
     }
 
     final file = File(task.savePath);
     if (!file.existsSync()) {
-      return const DownloadOpenResult(success: false, message: '文件已被移除或路径无效');
+      return const DownloadOpenResult(success: false, message: 'File has been removed or path is invalid');
     }
 
     try {
@@ -316,7 +316,7 @@ class DownloadService {
         message: result.message,
       );
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '打开下载文件失败');
+      AppError.ignore(e, st, 'Failed to open download file');
       return DownloadOpenResult(success: false, message: e.toString());
     }
   }
@@ -330,7 +330,7 @@ class DownloadService {
       final dir = await downloadDirectory;
       final directory = Directory(dir);
       if (!directory.existsSync()) {
-        return const DownloadOpenResult(success: false, message: '下载目录不存在');
+        return const DownloadOpenResult(success: false, message: 'Download directory does not exist');
       }
 
       if (Platform.isMacOS) {
@@ -349,10 +349,10 @@ class DownloadService {
       // 提示用户从系统文件 App 自行进入即可。
       return const DownloadOpenResult(
         success: false,
-        message: '当前平台不支持直接打开目录，请通过系统文件 App 访问',
+        message: 'Current platform does not support opening directories directly. Please access via the system file app.',
       );
     } on Exception catch (e, st) {
-      AppError.ignore(e, st, '打开下载目录失败');
+      AppError.ignore(e, st, 'Failed to open download directory');
       return DownloadOpenResult(success: false, message: e.toString());
     }
   }

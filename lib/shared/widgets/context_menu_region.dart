@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/shared/widgets/app_bottom_sheet.dart';
 
@@ -214,9 +215,9 @@ Future<MediaFileAction?> showMediaFileContextMenu({
 
   if (showViewDetails) {
     items.add(
-      const ContextMenuItem(
+      ContextMenuItem(
         icon: Icons.info_outline_rounded,
-        label: '查看详情',
+        label: context.l10n.mediaFileContextMenuViewDetails,
         value: MediaFileAction.viewDetails,
       ),
     );
@@ -224,9 +225,9 @@ Future<MediaFileAction?> showMediaFileContextMenu({
 
   if (showDownload) {
     items.add(
-      const ContextMenuItem(
+      ContextMenuItem(
         icon: Icons.download_rounded,
-        label: '下载',
+        label: context.l10n.mediaFileContextMenuDownload,
         value: MediaFileAction.download,
       ),
     );
@@ -234,9 +235,9 @@ Future<MediaFileAction?> showMediaFileContextMenu({
 
   if (showShare) {
     items.add(
-      const ContextMenuItem(
+      ContextMenuItem(
         icon: Icons.share_rounded,
-        label: '分享',
+        label: context.l10n.mediaFileContextMenuShare,
         value: MediaFileAction.share,
       ),
     );
@@ -246,7 +247,7 @@ Future<MediaFileAction?> showMediaFileContextMenu({
     items.add(
       ContextMenuItem(
         icon: isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-        label: isFavorite ? '取消收藏' : '收藏',
+        label: isFavorite ? context.l10n.mediaFileContextMenuRemoveFromFavorites : context.l10n.mediaFileContextMenuAddToFavorites,
         value: isFavorite
             ? MediaFileAction.removeFromFavorites
             : MediaFileAction.addToFavorites,
@@ -261,9 +262,9 @@ Future<MediaFileAction?> showMediaFileContextMenu({
 
   if (showRemoveFromLibrary) {
     items.add(
-      const ContextMenuItem(
+      ContextMenuItem(
         icon: Icons.visibility_off_rounded,
-        label: '从媒体库移除',
+        label: context.l10n.mediaFileContextMenuRemoveFromLibrary,
         value: MediaFileAction.removeFromLibrary,
       ),
     );
@@ -271,9 +272,9 @@ Future<MediaFileAction?> showMediaFileContextMenu({
 
   if (showDeleteFromSource) {
     items.add(
-      const ContextMenuItem(
+      ContextMenuItem(
         icon: Icons.delete_forever_rounded,
-        label: '删除源文件',
+        label: context.l10n.mediaFileContextMenuDeleteSourceFile,
         value: MediaFileAction.deleteFromSource,
         isDestructive: true,
       ),
@@ -373,9 +374,10 @@ Future<bool> showDeleteConfirmDialog({
   required BuildContext context,
   required String title,
   required String content,
-  String confirmText = '删除',
+  String confirmText = '',
   bool isDestructive = true,
 }) async {
+  final resolvedConfirmText = confirmText.isEmpty ? context.l10n.commonDelete : confirmText;
   final result = await showDialog<bool>(
     context: context,
     builder: (context) {
@@ -392,7 +394,7 @@ Future<bool> showDeleteConfirmDialog({
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              '取消',
+              context.l10n.commonCancel,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : null,
               ),
@@ -403,7 +405,7 @@ Future<bool> showDeleteConfirmDialog({
                 ? FilledButton.styleFrom(backgroundColor: AppColors.error)
                 : null,
             onPressed: () => Navigator.pop(context, true),
-            child: Text(confirmText),
+            child: Text(resolvedConfirmText),
           ),
         ],
       );

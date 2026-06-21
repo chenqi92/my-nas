@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -499,7 +500,7 @@ class _SettingFontPickerState extends State<SettingFontPicker> {
                 children: [
                   // 字体预览
                   Text(
-                    '永',
+                    context.l10n.readerSettingsFontPreviewCharacter,
                     style: TextStyle(
                       fontFamily: fontFamily,
                       fontSize: 24,

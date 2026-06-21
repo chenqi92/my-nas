@@ -43,7 +43,7 @@ class AppErrorWidget extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              '出错了',
+              context.l10n.errorWidgetTitle,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark
@@ -93,17 +93,17 @@ class AppErrorWidget extends StatelessWidget {
         child: InkWell(
           onTap: onRetry,
           borderRadius: BorderRadius.circular(14),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
-                SizedBox(width: 8),
+                const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
                 Text(
-                  '重试',
-                  style: TextStyle(
+                  context.l10n.errorWidgetRetryButton,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,

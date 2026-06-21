@@ -43,7 +43,7 @@ class NotConnectedWidget extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              title ?? '未连接到 NAS',
+              title ?? context.l10n.filesNotConnectedTitle,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? AppColors.darkOnSurface : null,
@@ -51,7 +51,7 @@ class NotConnectedWidget extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              message ?? '请先在设置中配置并连接到 NAS 服务器',
+              message ?? context.l10n.filesNotConnectedMessage,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: isDark
                     ? AppColors.darkOnSurfaceVariant
@@ -81,7 +81,7 @@ class NotConnectedWidget extends StatelessWidget {
                       MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -89,7 +89,7 @@ class NotConnectedWidget extends StatelessWidget {
                           Icon(Icons.add_rounded, color: Colors.white),
                           SizedBox(width: 8),
                           Text(
-                            '添加连接',
+                            context.l10n.filesAddConnection,
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,

@@ -111,8 +111,8 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          const Text(
-            '发现新版本',
+          Text(
+            context.l10n.updateDialogTitle,
             style: TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -136,7 +136,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
       ),
       child: Row(
         children: [
-          _buildVersionBadge('新版本', widget.updateInfo.version, AppColors.success),
+          _buildVersionBadge(context.l10n.updateDialogBadgeNewVersion, widget.updateInfo.version, AppColors.success),
           const SizedBox(width: AppSpacing.md),
           Icon(
             Icons.arrow_forward_rounded,
@@ -149,7 +149,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  hasDownload ? '文件大小' : '平台',
+                  hasDownload ? context.l10n.updateDialogFileSizeLabel : context.l10n.updateDialogPlatformLabel,
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -178,7 +178,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     if (Platform.isMacOS) return 'macOS';
     if (Platform.isWindows) return 'Windows';
     if (Platform.isLinux) return 'Linux';
-    return '未知平台';
+    return context.l10n.updateDialogUnknownPlatform;
   }
 
   Widget _buildVersionBadge(String label, String version, Color color) => Column(
@@ -214,7 +214,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
             ),
             const SizedBox(width: 8),
             Text(
-              '更新内容',
+              context.l10n.updateDialogReleaseNotesTitle,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -252,7 +252,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '下载中...',
+              context.l10n.updateDialogDownloading,
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
@@ -298,7 +298,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           ),
           const SizedBox(width: AppSpacing.md),
           Text(
-            '正在安装...',
+            context.l10n.updateDialogInstalling,
             style: TextStyle(
               fontSize: 13,
               color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
@@ -321,7 +321,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              _service.errorMessage ?? '未知错误',
+              _service.errorMessage ?? context.l10n.updateDialogUnknownError,
               style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.error,
@@ -343,7 +343,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
             padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          child: const Text('取消下载'),
+          child: Text(context.l10n.updateDialogButtonCancelDownload),
         ),
       );
     }
@@ -363,16 +363,16 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
               onPressed: () async {
                 final success = await _service.installUpdate();
                 if (!success && mounted) {
-                  context.showInfoToast('请手动安装下载的更新包');
+                  context.showInfoToast(context.l10n.updateDialogToastManualInstall);
                 }
               },
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.install_desktop_rounded, color: Colors.white, size: 20),
                   SizedBox(width: 8),
                   Text(
-                    '立即安装',
+                    context.l10n.updateDialogButtonInstallNow,
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -386,7 +386,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '稍后安装',
+              context.l10n.updateDialogButtonInstallLater,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -412,12 +412,12 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.refresh_rounded, size: 20),
                   SizedBox(width: 8),
-                  Text('重试'),
+                  Text(context.l10n.updateDialogButtonRetry),
                 ],
               ),
             ),
@@ -427,7 +427,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           TextButton(
             onPressed: _openReleasesPage,
             child: Text(
-              '前往 GitHub 下载',
+              context.l10n.updateDialogButtonGitHubDownload,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -436,7 +436,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              '关闭',
+              context.l10n.updateDialogButtonClose,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
               ),
@@ -479,7 +479,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           TextButton(
             onPressed: _openReleasesPage,
             child: Text(
-              '前往 GitHub 下载 IPA',
+              context.l10n.updateDialogButtonGitHubDownloadIPA,
               style: TextStyle(
                 color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
                 fontSize: 13,
@@ -491,7 +491,7 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(
-            '稍后提醒',
+            context.l10n.updateDialogButtonRemindLater,
             style: TextStyle(
               color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
             ),
@@ -514,11 +514,11 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
   String _getPrimaryActionText() {
     if (Platform.isIOS) {
       if (_service.config.hasAppStoreConfig) {
-        return '前往 App Store';
+        return context.l10n.updateDialogButtonAppStore;
       }
-      return '查看更新详情';
+      return context.l10n.updateDialogButtonViewDetails;
     }
-    return '立即下载';
+    return context.l10n.updateDialogButtonDownloadNow;
   }
 
   Future<void> _handlePrimaryAction() async {
@@ -644,11 +644,11 @@ class _CheckUpdateTileState extends ConsumerState<CheckUpdateTile> {
                   await showUpdateDialog(context, _service.updateInfo!);
                 } else if (_service.status == UpdateStatus.notAvailable) {
                   scaffoldMessenger.showSnackBar(
-                    const SnackBar(content: Text('当前已是最新版本')),
+                    SnackBar(content: Text(context.l10n.updateDialogAlreadyLatest)),
                   );
                 } else if (_service.status == UpdateStatus.error) {
                   scaffoldMessenger.showSnackBar(
-                    SnackBar(content: Text('检查更新失败: ${_service.errorMessage}')),
+                    SnackBar(content: Text(context.l10n.updateDialogCheckFailed(_service.errorMessage ?? ''))),
                   );
                 }
               },
@@ -678,7 +678,7 @@ class _CheckUpdateTileState extends ConsumerState<CheckUpdateTile> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '检查更新',
+                      context.l10n.updateTileTitle,
                       style: titleStyle?.copyWith(
                         color: widget.isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
                         fontWeight: FontWeight.w500,
@@ -738,21 +738,21 @@ class _CheckUpdateTileState extends ConsumerState<CheckUpdateTile> {
   String _getStatusText(UpdateStatus status) {
     switch (status) {
       case UpdateStatus.idle:
-        return '点击检查新版本';
+        return context.l10n.updateTileStatusIdle;
       case UpdateStatus.checking:
-        return '正在检查...';
+        return context.l10n.updateTileStatusChecking;
       case UpdateStatus.available:
-        return '发现新版本，点击更新';
+        return context.l10n.updateTileStatusAvailable;
       case UpdateStatus.notAvailable:
-        return '当前已是最新版本';
+        return context.l10n.updateDialogAlreadyLatest;
       case UpdateStatus.downloading:
-        return '正在下载...';
+        return context.l10n.updateTileStatusDownloading;
       case UpdateStatus.readyToInstall:
-        return '下载完成，点击安装';
+        return context.l10n.updateTileStatusReadyToInstall;
       case UpdateStatus.installing:
-        return '正在安装...';
+        return context.l10n.updateTileStatusInstalling;
       case UpdateStatus.error:
-        return '检查失败，点击重试';
+        return context.l10n.updateTileStatusError;
     }
   }
 }

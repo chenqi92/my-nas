@@ -356,7 +356,7 @@ class SearchToolbar extends StatelessWidget {
     required this.controller,
     this.onChanged,
     this.onSubmitted,
-    this.hintText = '搜索',
+    required this.hintText,
     this.leading,
     this.trailing,
     this.padding,
@@ -444,7 +444,7 @@ class _SearchField extends StatelessWidget {
     required this.controller,
     this.onChanged,
     this.onSubmitted,
-    this.hintText = '搜索',
+    required this.hintText,
     this.autofocus = false,
   });
 
