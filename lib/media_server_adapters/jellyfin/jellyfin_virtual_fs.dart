@@ -254,7 +254,7 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
     final parentPath = _idToPath(seriesId) ?? '/';
 
     return result.items.map((item) {
-      final seasonName = item.name.isNotEmpty ? item.name : '第${item.indexNumber ?? 0}季';
+      final seasonName = item.name.isNotEmpty ? item.name : appL10n.jellyfinVfsSeasonNameDefault(item.indexNumber ?? 0);
       final itemPath = '$parentPath/${_sanitizeName(seasonName)}';
       _pathToIdCache[itemPath] = item.id;
       _itemCache[item.id] = item;
@@ -344,7 +344,7 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
       // 搜索季
       final seasons = await _api.getSeasons(parentId);
       for (final season in seasons.items) {
-        final seasonName = season.name.isNotEmpty ? season.name : '第${season.indexNumber ?? 0}季';
+        final seasonName = season.name.isNotEmpty ? season.name : appL10n.jellyfinVfsSeasonNameDefault(season.indexNumber ?? 0);
         if (_sanitizeName(seasonName) == name) {
           return season;
         }

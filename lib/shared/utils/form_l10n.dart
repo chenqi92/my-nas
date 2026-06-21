@@ -368,6 +368,11 @@ String localizeFormText(BuildContext context, String? text) {
     '女声' => l.ttsl_2c0e7722,
     '中性' => l.ttsl_62731aaf,
     '系统默认' => l.ttsl_a52f5c20,
+    '衬线体' => l.fnl_11e5015d,
+    '无衬线' => l.fnl_b5e59f00,
+    '等宽' => l.fnl_b7bbbad6,
+    '手写体' => l.fnl_3d2eccf3,
+    '苹方' => l.fnl_c04ee2df,
     _ => text,
   };
 }

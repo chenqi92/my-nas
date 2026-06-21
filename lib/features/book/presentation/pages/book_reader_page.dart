@@ -2589,7 +2589,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
         // 字体选择 - 横向滑动
         SettingSectionTitle(
           title: context.l10n.bookReaderSettingFont,
-          trailing: AvailableFonts.getDisplayName(settings.fontFamily),
+          trailing: localizeFormText(context, AvailableFonts.getDisplayName(settings.fontFamily)),
         ),
         SettingFontPicker(
           selectedFont: settings.fontFamily,

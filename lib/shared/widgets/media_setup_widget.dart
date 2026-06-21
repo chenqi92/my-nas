@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
@@ -188,7 +189,7 @@ class MediaSetupWidget extends ConsumerWidget {
   Widget _buildAction(BuildContext context, MediaSetupState state) {
     final (label, actionIcon, onTap) = switch (state) {
       MediaSetupState.noSources => (
-          '添加连接',
+          appL10n.mediaSetupActionAddConnection,
           Icons.add_rounded,
           () => Navigator.push(
                 context,
@@ -196,7 +197,7 @@ class MediaSetupWidget extends ConsumerWidget {
               )
         ),
       MediaSetupState.notConnected => (
-          '去连接',
+          appL10n.mediaSetupActionGoConnect,
           Icons.link_rounded,
           () => Navigator.push(
                 context,
@@ -204,7 +205,7 @@ class MediaSetupWidget extends ConsumerWidget {
               )
         ),
       MediaSetupState.noLibraryPaths => (
-          '选择目录',
+          appL10n.mediaSetupActionSelectDirectory,
           Icons.folder_rounded,
           () => Navigator.push(
                 context,
@@ -213,7 +214,7 @@ class MediaSetupWidget extends ConsumerWidget {
               )
         ),
       MediaSetupState.pathsNotConnected => (
-          '去连接',
+          appL10n.mediaSetupActionGoConnect,
           Icons.link_rounded,
           () => Navigator.push(
                 context,

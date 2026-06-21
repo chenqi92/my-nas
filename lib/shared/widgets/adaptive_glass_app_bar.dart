@@ -11,6 +11,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 
 /// 自适应玻璃顶栏 - 根据平台和 UI 风格自动选择最佳实现
 ///
@@ -2611,7 +2612,7 @@ class _GlassSearchBarState extends State<GlassSearchBar>
             GestureDetector(
               onTap: _handleCancel,
               child: Text(
-                '取消',
+                context.l10n.glassSearchBarCancelButton,
                 style: TextStyle(
                   fontSize: 16,
                   color: AppColors.primary,
@@ -3014,7 +3015,7 @@ class GlassFloatingSearchBar extends StatelessWidget {
         // 玻璃搜索框 - 必须传递 width 给 GlassSearchBar，否则 iOS UiKitView 无法确定尺寸
         GlassSearchBar(
           controller: controller,
-          hintText: hintText,
+          hintText: localizeFormText(context, hintText),
           onChanged: onChanged,
           autofocus: true,
           showCancelButton: false,

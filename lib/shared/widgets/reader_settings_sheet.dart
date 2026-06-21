@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
@@ -410,7 +412,7 @@ class AvailableFonts {
     for (final (family, name) in fonts) {
       if (family == fontFamily) return name;
     }
-    return fontFamily ?? '系统默认';
+    return fontFamily ?? appL10n.readerSettingsFontDefaultFallback;
   }
 }
 
@@ -513,7 +515,7 @@ class _SettingFontPickerState extends State<SettingFontPicker> {
                   const SizedBox(height: 4),
                   // 字体名称
                   Text(
-                    displayName,
+                    localizeFormText(context, displayName),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,

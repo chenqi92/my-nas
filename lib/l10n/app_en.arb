@@ -12970,5 +12970,35 @@
   "bottomSheetFilterDefaultTitle": "Filter",
   "bottomSheetApplyButtonText": "Apply",
   "bottomSheetResetButtonText": "Reset",
-  "bottomSheetEmptyMessage": "No available options"
+  "bottomSheetEmptyMessage": "No available options",
+  "mediaSetupActionAddConnection": "Add Connection",
+  "mediaSetupActionGoConnect": "Go Connect",
+  "mediaSetupActionSelectDirectory": "Select Directory",
+  "readerSettingsFontDefaultFallback": "System Default",
+  "readerSettingsFontSystemDefault": "System Default",
+  "readerSettingsFontSerif": "Serif",
+  "readerSettingsFontSansSerif": "Sans-Serif",
+  "readerSettingsFontMonospace": "Monospace",
+  "readerSettingsFontCursive": "Cursive",
+  "readerSettingsFontAppleSystem": "Apple System",
+  "pillStatusDownloading": "Downloading",
+  "pillStatusSeeding": "Seeding",
+  "pillStatusPaused": "Paused",
+  "pillStatusQueued": "Queued",
+  "pillStatusCompleted": "Completed",
+  "pillStatusError": "Error",
+  "pillStatusInfo": "Info",
+  "jellyfinVfsSeasonNameDefault": "Season {number}",
+  "@jellyfinVfsSeasonNameDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "fnl_11e5015d": "Serif",
+  "fnl_b5e59f00": "Sans-serif",
+  "fnl_b7bbbad6": "Monospace",
+  "fnl_3d2eccf3": "Cursive",
+  "fnl_c04ee2df": "PingFang"
 }

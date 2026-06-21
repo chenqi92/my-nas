@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// 设计稿 `.state-pill` 原子：传输 / 下载任务状态徽标。
 enum PillStatus { downloading, seeding, paused, queued, completed, error, info }
@@ -18,37 +19,37 @@ class StatusPill extends StatelessWidget {
       PillStatus.downloading => (
           const Color(0x245B9DFF),
           const Color(0xFF7DB1FF),
-          '下载中',
+          appL10n.pillStatusDownloading,
         ),
       PillStatus.seeding => (
           const Color(0x2434D399),
           const Color(0xFF34D399),
-          '做种',
+          appL10n.pillStatusSeeding,
         ),
       PillStatus.paused => (
           const Color(0x2494A3B8),
           const Color(0xFF94A3B8),
-          '已暂停',
+          appL10n.pillStatusPaused,
         ),
       PillStatus.queued => (
           const Color(0x24F5B754),
           const Color(0xFFF5B754),
-          '排队',
+          appL10n.pillStatusQueued,
         ),
       PillStatus.completed => (
           const Color(0x246E788C),
           const Color(0xFF8B94A7),
-          '已完成',
+          appL10n.pillStatusCompleted,
         ),
       PillStatus.error => (
           const Color(0x24F87171),
           const Color(0xFFF87171),
-          '错误',
+          appL10n.pillStatusError,
         ),
       PillStatus.info => (
           DesignTokens.of(context).chipBg,
           DesignTokens.of(context).text2,
-          '信息',
+          appL10n.pillStatusInfo,
         ),
     };
     return Container(

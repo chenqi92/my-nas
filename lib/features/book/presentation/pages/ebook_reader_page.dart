@@ -24,6 +24,7 @@ import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/services/native_tab_bar_service.dart';
+import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/lottie_loading.dart';
 import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -489,7 +490,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         // 字体选择（注意：Foliate 仅支持系统字体）
         SettingSectionTitle(
           title: context.l10n.ebookReaderSettingFont,
-          trailing: AvailableFonts.getDisplayName(settings.fontFamily),
+          trailing: localizeFormText(context, AvailableFonts.getDisplayName(settings.fontFamily)),
         ),
         SettingFontPicker(
           selectedFont: settings.fontFamily,

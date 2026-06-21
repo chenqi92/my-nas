@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 
 /// 面包屑项
@@ -408,9 +409,10 @@ class _CollapsedBreadcrumbState extends State<_CollapsedBreadcrumb> {
 /// 从路径构建面包屑项列表的工具方法
 List<BreadcrumbItem> buildBreadcrumbsFromPath(
   String path, {
-  String rootLabel = '根目录',
+  String? rootLabel,
   String separator = '/',
 }) {
+  rootLabel ??= appL10n.breadcrumbRootLabel;
   // 添加根目录
   final items = <BreadcrumbItem>[]
     ..add(BreadcrumbItem(label: rootLabel, path: separator));
@@ -441,21 +443,22 @@ class CompactBreadcrumb extends StatelessWidget {
   const CompactBreadcrumb({
     required this.currentPath,
     required this.onBack,
-    this.rootLabel = '根目录',
+    this.rootLabel,
     this.height = 48,
     super.key,
   });
 
   final String currentPath;
   final VoidCallback? onBack;
-  final String rootLabel;
+  final String? rootLabel;
   final double height;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isRoot = currentPath == '/' || currentPath.isEmpty;
-    final currentName = isRoot ? rootLabel : currentPath.split('/').last;
+    final rootLabelText = rootLabel ?? appL10n.breadcrumbRootLabel;
+    final currentName = isRoot ? rootLabelText : currentPath.split('/').last;
 
     return SizedBox(
       height: height,
