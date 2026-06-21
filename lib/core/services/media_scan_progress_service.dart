@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 
@@ -51,20 +52,20 @@ class MediaScanProgress {
   String get description {
     switch (phase) {
       case MediaScanPhase.idle:
-        return '准备扫描...';
+        return appL10n.mediaScanProgressPhaseIdleDesc;
       case MediaScanPhase.scanning:
-        return currentPath ?? '正在扫描...';
+        return currentPath ?? appL10n.mediaScanProgressPhaseScanningDesc;
       case MediaScanPhase.processing:
         if (currentFile != null) {
-          return '处理中: $currentFile ($scannedCount/$totalCount)';
+          return appL10n.mediaScanProgressPhaseProcessingDescWithFile(currentFile ?? '', scannedCount, totalCount);
         }
-        return '处理中 ($scannedCount/$totalCount)';
+        return appL10n.mediaScanProgressPhaseProcessingDesc(scannedCount, totalCount);
       case MediaScanPhase.saving:
-        return '正在保存到数据库 ($scannedCount/$totalCount)';
+        return appL10n.mediaScanProgressPhaseSavingDesc(scannedCount, totalCount);
       case MediaScanPhase.completed:
-        return '扫描完成，共 $scannedCount 个文件';
+        return appL10n.mediaScanProgressPhaseCompletedDesc(scannedCount);
       case MediaScanPhase.error:
-        return '扫描失败';
+        return appL10n.mediaScanProgressPhaseErrorDesc;
     }
   }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
@@ -542,7 +543,7 @@ class TransferService {
   Future<void> _executeUpload(TransferTask task) async {
     final connection = _connections[task.targetSourceId];
     if (connection == null) {
-      throw StateError('目标连接不可用: ${task.targetSourceId}');
+      throw StateError(appL10n.transferServiceTargetConnectionUnavailable(task.targetSourceId ?? ''));
     }
 
     final fs = connection.adapter.fileSystem;
@@ -553,11 +554,11 @@ class TransferService {
       // 从相册获取文件
       final asset = await pm.AssetEntity.fromId(task.assetId!);
       if (asset == null) {
-        throw StateError('相册资源不存在: ${task.assetId}');
+        throw StateError(appL10n.transferServiceAlbumAssetNotFound(task.assetId!));
       }
       final file = await asset.file;
       if (file == null) {
-        throw StateError('无法获取相册文件: ${task.assetId}');
+        throw StateError(appL10n.transferServiceAlbumFileUnavailable(task.assetId!));
       }
       localFile = file;
     } else {
@@ -565,7 +566,7 @@ class TransferService {
     }
 
     if (!await localFile.exists()) {
-      throw StateError('本地文件不存在: ${task.sourcePath}');
+      throw StateError(appL10n.transferServiceLocalFileNotFound(task.sourcePath));
     }
 
     // 上传文件
@@ -595,7 +596,7 @@ class TransferService {
   Future<void> _executeDownload(TransferTask task) async {
     final connection = _connections[task.sourceId];
     if (connection == null) {
-      throw StateError('源连接不可用: ${task.sourceId}');
+      throw StateError(appL10n.transferServiceSourceConnectionUnavailable(task.sourceId));
     }
 
     final fs = connection.adapter.fileSystem;
@@ -648,7 +649,7 @@ class TransferService {
   Future<void> _executeCache(TransferTask task) async {
     final connection = _connections[task.sourceId];
     if (connection == null) {
-      throw StateError('源连接不可用: ${task.sourceId}');
+      throw StateError(appL10n.transferServiceSourceConnectionUnavailable(task.sourceId));
     }
 
     final fs = connection.adapter.fileSystem;

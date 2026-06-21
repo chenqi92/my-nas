@@ -187,13 +187,13 @@ class TransferTask {
 
   /// 状态显示名称
   String get statusDisplayName => switch (status) {
-        TransferStatus.pending => '等待中',
-        TransferStatus.queued => '排队中',
-        TransferStatus.transferring => '传输中',
-        TransferStatus.paused => '已暂停',
-        TransferStatus.completed => '已完成',
-        TransferStatus.failed => '失败',
-        TransferStatus.cancelled => '已取消',
+        TransferStatus.pending => appL10n.transferStatusPending,
+        TransferStatus.queued => appL10n.transferStatusQueued,
+        TransferStatus.transferring => appL10n.transferStatusTransferring,
+        TransferStatus.paused => appL10n.transferStatusPaused,
+        TransferStatus.completed => appL10n.transferStatusCompleted,
+        TransferStatus.failed => appL10n.transferStatusFailed,
+        TransferStatus.cancelled => appL10n.transferStatusCancelled,
       };
 
   /// 复制并更新状态

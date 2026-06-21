@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -30,10 +31,10 @@ class EmbyAdapter extends MediaServerAdapter {
   EmbyVirtualFileSystem? _virtualFs;
 
   @override
-  ServiceAdapterInfo get info => const ServiceAdapterInfo(
+  ServiceAdapterInfo get info => ServiceAdapterInfo(
         name: 'Emby',
         type: SourceType.emby,
-        description: 'Emby 媒体服务器适配器',
+        description: appL10n.embyAdapterDescription,
       );
 
   @override
@@ -109,7 +110,7 @@ class EmbyAdapter extends MediaServerAdapter {
         );
         _userId = result.userId;
       } else {
-        return const ServiceConnectionFailure('需要提供认证信息');
+        return ServiceConnectionFailure(appL10n.embyConnectAuthRequired);
       }
 
       _isConnected = true;
@@ -212,7 +213,7 @@ class EmbyAdapter extends MediaServerAdapter {
     final playbackInfo = await _api.getPlaybackInfo(itemId);
 
     if (playbackInfo.mediaSources.isEmpty) {
-      throw Exception('没有可用的媒体源');
+      throw Exception(appL10n.embyStreamNoMediaSource);
     }
 
     final source = playbackInfo.mediaSources.first;
@@ -363,17 +364,17 @@ class EmbyAdapter extends MediaServerAdapter {
   String _parseError(Object e) {
     final message = e.toString();
     if (message.contains('401')) {
-      return '认证失败：用户名或密码错误';
+      return appL10n.embyErrorAuth;
     } else if (message.contains('403')) {
-      return '访问被拒绝：权限不足';
+      return appL10n.embyErrorAccessDenied;
     } else if (message.contains('404')) {
-      return '服务器未找到：请检查地址是否正确';
+      return appL10n.embyErrorNotFound;
     } else if (message.contains('timeout') || message.contains('Timeout')) {
-      return '连接超时：请检查网络或服务器状态';
+      return appL10n.embyErrorTimeout;
     } else if (message.contains('SocketException') ||
         message.contains('Connection refused')) {
-      return '无法连接：请检查服务器地址和端口';
+      return appL10n.embyErrorCannotConnect;
     }
-    return '连接失败：$message';
+    return appL10n.embyErrorConnectionFailed(message);
   }
 }

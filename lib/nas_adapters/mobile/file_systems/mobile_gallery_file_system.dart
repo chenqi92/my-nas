@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
-import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart' as fs;
+import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:photo_manager/photo_manager.dart' as pm;
 
 /// URL 编码辅助方法（仅编码斜杠和百分号）
@@ -365,7 +366,7 @@ class MobileGalleryFileSystem implements NasFileSystem {
     if (asset == null) {
       asset = await pm.AssetEntity.fromId(assetId);
       if (asset == null) {
-        throw Exception('Asset not found: $assetId');
+        throw Exception(appL10n.galleryAssetNotFound(assetId));
       }
       _assetCache[assetId] = asset;
     }
@@ -442,14 +443,14 @@ class MobileGalleryFileSystem implements NasFileSystem {
     if (asset == null) {
       asset = await pm.AssetEntity.fromId(assetId);
       if (asset == null) {
-        throw Exception('Asset not found: $assetId');
+        throw Exception(appL10n.galleryAssetNotFound(assetId));
       }
       _assetCache[assetId] = asset;
     }
 
     final file = await asset.file;
     if (file == null) {
-      throw Exception('Cannot get file for asset: $assetId');
+      throw Exception(appL10n.galleryCannotGetFileForAsset(assetId));
     }
 
     // 处理范围请求
@@ -478,14 +479,14 @@ class MobileGalleryFileSystem implements NasFileSystem {
     if (asset == null) {
       asset = await pm.AssetEntity.fromId(assetId);
       if (asset == null) {
-        throw Exception('Asset not found: $assetId');
+        throw Exception(appL10n.galleryAssetNotFound(assetId));
       }
       _assetCache[assetId] = asset;
     }
 
     final file = await asset.file;
     if (file == null) {
-      throw Exception('Cannot get file for asset: $assetId');
+      throw Exception(appL10n.galleryCannotGetFileForAsset(assetId));
     }
 
     // 返回本地文件 URL
@@ -528,7 +529,7 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) {
-    throw UnimplementedError('相册不支持 URL 流访问');
+    throw UnimplementedError(appL10n.galleryUrlStreamNotSupported);
   }
 
   /// 获取资源实体
@@ -549,27 +550,27 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
   @override
   Future<void> createDirectory(String path) async {
-    throw UnsupportedError('相册不支持创建目录');
+    throw UnsupportedError(appL10n.galleryCreateDirectoryNotSupported);
   }
 
   @override
   Future<void> delete(String path) async {
-    throw UnsupportedError('相册不支持删除操作（请使用系统相册App）');
+    throw UnsupportedError(appL10n.galleryDeleteNotSupported);
   }
 
   @override
   Future<void> rename(String oldPath, String newPath) async {
-    throw UnsupportedError('相册不支持重命名');
+    throw UnsupportedError(appL10n.galleryRenameNotSupported);
   }
 
   @override
   Future<void> copy(String sourcePath, String destPath) async {
-    throw UnsupportedError('相册不支持复制');
+    throw UnsupportedError(appL10n.galleryCopyNotSupported);
   }
 
   @override
   Future<void> move(String sourcePath, String destPath) async {
-    throw UnsupportedError('相册不支持移动');
+    throw UnsupportedError(appL10n.galleryMoveNotSupported);
   }
 
   @override
@@ -579,12 +580,12 @@ class MobileGalleryFileSystem implements NasFileSystem {
     String? fileName,
     void Function(int sent, int total)? onProgress,
   }) async {
-    throw UnsupportedError('相册不支持上传（请使用系统相册App）');
+    throw UnsupportedError(appL10n.galleryUploadNotSupported);
   }
 
   @override
   Future<void> writeFile(String remotePath, List<int> data) async {
-    throw UnsupportedError('相册不支持写入');
+    throw UnsupportedError(appL10n.galleryWriteNotSupported);
   }
 
   @override

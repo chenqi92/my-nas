@@ -865,7 +865,7 @@ class _SourceTypeBottomSheet extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 8, bottom: 4),
                         child: Text(
-                          category.displayName,
+                          localizeFormText(context, category.displayName),
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.w600,

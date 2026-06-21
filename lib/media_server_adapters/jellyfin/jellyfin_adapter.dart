@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -87,14 +88,14 @@ class JellyfinAdapter extends MediaServerAdapter {
         try {
           await _api.getLibraries();
         } on Exception {
-          return const ServiceConnectionFailure('Access Token 无效或已过期');
+          return ServiceConnectionFailure(appL10n.jellyfinAdapterAccessTokenExpiredError);
         }
       } else if (config.apiKey != null && config.apiKey!.isNotEmpty) {
         // 使用 API Key 认证
         logger.i('JellyfinAdapter: 使用 API Key 认证');
         final success = await _api.authenticateWithApiKey(config.apiKey!);
         if (!success) {
-          return const ServiceConnectionFailure('API Key 无效或没有可用用户');
+          return ServiceConnectionFailure(appL10n.jellyfinAdapterInvalidApiKeyError);
         }
       } else if (config.username != null && config.password != null) {
         // 使用用户名密码认证
@@ -104,7 +105,7 @@ class JellyfinAdapter extends MediaServerAdapter {
           password: config.password!,
         );
       } else {
-        return const ServiceConnectionFailure('请提供 API Key 或用户名密码');
+        return ServiceConnectionFailure(appL10n.jellyfinAdapterMissingCredentialsError);
       }
 
       _connected = true;
@@ -219,7 +220,7 @@ class JellyfinAdapter extends MediaServerAdapter {
 
     final playbackInfo = await _api.getPlaybackInfo(itemId);
     if (playbackInfo.mediaSources.isEmpty) {
-      throw Exception('没有可用的媒体源');
+      throw Exception(appL10n.jellyfinAdapterNoMediaSourceError);
     }
 
     final source = playbackInfo.mediaSources.first;
@@ -250,7 +251,7 @@ class JellyfinAdapter extends MediaServerAdapter {
         transcodingContainer: source.transcodingContainer,
       );
     } else {
-      throw Exception('媒体源不支持任何播放方式');
+      throw Exception(appL10n.jellyfinAdapterPlaybackMethodNotSupportedError);
     }
   }
 
@@ -291,7 +292,7 @@ class JellyfinAdapter extends MediaServerAdapter {
   @override
   NasFileSystem get virtualFileSystem {
     if (_virtualFs == null) {
-      throw StateError('适配器未连接，无法获取虚拟文件系统');
+      throw StateError(appL10n.jellyfinAdapterNotConnectedError);
     }
     return _virtualFs!;
   }
@@ -387,17 +388,17 @@ class JellyfinAdapter extends MediaServerAdapter {
   String _parseError(Object e) {
     final message = e.toString();
     if (message.contains('401')) {
-      return '认证失败：用户名或密码错误';
+      return appL10n.jellyfinAdapterAuthenticationFailedError;
     } else if (message.contains('403')) {
-      return '访问被拒绝：权限不足';
+      return appL10n.jellyfinAdapterAccessDeniedError;
     } else if (message.contains('404')) {
-      return '服务器未找到：请检查地址是否正确';
+      return appL10n.jellyfinAdapterServerNotFoundError;
     } else if (message.contains('timeout') || message.contains('Timeout')) {
-      return '连接超时：请检查网络或服务器状态';
+      return appL10n.jellyfinAdapterConnectionTimeoutError;
     } else if (message.contains('SocketException') ||
         message.contains('Connection refused')) {
-      return '无法连接：请检查服务器地址和端口';
+      return appL10n.jellyfinAdapterCannotConnectError;
     }
-    return '连接失败：$message';
+    return appL10n.jellyfinAdapterConnectionFailedError(message);
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:smb_connect/smb_connect.dart';
 
@@ -218,7 +219,7 @@ class SmbConnectionPool {
     bool exclusive = false,
   }) async {
     if (_disposed) {
-      throw StateError('连接池已关闭');
+      throw StateError(appL10n.smbPoolClosed);
     }
 
     // 先尝试在锁内快速获取或创建连接
@@ -302,7 +303,7 @@ class SmbConnectionPool {
       password: password,
     ).timeout(
       const Duration(seconds: 30),
-      onTimeout: () => throw TimeoutException('SMB 连接超时'),
+      onTimeout: () => throw TimeoutException(appL10n.smbConnectionTimeout),
     );
 
     final conn = _PooledConnection(client: client, type: type);
@@ -350,7 +351,7 @@ class SmbConnectionPool {
       await Future<void>.delayed(checkInterval);
     }
 
-    throw TimeoutException('等待 SMB 连接超时');
+    throw TimeoutException(appL10n.smbWaitConnectionTimeout);
   }
 
   /// 清理空闲连接
@@ -469,7 +470,7 @@ class SmbConnectionPool {
         password: password,
       ).timeout(
         const Duration(seconds: 30),
-        onTimeout: () => throw TimeoutException('SMB 专用连接超时 (30s)'),
+        onTimeout: () => throw TimeoutException(appL10n.smbDedicatedConnectionTimeout),
       );
 
       return (client: client, releaseCallback: _releaseDedicatedSlot);
@@ -522,7 +523,7 @@ class SmbConnectionPool {
         password: password,
       ).timeout(
         const Duration(seconds: 30),
-        onTimeout: () => throw TimeoutException('SMB 专用连接超时 (30s)'),
+        onTimeout: () => throw TimeoutException(appL10n.smbDedicatedConnectionTimeout),
       );
 
       final connection = DedicatedConnection._(
@@ -567,7 +568,7 @@ class SmbConnectionPool {
       await Future<void>.delayed(checkInterval);
     }
 
-    throw TimeoutException('等待专用连接槽位超时 ($_dedicatedConnectionCount/$maxDedicatedConnections)');
+    throw TimeoutException(appL10n.smbWaitDedicatedSlotTimeout(_dedicatedConnectionCount, maxDedicatedConnections));
   }
 
   /// 释放专用连接槽位

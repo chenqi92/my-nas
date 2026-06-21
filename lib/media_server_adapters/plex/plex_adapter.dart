@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -31,10 +32,10 @@ class PlexAdapter extends MediaServerAdapter {
   PlexVirtualFileSystem? _virtualFs;
 
   @override
-  ServiceAdapterInfo get info => const ServiceAdapterInfo(
+  ServiceAdapterInfo get info => ServiceAdapterInfo(
         name: 'Plex',
         type: SourceType.plex,
-        description: 'Plex 媒体服务器适配器',
+        description: appL10n.plexAdapterDescription,
       );
 
   @override
@@ -189,7 +190,7 @@ class PlexAdapter extends MediaServerAdapter {
   Future<MediaItem> getItemDetail(String itemId) async {
     final item = await _api.getItem(itemId);
     if (item == null) {
-      throw Exception('项目不存在: $itemId');
+      throw Exception(appL10n.plexAdapterItemNotFound(itemId));
     }
     return _toMediaItem(item);
   }
@@ -218,12 +219,12 @@ class PlexAdapter extends MediaServerAdapter {
   }) async {
     final item = await _api.getItem(itemId);
     if (item == null || item.media == null || item.media!.isEmpty) {
-      throw Exception('没有可用的媒体源');
+      throw Exception(appL10n.plexAdapterNoMediaSource);
     }
 
     final media = item.media!.first;
     if (media.parts == null || media.parts!.isEmpty) {
-      throw Exception('没有可用的媒体部分');
+      throw Exception(appL10n.plexAdapterNoMediaPart);
     }
 
     final part = media.parts!.first;
@@ -525,17 +526,17 @@ class PlexAdapter extends MediaServerAdapter {
   String _parseError(Object e) {
     final message = e.toString();
     if (message.contains('401')) {
-      return '认证失败：Plex Token 无效';
+      return appL10n.plexAdapterAuthenticationFailed;
     } else if (message.contains('403')) {
-      return '访问被拒绝：权限不足';
+      return appL10n.plexAdapterAccessDenied;
     } else if (message.contains('404')) {
-      return '服务器未找到：请检查地址是否正确';
+      return appL10n.plexAdapterServerNotFound;
     } else if (message.contains('timeout') || message.contains('Timeout')) {
-      return '连接超时：请检查网络或服务器状态';
+      return appL10n.plexAdapterConnectionTimeout;
     } else if (message.contains('SocketException') ||
         message.contains('Connection refused')) {
-      return '无法连接：请检查服务器地址和端口';
+      return appL10n.plexAdapterCannotConnect;
     }
-    return '连接失败：$message';
+    return appL10n.plexAdapterConnectionFailed(message);
   }
 }

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
@@ -64,18 +65,18 @@ class MusicScrapeProgress {
   String get description {
     switch (phase) {
       case MusicScrapePhase.preparing:
-        return '准备中...';
+        return appL10n.musicScrapeProgressPreparing;
       case MusicScrapePhase.scraping:
         if (currentTrack != null) {
-          return '正在刮削: $currentTrack';
+          return appL10n.musicScrapeProgressScraping(currentTrack!);
         }
-        return '正在刮削 ($processedCount/$totalCount)';
+        return appL10n.musicScrapeProgressScrapingCount(processedCount, totalCount);
       case MusicScrapePhase.completed:
-        return '完成！成功: $successCount, 跳过: $skipCount, 失败: $failCount';
+        return appL10n.musicScrapeProgressCompleted(successCount, skipCount, failCount);
       case MusicScrapePhase.cancelled:
-        return '已取消';
+        return appL10n.musicScrapeProgressCancelled;
       case MusicScrapePhase.error:
-        return '刮削失败';
+        return appL10n.musicScrapeProgressError;
     }
   }
 }

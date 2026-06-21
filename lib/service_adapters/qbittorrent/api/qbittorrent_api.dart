@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// qBittorrent Web API 客户端
 ///
@@ -49,7 +50,7 @@ class QBittorrentApi {
 
     // Cookie-based 认证
     if (username == null || password == null) {
-      throw const QBittorrentApiException('用户名或密码未提供');
+      throw QBittorrentApiException(appL10n.qbittorrentApiUsernamePasswordMissing);
     }
 
     final url = Uri.parse('$baseUrl$apiPrefix/auth/login');
@@ -77,17 +78,17 @@ class QBittorrentApi {
           _isAuthenticated = true;
           return true;
         } else if (body == 'fails.') {
-          throw const QBittorrentApiException('用户名或密码错误');
+          throw QBittorrentApiException(appL10n.qbittorrentApiUsernamePasswordIncorrect);
         }
       } else if (response.statusCode == 403) {
-        throw const QBittorrentApiException('IP 被禁止登录（连续登录失败次数过多）');
+        throw QBittorrentApiException(appL10n.qbittorrentApiIpBlocked);
       }
 
-      throw QBittorrentApiException('登录失败: ${response.statusCode}');
+      throw QBittorrentApiException(appL10n.qbittorrentApiLoginFailed(response.statusCode));
     } on SocketException catch (e) {
-      throw QBittorrentApiException('无法连接到服务器: ${e.message}');
+      throw QBittorrentApiException(appL10n.qbittorrentApiCannotConnectServer(e.message));
     } on http.ClientException catch (e) {
-      throw QBittorrentApiException('网络错误: ${e.message}');
+      throw QBittorrentApiException(appL10n.qbittorrentApiNetworkError(e.message));
     }
   }
 
@@ -98,7 +99,7 @@ class QBittorrentApi {
   Future<bool> _authenticateWithApiKey() async {
     // 基本长度检查（API Key 应该有一定长度）
     if (apiKey!.length < 8) {
-      throw const QBittorrentApiException('API Key 格式无效（长度过短）');
+      throw QBittorrentApiException(appL10n.qbittorrentApiKeyFormatInvalid);
     }
 
     // 尝试获取应用版本来验证 API Key
@@ -109,7 +110,7 @@ class QBittorrentApi {
         return true;
       }
     } on QBittorrentApiException {
-      throw const QBittorrentApiException('API Key 认证失败，请检查 API Key 是否正确');
+      throw QBittorrentApiException(appL10n.qbittorrentApiKeyAuthFailed);
     }
 
     return false;
@@ -468,25 +469,25 @@ class QBittorrentApi {
       } else if (method == 'POST') {
         response = await client.post(url, headers: headers, body: body);
       } else {
-        throw QBittorrentApiException('不支持的 HTTP 方法: $method');
+        throw QBittorrentApiException(appL10n.qbittorrentApiHttpMethodUnsupported(method));
       }
 
       if (response.statusCode == 403) {
         _isAuthenticated = false;
-        throw const QBittorrentApiException('认证已过期，请重新登录');
+        throw QBittorrentApiException(appL10n.qbittorrentApiAuthExpired);
       }
 
       if (response.statusCode != 200) {
         throw QBittorrentApiException(
-          '请求失败: ${response.statusCode} ${response.reasonPhrase}',
+          appL10n.qbittorrentApiRequestFailed(response.statusCode, response.reasonPhrase ?? ''),
         );
       }
 
       return response;
     } on SocketException catch (e) {
-      throw QBittorrentApiException('无法连接到服务器: ${e.message}');
+      throw QBittorrentApiException(appL10n.qbittorrentApiCannotConnectServer(e.message));
     } on http.ClientException catch (e) {
-      throw QBittorrentApiException('网络错误: ${e.message}');
+      throw QBittorrentApiException(appL10n.qbittorrentApiNetworkError(e.message));
     }
   }
 

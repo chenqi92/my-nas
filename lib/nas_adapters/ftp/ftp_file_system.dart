@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -77,7 +78,7 @@ class FtpFileSystem implements NasFileSystem {
     final entries = await listDirectory(dir);
     return entries.firstWhere(
       (f) => f.name == name,
-      orElse: () => throw Exception('文件不存在: $path'),
+      orElse: () => throw Exception(appL10n.ftpFileSystemFileNotFound(path)),
     );
   }
 
@@ -97,7 +98,7 @@ class FtpFileSystem implements NasFileSystem {
 
         final ok = await _ftp.downloadFile(_normalize(path), tempFile);
         if (!ok || !tempFile.existsSync()) {
-          throw Exception('FTP 下载失败: $path');
+          throw Exception(appL10n.ftpFileSystemDownloadFailed(path));
         }
 
         Stream<List<int>> stream;
@@ -139,7 +140,7 @@ class FtpFileSystem implements NasFileSystem {
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) =>
-      throw UnimplementedError('FTP 不支持通过 URL 获取数据流');
+      throw UnimplementedError(appL10n.ftpFileSystemUrlNotSupported);
 
   /// FTP 没有可分享的 HTTP URL 概念；返回 ftp:// 形式作占位，
   /// 应用层应优先调用 getFileStream。
@@ -172,7 +173,7 @@ class FtpFileSystem implements NasFileSystem {
 
   @override
   Future<void> copy(String sourcePath, String destPath) =>
-      throw UnimplementedError('FTP 协议本身不支持服务端拷贝');
+      throw UnimplementedError(appL10n.ftpFileSystemServerSideCopyNotSupported);
 
   @override
   Future<void> move(String sourcePath, String destPath) =>
@@ -193,7 +194,7 @@ class FtpFileSystem implements NasFileSystem {
         await _ftp.changeDirectory(_normalize(dir));
         final ok = await _ftp.uploadFile(File(localPath), sRemoteName: name);
         if (!ok) {
-          throw Exception('FTP 上传失败: $localPath -> $remotePath/$name');
+          throw Exception(appL10n.ftpFileSystemUploadFailed(localPath, remotePath, name));
         }
       });
 
@@ -212,7 +213,7 @@ class FtpFileSystem implements NasFileSystem {
           await _ftp.changeDirectory(dir);
           final ok = await _ftp.uploadFile(tempFile, sRemoteName: name);
           if (!ok) {
-            throw Exception('FTP 写入失败: $remotePath');
+            throw Exception(appL10n.ftpFileSystemWriteFailed(remotePath));
           }
         } finally {
           if (tempFile.existsSync()) {

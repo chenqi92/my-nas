@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/data/services/cache_config_service.dart';
@@ -311,12 +312,12 @@ class BookFileCacheService {
 
         // 根据扩展名生成更友好的名称
         final typeName = switch (info.extension) {
-          '.epub' => 'EPUB 电子书',
-          '.pdf' => 'PDF 文档',
-          '.mobi' => 'Mobi 电子书',
-          '.azw3' => 'AZW3 电子书',
-          '.txt' => '文本文件',
-          _ => '图书缓存',
+          '.epub' => appL10n.bookFileCacheTypeEpub,
+          '.pdf' => appL10n.bookFileCacheTypePdf,
+          '.mobi' => appL10n.bookFileCacheTypeMobi,
+          '.azw3' => appL10n.bookFileCacheTypeAzw3,
+          '.txt' => appL10n.bookFileCacheTypeTxt,
+          _ => appL10n.bookFileCacheTypeDefault,
         };
 
         items.add(CachedMediaItem(

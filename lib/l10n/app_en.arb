@@ -10445,5 +10445,430 @@
   "styp_4d1636e4": "Local",
   "styp_80746097": "UGREEN NAS",
   "styp_8967bc2e": "Resource Site",
-  "styp_8ce0ac4c": "fnOS"
+  "styp_8ce0ac4c": "fnOS",
+  "sourceCategoryDisplayNameNasDevices": "NAS Devices",
+  "sourceCategoryDisplayNameGenericProtocols": "Generic Protocols",
+  "sourceCategoryDisplayNameLocalStorage": "Local Storage",
+  "sourceCategoryDisplayNameMediaServers": "Media Servers",
+  "sourceCategoryDisplayNameDownloadTools": "Remote Tasks",
+  "sourceCategoryDisplayNameMediaTracking": "Media Tracking",
+  "sourceCategoryDisplayNameMediaManagement": "Media Management",
+  "sourceCategoryDisplayNamePtSites": "Resource Sites",
+  "sourceCategoryDisplayNameSubtitleSites": "Subtitle Sites",
+  "sourceCategoryDescNasDevices": "Connect to NAS devices to access stored media files",
+  "sourceCategoryDescGenericProtocols": "Connect to remote storage via generic protocols",
+  "sourceCategoryDescLocalStorage": "Access local storage; phone media library auto-loaded",
+  "sourceCategoryDescMediaServers": "Connect to media servers to play videos",
+  "sourceCategoryDescDownloadTools": "Manage downloads and torrents",
+  "sourceCategoryDescMediaTracking": "Track viewing history and media status",
+  "sourceCategoryDescMediaManagement": "Automate media library and subscriptions",
+  "sourceCategoryDescPtSites": "Connect to resource sites to get content",
+  "sourceCategoryDescSubtitleSites": "Configure subtitle download sites",
+  "jellyfinAdapterAccessTokenExpiredError": "Access Token is invalid or has expired",
+  "jellyfinAdapterInvalidApiKeyError": "API Key is invalid or no available user",
+  "jellyfinAdapterMissingCredentialsError": "Please provide API Key or username and password",
+  "jellyfinAdapterNoMediaSourceError": "No available media source",
+  "jellyfinAdapterPlaybackMethodNotSupportedError": "Media source does not support any playback method",
+  "jellyfinAdapterNotConnectedError": "Adapter not connected, cannot get virtual file system",
+  "jellyfinAdapterAuthenticationFailedError": "Authentication failed: incorrect username or password",
+  "jellyfinAdapterAccessDeniedError": "Access denied: insufficient permissions",
+  "jellyfinAdapterServerNotFoundError": "Server not found: please check if the address is correct",
+  "jellyfinAdapterConnectionTimeoutError": "Connection timeout: please check network or server status",
+  "jellyfinAdapterCannotConnectError": "Cannot connect: please check server address and port",
+  "jellyfinAdapterConnectionFailedError": "Connection failed: {message}",
+  "@jellyfinAdapterConnectionFailedError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "plexAdapterDescription": "Plex Media Server adapter",
+  "plexAdapterItemNotFound": "Item not found: {itemId}",
+  "@plexAdapterItemNotFound": {
+    "placeholders": {
+      "itemId": {
+        "type": "String"
+      }
+    }
+  },
+  "plexAdapterNoMediaSource": "No available media source",
+  "plexAdapterNoMediaPart": "No available media part",
+  "plexAdapterAuthenticationFailed": "Authentication failed: Plex Token is invalid",
+  "plexAdapterAccessDenied": "Access denied: Insufficient permissions",
+  "plexAdapterServerNotFound": "Server not found: Please check if the address is correct",
+  "plexAdapterConnectionTimeout": "Connection timeout: Please check network or server status",
+  "plexAdapterCannotConnect": "Cannot connect: Please check server address and port",
+  "plexAdapterConnectionFailed": "Connection failed: {message}",
+  "@plexAdapterConnectionFailed": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "photoSaveDownloadFailed": "Download failed: {code}",
+  "@photoSaveDownloadFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoSaveDownloadedFileNotFound": "Downloaded file not found",
+  "photoSaveDownloadedFileEmpty": "Downloaded file is empty",
+  "photoSaveFailed": "Save failed: {error}",
+  "@photoSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoSaveSourceFileNotFound": "Source file not found",
+  "photoSaveUnsupportedUrlType": "Unsupported URL type or missing file system",
+  "photoSaveDialogTitle": "Save Photo",
+  "photoSaveTempFileNotFound": "Temporary file not found",
+  "photoSaveGalleryPermissionDenied": "Gallery access permission required. Please grant access in settings.",
+  "photoSaveToGalleryFailed": "Failed to save to gallery: {reason}",
+  "@photoSaveToGalleryFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoSavePlatformNotSupported": "Sharing is not supported on current platform",
+  "photoSaveFileNotFound": "File not found",
+  "photoSaveShareFeatureUnavailable": "Sharing feature unavailable",
+  "photoSharePrepareFileFailed": "Failed to prepare file for sharing",
+  "photoDioErrorConnectionTimeout": "Connection timeout",
+  "photoDioErrorSendTimeout": "Send timeout",
+  "photoDioErrorReceiveTimeout": "Receive timeout",
+  "photoDioErrorBadResponse": "HTTP {code}",
+  "@photoDioErrorBadResponse": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoDioErrorCancelled": "Cancelled",
+  "photoDioErrorConnectionFailed": "Network connection failed",
+  "photoDioErrorUnknown": "Unknown error",
+  "photoDioErrorNetworkError": "Network error",
+  "photoSaveResultSavedToGallery": "Saved to gallery",
+  "photoSaveResultSavedTo": "Saved to: {path}",
+  "@photoSaveResultSavedTo": {
+    "placeholders": {
+      "path": {
+        "type": "Object"
+      }
+    }
+  },
+  "photoSaveResultCancelled": "Cancelled",
+  "photoSaveResultFailed": "Save failed",
+  "musicFileSystemUnsupportedUrlStream": "Music library does not support URL stream access",
+  "musicFileSystemUnsupportedCreateDirectory": "Music library does not support creating directories",
+  "musicFileSystemUnsupportedDelete": "Music library does not support delete operations",
+  "musicFileSystemUnsupportedRename": "Music library does not support renaming",
+  "musicFileSystemUnsupportedCopy": "Music library does not support copying",
+  "musicFileSystemUnsupportedMove": "Music library does not support moving",
+  "musicFileSystemUnsupportedUpload": "Music library does not support uploading",
+  "musicFileSystemUnsupportedWrite": "Music library does not support writing",
+  "galleryAlbumNotFound": "Album not found: {albumId}",
+  "@galleryAlbumNotFound": {
+    "placeholders": {
+      "albumId": {
+        "type": "String"
+      }
+    }
+  },
+  "galleryAssetNotFound": "Asset not found: {assetId}",
+  "@galleryAssetNotFound": {
+    "placeholders": {
+      "assetId": {
+        "type": "String"
+      }
+    }
+  },
+  "galleryCannotGetFileForAsset": "Cannot get file for asset: {assetId}",
+  "@galleryCannotGetFileForAsset": {
+    "placeholders": {
+      "assetId": {
+        "type": "String"
+      }
+    }
+  },
+  "galleryUrlStreamNotSupported": "Gallery does not support URL stream access",
+  "galleryCreateDirectoryNotSupported": "Gallery does not support creating directories",
+  "galleryDeleteNotSupported": "Gallery does not support delete operations (please use the system Photos app)",
+  "galleryRenameNotSupported": "Gallery does not support renaming",
+  "galleryCopyNotSupported": "Gallery does not support copying",
+  "galleryMoveNotSupported": "Gallery does not support moving",
+  "galleryUploadNotSupported": "Gallery does not support uploading (please use the system Photos app)",
+  "galleryWriteNotSupported": "Gallery does not support writing",
+  "transferStatusPending": "Pending",
+  "transferStatusQueued": "Queued",
+  "transferStatusTransferring": "Transferring",
+  "transferStatusPaused": "Paused",
+  "transferStatusCompleted": "Completed",
+  "transferStatusFailed": "Failed",
+  "transferStatusCancelled": "Cancelled",
+  "embyAdapterDescription": "Emby media server adapter",
+  "embyConnectAuthRequired": "Authentication information is required",
+  "embyStreamNoMediaSource": "No available media sources",
+  "embyErrorAuth": "Authentication failed: incorrect username or password",
+  "embyErrorAccessDenied": "Access denied: insufficient permissions",
+  "embyErrorNotFound": "Server not found: please verify the address",
+  "embyErrorTimeout": "Connection timeout: please check network or server status",
+  "embyErrorCannotConnect": "Unable to connect: please verify server address and port",
+  "embyErrorConnectionFailed": "Connection failed: {error}",
+  "@embyErrorConnectionFailed": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "ugreenAdapterName": "Ugreen UGREEN",
+  "ugreenConnectNotCalledError": "Please call connect first",
+  "ugreen2FAVerifyFailedError": "Two-factor verification failed",
+  "ugreenWebdavConnectionFailedError": "WebDAV connection failed",
+  "ugreenConnectionHealthCheckTimeoutError": "Connection health check timeout",
+  "ugreenNotConnectedError": "Not connected to NAS",
+  "ugreenFileSystemNotInitializedError": "File system not initialized",
+  "qbittorrentApiUsernamePasswordMissing": "Username or password not provided",
+  "qbittorrentApiUsernamePasswordIncorrect": "Username or password incorrect",
+  "qbittorrentApiIpBlocked": "IP blocked: too many failed login attempts",
+  "qbittorrentApiLoginFailed": "Login failed: {code}",
+  "@qbittorrentApiLoginFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      }
+    }
+  },
+  "qbittorrentApiCannotConnectServer": "Cannot connect to server: {error}",
+  "@qbittorrentApiCannotConnectServer": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "qbittorrentApiNetworkError": "Network error: {error}",
+  "@qbittorrentApiNetworkError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "qbittorrentApiKeyFormatInvalid": "Invalid API Key format (too short)",
+  "qbittorrentApiKeyAuthFailed": "API Key authentication failed, please verify the key",
+  "qbittorrentApiHttpMethodUnsupported": "Unsupported HTTP method: {method}",
+  "@qbittorrentApiHttpMethodUnsupported": {
+    "placeholders": {
+      "method": {
+        "type": "Object"
+      }
+    }
+  },
+  "qbittorrentApiAuthExpired": "Authentication expired, please login again",
+  "qbittorrentApiRequestFailed": "Request failed: {code} {reason}",
+  "@qbittorrentApiRequestFailed": {
+    "placeholders": {
+      "code": {
+        "type": "Object"
+      },
+      "reason": {
+        "type": "Object"
+      }
+    }
+  },
+  "mediaScanProgressPhaseIdleDesc": "Preparing scan…",
+  "mediaScanProgressPhaseScanningDesc": "Scanning…",
+  "mediaScanProgressPhaseProcessingDescWithFile": "Processing: {file} ({scanned}/{total})",
+  "@mediaScanProgressPhaseProcessingDescWithFile": {
+    "placeholders": {
+      "file": {
+        "type": "String"
+      },
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaScanProgressPhaseProcessingDesc": "Processing ({scanned}/{total})",
+  "@mediaScanProgressPhaseProcessingDesc": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaScanProgressPhaseSavingDesc": "Saving to database ({scanned}/{total})",
+  "@mediaScanProgressPhaseSavingDesc": {
+    "placeholders": {
+      "scanned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaScanProgressPhaseCompletedDesc": "Scan completed, {count} files in total",
+  "@mediaScanProgressPhaseCompletedDesc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mediaScanProgressPhaseErrorDesc": "Scan failed",
+  "musicScrapeProgressPreparing": "Preparing...",
+  "musicScrapeProgressScraping": "Scraping: {trackName}",
+  "@musicScrapeProgressScraping": {
+    "placeholders": {
+      "trackName": {
+        "type": "String"
+      }
+    }
+  },
+  "musicScrapeProgressScrapingCount": "Scraping ({current}/{total})",
+  "@musicScrapeProgressScrapingCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "musicScrapeProgressCompleted": "Completed! Success: {success}, Skip: {skip}, Fail: {fail}",
+  "@musicScrapeProgressCompleted": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "skip": {
+        "type": "int"
+      },
+      "fail": {
+        "type": "int"
+      }
+    }
+  },
+  "musicScrapeProgressCancelled": "Cancelled",
+  "musicScrapeProgressError": "Scraping failed",
+  "transferServiceTargetConnectionUnavailable": "Target connection unavailable: {sourceId}",
+  "@transferServiceTargetConnectionUnavailable": {
+    "placeholders": {
+      "sourceId": {
+        "type": "String"
+      }
+    }
+  },
+  "transferServiceAlbumAssetNotFound": "Album resource not found: {assetId}",
+  "@transferServiceAlbumAssetNotFound": {
+    "placeholders": {
+      "assetId": {
+        "type": "String"
+      }
+    }
+  },
+  "transferServiceAlbumFileUnavailable": "Unable to get album file: {assetId}",
+  "@transferServiceAlbumFileUnavailable": {
+    "placeholders": {
+      "assetId": {
+        "type": "String"
+      }
+    }
+  },
+  "transferServiceLocalFileNotFound": "Local file not found: {path}",
+  "@transferServiceLocalFileNotFound": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "transferServiceSourceConnectionUnavailable": "Source connection unavailable: {sourceId}",
+  "@transferServiceSourceConnectionUnavailable": {
+    "placeholders": {
+      "sourceId": {
+        "type": "String"
+      }
+    }
+  },
+  "bookFileCacheTypeEpub": "EPUB eBook",
+  "bookFileCacheTypePdf": "PDF Document",
+  "bookFileCacheTypeMobi": "Mobi eBook",
+  "bookFileCacheTypeAzw3": "AZW3 eBook",
+  "bookFileCacheTypeTxt": "Text File",
+  "bookFileCacheTypeDefault": "Book Cache",
+  "ftpFileSystemFileNotFound": "File not found: {path}",
+  "@ftpFileSystemFileNotFound": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpFileSystemDownloadFailed": "FTP download failed: {path}",
+  "@ftpFileSystemDownloadFailed": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpFileSystemUrlNotSupported": "FTP does not support obtaining data streams by URL",
+  "ftpFileSystemServerSideCopyNotSupported": "FTP protocol itself does not support server-side copy",
+  "ftpFileSystemUploadFailed": "FTP upload failed: {source} → {dest}/{name}",
+  "@ftpFileSystemUploadFailed": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "dest": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ftpFileSystemWriteFailed": "FTP write failed: {path}",
+  "@ftpFileSystemWriteFailed": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "smbPoolClosed": "Connection pool closed",
+  "smbConnectionTimeout": "SMB connection timeout",
+  "smbWaitConnectionTimeout": "Waiting for SMB connection timed out",
+  "smbDedicatedConnectionTimeout": "SMB dedicated connection timeout (30s)",
+  "smbWaitDedicatedSlotTimeout": "Waiting for dedicated connection slot timed out ({current}/{max})",
+  "@smbWaitDedicatedSlotTimeout": {
+    "placeholders": {
+      "current": {
+        "type": "Object"
+      },
+      "max": {
+        "type": "Object"
+      }
+    }
+  }
 }

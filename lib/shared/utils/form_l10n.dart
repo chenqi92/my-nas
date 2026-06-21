@@ -346,6 +346,12 @@ String localizeFormText(BuildContext context, String? text) {
     '绿联 NAS' => l.styp_80746097,
     '资源站点' => l.styp_8967bc2e,
     '飞牛 fnOS' => l.styp_8ce0ac4c,
+    'NAS 设备' => l.sourceCategoryDisplayNameNasDevices,
+    '通用协议' => l.sourceCategoryDisplayNameGenericProtocols,
+    '远程任务' => l.sourceCategoryDisplayNameDownloadTools,
+    '媒体追踪' => l.sourceCategoryDisplayNameMediaTracking,
+    '媒体管理' => l.sourceCategoryDisplayNameMediaManagement,
+    '字幕站点' => l.sourceCategoryDisplayNameSubtitleSites,
     _ => text,
   };
 }

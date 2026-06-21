@@ -1,5 +1,6 @@
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
@@ -34,7 +35,7 @@ class UGreenAdapter implements NasAdapter {
   @override
   NasAdapterInfo get info => NasAdapterInfo(
         type: NasAdapterType.ugreen,
-        name: '绿联 UGREEN',
+        name: appL10n.ugreenAdapterName,
         version: AppConstants.appVersion,
       );
 
@@ -93,7 +94,7 @@ class UGreenAdapter implements NasAdapter {
     bool rememberDevice = false,
   }) async {
     if (_config == null) {
-      return const ConnectionFailure(error: '请先调用 connect');
+      return ConnectionFailure(error: appL10n.ugreenConnectNotCalledError);
     }
 
     final authResult = await _api.login(
@@ -106,7 +107,7 @@ class UGreenAdapter implements NasAdapter {
       UGreenAuthSuccess(:final token) =>
         await _handleLoginSuccess(_config!, token),
       UGreenAuthFailure(:final error) => ConnectionFailure(error: error),
-      UGreenAuthRequires2FA() => const ConnectionFailure(error: '二次验证失败'),
+      UGreenAuthRequires2FA() => ConnectionFailure(error: appL10n.ugreen2FAVerifyFailedError),
     };
   }
 
@@ -205,7 +206,7 @@ class UGreenAdapter implements NasAdapter {
       }
     }
 
-    throw Exception('WebDAV 连接失败');
+    throw Exception(appL10n.ugreenWebdavConnectionFailedError);
   }
 
   @override
@@ -234,7 +235,7 @@ class UGreenAdapter implements NasAdapter {
         await _webdavClient!.ping().timeout(
           const Duration(seconds: 5),
           onTimeout: () {
-            throw Exception('连接健康检查超时');
+            throw Exception(appL10n.ugreenConnectionHealthCheckTimeoutError);
           },
         );
       } else {
@@ -242,7 +243,7 @@ class UGreenAdapter implements NasAdapter {
         await _api.getDeviceInfo().timeout(
           const Duration(seconds: 5),
           onTimeout: () {
-            throw Exception('连接健康检查超时');
+            throw Exception(appL10n.ugreenConnectionHealthCheckTimeoutError);
           },
         );
       }
@@ -258,10 +259,10 @@ class UGreenAdapter implements NasAdapter {
   @override
   NasFileSystem get fileSystem {
     if (!_connected) {
-      throw StateError('未连接到 NAS');
+      throw StateError(appL10n.ugreenNotConnectedError);
     }
     if (_fileSystem == null) {
-      throw StateError('文件系统未初始化');
+      throw StateError(appL10n.ugreenFileSystemNotInitializedError);
     }
     return _fileSystem!;
   }

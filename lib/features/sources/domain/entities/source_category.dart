@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 
 /// 源分组类型
 ///
@@ -34,15 +35,15 @@ enum SourceCategory {
 
   /// 获取分组的描述文本
   String get description => switch (this) {
-        nasDevices => '连接到 NAS 设备，访问存储的媒体文件',
-        genericProtocols => '通过通用协议连接到远程存储',
-        localStorage => '访问本机存储，手机端自动获取系统媒体库',
-        mediaServers => '连接到媒体服务器，播放视频内容',
-        downloadTools => '管理下载任务和种子',
-        mediaTracking => '追踪观看记录和媒体状态',
-        mediaManagement => '自动化管理媒体库和订阅',
-        ptSites => '连接资源站点获取内容',
-        subtitleSites => '配置字幕下载站点',
+        nasDevices => appL10n.sourceCategoryDescNasDevices,
+        genericProtocols => appL10n.sourceCategoryDescGenericProtocols,
+        localStorage => appL10n.sourceCategoryDescLocalStorage,
+        mediaServers => appL10n.sourceCategoryDescMediaServers,
+        downloadTools => appL10n.sourceCategoryDescDownloadTools,
+        mediaTracking => appL10n.sourceCategoryDescMediaTracking,
+        mediaManagement => appL10n.sourceCategoryDescMediaManagement,
+        ptSites => appL10n.sourceCategoryDescPtSites,
+        subtitleSites => appL10n.sourceCategoryDescSubtitleSites,
       };
 }
 
