@@ -1,4 +1,5 @@
 import 'package:hive_ce/hive.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/video/data/services/video_favorites_service.dart';
 
@@ -12,7 +13,7 @@ class VideoFavoritesSyncModule implements SyncableModule {
   String get key => 'video_favorites';
 
   @override
-  String get displayName => '视频 - 收藏';
+  String get displayName => appL10n.syncModuleVideoFavorites;
 
   @override
   Future<DateTime?> getLocalUpdatedAt() async {

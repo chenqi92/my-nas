@@ -1,4 +1,5 @@
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -983,19 +984,19 @@ class MonthData {
 
   /// 月份名称
   String get monthName => switch (month) {
-        1 => '一月',
-        2 => '二月',
-        3 => '三月',
-        4 => '四月',
-        5 => '五月',
-        6 => '六月',
-        7 => '七月',
-        8 => '八月',
-        9 => '九月',
-        10 => '十月',
-        11 => '十一月',
-        12 => '十二月',
-        _ => '$month月',
+        1 => appL10n.monthJan,
+        2 => appL10n.monthFeb,
+        3 => appL10n.monthMar,
+        4 => appL10n.monthApr,
+        5 => appL10n.monthMay,
+        6 => appL10n.monthJun,
+        7 => appL10n.monthJul,
+        8 => appL10n.monthAug,
+        9 => appL10n.monthSep,
+        10 => appL10n.monthOct,
+        11 => appL10n.monthNov,
+        12 => appL10n.monthDec,
+        _ => appL10n.monthNumber(month),
       };
 
   /// 短月份名称

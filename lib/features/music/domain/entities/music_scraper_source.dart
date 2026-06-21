@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:uuid/uuid.dart';
 
 /// 法律/合规风险等级
@@ -58,14 +59,14 @@ enum MusicScraperType {
 
   /// 描述
   String get description => switch (this) {
-        MusicScraperType.musicBrainz => '开放音乐数据库，支持元数据和封面查询',
-        MusicScraperType.acoustId => '声纹识别服务，需要 API Key',
-        MusicScraperType.neteaseMusic => '国内音乐平台，支持歌词和封面',
-        MusicScraperType.qqMusic => '国内音乐平台，支持歌词和封面',
-        MusicScraperType.kugouMusic => '国内音乐平台，歌词库丰富',
-        MusicScraperType.kuwoMusic => '国内音乐平台，支持歌词和封面',
-        MusicScraperType.miguMusic => '中国移动旗下音乐平台，无损音源丰富',
-        MusicScraperType.musicTagWeb => '自托管音乐刮削服务，需配置服务器地址',
+        MusicScraperType.musicBrainz => appL10n.musicScraperDescMusicBrainz,
+        MusicScraperType.acoustId => appL10n.musicScraperDescAcoustId,
+        MusicScraperType.neteaseMusic => appL10n.musicScraperDescDomestic,
+        MusicScraperType.qqMusic => appL10n.musicScraperDescDomestic,
+        MusicScraperType.kugouMusic => appL10n.musicScraperDescKugou,
+        MusicScraperType.kuwoMusic => appL10n.musicScraperDescDomestic,
+        MusicScraperType.miguMusic => appL10n.musicScraperDescMigu,
+        MusicScraperType.musicTagWeb => appL10n.musicScraperDescTagWeb,
       };
 
   /// 是否支持元数据

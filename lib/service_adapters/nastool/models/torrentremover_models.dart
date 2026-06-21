@@ -1,6 +1,8 @@
 /// 自动删种相关数据模型
 library;
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
+
 /// 自动删种任务
 class NtTorrentRemoverTask {
   const NtTorrentRemoverTask({
@@ -69,9 +71,9 @@ class NtTorrentRemoverTask {
 
   /// 动作描述
   String get actionText => switch (action) {
-        1 => '暂停',
-        2 => '删除种子',
-        3 => '删除种子及文件',
-        _ => '未知',
+        1 => appL10n.nastoolRemoverPause,
+        2 => appL10n.nastoolRemoverDeleteTorrent,
+        3 => appL10n.nastoolRemoverDeleteTorrentFiles,
+        _ => appL10n.nastoolUnknown,
       };
 }

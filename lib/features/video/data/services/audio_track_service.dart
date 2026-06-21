@@ -1,4 +1,5 @@
 import 'package:media_kit/media_kit.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
 
@@ -189,18 +190,18 @@ class AudioTrackService {
   String _getLanguageDisplayName(String langCode) {
     final code = langCode.toLowerCase();
     return switch (code) {
-      'chi' || 'zh' || 'zho' || 'chs' || 'cht' => '中文',
-      'eng' || 'en' => '英语',
-      'jpn' || 'ja' || 'jap' => '日语',
-      'kor' || 'ko' => '韩语',
-      'fre' || 'fra' || 'fr' => '法语',
-      'ger' || 'deu' || 'de' => '德语',
-      'spa' || 'es' => '西班牙语',
-      'por' || 'pt' => '葡萄牙语',
-      'rus' || 'ru' => '俄语',
-      'ita' || 'it' => '意大利语',
-      'tha' || 'th' => '泰语',
-      'vie' || 'vi' => '越南语',
+      'chi' || 'zh' || 'zho' || 'chs' || 'cht' => appL10n.langZh,
+      'eng' || 'en' => appL10n.langEn,
+      'jpn' || 'ja' || 'jap' => appL10n.langJa,
+      'kor' || 'ko' => appL10n.langKo,
+      'fre' || 'fra' || 'fr' => appL10n.langFr,
+      'ger' || 'deu' || 'de' => appL10n.langDe,
+      'spa' || 'es' => appL10n.langEs,
+      'por' || 'pt' => appL10n.langPt,
+      'rus' || 'ru' => appL10n.langRu,
+      'ita' || 'it' => appL10n.langIt,
+      'tha' || 'th' => appL10n.langTh,
+      'vie' || 'vi' => appL10n.langVi,
       _ => langCode,
     };
   }

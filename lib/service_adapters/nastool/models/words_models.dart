@@ -1,6 +1,8 @@
 /// 识别词相关数据模型
 library;
 
+import 'package:my_nas/core/i18n/app_l10n.dart';
+
 /// 识别词组
 class NtWordsGroup {
   const NtWordsGroup({
@@ -90,12 +92,12 @@ class NtWordItem {
 
   /// 类型描述
   String get typeText => switch (type) {
-        1 => '屏蔽',
-        2 => '替换',
-        3 => '集数偏移',
-        4 => '识别词前',
-        5 => '识别词后',
-        _ => '未知',
+        1 => appL10n.nastoolWordBlock,
+        2 => appL10n.nastoolWordReplace,
+        3 => appL10n.nastoolWordEpisodeOffset,
+        4 => appL10n.nastoolWordBeforeRecognition,
+        5 => appL10n.nastoolWordAfterRecognition,
+        _ => appL10n.nastoolUnknown,
       };
 }
 

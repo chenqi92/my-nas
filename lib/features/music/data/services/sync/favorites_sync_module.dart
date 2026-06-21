@@ -1,4 +1,5 @@
 import 'package:hive_ce/hive.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/music/data/services/music_favorites_service.dart';
 
@@ -18,7 +19,7 @@ class FavoritesSyncModule implements SyncableModule {
   String get key => 'music_favorites';
 
   @override
-  String get displayName => '音乐 - 收藏';
+  String get displayName => appL10n.syncModuleMusicFavorites;
 
   @override
   Future<DateTime?> getLocalUpdatedAt() async {

@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/note/data/services/note_state_service.dart';
 
@@ -20,7 +21,7 @@ class NoteSyncModule implements SyncableModule {
   String get key => 'note_states';
 
   @override
-  String get displayName => '笔记 - 阅读状态与书签';
+  String get displayName => appL10n.syncModuleNotes;
 
   @override
   Future<DateTime?> getLocalUpdatedAt() async {

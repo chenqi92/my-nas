@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/book/data/services/sources/book_source_manager_service.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
@@ -20,7 +21,7 @@ class BookSourcesSyncModule implements SyncableModule {
   String get key => 'book_sources';
 
   @override
-  String get displayName => '阅读 - 书源';
+  String get displayName => appL10n.syncModuleReadingSources;
 
   @override
   Future<DateTime?> getLocalUpdatedAt() async {

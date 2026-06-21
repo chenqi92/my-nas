@@ -1,4 +1,5 @@
 import 'package:hive_ce/hive.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/snapshot_change_tracker.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 
@@ -20,7 +21,7 @@ class MusicSettingsSyncModule implements SyncableModule {
   String get key => _moduleKey;
 
   @override
-  String get displayName => '音乐 - 播放器设置';
+  String get displayName => appL10n.syncModuleMusicSettings;
 
   Future<Box<Map<dynamic, dynamic>>> _open() async {
     if (Hive.isBoxOpen(_boxName)) {

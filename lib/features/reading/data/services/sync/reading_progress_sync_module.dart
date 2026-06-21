@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/reading/data/services/reading_progress_service.dart';
 
@@ -16,7 +17,7 @@ class ReadingProgressSyncModule implements SyncableModule {
   String get key => 'reading_progress';
 
   @override
-  String get displayName => '阅读 - 进度（图书/漫画/PDF）';
+  String get displayName => appL10n.syncModuleReadingProgress;
 
   @override
   Future<DateTime?> getLocalUpdatedAt() async {

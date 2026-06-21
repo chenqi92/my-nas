@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/music/data/services/playlist_service.dart';
 
@@ -15,7 +16,7 @@ class PlaylistSyncModule implements SyncableModule {
   String get key => 'music_playlists';
 
   @override
-  String get displayName => '音乐 - 歌单';
+  String get displayName => appL10n.syncModuleMusicPlaylists;
 
   @override
   Future<DateTime?> getLocalUpdatedAt() async {

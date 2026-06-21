@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/snapshot_change_tracker.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
@@ -19,7 +20,7 @@ class AppSettingsSyncModule implements SyncableModule {
   String get key => _moduleKey;
 
   @override
-  String get displayName => '全局 - 主题与配色';
+  String get displayName => appL10n.syncModuleGlobalTheme;
 
   Future<Map<String, dynamic>> _readSnapshot() async {
     final box = await HiveUtils.getSettingsBox();

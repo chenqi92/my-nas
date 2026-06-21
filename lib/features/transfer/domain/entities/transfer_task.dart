@@ -1,3 +1,4 @@
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 
 /// 传输任务类型
@@ -179,9 +180,9 @@ class TransferTask {
 
   /// 传输类型显示名称
   String get typeDisplayName => switch (type) {
-        TransferType.upload => '上传',
-        TransferType.download => '下载',
-        TransferType.cache => '缓存',
+        TransferType.upload => appL10n.transferTypeUpload,
+        TransferType.download => appL10n.transferTypeDownload,
+        TransferType.cache => appL10n.transferTypeCache,
       };
 
   /// 状态显示名称

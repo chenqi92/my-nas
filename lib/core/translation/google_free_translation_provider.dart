@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/translation/token_bucket.dart';
 import 'package:my_nas/core/translation/translation_provider.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -27,7 +28,7 @@ class GoogleFreeTranslationProvider implements TranslationProvider {
   String get id => 'google_free';
 
   @override
-  String get displayName => 'Google 翻译（免费）';
+  String get displayName => appL10n.translationProviderGoogleFree;
 
   @override
   Future<List<String?>> translate({
