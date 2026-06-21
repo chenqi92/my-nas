@@ -166,7 +166,8 @@ class WebDavFileSystem implements NasFileSystem {
         final headers = <String, dynamic>{};
         if (range != null) {
           final rangeStart = range.start;
-          final rangeEnd = range.end != null ? '${range.end}' : '';
+          // FileRange.end 为排他边界，HTTP Range 为闭区间，需 -1
+          final rangeEnd = range.end != null ? '${range.end! - 1}' : '';
           headers['Range'] = 'bytes=$rangeStart-$rangeEnd';
           logger.d('WebDavFileSystem: 使用 Range 请求: bytes=$rangeStart-$rangeEnd');
         }

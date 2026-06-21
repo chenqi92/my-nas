@@ -141,7 +141,8 @@ class UpnpFileSystem implements NasFileSystem {
     try {
       final headers = <String, dynamic>{};
       if (range != null) {
-        final end = range.end != null ? '${range.end}' : '';
+        // FileRange.end 为排他边界，HTTP Range 为闭区间，需 -1
+        final end = range.end != null ? '${range.end! - 1}' : '';
         headers['Range'] = 'bytes=${range.start}-$end';
       }
       final response = await _streamDio.get<ResponseBody>(

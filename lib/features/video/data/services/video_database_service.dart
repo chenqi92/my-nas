@@ -1734,7 +1734,7 @@ class VideoDatabaseService {
   /// 批量获取视频元数据（用于增量更新）
   ///
   /// 根据 uniqueKey 列表批量获取视频，避免多次数据库查询
-  /// [keys] uniqueKey 列表，格式为 "sourceId|filePath"
+  /// [keys] uniqueKey 列表，格式为 "sourceId_filePath"（与 VideoMetadata.uniqueKey 一致）
   Future<Map<String, VideoMetadata>> getByKeys(List<String> keys) async {
     if (!_initialized) await init();
     if (keys.isEmpty) return {};
@@ -1747,10 +1747,10 @@ class VideoDatabaseService {
       final batch = keys.skip(i).take(batchSize).toList();
       final placeholders = List.filled(batch.length, '?').join(', ');
 
-      // uniqueKey = sourceId || '|' || filePath
+      // uniqueKey = sourceId || '_' || filePath（与 VideoMetadata.uniqueKey 一致）
       final sql = '''
         SELECT * FROM $_tableMetadata
-        WHERE ($_colSourceId || '|' || $_colFilePath) IN ($placeholders)
+        WHERE ($_colSourceId || '_' || $_colFilePath) IN ($placeholders)
       ''';
 
       final rows = await _db!.rawQuery(sql, batch);
@@ -2355,14 +2355,15 @@ class VideoDatabaseService {
 
     // 如果没有观看历史，直接返回
     if (watchedPaths.isEmpty) {
-      return allVideos.take(limit).toList();
+      return allVideos.skip(offset).take(limit).toList();
     }
 
     // 过滤掉已观看的视频
     // 对于剧集，检查是否有任何一集被观看过（通过 TMDB ID 或 showDirectory 匹配）
     final unwatched = <VideoMetadata>[];
     for (final video in allVideos) {
-      if (unwatched.length >= limit) break;
+      // 先收满 offset+limit 条，再按 offset 分页返回
+      if (unwatched.length >= offset + limit) break;
 
       if (video.category == MediaCategory.tvShow) {
         // 对于剧集，检查是否整部剧都没看过
@@ -2380,7 +2381,7 @@ class VideoDatabaseService {
       }
     }
 
-    return unwatched;
+    return unwatched.skip(offset).take(limit).toList();
   }
 
   /// 检查电影是否已观看（检查所有版本）

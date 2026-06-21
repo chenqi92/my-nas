@@ -390,7 +390,8 @@ class SynologyApi {
     final headers = <String, dynamic>{};
     if (start != null || end != null) {
       final rangeStart = start ?? 0;
-      final rangeEnd = end != null ? end.toString() : '';
+      // end 来自 FileRange.end（排他边界），HTTP Range 为闭区间，需 -1
+      final rangeEnd = end != null ? (end - 1).toString() : '';
       headers['Range'] = 'bytes=$rangeStart-$rangeEnd';
     }
 

@@ -94,6 +94,7 @@ class _TwoFASheet extends StatefulWidget {
 class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderStateMixin {
   late final List<TextEditingController> _controllers;
   late final List<FocusNode> _focusNodes;
+  late final List<FocusNode> _keyboardFocusNodes;
   late bool _rememberDevice;
   bool _hasError = false;
   late AnimationController _animationController;
@@ -105,6 +106,7 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
     _rememberDevice = widget.initialRememberDevice;
     _controllers = List.generate(6, (_) => TextEditingController());
     _focusNodes = List.generate(6, (_) => FocusNode());
+    _keyboardFocusNodes = List.generate(6, (_) => FocusNode());
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 400),
@@ -128,6 +130,9 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
       controller.dispose();
     }
     for (final node in _focusNodes) {
+      node.dispose();
+    }
+    for (final node in _keyboardFocusNodes) {
       node.dispose();
     }
     _animationController.dispose();
@@ -397,7 +402,7 @@ class _TwoFASheetState extends State<_TwoFASheet> with SingleTickerProviderState
             right: index == 2 ? 8 : 0, // 在第3位后加点间距
           ),
           child: KeyboardListener(
-            focusNode: FocusNode(),
+            focusNode: _keyboardFocusNodes[index],
             onKeyEvent: (event) => _onKeyEvent(index, event),
             child: TextField(
               controller: _controllers[index],
@@ -476,6 +481,7 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
     with SingleTickerProviderStateMixin {
   late final List<TextEditingController> _controllers;
   late final List<FocusNode> _focusNodes;
+  late final List<FocusNode> _keyboardFocusNodes;
   late bool _rememberDevice;
   bool _hasError = false;
   bool _isVerifying = false;
@@ -491,6 +497,7 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
     _rememberDevice = widget.initialRememberDevice;
     _controllers = List.generate(6, (_) => TextEditingController());
     _focusNodes = List.generate(6, (_) => FocusNode());
+    _keyboardFocusNodes = List.generate(6, (_) => FocusNode());
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -526,6 +533,9 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
       controller.dispose();
     }
     for (final node in _focusNodes) {
+      node.dispose();
+    }
+    for (final node in _keyboardFocusNodes) {
       node.dispose();
     }
     _animationController.dispose();
@@ -923,7 +933,7 @@ class _TwoFASheetWithVerifyState extends State<_TwoFASheetWithVerify>
               right: index == 2 ? 8 : 0,
             ),
             child: KeyboardListener(
-              focusNode: FocusNode(),
+              focusNode: _keyboardFocusNodes[index],
               onKeyEvent: (event) => _onKeyEvent(index, event),
               child: TextField(
                 controller: _controllers[index],

@@ -55,7 +55,11 @@ class JumpListController {
       );
 
       // 监听运行时 deep link（WM_COPYDATA 转发的二次启动 / jump list 点击）。
-      _deepLinkSub = svc.deepLinkStream.listen(_handleDeepLink);
+      _deepLinkSub = svc.deepLinkStream.listen(
+        _handleDeepLink,
+        onError: (Object e, StackTrace st) =>
+            AppError.handle(e, st, 'jumpList.deepLink'),
+      );
 
       // 消费本次启动的命令行 deep link（如果 app 是被 jump list 拉起的）。
       final initial = svc.consumeInitialArg();

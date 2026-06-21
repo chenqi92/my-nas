@@ -274,6 +274,9 @@ class BookListNotifier extends StateNotifier<BookListState> {
   final BookPreloadService _preloadService = BookPreloadService();
   final BookMetadataService _metadataService = BookMetadataService();
 
+  /// 最近一次搜索词，用于丢弃乱序返回的旧搜索结果
+  String? _lastSearchQuery;
+
   /// 后台元数据提取是否正在运行
   bool _isExtractingMetadata = false;
 
@@ -825,23 +828,25 @@ class BookListNotifier extends StateNotifier<BookListState> {
 
   void setSearchQuery(String query) {
     final current = state;
-    if (current is BookListLoaded) {
-      if (query.isEmpty) {
-        state = current.copyWith(searchQuery: '', searchResults: []);
-      } else {
-        // 使用 SQLite 搜索
-        _db.search(query).then((results) {
-          if (state is BookListLoaded) {
-            state = (state as BookListLoaded).copyWith(
-              searchQuery: query,
-              searchResults: results,
-            );
-          }
-        });
-        // 先更新搜索词，结果异步返回
-        state = current.copyWith(searchQuery: query);
-      }
+    if (current is! BookListLoaded) return;
+    if (query.isEmpty) {
+      _lastSearchQuery = '';
+      state = current.copyWith(searchQuery: '', searchResults: []);
+      return;
     }
+    // 记录当前搜索词；先更新搜索词，结果异步返回
+    _lastSearchQuery = query;
+    state = current.copyWith(searchQuery: query);
+    // 使用 SQLite 搜索
+    _db.search(query).then((results) {
+      // 仅当结果仍对应最新搜索词时才应用，避免乱序覆盖
+      final s = state;
+      if (s is BookListLoaded && _lastSearchQuery == query) {
+        state = s.copyWith(searchQuery: query, searchResults: results);
+      }
+    }).catchError((Object e, StackTrace st) {
+      logger.e('BookList: 搜索失败 "$query"', e, st);
+    });
   }
 
   void setSortType(BookSortType sortType) {

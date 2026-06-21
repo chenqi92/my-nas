@@ -163,7 +163,7 @@ class SpotlightDeepLinkHandler {
   // ---------------------------------------------------------------------------
 
   Future<void> _pushVideoDetail(String sourceId, String filePath) async {
-    final key = '$sourceId|$filePath';
+    final key = '${sourceId}_$filePath';
     final found = await VideoDatabaseService().getByKeys([key]);
     final metadata = found[key];
     if (metadata == null) {

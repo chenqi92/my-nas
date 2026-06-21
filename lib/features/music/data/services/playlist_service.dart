@@ -19,7 +19,7 @@ class PlaylistEntry {
         name: map['name'] as String,
         description: map['description'] as String?,
         coverUrl: map['coverUrl'] as String?,
-        trackPaths: (map['trackPaths'] as List).cast<String>(),
+        trackPaths: (map['trackPaths'] as List<dynamic>?)?.cast<String>() ?? [],
         createdAt: DateTime.fromMillisecondsSinceEpoch(map['createdAt'] as int),
         updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updatedAt'] as int),
         deletedAt: map['deletedAt'] is int
