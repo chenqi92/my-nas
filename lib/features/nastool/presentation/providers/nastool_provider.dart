@@ -574,8 +574,13 @@ class NasToolActions {
     await adapter.runSyncDirectory(id);
   }
 
-  /// 获取同步历史（暂时返回空列表，API 不支持）
-  Future<List<NtSyncHistory>> getSyncHistory(int dirId) async => [];
+  /// 获取同步历史。
+  ///
+  /// NAStool 服务端 API 未提供该端点，按项目约定抛 [UnsupportedError]——而非
+  /// 静默返回空列表被 UI 误读成「没有数据」。调用方应 catch 后隐藏入口或显示
+  /// 「该 NAStool API 不支持」提示。
+  Future<List<NtSyncHistory>> getSyncHistory(int dirId) async =>
+      throw UnsupportedError('当前 NAStool API 不支持查询同步历史');
 
   // === 系统操作 ===
 
@@ -603,8 +608,13 @@ class NasToolActions {
     return adapter.checkUpdate();
   }
 
-  /// 获取日志（暂时返回空列表，API 不支持）
-  Future<List<NtLogEntry>> getLogs({String level = 'INFO'}) async => [];
+  /// 获取系统日志。
+  ///
+  /// NAStool 服务端 API 未提供该端点，按项目约定抛 [UnsupportedError]——而非
+  /// 静默返回空列表被 UI 误读成「没有数据」。调用方应 catch 后隐藏入口或显示
+  /// 「该 NAStool API 不支持」提示。
+  Future<List<NtLogEntry>> getLogs({String level = 'INFO'}) async =>
+      throw UnsupportedError('当前 NAStool API 不支持查询日志');
 
   /// 刷新所有数据
   void refreshAll() {

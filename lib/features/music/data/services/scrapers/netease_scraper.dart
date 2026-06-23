@@ -10,6 +10,7 @@ import 'package:dio/io.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -104,53 +105,53 @@ class NeteaseScraper implements MusicScraper {
         'offset': offset,
       };
 
-      debugPrint('[NeteaseScraper] search: query=$searchQuery, page=$page, limit=$limit');
-      debugPrint('[NeteaseScraper] request URL: $_baseUrl/weapi/cloudsearch/get/web');
+      scraperDebug('[NeteaseScraper] search: query=$searchQuery, page=$page, limit=$limit');
+      scraperDebug('[NeteaseScraper] request URL: $_baseUrl/weapi/cloudsearch/get/web');
 
       final encryptedData = _encryptParams(params);
-      debugPrint('[NeteaseScraper] encrypted params length: ${encryptedData.length}');
-      debugPrint('[NeteaseScraper] encrypted params (first 200 chars): ${encryptedData.length > 200 ? encryptedData.substring(0, 200) : encryptedData}');
+      scraperDebug('[NeteaseScraper] encrypted params length: ${encryptedData.length}');
+      scraperDebug('[NeteaseScraper] encrypted params (first 200 chars): ${encryptedData.length > 200 ? encryptedData.substring(0, 200) : encryptedData}');
 
       final response = await _rateLimitedRequest(() => _dio.post<dynamic>(
             '$_baseUrl/weapi/cloudsearch/get/web',
             data: encryptedData,
           ));
 
-      debugPrint('[NeteaseScraper] response status: ${response.statusCode}');
-      debugPrint('[NeteaseScraper] response data type: ${response.data.runtimeType}');
+      scraperDebug('[NeteaseScraper] response status: ${response.statusCode}');
+      scraperDebug('[NeteaseScraper] response data type: ${response.data.runtimeType}');
       // 截断响应数据避免日志过长
       final dataStr = response.data.toString();
-      debugPrint('[NeteaseScraper] response data (first 500 chars): ${dataStr.length > 500 ? dataStr.substring(0, 500) : dataStr}');
+      scraperDebug('[NeteaseScraper] response data (first 500 chars): ${dataStr.length > 500 ? dataStr.substring(0, 500) : dataStr}');
 
       // 处理响应数据 - 可能是 String 或 Map
       Map<String, dynamic> data;
       if (response.data == null) {
-        debugPrint('[NeteaseScraper] Response data is null');
+        scraperDebug('[NeteaseScraper] Response data is null');
         return MusicScraperSearchResult.empty(type);
       } else if (response.data is String) {
         // 服务器可能返回 JSON 字符串，需要手动解析
         try {
           data = json.decode(response.data as String) as Map<String, dynamic>;
-          debugPrint('[NeteaseScraper] Parsed JSON string to Map');
+          scraperDebug('[NeteaseScraper] Parsed JSON string to Map');
         } on FormatException catch (e) {
-          debugPrint('[NeteaseScraper] Failed to parse JSON: $e');
+          scraperDebug('[NeteaseScraper] Failed to parse JSON: $e');
           return MusicScraperSearchResult.empty(type);
         }
       } else if (response.data is Map<String, dynamic>) {
         data = response.data as Map<String, dynamic>;
       } else {
-        debugPrint('[NeteaseScraper] Invalid response data format: ${response.data.runtimeType}');
+        scraperDebug('[NeteaseScraper] Invalid response data format: ${response.data.runtimeType}');
         return MusicScraperSearchResult.empty(type);
       }
 
       // 检查返回码
       final code = data['code'] as int?;
-      debugPrint('[NeteaseScraper] response code: $code');
+      scraperDebug('[NeteaseScraper] response code: $code');
       if (code != null && code != 200) {
-        debugPrint('[NeteaseScraper] API returned error code: $code, message: ${data['message']}');
+        scraperDebug('[NeteaseScraper] API returned error code: $code, message: ${data['message']}');
         // 如果加密 API 失败，尝试使用备用 API
         if (code == 50000005 || code == -460) {
-          debugPrint('[NeteaseScraper] Trying fallback API...');
+          scraperDebug('[NeteaseScraper] Trying fallback API...');
           return _searchWithFallbackApi(searchQuery, page: page, limit: limit);
         }
         return MusicScraperSearchResult.empty(type);
@@ -158,14 +159,14 @@ class NeteaseScraper implements MusicScraper {
 
       final result = data['result'] as Map<String, dynamic>?;
       if (result == null) {
-        debugPrint('[NeteaseScraper] No result in response');
+        scraperDebug('[NeteaseScraper] No result in response');
         return MusicScraperSearchResult.empty(type);
       }
 
       final songs = (result['songs'] as List?)?.whereType<Map<String, dynamic>>().toList() ?? [];
       final songCount = result['songCount'] as int? ?? 0;
 
-      debugPrint('[NeteaseScraper] Found ${songs.length} songs, total: $songCount');
+      scraperDebug('[NeteaseScraper] Found ${songs.length} songs, total: $songCount');
 
       final items = songs.map(_parseSong).toList();
 
@@ -177,12 +178,12 @@ class NeteaseScraper implements MusicScraper {
         totalResults: songCount,
       );
     } on DioException catch (e) {
-      debugPrint('[NeteaseScraper] DioException: ${e.type}, message: ${e.message}');
-      debugPrint('[NeteaseScraper] Response: ${e.response?.data}');
+      scraperDebug('[NeteaseScraper] DioException: ${e.type}, message: ${e.message}');
+      scraperDebug('[NeteaseScraper] Response: ${e.response?.data}');
       throw _handleDioError(e);
     } on Exception catch (e, st) {
-      debugPrint('[NeteaseScraper] Exception: $e');
-      debugPrint('[NeteaseScraper] StackTrace: $st');
+      scraperDebug('[NeteaseScraper] Exception: $e');
+      scraperDebug('[NeteaseScraper] StackTrace: $st');
       rethrow;
     }
   }
@@ -322,8 +323,8 @@ class NeteaseScraper implements MusicScraper {
             },
           ));
 
-      debugPrint('[NeteaseScraper] Fallback API response status: ${response.statusCode}');
-      debugPrint('[NeteaseScraper] Fallback API response type: ${response.data.runtimeType}');
+      scraperDebug('[NeteaseScraper] Fallback API response status: ${response.statusCode}');
+      scraperDebug('[NeteaseScraper] Fallback API response type: ${response.data.runtimeType}');
 
       // 处理响应数据
       Map<String, dynamic> data;
@@ -342,7 +343,7 @@ class NeteaseScraper implements MusicScraper {
       }
 
       final code = data['code'] as int?;
-      debugPrint('[NeteaseScraper] Fallback API code: $code');
+      scraperDebug('[NeteaseScraper] Fallback API code: $code');
 
       if (code != null && code != 200) {
         return MusicScraperSearchResult.empty(type);
@@ -356,7 +357,7 @@ class NeteaseScraper implements MusicScraper {
       final songs = (result['songs'] as List?)?.whereType<Map<String, dynamic>>().toList() ?? [];
       final songCount = result['songCount'] as int? ?? 0;
 
-      debugPrint('[NeteaseScraper] Fallback API found ${songs.length} songs');
+      scraperDebug('[NeteaseScraper] Fallback API found ${songs.length} songs');
 
       final items = songs.map(_parseSong).toList();
 
@@ -368,7 +369,7 @@ class NeteaseScraper implements MusicScraper {
         totalResults: songCount,
       );
     } on DioException catch (e) {
-      debugPrint('[NeteaseScraper] Fallback API error: ${e.message}');
+      scraperDebug('[NeteaseScraper] Fallback API error: ${e.message}');
       throw _handleDioError(e);
     }
   }

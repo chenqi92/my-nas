@@ -5,7 +5,7 @@
 >
 > 应用：**MyNAS — 跨平台 NAS 客户端**（Flutter）。本规格聚焦**桌面端**（macOS / Windows / Linux），信息架构与移动端共享，只在布局密度与系统集成上差异化。
 >
-> 技术现状（理解约束用，别因此锁死视觉）：Flutter + Riverpod + go_router（`StatefulShellRoute.indexedStack`，8 branch）+ Hive/SQLite/flutter_secure_storage + media_kit/just_audio/ffmpeg + dlna_dart + shelf（投屏与本地媒体代理）+ tflite/ML Kit（人脸）。
+> 技术现状（理解约束用，别因此锁死视觉）：Flutter + Riverpod + go_router（`StatefulShellRoute.indexedStack`，14 branch）+ Hive/SQLite/flutter_secure_storage + media_kit/just_audio/ffmpeg + dlna_dart + shelf（投屏与本地媒体代理）+ tflite/ML Kit（人脸）。
 >
 > **必须同时给出两套并列方案**（app 内 `uiStyleProvider` 真实开关 `classic` / `glass`）：
 > - **A 套 · 玻璃版 (Glass)**：`BackdropFilter` 模糊 + 半透明 + tint + 可选描边发光（`GlassStyle`），按平台优化（macOS 原生级模糊 / Windows 降级 / Linux 视性能降级 / Web 禁用）。
@@ -28,7 +28,7 @@ MyNAS 是一个跨平台（macOS/Windows/Linux/iOS/Android）的 **NAS 全能客
 
 ## 1. 顶层信息架构
 
-容器是用户进入功能的入口；如何呈现（NavigationRail / 侧栏 / Tab / Toolbar / 多窗口 / 浮层）由设计师决定。当前为 `StatefulShellRoute.indexedStack` 的 8 个并行 branch（各自维护导航栈，双击 tab 回首屏）。
+容器是用户进入功能的入口；如何呈现（NavigationRail / 侧栏 / Tab / Toolbar / 多窗口 / 浮层）由设计师决定。当前为 `StatefulShellRoute.indexedStack` 的 14 个并行 branch（各自维护导航栈，双击 tab 回首屏），顺序固定为 `home / video / live / music / photo / reading / mine / ops / download / transfer / sources / pt / nastool / files`（移动端底栏仅显示其中 video/music/photo/reading/mine 五项，其余为桌面工具区）。
 
 ### 1.1 一级入口（主导航，5 个）
 - **影视 Video**（`/video`）— 视频媒体库 + 播放器
@@ -73,7 +73,7 @@ MyNAS 是一个跨平台（macOS/Windows/Linux/iOS/Android）的 **NAS 全能客
 | SYS-04 | 后台任务（视频刮削 / 扫描；前台服务通知 + 实时进度；idle/running/paused/completed/error） | BackgroundTaskService | VID-SCR-* |
 | SYS-05 | macOS Spotlight 索引（视频/音乐/图书可被系统搜索，结果深链直达；启用后增量重索引） | SpotlightSettings | SYS-03 |
 | SYS-06 | Windows Jump List（右键任务栏快速跳各 tab） | JumpListController | §1.1 |
-| SYS-07 | 系统托盘 / 最小化到托盘（Windows/Linux） | tray | — |
+| SYS-07 | 系统托盘 / 最小化到托盘（Windows/Linux）【规划：未实现，无 tray 依赖/代码】 | tray | — |
 | SYS-08 | 全局 Toast/通知队列 | ToastService | 全模块 |
 | SYS-09 | 应用更新检查（启动静默 + 手动；非 iOS 下载更新；显示更新日志 + 立即更新） | UpdateService | SET-ABOUT |
 | SYS-10 | 剪贴板集成（复制视频/音乐/图书链接，长按/右键） | Clipboard | — |
@@ -140,7 +140,7 @@ MyNAS 是一个跨平台（macOS/Windows/Linux/iOS/Android）的 **NAS 全能客
 | SRC-T08 | FTP | host/21/user/pwd/encryption/path | 明文/隐式TLS(990)/显式TLS、匿名 |
 | SRC-T09 | NFS | host/2049/export/version | 【规划】Unix 权限，isSupported=false |
 | SRC-T10 | UPnP/DLNA 服务器 | host/port（自动发现） | 只读 SOAP Browse、直链流式 |
-| SRC-T11 | S3 兼容 | endpoint/access/secret/bucket | — |
+| SRC-T11 | S3 兼容 | endpoint/access/secret/bucket | 【规划：未实现，无 SourceType.s3/适配器】 |
 | SRC-T12 | 本地存储 Local | 文件夹选择 | 移动端自动媒体库 |
 | SRC-T13 | Jellyfin | host/8096/SSL；user/pwd \| API Key \| Quick Connect | 虚拟库、转码(直连/转码)、库缓存 |
 | SRC-T14 | Emby | host/8096/SSL；user/pwd \| API Key | 虚拟库、转码 |
@@ -463,7 +463,7 @@ MyNAS 是一个跨平台（macOS/Windows/Linux/iOS/Android）的 **NAS 全能客
 | PT-03 | 种子详情（IMDB/豆瓣 ID、描述、标签） | detailUrl | — |
 | PT-04 | 分类列表 | PTCategory | — |
 | PT-05 | 用户信息（等级/上下传/分享率/魔力/邀请） | PTUserInfo | — |
-| PT-06 | 签到（跳浏览器）/ 传输统计（做种/下载/已完成/H&R）/ 做种统计 | PTTransferStats/Log | — |
+| PT-06 | 签到【规划：桌面页仅 plan 占位标签，未实现】/ 传输统计（做种/下载/已完成/H&R）/ 做种统计 | PTTransferStats/Log | — |
 | PT-07 | 免费/折扣标签（Free/2xFree/50%↓/2x↑ + 剩余免费时间） | promotionLabel | — |
 | PT-08 | **发送到下载器**（一键推送种子到 aria2/qBittorrent/Transmission） | send_to_downloader | ARIA/QBT/TRM-03 |
 | NT-01 | NAStool 连接 + 媒体库统计（电影/剧集/番剧数） | NasToolConnection/Stats | SRC-T20 |

@@ -44,7 +44,7 @@ linter:
     always_put_required_named_parameters_first: false
     avoid_bool_literals_in_conditional_expressions: true
     # 禁用：使用 AppError 工具类统一处理所有异常，catch 块会调用 AppError.handle()
-    # 进行错误分类和上报到 RabbitMQ。使用 on 子句可能漏掉某些错误类型
+    # 进行错误分类并写入本地日志。使用 on 子句可能漏掉某些错误类型
     avoid_catches_without_on_clauses: false
     avoid_catching_errors: true
     avoid_double_and_int_checks: true

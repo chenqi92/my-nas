@@ -55,6 +55,8 @@ final _filesNavigatorKey = GlobalKey<NavigatorState>(); // 桌面 文件浏览
 /// 引用。顺序必须与 `desktop_scaffold._routeForBranch` 完全一致：
 /// 0=home 1=video 2=live 3=music 4=photo 5=reading 6=mine 7=ops
 /// 8=download 9=transfer 10=sources 11=pt 12=nastool 13=files
+/// 顺序必须与 [AppBranch] 命名常量 / [branchRoutes] / 下方 `branches` 定义
+/// 完全一致（三者的单一事实来源是 `routes.dart`）。
 final branchNavigatorKeys = <GlobalKey<NavigatorState>>[
   _homeNavigatorKey,
   _videoNavigatorKey,

@@ -794,15 +794,13 @@ class SynologyApi {
         queryParameters: queryParams,
       );
 
-      // 记录完整请求 URL
-      logger.d('SynologyApi: 完整请求 URL => ${response.requestOptions.uri}');
+      // 不记录完整 URI（query 含 _sid 会话凭据，日志会落盘到 app.log）。
+      logger.d('SynologyApi: 请求 api=$api method=$method');
 
       final data = response.data;
-      logger.d('SynologyApi: 响应状态码 => ${response.statusCode}');
-      // 只在非 listFiles 调用时打印响应数据（避免大量数据）
-      if (method != 'list' || api != 'SYNO.FileStation.List') {
-        logger.d('SynologyApi: 响应数据 => $data');
-      }
+      // 不打印完整响应（登录响应含 sid），仅记录状态码与 success 标志。
+      logger.d('SynologyApi: 响应状态码 => ${response.statusCode}, '
+          'success=${data?['success']}');
 
       if (data == null) {
         logger.e('SynologyApi: 服务器返回空数据');

@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -90,8 +91,8 @@ class KugouScraper implements MusicScraper {
         searchQuery += ' $album';
       }
 
-      debugPrint('[KugouScraper] search: query=$searchQuery, page=$page, limit=$limit');
-      debugPrint('[KugouScraper] request URL: $_searchUrl');
+      scraperDebug('[KugouScraper] search: query=$searchQuery, page=$page, limit=$limit');
+      scraperDebug('[KugouScraper] request URL: $_searchUrl');
 
       final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
             _searchUrl,
@@ -103,42 +104,42 @@ class KugouScraper implements MusicScraper {
             },
           ));
 
-      debugPrint('[KugouScraper] response status: ${response.statusCode}');
-      debugPrint('[KugouScraper] response data type: ${response.data.runtimeType}');
-      debugPrint('[KugouScraper] response data: ${response.data}');
+      scraperDebug('[KugouScraper] response status: ${response.statusCode}');
+      scraperDebug('[KugouScraper] response data type: ${response.data.runtimeType}');
+      scraperDebug('[KugouScraper] response data: ${response.data}');
 
       // 处理响应数据 - 可能是 String 或 Map
       Map<String, dynamic> data;
       if (response.data == null) {
-        debugPrint('[KugouScraper] Response data is null');
+        scraperDebug('[KugouScraper] Response data is null');
         return MusicScraperSearchResult.empty(type);
       } else if (response.data is String) {
         // 服务器可能返回 JSON 字符串，需要手动解析
         try {
           data = json.decode(response.data as String) as Map<String, dynamic>;
-          debugPrint('[KugouScraper] Parsed JSON string to Map');
+          scraperDebug('[KugouScraper] Parsed JSON string to Map');
         } on FormatException catch (e) {
-          debugPrint('[KugouScraper] Failed to parse JSON: $e');
+          scraperDebug('[KugouScraper] Failed to parse JSON: $e');
           return MusicScraperSearchResult.empty(type);
         }
       } else if (response.data is Map<String, dynamic>) {
         data = response.data as Map<String, dynamic>;
       } else {
-        debugPrint('[KugouScraper] Invalid response data format: ${response.data.runtimeType}');
+        scraperDebug('[KugouScraper] Invalid response data format: ${response.data.runtimeType}');
         return MusicScraperSearchResult.empty(type);
       }
       final status = data['status'] as int?;
       final errcode = data['errcode'] as int?;
-      debugPrint('[KugouScraper] status: $status, errcode: $errcode');
+      scraperDebug('[KugouScraper] status: $status, errcode: $errcode');
 
       if (status != 1) {
-        debugPrint('[KugouScraper] API returned error status: $status, error: ${data['error']}');
+        scraperDebug('[KugouScraper] API returned error status: $status, error: ${data['error']}');
         return MusicScraperSearchResult.empty(type);
       }
 
       final dataSection = data['data'] as Map<String, dynamic>?;
       if (dataSection == null) {
-        debugPrint('[KugouScraper] No data section in response');
+        scraperDebug('[KugouScraper] No data section in response');
         return MusicScraperSearchResult.empty(type);
       }
 
@@ -148,7 +149,7 @@ class KugouScraper implements MusicScraper {
           [];
       final total = dataSection['total'] as int? ?? 0;
 
-      debugPrint('[KugouScraper] Found ${songs.length} songs, total: $total');
+      scraperDebug('[KugouScraper] Found ${songs.length} songs, total: $total');
 
       final items = songs.map(_parseSong).toList();
 
@@ -160,12 +161,12 @@ class KugouScraper implements MusicScraper {
         totalResults: total,
       );
     } on DioException catch (e) {
-      debugPrint('[KugouScraper] DioException: ${e.type}, message: ${e.message}');
-      debugPrint('[KugouScraper] Response: ${e.response?.data}');
+      scraperDebug('[KugouScraper] DioException: ${e.type}, message: ${e.message}');
+      scraperDebug('[KugouScraper] Response: ${e.response?.data}');
       throw _handleDioError(e);
     } on Exception catch (e, st) {
-      debugPrint('[KugouScraper] Exception: $e');
-      debugPrint('[KugouScraper] StackTrace: $st');
+      scraperDebug('[KugouScraper] Exception: $e');
+      scraperDebug('[KugouScraper] StackTrace: $st');
       rethrow;
     }
   }
@@ -371,12 +372,12 @@ class KugouScraper implements MusicScraper {
     final requestUrl = e.requestOptions.uri.toString();
 
     // 记录详细日志
-    debugPrint('[KugouScraper] DioException: ${e.type}');
-    debugPrint('[KugouScraper] Request URL: $requestUrl');
-    debugPrint('[KugouScraper] Status: $statusCode $statusMessage');
-    debugPrint('[KugouScraper] Response: $responseData');
-    debugPrint('[KugouScraper] Error: ${e.error}');
-    debugPrint('[KugouScraper] Message: ${e.message}');
+    scraperDebug('[KugouScraper] DioException: ${e.type}');
+    scraperDebug('[KugouScraper] Request URL: $requestUrl');
+    scraperDebug('[KugouScraper] Status: $statusCode $statusMessage');
+    scraperDebug('[KugouScraper] Response: $responseData');
+    scraperDebug('[KugouScraper] Error: ${e.error}');
+    scraperDebug('[KugouScraper] Message: ${e.message}');
 
     if (statusCode == 429) {
       return MusicScraperRateLimitException(

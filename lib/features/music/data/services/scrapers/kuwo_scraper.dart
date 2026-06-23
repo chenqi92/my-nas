@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -88,7 +89,7 @@ class KuwoScraper implements MusicScraper {
         searchQuery += ' $album';
       }
 
-      debugPrint(
+      scraperDebug(
           '[KuwoScraper] search: query=$searchQuery, page=$page, limit=$limit');
 
       final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
@@ -105,11 +106,11 @@ class KuwoScraper implements MusicScraper {
             },
           ));
 
-      debugPrint('[KuwoScraper] response status: ${response.statusCode}');
+      scraperDebug('[KuwoScraper] response status: ${response.statusCode}');
 
       // 处理响应数据 - 移动端 API 返回格式不同
       if (response.data == null) {
-        debugPrint('[KuwoScraper] Response data is null');
+        scraperDebug('[KuwoScraper] Response data is null');
         return MusicScraperSearchResult.empty(type);
       }
 
@@ -118,11 +119,11 @@ class KuwoScraper implements MusicScraper {
       // 如果 Dio 已自动解析为 Map，直接使用
       if (response.data is Map<String, dynamic>) {
         data = response.data as Map<String, dynamic>;
-        debugPrint('[KuwoScraper] Response is Map, keys: ${data.keys.take(5).join(', ')}...');
+        scraperDebug('[KuwoScraper] Response is Map, keys: ${data.keys.take(5).join(', ')}...');
       } else if (response.data is String) {
         final responseStr = response.data as String;
         // 打印前200字符用于调试
-        debugPrint('[KuwoScraper] Response preview: ${responseStr.substring(0, responseStr.length > 200 ? 200 : responseStr.length)}');
+        scraperDebug('[KuwoScraper] Response preview: ${responseStr.substring(0, responseStr.length > 200 ? 200 : responseStr.length)}');
 
         // 尝试直接解析 JSON
         try {
@@ -141,18 +142,18 @@ class KuwoScraper implements MusicScraper {
           // 尝试提取 JSON 对象
           final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(jsonStr);
           if (jsonMatch == null) {
-            debugPrint('[KuwoScraper] Failed to extract JSON from response');
+            scraperDebug('[KuwoScraper] Failed to extract JSON from response');
             return MusicScraperSearchResult.empty(type);
           }
           try {
             data = json.decode(jsonMatch.group(0)!) as Map<String, dynamic>;
           } on FormatException catch (e) {
-            debugPrint('[KuwoScraper] Failed to parse JSON: $e');
+            scraperDebug('[KuwoScraper] Failed to parse JSON: $e');
             return MusicScraperSearchResult.empty(type);
           }
         }
       } else {
-        debugPrint('[KuwoScraper] Invalid response type: ${response.data.runtimeType}');
+        scraperDebug('[KuwoScraper] Invalid response type: ${response.data.runtimeType}');
         return MusicScraperSearchResult.empty(type);
       }
 
@@ -161,7 +162,7 @@ class KuwoScraper implements MusicScraper {
       final songs = abslist?.whereType<Map<String, dynamic>>().toList() ?? [];
       final total = int.tryParse(data['TOTAL']?.toString() ?? '0') ?? 0;
 
-      debugPrint('[KuwoScraper] Found ${songs.length} songs, total: $total');
+      scraperDebug('[KuwoScraper] Found ${songs.length} songs, total: $total');
 
       final items = songs.map(_parseSong).toList();
 
@@ -173,11 +174,11 @@ class KuwoScraper implements MusicScraper {
         totalResults: total,
       );
     } on DioException catch (e) {
-      debugPrint('[KuwoScraper] DioException: ${e.type}, message: ${e.message}');
+      scraperDebug('[KuwoScraper] DioException: ${e.type}, message: ${e.message}');
       throw _handleDioError(e);
     } on Exception catch (e, st) {
-      debugPrint('[KuwoScraper] Exception: $e');
-      debugPrint('[KuwoScraper] StackTrace: $st');
+      scraperDebug('[KuwoScraper] Exception: $e');
+      scraperDebug('[KuwoScraper] StackTrace: $st');
       rethrow;
     }
   }
@@ -254,7 +255,7 @@ class KuwoScraper implements MusicScraper {
       final songName = parts.length > 1 ? parts[1] : '';
       final artistName = parts.length > 2 ? parts[2] : '';
 
-      debugPrint('[KuwoScraper] getLyrics: rid=$rid');
+      scraperDebug('[KuwoScraper] getLyrics: rid=$rid');
 
       final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
             _lyricUrl,
@@ -282,7 +283,7 @@ class KuwoScraper implements MusicScraper {
 
       final status = data['status'] as int?;
       if (status != 200) {
-        debugPrint('[KuwoScraper] Lyrics API error: status=$status');
+        scraperDebug('[KuwoScraper] Lyrics API error: status=$status');
         return null;
       }
 
@@ -322,7 +323,7 @@ class KuwoScraper implements MusicScraper {
         artist: artistName,
       );
     } on DioException catch (e) {
-      debugPrint('[KuwoScraper] getLyrics DioException: ${e.message}');
+      scraperDebug('[KuwoScraper] getLyrics DioException: ${e.message}');
       throw _handleDioError(e);
     }
   }
@@ -412,9 +413,9 @@ class KuwoScraper implements MusicScraper {
   MusicScraperException _handleDioError(DioException e) {
     final statusCode = e.response?.statusCode;
 
-    debugPrint('[KuwoScraper] DioException: ${e.type}');
-    debugPrint('[KuwoScraper] Status: $statusCode');
-    debugPrint('[KuwoScraper] Error: ${e.error}');
+    scraperDebug('[KuwoScraper] DioException: ${e.type}');
+    scraperDebug('[KuwoScraper] Status: $statusCode');
+    scraperDebug('[KuwoScraper] Error: ${e.error}');
 
     if (statusCode == 429) {
       return MusicScraperRateLimitException(

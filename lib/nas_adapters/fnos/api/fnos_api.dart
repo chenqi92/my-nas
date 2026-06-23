@@ -159,7 +159,8 @@ class FnOSApi {
           ),
         );
 
-        logger.d('FnOSApi: 登录响应 ($endpoint) => ${response.data}');
+        // 不记录 response.data：登录响应含 token，日志会落盘到 app.log。
+        logger.d('FnOSApi: 登录响应 ($endpoint) status=${response.statusCode}');
 
         final result = _parseLoginResponse(response.data);
         if (result is FnOSAuthSuccess) {

@@ -515,13 +515,11 @@ class _VideoScraperConfigSheet extends StatefulWidget {
 
 class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
   static const _tmdbCustomSentinel = '__custom__';
+  // 仅内置 TMDB 官方端点；第三方代理会把用户 API Key 路由到他人服务器，
+  // 不再硬编码（合规要求），需要代理的用户通过「自定义」选项自行填写。
   static const _tmdbPresetUrls = <String>{
     'https://api.themoviedb.org/3',
     'https://api.tmdb.org/3',
-    'https://tmdb.nastool.cn/3',
-    'https://tmdb.nastool.workers.dev/3',
-    'https://tmdb.cub.red/3',
-    'https://api.tmdb.cdn.kvxd.workers.dev/3',
   };
 
   final _apiKeyController = TextEditingController();
@@ -805,13 +803,11 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
   }
 
   Widget _buildTmdbApiUrlDropdown(bool isDark) {
+    // 仅 TMDB 官方端点 + 自定义。第三方代理不再内置（合规要求），
+    // 需要代理的用户选「自定义」自行填写地址。
     final options = [
       ('https://api.themoviedb.org/3', context.l10n.videoScraperTmdbOfficialLabel, context.l10n.videoScraperTmdbOfficialDesc),
       ('https://api.tmdb.org/3', context.l10n.videoScraperTmdbBackupLabel, 'api.tmdb.org'),
-      ('https://tmdb.nastool.cn/3', context.l10n.videoScraperNastoolLabel, context.l10n.videoScraperNastoolDesc),
-      ('https://tmdb.nastool.workers.dev/3', context.l10n.videoScraperWorkersLabel, 'tmdb.nastool.workers.dev'),
-      ('https://tmdb.cub.red/3', context.l10n.videoScraperCubRedLabel, 'tmdb.cub.red'),
-      ('https://api.tmdb.cdn.kvxd.workers.dev/3', 'KVXD Workers', 'api.tmdb.cdn.kvxd.workers.dev'),
       (_tmdbCustomSentinel, context.l10n.videoScraperCustomLabel, context.l10n.videoScraperCustomDesc),
     ];
 

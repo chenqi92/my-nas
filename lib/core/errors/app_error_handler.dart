@@ -11,11 +11,13 @@ import 'package:my_nas/core/utils/logger.dart';
 
 /// 统一错误处理工具类
 ///
-/// 提供统一的错误处理、上报和UI提示功能，确保错误处理的一致性和可追踪性。
+/// 提供统一的错误处理、本地日志记录和UI提示功能，确保错误处理的一致性和可追踪性。
+/// 注意：远程上报已于 2026-04 移除（避免客户端凭证泄露），所有方法仅写入本地
+/// 日志（控制台 + app.log），错误分类只用于决定日志级别（fatal/error/warn）。
 ///
 /// ## 使用方式
 ///
-/// ### 1. 基本错误处理（上报到服务器）
+/// ### 1. 基本错误处理（写入本地日志）
 /// ```dart
 /// try {
 ///   await someOperation();
@@ -33,7 +35,7 @@ import 'package:my_nas/core/utils/logger.dart';
 /// }
 /// ```
 ///
-/// ### 3. 安全执行（自动捕获并上报）
+/// ### 3. 安全执行（自动捕获并记录本地日志）
 /// ```dart
 /// final result = await AppError.guard(
 ///   () => fetchData(),
@@ -42,7 +44,7 @@ import 'package:my_nas/core/utils/logger.dart';
 /// );
 /// ```
 ///
-/// ### 4. 不需要上报的错误（仅本地日志）
+/// ### 4. 不需要追踪的错误（仅 debug 级本地日志）
 /// ```dart
 /// try {
 ///   await someOperation();
@@ -123,7 +125,7 @@ class AppError {
 
   /// 安全执行异步操作
   ///
-  /// 自动捕获异常并上报，返回结果或fallback值。
+  /// 自动捕获异常并写入本地日志，返回结果或fallback值。
   ///
   /// [operation] 要执行的异步操作
   /// [action] 操作描述
@@ -222,9 +224,10 @@ class AppError {
   // 错误分类和判断
   // ============================================================
 
-  /// 判断错误是否需要上报
+  /// 判断错误是否值得记录为错误级别日志
   ///
-  /// 返回 true 表示需要上报到服务器
+  /// 返回 true 表示按错误级别（logger.e/f）记录；false 表示降级为 debug/warn。
+  /// 历史上用于「是否上报到服务器」，远程上报移除后仅用于决定本地日志级别。
   static bool isReportable(Object error) {
     final category = _categorizeError(error);
 

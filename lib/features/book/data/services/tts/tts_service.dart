@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/tts/edge_tts_client.dart';
@@ -236,39 +237,32 @@ class TTSService {
       return;
     }
 
-    // 调试日志 - 使用 print 确保输出到控制台
-    // ignore: avoid_print
-    print('🔊 TTS.speak: engine=${_settings.engine.name}, edgeVoiceId=${_settings.selectedEdgeVoiceId}');
+    logger.d('TTS.speak: engine=${_settings.engine.name}, edgeVoiceId=${_settings.selectedEdgeVoiceId}');
 
     // 根据引擎设置选择 TTS 方式
     if (_settings.engine == TTSEngine.edge) {
-      // ignore: avoid_print
-      print('🔊 TTS: 使用 Edge TTS 朗读');
+      logger.d('TTS: 使用 Edge TTS 朗读');
       await _speakWithEdgeTTS(text);
     } else {
-      // ignore: avoid_print
-      print('🔊 TTS: 使用系统 TTS 朗读');
+      logger.d('TTS: 使用系统 TTS 朗读');
       await _tts.speak(text);
     }
   }
 
   /// 使用 Edge TTS 朗读
   Future<void> _speakWithEdgeTTS(String text) async {
-    // ignore: avoid_print
-    print('🔊 _speakWithEdgeTTS: 开始, voiceId=${_settings.selectedEdgeVoiceId}');
+    logger.d('_speakWithEdgeTTS: 开始, voiceId=${_settings.selectedEdgeVoiceId}');
     try {
       // 设置 Edge TTS 音色
       if (_settings.selectedEdgeVoiceId != null) {
         final voice = EdgeTTSVoices.getVoiceById(_settings.selectedEdgeVoiceId!);
         if (voice != null) {
           _edgeTts.setVoice(voice);
-          // ignore: avoid_print
-          print('🔊 _speakWithEdgeTTS: 设置音色 ${voice.name}');
+          logger.d('_speakWithEdgeTTS: 设置音色 ${voice.name}');
         }
       } else {
         _edgeTts.setVoice(EdgeTTSVoices.defaultVoice);
-        // ignore: avoid_print
-        print('🔊 _speakWithEdgeTTS: 使用默认音色');
+        logger.d('_speakWithEdgeTTS: 使用默认音色');
       }
 
       // 设置语速/音调/音量 (转换为 Edge TTS 范围)
@@ -280,35 +274,26 @@ class TTSService {
         ..onStart = () {
           _state = TTSPlayState.playing;
           _stateController.add(_state);
-          // ignore: avoid_print
-          print('🔊 EdgeTTS: onStart 回调');
+          logger.d('EdgeTTS: onStart 回调');
         }
         ..onComplete = () {
           _state = TTSPlayState.completed;
           _stateController.add(_state);
           _completionController.add(null);
-          // ignore: avoid_print
-          print('🔊 EdgeTTS: onComplete 回调');
+          logger.d('EdgeTTS: onComplete 回调');
         }
         ..onError = (error) {
-          // ignore: avoid_print
-          print('🔊 EdgeTTS: onError 回调 - $error');
+          logger.w('EdgeTTS: onError 回调 - $error');
           // 降级到系统 TTS
           _tts.speak(text);
         };
 
-      // ignore: avoid_print
-      print('🔊 _speakWithEdgeTTS: 调用 _edgeTts.speak()');
+      logger.d('_speakWithEdgeTTS: 调用 _edgeTts.speak()');
       await _edgeTts.speak(text);
-      // ignore: avoid_print
-      print('🔊 _speakWithEdgeTTS: _edgeTts.speak() 完成');
+      logger.d('_speakWithEdgeTTS: _edgeTts.speak() 完成');
     } catch (e, st) {
-      // 捕获所有错误，包括 Error 和 Exception
-      // ignore: avoid_print
-      print('🔊 _speakWithEdgeTTS: 捕获错误 - $e');
-      // ignore: avoid_print
-      print('🔊 Stack trace: $st');
-      // 网络错误时降级到系统 TTS
+      // 捕获所有错误（含 Error）：Edge TTS 失败属预期降级，记 debug 日志后转系统 TTS。
+      AppError.ignore(e, st, 'Edge TTS 朗读失败，降级到系统 TTS');
       await _tts.speak(text);
     }
   }
@@ -393,8 +378,7 @@ class TTSService {
 
   /// 更新设置
   Future<void> updateSettings(TTSSettings settings) async {
-    // ignore: avoid_print
-    print('🔊 TTSService.updateSettings: engine=${settings.engine.name}, edgeVoiceId=${settings.selectedEdgeVoiceId}');
+    logger.d('TTSService.updateSettings: engine=${settings.engine.name}, edgeVoiceId=${settings.selectedEdgeVoiceId}');
     _settings = settings;
     await _applySetting();
     await _settingsService.saveSettings(settings);

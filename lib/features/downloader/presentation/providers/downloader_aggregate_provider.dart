@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/features/aria2/presentation/providers/aria2_provider.dart';
 import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -172,8 +173,9 @@ final downloaderBootstrapProvider =
         default:
           break;
       }
-    } on Object {
+    } on Object catch (e, st) {
       // 单个客户端连接失败不影响其它客户端；UI 通过连接状态自行降级。
+      AppError.ignore(e, st, '下载器自动连接失败（${s.type.name}），UI 按连接状态降级');
     }
   }
 });

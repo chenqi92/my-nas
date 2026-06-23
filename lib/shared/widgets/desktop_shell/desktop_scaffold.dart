@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/services/tray_service.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
@@ -54,25 +57,6 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
 
   /// 首次拿到聚合任务时把当前已完成项纳入基线，避免历史完成在首帧全部弹出。
   bool _completedBaselineReady = false;
-
-  /// 与 14 branch 路由的对应（与 `app_router.dart` 的 branchNavigatorKeys
-  /// 顺序必须完全一致）。
-  static const _routeForBranch = <String>[
-    '/home', // 0
-    '/video', // 1
-    '/live', // 2
-    '/music', // 3
-    '/photo', // 4
-    '/reading', // 5
-    '/mine', // 6
-    '/ops', // 7
-    '/download', // 8
-    '/transfer', // 9
-    '/sources', // 10
-    '/pt', // 11
-    '/nastool', // 12
-    '/files', // 13
-  ];
 
   bool _commandsRegistered = false;
 
@@ -201,6 +185,36 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     });
   }
 
+  /// 幂等启动系统托盘（仅桌面，移动/Web 内部 no-op），并把播放控制回调绑定到
+  /// 当前 musicPlayerController。每帧 build 调用安全（TrayService 内部去重）。
+  void _ensureTray(AppLocalizations l) {
+    AppError.fireAndForget(
+      TrayService.instance.ensureStarted(
+        TrayLabels(
+          show: l.trayMenuShow,
+          playPause: l.trayMenuPlayPause,
+          previous: l.trayMenuPrevious,
+          next: l.trayMenuNext,
+          exit: l.trayMenuExit,
+          tooltip: l.trayTooltip,
+        ),
+        onPlayPause: () => AppError.fireAndForget(
+          ref.read(musicPlayerControllerProvider.notifier).playOrPause(),
+          action: 'trayPlayPause',
+        ),
+        onPrevious: () => AppError.fireAndForget(
+          ref.read(musicPlayerControllerProvider.notifier).playPrevious(),
+          action: 'trayPrevious',
+        ),
+        onNext: () => AppError.fireAndForget(
+          ref.read(musicPlayerControllerProvider.notifier).playNext(),
+          action: 'trayNext',
+        ),
+      ),
+      action: 'trayEnsureStarted',
+    );
+  }
+
   bool get _hasOverlay => _cmdkOpen || _activityOpen || _appearanceOpen;
 
   void _closeOverlays() {
@@ -229,7 +243,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     if (s != null) {
       ref.read(desktopSpaceProvider.notifier).set(s);
     }
-    final idx = _routeForBranch.indexOf(route);
+    // branchRoutes（routes.dart）是 branch 顺序的单一事实来源。
+    final idx = branchRoutes.indexOf(route);
     if (idx >= 0 && idx < widget.navigationShell.route.branches.length) {
       widget.navigationShell.goBranch(
         idx,
@@ -246,6 +261,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     _registerCommands(l);
+    _ensureTray(l);
     final persistedSpace = ref.watch(desktopSpaceProvider);
     final hasMusic = ref.watch(currentMusicProvider) != null;
     final ambientOn = ref.watch(dynamicAmbientProvider);

@@ -240,8 +240,8 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       // 然后尝试自动重连
       await ref.read(activeConnectionsProvider.notifier).autoConnectAll();
       logger.d('MyNasApp: 连接状态已刷新');
-    } on Exception catch (e) {
-      logger.w('MyNasApp: 恢复连接失败: $e');
+    } on Exception catch (e, st) {
+      AppError.handle(e, st, 'resumeBackgroundConnection');
     }
 
     // 仅在移动平台检查后台服务状态

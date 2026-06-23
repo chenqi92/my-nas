@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -90,7 +91,7 @@ class MiguScraper implements MusicScraper {
         searchQuery += ' $album';
       }
 
-      debugPrint(
+      scraperDebug(
           '[MiguScraper] search: query=$searchQuery, page=$page, limit=$limit');
 
       final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
@@ -103,11 +104,11 @@ class MiguScraper implements MusicScraper {
             },
           ));
 
-      debugPrint('[MiguScraper] response status: ${response.statusCode}');
+      scraperDebug('[MiguScraper] response status: ${response.statusCode}');
 
       // 处理响应数据
       if (response.data == null) {
-        debugPrint('[MiguScraper] Response data is null');
+        scraperDebug('[MiguScraper] Response data is null');
         return MusicScraperSearchResult.empty(type);
       }
 
@@ -116,26 +117,26 @@ class MiguScraper implements MusicScraper {
       // 如果 Dio 已自动解析为 Map，直接使用
       if (response.data is Map<String, dynamic>) {
         data = response.data as Map<String, dynamic>;
-        debugPrint('[MiguScraper] Response is Map, keys: ${data.keys.take(5).join(', ')}...');
+        scraperDebug('[MiguScraper] Response is Map, keys: ${data.keys.take(5).join(', ')}...');
       } else if (response.data is String) {
         final responseStr = response.data as String;
         // 打印前200字符用于调试
-        debugPrint('[MiguScraper] Response preview: ${responseStr.substring(0, responseStr.length > 200 ? 200 : responseStr.length)}');
+        scraperDebug('[MiguScraper] Response preview: ${responseStr.substring(0, responseStr.length > 200 ? 200 : responseStr.length)}');
 
         try {
           data = json.decode(responseStr) as Map<String, dynamic>;
         } on FormatException catch (e) {
-          debugPrint('[MiguScraper] Failed to parse JSON: $e');
+          scraperDebug('[MiguScraper] Failed to parse JSON: $e');
           return MusicScraperSearchResult.empty(type);
         }
       } else {
-        debugPrint('[MiguScraper] Invalid response type: ${response.data.runtimeType}');
+        scraperDebug('[MiguScraper] Invalid response type: ${response.data.runtimeType}');
         return MusicScraperSearchResult.empty(type);
       }
 
       final success = data['success'] as bool? ?? false;
       if (!success) {
-        debugPrint('[MiguScraper] API returned error');
+        scraperDebug('[MiguScraper] API returned error');
         return MusicScraperSearchResult.empty(type);
       }
 
@@ -145,7 +146,7 @@ class MiguScraper implements MusicScraper {
           [];
       final total = int.tryParse(data['pgt']?.toString() ?? '0') ?? 0;
 
-      debugPrint('[MiguScraper] Found ${songs.length} songs, totalPages: $total');
+      scraperDebug('[MiguScraper] Found ${songs.length} songs, totalPages: $total');
 
       final items = songs.map(_parseSong).toList();
 
@@ -157,11 +158,11 @@ class MiguScraper implements MusicScraper {
         totalResults: total * limit,
       );
     } on DioException catch (e) {
-      debugPrint('[MiguScraper] DioException: ${e.type}, message: ${e.message}');
+      scraperDebug('[MiguScraper] DioException: ${e.type}, message: ${e.message}');
       throw _handleDioError(e);
     } on Exception catch (e, st) {
-      debugPrint('[MiguScraper] Exception: $e');
-      debugPrint('[MiguScraper] StackTrace: $st');
+      scraperDebug('[MiguScraper] Exception: $e');
+      scraperDebug('[MiguScraper] StackTrace: $st');
       rethrow;
     }
   }
@@ -226,7 +227,7 @@ class MiguScraper implements MusicScraper {
       final songName = parts.length > 1 ? parts[1] : '';
       final artistName = parts.length > 2 ? parts[2] : '';
 
-      debugPrint('[MiguScraper] getLyrics: copyrightId=$copyrightId');
+      scraperDebug('[MiguScraper] getLyrics: copyrightId=$copyrightId');
 
       final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
             _lyricUrl,
@@ -254,7 +255,7 @@ class MiguScraper implements MusicScraper {
 
       final returnCode = data['returnCode'] as String?;
       if (returnCode != '000000') {
-        debugPrint('[MiguScraper] Lyrics API error: returnCode=$returnCode');
+        scraperDebug('[MiguScraper] Lyrics API error: returnCode=$returnCode');
         return null;
       }
 
@@ -270,7 +271,7 @@ class MiguScraper implements MusicScraper {
         artist: artistName,
       );
     } on DioException catch (e) {
-      debugPrint('[MiguScraper] getLyrics DioException: ${e.message}');
+      scraperDebug('[MiguScraper] getLyrics DioException: ${e.message}');
       throw _handleDioError(e);
     }
   }
@@ -331,9 +332,9 @@ class MiguScraper implements MusicScraper {
   MusicScraperException _handleDioError(DioException e) {
     final statusCode = e.response?.statusCode;
 
-    debugPrint('[MiguScraper] DioException: ${e.type}');
-    debugPrint('[MiguScraper] Status: $statusCode');
-    debugPrint('[MiguScraper] Error: ${e.error}');
+    scraperDebug('[MiguScraper] DioException: ${e.type}');
+    scraperDebug('[MiguScraper] Status: $statusCode');
+    scraperDebug('[MiguScraper] Error: ${e.error}');
 
     if (statusCode == 429) {
       return MusicScraperRateLimitException(

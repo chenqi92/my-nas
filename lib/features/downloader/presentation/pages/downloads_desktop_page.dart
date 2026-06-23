@@ -9,6 +9,8 @@ import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_p
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/transmission/presentation/providers/transmission_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
+import 'package:my_nas/shared/providers/download_provider.dart';
+import 'package:my_nas/shared/services/download_service.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -16,6 +18,7 @@ import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 import 'package:my_nas/shared/widgets/atoms/status_pill.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/dialogs/add_download_dialog.dart';
+import 'package:my_nas/shared/widgets/download_manager_sheet.dart';
 
 /// 桌面端「下载器」——聚合 aria2 / qBittorrent / Transmission 真实任务。
 ///
@@ -121,6 +124,15 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
     final clients = ref.watch(downloaderClientsProvider);
     final throughput = ref.watch(downloaderThroughputProvider);
     final allTasks = ref.watch(aggregatedDownloadTasksProvider);
+    // 直连 HTTP 下载（DownloadService）任务，独立于下载器聚合，桌面端通过
+    // 「下载管理」入口统一管理（文件/相册/书/笔记/漫画都可能创建这类任务）。
+    final directTasks = ref.watch(downloadTasksProvider).valueOrNull ?? const [];
+    final directActive = directTasks
+        .where((task) =>
+            task.status == DownloadStatus.downloading ||
+            task.status == DownloadStatus.pending ||
+            task.status == DownloadStatus.paused)
+        .length;
 
     if (_client != null &&
         !clients.any((c) => c.source.displayName == _client)) {
@@ -146,14 +158,28 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
       maxWidth: 1500,
       actions: Padding(
         padding: const EdgeInsets.only(left: 12),
-        child: FilledButton.icon(
-          onPressed: () => showDialog<void>(
-            context: context,
-            barrierColor: Colors.black.withValues(alpha: 0.5),
-            builder: (_) => const AddDownloadDialog(),
-          ),
-          icon: const Icon(Icons.add_rounded, size: 16),
-          label: Text(l.dlPageNewTask),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 直连 HTTP 下载的统一管理入口（复用已有 DownloadManagerSheet）。
+            OutlinedButton.icon(
+              onPressed: () => showDownloadManager(context),
+              icon: const Icon(Icons.cloud_download_outlined, size: 16),
+              label: Text(directActive > 0
+                  ? '${l.downloadManagerTitle} ($directActive)'
+                  : l.downloadManagerTitle),
+            ),
+            const SizedBox(width: 8),
+            FilledButton.icon(
+              onPressed: () => showDialog<void>(
+                context: context,
+                barrierColor: Colors.black.withValues(alpha: 0.5),
+                builder: (_) => const AddDownloadDialog(),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 16),
+              label: Text(l.dlPageNewTask),
+            ),
+          ],
         ),
       ),
       body: Column(

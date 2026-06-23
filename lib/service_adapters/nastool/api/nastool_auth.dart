@@ -61,9 +61,9 @@ class NasToolAuth {
     try {
       final url = Uri.parse('$baseUrl/api/v1/user/login');
 
-      // 调试日志：登录请求
+      // 调试日志：登录请求（不记录用户名，日志会落盘到 app.log）
       if (kDebugMode) {
-        logger.d('[NasToolAuth] Login Request - URL: $url, Username: $username');
+        logger.d('[NasToolAuth] Login Request - host: ${url.host}');
       }
 
       final response = await http.post(

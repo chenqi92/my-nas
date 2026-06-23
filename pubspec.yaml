@@ -166,6 +166,7 @@ dependencies:
   # Picture in Picture
   floating: ^6.0.0 # Android/iOS PiP support
   window_manager: ^0.4.3 # Desktop window control
+  tray_manager: ^0.3.2 # System tray icon + menu (Windows/Linux/macOS)
 
   # Desktop Lyrics & Menu Bar
   desktop_multi_window: ^0.2.0 # Multi-window support for desktop lyrics (macOS only)

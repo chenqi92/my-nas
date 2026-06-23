@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/features/transfer/data/services/transfer_service.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -29,11 +29,17 @@ class BackgroundTransferGuard with WindowListener {
 
   @override
   void onWindowMinimize() {
-    unawaited(TransferService().pauseActiveForBackground());
+    AppError.fireAndForget(
+      TransferService().pauseActiveForBackground(),
+      action: 'pauseTransferForBackground',
+    );
   }
 
   @override
   void onWindowRestore() {
-    unawaited(TransferService().resumeFromBackground());
+    AppError.fireAndForget(
+      TransferService().resumeFromBackground(),
+      action: 'resumeTransferFromBackground',
+    );
   }
 }

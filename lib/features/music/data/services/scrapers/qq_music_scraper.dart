@@ -7,6 +7,7 @@ import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -400,12 +401,12 @@ class QQMusicScraper implements MusicScraper {
     final requestUrl = e.requestOptions.uri.toString();
 
     // 记录详细日志
-    debugPrint('[QQMusicScraper] DioException: ${e.type}');
-    debugPrint('[QQMusicScraper] Request URL: $requestUrl');
-    debugPrint('[QQMusicScraper] Status: $statusCode $statusMessage');
-    debugPrint('[QQMusicScraper] Response: $responseData');
-    debugPrint('[QQMusicScraper] Error: ${e.error}');
-    debugPrint('[QQMusicScraper] Message: ${e.message}');
+    scraperDebug('[QQMusicScraper] DioException: ${e.type}');
+    scraperDebug('[QQMusicScraper] Request URL: $requestUrl');
+    scraperDebug('[QQMusicScraper] Status: $statusCode $statusMessage');
+    scraperDebug('[QQMusicScraper] Response: $responseData');
+    scraperDebug('[QQMusicScraper] Error: ${e.error}');
+    scraperDebug('[QQMusicScraper] Message: ${e.message}');
 
     if (statusCode == 401 || statusCode == 403) {
       return MusicScraperAuthException(

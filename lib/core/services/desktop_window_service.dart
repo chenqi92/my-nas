@@ -1,8 +1,8 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:window_manager/window_manager.dart';
@@ -121,26 +121,26 @@ class DesktopWindowService with WindowListener {
 
   @override
   void onWindowResized() {
-    unawaited(_persist());
+    AppError.fireAndForget(_persist(), action: 'persistWindowBounds');
   }
 
   @override
   void onWindowMoved() {
-    unawaited(_persist());
+    AppError.fireAndForget(_persist(), action: 'persistWindowBounds');
   }
 
   @override
   void onWindowMaximize() {
-    unawaited(_persist());
+    AppError.fireAndForget(_persist(), action: 'persistWindowBounds');
   }
 
   @override
   void onWindowUnmaximize() {
-    unawaited(_persist());
+    AppError.fireAndForget(_persist(), action: 'persistWindowBounds');
   }
 
   @override
   void onWindowClose() {
-    unawaited(_persist());
+    AppError.fireAndForget(_persist(), action: 'persistWindowBounds');
   }
 }

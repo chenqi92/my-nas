@@ -175,14 +175,15 @@ class CastMediaProxyServer {
       createdAt: DateTime.now(),
     );
 
-    logger.i('注册媒体流: token=$token, path=$path');
+    // 不记录 token：它是 LAN 代理的访问凭据，日志会落盘到 app.log。
+    logger.i('注册媒体流: path=$path');
     return token;
   }
 
   /// 注销媒体流
   void unregisterStream(String token) {
     _streams.remove(token);
-    logger.i('注销媒体流: token=$token');
+    logger.i('注销媒体流，剩余 ${_streams.length} 个');
   }
 
   /// 获取媒体流 URL

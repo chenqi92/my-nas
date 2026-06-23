@@ -139,12 +139,14 @@ class ScraperFormConfig {
                 placeholder: '输入 TMDB API Key',
                 helpText: '在 TMDB 网站的 API 设置页面获取',
               ),
+              // 仅内置 TMDB 官方端点；第三方代理会把用户 API Key 路由到他人
+              // 服务器，不再硬编码（合规要求），需要代理的用户用「自定义」填写。
               ScraperFormField(
                 key: 'apiUrl',
                 label: 'API 服务器',
                 type: ScraperFormFieldType.dropdown,
                 defaultValue: 'https://api.themoviedb.org/3',
-                helpText: '选择 API 服务器，国内可使用代理服务器',
+                helpText: '选择 TMDB 官方端点，或填写自定义代理地址',
                 required: false,
                 options: [
                   ScraperFormOption(
@@ -156,16 +158,6 @@ class ScraperFormConfig {
                     value: 'https://api.tmdb.org/3',
                     label: 'TMDB 备用',
                     description: 'api.tmdb.org',
-                  ),
-                  ScraperFormOption(
-                    value: 'https://tmdb.nastool.cn/3',
-                    label: 'NasTool 代理',
-                    description: 'tmdb.nastool.cn（国内推荐）',
-                  ),
-                  ScraperFormOption(
-                    value: 'https://tmdb.nastool.workers.dev/3',
-                    label: 'Workers 代理',
-                    description: 'tmdb.nastool.workers.dev',
                   ),
                 ],
               ),

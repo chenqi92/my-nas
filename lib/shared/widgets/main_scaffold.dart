@@ -118,7 +118,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.movie_filter_rounded,
       labelKey: 'mainNavTabFilms',
       route: Routes.video,
-      branchIndex: 1,
+      branchIndex: AppBranch.video,
       sfSymbol: 'film',
     ),
     _Destination(
@@ -126,7 +126,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.library_music_rounded,
       labelKey: 'mainNavTabMusic',
       route: Routes.music,
-      branchIndex: 3,
+      branchIndex: AppBranch.music,
       sfSymbol: 'music.note.list',
     ),
     _Destination(
@@ -134,7 +134,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.photo_album_rounded,
       labelKey: 'mainNavTabPhotos',
       route: Routes.photo,
-      branchIndex: 4,
+      branchIndex: AppBranch.photo,
       sfSymbol: 'photo.on.rectangle',
     ),
     _Destination(
@@ -142,7 +142,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.menu_book_rounded,
       labelKey: 'mainNavTabReading',
       route: Routes.reading,
-      branchIndex: 5,
+      branchIndex: AppBranch.reading,
       sfSymbol: 'book',
     ),
     _Destination(
@@ -150,7 +150,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       selectedIcon: Icons.account_circle_rounded,
       labelKey: 'mainNavTabMe',
       route: Routes.mine,
-      branchIndex: 6,
+      branchIndex: AppBranch.mine,
       sfSymbol: 'person.circle',
     ),
   ];
@@ -347,7 +347,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       },
       onGotoSettings: () {
         // 跳到 mine tab 并强制清空该 branch 栈，让用户看到设置主页。
-        widget.navigationShell.goBranch(4, initialLocation: true);
+        widget.navigationShell.goBranch(AppBranch.mine, initialLocation: true);
       },
       onEscape: () {
         // Esc 优先 pop 当前 branch navigator（覆盖 push 的详情/工具页），

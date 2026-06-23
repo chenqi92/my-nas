@@ -502,7 +502,7 @@ class _MobileBottomSheet extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter,
+          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
           child: content,
         ),
       );
@@ -642,7 +642,7 @@ class _DesktopDialog extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: glassStyle.blurFilter,
+          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
           child: content,
         ),
       );
@@ -769,7 +769,7 @@ class _DesktopSidePanel extends ConsumerWidget {
     if (glassStyle.needsBlur) {
       content = ClipRect(
         child: BackdropFilter(
-          filter: glassStyle.blurFilter,
+          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
           child: content,
         ),
       );
