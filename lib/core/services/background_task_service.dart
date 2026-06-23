@@ -3,9 +3,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 后台任务类型
@@ -365,7 +365,7 @@ class MediaLibraryTaskHandler extends TaskHandler {
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    debugPrint('MediaLibraryTaskHandler: 任务开始 starter=$starter');
+    debugLog('MediaLibraryTaskHandler: 任务开始 starter=$starter');
   }
 
   @override
@@ -400,7 +400,7 @@ class MediaLibraryTaskHandler extends TaskHandler {
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
-    debugPrint('MediaLibraryTaskHandler: 任务结束 isTimeout=$isTimeout');
+    debugLog('MediaLibraryTaskHandler: 任务结束 isTimeout=$isTimeout');
   }
 
   @override

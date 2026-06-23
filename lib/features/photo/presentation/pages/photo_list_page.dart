@@ -11,6 +11,7 @@ import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/media_scan_progress_service.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_library_cache_service.dart';
@@ -3018,7 +3019,7 @@ class _PhotoGridItem extends ConsumerWidget {
               // 选择模式下，点击切换选择状态
               ref.read(photoListProvider.notifier).togglePhotoSelection(photo.path);
             } else {
-              debugPrint('PhotoGridItem: onTap called for ${photo.name}');
+              debugLog('PhotoGridItem: onTap called for ${photo.name}');
               _openPhotoViewer(context, ref);
             }
           },
@@ -3244,27 +3245,27 @@ class _PhotoGridItem extends ConsumerWidget {
     );
 
   Future<void> _openPhotoViewer(BuildContext context, WidgetRef ref) async {
-    debugPrint('PhotoViewer: _openPhotoViewer called');
-    debugPrint('PhotoViewer: photo.sourceId = ${photo.sourceId}');
+    debugLog('PhotoViewer: _openPhotoViewer called');
+    debugLog('PhotoViewer: photo.sourceId = ${photo.sourceId}');
 
     final connections = ref.read(activeConnectionsProvider);
-    debugPrint('PhotoViewer: connections count = ${connections.length}');
-    debugPrint('PhotoViewer: connections keys = ${connections.keys.toList()}');
+    debugLog('PhotoViewer: connections count = ${connections.length}');
+    debugLog('PhotoViewer: connections keys = ${connections.keys.toList()}');
 
     final connection = connections[photo.sourceId];
     if (connection == null) {
-      debugPrint('PhotoViewer: connection is null for sourceId=${photo.sourceId}');
+      debugLog('PhotoViewer: connection is null for sourceId=${photo.sourceId}');
       return;
     }
-    debugPrint('PhotoViewer: connection found');
+    debugLog('PhotoViewer: connection found');
 
     // 获取当前点击照片的原图 URL
     String currentUrl;
     try {
       currentUrl = await connection.adapter.fileSystem.getFileUrl(photo.path);
-      debugPrint('PhotoViewer: got currentUrl = $currentUrl');
+      debugLog('PhotoViewer: got currentUrl = $currentUrl');
     } on Exception catch (e) {
-      debugPrint('PhotoViewer: failed to get url: $e');
+      debugLog('PhotoViewer: failed to get url: $e');
       // 如果获取失败，留空，让查看器去获取
       currentUrl = '';
     }
@@ -3284,18 +3285,18 @@ class _PhotoGridItem extends ConsumerWidget {
         modifiedAt: p.modifiedTime,
       );
     }).toList();
-    debugPrint('PhotoViewer: photoItems count = ${photoItems.length}');
+    debugLog('PhotoViewer: photoItems count = ${photoItems.length}');
 
     if (!context.mounted) {
-      debugPrint('PhotoViewer: context not mounted');
+      debugLog('PhotoViewer: context not mounted');
       return;
     }
 
     // 使用 rootNavigatorKey 确保全屏显示，不受 ShellRoute 影响
     final navigator = rootNavigatorKey.currentState;
-    debugPrint('PhotoViewer: rootNavigatorKey.currentState = $navigator');
+    debugLog('PhotoViewer: rootNavigatorKey.currentState = $navigator');
     if (navigator == null) {
-      debugPrint('PhotoViewer: rootNavigatorKey.currentState is null, trying Navigator.of');
+      debugLog('PhotoViewer: rootNavigatorKey.currentState is null, trying Navigator.of');
       // 尝试使用 Navigator.of 作为后备方案
       if (context.mounted) {
         await Navigator.of(context, rootNavigator: true).push(
@@ -3309,7 +3310,7 @@ class _PhotoGridItem extends ConsumerWidget {
                 try {
                   return await conn.adapter.fileSystem.getFileUrl(path);
                 } on Exception catch (e) {
-                  debugPrint('PhotoViewer: 获取URL失败 path=$path, error=$e');
+                  debugLog('PhotoViewer: 获取URL失败 path=$path, error=$e');
                   return null;
                 }
               },
@@ -3332,7 +3333,7 @@ class _PhotoGridItem extends ConsumerWidget {
       return;
     }
 
-    debugPrint('PhotoViewer: pushing route');
+    debugLog('PhotoViewer: pushing route');
     await navigator.push(
       MaterialPageRoute<void>(
         builder: (ctx) => PhotoViewerPage(
@@ -3346,7 +3347,7 @@ class _PhotoGridItem extends ConsumerWidget {
             try {
               return await conn.adapter.fileSystem.getFileUrl(path);
             } on Exception catch (e) {
-              debugPrint('PhotoViewer: 获取URL失败 path=$path, error=$e');
+              debugLog('PhotoViewer: 获取URL失败 path=$path, error=$e');
               return null;
             }
           },
@@ -3365,6 +3366,6 @@ class _PhotoGridItem extends ConsumerWidget {
         ),
       ),
     );
-    debugPrint('PhotoViewer: route pushed successfully');
+    debugLog('PhotoViewer: route pushed successfully');
   }
 }

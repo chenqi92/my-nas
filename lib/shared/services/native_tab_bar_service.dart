@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 
 /// 原生 Tab Bar 服务
 ///
@@ -47,7 +48,7 @@ class NativeTabBarService {
   /// 由 MainScaffold 调用
   void setNativeTabBarEnabled(bool enabled) {
     _isNativeTabBarEnabled = enabled;
-    debugPrint('NativeTabBarService: Native tab bar enabled: $enabled');
+    debugLog('NativeTabBarService: Native tab bar enabled: $enabled');
   }
 
   /// 初始化服务
@@ -60,7 +61,7 @@ class NativeTabBarService {
     _channel!.setMethodCallHandler(_handleMethodCall);
     _isInitialized = true;
 
-    debugPrint('NativeTabBarService: Initialized');
+    debugLog('NativeTabBarService: Initialized');
   }
 
   /// 处理来自原生的方法调用
@@ -71,13 +72,13 @@ class NativeTabBarService {
         final index = args['index'] as int;
         final route = args['route'] as String;
 
-        debugPrint('NativeTabBarService: Tab selected - index: $index, route: $route');
+        debugLog('NativeTabBarService: Tab selected - index: $index, route: $route');
         _tabSelectedController.add(TabSelectedEvent(index: index, route: route));
         return null;
 
       case 'onThemeChanged':
         final isDark = call.arguments as bool;
-        debugPrint('NativeTabBarService: Theme changed - isDark: $isDark');
+        debugLog('NativeTabBarService: Theme changed - isDark: $isDark');
         _themeChangedController.add(isDark);
         return null;
 
@@ -156,7 +157,7 @@ class NativeTabBarService {
     // 经典模式下不操作原生 Tab Bar
     // 显示时需要检查是否启用，隐藏时总是允许（以防万一）
     if (visible && !_isNativeTabBarEnabled) {
-      debugPrint('NativeTabBarService: Ignoring setTabBarVisible(true) - native tab bar not enabled');
+      debugLog('NativeTabBarService: Ignoring setTabBarVisible(true) - native tab bar not enabled');
       return;
     }
 

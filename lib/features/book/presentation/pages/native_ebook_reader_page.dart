@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
@@ -339,7 +340,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
       paragraphs,
       onParagraphChanged: (paragraphIndex) {
         // TTS 段落变化时的回调（可用于滚动到对应位置）
-        debugPrint('TTS: 当前段落 $paragraphIndex');
+        debugLog('TTS: 当前段落 $paragraphIndex');
       },
       onAllComplete: () {
         // 朗读完成，检查是否自动播放下一页

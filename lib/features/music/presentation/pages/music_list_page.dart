@@ -17,6 +17,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/media_scan_progress_service.dart';
 import 'package:my_nas/core/utils/background_task_pool.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/core/utils/grid_helper.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
@@ -2209,21 +2210,21 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
 
   /// 音乐菜单选择处理
   void _handleMusicMenuSelection(String value) {
-    debugPrint('_handleMusicMenuSelection: called with value: $value, mounted: $mounted');
+    debugLog('_handleMusicMenuSelection: called with value: $value, mounted: $mounted');
     if (!mounted) return;
     switch (value) {
       case 'layout':
-        debugPrint('_handleMusicMenuSelection: showing home layout sheet');
+        debugLog('_handleMusicMenuSelection: showing home layout sheet');
         showHomeLayoutSheet(context);
       case 'library':
-        debugPrint('_handleMusicMenuSelection: navigating to media library');
+        debugLog('_handleMusicMenuSelection: navigating to media library');
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (context) => const MediaLibraryPage(),
           ),
         );
       case 'sources':
-        debugPrint('_handleMusicMenuSelection: navigating to sources');
+        debugLog('_handleMusicMenuSelection: navigating to sources');
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (context) => const SourcesPage(),

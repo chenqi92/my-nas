@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/features/music/data/services/live_activity_service.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
@@ -154,8 +155,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
         final sourceName = result.source.displayName;
         sourceStats[sourceName] = result.items.length;
       }
-      debugPrint('[ManualScraper] 搜索结果统计: $sourceStats, 总计: ${allItems.length}');
-      debugPrint('[ManualScraper] 当前音乐时长: ${_musicDurationMs}ms (${widget.music.duration})');
+      debugLog('[ManualScraper] 搜索结果统计: $sourceStats, 总计: ${allItems.length}');
+      debugLog('[ManualScraper] 当前音乐时长: ${_musicDurationMs}ms (${widget.music.duration})');
 
       // 获取刮削源优先级映射
       final sources = await manager.getSources();
@@ -173,7 +174,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
           final diff = e.durationMs != null ? (e.durationMs! - _musicDurationMs).abs() : 999999999;
           return '${e.source.displayName}:${e.durationMs ?? 0}ms(diff=$diff)';
         }).join(', ');
-        debugPrint('[ManualScraper] 排序后前10: $first10');
+        debugLog('[ManualScraper] 排序后前10: $first10');
       }
 
       setState(() {

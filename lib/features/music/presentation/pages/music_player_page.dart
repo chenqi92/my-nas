@@ -9,6 +9,7 @@ import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/theme/dynamic_accent_provider.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/presentation/providers/music_favorites_provider.dart';
@@ -77,7 +78,7 @@ class MusicPlayerPage extends ConsumerStatefulWidget {
       );
     } on Exception catch (e) {
       // 导航失败时记录错误但不抛出异常
-      debugPrint('MusicPlayerPage.open: 导航失败 - $e');
+      debugLog('MusicPlayerPage.open: 导航失败 - $e');
     } finally {
       _isNavigating = false;
     }

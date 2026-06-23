@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 import 'package:path/path.dart' as p;
 
@@ -32,9 +32,9 @@ class FingerprintServiceDesktop implements FingerprintService {
     _fpcalcPath = _findFpcalc();
     _available = _fpcalcPath != null;
     if (_available) {
-      debugPrint('fpcalc found at: $_fpcalcPath');
+      debugLog('fpcalc found at: $_fpcalcPath');
     } else {
-      debugPrint('fpcalc not found. Audio fingerprinting will be unavailable.');
+      debugLog('fpcalc not found. Audio fingerprinting will be unavailable.');
     }
   }
 

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/features/book/data/services/native_online_paginator.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
 import 'package:my_nas/features/book/presentation/providers/book_search_provider.dart';
@@ -125,7 +126,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
         if (mounted) _paginateContent();
       });
     } catch (e, st) {
-      debugPrint('[阅读器] 加载异常: $e\n$st');
+      debugLog('[阅读器] 加载异常: $e\n$st');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -224,7 +225,7 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
     await ttsNotifier.speakParagraphs(
       paragraphs,
       onParagraphChanged: (paragraphIndex) {
-        debugPrint('TTS: 当前段落 $paragraphIndex');
+        debugLog('TTS: 当前段落 $paragraphIndex');
       },
       onAllComplete: () {
         final settings = ref.read(ttsProvider).settings;

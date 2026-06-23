@@ -2,10 +2,10 @@
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_service.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_voice.dart';
@@ -175,7 +175,7 @@ class TTSNotifier extends StateNotifier<TTSState> {
     _onAllComplete = onAllComplete;
     _onParagraphChanged = onParagraphChanged;
 
-    debugPrint('TTS speakParagraphs: 设置 ${paragraphs.length} 段, 起始索引 $_currentParagraphIndex');
+    debugLog('TTS speakParagraphs: 设置 ${paragraphs.length} 段, 起始索引 $_currentParagraphIndex');
 
     state = state.copyWith(
       currentParagraphIndex: _currentParagraphIndex,
@@ -237,9 +237,9 @@ class TTSNotifier extends StateNotifier<TTSState> {
 
   /// 上一段
   Future<void> previousParagraph() async {
-    debugPrint('TTS previousParagraph: index=$_currentParagraphIndex, total=${_paragraphs.length}');
+    debugLog('TTS previousParagraph: index=$_currentParagraphIndex, total=${_paragraphs.length}');
     if (_paragraphs.isEmpty) {
-      debugPrint('TTS previousParagraph: _paragraphs is empty!');
+      debugLog('TTS previousParagraph: _paragraphs is empty!');
       return;
     }
     if (_currentParagraphIndex > 0) {
@@ -250,15 +250,15 @@ class TTSNotifier extends StateNotifier<TTSState> {
       _onParagraphChanged?.call(_currentParagraphIndex);
       await _speakCurrentParagraph();
     } else {
-      debugPrint('TTS previousParagraph: already at first paragraph');
+      debugLog('TTS previousParagraph: already at first paragraph');
     }
   }
 
   /// 下一段
   Future<void> nextParagraph() async {
-    debugPrint('TTS nextParagraph: index=$_currentParagraphIndex, total=${_paragraphs.length}');
+    debugLog('TTS nextParagraph: index=$_currentParagraphIndex, total=${_paragraphs.length}');
     if (_paragraphs.isEmpty) {
-      debugPrint('TTS nextParagraph: _paragraphs is empty!');
+      debugLog('TTS nextParagraph: _paragraphs is empty!');
       return;
     }
     if (_currentParagraphIndex < _paragraphs.length - 1) {
@@ -269,7 +269,7 @@ class TTSNotifier extends StateNotifier<TTSState> {
       _onParagraphChanged?.call(_currentParagraphIndex);
       await _speakCurrentParagraph();
     } else {
-      debugPrint('TTS nextParagraph: already at last paragraph');
+      debugLog('TTS nextParagraph: already at last paragraph');
     }
   }
 

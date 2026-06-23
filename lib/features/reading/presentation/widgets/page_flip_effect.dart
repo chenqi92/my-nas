@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 
 /// 翻页效果模式
 enum PageFlipMode {
@@ -131,7 +132,7 @@ class _PageFlipEffectState extends State<PageFlipEffect>
 
     if (shouldComplete && direction != null) {
       if (kDebugMode) {
-        debugPrint('[PageFlip] Animation complete, triggering ${direction == FlipDirection.forward ? 'nextPage' : 'prevPage'}');
+        debugLog('[PageFlip] Animation complete, triggering ${direction == FlipDirection.forward ? 'nextPage' : 'prevPage'}');
       }
       // 先重置状态
       _reset();
@@ -143,7 +144,7 @@ class _PageFlipEffectState extends State<PageFlipEffect>
       }
     } else {
       if (kDebugMode) {
-        debugPrint('[PageFlip] Animation complete, cancelled');
+        debugLog('[PageFlip] Animation complete, cancelled');
       }
       _reset();
     }
@@ -162,7 +163,7 @@ class _PageFlipEffectState extends State<PageFlipEffect>
     if (!widget.enabled || _isAnimating) return;
     _dragStart = details.localPosition;
     if (kDebugMode) {
-      debugPrint('[PageFlip] onDragStart: ${details.localPosition}');
+      debugLog('[PageFlip] onDragStart: ${details.localPosition}');
     }
   }
 
@@ -196,7 +197,7 @@ class _PageFlipEffectState extends State<PageFlipEffect>
     _animationStartProgress = _dragProgress;
 
     if (kDebugMode) {
-      debugPrint('[PageFlip] onDragEnd: direction=$_direction, progress=$_dragProgress, shouldComplete=$_shouldComplete');
+      debugLog('[PageFlip] onDragEnd: direction=$_direction, progress=$_dragProgress, shouldComplete=$_shouldComplete');
     }
 
     _controller.forward(from: 0);
@@ -222,7 +223,7 @@ class _PageFlipEffectState extends State<PageFlipEffect>
     if (_isAnimating || _direction != null) return;
 
     if (kDebugMode) {
-      debugPrint('[PageFlip] triggerTapFlip: $direction');
+      debugLog('[PageFlip] triggerTapFlip: $direction');
     }
 
     _direction = direction;

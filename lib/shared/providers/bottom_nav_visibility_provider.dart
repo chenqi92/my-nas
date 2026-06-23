@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/utils/debug_log.dart';
 
 /// 底部导航栏可见性 Provider
 ///
@@ -43,7 +43,7 @@ class BottomNavVisibilityNotifier extends StateNotifier<bool> {
   void hide() {
     _hideRequestCount++;
     _scheduleUpdate();
-    debugPrint('BottomNavVisibility: hide() called, count=$_hideRequestCount');
+    debugLog('BottomNavVisibility: hide() called, count=$_hideRequestCount');
   }
 
   /// 显示底部导航栏
@@ -53,7 +53,7 @@ class BottomNavVisibilityNotifier extends StateNotifier<bool> {
     if (_hideRequestCount > 0) {
       _hideRequestCount--;
     }
-    debugPrint('BottomNavVisibility: show() called, count=$_hideRequestCount');
+    debugLog('BottomNavVisibility: show() called, count=$_hideRequestCount');
     _scheduleUpdate();
   }
 
@@ -80,7 +80,7 @@ class BottomNavVisibilityNotifier extends StateNotifier<bool> {
     final shouldBeVisible = _hideRequestCount <= 0;
     if (state != shouldBeVisible) {
       state = shouldBeVisible;
-      debugPrint('BottomNavVisibility: state changed to $state');
+      debugLog('BottomNavVisibility: state changed to $state');
     }
   }
 
@@ -92,7 +92,7 @@ class BottomNavVisibilityNotifier extends StateNotifier<bool> {
     if (mounted) {
       state = true;
     }
-    debugPrint('BottomNavVisibility: reset');
+    debugLog('BottomNavVisibility: reset');
   }
 
   /// 设置可见性（直接设置，强制更新）
@@ -107,7 +107,7 @@ class BottomNavVisibilityNotifier extends StateNotifier<bool> {
     } else {
       _hideRequestCount = 1;
     }
-    debugPrint('BottomNavVisibility: setVisible($visible) called, count=$_hideRequestCount');
+    debugLog('BottomNavVisibility: setVisible($visible) called, count=$_hideRequestCount');
     // 清除待处理标志，确保 _scheduleUpdate() 能够执行
     // 这样即使之前有待处理的更新，也能正确安排新的更新
     _pendingUpdate = false;
