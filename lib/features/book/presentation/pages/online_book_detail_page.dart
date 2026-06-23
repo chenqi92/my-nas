@@ -369,7 +369,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
       if (mounted) {
         setState(() => _isInShelf = true);
         // 刷新书架 Provider 状态
-        unawaited(ref.read(onlineBookShelfProvider.notifier).onBookAdded());
+        AppError.fireAndForget(ref.read(onlineBookShelfProvider.notifier).onBookAdded());
         context.showToast(context.l10n.bookDetailAddedToShelf(_displayName));
         logger.d('[在线书架] 已刷新 Provider 并显示 toast');
       }
@@ -392,7 +392,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     if (mounted) {
       setState(() => _isInShelf = false);
       // 刷新书架 Provider 状态
-      unawaited(ref.read(onlineBookShelfProvider.notifier).onBookRemoved());
+      AppError.fireAndForget(ref.read(onlineBookShelfProvider.notifier).onBookRemoved());
       context.showToast(context.l10n.bookDetailRemovedFromShelf);
     }
   }
@@ -404,7 +404,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
         await OnlineBookShelfService.instance.addBook(widget.book);
         if (mounted) {
           setState(() => _isInShelf = true);
-          unawaited(ref.read(onlineBookShelfProvider.notifier).onBookAdded());
+          AppError.fireAndForget(ref.read(onlineBookShelfProvider.notifier).onBookAdded());
         }
       } catch (e) {
         logger.w('加入书架失败，继续阅读', e);

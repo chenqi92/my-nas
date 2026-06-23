@@ -1,6 +1,5 @@
 // ignore_for_file: unused_element
 
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -268,7 +267,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
           source: fullSource,
         );
         if (mounted) {
-          unawaited(Navigator.of(context).push(
+          AppError.fireAndForget(Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (context) => OnlineBookDetailPage(book: book),
             ),
@@ -364,7 +363,7 @@ class _ReadingPageState extends ConsumerState<ReadingPage> {
               Navigator.of(context).pop();
               try {
                 await OnlineBookShelfService.instance.removeBook(item.id);
-                unawaited(ref.read(onlineBookShelfProvider.notifier).onBookRemoved());
+                AppError.fireAndForget(ref.read(onlineBookShelfProvider.notifier).onBookRemoved());
                 if (mounted) {
                   this.context.showSuccessToast(context.l10n.readingDeleteBookRemoveSuccess);
                 }

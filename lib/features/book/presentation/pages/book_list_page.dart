@@ -1981,7 +1981,7 @@ class _BookGridItemState extends ConsumerState<_BookGridItem> {
       final url = await connection.adapter.fileSystem.getFileUrl(book.filePath);
       final service = ref.read(downloadServiceProvider);
       final task = await service.addTask(url: url, fileName: book.fileName);
-      unawaited(service.startDownload(task.id));
+      AppError.fireAndForget(service.startDownload(task.id));
       if (!context.mounted) return;
       final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(

@@ -9,6 +9,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
@@ -737,7 +738,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
           await connection.adapter.fileSystem.getFileUrl(node.path);
       final service = ref.read(downloadServiceProvider);
       final task = await service.addTask(url: url, fileName: node.name);
-      unawaited(service.startDownload(task.id));
+      AppError.fireAndForget(service.startDownload(task.id));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAdded(node.name))),
@@ -2079,7 +2080,7 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
           await connection.adapter.fileSystem.getFileUrl(node.path);
       final service = ref.read(downloadServiceProvider);
       final task = await service.addTask(url: url, fileName: node.name);
-      unawaited(service.startDownload(task.id));
+      AppError.fireAndForget(service.startDownload(task.id));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAdded(node.name))),

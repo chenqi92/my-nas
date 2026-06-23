@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -1775,7 +1776,7 @@ subtitle: Text(context.l10n.nastoolAdvancedRssInterval(t.interval ?? 0)),
                       onPressed: () async {
                         final articles = await ref.read(nastoolActionsProvider(widget.sourceId)).previewRssTask(t.id);
                         if (context.mounted) {
-                          unawaited(showDialog<void>(context: context, builder: (_) => AlertDialog(
+                          AppError.fireAndForget(showDialog<void>(context: context, builder: (_) => AlertDialog(
                             title: Text(context.l10n.nastoolRssPreviewTitle(t.name)),
                             content: SizedBox(
                               width: double.maxFinite,

@@ -931,9 +931,12 @@ Map<String, dynamic>? _readMetadataInIsolate(String filePath) {
     // 文件没有元数据标签
     return null;
   } catch (e) {
-    // 捕获所有异常，防止 Isolate 崩溃
-    // ignore: avoid_print
-    print('MusicMetadataService: Isolate 中元数据提取异常: $e');
+    // 捕获所有异常，防止 Isolate 崩溃。Isolate 内无法用主 isolate 的 file
+    // logger，仅 debug 构建 print，release 不输出。
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print('MusicMetadataService: Isolate 中元数据提取异常: $e');
+    }
     return null;
   }
 }
@@ -962,8 +965,11 @@ Map<String, dynamic>? _decryptNcmInIsolate(Uint8List ncmData) {
       'coverData': result.coverData?.toList(),
     };
   } catch (e) {
-    // ignore: avoid_print
-    print('MusicMetadataService: Isolate 中 NCM 解密异常: $e');
+    // Isolate 内无法用主 isolate 的 file logger，仅 debug 构建 print。
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print('MusicMetadataService: Isolate 中 NCM 解密异常: $e');
+    }
     return null;
   }
 }

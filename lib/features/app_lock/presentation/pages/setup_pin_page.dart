@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/features/app_lock/presentation/providers/app_lock_provider.dart';
 import 'package:my_nas/features/app_lock/presentation/widgets/pin_keypad.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
@@ -76,7 +77,7 @@ class _PinSetupViewState extends ConsumerState<PinSetupView> {
     if (_currentInput.length >= _minLength) {
       // 输够最小长度后不自动提交；用户可以继续输入直到 6 位或手动确认。
       // 等待 800ms 后如果还停在当前长度则视为确认。
-      unawaited(_maybeAutoCommit(_currentInput.length));
+      AppError.fireAndForget(_maybeAutoCommit(_currentInput.length));
     }
   }
 
@@ -90,14 +91,14 @@ class _PinSetupViewState extends ConsumerState<PinSetupView> {
 
   Future<void> _maybeAutoCommit(int snapshotLength) async {
     if (snapshotLength == _maxLength) {
-      unawaited(_commit());
+      AppError.fireAndForget(_commit());
       return;
     }
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
     if (_currentInput.length == snapshotLength &&
         _currentInput.length >= _minLength) {
-      unawaited(_commit());
+      AppError.fireAndForget(_commit());
     }
   }
 

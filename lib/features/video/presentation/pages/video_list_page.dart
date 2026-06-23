@@ -6471,7 +6471,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
 
     // 经典模式使用 Flutter 底部弹框
     final cs = Theme.of(context).colorScheme;
-    unawaited(showAdaptiveModalSheet<void>(
+    AppError.fireAndForget(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: cs.surfaceContainer,
       shape: const RoundedRectangleBorder(
@@ -6640,7 +6640,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
 
     // 经典模式使用 Flutter 底部弹框
     final cs = Theme.of(context).colorScheme;
-    unawaited(showAdaptiveModalSheet<void>(
+    AppError.fireAndForget(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: cs.surfaceContainer,
       shape: const RoundedRectangleBorder(
@@ -7433,14 +7433,14 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
             _selectedGenre = genre;
             _selectedYear = year;
           });
-          unawaited(_resetAndReload());
+          AppError.fireAndForget(_resetAndReload());
         }
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    unawaited(showAdaptiveModalSheet<void>(
+    AppError.fireAndForget(showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -7764,13 +7764,13 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
 
       if (selected != null && selected != _sortOption) {
         setState(() => _sortOption = selected);
-        unawaited(_resetAndReload());
+        AppError.fireAndForget(_resetAndReload());
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    unawaited(showAdaptiveModalSheet<void>(
+    AppError.fireAndForget(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -8309,14 +8309,14 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
             _selectedGenre = genre;
             _selectedYear = year;
           });
-          unawaited(_resetAndReload());
+          AppError.fireAndForget(_resetAndReload());
         }
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    unawaited(showAdaptiveModalSheet<void>(
+    AppError.fireAndForget(showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -8361,13 +8361,13 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
 
       if (selected != null && selected != _sortOption) {
         setState(() => _sortOption = selected);
-        unawaited(_resetAndReload());
+        AppError.fireAndForget(_resetAndReload());
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    unawaited(showAdaptiveModalSheet<void>(
+    AppError.fireAndForget(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -8812,13 +8812,13 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
 
       if (result != null && result != _sortOption) {
         setState(() => _sortOption = result);
-        unawaited(_resetAndReload());
+        AppError.fireAndForget(_resetAndReload());
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    unawaited(showAdaptiveModalSheet<void>(
+    AppError.fireAndForget(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(
@@ -10332,13 +10332,13 @@ class _FilteredVideosPaginatedPageState
 
       if (selected != null && selected != _sortOption) {
         setState(() => _sortOption = selected);
-        unawaited(_resetAndReload());
+        AppError.fireAndForget(_resetAndReload());
       }
       return;
     }
 
     // 经典模式使用 Flutter 底部弹框
-    unawaited(showAdaptiveModalSheet<void>(
+    AppError.fireAndForget(showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => DecoratedBox(

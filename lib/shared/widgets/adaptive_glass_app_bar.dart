@@ -2420,9 +2420,9 @@ class _GlassSearchBarState extends State<GlassSearchBar>
           _isFocused = focused;
         });
         if (focused) {
-          unawaited(_animationController.forward());
+          AppError.fireAndForget(_animationController.forward());
         } else {
-          unawaited(_animationController.reverse());
+          AppError.fireAndForget(_animationController.reverse());
         }
     }
     return null;

@@ -1203,7 +1203,7 @@ class _ComicCard extends ConsumerWidget {
         url: url,
         fileName: comic.folderName,
       );
-      unawaited(service.startDownload(task.id));
+      AppError.fireAndForget(service.startDownload(task.id));
       if (!context.mounted) return;
       final l = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(

@@ -3188,7 +3188,7 @@ class _PhotoGridItem extends ConsumerWidget {
       final url = await connection.adapter.fileSystem.getFileUrl(photo.path);
       final service = ref.read(downloadServiceProvider);
       final task = await service.addTask(url: url, fileName: photo.name);
-      unawaited(service.startDownload(task.id));
+      AppError.fireAndForget(service.startDownload(task.id));
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l.photoDownloadAdded(photo.name))),

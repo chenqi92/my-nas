@@ -5722,7 +5722,7 @@ class _ArtistCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    unawaited(Navigator.push(
+    AppError.fireAndForget(Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
@@ -6074,7 +6074,7 @@ class _AlbumCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    unawaited(showAdaptiveModalSheet<void>(
+    AppError.fireAndForget(showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
@@ -6409,7 +6409,7 @@ class _FolderCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    unawaited(Navigator.push(
+    AppError.fireAndForget(Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
@@ -6693,7 +6693,7 @@ class _GenreCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    unawaited(Navigator.push(
+    AppError.fireAndForget(Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(
@@ -7029,7 +7029,7 @@ class _YearCardFromDb extends ConsumerWidget {
         .toList();
 
     if (!context.mounted) return;
-    unawaited(Navigator.push(
+    AppError.fireAndForget(Navigator.push(
       context,
       MaterialPageRoute<void>(
         builder: (_) => CategoryDetailPage(

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/features/app_lock/presentation/providers/app_lock_provider.dart';
 import 'package:my_nas/features/app_lock/presentation/widgets/pin_keypad.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
@@ -33,7 +34,7 @@ class _UnlockPageState extends ConsumerState<UnlockPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(_maybeAutoTriggerBiometric());
+      AppError.fireAndForget(_maybeAutoTriggerBiometric());
     });
     _countdownTicker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
@@ -62,7 +63,7 @@ class _UnlockPageState extends ConsumerState<UnlockPage> {
       _wrongPin = false;
     });
     if (_input.length >= 4) {
-      unawaited(_trySubmit());
+      AppError.fireAndForget(_trySubmit());
     }
   }
 

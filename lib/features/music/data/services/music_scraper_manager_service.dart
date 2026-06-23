@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/data/services/music_scraper_factory.dart';
+import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -496,32 +496,32 @@ class MusicScraperManagerService {
     final sources = await getSources();
     final result = <(MusicScraperSourceEntity, MusicScraper)>[];
 
-    debugPrint('[MusicScraperManager] 所有源: ${sources.map((s) => '${s.type.name}(enabled=${s.isEnabled},configured=${s.isConfigured})').join(', ')}');
+    scraperDebug('[MusicScraperManager] 所有源: ${sources.map((s) => '${s.type.name}(enabled=${s.isEnabled},configured=${s.isConfigured})').join(', ')}');
 
     for (final source in sources) {
       if (!source.isEnabled) {
-        debugPrint('[MusicScraperManager] ${source.type.name}: 跳过(未启用)');
+        scraperDebug('[MusicScraperManager] ${source.type.name}: 跳过(未启用)');
         continue;
       }
       if (!source.isConfigured) {
-        debugPrint('[MusicScraperManager] ${source.type.name}: 跳过(未配置)');
+        scraperDebug('[MusicScraperManager] ${source.type.name}: 跳过(未配置)');
         continue;
       }
       if (!MusicScraperFactory.isImplemented(source.type)) {
-        debugPrint('[MusicScraperManager] ${source.type.name}: 跳过(未实现)');
+        scraperDebug('[MusicScraperManager] ${source.type.name}: 跳过(未实现)');
         continue;
       }
 
       final scraper = await getScraper(source.id);
       if (scraper != null) {
         result.add((source, scraper));
-        debugPrint('[MusicScraperManager] ${source.type.name}: 已加载');
+        scraperDebug('[MusicScraperManager] ${source.type.name}: 已加载');
       } else {
-        debugPrint('[MusicScraperManager] ${source.type.name}: 创建失败');
+        scraperDebug('[MusicScraperManager] ${source.type.name}: 创建失败');
       }
     }
 
-    debugPrint('[MusicScraperManager] 可用刮削器: ${result.map((r) => r.$1.type.name).join(', ')}');
+    scraperDebug('[MusicScraperManager] 可用刮削器: ${result.map((r) => r.$1.type.name).join(', ')}');
     return result;
   }
 
@@ -537,29 +537,29 @@ class MusicScraperManagerService {
     final scrapers = await getEnabledScrapers();
     final results = <MusicScraperSearchResult>[];
 
-    debugPrint('[MusicScraperManager] search: query=$query, artist=$artist, album=$album');
-    debugPrint('[MusicScraperManager] Enabled scrapers: ${scrapers.map((s) => s.$1.type.name).join(', ')}');
+    scraperDebug('[MusicScraperManager] search: query=$query, artist=$artist, album=$album');
+    scraperDebug('[MusicScraperManager] Enabled scrapers: ${scrapers.map((s) => s.$1.type.name).join(', ')}');
 
     for (final (source, scraper) in scrapers) {
       try {
-        debugPrint('[MusicScraperManager] Searching with ${source.type.name}...');
+        scraperDebug('[MusicScraperManager] Searching with ${source.type.name}...');
         final result = await scraper.search(
           query,
           artist: artist,
           album: album,
           limit: limit,
         );
-        debugPrint('[MusicScraperManager] ${source.type.name}: found ${result.items.length} results');
+        scraperDebug('[MusicScraperManager] ${source.type.name}: found ${result.items.length} results');
         if (result.isNotEmpty) {
           results.add(result);
         }
       } on Exception catch (e, st) {
-        debugPrint('[MusicScraperManager] ${source.type.name} search failed: $e');
+        scraperDebug('[MusicScraperManager] ${source.type.name} search failed: $e');
         AppError.ignore(e, st, '搜索失败: ${source.type}');
       }
     }
 
-    debugPrint('[MusicScraperManager] Total results from ${results.length} sources');
+    scraperDebug('[MusicScraperManager] Total results from ${results.length} sources');
     return results;
   }
 
