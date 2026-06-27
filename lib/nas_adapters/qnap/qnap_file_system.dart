@@ -11,6 +11,15 @@ class QnapFileSystem implements NasFileSystem {
   final QnapApi _api;
 
   @override
+  bool get supportsWriteOperations => true;
+
+  @override
+  bool get supportsServerSideCopy => true;
+
+  @override
+  bool get supportsDirectFileUrl => true;
+
+  @override
   Future<List<FileItem>> listDirectory(String path) async {
     // 根目录返回共享文件夹列表
     if (path == '/' || path.isEmpty) {
@@ -111,18 +120,12 @@ class QnapFileSystem implements NasFileSystem {
 
   @override
   Future<void> copy(String sourcePath, String destPath) async {
-    await _api.copyFiles(
-      sourcePaths: [sourcePath],
-      destPath: destPath,
-    );
+    await _api.copyFiles(sourcePaths: [sourcePath], destPath: destPath);
   }
 
   @override
   Future<void> move(String sourcePath, String destPath) async {
-    await _api.moveFiles(
-      sourcePaths: [sourcePath],
-      destPath: destPath,
-    );
+    await _api.moveFiles(sourcePaths: [sourcePath], destPath: destPath);
   }
 
   @override
@@ -182,5 +185,8 @@ class QnapFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 }

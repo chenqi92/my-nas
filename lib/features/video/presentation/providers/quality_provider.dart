@@ -13,15 +13,14 @@ import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 /// 清晰度设置 Provider
 final qualitySettingsProvider =
     StateNotifierProvider<QualitySettingsNotifier, QualitySettings>(
-  (ref) => QualitySettingsNotifier(),
-);
+      (ref) => QualitySettingsNotifier(),
+    );
 
 /// 清晰度状态 Provider
 /// 注意：不使用 autoDispose，因为视频控制栏会隐藏/显示，
 /// 隐藏时如果使用 autoDispose 会导致 provider 被销毁，丢失初始化的画质状态
-final qualityStateProvider = StateNotifierProvider<QualityNotifier, QualityState>(
-  QualityNotifier.new,
-);
+final qualityStateProvider =
+    StateNotifierProvider<QualityNotifier, QualityState>(QualityNotifier.new);
 
 /// 清晰度设置
 class QualitySettings {
@@ -36,17 +35,17 @@ class QualitySettings {
   });
 
   factory QualitySettings.fromMap(Map<dynamic, dynamic> map) => QualitySettings(
-        defaultQuality: VideoQuality.values.firstWhere(
-          (q) => q.name == (map['defaultQuality'] as String?),
-          orElse: () => VideoQuality.original,
-        ),
-        enableAdaptiveSuggestion: map['enableAdaptiveSuggestion'] as bool? ?? true,
-        bufferThresholdSeconds: map['bufferThresholdSeconds'] as int? ?? 3,
-        rememberPerVideo: map['rememberPerVideo'] as bool? ?? true,
-        showUnsupportedHint: map['showUnsupportedHint'] as bool? ?? true,
-        allowServerTranscoding: map['allowServerTranscoding'] as bool? ?? true,
-        allowClientTranscoding: map['allowClientTranscoding'] as bool? ?? true,
-      );
+    defaultQuality: VideoQuality.values.firstWhere(
+      (q) => q.name == (map['defaultQuality'] as String?),
+      orElse: () => VideoQuality.original,
+    ),
+    enableAdaptiveSuggestion: map['enableAdaptiveSuggestion'] as bool? ?? true,
+    bufferThresholdSeconds: map['bufferThresholdSeconds'] as int? ?? 3,
+    rememberPerVideo: map['rememberPerVideo'] as bool? ?? true,
+    showUnsupportedHint: map['showUnsupportedHint'] as bool? ?? true,
+    allowServerTranscoding: map['allowServerTranscoding'] as bool? ?? true,
+    allowClientTranscoding: map['allowClientTranscoding'] as bool? ?? true,
+  );
 
   /// 默认清晰度
   final VideoQuality defaultQuality;
@@ -79,26 +78,29 @@ class QualitySettings {
     bool? showUnsupportedHint,
     bool? allowServerTranscoding,
     bool? allowClientTranscoding,
-  }) =>
-      QualitySettings(
-        defaultQuality: defaultQuality ?? this.defaultQuality,
-        enableAdaptiveSuggestion: enableAdaptiveSuggestion ?? this.enableAdaptiveSuggestion,
-        bufferThresholdSeconds: bufferThresholdSeconds ?? this.bufferThresholdSeconds,
-        rememberPerVideo: rememberPerVideo ?? this.rememberPerVideo,
-        showUnsupportedHint: showUnsupportedHint ?? this.showUnsupportedHint,
-        allowServerTranscoding: allowServerTranscoding ?? this.allowServerTranscoding,
-        allowClientTranscoding: allowClientTranscoding ?? this.allowClientTranscoding,
-      );
+  }) => QualitySettings(
+    defaultQuality: defaultQuality ?? this.defaultQuality,
+    enableAdaptiveSuggestion:
+        enableAdaptiveSuggestion ?? this.enableAdaptiveSuggestion,
+    bufferThresholdSeconds:
+        bufferThresholdSeconds ?? this.bufferThresholdSeconds,
+    rememberPerVideo: rememberPerVideo ?? this.rememberPerVideo,
+    showUnsupportedHint: showUnsupportedHint ?? this.showUnsupportedHint,
+    allowServerTranscoding:
+        allowServerTranscoding ?? this.allowServerTranscoding,
+    allowClientTranscoding:
+        allowClientTranscoding ?? this.allowClientTranscoding,
+  );
 
   Map<String, dynamic> toMap() => {
-        'defaultQuality': defaultQuality.name,
-        'enableAdaptiveSuggestion': enableAdaptiveSuggestion,
-        'bufferThresholdSeconds': bufferThresholdSeconds,
-        'rememberPerVideo': rememberPerVideo,
-        'showUnsupportedHint': showUnsupportedHint,
-        'allowServerTranscoding': allowServerTranscoding,
-        'allowClientTranscoding': allowClientTranscoding,
-      };
+    'defaultQuality': defaultQuality.name,
+    'enableAdaptiveSuggestion': enableAdaptiveSuggestion,
+    'bufferThresholdSeconds': bufferThresholdSeconds,
+    'rememberPerVideo': rememberPerVideo,
+    'showUnsupportedHint': showUnsupportedHint,
+    'allowServerTranscoding': allowServerTranscoding,
+    'allowClientTranscoding': allowClientTranscoding,
+  };
 }
 
 /// 清晰度设置管理
@@ -240,13 +242,16 @@ class QualityState {
   final Duration transcodingStartPosition;
 
   /// 是否支持清晰度切换
-  bool get canSwitchQuality => capability != TranscodingCapability.none;
+  bool get canSwitchQuality =>
+      capability != TranscodingCapability.none && availableQualities.length > 1;
 
   /// 是否使用服务端转码
-  bool get isServerSideTranscoding => capability == TranscodingCapability.serverSide;
+  bool get isServerSideTranscoding =>
+      capability == TranscodingCapability.serverSide;
 
   /// 是否使用客户端转码
-  bool get isClientSideTranscoding => capability == TranscodingCapability.clientSide;
+  bool get isClientSideTranscoding =>
+      capability == TranscodingCapability.clientSide;
 
   /// 是否正在使用转码流
   bool get isUsingTranscodedStream =>
@@ -265,21 +270,21 @@ class QualityState {
     String? transcodedStreamUrl,
     TranscodingSession? activeSession,
     Duration? transcodingStartPosition,
-  }) =>
-      QualityState(
-        currentQuality: currentQuality ?? this.currentQuality,
-        availableQualities: availableQualities ?? this.availableQualities,
-        capability: capability ?? this.capability,
-        isLoading: isLoading ?? this.isLoading,
-        showSuggestionDialog: showSuggestionDialog ?? this.showSuggestionDialog,
-        suggestedQuality: suggestedQuality ?? this.suggestedQuality,
-        errorMessage: errorMessage,
-        videoPath: videoPath ?? this.videoPath,
-        videoUrl: videoUrl ?? this.videoUrl,
-        transcodedStreamUrl: transcodedStreamUrl,
-        activeSession: activeSession,
-        transcodingStartPosition: transcodingStartPosition ?? this.transcodingStartPosition,
-      );
+  }) => QualityState(
+    currentQuality: currentQuality ?? this.currentQuality,
+    availableQualities: availableQualities ?? this.availableQualities,
+    capability: capability ?? this.capability,
+    isLoading: isLoading ?? this.isLoading,
+    showSuggestionDialog: showSuggestionDialog ?? this.showSuggestionDialog,
+    suggestedQuality: suggestedQuality ?? this.suggestedQuality,
+    errorMessage: errorMessage,
+    videoPath: videoPath ?? this.videoPath,
+    videoUrl: videoUrl ?? this.videoUrl,
+    transcodedStreamUrl: transcodedStreamUrl,
+    activeSession: activeSession,
+    transcodingStartPosition:
+        transcodingStartPosition ?? this.transcodingStartPosition,
+  );
 }
 
 /// 切换清晰度后的回调类型
@@ -290,7 +295,9 @@ class QualityNotifier extends StateNotifier<QualityState> {
   QualityNotifier(this._ref) : super(const QualityState()) {
     _capabilityService = TranscodingCapabilityService();
     _monitorService = QualityMonitorService(
-      bufferThresholdSeconds: _ref.read(qualitySettingsProvider).bufferThresholdSeconds,
+      bufferThresholdSeconds: _ref
+          .read(qualitySettingsProvider)
+          .bufferThresholdSeconds,
     );
 
     // 设置监控回调
@@ -345,11 +352,16 @@ class QualityNotifier extends StateNotifier<QualityState> {
     var capability = _capabilityService.getCapability(sourceType);
     logger.d('清晰度: 源类型=$sourceType, 初始能力=$capability');
 
-    // 服务端转码开关：关闭后服务端能力源降级为「仅原画」
-    if (capability == TranscodingCapability.serverSide &&
-        !settings.allowServerTranscoding) {
-      capability = TranscodingCapability.none;
-      logger.i('清晰度: 服务端转码已被用户关闭，降级为仅原画');
+    // 服务端转码只有在调用方传入真实服务时才开放，否则降级为「仅原画」。
+    if (capability == TranscodingCapability.serverSide) {
+      if (!settings.allowServerTranscoding) {
+        capability = TranscodingCapability.none;
+        logger.i('清晰度: 服务端转码已被用户关闭，降级为仅原画');
+      } else if (_transcodingService == null ||
+          !_transcodingService!.isAvailable) {
+        capability = TranscodingCapability.none;
+        logger.w('清晰度: 未接入可用的服务端转码服务，降级为仅原画');
+      }
     }
 
     // 客户端转码开关：关闭后客户端能力源降级为「仅原画」，跳过 FFmpeg 初始化
@@ -365,7 +377,9 @@ class QualityNotifier extends StateNotifier<QualityState> {
       _clientTranscodingService ??= ClientTranscodingService();
       logger.d('清晰度: 开始初始化客户端转码服务...');
       await _clientTranscodingService!.init();
-      logger.d('清晰度: 客户端转码服务初始化完成, isAvailable=${_clientTranscodingService!.isAvailable}');
+      logger.d(
+        '清晰度: 客户端转码服务初始化完成, isAvailable=${_clientTranscodingService!.isAvailable}',
+      );
 
       // 异步操作后再次检查是否已销毁
       if (!mounted) {
@@ -419,7 +433,8 @@ class QualityNotifier extends StateNotifier<QualityState> {
     );
 
     // 初始化质量监控（仅在启用自适应建议时）
-    if (settings.enableAdaptiveSuggestion && capability != TranscodingCapability.none) {
+    if (settings.enableAdaptiveSuggestion &&
+        capability != TranscodingCapability.none) {
       _monitorService.init(
         player: player,
         availableQualities: availableQualities,
@@ -427,8 +442,10 @@ class QualityNotifier extends StateNotifier<QualityState> {
       );
     }
 
-    logger.i('清晰度初始化: 能力=$capability, 当前=${defaultQuality.label}, '
-        '可用=${availableQualities.map((q) => q.label).join(",")}');
+    logger.i(
+      '清晰度初始化: 能力=$capability, 当前=${defaultQuality.label}, '
+      '可用=${availableQualities.map((q) => q.label).join(",")}',
+    );
   }
 
   /// 切换清晰度
@@ -458,7 +475,8 @@ class QualityNotifier extends StateNotifier<QualityState> {
       if (state.isServerSideTranscoding && _transcodingService != null) {
         // 服务端转码：从 NAS/媒体服务器获取转码流
         newStreamUrl = await _handleServerSideTranscoding(quality);
-      } else if (state.isClientSideTranscoding && _clientTranscodingService != null) {
+      } else if (state.isClientSideTranscoding &&
+          _clientTranscodingService != null) {
         // 客户端转码：使用本地 FFmpeg
         newStreamUrl = await _handleClientSideTranscoding(quality);
       }
@@ -466,6 +484,17 @@ class QualityNotifier extends StateNotifier<QualityState> {
       // 异步操作后检查是否已销毁
       if (!mounted) {
         logger.w('清晰度: 转码完成后 Notifier 已销毁');
+        return;
+      }
+
+      if (!quality.isOriginal && newStreamUrl == null) {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: appL10n.videoQualitySwitchFailed(
+            'No transcoded stream URL',
+          ),
+        );
+        logger.w('清晰度切换失败: 未获取到 ${quality.label} 的转码流');
         return;
       }
 
@@ -488,7 +517,9 @@ class QualityNotifier extends StateNotifier<QualityState> {
         showSuggestionDialog: false,
         suggestedQuality: null,
         transcodedStreamUrl: newStreamUrl,
-        transcodingStartPosition: newStreamUrl == null ? Duration.zero : null, // 原画时重置
+        transcodingStartPosition: newStreamUrl == null
+            ? Duration.zero
+            : null, // 原画时重置
       );
 
       // 更新监控服务
@@ -579,7 +610,9 @@ class QualityNotifier extends StateNotifier<QualityState> {
         activeSession: session,
         transcodingStartPosition: currentPosition, // 保存起始位置用于进度偏移
       );
-      logger.i('客户端转码: 转码完成，流 URL: $streamUrl，起始位置: ${currentPosition.inSeconds}s');
+      logger.i(
+        '客户端转码: 转码完成，流 URL: $streamUrl，起始位置: ${currentPosition.inSeconds}s',
+      );
       return streamUrl;
     }
 
@@ -625,10 +658,7 @@ class QualityNotifier extends StateNotifier<QualityState> {
       _monitorService.optOut();
     }
 
-    state = state.copyWith(
-      showSuggestionDialog: false,
-      suggestedQuality: null,
-    );
+    state = state.copyWith(showSuggestionDialog: false, suggestedQuality: null);
   }
 
   /// 清除错误信息
@@ -638,9 +668,7 @@ class QualityNotifier extends StateNotifier<QualityState> {
 
   /// 隐藏建议弹窗
   void hideSuggestionDialog() {
-    state = state.copyWith(
-      showSuggestionDialog: false,
-    );
+    state = state.copyWith(showSuggestionDialog: false);
   }
 
   /// 停止当前转码会话
@@ -650,12 +678,11 @@ class QualityNotifier extends StateNotifier<QualityState> {
         await _transcodingService!.stopSession(state.activeSession!.sessionId);
       }
       if (_clientTranscodingService != null) {
-        await _clientTranscodingService!.stopSession(state.activeSession!.sessionId);
+        await _clientTranscodingService!.stopSession(
+          state.activeSession!.sessionId,
+        );
       }
-      state = state.copyWith(
-        activeSession: null,
-        transcodedStreamUrl: null,
-      );
+      state = state.copyWith(activeSession: null, transcodedStreamUrl: null);
     }
   }
 

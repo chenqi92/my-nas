@@ -15,10 +15,8 @@ final _logger = Logger();
 
 /// PT 站点 API 基类
 abstract class PTSiteApi {
-  PTSiteApi({
-    required this.source,
-    http.Client? client,
-  }) : _client = client ?? http.Client();
+  PTSiteApi({required this.source, http.Client? client})
+    : _client = client ?? http.Client();
 
   final SourceEntity source;
   final http.Client _client;
@@ -26,13 +24,18 @@ abstract class PTSiteApi {
   /// 获取基础 URL
   String get baseUrl {
     // 如果 host 已经包含协议，解析并使用其 scheme 和 host
-    if (source.host.startsWith('http://') || source.host.startsWith('https://')) {
+    if (source.host.startsWith('http://') ||
+        source.host.startsWith('https://')) {
       final uri = Uri.parse(source.host);
-      final port = source.port == 443 || source.port == 80 ? '' : ':${source.port}';
+      final port = source.port == 443 || source.port == 80
+          ? ''
+          : ':${source.port}';
       return '${uri.scheme}://${uri.host}$port';
     }
     final protocol = source.useSsl ? 'https' : 'http';
-    final port = source.port == 443 || source.port == 80 ? '' : ':${source.port}';
+    final port = source.port == 443 || source.port == 80
+        ? ''
+        : ':${source.port}';
     return '$protocol://${source.host}$port';
   }
 
@@ -82,18 +85,12 @@ abstract class PTSiteApi {
 }
 
 /// 排序方式
-enum PTTorrentSortBy {
-  uploadTime,
-  size,
-  seeders,
-  leechers,
-  snatched,
-  name,
-}
+enum PTTorrentSortBy { uploadTime, size, seeders, leechers, snatched, name }
 
 /// 馒头 M-Team API
 class MTeamApi extends PTSiteApi {
-  MTeamApi({required super.source, super.client}) : _ioClient = _createIOClient();
+  MTeamApi({required super.source, super.client})
+    : _ioClient = _createIOClient();
 
   /// 创建禁用自动重定向的 IOClient，以便更好地处理 302 等状态码
   static http.Client _createIOClient() {
@@ -144,7 +141,9 @@ class MTeamApi extends PTSiteApi {
 
       _logger
         ..d('MTeamApi.testConnection: extraConfig = ${source.extraConfig}')
-        ..d('MTeamApi.testConnection: xApiKey = ${xApiKey.isNotEmpty ? "已配置(${xApiKey.length}字符)" : "未配置"}')
+        ..d(
+          'MTeamApi.testConnection: xApiKey = ${xApiKey.isNotEmpty ? "已配置(${xApiKey.length}字符)" : "未配置"}',
+        )
         ..d('MTeamApi.testConnection: headers = $headers');
 
       if (xApiKey.isEmpty) {
@@ -179,7 +178,9 @@ class MTeamApi extends PTSiteApi {
 
       _logger
         ..d('MTeamApi.testConnection: HTTP ${response.statusCode}')
-        ..d('MTeamApi.testConnection: response = ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}');
+        ..d(
+          'MTeamApi.testConnection: response = ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}',
+        );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
@@ -190,8 +191,11 @@ class MTeamApi extends PTSiteApi {
           return true;
         }
         // API 返回错误
-        final message = data['message'] as String? ?? appL10n.ptSiteUnknownErrorMessage;
-        _logger.w('MTeamApi.testConnection: API 返回错误 - code=$code, message=$message');
+        final message =
+            data['message'] as String? ?? appL10n.ptSiteUnknownErrorMessage;
+        _logger.w(
+          'MTeamApi.testConnection: API 返回错误 - code=$code, message=$message',
+        );
         AppError.ignore(
           Exception(appL10n.ptSiteApiResponseError(message)),
           StackTrace.current,
@@ -249,15 +253,18 @@ class MTeamApi extends PTSiteApi {
       final data = json.decode(response.body) as Map<String, dynamic>;
       final code = data['code'];
       if (code != '0' && code != 0 && code != 'SUCCESS') {
-        throw Exception(data['message'] ?? appL10n.ptSiteGetUserInfoFailedDefault);
+        throw Exception(
+          data['message'] ?? appL10n.ptSiteGetUserInfoFailedDefault,
+        );
       }
 
       final profile = data['data'] as Map<String, dynamic>;
       final memberCount = profile['memberCount'] as Map<String, dynamic>? ?? {};
 
       // 调试日志：记录 API 返回的完整数据以便排查问题
-      _logger..d('MTeamApi.getUserInfo: profile = $profile')
-      ..d('MTeamApi.getUserInfo: memberCount = $memberCount');
+      _logger
+        ..d('MTeamApi.getUserInfo: profile = $profile')
+        ..d('MTeamApi.getUserInfo: memberCount = $memberCount');
 
       // 用户等级：M-Team 的 role 是数字 ID，需要映射到文字名称
       final userClass = _parseUserClass(profile);
@@ -267,7 +274,8 @@ class MTeamApi extends PTSiteApi {
       _logger.d('MTeamApi.getUserInfo: peerStatus = $peerStatus');
 
       final seedingCount = peerStatus['seeder'] ?? peerStatus['seeding'] ?? 0;
-      final leechingCount = peerStatus['leecher'] ?? peerStatus['leeching'] ?? 0;
+      final leechingCount =
+          peerStatus['leecher'] ?? peerStatus['leeching'] ?? 0;
 
       return PTUserInfo(
         username: profile['username'] as String? ?? '',
@@ -282,14 +290,15 @@ class MTeamApi extends PTSiteApi {
         // 额外字段
         invites: _parseInt(profile['invites']),
         joinTime: DateTime.tryParse(profile['createdDate']?.toString() ?? ''),
-        lastAccess: DateTime.tryParse(profile['lastBrowseTime']?.toString() ?? ''),
+        lastAccess: DateTime.tryParse(
+          profile['lastBrowseTime']?.toString() ?? '',
+        ),
       );
     } catch (e, st) {
       AppError.handle(e, st, 'MTeamApi.getUserInfo');
       rethrow;
     }
   }
-
 
   /// 获取用户做种/下载状态
   /// 调用 api/tracker/myPeerStatus 接口
@@ -343,10 +352,7 @@ class MTeamApi extends PTSiteApi {
         final parts = authorization.split('.');
         if (parts.length == 3) {
           // Base64 解码 payload，补齐 padding
-          final payload = parts[1].padRight(
-            (parts[1].length + 3) & ~3,
-            '=',
-          );
+          final payload = parts[1].padRight((parts[1].length + 3) & ~3, '=');
           final decoded = utf8.decode(base64Decode(payload));
           final payloadJson = json.decode(decoded) as Map<String, dynamic>;
           final uid = payloadJson['uid'];
@@ -405,20 +411,26 @@ class MTeamApi extends PTSiteApi {
       );
 
       if (response.statusCode != 200) {
-        throw Exception(appL10n.ptSiteGetTorrentListFailed(response.statusCode));
+        throw Exception(
+          appL10n.ptSiteGetTorrentListFailed(response.statusCode),
+        );
       }
 
       final data = json.decode(response.body) as Map<String, dynamic>;
       final code = data['code'];
       // code 可能是字符串 "0" 或整数 0
       if (code != '0' && code != 0 && code != 'SUCCESS') {
-        throw Exception(data['message'] ?? appL10n.ptSiteGetTorrentListFailedDefault);
+        throw Exception(
+          data['message'] ?? appL10n.ptSiteGetTorrentListFailedDefault,
+        );
       }
 
       final torrentsData = data['data'] as Map<String, dynamic>? ?? {};
       final list = torrentsData['data'] as List<dynamic>? ?? [];
 
-      return list.map((item) => _parseTorrent(item as Map<String, dynamic>)).toList();
+      return list
+          .map((item) => _parseTorrent(item as Map<String, dynamic>))
+          .toList();
     } catch (e, st) {
       AppError.handle(e, st, 'MTeamApi.getTorrents');
       rethrow;
@@ -435,13 +447,17 @@ class MTeamApi extends PTSiteApi {
       );
 
       if (response.statusCode != 200) {
-        throw Exception(appL10n.ptSiteGetTorrentDetailFailed(response.statusCode));
+        throw Exception(
+          appL10n.ptSiteGetTorrentDetailFailed(response.statusCode),
+        );
       }
 
       final data = json.decode(response.body) as Map<String, dynamic>;
       final code = data['code'];
       if (code != '0' && code != 0 && code != 'SUCCESS') {
-        throw Exception(data['message'] ?? appL10n.ptSiteGetTorrentDetailFailedDefault);
+        throw Exception(
+          data['message'] ?? appL10n.ptSiteGetTorrentDetailFailedDefault,
+        );
       }
 
       return _parseTorrent(data['data'] as Map<String, dynamic>);
@@ -461,13 +477,17 @@ class MTeamApi extends PTSiteApi {
       );
 
       if (response.statusCode != 200) {
-        throw Exception(appL10n.ptSiteGetDownloadUrlFailed(response.statusCode));
+        throw Exception(
+          appL10n.ptSiteGetDownloadUrlFailed(response.statusCode),
+        );
       }
 
       final data = json.decode(response.body) as Map<String, dynamic>;
       final code = data['code'];
       if (code != '0' && code != 0 && code != 'SUCCESS') {
-        throw Exception(data['message'] ?? appL10n.ptSiteGetDownloadUrlFailedDefault);
+        throw Exception(
+          data['message'] ?? appL10n.ptSiteGetDownloadUrlFailedDefault,
+        );
       }
 
       return data['data'] as String? ?? '';
@@ -479,18 +499,18 @@ class MTeamApi extends PTSiteApi {
 
   @override
   Future<List<PTCategory>> getCategories() async => [
-      const PTCategory(id: '401', name: '电影/Movie'),
-      const PTCategory(id: '404', name: '纪录/Documentary'),
-      const PTCategory(id: '405', name: '动漫/Anime'),
-      const PTCategory(id: '402', name: '剧集/TV Series'),
-      const PTCategory(id: '403', name: '综艺/TV Show'),
-      const PTCategory(id: '406', name: '体育/Sports'),
-      const PTCategory(id: '407', name: 'MV/Music Video'),
-      const PTCategory(id: '408', name: '音乐/Music'),
-      const PTCategory(id: '410', name: '软件/Software'),
-      const PTCategory(id: '411', name: '学习/Education'),
-      const PTCategory(id: '409', name: '其他/Other'),
-    ];
+    const PTCategory(id: '401', name: '电影/Movie'),
+    const PTCategory(id: '404', name: '纪录/Documentary'),
+    const PTCategory(id: '405', name: '动漫/Anime'),
+    const PTCategory(id: '402', name: '剧集/TV Series'),
+    const PTCategory(id: '403', name: '综艺/TV Show'),
+    const PTCategory(id: '406', name: '体育/Sports'),
+    const PTCategory(id: '407', name: 'MV/Music Video'),
+    const PTCategory(id: '408', name: '音乐/Music'),
+    const PTCategory(id: '410', name: '软件/Software'),
+    const PTCategory(id: '411', name: '学习/Education'),
+    const PTCategory(id: '409', name: '其他/Other'),
+  ];
 
   @override
   Future<List<PTTorrent>> searchTorrents(String keyword, {int page = 1}) =>
@@ -535,7 +555,11 @@ class MTeamApi extends PTSiteApi {
 
   /// 获取用户种子列表
   /// 调用 api/member/getUserTorrentList 接口
-  Future<List<PTTransferLog>> _getUserTorrentList(int uid, PTTransferLogType type, int page) async {
+  Future<List<PTTransferLog>> _getUserTorrentList(
+    int uid,
+    PTTransferLogType type,
+    int page,
+  ) async {
     try {
       // 根据类型设置过滤条件
       final typeStr = switch (type) {
@@ -588,7 +612,9 @@ class MTeamApi extends PTSiteApi {
   }
 
   /// 从 profile 接口获取基本统计数据（降级方案）
-  Future<PTTransferStats> _getTransferStatsFromProfile(PTTransferLogType type) async {
+  Future<PTTransferStats> _getTransferStatsFromProfile(
+    PTTransferLogType type,
+  ) async {
     try {
       final userInfo = await getUserInfo();
       return PTTransferStats(
@@ -622,17 +648,23 @@ class MTeamApi extends PTSiteApi {
     }
 
     return PTTransferLog(
-      torrentId: torrent['id']?.toString() ?? data['torrentId']?.toString() ?? '',
-      torrentName: torrent['name'] as String? ?? data['torrentName'] as String? ?? '',
+      torrentId:
+          torrent['id']?.toString() ?? data['torrentId']?.toString() ?? '',
+      torrentName:
+          torrent['name'] as String? ?? data['torrentName'] as String? ?? '',
       uploaded: uploaded,
       downloaded: downloaded,
       ratio: ratio,
       seedTime: _parseInt(data['seedTime'] ?? data['seedingTime'] ?? 0),
       addedTime: DateTime.tryParse(
-        data['createdDate']?.toString() ?? torrent['createdDate']?.toString() ?? '',
+        data['createdDate']?.toString() ??
+            torrent['createdDate']?.toString() ??
+            '',
       ),
       lastActive: DateTime.tryParse(
-        data['lastModifiedDate']?.toString() ?? data['lastActive']?.toString() ?? '',
+        data['lastModifiedDate']?.toString() ??
+            data['lastActive']?.toString() ??
+            '',
       ),
       status: data['status']?.toString(),
     );
@@ -648,14 +680,17 @@ class MTeamApi extends PTSiteApi {
       seeders: _parseInt(status['seeders']),
       leechers: _parseInt(status['leechers']),
       snatched: _parseInt(status['timesCompleted']),
-      uploadTime: DateTime.tryParse(data['createdDate'] as String? ?? '') ?? DateTime.now(),
+      uploadTime:
+          DateTime.tryParse(data['createdDate'] as String? ?? '') ??
+          DateTime.now(),
       category: data['category'] as String?,
       smallDescr: data['smallDescr'] as String?,
       detailUrl: '$baseUrl/detail/${data['id']}',
       imdbId: data['imdb'] as String?,
       doubanId: data['douban'] as String?,
       status: PTTorrentStatus(
-        isFree: status['discount'] == 'FREE' || status['discount'] == '_2X_FREE',
+        isFree:
+            status['discount'] == 'FREE' || status['discount'] == '_2X_FREE',
         isDoubleFree: status['discount'] == '_2X_FREE',
         isHalfDown: status['discount'] == '_50_PERCENT_OFF',
         isDoubleUp: status['discount'] == '_2X_UPLOAD',
@@ -758,7 +793,10 @@ class MTeamApi extends PTSiteApi {
     // 尝试从 memberStatus 获取
     final memberStatus = profile['memberStatus'] as Map<String, dynamic>?;
     if (memberStatus != null) {
-      final statusName = memberStatus['name'] ?? memberStatus['className'] ?? memberStatus['roleName'];
+      final statusName =
+          memberStatus['name'] ??
+          memberStatus['className'] ??
+          memberStatus['roleName'];
       if (statusName != null) {
         return statusName.toString();
       }
@@ -776,12 +814,14 @@ class GenericPTSiteApi extends PTSiteApi {
   @override
   Map<String, String> get headers {
     final authType = source.extraConfig?['authType'] as String? ?? 'Cookie';
-    final userAgent = source.extraConfig?['userAgent'] as String? ??
+    final userAgent =
+        source.extraConfig?['userAgent'] as String? ??
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
 
     final result = <String, String>{
       'User-Agent': userAgent,
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept':
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
     };
 
@@ -812,7 +852,9 @@ class GenericPTSiteApi extends PTSiteApi {
       } else {
         result['Cookie'] = cookie;
         // 打印 Cookie 前50个字符用于调试
-        final preview = cookie.length > 50 ? '${cookie.substring(0, 50)}...' : cookie;
+        final preview = cookie.length > 50
+            ? '${cookie.substring(0, 50)}...'
+            : cookie;
         _logger.d('GenericPTSiteApi.headers: Cookie 预览 = $preview');
       }
     }
@@ -856,10 +898,8 @@ class GenericPTSiteApi extends PTSiteApi {
   }
 
   @override
-  Future<PTUserInfo> getUserInfo() async => const PTUserInfo(
-    username: '',
-    userId: '',
-  );
+  Future<PTUserInfo> getUserInfo() async =>
+      const PTUserInfo(username: '', userId: '');
 
   @override
   Future<List<PTTorrent>> getTorrents({
@@ -893,9 +933,12 @@ class GenericPTSiteApi extends PTSiteApi {
         params['type'] = descending ? 'desc' : 'asc';
       }
 
-      final uri = Uri.parse('$baseUrl/torrents.php').replace(queryParameters: params);
-      _logger..d('GenericPTSiteApi.getTorrents: 请求 URL = $uri')
-      ..d('GenericPTSiteApi.getTorrents: headers = $headers');
+      final uri = Uri.parse(
+        '$baseUrl/torrents.php',
+      ).replace(queryParameters: params);
+      _logger
+        ..d('GenericPTSiteApi.getTorrents: 请求 URL = $uri')
+        ..d('GenericPTSiteApi.getTorrents: headers = $headers');
 
       final httpClient = HttpClient();
       // ignore: cascade_invocations
@@ -912,12 +955,17 @@ class GenericPTSiteApi extends PTSiteApi {
       final body = await response.transform(utf8.decoder).join();
       httpClient.close();
 
-      _logger..d('GenericPTSiteApi.getTorrents: HTTP ${response.statusCode}')
-      ..d('GenericPTSiteApi.getTorrents: 响应长度 = ${body.length} 字符');
+      _logger
+        ..d('GenericPTSiteApi.getTorrents: HTTP ${response.statusCode}')
+        ..d('GenericPTSiteApi.getTorrents: 响应长度 = ${body.length} 字符');
 
       if (response.statusCode != 200) {
-        _logger.e('GenericPTSiteApi.getTorrents: HTTP 状态错误 ${response.statusCode}');
-        throw Exception(appL10n.ptSiteGetTorrentListFailed(response.statusCode));
+        _logger.e(
+          'GenericPTSiteApi.getTorrents: HTTP 状态错误 ${response.statusCode}',
+        );
+        throw Exception(
+          appL10n.ptSiteGetTorrentListFailed(response.statusCode),
+        );
       }
 
       // 检测是否被重定向到登录页
@@ -949,14 +997,20 @@ class GenericPTSiteApi extends PTSiteApi {
   List<PTTorrent> _parseNexusPHPTorrents(String html) {
     final torrents = <PTTorrent>[];
 
-    _logger.d('GenericPTSiteApi._parseNexusPHPTorrents: HTML 长度 = ${html.length} 字符');
+    _logger.d(
+      'GenericPTSiteApi._parseNexusPHPTorrents: HTML 长度 = ${html.length} 字符',
+    );
 
     try {
       final document = html_parser.parse(html);
 
       // 查找种子表格 - NexusPHP 通常使用 class 包含 "torrents" 的表格
-      final tables = document.querySelectorAll('table.torrents, table#torrent_table, table[class*="torrent"]');
-      _logger.d('GenericPTSiteApi._parseNexusPHPTorrents: 找到 ${tables.length} 个种子表格');
+      final tables = document.querySelectorAll(
+        'table.torrents, table#torrent_table, table[class*="torrent"]',
+      );
+      _logger.d(
+        'GenericPTSiteApi._parseNexusPHPTorrents: 找到 ${tables.length} 个种子表格',
+      );
 
       // 如果没找到特定表格，尝试查找包含 details.php 链接的表格
       var targetTable = tables.isNotEmpty ? tables.first : null;
@@ -965,7 +1019,9 @@ class GenericPTSiteApi extends PTSiteApi {
         for (final table in allTables) {
           if (table.querySelector('a[href*="details.php"]') != null) {
             targetTable = table;
-            _logger.d('GenericPTSiteApi._parseNexusPHPTorrents: 通过 details.php 链接找到表格');
+            _logger.d(
+              'GenericPTSiteApi._parseNexusPHPTorrents: 通过 details.php 链接找到表格',
+            );
             break;
           }
         }
@@ -978,7 +1034,9 @@ class GenericPTSiteApi extends PTSiteApi {
 
       // 获取所有行
       final rows = targetTable.querySelectorAll('tr');
-      _logger.d('GenericPTSiteApi._parseNexusPHPTorrents: 表格中有 ${rows.length} 行');
+      _logger.d(
+        'GenericPTSiteApi._parseNexusPHPTorrents: 表格中有 ${rows.length} 行',
+      );
 
       for (final row in rows) {
         // 跳过表头行
@@ -1000,10 +1058,14 @@ class GenericPTSiteApi extends PTSiteApi {
 
         // 提取副标题 - 通常在标题链接后面或 br 标签后
         String? smallDescr;
-        final torrentNameCell = row.querySelector('td.torrentname, td.embedded, td[class*="name"]');
+        final torrentNameCell = row.querySelector(
+          'td.torrentname, td.embedded, td[class*="name"]',
+        );
         if (torrentNameCell != null) {
           // 查找 br 标签后的文本或 class 包含 subtitle 的元素
-          final subtitleEl = torrentNameCell.querySelector('.subtitle, .torrent_small, span[title]');
+          final subtitleEl = torrentNameCell.querySelector(
+            '.subtitle, .torrent_small, span[title]',
+          );
           if (subtitleEl != null) {
             smallDescr = _htmlDecode(subtitleEl.text.trim());
           } else {
@@ -1041,34 +1103,69 @@ class GenericPTSiteApi extends PTSiteApi {
         // 方法1: 通过 class 名称查找
         final seedersEl = row.querySelector('.seeders, td[class*="seeder"]');
         final leechersEl = row.querySelector('.leechers, td[class*="leecher"]');
-        final snatchedEl = row.querySelector('.snatched, td[class*="snatch"], td[class*="times"]');
+        final snatchedEl = row.querySelector(
+          '.snatched, td[class*="snatch"], td[class*="times"]',
+        );
 
-        if (seedersEl != null) seeders = int.tryParse(seedersEl.text.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
-        if (leechersEl != null) leechers = int.tryParse(leechersEl.text.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
-        if (snatchedEl != null) snatched = int.tryParse(snatchedEl.text.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+        if (seedersEl != null) {
+          seeders =
+              int.tryParse(seedersEl.text.replaceAll(RegExp(r'[^\d]'), '')) ??
+              0;
+        }
+        if (leechersEl != null) {
+          leechers =
+              int.tryParse(leechersEl.text.replaceAll(RegExp(r'[^\d]'), '')) ??
+              0;
+        }
+        if (snatchedEl != null) {
+          snatched =
+              int.tryParse(snatchedEl.text.replaceAll(RegExp(r'[^\d]'), '')) ??
+              0;
+        }
 
         // 方法2: 通过链接查找 (NexusPHP 常见模式)
         if (seeders == 0) {
-          final seedersLink = row.querySelector('a[href*="seeders"], a[title*="做种"], a[title*="seeder"]');
+          final seedersLink = row.querySelector(
+            'a[href*="seeders"], a[title*="做种"], a[title*="seeder"]',
+          );
           if (seedersLink != null) {
-            seeders = int.tryParse(seedersLink.text.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+            seeders =
+                int.tryParse(
+                  seedersLink.text.replaceAll(RegExp(r'[^\d]'), ''),
+                ) ??
+                0;
           }
         }
         if (leechers == 0) {
-          final leechersLink = row.querySelector('a[href*="leechers"], a[title*="下载"], a[title*="leecher"]');
+          final leechersLink = row.querySelector(
+            'a[href*="leechers"], a[title*="下载"], a[title*="leecher"]',
+          );
           if (leechersLink != null) {
-            leechers = int.tryParse(leechersLink.text.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+            leechers =
+                int.tryParse(
+                  leechersLink.text.replaceAll(RegExp(r'[^\d]'), ''),
+                ) ??
+                0;
           }
         }
         if (snatched == 0) {
-          final snatchedLink = row.querySelector('a[href*="snatches"], a[title*="完成"], a[title*="snatch"]');
+          final snatchedLink = row.querySelector(
+            'a[href*="snatches"], a[title*="完成"], a[title*="snatch"]',
+          );
           if (snatchedLink != null) {
-            snatched = int.tryParse(snatchedLink.text.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+            snatched =
+                int.tryParse(
+                  snatchedLink.text.replaceAll(RegExp(r'[^\d]'), ''),
+                ) ??
+                0;
           }
         }
 
         // 方法3: 如果还是没找到，尝试从后三列提取数字
-        if (seeders == 0 && leechers == 0 && snatched == 0 && cells.length >= 4) {
+        if (seeders == 0 &&
+            leechers == 0 &&
+            snatched == 0 &&
+            cells.length >= 4) {
           // 通常顺序是: ... 大小, 做种, 下载, 完成
           for (var i = cells.length - 1; i >= cells.length - 4 && i >= 0; i--) {
             final text = cells[i].text.trim();
@@ -1087,37 +1184,48 @@ class GenericPTSiteApi extends PTSiteApi {
 
         // 检测免费状态 - 从 class 或 img 元素判断
         final rowHtml = row.outerHtml.toLowerCase();
-        final isFree = rowHtml.contains('free') ||
-            row.querySelector('img[class*="free"], img[src*="free"], .pro_free') != null;
-        final isDoubleFree = rowHtml.contains('2xfree') ||
+        final isFree =
+            rowHtml.contains('free') ||
+            row.querySelector(
+                  'img[class*="free"], img[src*="free"], .pro_free',
+                ) !=
+                null;
+        final isDoubleFree =
+            rowHtml.contains('2xfree') ||
             rowHtml.contains('twoupfree') ||
             row.querySelector('img[class*="2xfree"], .pro_free2up') != null;
-        final isDoubleUp = rowHtml.contains('2x') && rowHtml.contains('up') ||
+        final isDoubleUp =
+            rowHtml.contains('2x') && rowHtml.contains('up') ||
             row.querySelector('img[class*="2xup"], .pro_2up') != null;
-        final isHalfDown = rowHtml.contains('50%') ||
+        final isHalfDown =
+            rowHtml.contains('50%') ||
             rowHtml.contains('halfdown') ||
             row.querySelector('img[class*="50"], .pro_50pctdown') != null;
 
-        torrents.add(PTTorrent(
-          id: id,
-          name: name,
-          size: size,
-          seeders: seeders,
-          leechers: leechers,
-          snatched: snatched,
-          uploadTime: _parseNexusPHPTime(row),
-          smallDescr: (smallDescr?.isNotEmpty ?? false) ? smallDescr : null,
-          detailUrl: '$baseUrl/details.php?id=$id',
-          status: PTTorrentStatus(
-            isFree: isFree || isDoubleFree,
-            isDoubleFree: isDoubleFree,
-            isDoubleUp: isDoubleUp,
-            isHalfDown: isHalfDown,
+        torrents.add(
+          PTTorrent(
+            id: id,
+            name: name,
+            size: size,
+            seeders: seeders,
+            leechers: leechers,
+            snatched: snatched,
+            uploadTime: _parseNexusPHPTime(row),
+            smallDescr: (smallDescr?.isNotEmpty ?? false) ? smallDescr : null,
+            detailUrl: '$baseUrl/details.php?id=$id',
+            status: PTTorrentStatus(
+              isFree: isFree || isDoubleFree,
+              isDoubleFree: isDoubleFree,
+              isDoubleUp: isDoubleUp,
+              isHalfDown: isHalfDown,
+            ),
           ),
-        ));
+        );
       }
 
-      _logger.i('GenericPTSiteApi._parseNexusPHPTorrents: 成功解析 ${torrents.length} 个种子');
+      _logger.i(
+        'GenericPTSiteApi._parseNexusPHPTorrents: 成功解析 ${torrents.length} 个种子',
+      );
     } on Exception catch (e, st) {
       _logger.w('GenericPTSiteApi._parseNexusPHPTorrents: 解析失败 - $e');
       AppError.ignore(e, st, 'NexusPHP HTML 解析失败');
@@ -1129,13 +1237,13 @@ class GenericPTSiteApi extends PTSiteApi {
   /// 将 [PTTorrentSortBy] 映射到 NexusPHP torrents.php 的 sort 列号。
   /// 返回 null 表示无可靠映射，应保持站点默认排序（零破坏）。
   String? _nexusPHPSortColumn(PTTorrentSortBy sortBy) => switch (sortBy) {
-        PTTorrentSortBy.name => '1',
-        PTTorrentSortBy.uploadTime => '4', // added
-        PTTorrentSortBy.size => '5',
-        PTTorrentSortBy.snatched => '6', // times_completed
-        PTTorrentSortBy.seeders => '7',
-        PTTorrentSortBy.leechers => '8',
-      };
+    PTTorrentSortBy.name => '1',
+    PTTorrentSortBy.uploadTime => '4', // added
+    PTTorrentSortBy.size => '5',
+    PTTorrentSortBy.snatched => '6', // times_completed
+    PTTorrentSortBy.seeders => '7',
+    PTTorrentSortBy.leechers => '8',
+  };
 
   /// 从 NexusPHP 种子行中解析发布时间。
   /// 优先级：
@@ -1168,8 +1276,10 @@ class GenericPTSiteApi extends PTSiteApi {
         return cell.querySelector('a[href*="details.php"]') != null;
       }
 
-      final timeCells =
-          row.querySelectorAll('td').where((c) => !isNameCell(c)).toList();
+      final timeCells = row
+          .querySelectorAll('td')
+          .where((c) => !isNameCell(c))
+          .toList();
 
       // 2. 绝对时间（默认显示模式直接渲染 yyyy-MM-dd HH:mm:ss）。
       for (final cell in timeCells) {
@@ -1201,7 +1311,11 @@ class GenericPTSiteApi extends PTSiteApi {
     final hour = int.tryParse(match.group(4) ?? '');
     final minute = int.tryParse(match.group(5) ?? '');
     final second = int.tryParse(match.group(6) ?? '0') ?? 0;
-    if (year == null || month == null || day == null || hour == null || minute == null) {
+    if (year == null ||
+        month == null ||
+        day == null ||
+        hour == null ||
+        minute == null) {
       return null;
     }
     try {
@@ -1218,11 +1332,13 @@ class GenericPTSiteApi extends PTSiteApi {
     if (text.isEmpty) return null;
     // 必须明显是相对时间，避免把无关数字误判（要求含 前/ago 或时间单位）。
     final lower = text.toLowerCase();
-    final looksRelative = text.contains('前') ||
+    final looksRelative =
+        text.contains('前') ||
         lower.contains('ago') ||
-        RegExp(r'\d+\s*(年|个?月|周|星期|天|日|小时|时|分钟|分|秒|year|month|week|day|hour|hr|min|sec)',
-                caseSensitive: false)
-            .hasMatch(text);
+        RegExp(
+          r'\d+\s*(年|个?月|周|星期|天|日|小时|时|分钟|分|秒|year|month|week|day|hour|hr|min|sec)',
+          caseSensitive: false,
+        ).hasMatch(text);
     if (!looksRelative) return null;
 
     var totalSeconds = 0;
@@ -1257,18 +1373,21 @@ class GenericPTSiteApi extends PTSiteApi {
 
   /// HTML 实体解码
   String _htmlDecode(String text) => text
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&#39;', "'")
-        .replaceAll('&nbsp;', ' ')
-        .trim();
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#39;', "'")
+      .replaceAll('&nbsp;', ' ')
+      .trim();
 
   /// 解析文件大小
   int _parseSize(String sizeStr) {
     if (sizeStr.isEmpty) return 0;
-    final match = RegExp(r'(\d+(?:\.\d+)?)\s*(GB|MB|KB|TB|GiB|MiB|KiB|TiB)', caseSensitive: false).firstMatch(sizeStr);
+    final match = RegExp(
+      r'(\d+(?:\.\d+)?)\s*(GB|MB|KB|TB|GiB|MiB|KiB|TiB)',
+      caseSensitive: false,
+    ).firstMatch(sizeStr);
     if (match == null) return 0;
 
     final value = double.tryParse(match.group(1) ?? '0') ?? 0;
@@ -1302,9 +1421,7 @@ class GenericPTSiteApi extends PTSiteApi {
   Future<PTTransferStats> getTransferStats({
     PTTransferLogType type = PTTransferLogType.all,
     int page = 1,
-  }) async =>
-      // 通用 PT 站点 API 暂不支持获取详细统计，返回空数据
-      const PTTransferStats();
+  }) async => throw UnimplementedError(appL10n.ptSiteUnimplementedError);
 }
 
 /// PT 站点 API 工厂
@@ -1313,7 +1430,9 @@ class PTSiteApiFactory {
   /// 根据站点类型选择合适的 API 实现
   static PTSiteApi create(SourceEntity source) {
     _logger
-      ..d('PTSiteApiFactory.create: source.name = ${source.name}, host = ${source.host}')
+      ..d(
+        'PTSiteApiFactory.create: source.name = ${source.name}, host = ${source.host}',
+      )
       ..d('PTSiteApiFactory.create: extraConfig = ${source.extraConfig}');
 
     // 判断是否是馒头站点（只检查 host）
@@ -1322,7 +1441,9 @@ class PTSiteApiFactory {
 
       // 预处理：从 customHeaders 或表单字段提取 API Key
       final preparedSource = _prepareApiKeyConfig(source);
-      _logger.d('PTSiteApiFactory.create: 预处理后 extraConfig = ${preparedSource.extraConfig}');
+      _logger.d(
+        'PTSiteApiFactory.create: 预处理后 extraConfig = ${preparedSource.extraConfig}',
+      );
 
       return MTeamApi(source: preparedSource);
     }
@@ -1353,7 +1474,9 @@ class PTSiteApiFactory {
 
     // 解析 String 类型的 customHeaders（兼容旧数据）
     if (customHeaders is String && customHeaders.isNotEmpty) {
-      _logger.d('PTSiteApiFactory._prepareApiKeyConfig: 解析 String 类型 customHeaders');
+      _logger.d(
+        'PTSiteApiFactory._prepareApiKeyConfig: 解析 String 类型 customHeaders',
+      );
       customHeaders = _parseCustomHeadersString(customHeaders);
     }
 
@@ -1364,10 +1487,16 @@ class PTSiteApiFactory {
           final value = header['value']?.toString() ?? '';
           if (key == 'x-api-key' && value.isNotEmpty && xApiKey.isEmpty) {
             xApiKey = value;
-            _logger.d('PTSiteApiFactory._prepareApiKeyConfig: 从 customHeaders 提取 x-api-key');
-          } else if (key == 'authorization' && value.isNotEmpty && authorization.isEmpty) {
+            _logger.d(
+              'PTSiteApiFactory._prepareApiKeyConfig: 从 customHeaders 提取 x-api-key',
+            );
+          } else if (key == 'authorization' &&
+              value.isNotEmpty &&
+              authorization.isEmpty) {
             authorization = value;
-            _logger.d('PTSiteApiFactory._prepareApiKeyConfig: 从 customHeaders 提取 authorization');
+            _logger.d(
+              'PTSiteApiFactory._prepareApiKeyConfig: 从 customHeaders 提取 authorization',
+            );
           }
         }
       }
@@ -1379,7 +1508,6 @@ class PTSiteApiFactory {
 
     return source.copyWith(extraConfig: extraConfig);
   }
-
 
   /// 尝试解析 String 格式的 customHeaders
   static List<Map<String, String>>? _parseCustomHeadersString(String str) {
@@ -1417,7 +1545,9 @@ class PTSiteApiFactory {
     }
 
     if (result.isNotEmpty) {
-      _logger.d('PTSiteApiFactory._parseCustomHeadersString: 解析出 ${result.length} 个 header');
+      _logger.d(
+        'PTSiteApiFactory._parseCustomHeadersString: 解析出 ${result.length} 个 header',
+      );
       return result;
     }
 

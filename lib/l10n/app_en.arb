@@ -1499,6 +1499,7 @@
     }
   },
   "filesDownloadFailed": "Download failed",
+  "filesDirectDownloadUnsupported": "This protocol does not provide a direct download URL. Use copy, transfer, or system share.",
   "filesUploading": "Uploading: {name}",
   "@filesUploading": {
     "placeholders": {
@@ -1945,6 +1946,8 @@
     }
   },
   "opsClientNotConnected": "Not connected",
+  "opsNoDownloaderClientsTitle": "No downloader connected",
+  "opsNoDownloaderClients": "Add qBittorrent, aria2, or Transmission to show real connection state and speeds here.",
   "opsDownloadingTitle": "Downloading",
   "opsDownloaderChip": "Downloader",
   "opsNoDownloadingTasks": "No tasks are currently downloading.",
@@ -2722,6 +2725,14 @@
   "sourceFormPlexAuthFailed": "Plex authorization failed",
   "sourceFormConnectionTestSuccess": "Connection test succeeded",
   "sourceFormConnectionTestFailed": "Connection test failed: {error}",
+  "sourceFormConnectionTestRequiresAuth": "{serviceType} app credentials are valid. Complete authorization before connecting.",
+  "@sourceFormConnectionTestRequiresAuth": {
+    "placeholders": {
+      "serviceType": {
+        "type": "String"
+      }
+    }
+  },
   "@sourceFormConnectionTestFailed": {
     "placeholders": {
       "error": {
@@ -10436,7 +10447,7 @@
   "ptSiteGetDownloadUrlFailedDefault": "Failed to get download link",
   "ptSiteResponseFormatError": "Response format parsing error, site may have returned non-standard Content-Type",
   "ptSiteTestConnectionFailed": "Test connection failed, user perceivable error",
-  "ptSiteUnimplementedError": "Need to be implemented in subclass",
+  "ptSiteUnimplementedError": "This site type does not support this feature yet",
   "sourceManagerErrorConnectionNotFound": "Connection not found",
   "sourceManager2FAVerificationFailed": "2FA verification failed",
   "sourceManagerError2FANotSupported": "This source type does not support 2FA",

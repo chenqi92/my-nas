@@ -19,6 +19,15 @@ class UGreenFileSystem implements NasFileSystem {
   List<UGreenFileInfo>? _cachedShares;
 
   @override
+  bool get supportsWriteOperations => true;
+
+  @override
+  bool get supportsServerSideCopy => true;
+
+  @override
+  bool get supportsDirectFileUrl => true;
+
+  @override
   Future<List<FileItem>> listDirectory(String path) async {
     logger.d('UGreenFileSystem: listDirectory => $path');
 
@@ -35,16 +44,20 @@ class UGreenFileSystem implements NasFileSystem {
       logger.d('UGreenFileSystem: API 返回空，检查是否为共享文件夹');
     }
 
-    return files.map((file) => FileItem(
-      name: file.name,
-      path: file.path,
-      isDirectory: file.isDir,
-      size: file.size ?? 0,
-      modifiedTime: file.modified,
-      createdTime: file.created,
-      mimeType: file.mimeType,
-      extension: _getExtension(file.name),
-    )).toList();
+    return files
+        .map(
+          (file) => FileItem(
+            name: file.name,
+            path: file.path,
+            isDirectory: file.isDir,
+            size: file.size ?? 0,
+            modifiedTime: file.modified,
+            createdTime: file.created,
+            mimeType: file.mimeType,
+            extension: _getExtension(file.name),
+          ),
+        )
+        .toList();
   }
 
   /// 列出共享文件夹 (根目录内容)
@@ -56,12 +69,16 @@ class UGreenFileSystem implements NasFileSystem {
     // 如果有缓存，直接返回
     if (_cachedShares != null && _cachedShares!.isNotEmpty) {
       logger.d('UGreenFileSystem: 使用缓存的共享列表 (${_cachedShares!.length} 项)');
-      return _cachedShares!.map((share) => FileItem(
-        name: share.name,
-        path: share.path,
-        isDirectory: true,
-        size: 0,
-      )).toList();
+      return _cachedShares!
+          .map(
+            (share) => FileItem(
+              name: share.name,
+              path: share.path,
+              isDirectory: true,
+              size: 0,
+            ),
+          )
+          .toList();
     }
 
     // 获取共享列表
@@ -70,12 +87,16 @@ class UGreenFileSystem implements NasFileSystem {
 
     logger.i('UGreenFileSystem: 获取到 ${shares.length} 个共享文件夹');
 
-    return shares.map((share) => FileItem(
-      name: share.name,
-      path: share.path,
-      isDirectory: true,
-      size: 0,
-    )).toList();
+    return shares
+        .map(
+          (share) => FileItem(
+            name: share.name,
+            path: share.path,
+            isDirectory: true,
+            size: 0,
+          ),
+        )
+        .toList();
   }
 
   /// 清除共享文件夹缓存
@@ -104,7 +125,10 @@ class UGreenFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
+  Future<Stream<List<int>>> getFileStream(
+    String path, {
+    FileRange? range,
+  }) async {
     final url = await api.getFileUrl(path);
     return api.getUrlStream(url);
   }
@@ -113,7 +137,8 @@ class UGreenFileSystem implements NasFileSystem {
   Future<Stream<List<int>>> getUrlStream(String url) => api.getUrlStream(url);
 
   @override
-  Future<String> getFileUrl(String path, {Duration? expiry}) => api.getFileUrl(path);
+  Future<String> getFileUrl(String path, {Duration? expiry}) =>
+      api.getFileUrl(path);
 
   @override
   Future<void> createDirectory(String path) async {
@@ -173,13 +198,11 @@ class UGreenFileSystem implements NasFileSystem {
   Future<void> writeFile(String remotePath, List<int> data) async {
     final lastSlash = remotePath.lastIndexOf('/');
     final remoteDir = lastSlash > 0 ? remotePath.substring(0, lastSlash) : '/';
-    final fileName = lastSlash >= 0 ? remotePath.substring(lastSlash + 1) : remotePath;
+    final fileName = lastSlash >= 0
+        ? remotePath.substring(lastSlash + 1)
+        : remotePath;
 
-    await api.uploadBytes(
-      remoteDir: remoteDir,
-      fileName: fileName,
-      data: data,
-    );
+    await api.uploadBytes(remoteDir: remoteDir, fileName: fileName, data: data);
   }
 
   @override
@@ -190,16 +213,18 @@ class UGreenFileSystem implements NasFileSystem {
     try {
       final results = await api.search(query, path: path);
       return results
-          .map((file) => FileItem(
-                name: file.name,
-                path: file.path,
-                isDirectory: file.isDir,
-                size: file.size ?? 0,
-                modifiedTime: file.modified,
-                createdTime: file.created,
-                mimeType: file.mimeType,
-                extension: _getExtension(file.name),
-              ))
+          .map(
+            (file) => FileItem(
+              name: file.name,
+              path: file.path,
+              isDirectory: file.isDir,
+              size: file.size ?? 0,
+              modifiedTime: file.modified,
+              createdTime: file.created,
+              mimeType: file.mimeType,
+              extension: _getExtension(file.name),
+            ),
+          )
           .toList();
     } on Exception catch (e, st) {
       AppError.ignore(e, st, 'UGOS 服务端搜索失败，回退到客户端递归遍历');
@@ -245,5 +270,8 @@ class UGreenFileSystem implements NasFileSystem {
       api.getThumbnailUrl(path, size: size);
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 }

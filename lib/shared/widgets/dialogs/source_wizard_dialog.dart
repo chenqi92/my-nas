@@ -15,7 +15,7 @@ import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 /// 存储，因此本向导只负责选类型并把真实链路接上，不再造重复的假表单。
 ///
 /// 类型清单由 [SourceType] 枚举驱动：`local` 由系统自动创建不在此显示；
-/// 未实现的类型（绿联 / 飞牛 / NFS）以「规划」角标置灰，不可选。
+/// 未实现的类型（当前为 NFS）以「规划」角标置灰，不可选。
 class SourceWizardDialog extends StatefulWidget {
   const SourceWizardDialog({super.key});
 
@@ -27,9 +27,9 @@ class _SourceWizardDialogState extends State<SourceWizardDialog> {
   SourceType? _type;
 
   List<SourceType> get _availableTypes => [
-        for (final t in SourceType.values)
-          if (t.isAvailableOnCurrentPlatform) t,
-      ];
+    for (final t in SourceType.values)
+      if (t.isAvailableOnCurrentPlatform) t,
+  ];
 
   void _openForm() {
     final type = _type;
@@ -80,10 +80,7 @@ class _SourceWizardDialogState extends State<SourceWizardDialog> {
                   ),
                 ),
               ),
-              _Footer(
-                t: t,
-                onNext: _type != null ? _openForm : null,
-              ),
+              _Footer(t: t, onNext: _type != null ? _openForm : null),
             ],
           ),
         ),
@@ -269,7 +266,7 @@ class _TypeGrid extends StatelessWidget {
       ),
       itemBuilder: (_, i) {
         final type = types[i];
-        // 未实现的类型即「规划」态，置灰不可选（绿联 / 飞牛 / NFS）。
+        // 未实现的类型即「规划」态，置灰不可选。
         final plan = !type.isSupported;
         return Opacity(
           opacity: plan ? 0.55 : 1,

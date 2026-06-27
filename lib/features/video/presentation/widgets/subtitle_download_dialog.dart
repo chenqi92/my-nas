@@ -62,26 +62,28 @@ class SubtitleDownloadDialog extends ConsumerStatefulWidget {
     required String savePath,
     void Function(String path)? onDownloaded,
   }) async => showAdaptiveModalSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (context) => SubtitleDownloadDialog(
-        tmdbId: tmdbId,
-        imdbId: imdbId,
-        title: title,
-        seasonNumber: seasonNumber,
-        episodeNumber: episodeNumber,
-        isMovie: isMovie,
-        savePath: savePath,
-        onDownloaded: onDownloaded,
-      ),
-    );
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (context) => SubtitleDownloadDialog(
+      tmdbId: tmdbId,
+      imdbId: imdbId,
+      title: title,
+      seasonNumber: seasonNumber,
+      episodeNumber: episodeNumber,
+      isMovie: isMovie,
+      savePath: savePath,
+      onDownloaded: onDownloaded,
+    ),
+  );
 
   @override
-  ConsumerState<SubtitleDownloadDialog> createState() => _SubtitleDownloadDialogState();
+  ConsumerState<SubtitleDownloadDialog> createState() =>
+      _SubtitleDownloadDialogState();
 }
 
-class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog> {
+class _SubtitleDownloadDialogState
+    extends ConsumerState<SubtitleDownloadDialog> {
   List<OpenSubtitleResult>? _results;
   bool _isLoading = false;
   bool _isDownloading = false;
@@ -95,8 +97,9 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
   }
 
   Future<void> _search() async {
-    final service = ref.read(openSubtitlesServiceProvider);
+    final service = await ref.read(openSubtitlesServiceProvider.future);
     if (service == null) {
+      if (!mounted) return;
       setState(() {
         _error = context.l10n.videoSubtitleDownloadDialogNotConfigured;
       });
@@ -115,7 +118,9 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
       final params = OpenSubtitleSearchParams(
         tmdbId: widget.tmdbId,
         imdbId: widget.imdbId,
-        query: widget.tmdbId == null && widget.imdbId == null ? widget.title : null,
+        query: widget.tmdbId == null && widget.imdbId == null
+            ? widget.title
+            : null,
         seasonNumber: widget.seasonNumber,
         episodeNumber: widget.episodeNumber,
         type: widget.isMovie ? 'movie' : 'episode',
@@ -143,8 +148,9 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
   }
 
   Future<void> _download(OpenSubtitleResult subtitle) async {
-    final service = ref.read(openSubtitlesServiceProvider);
+    final service = await ref.read(openSubtitlesServiceProvider.future);
     if (service == null) return;
+    if (!mounted) return;
 
     setState(() {
       _isDownloading = true;
@@ -202,10 +208,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                Icon(
-                  Icons.subtitles,
-                  color: theme.colorScheme.primary,
-                ),
+                Icon(Icons.subtitles, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -237,8 +240,10 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
                             title: context.l10n.videoSubtitleSourcesLabel,
                             category: SourceCategory.subtitleSites,
                             emptyIcon: Icons.subtitles_rounded,
-                            emptyTitle: context.l10n.videoSubtitleSourceNotConfigured,
-                            emptySubtitle: context.l10n.videoSubtitleSourceConfigHint,
+                            emptyTitle:
+                                context.l10n.videoSubtitleSourceNotConfigured,
+                            emptySubtitle:
+                                context.l10n.videoSubtitleSourceConfigHint,
                           ),
                         ),
                       );
@@ -263,9 +268,7 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
           ),
           const Divider(height: 1),
           // 内容
-          Expanded(
-            child: _buildContent(theme, scrollController),
-          ),
+          Expanded(child: _buildContent(theme, scrollController)),
         ],
       ),
     );
@@ -360,21 +363,26 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
               ),
               if (subtitle.qualityTags.isNotEmpty) ...[
                 const SizedBox(width: 8),
-                ...subtitle.qualityTags.map((tag) => Container(
-                      margin: const EdgeInsets.only(right: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: _getTagColor(tag),
-                        borderRadius: BorderRadius.circular(2),
+                ...subtitle.qualityTags.map(
+                  (tag) => Container(
+                    margin: const EdgeInsets.only(right: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getTagColor(tag),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: Text(
+                      tag,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontSize: 10,
                       ),
-                      child: Text(
-                        tag,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                      ),
-                    )),
+                    ),
+                  ),
+                ),
               ],
               if (subtitle.release != null) ...[
                 const SizedBox(width: 8),
@@ -415,55 +423,49 @@ class _SubtitleDownloadDialogState extends ConsumerState<SubtitleDownloadDialog>
     required String message,
     Widget? action,
   }) => Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 64,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 64,
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(title, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (action != null) ...[
-              const SizedBox(height: 16),
-              action,
-            ],
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+          if (action != null) ...[const SizedBox(height: 16), action],
+        ],
       ),
-    );
+    ),
+  );
 
   Color _getLanguageColor(String languageCode) => switch (languageCode) {
-      'zh-cn' || 'zh-tw' || 'zh' => AppColors.error,
-      'en' => Colors.blue,
-      'ja' => Colors.pink,
-      'ko' => Colors.purple,
-      'fr' => Colors.indigo,
-      'de' => Colors.amber.shade700,
-      'es' => Colors.orange,
-      _ => Colors.grey,
-    };
+    'zh-cn' || 'zh-tw' || 'zh' => AppColors.error,
+    'en' => Colors.blue,
+    'ja' => Colors.pink,
+    'ko' => Colors.purple,
+    'fr' => Colors.indigo,
+    'de' => Colors.amber.shade700,
+    'es' => Colors.orange,
+    _ => Colors.grey,
+  };
 
   Color _getTagColor(String tag) => switch (tag) {
-      'SDH' => Colors.teal,
-      'AI' => Colors.deepPurple,
-      '机翻' => Colors.orange,
-      _ => Colors.grey,
-    };
+    'SDH' => Colors.teal,
+    'AI' => Colors.deepPurple,
+    '机翻' => Colors.orange,
+    _ => Colors.grey,
+  };
 
   String _formatDownloadCount(int count) {
     if (count >= 1000000) {

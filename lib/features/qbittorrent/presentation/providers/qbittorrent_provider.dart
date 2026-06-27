@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
@@ -26,28 +27,24 @@ class QBittorrentConnection {
     QBittorrentAdapter? adapter,
     QBConnectionStatus? status,
     String? errorMessage,
-  }) =>
-      QBittorrentConnection(
-        source: source ?? this.source,
-        adapter: adapter ?? this.adapter,
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
+  }) => QBittorrentConnection(
+    source: source ?? this.source,
+    adapter: adapter ?? this.adapter,
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+  );
 }
 
 /// 连接状态枚举
-enum QBConnectionStatus {
-  disconnected,
-  connecting,
-  connected,
-  error,
-}
+enum QBConnectionStatus { disconnected, connecting, connected, error }
 
 /// qBittorrent 连接管理 Provider
-final qbittorrentConnectionProvider = StateNotifierProvider.family<
-    QBittorrentConnectionNotifier, QBittorrentConnection?, String>(
-  (ref, sourceId) => QBittorrentConnectionNotifier(sourceId),
-);
+final qbittorrentConnectionProvider =
+    StateNotifierProvider.family<
+      QBittorrentConnectionNotifier,
+      QBittorrentConnection?,
+      String
+    >((ref, sourceId) => QBittorrentConnectionNotifier(sourceId));
 
 class QBittorrentConnectionNotifier
     extends StateNotifier<QBittorrentConnection?> {
@@ -71,7 +68,10 @@ class QBittorrentConnectionNotifier
       status: QBConnectionStatus.connecting,
     );
 
-    final config = ServiceConnectionConfig.fromSource(source, password: password);
+    final config = ServiceConnectionConfig.fromSource(
+      source,
+      password: password,
+    );
 
     try {
       final result = await adapter.connect(config);
@@ -121,53 +121,53 @@ class QBittorrentConnectionNotifier
 /// qBittorrent 下载统计 Provider
 final qbittorrentStatsProvider = FutureProvider.family
     .autoDispose<QBDownloadStats?, String>((ref, sourceId) async {
-  final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != QBConnectionStatus.connected) {
-    return null;
-  }
+      final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != QBConnectionStatus.connected) {
+        return null;
+      }
 
-  try {
-    return await connection.adapter.getDownloadStats();
-  } on Exception catch (e) {
-    logger.e('QBittorrentProvider: 获取下载统计失败', e);
-    return null;
-  }
-});
+      try {
+        return await connection.adapter.getDownloadStats();
+      } on Exception catch (e) {
+        logger.e('QBittorrentProvider: 获取下载统计失败', e);
+        return null;
+      }
+    });
 
 /// qBittorrent Torrent 列表 Provider
 final qbittorrentTorrentsProvider = FutureProvider.family
     .autoDispose<List<QBTorrent>, String>((ref, sourceId) async {
-  final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != QBConnectionStatus.connected) {
-    return [];
-  }
+      final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != QBConnectionStatus.connected) {
+        return [];
+      }
 
-  try {
-    return await connection.adapter.getTorrents();
-  } on Exception catch (e) {
-    logger.e('QBittorrentProvider: 获取 Torrent 列表失败', e);
-    return [];
-  }
-});
+      try {
+        return await connection.adapter.getTorrents();
+      } on Exception catch (e) {
+        logger.e('QBittorrentProvider: 获取 Torrent 列表失败', e);
+        return [];
+      }
+    });
 
 /// qBittorrent 传输信息 Provider（实时速度等）
 final qbittorrentTransferInfoProvider = FutureProvider.family
     .autoDispose<QBTransferInfo?, String>((ref, sourceId) async {
-  final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != QBConnectionStatus.connected) {
-    return null;
-  }
+      final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != QBConnectionStatus.connected) {
+        return null;
+      }
 
-  try {
-    return await connection.adapter.getTransferInfo();
-  } on Exception catch (e) {
-    logger.e('QBittorrentProvider: 获取传输信息失败', e);
-    return null;
-  }
-});
+      try {
+        return await connection.adapter.getTransferInfo();
+      } on Exception catch (e) {
+        logger.e('QBittorrentProvider: 获取传输信息失败', e);
+        return null;
+      }
+    });
 
 /// 自动刷新的 Torrent 列表 Provider
 class QBittorrentAutoRefreshNotifier extends StateNotifier<List<QBTorrent>> {
@@ -215,8 +215,8 @@ class QBittorrentAutoRefreshNotifier extends StateNotifier<List<QBTorrent>> {
 
 final qbittorrentAutoRefreshProvider = StateNotifierProvider.family
     .autoDispose<QBittorrentAutoRefreshNotifier, List<QBTorrent>, String>(
-  QBittorrentAutoRefreshNotifier.new,
-);
+      QBittorrentAutoRefreshNotifier.new,
+    );
 
 /// 自动刷新的传输信息 Provider
 class QBTransferInfoAutoRefreshNotifier extends StateNotifier<QBTransferInfo?> {
@@ -261,12 +261,13 @@ class QBTransferInfoAutoRefreshNotifier extends StateNotifier<QBTransferInfo?> {
 
 final qbTransferInfoAutoRefreshProvider = StateNotifierProvider.family
     .autoDispose<QBTransferInfoAutoRefreshNotifier, QBTransferInfo?, String>(
-  QBTransferInfoAutoRefreshNotifier.new,
-);
+      QBTransferInfoAutoRefreshNotifier.new,
+    );
 
 /// Torrent 操作 Provider
-final qbittorrentActionsProvider =
-    Provider.family<QBittorrentActions, String>(QBittorrentActions.new);
+final qbittorrentActionsProvider = Provider.family<QBittorrentActions, String>(
+  QBittorrentActions.new,
+);
 
 class QBittorrentActions {
   QBittorrentActions(this._ref, this._sourceId);
@@ -277,14 +278,21 @@ class QBittorrentActions {
   QBittorrentAdapter? get _adapter =>
       _ref.read(qbittorrentConnectionProvider(_sourceId))?.adapter;
 
+  QBittorrentAdapter _requireAdapter() {
+    final adapter = _adapter;
+    if (adapter == null) {
+      throw Exception(appL10n.qbittorrentAdapterNotConnected);
+    }
+    return adapter;
+  }
+
   void _invalidate() {
     _ref.invalidate(qbittorrentAutoRefreshProvider(_sourceId));
   }
 
   /// 暂停 Torrent
   Future<void> pause(List<String> hashes) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.pauseTorrents(hashes);
     _invalidate();
@@ -292,8 +300,7 @@ class QBittorrentActions {
 
   /// 暂停所有 Torrent
   Future<void> pauseAll() async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.pauseAllTorrents();
     _invalidate();
@@ -301,8 +308,7 @@ class QBittorrentActions {
 
   /// 恢复 Torrent
   Future<void> resume(List<String> hashes) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.resumeTorrents(hashes);
     _invalidate();
@@ -310,8 +316,7 @@ class QBittorrentActions {
 
   /// 恢复所有 Torrent
   Future<void> resumeAll() async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.resumeAllTorrents();
     _invalidate();
@@ -319,8 +324,7 @@ class QBittorrentActions {
 
   /// 删除 Torrent
   Future<void> delete(List<String> hashes, {bool deleteFiles = false}) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.deleteTorrents(hashes, deleteFiles: deleteFiles);
     _invalidate();
@@ -333,8 +337,7 @@ class QBittorrentActions {
     String? category,
     bool paused = false,
   }) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.addTorrent(
       url,
@@ -347,8 +350,7 @@ class QBittorrentActions {
 
   /// 重命名 Torrent
   Future<void> rename(String hash, String name) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.renameTorrent(hash, name);
     _invalidate();
@@ -356,8 +358,7 @@ class QBittorrentActions {
 
   /// 设置 Torrent 保存位置
   Future<void> setLocation(List<String> hashes, String location) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.setTorrentLocation(hashes, location);
     _invalidate();
@@ -365,8 +366,7 @@ class QBittorrentActions {
 
   /// 设置 Torrent 分类
   Future<void> setCategory(List<String> hashes, String category) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.setTorrentCategory(hashes, category);
     _invalidate();
@@ -374,8 +374,7 @@ class QBittorrentActions {
 
   /// 添加标签到 Torrent
   Future<void> addTags(List<String> hashes, List<String> tags) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.addTorrentTags(hashes, tags);
     _invalidate();
@@ -383,8 +382,7 @@ class QBittorrentActions {
 
   /// 从 Torrent 移除标签
   Future<void> removeTags(List<String> hashes, List<String> tags) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.removeTorrentTags(hashes, tags);
     _invalidate();
@@ -392,18 +390,17 @@ class QBittorrentActions {
 
   /// 切换备用速度限制
   Future<void> toggleAlternativeSpeedLimits() async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.toggleAlternativeSpeedLimits();
-    _ref..invalidate(qbPreferencesProvider(_sourceId))
-    ..invalidate(qbTransferInfoAutoRefreshProvider(_sourceId));
+    _ref
+      ..invalidate(qbPreferencesProvider(_sourceId))
+      ..invalidate(qbTransferInfoAutoRefreshProvider(_sourceId));
   }
 
   /// 设置全局限速
   Future<void> setGlobalSpeedLimits({int? dlLimit, int? upLimit}) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.setGlobalSpeedLimits(dlLimit: dlLimit, upLimit: upLimit);
     _ref.invalidate(qbPreferencesProvider(_sourceId));
@@ -411,8 +408,7 @@ class QBittorrentActions {
 
   /// 设置备用速度限速
   Future<void> setAlternativeSpeedLimits({int? dlLimit, int? upLimit}) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.setAlternativeSpeedLimits(dlLimit: dlLimit, upLimit: upLimit);
     _ref.invalidate(qbPreferencesProvider(_sourceId));
@@ -420,8 +416,7 @@ class QBittorrentActions {
 
   /// 创建分类
   Future<void> createCategory(String category, {String? savePath}) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.createCategory(category, savePath: savePath);
     _ref.invalidate(qbCategoriesProvider(_sourceId));
@@ -429,8 +424,7 @@ class QBittorrentActions {
 
   /// 创建标签
   Future<void> createTags(List<String> tags) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.createTags(tags);
     _ref.invalidate(qbTagsProvider(_sourceId));
@@ -440,26 +434,27 @@ class QBittorrentActions {
 /// qBittorrent 分类 Provider
 final qbCategoriesProvider = FutureProvider.family
     .autoDispose<Map<String, QBCategory>, String>((ref, sourceId) async {
-  final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != QBConnectionStatus.connected) {
-    return {};
-  }
+      final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != QBConnectionStatus.connected) {
+        return {};
+      }
 
-  try {
-    return await connection.adapter.getCategories();
-  } on Exception catch (e) {
-    logger.e('QBittorrentProvider: 获取分类失败', e);
-    return {};
-  }
-});
+      try {
+        return await connection.adapter.getCategories();
+      } on Exception catch (e) {
+        logger.e('QBittorrentProvider: 获取分类失败', e);
+        return {};
+      }
+    });
 
 /// qBittorrent 标签 Provider
-final qbTagsProvider = FutureProvider.family
-    .autoDispose<List<String>, String>((ref, sourceId) async {
+final qbTagsProvider = FutureProvider.family.autoDispose<List<String>, String>((
+  ref,
+  sourceId,
+) async {
   final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != QBConnectionStatus.connected) {
+  if (connection == null || connection.status != QBConnectionStatus.connected) {
     return [];
   }
 
@@ -474,36 +469,36 @@ final qbTagsProvider = FutureProvider.family
 /// qBittorrent 偏好设置 Provider
 final qbPreferencesProvider = FutureProvider.family
     .autoDispose<QBPreferences?, String>((ref, sourceId) async {
-  final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != QBConnectionStatus.connected) {
-    return null;
-  }
+      final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != QBConnectionStatus.connected) {
+        return null;
+      }
 
-  try {
-    return await connection.adapter.getPreferences();
-  } on Exception catch (e) {
-    logger.e('QBittorrentProvider: 获取偏好设置失败', e);
-    return null;
-  }
-});
+      try {
+        return await connection.adapter.getPreferences();
+      } on Exception catch (e) {
+        logger.e('QBittorrentProvider: 获取偏好设置失败', e);
+        return null;
+      }
+    });
 
 /// qBittorrent 单个 Torrent 的文件列表 Provider（key = (sourceId, hash)）。
 final qbTorrentFilesProvider = FutureProvider.autoDispose
     .family<List<QBTorrentFile>, (String, String)>((ref, key) async {
-  final (sourceId, hash) = key;
-  final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != QBConnectionStatus.connected) {
-    return const [];
-  }
-  try {
-    return await connection.adapter.getTorrentFiles(hash);
-  } on Exception catch (e) {
-    logger.e('QBittorrentProvider: 获取文件列表失败', e);
-    return const [];
-  }
-});
+      final (sourceId, hash) = key;
+      final connection = ref.watch(qbittorrentConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != QBConnectionStatus.connected) {
+        return const [];
+      }
+      try {
+        return await connection.adapter.getTorrentFiles(hash);
+      } on Exception catch (e) {
+        logger.e('QBittorrentProvider: 获取文件列表失败', e);
+        return const [];
+      }
+    });
 
 /// Torrent 排序方式
 enum QBSortMode {
@@ -537,7 +532,10 @@ class QBSortSettingsNotifier extends StateNotifier<QBSortSettings> {
   }
 
   void setFilterCategory(String? category) {
-    state = state.copyWith(filterCategory: category, clearCategory: category == null);
+    state = state.copyWith(
+      filterCategory: category,
+      clearCategory: category == null,
+    );
   }
 
   void setFilterTag(String? tag) {
@@ -565,16 +563,19 @@ class QBSortSettings {
     String? filterTag,
     bool clearCategory = false,
     bool clearTag = false,
-  }) =>
-      QBSortSettings(
-        sortMode: sortMode ?? this.sortMode,
-        reverse: reverse ?? this.reverse,
-        filterCategory: clearCategory ? null : (filterCategory ?? this.filterCategory),
-        filterTag: clearTag ? null : (filterTag ?? this.filterTag),
-      );
+  }) => QBSortSettings(
+    sortMode: sortMode ?? this.sortMode,
+    reverse: reverse ?? this.reverse,
+    filterCategory: clearCategory
+        ? null
+        : (filterCategory ?? this.filterCategory),
+    filterTag: clearTag ? null : (filterTag ?? this.filterTag),
+  );
 }
 
-final qbSortSettingsProvider = StateNotifierProvider.family<
-    QBSortSettingsNotifier, QBSortSettings, String>(
-  (ref, sourceId) => QBSortSettingsNotifier(),
-);
+final qbSortSettingsProvider =
+    StateNotifierProvider.family<
+      QBSortSettingsNotifier,
+      QBSortSettings,
+      String
+    >((ref, sourceId) => QBSortSettingsNotifier());

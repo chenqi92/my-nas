@@ -69,6 +69,9 @@ class TraktAdapter implements ServiceAdapter {
           'accessToken': tokenResponse.accessToken,
           'refreshToken': tokenResponse.refreshToken,
           'expiresIn': tokenResponse.expiresIn,
+          'tokenExpiresAt': DateTime.now()
+              .add(Duration(seconds: tokenResponse.expiresIn))
+              .toIso8601String(),
         },
       );
 
@@ -77,7 +80,9 @@ class TraktAdapter implements ServiceAdapter {
       return ServiceConnectionFailure(e.message);
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'authenticateTraktWithCode');
-      return ServiceConnectionFailure(appL10n.traktAdapterAuthenticationFailed(e));
+      return ServiceConnectionFailure(
+        appL10n.traktAdapterAuthenticationFailed(e),
+      );
     }
   }
 
@@ -91,13 +96,16 @@ class TraktAdapter implements ServiceAdapter {
         return ServiceConnectionFailure(appL10n.traktAdapterMissingOAuthConfig);
       }
 
-      final clientId = extraConfig['clientId'] as String?;
-      final clientSecret = extraConfig['clientSecret'] as String?;
-      final accessToken = extraConfig['accessToken'] as String?;
-      final refreshToken = extraConfig['refreshToken'] as String?;
+      final clientId = _readString(extraConfig['clientId']);
+      final clientSecret = _readString(extraConfig['clientSecret']);
+      final accessToken = _readString(extraConfig['accessToken']);
+      final refreshToken = _readString(extraConfig['refreshToken']);
+      final tokenExpiresAt = _readTokenExpiresAt(extraConfig);
 
       if (clientId == null || clientSecret == null) {
-        return ServiceConnectionFailure(appL10n.traktAdapterMissingClientCredentials);
+        return ServiceConnectionFailure(
+          appL10n.traktAdapterMissingClientCredentials,
+        );
       }
 
       _api = TraktApi(
@@ -105,11 +113,14 @@ class TraktAdapter implements ServiceAdapter {
         clientSecret: clientSecret,
         accessToken: accessToken,
         refreshToken: refreshToken,
+        tokenExpiresAt: tokenExpiresAt,
       );
 
       // 如果没有 token，需要进行 OAuth 授权
       if (accessToken == null || accessToken.isEmpty) {
-        return ServiceConnectionFailure(appL10n.traktAdapterRequiresOAuthAuthorization);
+        return ServiceConnectionFailure(
+          appL10n.traktAdapterRequiresOAuthAuthorization,
+        );
       }
 
       // 检查 token 是否需要刷新
@@ -124,7 +135,9 @@ class TraktAdapter implements ServiceAdapter {
         AppError.handle(e, st, 'getTraktUserSettings');
         _api?.dispose();
         _api = null;
-        return ServiceConnectionFailure(appL10n.traktAdapterConnectionVerificationFailed(e));
+        return ServiceConnectionFailure(
+          appL10n.traktAdapterConnectionVerificationFailed(e),
+        );
       }
 
       _connection = config;
@@ -257,6 +270,26 @@ class TraktAdapter implements ServiceAdapter {
     if (!isConnected) {
       throw TraktApiException(appL10n.traktAdapterNotConnected);
     }
+  }
+
+  String? _readString(Object? value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
+  }
+
+  DateTime? _readTokenExpiresAt(Map<String, dynamic> extraConfig) {
+    final raw = extraConfig['tokenExpiresAt'] ?? extraConfig['expiresAt'];
+    if (raw is DateTime) return raw;
+    if (raw != null) {
+      final parsed = DateTime.tryParse(raw.toString());
+      if (parsed != null) return parsed;
+    }
+
+    final expiresIn = int.tryParse(extraConfig['expiresIn']?.toString() ?? '');
+    if (expiresIn != null && expiresIn > 0) {
+      return DateTime.now().add(Duration(seconds: expiresIn));
+    }
+    return null;
   }
 }
 

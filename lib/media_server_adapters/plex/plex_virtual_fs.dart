@@ -10,11 +10,9 @@ import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 ///
 /// 将 Plex 媒体库映射为文件系统结构，用于文件浏览器兼容
 class PlexVirtualFileSystem implements NasFileSystem {
-  PlexVirtualFileSystem({
-    required PlexApi api,
-    required String sourceId,
-  })  : _api = api,
-        _sourceId = sourceId;
+  PlexVirtualFileSystem({required PlexApi api, required String sourceId})
+    : _api = api,
+      _sourceId = sourceId;
 
   final PlexApi _api;
   // ignore: unused_field
@@ -24,6 +22,15 @@ class PlexVirtualFileSystem implements NasFileSystem {
   List<PlexLibrary>? _librariesCache;
   final Map<String, String> _pathToKeyCache = {};
   final Map<String, PlexMediaItem> _itemCache = {};
+
+  @override
+  bool get supportsWriteOperations => false;
+
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  bool get supportsDirectFileUrl => true;
 
   @override
   Future<List<FileItem>> listDirectory(String path) async {
@@ -53,12 +60,7 @@ class PlexVirtualFileSystem implements NasFileSystem {
     final normalizedPath = _normalizePath(path);
 
     if (normalizedPath == '/') {
-      return const FileItem(
-        name: '/',
-        path: '/',
-        isDirectory: true,
-        size: 0,
-      );
+      return const FileItem(name: '/', path: '/', isDirectory: true, size: 0);
     }
 
     final ratingKey = await _resolvePathToKey(normalizedPath);
@@ -70,9 +72,9 @@ class PlexVirtualFileSystem implements NasFileSystem {
       final libraryKey = ratingKey.substring(8);
       _librariesCache ??= await _api.getLibraries();
       final library = _librariesCache!.cast<PlexLibrary?>().firstWhere(
-            (lib) => lib!.key == libraryKey,
-            orElse: () => null,
-          );
+        (lib) => lib!.key == libraryKey,
+        orElse: () => null,
+      );
       if (library == null) {
         throw Exception(appL10n.plexVfsLibraryNotExist(libraryKey));
       }
@@ -93,7 +95,10 @@ class PlexVirtualFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
+  Future<Stream<List<int>>> getFileStream(
+    String path, {
+    FileRange? range,
+  }) async {
     throw UnsupportedError(appL10n.plexVfsDirectReadStreamNotSupported);
   }
 
@@ -195,7 +200,10 @@ class PlexVirtualFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 
   // === 私有方法 ===
 
@@ -217,12 +225,7 @@ class PlexVirtualFileSystem implements NasFileSystem {
       final path = '/${lib.title}';
       _pathToKeyCache[path] = 'library:${lib.key}';
 
-      return FileItem(
-        name: lib.title,
-        path: path,
-        isDirectory: true,
-        size: 0,
-      );
+      return FileItem(name: lib.title, path: path, isDirectory: true, size: 0);
     }).toList();
   }
 
@@ -266,9 +269,9 @@ class PlexVirtualFileSystem implements NasFileSystem {
 
     final libraryName = parts[0];
     final library = _librariesCache!.cast<PlexLibrary?>().firstWhere(
-          (lib) => lib!.title == libraryName,
-          orElse: () => null,
-        );
+      (lib) => lib!.title == libraryName,
+      orElse: () => null,
+    );
     if (library == null) return null;
 
     if (parts.length == 1) {
@@ -284,9 +287,9 @@ class PlexVirtualFileSystem implements NasFileSystem {
     for (var i = 1; i < parts.length; i++) {
       final name = _stripExtension(parts[i]);
       final item = result.items.cast<PlexMediaItem?>().firstWhere(
-            (item) => item!.title == name,
-            orElse: () => null,
-          );
+        (item) => item!.title == name,
+        orElse: () => null,
+      );
       if (item == null) return null;
       currentKey = item.ratingKey;
       _itemCache[item.ratingKey] = item;

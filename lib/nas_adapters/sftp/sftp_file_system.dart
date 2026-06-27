@@ -18,6 +18,15 @@ class SftpFileSystem implements NasFileSystem {
 
   final SftpClient _sftp;
 
+  @override
+  bool get supportsWriteOperations => true;
+
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  bool get supportsDirectFileUrl => false;
+
   String _normalize(String path) =>
       path.isEmpty ? '/' : (path.startsWith('/') ? path : '/$path');
 
@@ -26,9 +35,9 @@ class SftpFileSystem implements NasFileSystem {
     try {
       final normalized = _normalize(path);
       final entries = await _sftp.listdir(normalized);
-      return entries
-          .where((e) => e.filename != '.' && e.filename != '..')
-          .map((e) {
+      return entries.where((e) => e.filename != '.' && e.filename != '..').map((
+        e,
+      ) {
         final isDir = e.attr.isDirectory;
         final fullPath = normalized.endsWith('/')
             ? '$normalized${e.filename}'
@@ -73,9 +82,9 @@ class SftpFileSystem implements NasFileSystem {
 
   @override
   Future<Stream<List<int>>> getFileStream(
-    String path,
-    {FileRange? range,}
-  ) async {
+    String path, {
+    FileRange? range,
+  }) async {
     try {
       final normalized = _normalize(path);
       final file = await _sftp.open(normalized);
@@ -139,7 +148,9 @@ class SftpFileSystem implements NasFileSystem {
 
   @override
   Future<void> copy(String sourcePath, String destPath) =>
-      throw UnimplementedError(appL10n.sftpFileSystemServerSideCopyNotSupported);
+      throw UnimplementedError(
+        appL10n.sftpFileSystemServerSideCopyNotSupported,
+      );
 
   @override
   Future<void> move(String sourcePath, String destPath) =>
@@ -159,7 +170,8 @@ class SftpFileSystem implements NasFileSystem {
           : '$remotePath/$name';
       final remoteFile = await _sftp.open(
         _normalize(destPath),
-        mode: SftpFileOpenMode.create |
+        mode:
+            SftpFileOpenMode.create |
             SftpFileOpenMode.write |
             SftpFileOpenMode.truncate,
       );
@@ -181,7 +193,8 @@ class SftpFileSystem implements NasFileSystem {
     try {
       final file = await _sftp.open(
         _normalize(remotePath),
-        mode: SftpFileOpenMode.create |
+        mode:
+            SftpFileOpenMode.create |
             SftpFileOpenMode.write |
             SftpFileOpenMode.truncate,
       );
@@ -205,8 +218,10 @@ class SftpFileSystem implements NasFileSystem {
       null;
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async =>
-      null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 
   /// 释放 SFTP 子会话；上层 [SftpAdapter] 还会关闭 SSH 客户端
   Future<void> dispose() async {

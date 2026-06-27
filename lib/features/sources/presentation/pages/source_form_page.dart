@@ -13,6 +13,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/sources/presentation/widgets/plex_auth_widget.dart';
 import 'package:my_nas/features/sources/presentation/widgets/quick_connect_widget.dart';
 import 'package:my_nas/features/sources/presentation/widgets/two_fa_sheet.dart';
+import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/media_server_adapters/emby/emby_adapter.dart';
 import 'package:my_nas/media_server_adapters/jellyfin/jellyfin_adapter.dart';
@@ -22,6 +23,7 @@ import 'package:my_nas/service_adapters/base/service_adapter.dart';
 import 'package:my_nas/service_adapters/moviepilot/api/moviepilot_api.dart';
 import 'package:my_nas/service_adapters/nastool/api/nastool_api.dart';
 import 'package:my_nas/service_adapters/qbittorrent/api/qbittorrent_api.dart';
+import 'package:my_nas/service_adapters/trakt/api/trakt_api.dart';
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/source_defaults_provider.dart';
@@ -40,7 +42,17 @@ class _ConnectionValidationNotImplementedException implements Exception {
   final String sourceTypeName;
 
   @override
-  String toString() => appL10n.sourceFormValidationNotImplemented(sourceTypeName);
+  String toString() =>
+      appL10n.sourceFormValidationNotImplemented(sourceTypeName);
+}
+
+class _ConnectionRequiresAuthorizationException implements Exception {
+  const _ConnectionRequiresAuthorizationException(this.sourceTypeName);
+  final String sourceTypeName;
+
+  @override
+  String toString() =>
+      appL10n.sourceFormConnectionTestRequiresAuth(sourceTypeName);
 }
 
 /// 源表单页面
@@ -459,7 +471,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return context.l10n.sourceFormFieldRequired(localizeFormText(context, field.label));
+            return context.l10n.sourceFormFieldRequired(
+              localizeFormText(context, field.label),
+            );
           }
           return field.validator?.call(value);
         },
@@ -470,47 +484,51 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         },
       );
 
-  Widget _buildPasswordField(SourceFormField field, ThemeData theme) =>
-      TextFormField(
-        controller: _controllers[field.key],
-        obscureText: _obscurePasswords,
-        decoration: InputDecoration(
-          labelText: widget.mode == SourceFormMode.edit
-              ? '${localizeFormText(context, field.label)}${context.l10n.sourceFormPasswordEditModeHint}'
-              : localizeFormText(context, field.label),
-          hintText: localizeFormText(context, field.placeholder),
-          helperText: localizeFormText(context, field.helpText),
-          helperMaxLines: 2,
-          prefixIcon: _getFieldIcon(field.key),
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscurePasswords
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-            ),
-            onPressed: () {
-              setState(() {
-                _obscurePasswords = !_obscurePasswords;
-              });
-            },
-          ),
+  Widget _buildPasswordField(
+    SourceFormField field,
+    ThemeData theme,
+  ) => TextFormField(
+    controller: _controllers[field.key],
+    obscureText: _obscurePasswords,
+    decoration: InputDecoration(
+      labelText: widget.mode == SourceFormMode.edit
+          ? '${localizeFormText(context, field.label)}${context.l10n.sourceFormPasswordEditModeHint}'
+          : localizeFormText(context, field.label),
+      hintText: localizeFormText(context, field.placeholder),
+      helperText: localizeFormText(context, field.helpText),
+      helperMaxLines: 2,
+      prefixIcon: _getFieldIcon(field.key),
+      suffixIcon: IconButton(
+        icon: Icon(
+          _obscurePasswords
+              ? Icons.visibility_outlined
+              : Icons.visibility_off_outlined,
         ),
-        validator: (value) {
-          if (field.required && (value == null || value.isEmpty)) {
-            // 编辑模式下密码可以为空（保持不变）
-            if (widget.mode == SourceFormMode.edit) {
-              return null;
-            }
-            return context.l10n.sourceFormPasswordRequired(localizeFormText(context, field.label));
-          }
-          return field.validator?.call(value);
-        },
-        onChanged: (value) {
+        onPressed: () {
           setState(() {
-            _formValues[field.key] = value;
+            _obscurePasswords = !_obscurePasswords;
           });
         },
-      );
+      ),
+    ),
+    validator: (value) {
+      if (field.required && (value == null || value.isEmpty)) {
+        // 编辑模式下密码可以为空（保持不变）
+        if (widget.mode == SourceFormMode.edit) {
+          return null;
+        }
+        return context.l10n.sourceFormPasswordRequired(
+          localizeFormText(context, field.label),
+        );
+      }
+      return field.validator?.call(value);
+    },
+    onChanged: (value) {
+      setState(() {
+        _formValues[field.key] = value;
+      });
+    },
+  );
 
   Widget _buildNumberField(SourceFormField field, ThemeData theme) =>
       TextFormField(
@@ -526,7 +544,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         ),
         validator: (value) {
           if (field.required && (value == null || value.isEmpty)) {
-            return context.l10n.sourceFormFieldRequired(localizeFormText(context, field.label));
+            return context.l10n.sourceFormFieldRequired(
+              localizeFormText(context, field.label),
+            );
           }
           if (value != null && value.isNotEmpty) {
             final number = int.tryParse(value);
@@ -549,7 +569,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(localizeFormText(context, field.label)),
-      subtitle: field.helpText != null ? Text(localizeFormText(context, field.helpText)) : null,
+      subtitle: field.helpText != null
+          ? Text(localizeFormText(context, field.helpText))
+          : null,
       value: value,
       onChanged: (newValue) {
         setState(() {
@@ -573,7 +595,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       ),
       items: field.options
           ?.map(
-            (option) => DropdownMenuItem(value: option, child: Text(localizeFormText(context, option))),
+            (option) => DropdownMenuItem(
+              value: option,
+              child: Text(localizeFormText(context, option)),
+            ),
           )
           .toList(),
       onChanged: (value) {
@@ -624,7 +649,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         Row(
           children: [
             Expanded(
-              child: Text(localizeFormText(context, field.label), style: theme.textTheme.titleSmall),
+              child: Text(
+                localizeFormText(context, field.label),
+                style: theme.textTheme.titleSmall,
+              ),
             ),
             TextButton.icon(
               onPressed: () {
@@ -850,7 +878,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       final l = AppLocalizations.of(context);
       _showSuccessSnackBar(l.sourceFormQuickConnectAuthSuccess);
     } else {
-      _showErrorSnackBar(result.errorMessage ?? context.l10n.sourceFormQuickConnectAuthFailed);
+      _showErrorSnackBar(
+        result.errorMessage ?? context.l10n.sourceFormQuickConnectAuthFailed,
+      );
     }
   }
 
@@ -909,7 +939,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                 ],
               ),
             ),
-            TextButton(onPressed: _resetPlexAuth, child: Text(context.l10n.sourceFormReauthorizeButton)),
+            TextButton(
+              onPressed: _resetPlexAuth,
+              child: Text(context.l10n.sourceFormReauthorizeButton),
+            ),
           ],
         ),
       );
@@ -970,7 +1003,11 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                 color: Colors.white,
               ),
             )
-          : Text(widget.mode == SourceFormMode.edit ? context.l10n.sourceFormSaveButton : context.l10n.sourceFormAddAndConnectButton),
+          : Text(
+              widget.mode == SourceFormMode.edit
+                  ? context.l10n.sourceFormSaveButton
+                  : context.l10n.sourceFormAddAndConnectButton,
+            ),
     ),
   );
 
@@ -1032,14 +1069,20 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         case SourceStatus.requires2FA:
           _showWarningSnackBar(context.l10n.sourceFormRequires2FA);
         case SourceStatus.error:
-          _showErrorSnackBar(context.l10n.sourceFormConnectionFailed(connection.errorMessage ?? context.l10n.sourceFormUnknownError));
+          _showErrorSnackBar(
+            context.l10n.sourceFormConnectionFailed(
+              connection.errorMessage ?? context.l10n.sourceFormUnknownError,
+            ),
+          );
         default:
           final l = AppLocalizations.of(context);
           _showErrorSnackBar(l.sourceFormConnectionStatusError);
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar(AppLocalizations.of(context).sourceFormConnectionTestFailed(e));
+      _showErrorSnackBar(
+        AppLocalizations.of(context).sourceFormConnectionTestFailed(e),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -1064,9 +1107,16 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       } else {
         _showErrorSnackBar(context.l10n.sourceFormConnectionCheckFailed);
       }
+    } on _ConnectionRequiresAuthorizationException catch (e) {
+      if (!mounted) return;
+      _showSuccessSnackBar(
+        context.l10n.sourceFormConnectionTestRequiresAuth(e.sourceTypeName),
+      );
     } on Exception catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar(AppLocalizations.of(context).sourceFormConnectionTestFailed(e));
+      _showErrorSnackBar(
+        AppLocalizations.of(context).sourceFormConnectionTestFailed(e),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -1090,7 +1140,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       }
     } on Exception catch (e) {
       if (!mounted) return;
-      _showErrorSnackBar(AppLocalizations.of(context).sourceFormConnectionTestFailed(e));
+      _showErrorSnackBar(
+        AppLocalizations.of(context).sourceFormConnectionTestFailed(e),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -1100,11 +1152,25 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     }
   }
 
+  String? _extraString(SourceEntity source, String key) {
+    final text = source.extraConfig?[key]?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
+  }
+
+  DateTime? _extraDateTime(SourceEntity source, String key) {
+    final raw = source.extraConfig?[key];
+    if (raw is DateTime) return raw;
+    if (raw == null) return null;
+    return DateTime.tryParse(raw.toString());
+  }
+
   /// 验证服务类源连接
   Future<bool> _validateServiceSourceConnection(SourceEntity source) async {
     switch (source.type) {
       case SourceType.nastool:
-        final authType = _formValues['authType'] as String? ?? context.l10n.sourceFormAuthTypeUsernamePassword;
+        final authType =
+            _formValues['authType'] as String? ??
+            context.l10n.sourceFormAuthTypeUsernamePassword;
         final api = NasToolApi(baseUrl: source.baseUrl);
         try {
           if (authType == 'API Token') {
@@ -1174,7 +1240,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           mpApi.dispose();
         }
       case SourceType.jellyfin:
-        final jellyfinAuthType = _formValues['authType'] as String? ?? context.l10n.sourceFormAuthTypeUsernamePassword;
+        final jellyfinAuthType =
+            _formValues['authType'] as String? ??
+            context.l10n.sourceFormAuthTypeUsernamePassword;
         final jellyfinAdapter = JellyfinAdapter();
         try {
           ServiceConnectionConfig config;
@@ -1208,7 +1276,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           await jellyfinAdapter.dispose();
         }
       case SourceType.plex:
-        final plexAuthType = _formValues['authType'] as String? ?? context.l10n.sourceFormAuthTypePinAuthorization;
+        final plexAuthType =
+            _formValues['authType'] as String? ??
+            context.l10n.sourceFormAuthTypePinAuthorization;
         final plexAdapter = PlexAdapter();
         try {
           String? plexToken;
@@ -1234,7 +1304,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           await plexAdapter.dispose();
         }
       case SourceType.emby:
-        final embyAuthType = _formValues['authType'] as String? ?? context.l10n.sourceFormAuthTypeUsernamePassword;
+        final embyAuthType =
+            _formValues['authType'] as String? ??
+            context.l10n.sourceFormAuthTypeUsernamePassword;
         final embyAdapter = EmbyAdapter();
         try {
           ServiceConnectionConfig config;
@@ -1257,11 +1329,51 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         } finally {
           await embyAdapter.dispose();
         }
-      case SourceType.trakt:
-        // Trakt OAuth 验证待实现；用类型化异常告知调用方区分"未实现" vs "失败"
-        throw _ConnectionValidationNotImplementedException(
-          source.type.displayName,
+      case SourceType.opensubtitles:
+        final username = source.username.trim();
+        final password = _formValues['password'] as String? ?? '';
+        final apiKey = source.apiKey?.trim();
+        final service = OpenSubtitlesService(
+          apiKey: (apiKey?.isNotEmpty ?? false)
+              ? apiKey!
+              : OpenSubtitlesService.defaultApiKey,
+          username: username.isNotEmpty ? username : null,
+          password: password.isNotEmpty ? password : null,
         );
+        return service.validateConnection();
+      case SourceType.trakt:
+        final clientId = _extraString(source, 'clientId');
+        final clientSecret = _extraString(source, 'clientSecret');
+        if (clientId == null || clientSecret == null) return false;
+
+        final accessToken =
+            source.accessToken ?? _extraString(source, 'accessToken');
+        final refreshToken =
+            source.refreshToken ?? _extraString(source, 'refreshToken');
+        final tokenExpiresAt =
+            source.tokenExpiresAt ??
+            _extraDateTime(source, 'tokenExpiresAt') ??
+            _extraDateTime(source, 'expiresAt');
+
+        final traktApi = TraktApi(
+          clientId: clientId,
+          clientSecret: clientSecret,
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+          tokenExpiresAt: tokenExpiresAt,
+        );
+        try {
+          if (accessToken != null && accessToken.isNotEmpty) {
+            return await traktApi.validateAuthenticatedConnection();
+          }
+          final appCredentialsValid = await traktApi.validateAppCredentials();
+          if (!appCredentialsValid) return false;
+          throw _ConnectionRequiresAuthorizationException(
+            source.type.displayName,
+          );
+        } finally {
+          traktApi.dispose();
+        }
       default:
         // 其它未列出的服务类型同样标记为"未实现自动验证"，让 UI 给出友好提示
         throw _ConnectionValidationNotImplementedException(
@@ -1414,7 +1526,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           await ref
               .read(activeConnectionsProvider.notifier)
               .connect(source, password: password);
-          _showSuccessAndPop(source, context.l10n.sourceFormConnectSuccess(source.displayName));
+          _showSuccessAndPop(
+            source,
+            context.l10n.sourceFormConnectSuccess(source.displayName),
+          );
         }
 
       case SourceStatus.requires2FA:
@@ -1425,7 +1540,11 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         // 连接失败
         // 断开临时连接
         await sourceManager.disconnect(source.id);
-        _showErrorSnackBar(context.l10n.sourceFormConnectionFailed(connection.errorMessage ?? context.l10n.sourceFormUnknownError));
+        _showErrorSnackBar(
+          context.l10n.sourceFormConnectionFailed(
+            connection.errorMessage ?? context.l10n.sourceFormUnknownError,
+          ),
+        );
 
       default:
         // 其他状态
@@ -1459,14 +1578,35 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         }
 
         if (mounted) {
-          _showSuccessAndPop(source, context.l10n.sourceFormAddSuccess(source.displayName));
+          _showSuccessAndPop(
+            source,
+            context.l10n.sourceFormAddSuccess(source.displayName),
+          );
         }
       } else {
         _showErrorSnackBar(context.l10n.sourceFormConnectionCheckFailed);
       }
+    } on _ConnectionRequiresAuthorizationException catch (e) {
+      if (!mounted) return;
+      await sourcesNotifier.addSource(source);
+      final password = _formValues['password'] as String? ?? '';
+      if (password.isNotEmpty) {
+        await sourceManager.saveCredential(
+          source.id,
+          SourceCredential(password: password),
+        );
+      }
+      if (mounted) {
+        _showSuccessAndPop(
+          source,
+          context.l10n.sourceFormServiceAddedPendingAuth(
+            source.displayName,
+            e.sourceTypeName,
+          ),
+        );
+      }
     } on _ConnectionValidationNotImplementedException catch (e) {
-      // 该源类型不支持表单内一键自动验证（如 Trakt 走交互式 OAuth 设备码授权，
-      // 连接在 media_tracking 流程中完成）。不应阻断添加：直接保存源，并提示
+      // 该源类型不支持表单内一键自动验证。不应阻断添加：直接保存源，并提示
       // 用户稍后到对应授权入口完成连接。
       if (!mounted) return;
       await sourcesNotifier.addSource(source);
@@ -1480,7 +1620,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       if (mounted) {
         _showSuccessAndPop(
           source,
-          context.l10n.sourceFormServiceAddedPendingAuth(source.displayName, e.sourceTypeName),
+          context.l10n.sourceFormServiceAddedPendingAuth(
+            source.displayName,
+            e.sourceTypeName,
+          ),
         );
       }
     } on Exception catch (e) {
@@ -1505,7 +1648,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         // 连接成功，保存源
         await sourcesNotifier.addSource(source);
         if (mounted) {
-          _showSuccessAndPop(source, context.l10n.sourceFormAddSuccess(source.displayName));
+          _showSuccessAndPop(
+            source,
+            context.l10n.sourceFormAddSuccess(source.displayName),
+          );
         }
       } else {
         _showErrorSnackBar(context.l10n.sourceFormConnectionCheckFailed);
@@ -1556,7 +1702,10 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         // 刷新连接状态（verify2FA 已经更新了底层状态为 connected）
         ref.read(activeConnectionsProvider.notifier).refresh();
         if (mounted) {
-          _showSuccessAndPop(source, context.l10n.sourceFormConnectSuccess(source.displayName));
+          _showSuccessAndPop(
+            source,
+            context.l10n.sourceFormConnectSuccess(source.displayName),
+          );
         }
 
       case TwoFAResultType.skipped:
@@ -1671,6 +1820,31 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     } else if (widget.sourceType == SourceType.plex) {
       // 如果是手动输入 Token 模式
       plexApiKey = _formValues['plexToken'] as String?;
+    }
+
+    if (widget.sourceType == SourceType.trakt) {
+      final existingAccessToken =
+          widget.existingSource?.accessToken ??
+          widget.existingSource?.extraConfig?['accessToken']?.toString();
+      final existingRefreshToken =
+          widget.existingSource?.refreshToken ??
+          widget.existingSource?.extraConfig?['refreshToken']?.toString();
+      final existingExpiresAt =
+          widget.existingSource?.tokenExpiresAt ??
+          (widget.existingSource == null
+              ? null
+              : _extraDateTime(widget.existingSource!, 'tokenExpiresAt'));
+
+      if (existingAccessToken != null && existingAccessToken.isNotEmpty) {
+        accessToken = existingAccessToken;
+        extraConfig['accessToken'] = existingAccessToken;
+      }
+      if (existingRefreshToken != null && existingRefreshToken.isNotEmpty) {
+        extraConfig['refreshToken'] = existingRefreshToken;
+      }
+      if (existingExpiresAt != null) {
+        extraConfig['tokenExpiresAt'] = existingExpiresAt.toIso8601String();
+      }
     }
 
     return SourceEntity(

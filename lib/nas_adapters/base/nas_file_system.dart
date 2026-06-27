@@ -2,6 +2,21 @@ import 'dart:typed_data';
 
 /// 文件系统抽象接口
 abstract class NasFileSystem {
+  /// 是否支持写操作。
+  bool get supportsWriteOperations => true;
+
+  /// 是否支持服务端复制。
+  ///
+  /// 返回 false 时，调用方不应以客户端下载再上传的方式静默兜底，避免大文件
+  /// 占用本地磁盘和网络双倍带宽。
+  bool get supportsServerSideCopy => supportsWriteOperations;
+
+  /// 是否能返回可交给下载器/播放器直接访问的 URL。
+  ///
+  /// 返回 false 时，调用方应使用 [getFileStream]，而不是把占位协议 URL 交给
+  /// HTTP 下载服务。
+  bool get supportsDirectFileUrl => true;
+
   /// 列出目录内容
   Future<List<FileItem>> listDirectory(String path);
 
@@ -74,7 +89,8 @@ abstract class NasFileSystem {
   ///
   /// [path] 文件路径
   /// [size] 缩略图尺寸（可选，默认 medium）
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) => Future.value();
+  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) =>
+      Future.value();
 }
 
 /// 文件项
@@ -162,11 +178,23 @@ enum FileType {
   static FileType fromExtension(String ext) {
     final e = ext.toLowerCase().replaceAll('.', '');
     return switch (e) {
-      'jpg' || 'jpeg' || 'png' || 'gif' || 'webp' || 'bmp' || 'svg' ||
-      'heic' || 'heif' ||  // iOS 默认格式
-      'tiff' || 'tif' ||   // TIFF 格式
-      'raw' || 'cr2' || 'nef' || 'arw' || 'dng' =>  // RAW 格式
-        FileType.image,
+      'jpg' ||
+      'jpeg' ||
+      'png' ||
+      'gif' ||
+      'webp' ||
+      'bmp' ||
+      'svg' ||
+      'heic' ||
+      'heif' || // iOS 默认格式
+      'tiff' ||
+      'tif' || // TIFF 格式
+      'raw' ||
+      'cr2' ||
+      'nef' ||
+      'arw' ||
+      'dng' => // RAW 格式
+      FileType.image,
       'mp4' ||
       'mkv' ||
       'avi' ||
@@ -176,8 +204,7 @@ enum FileType {
       'webm' ||
       'rmvb' ||
       'ts' ||
-      'm2ts' =>
-        FileType.video,
+      'm2ts' => FileType.video,
       'mp3' ||
       'flac' ||
       'wav' ||
@@ -188,15 +215,20 @@ enum FileType {
       'ape' ||
       'aiff' ||
       'dsd' ||
-      'ncm' ||    // 网易云音乐加密格式
-      'dsf' ||    // DSD 格式
-      'dff' ||    // DSD 格式
-      'alac' ||   // Apple Lossless
-      'opus' ||   // Opus 编码
-      'mka' ||    // Matroska 音频
-      'cue' =>    // CUE 分轨文件
-        FileType.audio,
-      'doc' || 'docx' || 'xls' || 'xlsx' || 'ppt' || 'pptx' => FileType.document,
+      'ncm' || // 网易云音乐加密格式
+      'dsf' || // DSD 格式
+      'dff' || // DSD 格式
+      'alac' || // Apple Lossless
+      'opus' || // Opus 编码
+      'mka' || // Matroska 音频
+      'cue' => // CUE 分轨文件
+      FileType.audio,
+      'doc' ||
+      'docx' ||
+      'xls' ||
+      'xlsx' ||
+      'ppt' ||
+      'pptx' => FileType.document,
       'zip' || 'rar' || '7z' || 'tar' || 'gz' || 'bz2' => FileType.archive,
       'cbz' || 'cbr' => FileType.comic,
       'dart' ||
@@ -216,8 +248,7 @@ enum FileType {
       'xml' ||
       'json' ||
       'yaml' ||
-      'yml' =>
-        FileType.code,
+      'yml' => FileType.code,
       'txt' || 'md' || 'log' => FileType.text,
       'pdf' => FileType.pdf,
       'epub' || 'mobi' || 'azw3' || 'fb2' => FileType.epub,

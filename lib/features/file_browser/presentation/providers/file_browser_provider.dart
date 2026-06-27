@@ -16,7 +16,8 @@ class BrowsableConnection {
     required this.isMediaServer,
   });
 
-  factory BrowsableConnection.fromNas(SourceConnection conn) => BrowsableConnection._(
+  factory BrowsableConnection.fromNas(SourceConnection conn) =>
+      BrowsableConnection._(
         sourceId: conn.source.id,
         fileSystem: conn.adapter.fileSystem,
         status: conn.status,
@@ -53,7 +54,9 @@ final selectedSourceConnectionProvider = Provider<SourceConnection?>((ref) {
 });
 
 /// 获取当前选中的可浏览连接（统一 NAS 和媒体服务器）
-final selectedBrowsableConnectionProvider = Provider<BrowsableConnection?>((ref) {
+final selectedBrowsableConnectionProvider = Provider<BrowsableConnection?>((
+  ref,
+) {
   final selectedId = ref.watch(selectedSourceIdProvider);
   if (selectedId == null) return null;
 
@@ -75,49 +78,53 @@ final selectedBrowsableConnectionProvider = Provider<BrowsableConnection?>((ref)
 });
 
 /// 获取所有已连接的源列表（NAS）
-final connectedSourcesProvider = Provider<List<(SourceEntity, SourceConnection)>>((ref) {
-  final sources = ref.watch(sourcesProvider).valueOrNull ?? [];
-  final connections = ref.watch(activeConnectionsProvider);
+final connectedSourcesProvider =
+    Provider<List<(SourceEntity, SourceConnection)>>((ref) {
+      final sources = ref.watch(sourcesProvider).valueOrNull ?? [];
+      final connections = ref.watch(activeConnectionsProvider);
 
-  final result = <(SourceEntity, SourceConnection)>[];
-  for (final source in sources) {
-    final connection = connections[source.id];
-    if (connection != null && connection.status == SourceStatus.connected) {
-      result.add((source, connection));
-    }
-  }
-  return result;
-});
+      final result = <(SourceEntity, SourceConnection)>[];
+      for (final source in sources) {
+        final connection = connections[source.id];
+        if (connection != null && connection.status == SourceStatus.connected) {
+          result.add((source, connection));
+        }
+      }
+      return result;
+    });
 
 /// 获取所有可浏览的已连接源列表（包括 NAS 和媒体服务器）
-final browsableSourcesProvider = Provider<List<(SourceEntity, BrowsableConnection)>>((ref) {
-  final sources = ref.watch(sourcesProvider).valueOrNull ?? [];
-  final nasConnections = ref.watch(activeConnectionsProvider);
-  final mediaConnections = ref.watch(activeMediaServerConnectionsProvider);
+final browsableSourcesProvider =
+    Provider<List<(SourceEntity, BrowsableConnection)>>((ref) {
+      final sources = ref.watch(sourcesProvider).valueOrNull ?? [];
+      final nasConnections = ref.watch(activeConnectionsProvider);
+      final mediaConnections = ref.watch(activeMediaServerConnectionsProvider);
 
-  final result = <(SourceEntity, BrowsableConnection)>[];
-  for (final source in sources) {
-    // 检查 NAS 连接
-    final nasConn = nasConnections[source.id];
-    if (nasConn != null && nasConn.status == SourceStatus.connected) {
-      result.add((source, BrowsableConnection.fromNas(nasConn)));
-      continue;
-    }
+      final result = <(SourceEntity, BrowsableConnection)>[];
+      for (final source in sources) {
+        // 检查 NAS 连接
+        final nasConn = nasConnections[source.id];
+        if (nasConn != null && nasConn.status == SourceStatus.connected) {
+          result.add((source, BrowsableConnection.fromNas(nasConn)));
+          continue;
+        }
 
-    // 检查媒体服务器连接
-    final mediaConn = mediaConnections[source.id];
-    if (mediaConn != null && mediaConn.status == SourceStatus.connected) {
-      result.add((source, BrowsableConnection.fromMediaServer(mediaConn)));
-    }
-  }
-  return result;
-});
+        // 检查媒体服务器连接
+        final mediaConn = mediaConnections[source.id];
+        if (mediaConn != null && mediaConn.status == SourceStatus.connected) {
+          result.add((source, BrowsableConnection.fromMediaServer(mediaConn)));
+        }
+      }
+      return result;
+    });
 
 /// 当前选中的连接是否支持写操作
 final supportsWriteOperationsProvider = Provider<bool>((ref) {
   final connection = ref.watch(selectedBrowsableConnectionProvider);
   // 媒体服务器不支持写操作
-  return connection != null && !connection.isMediaServer;
+  return connection != null &&
+      !connection.isMediaServer &&
+      connection.fileSystem.supportsWriteOperations;
 });
 
 /// 获取当前选中的源实体
@@ -130,8 +137,9 @@ final selectedSourceEntityProvider = Provider<SourceEntity?>((ref) {
 });
 
 /// 文件列表状态
-final fileListProvider =
-    StateNotifierProvider<FileListNotifier, FileListState>(FileListNotifier.new);
+final fileListProvider = StateNotifierProvider<FileListNotifier, FileListState>(
+  FileListNotifier.new,
+);
 
 /// 视图模式
 final viewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.grid);
@@ -162,10 +170,7 @@ class FileListLoading extends FileListState {
 }
 
 class FileListLoaded extends FileListState {
-  const FileListLoaded({
-    required this.files,
-    required this.path,
-  });
+  const FileListLoaded({required this.files, required this.path});
   final List<FileItem> files;
   final String path;
 }
@@ -293,7 +298,8 @@ class FileListNotifier extends StateNotifier<FileListState> {
   /// 获取父目录路径，正确处理跨平台路径分隔符
   String? _getParentPath(String currentPath) {
     // 检测是否是 Windows 路径（包含驱动器字母如 C: 或 D:）
-    final isWindowsPath = currentPath.length >= 2 &&
+    final isWindowsPath =
+        currentPath.length >= 2 &&
         currentPath[1] == ':' &&
         RegExp('^[A-Za-z]').hasMatch(currentPath);
 
@@ -356,7 +362,8 @@ class FileListNotifier extends StateNotifier<FileListState> {
     }
 
     // 检测是否是 Windows 路径
-    final isWindowsPath = oldPath.length >= 2 &&
+    final isWindowsPath =
+        oldPath.length >= 2 &&
         oldPath[1] == ':' &&
         RegExp('^[A-Za-z]').hasMatch(oldPath);
 
@@ -364,7 +371,9 @@ class FileListNotifier extends StateNotifier<FileListState> {
     if (isWindowsPath) {
       final normalized = oldPath.replaceAll('/', r'\');
       final lastSep = normalized.lastIndexOf(r'\');
-      final parentPath = lastSep > 0 ? normalized.substring(0, lastSep) : normalized;
+      final parentPath = lastSep > 0
+          ? normalized.substring(0, lastSep)
+          : normalized;
       newPath = '$parentPath\\$newName';
     } else {
       final lastSep = oldPath.lastIndexOf('/');
@@ -394,19 +403,30 @@ class FileListNotifier extends StateNotifier<FileListState> {
     await refresh();
   }
 
-  Future<void> copyTo(String sourcePath, String destPath,
-      {bool skipRefresh = false}) async {
+  Future<void> copyTo(
+    String sourcePath,
+    String destPath, {
+    bool skipRefresh = false,
+  }) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
       throw UnsupportedError(appL10n.fileBrowserCopyUnsupported);
     }
 
-    await connection.adapter.fileSystem.copy(sourcePath, destPath);
+    final fileSystem = connection.adapter.fileSystem;
+    if (!fileSystem.supportsServerSideCopy) {
+      throw UnsupportedError(appL10n.fileBrowserCopyUnsupported);
+    }
+
+    await fileSystem.copy(sourcePath, destPath);
     if (!skipRefresh) await refresh();
   }
 
-  Future<void> moveTo(String sourcePath, String destPath,
-      {bool skipRefresh = false}) async {
+  Future<void> moveTo(
+    String sourcePath,
+    String destPath, {
+    bool skipRefresh = false,
+  }) async {
     final connection = _getSelectedNasConnection();
     if (connection == null) {
       throw UnsupportedError(appL10n.fileBrowserMoveUnsupported);
@@ -431,10 +451,10 @@ class FileListNotifier extends StateNotifier<FileListState> {
       final result = switch (mode) {
         SortMode.name => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
         SortMode.size => a.size.compareTo(b.size),
-        SortMode.date => (a.modifiedTime ?? DateTime(0))
-            .compareTo(b.modifiedTime ?? DateTime(0)),
-        SortMode.type =>
-          (a.extension ?? '').compareTo(b.extension ?? ''),
+        SortMode.date => (a.modifiedTime ?? DateTime(0)).compareTo(
+          b.modifiedTime ?? DateTime(0),
+        ),
+        SortMode.type => (a.extension ?? '').compareTo(b.extension ?? ''),
       };
       return ascending ? result : -result;
     }

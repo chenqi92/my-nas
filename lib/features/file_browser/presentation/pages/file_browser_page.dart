@@ -2116,6 +2116,16 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       return;
     }
 
+    if (!connection.fileSystem.supportsDirectFileUrl) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(l.filesDirectDownloadUnsupported),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
     var successCount = 0;
     var failCount = 0;
 
@@ -2260,6 +2270,10 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     try {
+      if (!connection.fileSystem.supportsDirectFileUrl) {
+        throw UnsupportedError(l.filesDirectDownloadUnsupported);
+      }
+
       final url = await connection.fileSystem.getFileUrl(file.path);
       final service = ref.read(downloadServiceProvider);
       final task = await service.addTask(url: url, fileName: file.name);

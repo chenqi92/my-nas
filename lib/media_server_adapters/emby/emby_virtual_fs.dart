@@ -10,11 +10,9 @@ import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 ///
 /// 将 Emby 媒体库映射为文件系统结构，用于文件浏览器兼容
 class EmbyVirtualFileSystem implements NasFileSystem {
-  EmbyVirtualFileSystem({
-    required EmbyApi api,
-    required String sourceId,
-  })  : _api = api,
-        _sourceId = sourceId;
+  EmbyVirtualFileSystem({required EmbyApi api, required String sourceId})
+    : _api = api,
+      _sourceId = sourceId;
 
   final EmbyApi _api;
   // ignore: unused_field
@@ -24,6 +22,15 @@ class EmbyVirtualFileSystem implements NasFileSystem {
   List<JellyfinLibrary>? _librariesCache;
   final Map<String, String> _pathToIdCache = {};
   final Map<String, JellyfinItem> _itemCache = {};
+
+  @override
+  bool get supportsWriteOperations => false;
+
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  bool get supportsDirectFileUrl => true;
 
   @override
   Future<List<FileItem>> listDirectory(String path) async {
@@ -48,12 +55,7 @@ class EmbyVirtualFileSystem implements NasFileSystem {
     final normalizedPath = _normalizePath(path);
 
     if (normalizedPath == '/') {
-      return const FileItem(
-        name: '/',
-        path: '/',
-        isDirectory: true,
-        size: 0,
-      );
+      return const FileItem(name: '/', path: '/', isDirectory: true, size: 0);
     }
 
     final itemId = await _resolvePathToId(normalizedPath);
@@ -70,7 +72,10 @@ class EmbyVirtualFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
+  Future<Stream<List<int>>> getFileStream(
+    String path, {
+    FileRange? range,
+  }) async {
     throw UnsupportedError(appL10n.embyVfsUnsupportedStreamRead);
   }
 
@@ -156,7 +161,10 @@ class EmbyVirtualFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 
   // === 私有方法 ===
 
@@ -178,12 +186,7 @@ class EmbyVirtualFileSystem implements NasFileSystem {
       final path = '/${lib.name}';
       _pathToIdCache[path] = lib.id;
 
-      return FileItem(
-        name: lib.name,
-        path: path,
-        isDirectory: true,
-        size: 0,
-      );
+      return FileItem(name: lib.name, path: path, isDirectory: true, size: 0);
     }).toList();
   }
 
@@ -218,9 +221,9 @@ class EmbyVirtualFileSystem implements NasFileSystem {
     // 查找库
     final libraryName = parts[0];
     final library = _librariesCache!.cast<JellyfinLibrary?>().firstWhere(
-          (lib) => lib!.name == libraryName,
-          orElse: () => null,
-        );
+      (lib) => lib!.name == libraryName,
+      orElse: () => null,
+    );
     if (library == null) return null;
 
     if (parts.length == 1) {
@@ -234,9 +237,9 @@ class EmbyVirtualFileSystem implements NasFileSystem {
       final name = _stripExtension(parts[i]);
       final result = await _api.getItems(parentId: currentId, limit: 1000);
       final item = result.items.cast<JellyfinItem?>().firstWhere(
-            (item) => item!.name == name,
-            orElse: () => null,
-          );
+        (item) => item!.name == name,
+        orElse: () => null,
+      );
       if (item == null) return null;
       currentId = item.id;
       _itemCache[item.id] = item;
@@ -264,17 +267,17 @@ class EmbyVirtualFileSystem implements NasFileSystem {
   }
 
   FileItem _itemToFileItem(JellyfinItem item, String path) {
-    final isPlayable = item.type == 'Movie' ||
-        item.type == 'Episode' ||
-        item.type == 'Audio';
+    final isPlayable =
+        item.type == 'Movie' || item.type == 'Episode' || item.type == 'Audio';
 
     // 从 Emby item 的真实媒体源读取容器格式与文件大小（参考 emby_adapter
     // source.container / source.size 的取法）。getItems/getItem 默认不返回
     // MediaSources，缺失时回退默认扩展名与 0 字节。
     final source = _firstMediaSource(item);
     final container = (source?['Container'] as String?)?.trim();
-    final extension =
-        (container != null && container.isNotEmpty) ? container : 'mp4';
+    final extension = (container != null && container.isNotEmpty)
+        ? container
+        : 'mp4';
     final size = (source?['Size'] as num?)?.toInt() ?? 0;
 
     return FileItem(

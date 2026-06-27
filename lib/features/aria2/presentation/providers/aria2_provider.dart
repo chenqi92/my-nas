@@ -27,28 +27,24 @@ class Aria2Connection {
     Aria2Adapter? adapter,
     Aria2ConnectionStatus? status,
     String? errorMessage,
-  }) =>
-      Aria2Connection(
-        source: source ?? this.source,
-        adapter: adapter ?? this.adapter,
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
+  }) => Aria2Connection(
+    source: source ?? this.source,
+    adapter: adapter ?? this.adapter,
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+  );
 }
 
 /// 连接状态枚举
-enum Aria2ConnectionStatus {
-  disconnected,
-  connecting,
-  connected,
-  error,
-}
+enum Aria2ConnectionStatus { disconnected, connecting, connected, error }
 
 /// Aria2 连接管理 Provider
-final aria2ConnectionProvider = StateNotifierProvider.family<
-    Aria2ConnectionNotifier, Aria2Connection?, String>(
-  (ref, sourceId) => Aria2ConnectionNotifier(sourceId),
-);
+final aria2ConnectionProvider =
+    StateNotifierProvider.family<
+      Aria2ConnectionNotifier,
+      Aria2Connection?,
+      String
+    >((ref, sourceId) => Aria2ConnectionNotifier(sourceId));
 
 class Aria2ConnectionNotifier extends StateNotifier<Aria2Connection?> {
   Aria2ConnectionNotifier(this.sourceId) : super(null);
@@ -74,7 +70,9 @@ class Aria2ConnectionNotifier extends StateNotifier<Aria2Connection?> {
     // 构建配置，传入 rpcSecret
     final config = ServiceConnectionConfig(
       baseUrl: 'http://${source.host}:${source.port}',
-      extraConfig: rpcSecret != null ? {'rpcSecret': rpcSecret} : source.extraConfig,
+      extraConfig: rpcSecret != null
+          ? {'rpcSecret': rpcSecret}
+          : source.extraConfig,
     );
 
     try {
@@ -125,36 +123,36 @@ class Aria2ConnectionNotifier extends StateNotifier<Aria2Connection?> {
 /// Aria2 全局统计 Provider
 final aria2GlobalStatProvider = FutureProvider.family
     .autoDispose<Aria2GlobalStat?, String>((ref, sourceId) async {
-  final connection = ref.watch(aria2ConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != Aria2ConnectionStatus.connected) {
-    return null;
-  }
+      final connection = ref.watch(aria2ConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != Aria2ConnectionStatus.connected) {
+        return null;
+      }
 
-  try {
-    return await connection.adapter.getGlobalStat();
-  } on Exception catch (e) {
-    logger.e('Aria2Provider: 获取全局统计失败', e);
-    return null;
-  }
-});
+      try {
+        return await connection.adapter.getGlobalStat();
+      } on Exception catch (e) {
+        logger.e('Aria2Provider: 获取全局统计失败', e);
+        return null;
+      }
+    });
 
 /// Aria2 下载列表 Provider
 final aria2DownloadsProvider = FutureProvider.family
     .autoDispose<List<Aria2Download>, String>((ref, sourceId) async {
-  final connection = ref.watch(aria2ConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != Aria2ConnectionStatus.connected) {
-    return [];
-  }
+      final connection = ref.watch(aria2ConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != Aria2ConnectionStatus.connected) {
+        return [];
+      }
 
-  try {
-    return await connection.adapter.getDownloads();
-  } on Exception catch (e) {
-    logger.e('Aria2Provider: 获取下载列表失败', e);
-    return [];
-  }
-});
+      try {
+        return await connection.adapter.getDownloads();
+      } on Exception catch (e) {
+        logger.e('Aria2Provider: 获取下载列表失败', e);
+        return [];
+      }
+    });
 
 /// 自动刷新的下载列表 Provider
 class Aria2AutoRefreshNotifier extends StateNotifier<List<Aria2Download>> {
@@ -202,8 +200,8 @@ class Aria2AutoRefreshNotifier extends StateNotifier<List<Aria2Download>> {
 
 final aria2AutoRefreshProvider = StateNotifierProvider.family
     .autoDispose<Aria2AutoRefreshNotifier, List<Aria2Download>, String>(
-  Aria2AutoRefreshNotifier.new,
-);
+      Aria2AutoRefreshNotifier.new,
+    );
 
 /// 自动刷新的全局统计 Provider
 class Aria2StatsAutoRefreshNotifier extends StateNotifier<Aria2GlobalStat?> {
@@ -248,12 +246,13 @@ class Aria2StatsAutoRefreshNotifier extends StateNotifier<Aria2GlobalStat?> {
 
 final aria2StatsAutoRefreshProvider = StateNotifierProvider.family
     .autoDispose<Aria2StatsAutoRefreshNotifier, Aria2GlobalStat?, String>(
-  Aria2StatsAutoRefreshNotifier.new,
-);
+      Aria2StatsAutoRefreshNotifier.new,
+    );
 
 /// 下载操作 Provider
-final aria2ActionsProvider =
-    Provider.family<Aria2Actions, String>(Aria2Actions.new);
+final aria2ActionsProvider = Provider.family<Aria2Actions, String>(
+  Aria2Actions.new,
+);
 
 class Aria2Actions {
   Aria2Actions(this._ref, this._sourceId);
@@ -264,14 +263,21 @@ class Aria2Actions {
   Aria2Adapter? get _adapter =>
       _ref.read(aria2ConnectionProvider(_sourceId))?.adapter;
 
+  Aria2Adapter _requireAdapter() {
+    final adapter = _adapter;
+    if (adapter == null) {
+      throw Exception(appL10n.aria2AdapterNotConnected);
+    }
+    return adapter;
+  }
+
   void _invalidate() {
     _ref.invalidate(aria2AutoRefreshProvider(_sourceId));
   }
 
   /// 暂停下载
   Future<void> pause(String gid) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.pauseDownload(gid);
     _invalidate();
@@ -279,8 +285,7 @@ class Aria2Actions {
 
   /// 暂停所有下载
   Future<void> pauseAll() async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.pauseAllDownloads();
     _invalidate();
@@ -288,8 +293,7 @@ class Aria2Actions {
 
   /// 恢复下载
   Future<void> resume(String gid) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.resumeDownload(gid);
     _invalidate();
@@ -297,8 +301,7 @@ class Aria2Actions {
 
   /// 恢复所有下载
   Future<void> resumeAll() async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.resumeAllDownloads();
     _invalidate();
@@ -306,8 +309,7 @@ class Aria2Actions {
 
   /// 删除下载
   Future<void> remove(String gid) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.removeDownload(gid);
     _invalidate();
@@ -315,8 +317,7 @@ class Aria2Actions {
 
   /// 清除已完成/错误的下载
   Future<void> purgeResults() async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.purgeDownloadResults();
     _invalidate();
@@ -328,16 +329,9 @@ class Aria2Actions {
     String? dir,
     String? filename,
   }) async {
-    final adapter = _adapter;
-    if (adapter == null) {
-      throw Exception(appL10n.aria2AdapterNotConnected);
-    }
+    final adapter = _requireAdapter();
 
-    final gid = await adapter.addUri(
-      uris,
-      dir: dir,
-      filename: filename,
-    );
+    final gid = await adapter.addUri(uris, dir: dir, filename: filename);
     _invalidate();
     return gid;
   }
@@ -386,7 +380,10 @@ class Aria2SortSettingsNotifier extends StateNotifier<Aria2SortSettings> {
   }
 
   void setFilterStatus(Aria2StatusFilter? status) {
-    state = state.copyWith(filterStatus: status, clearStatus: status == null || status == Aria2StatusFilter.all);
+    state = state.copyWith(
+      filterStatus: status,
+      clearStatus: status == null || status == Aria2StatusFilter.all,
+    );
   }
 }
 
@@ -406,15 +403,16 @@ class Aria2SortSettings {
     bool? reverse,
     Aria2StatusFilter? filterStatus,
     bool clearStatus = false,
-  }) =>
-      Aria2SortSettings(
-        sortMode: sortMode ?? this.sortMode,
-        reverse: reverse ?? this.reverse,
-        filterStatus: clearStatus ? null : (filterStatus ?? this.filterStatus),
-      );
+  }) => Aria2SortSettings(
+    sortMode: sortMode ?? this.sortMode,
+    reverse: reverse ?? this.reverse,
+    filterStatus: clearStatus ? null : (filterStatus ?? this.filterStatus),
+  );
 }
 
-final aria2SortSettingsProvider = StateNotifierProvider.family<
-    Aria2SortSettingsNotifier, Aria2SortSettings, String>(
-  (ref, sourceId) => Aria2SortSettingsNotifier(),
-);
+final aria2SortSettingsProvider =
+    StateNotifierProvider.family<
+      Aria2SortSettingsNotifier,
+      Aria2SortSettings,
+      String
+    >((ref, sourceId) => Aria2SortSettingsNotifier());

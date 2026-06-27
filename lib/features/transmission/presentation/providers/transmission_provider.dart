@@ -27,28 +27,24 @@ class TransmissionConnection {
     TransmissionAdapter? adapter,
     TransmissionConnectionStatus? status,
     String? errorMessage,
-  }) =>
-      TransmissionConnection(
-        source: source ?? this.source,
-        adapter: adapter ?? this.adapter,
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
+  }) => TransmissionConnection(
+    source: source ?? this.source,
+    adapter: adapter ?? this.adapter,
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+  );
 }
 
 /// 连接状态枚举
-enum TransmissionConnectionStatus {
-  disconnected,
-  connecting,
-  connected,
-  error,
-}
+enum TransmissionConnectionStatus { disconnected, connecting, connected, error }
 
 /// Transmission 连接管理 Provider
-final transmissionConnectionProvider = StateNotifierProvider.family<
-    TransmissionConnectionNotifier, TransmissionConnection?, String>(
-  (ref, sourceId) => TransmissionConnectionNotifier(sourceId),
-);
+final transmissionConnectionProvider =
+    StateNotifierProvider.family<
+      TransmissionConnectionNotifier,
+      TransmissionConnection?,
+      String
+    >((ref, sourceId) => TransmissionConnectionNotifier(sourceId));
 
 class TransmissionConnectionNotifier
     extends StateNotifier<TransmissionConnection?> {
@@ -72,7 +68,10 @@ class TransmissionConnectionNotifier
       status: TransmissionConnectionStatus.connecting,
     );
 
-    final config = ServiceConnectionConfig.fromSource(source, password: password);
+    final config = ServiceConnectionConfig.fromSource(
+      source,
+      password: password,
+    );
 
     try {
       final result = await adapter.connect(config);
@@ -122,39 +121,40 @@ class TransmissionConnectionNotifier
 /// Transmission 会话统计 Provider
 final transmissionSessionStatsProvider = FutureProvider.family
     .autoDispose<TransmissionSessionStats?, String>((ref, sourceId) async {
-  final connection = ref.watch(transmissionConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != TransmissionConnectionStatus.connected) {
-    return null;
-  }
+      final connection = ref.watch(transmissionConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != TransmissionConnectionStatus.connected) {
+        return null;
+      }
 
-  try {
-    return await connection.adapter.getSessionStats();
-  } on Exception catch (e) {
-    logger.e('TransmissionProvider: 获取会话统计失败', e);
-    return null;
-  }
-});
+      try {
+        return await connection.adapter.getSessionStats();
+      } on Exception catch (e) {
+        logger.e('TransmissionProvider: 获取会话统计失败', e);
+        return null;
+      }
+    });
 
 /// Transmission Torrent 列表 Provider
 final transmissionTorrentsProvider = FutureProvider.family
     .autoDispose<List<TransmissionTorrent>, String>((ref, sourceId) async {
-  final connection = ref.watch(transmissionConnectionProvider(sourceId));
-  if (connection == null ||
-      connection.status != TransmissionConnectionStatus.connected) {
-    return [];
-  }
+      final connection = ref.watch(transmissionConnectionProvider(sourceId));
+      if (connection == null ||
+          connection.status != TransmissionConnectionStatus.connected) {
+        return [];
+      }
 
-  try {
-    return await connection.adapter.getTorrents();
-  } on Exception catch (e) {
-    logger.e('TransmissionProvider: 获取 Torrent 列表失败', e);
-    return [];
-  }
-});
+      try {
+        return await connection.adapter.getTorrents();
+      } on Exception catch (e) {
+        logger.e('TransmissionProvider: 获取 Torrent 列表失败', e);
+        return [];
+      }
+    });
 
 /// 自动刷新的 Torrent 列表 Provider
-class TransmissionAutoRefreshNotifier extends StateNotifier<List<TransmissionTorrent>> {
+class TransmissionAutoRefreshNotifier
+    extends StateNotifier<List<TransmissionTorrent>> {
   TransmissionAutoRefreshNotifier(this._ref, this._sourceId) : super([]) {
     _startAutoRefresh();
   }
@@ -198,13 +198,17 @@ class TransmissionAutoRefreshNotifier extends StateNotifier<List<TransmissionTor
 }
 
 final transmissionAutoRefreshProvider = StateNotifierProvider.family
-    .autoDispose<TransmissionAutoRefreshNotifier, List<TransmissionTorrent>, String>(
-  TransmissionAutoRefreshNotifier.new,
-);
+    .autoDispose<
+      TransmissionAutoRefreshNotifier,
+      List<TransmissionTorrent>,
+      String
+    >(TransmissionAutoRefreshNotifier.new);
 
 /// 自动刷新的会话统计 Provider
-class TransmissionStatsAutoRefreshNotifier extends StateNotifier<TransmissionSessionStats?> {
-  TransmissionStatsAutoRefreshNotifier(this._ref, this._sourceId) : super(null) {
+class TransmissionStatsAutoRefreshNotifier
+    extends StateNotifier<TransmissionSessionStats?> {
+  TransmissionStatsAutoRefreshNotifier(this._ref, this._sourceId)
+    : super(null) {
     _startAutoRefresh();
   }
 
@@ -244,9 +248,11 @@ class TransmissionStatsAutoRefreshNotifier extends StateNotifier<TransmissionSes
 }
 
 final transmissionStatsAutoRefreshProvider = StateNotifierProvider.family
-    .autoDispose<TransmissionStatsAutoRefreshNotifier, TransmissionSessionStats?, String>(
-  TransmissionStatsAutoRefreshNotifier.new,
-);
+    .autoDispose<
+      TransmissionStatsAutoRefreshNotifier,
+      TransmissionSessionStats?,
+      String
+    >(TransmissionStatsAutoRefreshNotifier.new);
 
 /// Torrent 操作 Provider
 final transmissionActionsProvider =
@@ -261,14 +267,21 @@ class TransmissionActions {
   TransmissionAdapter? get _adapter =>
       _ref.read(transmissionConnectionProvider(_sourceId))?.adapter;
 
+  TransmissionAdapter _requireAdapter() {
+    final adapter = _adapter;
+    if (adapter == null) {
+      throw Exception(appL10n.transmissionProviderNotConnectedError);
+    }
+    return adapter;
+  }
+
   void _invalidate() {
     _ref.invalidate(transmissionAutoRefreshProvider(_sourceId));
   }
 
   /// 开始 Torrent
   Future<void> start(List<int> ids) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.startTorrents(ids);
     _invalidate();
@@ -276,8 +289,7 @@ class TransmissionActions {
 
   /// 开始所有 Torrent
   Future<void> startAll() async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.startAllTorrents();
     _invalidate();
@@ -285,8 +297,7 @@ class TransmissionActions {
 
   /// 停止 Torrent
   Future<void> stop(List<int> ids) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.stopTorrents(ids);
     _invalidate();
@@ -294,8 +305,7 @@ class TransmissionActions {
 
   /// 停止所有 Torrent
   Future<void> stopAll() async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.stopAllTorrents();
     _invalidate();
@@ -303,8 +313,7 @@ class TransmissionActions {
 
   /// 删除 Torrent
   Future<void> remove(List<int> ids, {bool deleteFiles = false}) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.removeTorrents(ids, deleteFiles: deleteFiles);
     _invalidate();
@@ -312,8 +321,7 @@ class TransmissionActions {
 
   /// 验证 Torrent 数据
   Future<void> verify(List<int> ids) async {
-    final adapter = _adapter;
-    if (adapter == null) return;
+    final adapter = _requireAdapter();
 
     await adapter.verifyTorrents(ids);
     _invalidate();
@@ -325,10 +333,7 @@ class TransmissionActions {
     String? downloadDir,
     bool paused = false,
   }) async {
-    final adapter = _adapter;
-    if (adapter == null) {
-      throw Exception(appL10n.transmissionProviderNotConnectedError);
-    }
+    final adapter = _requireAdapter();
 
     final result = await adapter.addTorrent(
       url,
@@ -359,7 +364,8 @@ enum TransmissionSortMode {
 }
 
 /// 排序设置 Provider
-class TransmissionSortSettingsNotifier extends StateNotifier<TransmissionSortSettings> {
+class TransmissionSortSettingsNotifier
+    extends StateNotifier<TransmissionSortSettings> {
   TransmissionSortSettingsNotifier() : super(const TransmissionSortSettings());
 
   void setSortMode(TransmissionSortMode mode) {
@@ -391,15 +397,16 @@ class TransmissionSortSettings {
     bool? reverse,
     TransmissionTorrentStatus? filterStatus,
     bool clearStatus = false,
-  }) =>
-      TransmissionSortSettings(
-        sortMode: sortMode ?? this.sortMode,
-        reverse: reverse ?? this.reverse,
-        filterStatus: clearStatus ? null : (filterStatus ?? this.filterStatus),
-      );
+  }) => TransmissionSortSettings(
+    sortMode: sortMode ?? this.sortMode,
+    reverse: reverse ?? this.reverse,
+    filterStatus: clearStatus ? null : (filterStatus ?? this.filterStatus),
+  );
 }
 
-final transmissionSortSettingsProvider = StateNotifierProvider.family<
-    TransmissionSortSettingsNotifier, TransmissionSortSettings, String>(
-  (ref, sourceId) => TransmissionSortSettingsNotifier(),
-);
+final transmissionSortSettingsProvider =
+    StateNotifierProvider.family<
+      TransmissionSortSettingsNotifier,
+      TransmissionSortSettings,
+      String
+    >((ref, sourceId) => TransmissionSortSettingsNotifier());

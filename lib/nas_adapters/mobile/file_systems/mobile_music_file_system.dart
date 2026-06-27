@@ -23,6 +23,15 @@ class MobileMusicFileSystem implements NasFileSystem {
 
   final OnAudioQuery _audioQuery = OnAudioQuery();
 
+  @override
+  bool get supportsWriteOperations => false;
+
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  bool get supportsDirectFileUrl => false;
+
   List<SongModel>? _cachedSongs;
   List<AlbumModel>? _cachedAlbums;
   List<ArtistModel>? _cachedArtists;
@@ -59,9 +68,13 @@ class MobileMusicFileSystem implements NasFileSystem {
 
   /// 获取所有歌曲
   Future<List<SongModel>> _getSongs() async {
-    logger.d('🎵 MobileMusicFileSystem: _getSongs() 被调用, _cachedSongs=${_cachedSongs?.length}');
+    logger.d(
+      '🎵 MobileMusicFileSystem: _getSongs() 被调用, _cachedSongs=${_cachedSongs?.length}',
+    );
     if (_cachedSongs != null) {
-      logger.d('🎵 MobileMusicFileSystem: 使用缓存歌曲列表，数量: ${_cachedSongs!.length}');
+      logger.d(
+        '🎵 MobileMusicFileSystem: 使用缓存歌曲列表，数量: ${_cachedSongs!.length}',
+      );
       return _cachedSongs!;
     }
 
@@ -72,7 +85,9 @@ class MobileMusicFileSystem implements NasFileSystem {
       uriType: UriType.EXTERNAL,
     );
 
-    logger.d('🎵 MobileMusicFileSystem: querySongs 返回 ${_cachedSongs!.length} 首歌曲');
+    logger.d(
+      '🎵 MobileMusicFileSystem: querySongs 返回 ${_cachedSongs!.length} 首歌曲',
+    );
 
     // 缓存歌曲
     for (final song in _cachedSongs!) {
@@ -82,7 +97,9 @@ class MobileMusicFileSystem implements NasFileSystem {
     // 打印前几首歌曲的信息用于调试
     for (var i = 0; i < _cachedSongs!.length && i < 3; i++) {
       final song = _cachedSongs![i];
-      logger.d('🎵   - ${song.displayName} (ext: ${song.fileExtension}, size: ${song.size})');
+      logger.d(
+        '🎵   - ${song.displayName} (ext: ${song.fileExtension}, size: ${song.size})',
+      );
     }
 
     if (_cachedSongs!.isEmpty) {
@@ -184,7 +201,9 @@ class MobileMusicFileSystem implements NasFileSystem {
     final albums = await _getAlbums();
     final artists = await _getArtists();
 
-    logger.d('🎵 MobileMusicFileSystem: _listRoot() 返回 songs=${songs.length}, albums=${albums.length}, artists=${artists.length}');
+    logger.d(
+      '🎵 MobileMusicFileSystem: _listRoot() 返回 songs=${songs.length}, albums=${albums.length}, artists=${artists.length}',
+    );
 
     return [
       FileItem(
@@ -217,23 +236,31 @@ class MobileMusicFileSystem implements NasFileSystem {
   /// 列出所有专辑
   Future<List<FileItem>> _listAlbums() async {
     final albums = await _getAlbums();
-    return albums.map((album) => FileItem(
-      name: album.album,
-      path: '/albums/${album.id}',
-      isDirectory: true,
-      size: album.numOfSongs,
-    )).toList();
+    return albums
+        .map(
+          (album) => FileItem(
+            name: album.album,
+            path: '/albums/${album.id}',
+            isDirectory: true,
+            size: album.numOfSongs,
+          ),
+        )
+        .toList();
   }
 
   /// 列出所有艺术家
   Future<List<FileItem>> _listArtists() async {
     final artists = await _getArtists();
-    return artists.map((artist) => FileItem(
-      name: artist.artist,
-      path: '/artists/${artist.id}',
-      isDirectory: true,
-      size: artist.numberOfTracks ?? 0,
-    )).toList();
+    return artists
+        .map(
+          (artist) => FileItem(
+            name: artist.artist,
+            path: '/artists/${artist.id}',
+            isDirectory: true,
+            size: artist.numberOfTracks ?? 0,
+          ),
+        )
+        .toList();
   }
 
   /// 列出专辑内歌曲
@@ -247,7 +274,9 @@ class MobileMusicFileSystem implements NasFileSystem {
       _songCache[song.id] = song;
     }
 
-    return songs.map((song) => _songToFileItem(song, '/albums/$albumId')).toList();
+    return songs
+        .map((song) => _songToFileItem(song, '/albums/$albumId'))
+        .toList();
   }
 
   /// 列出艺术家的歌曲
@@ -261,7 +290,9 @@ class MobileMusicFileSystem implements NasFileSystem {
       _songCache[song.id] = song;
     }
 
-    return songs.map((song) => _songToFileItem(song, '/artists/$artistId')).toList();
+    return songs
+        .map((song) => _songToFileItem(song, '/artists/$artistId'))
+        .toList();
   }
 
   /// 将 SongModel 转换为 FileItem
@@ -323,7 +354,10 @@ class MobileMusicFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
+  Future<Stream<List<int>>> getFileStream(
+    String path, {
+    FileRange? range,
+  }) async {
     final songId = int.tryParse(path.split('/').last);
     if (songId == null) {
       throw Exception(appL10n.mobileMusicInvalidSongId(path));
@@ -371,7 +405,10 @@ class MobileMusicFileSystem implements NasFileSystem {
 
   /// 获取歌曲封面作为缩略图数据
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async {
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async {
     final songId = int.tryParse(path.split('/').last);
     if (songId == null) return null;
     return getSongArtwork(songId, size: size);

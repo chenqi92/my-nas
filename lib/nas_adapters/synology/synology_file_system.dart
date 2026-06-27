@@ -12,6 +12,15 @@ class SynologyFileSystem implements NasFileSystem {
   final SynologyApi _api;
 
   @override
+  bool get supportsWriteOperations => true;
+
+  @override
+  bool get supportsServerSideCopy => true;
+
+  @override
+  bool get supportsDirectFileUrl => true;
+
+  @override
   Future<List<FileItem>> listDirectory(String path) async {
     // 根目录返回共享文件夹列表
     if (path == '/' || path.isEmpty) {
@@ -189,5 +198,8 @@ class SynologyFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 }

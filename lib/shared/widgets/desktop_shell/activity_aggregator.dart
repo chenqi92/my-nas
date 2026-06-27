@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/services/media_scan_progress_service.dart';
 import 'package:my_nas/core/sync/cloud_sync_service.dart';
+import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/music/data/services/music_scrape_service.dart';
 import 'package:my_nas/features/photo/data/services/face_recognition_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart'
@@ -37,6 +38,7 @@ class ActivityItem {
 /// 返回 null 表示该项无对应目标页（点击不响应）。
 String? activityItemRoute(String id) {
   if (id.startsWith('xfer.')) return '/transfer';
+  if (id.startsWith('download.')) return '/download';
   if (id == 'video.scan') return '/video';
   if (id.startsWith('media.scan.')) {
     final type = id.substring('media.scan.'.length);
@@ -92,6 +94,11 @@ final activeActivityCountProvider = Provider<int>((ref) {
       )
       .length;
 
+  final downloads = ref.watch(aggregatedDownloadTasksProvider);
+  n += downloads
+      .where((t) => t.status != UnifiedDownloadStatus.completed)
+      .length;
+
   final videoScan = ref.watch(videoScanActivityProvider).valueOrNull;
   if (videoScan != null &&
       videoScan.phase != VideoScanPhase.completed &&
@@ -129,11 +136,10 @@ final activeActivityCountProvider = Provider<int>((ref) {
   return n;
 });
 
-/// 聚合所有活动项：传输队列 + 视频扫描 + 媒体扫描 + 人脸识别 + 音乐刮削 + 云同步。
+/// 聚合所有活动项：传输队列 + 下载器任务 + 视频扫描 + 媒体扫描 + 人脸识别 + 音乐刮削 + 云同步。
 ///
 /// 文案需本地化，故做成普通函数由抽屉 widget 在 build 内调用（传入 [ref] 用于
-/// watch、[l] 用于取本地化文案）。直链下载暂无独立服务（HTTP 直链下载功能尚未实现，
-/// 现有下载聚合仅覆盖 aria2 / qBittorrent / Transmission，归在下载器页而非此处）。
+/// watch、[l] 用于取本地化文案）。
 List<ActivityItem> buildActivityItems(WidgetRef ref, AppLocalizations l) {
   final items = <ActivityItem>[];
 
@@ -163,7 +169,29 @@ List<ActivityItem> buildActivityItems(WidgetRef ref, AppLocalizations l) {
     );
   }
 
-  // 2) 视频扫描 / 刮削
+  // 2) 下载器任务（aria2 / qBittorrent / Transmission）
+  final downloads = ref.watch(aggregatedDownloadTasksProvider);
+  for (final task in downloads) {
+    if (task.status == UnifiedDownloadStatus.completed) continue;
+    final speeds = [
+      if (task.downloadSpeed > 0) '↓${formatSpeed(task.downloadSpeed)}',
+      if (task.uploadSpeed > 0) '↑${formatSpeed(task.uploadSpeed)}',
+    ].join('  ');
+    items.add(
+      ActivityItem(
+        id: 'download.${task.uniqueKey}',
+        group: l.actAggGroupDownload,
+        icon: Icons.download_rounded,
+        label: task.name,
+        detail: speeds.isEmpty
+            ? task.status.label(l)
+            : '${task.status.label(l)} · $speeds',
+        progress: task.totalBytes > 0 ? task.progress : null,
+      ),
+    );
+  }
+
+  // 3) 视频扫描 / 刮削
   final videoScan = ref.watch(videoScanActivityProvider).valueOrNull;
   if (videoScan != null &&
       videoScan.phase != VideoScanPhase.completed &&
@@ -188,7 +216,7 @@ List<ActivityItem> buildActivityItems(WidgetRef ref, AppLocalizations l) {
     );
   }
 
-  // 3) 媒体扫描（音乐 / 照片 / 漫画 / 图书）
+  // 4) 媒体扫描（音乐 / 照片 / 漫画 / 图书）
   final mediaScan = ref.watch(mediaScanActivityProvider).valueOrNull;
   if (mediaScan != null &&
       mediaScan.phase != MediaScanPhase.completed &&
@@ -225,7 +253,7 @@ List<ActivityItem> buildActivityItems(WidgetRef ref, AppLocalizations l) {
     );
   }
 
-  // 4) 人脸识别
+  // 5) 人脸识别
   final face = ref.watch(faceRecognitionActivityProvider).valueOrNull;
   if (face != null && face.status == FaceProcessStatus.processing) {
     items.add(

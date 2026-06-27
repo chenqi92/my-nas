@@ -36,6 +36,15 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
   final Map<String, JellyfinItem> _itemCache = {};
 
   @override
+  bool get supportsWriteOperations => false;
+
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  bool get supportsDirectFileUrl => true;
+
+  @override
   Future<List<FileItem>> listDirectory(String path) async {
     logger.i('JellyfinVirtualFS: listDirectory, path=$path');
 
@@ -75,12 +84,7 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
     final normalizedPath = _normalizePath(path);
 
     if (normalizedPath == '/') {
-      return const FileItem(
-        name: '/',
-        path: '/',
-        isDirectory: true,
-        size: 0,
-      );
+      return const FileItem(name: '/', path: '/', isDirectory: true, size: 0);
     }
 
     final itemId = await _resolvePathToId(normalizedPath);
@@ -97,7 +101,10 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
+  Future<Stream<List<int>>> getFileStream(
+    String path, {
+    FileRange? range,
+  }) async {
     logger.i('JellyfinVirtualFS: getFileStream, path=$path');
     // 媒体服务器通常返回 URL 让播放器直接访问
     throw UnsupportedError(appL10n.jellyfinVfsUseGetFileUrl);
@@ -137,15 +144,14 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
       null => 240,
     };
 
-    return _api.getImageUrl(
-      itemId,
-      MediaImageType.primary,
-      maxWidth: maxWidth,
-    );
+    return _api.getImageUrl(itemId, MediaImageType.primary, maxWidth: maxWidth);
   }
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async =>
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async =>
       // 使用 URL 方式，不直接提供数据
       null;
 
@@ -254,7 +260,9 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
     final parentPath = _idToPath(seriesId) ?? '/';
 
     return result.items.map((item) {
-      final seasonName = item.name.isNotEmpty ? item.name : appL10n.jellyfinVfsSeasonNameDefault(item.indexNumber ?? 0);
+      final seasonName = item.name.isNotEmpty
+          ? item.name
+          : appL10n.jellyfinVfsSeasonNameDefault(item.indexNumber ?? 0);
       final itemPath = '$parentPath/${_sanitizeName(seasonName)}';
       _pathToIdCache[itemPath] = item.id;
       _itemCache[item.id] = item;
@@ -274,8 +282,10 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
 
     return result.items.map((item) {
       // 构造剧集文件名：S01E01 凛冬将至.mkv
-      final seasonNum =
-          (item.parentIndexNumber ?? 1).toString().padLeft(2, '0');
+      final seasonNum = (item.parentIndexNumber ?? 1).toString().padLeft(
+        2,
+        '0',
+      );
       final episodeNum = (item.indexNumber ?? 1).toString().padLeft(2, '0');
       final fileName = 'S${seasonNum}E$episodeNum ${item.name}';
       final itemPath = '$parentPath/${_sanitizeName(fileName)}';
@@ -344,7 +354,9 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
       // 搜索季
       final seasons = await _api.getSeasons(parentId);
       for (final season in seasons.items) {
-        final seasonName = season.name.isNotEmpty ? season.name : appL10n.jellyfinVfsSeasonNameDefault(season.indexNumber ?? 0);
+        final seasonName = season.name.isNotEmpty
+            ? season.name
+            : appL10n.jellyfinVfsSeasonNameDefault(season.indexNumber ?? 0);
         if (_sanitizeName(seasonName) == name) {
           return season;
         }
@@ -359,8 +371,10 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
         seasonId: parentId,
       );
       for (final ep in episodes.items) {
-        final seasonNum =
-            (ep.parentIndexNumber ?? 1).toString().padLeft(2, '0');
+        final seasonNum = (ep.parentIndexNumber ?? 1).toString().padLeft(
+          2,
+          '0',
+        );
         final episodeNum = (ep.indexNumber ?? 1).toString().padLeft(2, '0');
         final fileName = 'S${seasonNum}E$episodeNum ${ep.name}';
         if (_sanitizeName(fileName) == name) {
@@ -409,15 +423,15 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
 
   /// 清理名称（移除不安全字符）
   String _sanitizeName(String name) => name
-        .replaceAll('/', '_')
-        .replaceAll(r'\', '_')
-        .replaceAll(':', '_')
-        .replaceAll('*', '_')
-        .replaceAll('?', '_')
-        .replaceAll('"', '_')
-        .replaceAll('<', '_')
-        .replaceAll('>', '_')
-        .replaceAll('|', '_');
+      .replaceAll('/', '_')
+      .replaceAll(r'\', '_')
+      .replaceAll(':', '_')
+      .replaceAll('*', '_')
+      .replaceAll('?', '_')
+      .replaceAll('"', '_')
+      .replaceAll('<', '_')
+      .replaceAll('>', '_')
+      .replaceAll('|', '_');
 
   /// 解析项目的首个媒体源（mediaSources 为原始 JSON 列表）
   JellyfinMediaSource? _firstMediaSource(JellyfinItem item) {
@@ -474,11 +488,7 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
       modifiedTime: item.premiereDate,
       extension: ext,
       thumbnailUrl: item.hasPrimaryImage
-          ? _api.getImageUrl(
-              item.id,
-              MediaImageType.primary,
-              maxWidth: 240,
-            )
+          ? _api.getImageUrl(item.id, MediaImageType.primary, maxWidth: 240)
           : null,
       mimeType: isPlayable ? 'video/x-matroska' : null,
     );

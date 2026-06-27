@@ -70,7 +70,8 @@ class SourcesPane extends ConsumerWidget {
         const _DiscoveredDevicesSection(),
         SetSection(
           title: l.paneSourcesBehaviorSection,
-          hint: 'trust_self_signed_cert · source_default_auto_connect · '
+          hint:
+              'trust_self_signed_cert · source_default_auto_connect · '
               'source_default_remember_device',
           bottomMargin: false,
           children: [
@@ -122,42 +123,42 @@ class SourcesPane extends ConsumerWidget {
   ) {
     final l = AppLocalizations.of(context);
     return sourcesAsync.when(
-    loading: () => [SetRow(title: l.paneSourcesRowLoading, last: true)],
-    error: (e, _) =>
-        [SetRow(title: l.paneSourcesRowLoadError, desc: '$e', last: true)],
-    data: (allSources) {
-      // 仅展示已实现的源类型；未实现类型（绿联 / 飞牛 / NFS 等）不可连接，
-      // 不在列表中渲染。
-      final sources = [
-        for (final s in allSources)
-          if (s.type.isSupported) s,
-      ];
-      if (sources.isEmpty) {
-        return [
-          SetRow(
-            leading: _SourceIcon(icon: Icons.lan_outlined, enabled: false),
-            title: l.paneSourcesEmptyTitle,
-            desc: l.paneSourcesEmptyDesc,
-            last: true,
-            trailing: AppButton(
-              label: l.paneSourcesAddShort,
-              icon: Icons.add_rounded,
-              dense: true,
-              onPressed: () => _openWizard(context),
-            ),
-          ),
+      loading: () => [SetRow(title: l.paneSourcesRowLoading, last: true)],
+      error: (e, _) => [
+        SetRow(title: l.paneSourcesRowLoadError, desc: '$e', last: true),
+      ],
+      data: (allSources) {
+        // 仅展示已实现的源类型；未实现类型（如 NFS）不可连接，不在列表中渲染。
+        final sources = [
+          for (final s in allSources)
+            if (s.type.isSupported) s,
         ];
-      }
-      return [
-        for (var i = 0; i < sources.length; i++)
-          _SourceRow(
-            source: sources[i],
-            conn: connections[sources[i].id],
-            libs: _libsForSource(libsConfig, sources[i].id),
-            last: i == sources.length - 1,
-          ),
-      ];
-    },
+        if (sources.isEmpty) {
+          return [
+            SetRow(
+              leading: _SourceIcon(icon: Icons.lan_outlined, enabled: false),
+              title: l.paneSourcesEmptyTitle,
+              desc: l.paneSourcesEmptyDesc,
+              last: true,
+              trailing: AppButton(
+                label: l.paneSourcesAddShort,
+                icon: Icons.add_rounded,
+                dense: true,
+                onPressed: () => _openWizard(context),
+              ),
+            ),
+          ];
+        }
+        return [
+          for (var i = 0; i < sources.length; i++)
+            _SourceRow(
+              source: sources[i],
+              conn: connections[sources[i].id],
+              libs: _libsForSource(libsConfig, sources[i].id),
+              last: i == sources.length - 1,
+            ),
+        ];
+      },
     );
   }
 
@@ -220,7 +221,8 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
     final descParts = <String>[
       source.type.displayName,
       if (source.host.isNotEmpty) source.host,
-      if (widget.libs.isNotEmpty) l.paneSourcesLibsSuffix(widget.libs.join(' / ')),
+      if (widget.libs.isNotEmpty)
+        l.paneSourcesLibsSuffix(widget.libs.join(' / ')),
     ];
 
     return SetRow(
@@ -273,16 +275,26 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
     AppLocalizations l,
     SourceStatus? status,
     String? errorMessage,
-  ) =>
-      switch (status) {
-        SourceStatus.connected => (DotStatus.ok, l.paneSourcesStatusConnected, false),
-        SourceStatus.requires2FA => (DotStatus.warn, l.paneSourcesStatus2FA, false),
-        SourceStatus.connecting => (DotStatus.warn, l.paneSourcesStatusConnecting, false),
-        SourceStatus.error =>
-          (DotStatus.err, errorMessage ?? l.paneSourcesStatusError, true),
-        SourceStatus.disconnected || null =>
-          (DotStatus.off, l.paneSourcesStatusDisconnected, false),
-      };
+  ) => switch (status) {
+    SourceStatus.connected => (
+      DotStatus.ok,
+      l.paneSourcesStatusConnected,
+      false,
+    ),
+    SourceStatus.requires2FA => (DotStatus.warn, l.paneSourcesStatus2FA, false),
+    SourceStatus.connecting => (
+      DotStatus.warn,
+      l.paneSourcesStatusConnecting,
+      false,
+    ),
+    SourceStatus.error => (
+      DotStatus.err,
+      errorMessage ?? l.paneSourcesStatusError,
+      true,
+    ),
+    SourceStatus.disconnected ||
+    null => (DotStatus.off, l.paneSourcesStatusDisconnected, false),
+  };
 
   Future<void> _reconnect() async {
     final l = AppLocalizations.of(context);
@@ -311,7 +323,9 @@ class _SourceRowState extends ConsumerState<_SourceRow> {
                   : l.paneSourcesConnectFailed(
                       source.name,
                       result?.errorMessage != null
-                          ? l.paneSourcesConnectFailedReason(result!.errorMessage!)
+                          ? l.paneSourcesConnectFailedReason(
+                              result!.errorMessage!,
+                            )
                           : '',
                     ),
             ),
@@ -446,7 +460,8 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
         for (var i = 0; i < devices.length; i++)
           SetRow(
             title: devices[i].name,
-            desc: '${devices[i].host}:${devices[i].port} · '
+            desc:
+                '${devices[i].host}:${devices[i].port} · '
                 '${devices[i].type.displayName}',
             last: i == devices.length - 1,
             leading: Container(
@@ -456,7 +471,11 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
                 color: t.insetBg,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(devices[i].type.icon, size: 19, color: t.accentBright),
+              child: Icon(
+                devices[i].type.icon,
+                size: 19,
+                color: t.accentBright,
+              ),
             ),
             trailing: AppButton(
               label: l.paneSourcesAddShort,

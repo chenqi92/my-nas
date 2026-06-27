@@ -29,6 +29,7 @@ class OpsOverviewPage extends ConsumerWidget {
     final totalSources =
         ref.watch(sourcesProvider).valueOrNull?.length ?? connections.length;
     final throughput = ref.watch(downloaderThroughputProvider);
+    final throughputHistory = ref.watch(downloaderThroughputHistoryProvider);
     final clients = ref.watch(downloaderClientsProvider);
     final tasks = ref.watch(aggregatedDownloadTasksProvider);
 
@@ -95,7 +96,10 @@ class OpsOverviewPage extends ConsumerWidget {
                 style: TextStyle(fontSize: 13, color: t.text2),
               ),
               const SizedBox(height: 22),
-              _LiveThroughput(throughput: throughput),
+              _LiveThroughput(
+                throughput: throughput,
+                history: throughputHistory,
+              ),
               const SizedBox(height: 16),
               _StatRow(
                 connectedSources: connections.length,
@@ -117,8 +121,9 @@ class OpsOverviewPage extends ConsumerWidget {
 }
 
 class _LiveThroughput extends StatelessWidget {
-  const _LiveThroughput({required this.throughput});
+  const _LiveThroughput({required this.throughput, required this.history});
   final DownloaderThroughput throughput;
+  final List<DownloaderThroughputSample> history;
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +166,7 @@ class _LiveThroughput extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          SizedBox(height: 150, child: _ThroughputChart()),
+          SizedBox(height: 150, child: _ThroughputChart(samples: history)),
         ],
       ),
     );
@@ -185,8 +190,12 @@ class _LiveThroughput extends StatelessWidget {
   );
 }
 
-/// 简易吞吐图：用两条静态 ribbon 表达 dn / up（视觉氛围，数值见上方读数）。
+/// 简易吞吐图：使用下载器聚合 provider 的历史采样绘制 dn / up。
 class _ThroughputChart extends StatelessWidget {
+  const _ThroughputChart({required this.samples});
+
+  final List<DownloaderThroughputSample> samples;
+
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
@@ -195,6 +204,7 @@ class _ThroughputChart extends StatelessWidget {
         accent: t.accent,
         accentBright: t.accentBright,
         text2: t.text2,
+        samples: samples,
       ),
       child: const SizedBox.expand(),
     );
@@ -206,29 +216,33 @@ class _RibbonPainter extends CustomPainter {
     required this.accent,
     required this.accentBright,
     required this.text2,
+    required this.samples,
   });
 
   final Color accent;
   final Color accentBright;
   final Color text2;
+  final List<DownloaderThroughputSample> samples;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final dnPath = Path()..moveTo(0, h);
-    final upPath = Path()..moveTo(0, h);
-    const points = 60;
-    for (var i = 0; i <= points; i++) {
-      final x = w * i / points;
-      final dnY = h - h * 0.55 * (0.42 + 0.5 * (0.5 + 0.5 * _sinish(i * 0.42)));
-      final upY =
-          h - h * 0.28 * (0.30 + 0.5 * (0.5 + 0.5 * _sinish(i * 0.55 + 1.4)));
-      dnPath.lineTo(x, dnY);
-      upPath.lineTo(x, upY);
-    }
-    dnPath.lineTo(w, h);
-    upPath.lineTo(w, h);
+    final maxSpeed = samples.fold<int>(
+      0,
+      (max, s) =>
+          [max, s.downloadSpeed, s.uploadSpeed].reduce((a, b) => a > b ? a : b),
+    );
+    final dnPath = _areaPath(
+      size,
+      samples.map((s) => s.downloadSpeed).toList(),
+      maxSpeed,
+      0.88,
+    );
+    final upPath = _areaPath(
+      size,
+      samples.map((s) => s.uploadSpeed).toList(),
+      maxSpeed,
+      0.46,
+    );
 
     final dnFill = Paint()
       ..shader = LinearGradient(
@@ -245,16 +259,41 @@ class _RibbonPainter extends CustomPainter {
     canvas.drawPath(upPath, upFill);
   }
 
-  double _sinish(double x) {
-    final wrapped = x - x.toInt();
-    return 1 - (wrapped - 0.5).abs() * 4;
+  Path _areaPath(
+    Size size,
+    List<int> values,
+    int maxSpeed,
+    double heightFactor,
+  ) {
+    final w = size.width;
+    final h = size.height;
+    final path = Path()..moveTo(0, h);
+    if (values.isEmpty || maxSpeed <= 0) {
+      path
+        ..lineTo(w, h)
+        ..close();
+      return path;
+    }
+
+    final denom = values.length > 1 ? values.length - 1 : 1;
+    for (var i = 0; i < values.length; i++) {
+      final x = w * i / denom;
+      final normalized = (values[i] / maxSpeed).clamp(0.0, 1.0);
+      final y = h - h * heightFactor * normalized;
+      path.lineTo(x, y);
+    }
+    path
+      ..lineTo(w, h)
+      ..close();
+    return path;
   }
 
   @override
   bool shouldRepaint(covariant _RibbonPainter old) =>
       old.accent != accent ||
       old.accentBright != accentBright ||
-      old.text2 != text2;
+      old.text2 != text2 ||
+      old.samples != samples;
 }
 
 class _StatRow extends StatelessWidget {
@@ -384,26 +423,15 @@ class _ClientsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 没有任何下载源时，展示三种受支持客户端的占位卡片。
     if (clients.isEmpty) {
-      const placeholders = ['qBittorrent', 'aria2', 'Transmission'];
-      return GridView.count(
-        crossAxisCount: 3,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        childAspectRatio: 3.0,
-        children: [
-          for (final name in placeholders)
-            _ClientCard(
-              name: name,
-              connected: false,
-              downloadSpeed: 0,
-              uploadSpeed: 0,
-              taskCount: 0,
-            ),
-        ],
+      final l = AppLocalizations.of(context);
+      return DesktopEmptyState(
+        icon: Icons.download_rounded,
+        title: l.opsNoDownloaderClientsTitle,
+        message: l.opsNoDownloaderClients,
+        actionLabel: l.opsDownloaderChip,
+        onAction: () => GoRouter.of(context).go('/download'),
+        compact: true,
       );
     }
     return GridView.count(

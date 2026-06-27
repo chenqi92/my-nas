@@ -10,10 +10,7 @@ import 'package:my_nas/core/utils/logger.dart';
 /// 支持 MoviePilot v2 API
 /// 项目地址: https://github.com/jxxghp/MoviePilot
 class MoviePilotApi {
-  MoviePilotApi({
-    required this.baseUrl,
-    required this.apiToken,
-  });
+  MoviePilotApi({required this.baseUrl, required this.apiToken});
 
   final String baseUrl;
   final String apiToken;
@@ -34,7 +31,9 @@ class MoviePilotApi {
   Future<bool> validateConnection() async {
     try {
       _log('validateConnection: 开始验证连接 baseUrl=$baseUrl');
-      _log('validateConnection: apiToken=${apiToken.isNotEmpty ? "已配置(${apiToken.length}字符)" : "未配置"}');
+      _log(
+        'validateConnection: apiToken=${apiToken.isNotEmpty ? "已配置(${apiToken.length}字符)" : "未配置"}',
+      );
 
       // MoviePilot 使用 /api/v1/system/env 端点验证连接
       final response = await _makeRequest('GET', '/api/v1/system/env');
@@ -63,20 +62,16 @@ class MoviePilotApi {
   /// 获取系统信息
   Future<MoviePilotSystemInfo> getSystemInfo() async {
     final response = await _makeRequest('GET', '/api/v1/system/env');
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = _extractMap(jsonDecode(response.body));
     return MoviePilotSystemInfo.fromJson(data);
   }
 
   /// 获取订阅列表
   Future<List<MoviePilotSubscribe>> getSubscribes() async {
     final response = await _makeRequest('GET', '/api/v1/subscribe/');
-    final data = jsonDecode(response.body);
-    if (data is List) {
-      return data
-          .map((e) => MoviePilotSubscribe.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    return [];
+    return _extractMaps(
+      jsonDecode(response.body),
+    ).map(MoviePilotSubscribe.fromJson).toList();
   }
 
   /// 添加订阅
@@ -126,25 +121,17 @@ class MoviePilotApi {
       queryParams: queryParams,
     );
 
-    final data = jsonDecode(response.body);
-    if (data is List) {
-      return data
-          .map((e) => MoviePilotSearchResult.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    return [];
+    return _extractMaps(
+      jsonDecode(response.body),
+    ).map(MoviePilotSearchResult.fromJson).toList();
   }
 
   /// 获取下载任务列表
   Future<List<MoviePilotDownloadTask>> getDownloadTasks() async {
     final response = await _makeRequest('GET', '/api/v1/download/');
-    final data = jsonDecode(response.body);
-    if (data is List) {
-      return data
-          .map((e) => MoviePilotDownloadTask.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    return [];
+    return _extractMaps(
+      jsonDecode(response.body),
+    ).map(MoviePilotDownloadTask.fromJson).toList();
   }
 
   /// 获取转移历史
@@ -155,17 +142,12 @@ class MoviePilotApi {
     final response = await _makeRequest(
       'GET',
       '/api/v1/history/transfer',
-      queryParams: {
-        'page': page.toString(),
-        'count': count.toString(),
-      },
+      queryParams: {'page': page.toString(), 'count': count.toString()},
     );
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final items = data['list'] as List<dynamic>? ?? [];
-    return items
-        .map((e) => MoviePilotTransferHistory.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return _extractMaps(
+      jsonDecode(response.body),
+    ).map(MoviePilotTransferHistory.fromJson).toList();
   }
 
   /// 发起请求
@@ -202,7 +184,9 @@ class MoviePilotApi {
       } else if (method == 'DELETE') {
         response = await client.delete(url, headers: headers);
       } else {
-        throw MoviePilotApiException(appL10n.moviepilotApiUnsupportedMethod(method));
+        throw MoviePilotApiException(
+          appL10n.moviepilotApiUnsupportedMethod(method),
+        );
       }
 
       _log('_makeRequest: 响应 ${response.statusCode}');
@@ -213,19 +197,28 @@ class MoviePilotApi {
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
-        _log('_makeRequest: 错误响应 body=${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
+        _log(
+          '_makeRequest: 错误响应 body=${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}',
+        );
         throw MoviePilotApiException(
-          appL10n.moviepilotApiRequestFailed(response.statusCode, response.reasonPhrase ?? ''),
+          appL10n.moviepilotApiRequestFailed(
+            response.statusCode,
+            response.reasonPhrase ?? '',
+          ),
         );
       }
 
       return response;
     } on SocketException catch (e) {
       _log('_makeRequest: SocketException - ${e.message}');
-      throw MoviePilotApiException(appL10n.moviepilotApiConnectionError(e.message));
+      throw MoviePilotApiException(
+        appL10n.moviepilotApiConnectionError(e.message),
+      );
     } on http.ClientException catch (e) {
       _log('_makeRequest: ClientException - ${e.message}');
-      throw MoviePilotApiException(appL10n.moviepilotApiNetworkError(e.message));
+      throw MoviePilotApiException(
+        appL10n.moviepilotApiNetworkError(e.message),
+      );
     } on FormatException catch (e) {
       _log('_makeRequest: FormatException - $e');
       throw MoviePilotApiException(appL10n.moviepilotApiUrlFormatError(e));
@@ -238,6 +231,42 @@ class MoviePilotApi {
     _client = null;
     _isAuthenticated = false;
   }
+
+  Map<String, dynamic> _extractMap(Object? data) {
+    if (data is Map<String, dynamic>) {
+      final wrapped = data['data'];
+      if (wrapped is Map<String, dynamic>) return wrapped;
+      if (wrapped is Map) return Map<String, dynamic>.from(wrapped);
+      final result = data['result'];
+      if (result is Map<String, dynamic>) return result;
+      if (result is Map) return Map<String, dynamic>.from(result);
+      return data;
+    }
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return const {};
+  }
+
+  List<dynamic> _extractList(Object? data) {
+    if (data is List) return data;
+    if (data is Map<Object?, Object?>) {
+      for (final key in const ['data', 'items', 'list', 'results', 'rows']) {
+        final value = data[key];
+        final list = _extractList(value);
+        if (list.isNotEmpty || value is List) return list;
+      }
+    }
+    return const [];
+  }
+
+  Iterable<Map<String, dynamic>> _extractMaps(Object? data) sync* {
+    for (final item in _extractList(data)) {
+      if (item is Map<String, dynamic>) {
+        yield item;
+      } else if (item is Map<Object?, Object?>) {
+        yield item.map((key, value) => MapEntry(key.toString(), value));
+      }
+    }
+  }
 }
 
 /// MoviePilot API 异常
@@ -247,6 +276,47 @@ class MoviePilotApiException implements Exception {
 
   @override
   String toString() => message;
+}
+
+String? _asString(Object? value) {
+  if (value == null) return null;
+  final text = value.toString();
+  return text.isEmpty ? null : text;
+}
+
+int? _asInt(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
+double? _asDouble(Object? value) {
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
+}
+
+bool? _asBool(Object? value) {
+  if (value is bool) return value;
+  if (value is num) return value != 0;
+  if (value is String) {
+    final lower = value.toLowerCase();
+    if (lower == 'true' || lower == 'success' || lower == '1') return true;
+    if (lower == 'false' ||
+        lower == 'fail' ||
+        lower == 'failed' ||
+        lower == '0') {
+      return false;
+    }
+  }
+  return null;
+}
+
+DateTime? _asDateTime(Object? value) {
+  final text = _asString(value);
+  return text == null ? null : DateTime.tryParse(text);
 }
 
 /// 系统信息
@@ -259,9 +329,11 @@ class MoviePilotSystemInfo {
 
   factory MoviePilotSystemInfo.fromJson(Map<String, dynamic> json) =>
       MoviePilotSystemInfo(
-        version: json['VERSION'] as String?,
-        frontendVersion: json['FRONTEND_VERSION'] as String?,
-        authVersion: json['AUTH_VERSION'] as String?,
+        version: _asString(json['VERSION'] ?? json['version']),
+        frontendVersion: _asString(
+          json['FRONTEND_VERSION'] ?? json['frontend_version'],
+        ),
+        authVersion: _asString(json['AUTH_VERSION'] ?? json['auth_version']),
       );
 
   final String? version;
@@ -283,15 +355,13 @@ class MoviePilotSubscribe {
 
   factory MoviePilotSubscribe.fromJson(Map<String, dynamic> json) =>
       MoviePilotSubscribe(
-        id: json['id'] as int? ?? 0,
-        name: json['name'] as String? ?? '',
-        type: json['type'] as String? ?? '',
-        tmdbId: json['tmdbid'] as int?,
-        season: json['season'] as int?,
-        state: json['state'] as String?,
-        lastUpdate: json['last_update'] != null
-            ? DateTime.tryParse(json['last_update'] as String)
-            : null,
+        id: _asInt(json['id'] ?? json['sid']) ?? 0,
+        name: _asString(json['name'] ?? json['title']) ?? '',
+        type: _asString(json['type'] ?? json['media_type']) ?? '',
+        tmdbId: _asInt(json['tmdbid'] ?? json['tmdb_id']),
+        season: _asInt(json['season']),
+        state: _asString(json['state'] ?? json['status']),
+        lastUpdate: _asDateTime(json['last_update'] ?? json['updated_at']),
       );
 
   final int id;
@@ -318,14 +388,14 @@ class MoviePilotSearchResult {
 
   factory MoviePilotSearchResult.fromJson(Map<String, dynamic> json) =>
       MoviePilotSearchResult(
-        title: json['title'] as String? ?? '',
-        size: json['size'] as int?,
-        seeders: json['seeders'] as int?,
-        leechers: json['peers'] as int?,
-        downloadUrl: json['enclosure'] as String?,
-        site: json['site'] as String?,
-        mediaType: json['media_type'] as String?,
-        resolution: json['resource_pix'] as String?,
+        title: _asString(json['title'] ?? json['name']) ?? '',
+        size: _asInt(json['size']),
+        seeders: _asInt(json['seeders'] ?? json['seeds']),
+        leechers: _asInt(json['leechers'] ?? json['peers']),
+        downloadUrl: _asString(json['enclosure'] ?? json['download_url']),
+        site: _asString(json['site'] ?? json['site_name']),
+        mediaType: _asString(json['media_type'] ?? json['mtype']),
+        resolution: _asString(json['resource_pix'] ?? json['resolution']),
       );
 
   final String title;
@@ -349,15 +419,22 @@ class MoviePilotDownloadTask {
     this.speed,
   });
 
-  factory MoviePilotDownloadTask.fromJson(Map<String, dynamic> json) =>
-      MoviePilotDownloadTask(
-        id: json['hash'] as String? ?? '',
-        name: json['name'] as String? ?? '',
-        state: json['state'] as String?,
-        progress: (json['progress'] as num?)?.toDouble(),
-        size: json['size'] as int?,
-        speed: json['dlspeed'] as int?,
-      );
+  factory MoviePilotDownloadTask.fromJson(Map<String, dynamic> json) {
+    final rawProgress = _asDouble(
+      json['progress'] ?? json['percentDone'] ?? json['completed'],
+    );
+    final progress = rawProgress != null && rawProgress <= 1
+        ? rawProgress * 100
+        : rawProgress;
+    return MoviePilotDownloadTask(
+      id: _asString(json['hash'] ?? json['id']) ?? '',
+      name: _asString(json['name'] ?? json['title']) ?? '',
+      state: _asString(json['state'] ?? json['status']),
+      progress: progress,
+      size: _asInt(json['size'] ?? json['total_size']),
+      speed: _asInt(json['dlspeed'] ?? json['download_speed'] ?? json['speed']),
+    );
+  }
 
   final String id;
   final String name;
@@ -381,15 +458,13 @@ class MoviePilotTransferHistory {
 
   factory MoviePilotTransferHistory.fromJson(Map<String, dynamic> json) =>
       MoviePilotTransferHistory(
-        id: json['id'] as int? ?? 0,
-        title: json['title'] as String? ?? '',
-        type: json['type'] as String?,
-        sourcePath: json['src'] as String?,
-        destPath: json['dest'] as String?,
-        transferTime: json['date'] != null
-            ? DateTime.tryParse(json['date'] as String)
-            : null,
-        success: json['status'] as bool?,
+        id: _asInt(json['id']) ?? 0,
+        title: _asString(json['title'] ?? json['name']) ?? '',
+        type: _asString(json['type'] ?? json['media_type']),
+        sourcePath: _asString(json['src'] ?? json['source_path']),
+        destPath: _asString(json['dest'] ?? json['dest_path']),
+        transferTime: _asDateTime(json['date'] ?? json['created_at']),
+        success: _asBool(json['status'] ?? json['success']),
       );
 
   final int id;

@@ -19,9 +19,8 @@ import 'package:my_nas/shared/widgets/desktop_shell/desktop_empty_state.dart';
 /// 桌面端「直播 / EPG」页面。
 ///
 /// 对齐设计稿 `live.jsx` LiveTV：精选频道 hero + 电子节目单时间轴。
-/// 数据取自真实 M3U/HLS 频道（[allLiveChannelsProvider]）。节目单的「节目」
-/// 数据需 XMLTV/EPG 源解析，当前数据层未提供，故时间轴只渲染频道与当前时间
-/// 红线，节目轨道留空（不伪造节目），点击频道行即可直接播放。
+/// 数据取自真实 M3U/HLS 频道（[allLiveChannelsProvider]）。节目单来自
+/// XMLTV/EPG 源，按当前频道涉及的 EPG URL 合并后以 tvgId 匹配。
 class LiveTvDesktopPage extends ConsumerStatefulWidget {
   const LiveTvDesktopPage({super.key});
 
@@ -82,14 +81,16 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
               .toList();
     final featured = channels.isNotEmpty ? channels.first : null;
 
-    // EPG（XMLTV）：取首个带 epgUrl 的频道地址，拉取并按 tvgId 匹配节目。
-    final epgUrl = channels
-        .map((c) => c.epgUrl)
-        .firstWhere((u) => u != null && u.isNotEmpty, orElse: () => null);
-    final epg = epgUrl != null
-        ? (ref.watch(liveEpgProvider(epgUrl)).valueOrNull ??
-              const <String, List<EpgProgramme>>{})
-        : const <String, List<EpgProgramme>>{};
+    // EPG（XMLTV）：按当前频道涉及的所有 epgUrl 拉取并合并，再按 tvgId 匹配节目。
+    final epgUrls = {
+      for (final c in channels)
+        if (c.epgUrl != null && c.epgUrl!.isNotEmpty) c.epgUrl!,
+    };
+    final epg = _mergeEpgMaps([
+      for (final url in epgUrls)
+        ref.watch(liveEpgProvider(url)).valueOrNull ??
+            const <String, List<EpgProgramme>>{},
+    ]);
     final hasEpg = epg.isNotEmpty;
     final featuredProgs = (featured?.tvgId != null)
         ? (epg[featured!.tvgId] ?? const <EpgProgramme>[])
@@ -254,6 +255,21 @@ const double _epgRowH = 62;
 const double _epgHeaderH = 42;
 const int _epgMaxRows = 50;
 const int _epgSpanMin = 360; // EPG 时间窗：6 小时
+
+Map<String, List<EpgProgramme>> _mergeEpgMaps(
+  Iterable<Map<String, List<EpgProgramme>>> maps,
+) {
+  final merged = <String, List<EpgProgramme>>{};
+  for (final map in maps) {
+    for (final entry in map.entries) {
+      merged.putIfAbsent(entry.key, () => <EpgProgramme>[]).addAll(entry.value);
+    }
+  }
+  for (final programmes in merged.values) {
+    programmes.sort((a, b) => a.start.compareTo(b.start));
+  }
+  return merged;
+}
 
 int _nowMin() {
   final n = DateTime.now();

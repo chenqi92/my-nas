@@ -26,6 +26,15 @@ class MobileFilesFileSystem implements NasFileSystem {
   String? _documentsPath;
   String? _downloadsPath;
 
+  @override
+  bool get supportsWriteOperations => true;
+
+  @override
+  bool get supportsServerSideCopy => true;
+
+  @override
+  bool get supportsDirectFileUrl => false;
+
   /// 需要排除的目录名（缓存目录等）
   static const _excludedDirNames = {
     'cache',
@@ -50,9 +59,10 @@ class MobileFilesFileSystem implements NasFileSystem {
     final downloadDir = await getDownloadsDirectory();
     _downloadsPath = downloadDir?.path;
 
-    logger..i('MobileFilesFileSystem: 初始化完成')
-    ..d('  Documents: $_documentsPath')
-    ..d('  Downloads: $_downloadsPath');
+    logger
+      ..i('MobileFilesFileSystem: 初始化完成')
+      ..d('  Documents: $_documentsPath')
+      ..d('  Downloads: $_downloadsPath');
   }
 
   /// 检查是否是应该排除的目录
@@ -264,7 +274,10 @@ class MobileFilesFileSystem implements NasFileSystem {
       null;
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) {

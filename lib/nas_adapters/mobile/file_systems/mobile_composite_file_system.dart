@@ -22,6 +22,15 @@ class MobileCompositeFileSystem implements NasFileSystem {
   late final MobileMusicFileSystem _musicFileSystem;
   late final MobileFilesFileSystem _filesFileSystem;
 
+  @override
+  bool get supportsWriteOperations => false;
+
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  bool get supportsDirectFileUrl => false;
+
   /// 权限状态跟踪
   bool _galleryPermissionGranted = false;
   bool _musicPermissionGranted = false;
@@ -53,7 +62,9 @@ class MobileCompositeFileSystem implements NasFileSystem {
   ///
   /// 仅在用户将本机添加到照片或视频媒体库时调用
   Future<bool> requestGalleryPermission() async {
-    logger.d('🟢 MobileCompositeFileSystem: requestGalleryPermission() 被调用, 已授权=$_galleryPermissionGranted');
+    logger.d(
+      '🟢 MobileCompositeFileSystem: requestGalleryPermission() 被调用, 已授权=$_galleryPermissionGranted',
+    );
     if (_galleryPermissionGranted) return true;
 
     final granted = await _galleryFileSystem.requestPermission();
@@ -93,7 +104,9 @@ class MobileCompositeFileSystem implements NasFileSystem {
   bool get hasMusicPermission => _musicPermissionGranted;
 
   /// 兼容旧 API（已弃用，请使用 initialize）
-  @Deprecated('Use initialize() instead. Permissions are now requested on-demand.')
+  @Deprecated(
+    'Use initialize() instead. Permissions are now requested on-demand.',
+  )
   Future<bool> requestPermissions() => initialize();
 
   /// 获取相册文件系统（用于直接访问）
@@ -107,13 +120,17 @@ class MobileCompositeFileSystem implements NasFileSystem {
 
   /// 根据路径确定使用哪个文件系统
   NasFileSystem _getFileSystem(String path) {
-    if (path.startsWith('/gallery') || path.startsWith('/photos') || path.startsWith('/videos')) {
+    if (path.startsWith('/gallery') ||
+        path.startsWith('/photos') ||
+        path.startsWith('/videos')) {
       return _galleryFileSystem;
     }
     if (path.startsWith('/music')) {
       return _musicFileSystem;
     }
-    if (path.startsWith('/files') || path.startsWith('/documents') || path.startsWith('/downloads')) {
+    if (path.startsWith('/files') ||
+        path.startsWith('/documents') ||
+        path.startsWith('/downloads')) {
       return _filesFileSystem;
     }
     // 默认返回相册（保持向后兼容）
@@ -156,26 +173,34 @@ class MobileCompositeFileSystem implements NasFileSystem {
 
     final fs = _getFileSystem(path);
     final transformedPath = _transformPath(path);
-    logger.d('🟢 MobileCompositeFileSystem: 转换路径 "$path" → "$transformedPath", 使用 ${fs.runtimeType}');
-    final items = await fs.listDirectory(transformedPath.isEmpty ? '/' : transformedPath);
+    logger.d(
+      '🟢 MobileCompositeFileSystem: 转换路径 "$path" → "$transformedPath", 使用 ${fs.runtimeType}',
+    );
+    final items = await fs.listDirectory(
+      transformedPath.isEmpty ? '/' : transformedPath,
+    );
     logger.d('🟢 MobileCompositeFileSystem: 返回 ${items.length} 个项目');
 
     // 为返回的项目添加前缀
     final prefix = _getPrefix(path);
-    return items.map((item) => FileItem(
-      name: item.name,
-      path: '$prefix${item.path}',
-      isDirectory: item.isDirectory,
-      size: item.size,
-      modifiedTime: item.modifiedTime,
-      createdTime: item.createdTime,
-      extension: item.extension,
-      mimeType: item.mimeType,
-      isHidden: item.isHidden,
-      thumbnailUrl: item.thumbnailUrl,
-      isLivePhoto: item.isLivePhoto,
-      livePhotoVideoPath: item.livePhotoVideoPath,
-    )).toList();
+    return items
+        .map(
+          (item) => FileItem(
+            name: item.name,
+            path: '$prefix${item.path}',
+            isDirectory: item.isDirectory,
+            size: item.size,
+            modifiedTime: item.modifiedTime,
+            createdTime: item.createdTime,
+            extension: item.extension,
+            mimeType: item.mimeType,
+            isHidden: item.isHidden,
+            thumbnailUrl: item.thumbnailUrl,
+            isLivePhoto: item.isLivePhoto,
+            livePhotoVideoPath: item.livePhotoVideoPath,
+          ),
+        )
+        .toList();
   }
 
   /// 获取路径前缀
@@ -193,30 +218,33 @@ class MobileCompositeFileSystem implements NasFileSystem {
   /// 列出根目录
   Future<List<FileItem>> _listRoot() async {
     final items = <FileItem>[]
-
-    // 相册（照片和视频）
-    ..add(FileItem(
-      name: appL10n.mobileCompositeFileSystemGallery,
-      path: '/gallery',
-      isDirectory: true,
-      size: 0,
-    ))
-
-    // 音乐库（iOS 和 Android 都支持）
-    ..add(FileItem(
-      name: appL10n.mobileCompositeFileSystemMusic,
-      path: '/music',
-      isDirectory: true,
-      size: 0,
-    ))
-
-    // 文件（Documents 和 Downloads）
-    ..add(FileItem(
-      name: appL10n.mobileCompositeFileSystemFiles,
-      path: '/files',
-      isDirectory: true,
-      size: 0,
-    ));
+      // 相册（照片和视频）
+      ..add(
+        FileItem(
+          name: appL10n.mobileCompositeFileSystemGallery,
+          path: '/gallery',
+          isDirectory: true,
+          size: 0,
+        ),
+      )
+      // 音乐库（iOS 和 Android 都支持）
+      ..add(
+        FileItem(
+          name: appL10n.mobileCompositeFileSystemMusic,
+          path: '/music',
+          isDirectory: true,
+          size: 0,
+        ),
+      )
+      // 文件（Documents 和 Downloads）
+      ..add(
+        FileItem(
+          name: appL10n.mobileCompositeFileSystemFiles,
+          path: '/files',
+          isDirectory: true,
+          size: 0,
+        ),
+      );
 
     return items;
   }
@@ -245,7 +273,10 @@ class MobileCompositeFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
+  Future<Stream<List<int>>> getFileStream(
+    String path, {
+    FileRange? range,
+  }) async {
     final fs = _getFileSystem(path);
     final transformedPath = _transformPath(path);
     return fs.getFileStream(transformedPath, range: range);
@@ -266,7 +297,10 @@ class MobileCompositeFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async {
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async {
     final fs = _getFileSystem(path);
     final transformedPath = _transformPath(path);
     return fs.getThumbnailData(transformedPath, size: size);
@@ -278,7 +312,9 @@ class MobileCompositeFileSystem implements NasFileSystem {
     if (url.startsWith('file://')) {
       return _filesFileSystem.getUrlStream(url);
     }
-    throw UnimplementedError(appL10n.mobileCompositeFileSystemUnsupportedUrl(url));
+    throw UnimplementedError(
+      appL10n.mobileCompositeFileSystemUnsupportedUrl(url),
+    );
   }
 
   @override
@@ -328,7 +364,12 @@ class MobileCompositeFileSystem implements NasFileSystem {
   }) async {
     final fs = _getFileSystem(remotePath);
     final transformedPath = _transformPath(remotePath);
-    await fs.upload(localPath, transformedPath, fileName: fileName, onProgress: onProgress);
+    await fs.upload(
+      localPath,
+      transformedPath,
+      fileName: fileName,
+      onProgress: onProgress,
+    );
   }
 
   @override
@@ -346,20 +387,24 @@ class MobileCompositeFileSystem implements NasFileSystem {
       final transformedPath = _transformPath(path);
       final items = await fs.search(query, path: transformedPath);
       final prefix = _getPrefix(path);
-      return items.map((item) => FileItem(
-        name: item.name,
-        path: '$prefix${item.path}',
-        isDirectory: item.isDirectory,
-        size: item.size,
-        modifiedTime: item.modifiedTime,
-        createdTime: item.createdTime,
-        extension: item.extension,
-        mimeType: item.mimeType,
-        isHidden: item.isHidden,
-        thumbnailUrl: item.thumbnailUrl,
-        isLivePhoto: item.isLivePhoto,
-        livePhotoVideoPath: item.livePhotoVideoPath,
-      )).toList();
+      return items
+          .map(
+            (item) => FileItem(
+              name: item.name,
+              path: '$prefix${item.path}',
+              isDirectory: item.isDirectory,
+              size: item.size,
+              modifiedTime: item.modifiedTime,
+              createdTime: item.createdTime,
+              extension: item.extension,
+              mimeType: item.mimeType,
+              isHidden: item.isHidden,
+              thumbnailUrl: item.thumbnailUrl,
+              isLivePhoto: item.isLivePhoto,
+              livePhotoVideoPath: item.livePhotoVideoPath,
+            ),
+          )
+          .toList();
     }
 
     // 否则在所有文件系统中搜索
@@ -367,41 +412,53 @@ class MobileCompositeFileSystem implements NasFileSystem {
 
     // 搜索相册
     final galleryItems = await _galleryFileSystem.search(query);
-    results.addAll(galleryItems.map((item) => FileItem(
-      name: item.name,
-      path: '/gallery${item.path}',
-      isDirectory: item.isDirectory,
-      size: item.size,
-      modifiedTime: item.modifiedTime,
-      createdTime: item.createdTime,
-      extension: item.extension,
-      isLivePhoto: item.isLivePhoto,
-      livePhotoVideoPath: item.livePhotoVideoPath,
-    )));
+    results.addAll(
+      galleryItems.map(
+        (item) => FileItem(
+          name: item.name,
+          path: '/gallery${item.path}',
+          isDirectory: item.isDirectory,
+          size: item.size,
+          modifiedTime: item.modifiedTime,
+          createdTime: item.createdTime,
+          extension: item.extension,
+          isLivePhoto: item.isLivePhoto,
+          livePhotoVideoPath: item.livePhotoVideoPath,
+        ),
+      ),
+    );
 
     // 搜索音乐（iOS 和 Android 都支持）
     final musicItems = await _musicFileSystem.search(query);
-    results.addAll(musicItems.map((item) => FileItem(
-      name: item.name,
-      path: '/music${item.path}',
-      isDirectory: item.isDirectory,
-      size: item.size,
-      modifiedTime: item.modifiedTime,
-      createdTime: item.createdTime,
-      extension: item.extension,
-    )));
+    results.addAll(
+      musicItems.map(
+        (item) => FileItem(
+          name: item.name,
+          path: '/music${item.path}',
+          isDirectory: item.isDirectory,
+          size: item.size,
+          modifiedTime: item.modifiedTime,
+          createdTime: item.createdTime,
+          extension: item.extension,
+        ),
+      ),
+    );
 
     // 搜索文件
     final filesItems = await _filesFileSystem.search(query);
-    results.addAll(filesItems.map((item) => FileItem(
-      name: item.name,
-      path: '/files${item.path}',
-      isDirectory: item.isDirectory,
-      size: item.size,
-      modifiedTime: item.modifiedTime,
-      createdTime: item.createdTime,
-      extension: item.extension,
-    )));
+    results.addAll(
+      filesItems.map(
+        (item) => FileItem(
+          name: item.name,
+          path: '/files${item.path}',
+          isDirectory: item.isDirectory,
+          size: item.size,
+          modifiedTime: item.modifiedTime,
+          createdTime: item.createdTime,
+          extension: item.extension,
+        ),
+      ),
+    );
 
     return results;
   }

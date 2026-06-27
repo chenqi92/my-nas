@@ -308,9 +308,6 @@ class _SiteStatCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              // 站点签到尚未实现：标注规划占位，不放可点却无行为的死按钮。
-              AppTag(l.ptPageCheckIn, variant: TagVariant.plan),
             ],
           ),
           const SizedBox(height: 10),

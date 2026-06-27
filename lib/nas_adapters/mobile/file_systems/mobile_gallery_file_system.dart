@@ -30,6 +30,15 @@ class MobileGalleryFileSystem implements NasFileSystem {
   List<pm.AssetPathEntity>? _cachedAlbums;
   final Map<String, pm.AssetEntity> _assetCache = {};
 
+  @override
+  bool get supportsWriteOperations => false;
+
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  bool get supportsDirectFileUrl => false;
+
   /// 请求相册访问权限
   Future<bool> requestPermission() async {
     logger.i('MobileGalleryFileSystem: 请求相册权限...');
@@ -55,10 +64,14 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
   /// 获取所有相册
   Future<List<pm.AssetPathEntity>> _getAlbums() async {
-    logger.d('🔵 MobileGalleryFileSystem: _getAlbums() 被调用, _cachedAlbums=${_cachedAlbums?.length}');
+    logger.d(
+      '🔵 MobileGalleryFileSystem: _getAlbums() 被调用, _cachedAlbums=${_cachedAlbums?.length}',
+    );
 
     if (_cachedAlbums != null) {
-      logger.d('MobileGalleryFileSystem: 使用缓存相册列表，数量: ${_cachedAlbums!.length}');
+      logger.d(
+        'MobileGalleryFileSystem: 使用缓存相册列表，数量: ${_cachedAlbums!.length}',
+      );
       return _cachedAlbums!;
     }
 
@@ -76,7 +89,9 @@ class MobileGalleryFileSystem implements NasFileSystem {
       // 打印每个相册的详细信息用于调试
       for (final album in _cachedAlbums!) {
         final count = await album.assetCountAsync;
-        logger.d('  - ${album.name} (id: ${album.id}, isAll: ${album.isAll}): $count 个资源');
+        logger.d(
+          '  - ${album.name} (id: ${album.id}, isAll: ${album.isAll}): $count 个资源',
+        );
       }
 
       if (_cachedAlbums!.isEmpty) {
@@ -147,12 +162,7 @@ class MobileGalleryFileSystem implements NasFileSystem {
   /// 只返回 /albums，不返回 /all，避免同一批照片被扫描两次
   /// （/albums 中的 isAll=true 相册已经包含所有照片）
   Future<List<FileItem>> _listRoot() async => [
-    const FileItem(
-      name: 'albums',
-      path: '/albums',
-      isDirectory: true,
-      size: 0,
-    ),
+    const FileItem(name: 'albums', path: '/albums', isDirectory: true, size: 0),
   ];
 
   /// 列出所有相册
@@ -176,13 +186,17 @@ class MobileGalleryFileSystem implements NasFileSystem {
       final count = await album.assetCountAsync;
       // 对 album ID 进行编码，避免包含斜杠导致路径解析错误
       final encodedId = _encodeId(album.id);
-      logger.d('MobileGalleryFileSystem: 相册 "${album.name}" (id: ${album.id}) 有 $count 个资源');
-      items.add(FileItem(
-        name: album.name,
-        path: '/albums/$encodedId',
-        isDirectory: true,
-        size: count,
-      ));
+      logger.d(
+        'MobileGalleryFileSystem: 相册 "${album.name}" (id: ${album.id}) 有 $count 个资源',
+      );
+      items.add(
+        FileItem(
+          name: album.name,
+          path: '/albums/$encodedId',
+          isDirectory: true,
+          size: count,
+        ),
+      );
     }
 
     logger.i('MobileGalleryFileSystem: _listAlbums 返回 ${items.length} 个相册');
@@ -229,7 +243,9 @@ class MobileGalleryFileSystem implements NasFileSystem {
       },
     );
 
-    logger.d('🔵 MobileGalleryFileSystem: ✓ 找到相册 "${album.name}" (id: ${album.id})');
+    logger.d(
+      '🔵 MobileGalleryFileSystem: ✓ 找到相册 "${album.name}" (id: ${album.id})',
+    );
 
     final count = await album.assetCountAsync;
     logger.i('MobileGalleryFileSystem: 相册 "${album.name}" 共有 $count 个资源');
@@ -289,26 +305,30 @@ class MobileGalleryFileSystem implements NasFileSystem {
         // 实际大小会在需要时通过 getFileInfo 获取
         final estimatedSize = asset.width * asset.height * 4 ~/ 10;
 
-        items.add(FileItem(
-          name: title ?? asset.id,
-          path: '/albums/$encodedAlbumId/$encodedAssetId',
-          isDirectory: false,
-          size: estimatedSize,
-          modifiedTime: asset.modifiedDateTime,
-          createdTime: asset.createDateTime,
-          extension: extension,
-          mimeType: mimeType,
-          isLivePhoto: isLivePhoto,
-          // Live Photo 视频路径延迟加载，不在列表时获取
-          livePhotoVideoPath: null,
-        ));
+        items.add(
+          FileItem(
+            name: title ?? asset.id,
+            path: '/albums/$encodedAlbumId/$encodedAssetId',
+            isDirectory: false,
+            size: estimatedSize,
+            modifiedTime: asset.modifiedDateTime,
+            createdTime: asset.createDateTime,
+            extension: extension,
+            mimeType: mimeType,
+            isLivePhoto: isLivePhoto,
+            // Live Photo 视频路径延迟加载，不在列表时获取
+            livePhotoVideoPath: null,
+          ),
+        );
       }
 
       // 每批处理后让出主线程，避免 UI 卡顿
       await Future<void>.delayed(Duration.zero);
     }
 
-    logger.d('🔵 MobileGalleryFileSystem: _listAlbumAssets 返回 ${items.length} 个资源');
+    logger.d(
+      '🔵 MobileGalleryFileSystem: _listAlbumAssets 返回 ${items.length} 个资源',
+    );
     return items;
   }
 
@@ -390,7 +410,10 @@ class MobileGalleryFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
+  Future<Stream<List<int>>> getFileStream(
+    String path, {
+    FileRange? range,
+  }) async {
     // 解码 asset ID
     final assetId = _decodeId(path.split('/').last);
     var asset = _assetCache[assetId];
@@ -417,7 +440,10 @@ class MobileGalleryFileSystem implements NasFileSystem {
     return file.openRead();
   }
 
-  Future<Stream<List<int>>> _getFileStreamWithRange(File file, FileRange range) async {
+  Future<Stream<List<int>>> _getFileStreamWithRange(
+    File file,
+    FileRange range,
+  ) async {
     final length = await file.length();
     // FileRange.end 为排他边界（同 openRead 的 end），null 表示读到文件结尾
     final end = range.end ?? length;
@@ -464,7 +490,10 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
   /// 获取资源的缩略图数据
   @override
-  Future<Uint8List?> getThumbnailData(String path, {fs.ThumbnailSize? size}) async {
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    fs.ThumbnailSize? size,
+  }) async {
     // 解码 asset ID
     final assetId = _decodeId(path.split('/').last);
     var asset = _assetCache[assetId];
@@ -478,9 +507,7 @@ class MobileGalleryFileSystem implements NasFileSystem {
 
     final thumbnailSize = size ?? fs.ThumbnailSize.medium;
     final pixelSize = thumbnailSize.pixels;
-    return asset.thumbnailDataWithSize(
-      pm.ThumbnailSize(pixelSize, pixelSize),
-    );
+    return asset.thumbnailDataWithSize(pm.ThumbnailSize(pixelSize, pixelSize));
   }
 
   @override
@@ -548,7 +575,10 @@ class MobileGalleryFileSystem implements NasFileSystem {
   Future<List<FileItem>> search(String query, {String? path}) async {
     // 分批搜索，避免一次性加载所有资源
     final albums = await _getAlbums();
-    final allAlbum = albums.firstWhere((a) => a.isAll, orElse: () => albums.first);
+    final allAlbum = albums.firstWhere(
+      (a) => a.isAll,
+      orElse: () => albums.first,
+    );
     final count = await allAlbum.assetCountAsync;
 
     final results = <FileItem>[];
@@ -586,17 +616,19 @@ class MobileGalleryFileSystem implements NasFileSystem {
           // 使用估算的文件大小
           final estimatedSize = asset.width * asset.height * 4 ~/ 10;
 
-          results.add(FileItem(
-            name: assetTitle ?? asset.id,
-            path: '/all/$encodedAssetId',
-            isDirectory: false,
-            size: estimatedSize,
-            modifiedTime: asset.modifiedDateTime,
-            extension: extension,
-            mimeType: asset.mimeType,
-            isLivePhoto: isLivePhoto,
-            livePhotoVideoPath: null, // 延迟加载
-          ));
+          results.add(
+            FileItem(
+              name: assetTitle ?? asset.id,
+              path: '/all/$encodedAssetId',
+              isDirectory: false,
+              size: estimatedSize,
+              modifiedTime: asset.modifiedDateTime,
+              extension: extension,
+              mimeType: asset.mimeType,
+              isLivePhoto: isLivePhoto,
+              livePhotoVideoPath: null, // 延迟加载
+            ),
+          );
         }
       }
 

@@ -47,7 +47,11 @@ class TrayService with TrayListener, WindowListener {
 
   /// Windows 用 .ico 渲染最佳；这里复用应用 logo（png），若 Windows 托盘图标
   /// 不显示，可在 assets 放一个 .ico 并改这里的路径。
-  static const _iconPath = 'assets/logo.png';
+  static const _defaultIconPath = 'assets/logo.png';
+
+  /// macOS 菜单栏会把图标压到很小，直接缩应用大图会显得方硬。
+  /// 使用带透明外边距与圆角底板的专用小图，选中高亮时更贴近系统风格。
+  static const _macosIconPath = 'assets/icons/tray_macos.png';
 
   bool _started = false;
   bool _exiting = false;
@@ -92,6 +96,8 @@ class TrayService with TrayListener, WindowListener {
     }
   }
 
+  String get _iconPath => Platform.isMacOS ? _macosIconPath : _defaultIconPath;
+
   Future<void> _setMenu(TrayLabels labels) async {
     await trayManager.setContextMenu(
       Menu(
@@ -126,8 +132,10 @@ class TrayService with TrayListener, WindowListener {
   void onTrayIconMouseDown() {
     // Windows/Linux 左键点击托盘图标 → 还原窗口；macOS 习惯弹菜单。
     if (!kIsWeb && Platform.isMacOS) {
-      AppError.fireAndForget(trayManager.popUpContextMenu(),
-          action: 'trayPopupMenu');
+      AppError.fireAndForget(
+        trayManager.popUpContextMenu(),
+        action: 'trayPopupMenu',
+      );
     } else {
       AppError.fireAndForget(_showWindow(), action: 'trayShowWindow');
     }
@@ -135,8 +143,10 @@ class TrayService with TrayListener, WindowListener {
 
   @override
   void onTrayIconRightMouseDown() {
-    AppError.fireAndForget(trayManager.popUpContextMenu(),
-        action: 'trayPopupMenu');
+    AppError.fireAndForget(
+      trayManager.popUpContextMenu(),
+      action: 'trayPopupMenu',
+    );
   }
 
   @override

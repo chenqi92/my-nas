@@ -13,6 +13,15 @@ class LocalFileSystem implements NasFileSystem {
   final LocalFileApi _api;
 
   @override
+  bool get supportsWriteOperations => true;
+
+  @override
+  bool get supportsServerSideCopy => true;
+
+  @override
+  bool get supportsDirectFileUrl => false;
+
+  @override
   Future<List<FileItem>> listDirectory(String path) async {
     // 根目录返回系统根目录列表
     if (path == '/' || path.isEmpty) {
@@ -62,7 +71,10 @@ class LocalFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) async {
+  Future<Stream<List<int>>> getFileStream(
+    String path, {
+    FileRange? range,
+  }) async {
     final file = File(path);
 
     if (range != null) {
@@ -136,10 +148,7 @@ class LocalFileSystem implements NasFileSystem {
   @override
   Future<List<FileItem>> search(String query, {String? path}) async {
     final basePath = path ?? '/';
-    final files = await _api.searchFiles(
-      basePath: basePath,
-      pattern: query,
-    );
+    final files = await _api.searchFiles(basePath: basePath, pattern: query);
 
     return files
         .map(
@@ -157,8 +166,12 @@ class LocalFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<String?> getThumbnailUrl(String path, {ThumbnailSize? size}) async => _api.getFileUri(path);
+  Future<String?> getThumbnailUrl(String path, {ThumbnailSize? size}) async =>
+      _api.getFileUri(path);
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async => null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 }

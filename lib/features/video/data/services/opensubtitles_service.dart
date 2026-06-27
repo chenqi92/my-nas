@@ -42,7 +42,8 @@ class OpenSubtitleResult {
 
   factory OpenSubtitleResult.fromJson(Map<String, dynamic> json) {
     final attributes = json['attributes'] as Map<String, dynamic>? ?? {};
-    final files = (attributes['files'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final files =
+        (attributes['files'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final firstFile = files.isNotEmpty ? files.first : <String, dynamic>{};
 
     return OpenSubtitleResult(
@@ -106,14 +107,21 @@ class OpenSubtitleResult {
   final double? ratings;
 
   /// 获取语言显示名称
-  String get displayLanguage => _getLanguageDisplayNames()[languageCode] ?? language;
+  String get displayLanguage =>
+      _getLanguageDisplayNames()[languageCode] ?? language;
 
   /// 获取字幕质量标签
   List<String> get qualityTags {
     final tags = <String>[];
-    if (hearingImpaired) tags.add('SDH');
-    if (aiTranslated) tags.add('AI');
-    if (machineTranslated) tags.add(appL10n.videoOpensubtitlesMachineTranslated);
+    if (hearingImpaired) {
+      tags.add('SDH');
+    }
+    if (aiTranslated) {
+      tags.add('AI');
+    }
+    if (machineTranslated) {
+      tags.add(appL10n.videoOpensubtitlesMachineTranslated);
+    }
     return tags;
   }
 
@@ -121,8 +129,12 @@ class OpenSubtitleResult {
     if (language == null) return '';
     // OpenSubtitles 返回的语言是 ISO 639-2B 格式，如 "Chinese (simplified)"
     final lower = language.toLowerCase();
-    if (lower.contains('chinese') && lower.contains('simplified')) return 'zh-cn';
-    if (lower.contains('chinese') && lower.contains('traditional')) return 'zh-tw';
+    if (lower.contains('chinese') && lower.contains('simplified')) {
+      return 'zh-cn';
+    }
+    if (lower.contains('chinese') && lower.contains('traditional')) {
+      return 'zh-tw';
+    }
     if (lower.contains('chinese')) return 'zh';
     if (lower.contains('english')) return 'en';
     if (lower.contains('japanese')) return 'ja';
@@ -139,21 +151,21 @@ class OpenSubtitleResult {
   }
 
   static Map<String, String> _getLanguageDisplayNames() => <String, String>{
-      'zh-cn': appL10n.videoOpensubtitlesLanguageZhCn,
-      'zh-tw': appL10n.videoOpensubtitlesLanguageZhTw,
-      'zh': appL10n.videoOpensubtitlesLanguageZh,
-      'en': 'English',
-      'ja': appL10n.videoOpensubtitlesLanguageJa,
-      'ko': appL10n.videoOpensubtitlesLanguageKo,
-      'fr': 'Français',
-      'de': 'Deutsch',
-      'es': 'Español',
-      'pt': 'Português',
-      'ru': 'Русский',
-      'it': 'Italiano',
-      'th': 'ไทย',
-      'vi': 'Tiếng Việt',
-    };
+    'zh-cn': appL10n.videoOpensubtitlesLanguageZhCn,
+    'zh-tw': appL10n.videoOpensubtitlesLanguageZhTw,
+    'zh': appL10n.videoOpensubtitlesLanguageZh,
+    'en': 'English',
+    'ja': appL10n.videoOpensubtitlesLanguageJa,
+    'ko': appL10n.videoOpensubtitlesLanguageKo,
+    'fr': 'Français',
+    'de': 'Deutsch',
+    'es': 'Español',
+    'pt': 'Português',
+    'ru': 'Русский',
+    'it': 'Italiano',
+    'th': 'ไทย',
+    'vi': 'Tiếng Việt',
+  };
 }
 
 /// OpenSubtitles 下载结果
@@ -309,11 +321,9 @@ class OpenSubtitleSearchParams {
 
 /// OpenSubtitles API 服务
 class OpenSubtitlesService {
-  OpenSubtitlesService({
-    required this.apiKey,
-    this.username,
-    this.password,
-  });
+  OpenSubtitlesService({required this.apiKey, this.username, this.password});
+
+  static String get defaultApiKey => _defaultApiKey;
 
   final String apiKey;
   final String? username;
@@ -337,6 +347,42 @@ class OpenSubtitlesService {
     return headers;
   }
 
+  /// 验证 API Key / 可选账号是否可用。
+  ///
+  /// 未配置账号时，用轻量搜索验证 API Key；配置账号时走登录接口，确保
+  /// 后续下载配额与 JWT 流程真实可用。
+  Future<bool> validateConnection() async {
+    if (apiKey.trim().isEmpty) return false;
+
+    final hasUsername = username?.trim().isNotEmpty ?? false;
+    final hasPassword = password?.isNotEmpty ?? false;
+    if (hasUsername || hasPassword) {
+      if (!hasUsername || !hasPassword) return false;
+      return await login() != null;
+    }
+
+    try {
+      final uri = Uri.parse('$_baseUrl/subtitles').replace(
+        queryParameters: const {
+          'query': 'test',
+          'languages': 'en',
+          'page': '1',
+        },
+      );
+      final response = await http.get(uri, headers: _getHeaders());
+      if (response.statusCode == 200) return true;
+      if (response.statusCode == 429) {
+        logger.w('OpenSubtitles: 验证遇到频率限制，视为 API 可达');
+        return true;
+      }
+      logger.w('OpenSubtitles: 验证失败，状态码: ${response.statusCode}');
+      return false;
+    } catch (e, st) {
+      AppError.handle(e, st, 'opensubtitles_validate');
+      return false;
+    }
+  }
+
   /// 登录获取 JWT Token
   Future<OpenSubtitleUserInfo?> login() async {
     if (username == null || password == null) {
@@ -347,10 +393,7 @@ class OpenSubtitlesService {
       final response = await http.post(
         Uri.parse('$_baseUrl/login'),
         headers: _getHeaders(),
-        body: jsonEncode({
-          'username': username,
-          'password': password,
-        }),
+        body: jsonEncode({'username': username, 'password': password}),
       );
 
       if (response.statusCode == 200) {
@@ -385,13 +428,15 @@ class OpenSubtitlesService {
   }
 
   /// 搜索字幕
-  Future<List<OpenSubtitleResult>> search(OpenSubtitleSearchParams params) async {
+  Future<List<OpenSubtitleResult>> search(
+    OpenSubtitleSearchParams params,
+  ) async {
     try {
       await _ensureLoggedIn();
 
-      final uri = Uri.parse('$_baseUrl/subtitles').replace(
-        queryParameters: params.toQueryParams(),
-      );
+      final uri = Uri.parse(
+        '$_baseUrl/subtitles',
+      ).replace(queryParameters: params.toQueryParams());
 
       final response = await http.get(
         uri,
@@ -427,9 +472,7 @@ class OpenSubtitlesService {
       final response = await http.post(
         Uri.parse('$_baseUrl/download'),
         headers: _getHeaders(requireAuth: true),
-        body: jsonEncode({
-          'file_id': fileId,
-        }),
+        body: jsonEncode({'file_id': fileId}),
       );
 
       if (response.statusCode == 200) {
@@ -480,7 +523,9 @@ class OpenSubtitlesService {
         }
 
         // 构建完整路径
-        final fullPath = savePath.endsWith('/') ? '$savePath$fileName' : '$savePath/$fileName';
+        final fullPath = savePath.endsWith('/')
+            ? '$savePath$fileName'
+            : '$savePath/$fileName';
 
         // 保存文件
         final file = File(fullPath);
@@ -513,32 +558,41 @@ class OpenSubtitlesService {
 }
 
 /// OpenSubtitles 服务 Provider
-final openSubtitlesServiceProvider = Provider<OpenSubtitlesService?>((ref) {
+final openSubtitlesServiceProvider = FutureProvider<OpenSubtitlesService?>((
+  ref,
+) async {
   // 获取已配置的 OpenSubtitles 源
   final sourcesAsync = ref.watch(sourcesProvider);
   final sources = sourcesAsync.valueOrNull ?? [];
-  final openSubtitlesSources = sources.where((s) => s.type == SourceType.opensubtitles).toList();
+  final openSubtitlesSources = sources
+      .where((s) => s.type == SourceType.opensubtitles)
+      .toList();
 
   if (openSubtitlesSources.isEmpty) {
     return null;
   }
 
   final source = openSubtitlesSources.first;
+  final sourceManager = ref.read(sourceManagerProvider);
+  final credential = await sourceManager.getCredential(source.id);
   // 优先使用用户自定义的 API Key，否则使用内置默认 Key
-  final customApiKey = source.apiKey ?? source.extraConfig?['apiKey'] as String?;
-  final apiKey = (customApiKey?.isNotEmpty ?? false) ? customApiKey! : _defaultApiKey;
+  final customApiKey =
+      source.apiKey ?? source.extraConfig?['apiKey'] as String?;
+  final apiKey = (customApiKey?.isNotEmpty ?? false)
+      ? customApiKey!
+      : _defaultApiKey;
 
   return OpenSubtitlesService(
     apiKey: apiKey,
     username: source.username.isNotEmpty ? source.username : null,
-    password: source.extraConfig?['password'] as String?,
+    password: credential?.password,
   );
 });
 
 /// 是否已配置 OpenSubtitles
 final hasOpenSubtitlesConfigProvider = Provider<bool>((ref) {
-  final service = ref.watch(openSubtitlesServiceProvider);
-  return service != null;
+  final sources = ref.watch(sourcesProvider).valueOrNull ?? [];
+  return sources.any((s) => s.type == SourceType.opensubtitles);
 });
 
 /// 根据语言偏好获取语言代码列表

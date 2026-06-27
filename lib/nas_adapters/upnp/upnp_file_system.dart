@@ -20,16 +20,23 @@ import 'package:my_nas/nas_adapters/upnp/upnp_content_directory_client.dart';
 /// 不支持的操作（多数 MediaServer 是只读）：
 /// upload / writeFile / delete / rename / mkdir / copy / move
 class UpnpFileSystem implements NasFileSystem {
-  UpnpFileSystem({
-    required UpnpContentDirectoryClient client,
-    Dio? dio,
-  })  : _client = client,
-        _streamDio = dio ?? Dio();
+  UpnpFileSystem({required UpnpContentDirectoryClient client, Dio? dio})
+    : _client = client,
+      _streamDio = dio ?? Dio();
 
   final UpnpContentDirectoryClient _client;
 
   /// 用于 getFileStream / getUrlStream 的独立 dio（避免和 SOAP 调用共享 baseUrl）
   final Dio _streamDio;
+
+  @override
+  bool get supportsWriteOperations => false;
+
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  bool get supportsDirectFileUrl => true;
 
   /// 缓存最近一次 list 的 item，用于 path → contentUrl 映射
   /// key: ObjectID（== path）
@@ -132,8 +139,7 @@ class UpnpFileSystem implements NasFileSystem {
   }
 
   @override
-  Future<Stream<List<int>>> getUrlStream(String url) =>
-      _streamRequest(url);
+  Future<Stream<List<int>>> getUrlStream(String url) => _streamRequest(url);
 
   Future<Stream<List<int>>> _streamRequest(
     String url, {
@@ -189,8 +195,9 @@ class UpnpFileSystem implements NasFileSystem {
   // —— 写操作：UPnP MediaServer 默认只读，全部抛 UnimplementedError ——
 
   @override
-  Future<void> createDirectory(String path) =>
-      throw UnimplementedError(appL10n.upnpFileSystemCreateDirectoryNotSupported);
+  Future<void> createDirectory(String path) => throw UnimplementedError(
+    appL10n.upnpFileSystemCreateDirectoryNotSupported,
+  );
 
   @override
   Future<void> delete(String path) =>
@@ -214,8 +221,7 @@ class UpnpFileSystem implements NasFileSystem {
     String remotePath, {
     String? fileName,
     void Function(int sent, int total)? onProgress,
-  }) =>
-      throw UnimplementedError(appL10n.upnpFileSystemUploadNotSupported);
+  }) => throw UnimplementedError(appL10n.upnpFileSystemUploadNotSupported);
 
   @override
   Future<void> writeFile(String remotePath, List<int> data) =>
@@ -229,8 +235,10 @@ class UpnpFileSystem implements NasFileSystem {
       null;
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async =>
-      null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 
   Future<void> dispose() async {
     _streamDio.close();

@@ -61,10 +61,11 @@ class TraktApi {
   }
 
   /// 获取 OAuth 授权 URL
-  String getAuthorizationUrl() => '$authUrl/oauth/authorize'
-        '?response_type=code'
-        '&client_id=$clientId'
-        '&redirect_uri=$redirectUri';
+  String getAuthorizationUrl() =>
+      '$authUrl/oauth/authorize'
+      '?response_type=code'
+      '&client_id=$clientId'
+      '&redirect_uri=$redirectUri';
 
   // ==================== Device Code Flow ====================
 
@@ -86,7 +87,9 @@ class TraktApi {
         return TraktDeviceCode.fromJson(data);
       }
 
-      throw TraktApiException(appL10n.traktApiRequestDeviceCodeFailed(response.statusCode));
+      throw TraktApiException(
+        appL10n.traktApiRequestDeviceCodeFailed(response.statusCode),
+      );
     } on SocketException catch (e) {
       throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
@@ -164,7 +167,9 @@ class TraktApi {
           );
 
         default:
-          throw TraktApiException(appL10n.traktApiPollAuthorizationFailed(response.statusCode));
+          throw TraktApiException(
+            appL10n.traktApiPollAuthorizationFailed(response.statusCode),
+          );
       }
     } on SocketException catch (e) {
       throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
@@ -180,9 +185,7 @@ class TraktApi {
     try {
       final response = await client.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'code': code,
           'client_id': clientId,
@@ -206,7 +209,9 @@ class TraktApi {
         return tokenResponse;
       }
 
-      throw TraktApiException(appL10n.traktApiGetTokenFailed(response.statusCode));
+      throw TraktApiException(
+        appL10n.traktApiGetTokenFailed(response.statusCode),
+      );
     } on SocketException catch (e) {
       throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
@@ -225,9 +230,7 @@ class TraktApi {
     try {
       final response = await client.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'refresh_token': refreshToken,
           'client_id': clientId,
@@ -251,7 +254,9 @@ class TraktApi {
         return tokenResponse;
       }
 
-      throw TraktApiException(appL10n.traktApiRefreshTokenFailed(response.statusCode));
+      throw TraktApiException(
+        appL10n.traktApiRefreshTokenFailed(response.statusCode),
+      );
     } on SocketException catch (e) {
       throw TraktApiException(appL10n.traktApiConnectionFailed(e.message));
     } on http.ClientException catch (e) {
@@ -268,9 +273,7 @@ class TraktApi {
     try {
       await client.post(
         url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'token': accessToken,
           'client_id': clientId,
@@ -281,6 +284,29 @@ class TraktApi {
       accessToken = null;
       refreshToken = null;
       tokenExpiresAt = null;
+    }
+  }
+
+  /// 验证 Trakt 应用 Client ID 是否可用。
+  ///
+  /// Device Code Flow 的第一步只需要 Client ID；Client Secret 会在换取
+  /// token 时由 Trakt 校验。
+  Future<bool> validateAppCredentials() async {
+    try {
+      final code = await requestDeviceCode();
+      return code.deviceCode.isNotEmpty && code.userCode.isNotEmpty;
+    } on TraktApiException {
+      return false;
+    }
+  }
+
+  /// 验证已授权 token 是否可用。
+  Future<bool> validateAuthenticatedConnection() async {
+    try {
+      await getUserSettings();
+      return true;
+    } on TraktApiException {
+      return false;
     }
   }
 
@@ -307,10 +333,7 @@ class TraktApi {
     final response = await _makeAuthenticatedRequest(
       'GET',
       '/users/me/history/$type',
-      queryParams: {
-        'page': page.toString(),
-        'limit': limit.toString(),
-      },
+      queryParams: {'page': page.toString(), 'limit': limit.toString()},
     );
 
     final data = jsonDecode(response.body) as List<dynamic>;
@@ -329,10 +352,7 @@ class TraktApi {
     final response = await _makeAuthenticatedRequest(
       'GET',
       '/users/me/watchlist/$type/$sort',
-      queryParams: {
-        'page': page.toString(),
-        'limit': limit.toString(),
-      },
+      queryParams: {'page': page.toString(), 'limit': limit.toString()},
     );
 
     final data = jsonDecode(response.body) as List<dynamic>;
@@ -418,17 +438,15 @@ class TraktApi {
       '/sync/ratings',
       body: {
         '${item.type}s': [
-          {
-            ...item.toJson(),
-            'rating': rating,
-          }
+          {...item.toJson(), 'rating': rating},
         ],
       },
     );
   }
 
   /// 搜索媒体
-  Future<List<TraktSearchResult>> search(String query, {
+  Future<List<TraktSearchResult>> search(
+    String query, {
     String type = 'movie,show',
     int page = 1,
     int limit = 10,
@@ -471,7 +489,10 @@ class TraktApi {
       _scrobble('stop', request);
 
   /// 执行 Scrobble 请求
-  Future<TraktScrobbleResponse?> _scrobble(String action, TraktScrobbleRequest request) async {
+  Future<TraktScrobbleResponse?> _scrobble(
+    String action,
+    TraktScrobbleRequest request,
+  ) async {
     try {
       final response = await _makeAuthenticatedRequest(
         'POST',
@@ -526,10 +547,7 @@ class TraktApi {
   ///
   /// [playbackId] 从 getPlaybackProgress 返回的 id
   Future<void> deletePlaybackProgress(int playbackId) async {
-    await _makeAuthenticatedRequest(
-      'DELETE',
-      '/sync/playback/$playbackId',
-    );
+    await _makeAuthenticatedRequest('DELETE', '/sync/playback/$playbackId');
   }
 
   /// 从观看历史中移除
@@ -610,11 +628,12 @@ class TraktApi {
   }
 
   /// 发起认证请求
-  Future<http.Response> _makeAuthenticatedRequest(String method,
-      String path, {
-        Map<String, String>? queryParams,
-        Map<String, dynamic>? body,
-      }) async {
+  Future<http.Response> _makeAuthenticatedRequest(
+    String method,
+    String path, {
+    Map<String, String>? queryParams,
+    Map<String, dynamic>? body,
+  }) async {
     // 检查 token 是否需要刷新
     if (needsTokenRefresh && refreshToken != null) {
       await refreshAccessToken();
@@ -634,12 +653,13 @@ class TraktApi {
   }
 
   /// 发起请求
-  Future<http.Response> _makeRequest(String method,
-      String path, {
-        Map<String, String>? queryParams,
-        Map<String, dynamic>? body,
-        bool authenticated = false,
-      }) async {
+  Future<http.Response> _makeRequest(
+    String method,
+    String path, {
+    Map<String, String>? queryParams,
+    Map<String, dynamic>? body,
+    bool authenticated = false,
+  }) async {
     var url = Uri.parse('$apiUrl$path');
     if (queryParams != null && queryParams.isNotEmpty) {
       url = url.replace(queryParameters: queryParams);
@@ -679,7 +699,10 @@ class TraktApi {
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw TraktApiException(
-          appL10n.traktApiRequestFailed(response.statusCode, response.reasonPhrase ?? 'unknown'),
+          appL10n.traktApiRequestFailed(
+            response.statusCode,
+            response.reasonPhrase ?? 'unknown',
+          ),
         );
       }
 
@@ -726,10 +749,7 @@ enum TraktApiErrorKind {
 
 /// Trakt API 异常
 class TraktApiException implements Exception {
-  const TraktApiException(
-    this.message, {
-    this.kind = TraktApiErrorKind.other,
-  });
+  const TraktApiException(this.message, {this.kind = TraktApiErrorKind.other});
 
   final String message;
 
@@ -758,14 +778,15 @@ class TraktTokenResponse {
     required this.createdAt,
   });
 
-  factory TraktTokenResponse.fromJson(Map<String, dynamic> json) => TraktTokenResponse(
-      accessToken: json['access_token'] as String,
-      tokenType: json['token_type'] as String,
-      expiresIn: json['expires_in'] as int,
-      refreshToken: json['refresh_token'] as String,
-      scope: json['scope'] as String,
-      createdAt: json['created_at'] as int,
-    );
+  factory TraktTokenResponse.fromJson(Map<String, dynamic> json) =>
+      TraktTokenResponse(
+        accessToken: json['access_token'] as String,
+        tokenType: json['token_type'] as String,
+        expiresIn: json['expires_in'] as int,
+        refreshToken: json['refresh_token'] as String,
+        scope: json['scope'] as String,
+        createdAt: json['created_at'] as int,
+      );
 
   final String accessToken;
   final String tokenType;
@@ -856,21 +877,22 @@ class TraktHistoryItem {
     this.episode,
   });
 
-  factory TraktHistoryItem.fromJson(Map<String, dynamic> json) => TraktHistoryItem(
-      id: json['id'] as int,
-      watchedAt: DateTime.parse(json['watched_at'] as String),
-      action: json['action'] as String,
-      type: json['type'] as String,
-      movie: json['movie'] != null
-          ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
-          : null,
-      show: json['show'] != null
-          ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
-          : null,
-      episode: json['episode'] != null
-          ? TraktEpisode.fromJson(json['episode'] as Map<String, dynamic>)
-          : null,
-    );
+  factory TraktHistoryItem.fromJson(Map<String, dynamic> json) =>
+      TraktHistoryItem(
+        id: json['id'] as int,
+        watchedAt: DateTime.parse(json['watched_at'] as String),
+        action: json['action'] as String,
+        type: json['type'] as String,
+        movie: json['movie'] != null
+            ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
+            : null,
+        show: json['show'] != null
+            ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
+            : null,
+        episode: json['episode'] != null
+            ? TraktEpisode.fromJson(json['episode'] as Map<String, dynamic>)
+            : null,
+      );
 
   final int id;
   final DateTime watchedAt;
@@ -891,17 +913,18 @@ class TraktWatchlistItem {
     this.show,
   });
 
-  factory TraktWatchlistItem.fromJson(Map<String, dynamic> json) => TraktWatchlistItem(
-      id: json['id'] as int,
-      listedAt: DateTime.parse(json['listed_at'] as String),
-      type: json['type'] as String,
-      movie: json['movie'] != null
-          ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
-          : null,
-      show: json['show'] != null
-          ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
-          : null,
-    );
+  factory TraktWatchlistItem.fromJson(Map<String, dynamic> json) =>
+      TraktWatchlistItem(
+        id: json['id'] as int,
+        listedAt: DateTime.parse(json['listed_at'] as String),
+        type: json['type'] as String,
+        movie: json['movie'] != null
+            ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
+            : null,
+        show: json['show'] != null
+            ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
+            : null,
+      );
 
   final int id;
   final DateTime listedAt;
@@ -912,21 +935,18 @@ class TraktWatchlistItem {
 
 /// 收藏项
 class TraktCollectionItem {
-  const TraktCollectionItem({
-    required this.collectedAt,
-    this.movie,
-    this.show,
-  });
+  const TraktCollectionItem({required this.collectedAt, this.movie, this.show});
 
-  factory TraktCollectionItem.fromJson(Map<String, dynamic> json) => TraktCollectionItem(
-      collectedAt: DateTime.parse(json['collected_at'] as String),
-      movie: json['movie'] != null
-          ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
-          : null,
-      show: json['show'] != null
-          ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
-          : null,
-    );
+  factory TraktCollectionItem.fromJson(Map<String, dynamic> json) =>
+      TraktCollectionItem(
+        collectedAt: DateTime.parse(json['collected_at'] as String),
+        movie: json['movie'] != null
+            ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
+            : null,
+        show: json['show'] != null
+            ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
+            : null,
+      );
 
   final DateTime collectedAt;
   final TraktMovie? movie;
@@ -943,17 +963,18 @@ class TraktRatingItem {
     this.show,
   });
 
-  factory TraktRatingItem.fromJson(Map<String, dynamic> json) => TraktRatingItem(
-      rating: json['rating'] as int,
-      ratedAt: DateTime.parse(json['rated_at'] as String),
-      type: json['type'] as String,
-      movie: json['movie'] != null
-          ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
-          : null,
-      show: json['show'] != null
-          ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
-          : null,
-    );
+  factory TraktRatingItem.fromJson(Map<String, dynamic> json) =>
+      TraktRatingItem(
+        rating: json['rating'] as int,
+        ratedAt: DateTime.parse(json['rated_at'] as String),
+        type: json['type'] as String,
+        movie: json['movie'] != null
+            ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
+            : null,
+        show: json['show'] != null
+            ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
+            : null,
+      );
 
   final int rating;
   final DateTime ratedAt;
@@ -971,16 +992,17 @@ class TraktSearchResult {
     this.show,
   });
 
-  factory TraktSearchResult.fromJson(Map<String, dynamic> json) => TraktSearchResult(
-      type: json['type'] as String,
-      score: (json['score'] as num?)?.toDouble() ?? 0.0,
-      movie: json['movie'] != null
-          ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
-          : null,
-      show: json['show'] != null
-          ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
-          : null,
-    );
+  factory TraktSearchResult.fromJson(Map<String, dynamic> json) =>
+      TraktSearchResult(
+        type: json['type'] as String,
+        score: (json['score'] as num?)?.toDouble() ?? 0.0,
+        movie: json['movie'] != null
+            ? TraktMovie.fromJson(json['movie'] as Map<String, dynamic>)
+            : null,
+        show: json['show'] != null
+            ? TraktShow.fromJson(json['show'] as Map<String, dynamic>)
+            : null,
+      );
 
   final String type;
   final double score;
@@ -997,10 +1019,10 @@ class TraktMovie {
   });
 
   factory TraktMovie.fromJson(Map<String, dynamic> json) => TraktMovie(
-      title: json['title'] as String? ?? '',
-      year: json['year'] as int?,
-      ids: TraktIds.fromJson(json['ids'] as Map<String, dynamic>? ?? {}),
-    );
+    title: json['title'] as String? ?? '',
+    year: json['year'] as int?,
+    ids: TraktIds.fromJson(json['ids'] as Map<String, dynamic>? ?? {}),
+  );
 
   final String title;
   final int? year;
@@ -1009,17 +1031,13 @@ class TraktMovie {
 
 /// 剧集
 class TraktShow {
-  const TraktShow({
-    required this.title,
-    required this.year,
-    required this.ids,
-  });
+  const TraktShow({required this.title, required this.year, required this.ids});
 
   factory TraktShow.fromJson(Map<String, dynamic> json) => TraktShow(
-      title: json['title'] as String? ?? '',
-      year: json['year'] as int?,
-      ids: TraktIds.fromJson(json['ids'] as Map<String, dynamic>? ?? {}),
-    );
+    title: json['title'] as String? ?? '',
+    year: json['year'] as int?,
+    ids: TraktIds.fromJson(json['ids'] as Map<String, dynamic>? ?? {}),
+  );
 
   final String title;
   final int? year;
@@ -1036,11 +1054,11 @@ class TraktEpisode {
   });
 
   factory TraktEpisode.fromJson(Map<String, dynamic> json) => TraktEpisode(
-      season: json['season'] as int? ?? 0,
-      number: json['number'] as int? ?? 0,
-      title: json['title'] as String? ?? '',
-      ids: TraktIds.fromJson(json['ids'] as Map<String, dynamic>? ?? {}),
-    );
+    season: json['season'] as int? ?? 0,
+    number: json['number'] as int? ?? 0,
+    title: json['title'] as String? ?? '',
+    ids: TraktIds.fromJson(json['ids'] as Map<String, dynamic>? ?? {}),
+  );
 
   final int season;
   final int number;
@@ -1050,21 +1068,15 @@ class TraktEpisode {
 
 /// Trakt IDs
 class TraktIds {
-  const TraktIds({
-    this.trakt,
-    this.slug,
-    this.imdb,
-    this.tmdb,
-    this.tvdb,
-  });
+  const TraktIds({this.trakt, this.slug, this.imdb, this.tmdb, this.tvdb});
 
   factory TraktIds.fromJson(Map<String, dynamic> json) => TraktIds(
-      trakt: json['trakt'] as int?,
-      slug: json['slug'] as String?,
-      imdb: json['imdb'] as String?,
-      tmdb: json['tmdb'] as int?,
-      tvdb: json['tvdb'] as int?,
-    );
+    trakt: json['trakt'] as int?,
+    slug: json['slug'] as String?,
+    imdb: json['imdb'] as String?,
+    tmdb: json['tmdb'] as int?,
+    tvdb: json['tvdb'] as int?,
+  );
 
   final int? trakt;
   final String? slug;
@@ -1083,7 +1095,8 @@ class TraktDeviceCode {
     required this.interval,
   });
 
-  factory TraktDeviceCode.fromJson(Map<String, dynamic> json) => TraktDeviceCode(
+  factory TraktDeviceCode.fromJson(Map<String, dynamic> json) =>
+      TraktDeviceCode(
         deviceCode: json['device_code'] as String,
         userCode: json['user_code'] as String,
         verificationUrl: json['verification_url'] as String,
@@ -1140,9 +1153,7 @@ class TraktMediaItem {
     if (tmdbId != null) ids['tmdb'] = tmdbId;
     if (tvdbId != null) ids['tvdb'] = tvdbId;
 
-    final result = <String, dynamic>{
-      'ids': ids,
-    };
+    final result = <String, dynamic>{'ids': ids};
 
     if (title != null) result['title'] = title;
     if (year != null) result['year'] = year;
@@ -1156,11 +1167,7 @@ class TraktMediaItem {
 }
 
 /// Scrobble 动作类型
-enum TraktScrobbleAction {
-  start,
-  pause,
-  stop,
-}
+enum TraktScrobbleAction { start, pause, stop }
 
 /// Scrobble 请求
 class TraktScrobbleRequest {
@@ -1177,9 +1184,7 @@ class TraktScrobbleRequest {
   final String? appDate;
 
   Map<String, dynamic> toJson() {
-    final result = <String, dynamic>{
-      'progress': progress,
-    };
+    final result = <String, dynamic>{'progress': progress};
 
     // 根据媒体类型添加对应字段
     if (media.type == 'movie') {

@@ -17,7 +17,8 @@ enum TranscodingCapability {
 /// 转码能力检测服务
 class TranscodingCapabilityService {
   /// 检测源类型的转码能力
-  TranscodingCapability getCapability(SourceType sourceType) => switch (sourceType) {
+  TranscodingCapability getCapability(SourceType sourceType) =>
+      switch (sourceType) {
         // NAS 设备支持服务端转码
         SourceType.synology => TranscodingCapability.serverSide,
         SourceType.qnap => TranscodingCapability.serverSide,
@@ -37,7 +38,7 @@ class TranscodingCapabilityService {
         SourceType.ftp => TranscodingCapability.clientSide,
         SourceType.sftp => TranscodingCapability.clientSide,
         SourceType.webdav => TranscodingCapability.clientSide,
-        SourceType.nfs => TranscodingCapability.clientSide,
+        SourceType.nfs => TranscodingCapability.none,
         SourceType.local => TranscodingCapability.clientSide,
         // UPnP/DLNA 设备通常自己处理转码，客户端不需要
         SourceType.upnp => TranscodingCapability.none,
@@ -60,11 +61,13 @@ class TranscodingCapabilityService {
   }
 
   /// 获取转码能力描述
-  String getCapabilityDescription(TranscodingCapability capability) => switch (capability) {
-        TranscodingCapability.serverSide => appL10n.transcodingCapabilityServerSide,
-        TranscodingCapability.clientSide => appL10n.transcodingCapabilityClientSide,
-        TranscodingCapability.none => appL10n.transcodingCapabilityNone,
-      };
+  String getCapabilityDescription(
+    TranscodingCapability capability,
+  ) => switch (capability) {
+    TranscodingCapability.serverSide => appL10n.transcodingCapabilityServerSide,
+    TranscodingCapability.clientSide => appL10n.transcodingCapabilityClientSide,
+    TranscodingCapability.none => appL10n.transcodingCapabilityNone,
+  };
 
   /// 获取不支持转码时的提示信息
   String getUnsupportedMessage(SourceType sourceType) =>
@@ -105,14 +108,20 @@ class TranscodingProfile {
     final filters = <String>[];
 
     // 缩放滤镜
-    if (!quality.isOriginal && quality.maxWidth != null && quality.maxHeight != null) {
-      filters.add('scale=${quality.maxWidth}:${quality.maxHeight}:force_original_aspect_ratio=decrease');
+    if (!quality.isOriginal &&
+        quality.maxWidth != null &&
+        quality.maxHeight != null) {
+      filters.add(
+        'scale=${quality.maxWidth}:${quality.maxHeight}:force_original_aspect_ratio=decrease',
+      );
     }
 
     // 字幕烧录滤镜
     if (burnSubtitle && subtitlePath != null) {
       // 转义路径中的特殊字符
-      final escapedPath = subtitlePath!.replaceAll(':', r'\:').replaceAll("'", r"\'");
+      final escapedPath = subtitlePath!
+          .replaceAll(':', r'\:')
+          .replaceAll("'", r"\'");
       filters.add("subtitles='$escapedPath'");
     }
 
@@ -129,15 +138,14 @@ class TranscodingProfile {
     String? container,
     String? subtitlePath,
     bool? burnSubtitle,
-  }) =>
-      TranscodingProfile(
-        quality: quality ?? this.quality,
-        videoCodec: videoCodec ?? this.videoCodec,
-        audioCodec: audioCodec ?? this.audioCodec,
-        container: container ?? this.container,
-        subtitlePath: subtitlePath ?? this.subtitlePath,
-        burnSubtitle: burnSubtitle ?? this.burnSubtitle,
-      );
+  }) => TranscodingProfile(
+    quality: quality ?? this.quality,
+    videoCodec: videoCodec ?? this.videoCodec,
+    audioCodec: audioCodec ?? this.audioCodec,
+    container: container ?? this.container,
+    subtitlePath: subtitlePath ?? this.subtitlePath,
+    burnSubtitle: burnSubtitle ?? this.burnSubtitle,
+  );
 }
 
 /// 转码状态
@@ -198,12 +206,11 @@ class TranscodingProgress {
     String? speed,
     Duration? eta,
     String? errorMessage,
-  }) =>
-      TranscodingProgress(
-        status: status ?? this.status,
-        progress: progress ?? this.progress,
-        speed: speed ?? this.speed,
-        eta: eta ?? this.eta,
-        errorMessage: errorMessage ?? this.errorMessage,
-      );
+  }) => TranscodingProgress(
+    status: status ?? this.status,
+    progress: progress ?? this.progress,
+    speed: speed ?? this.speed,
+    eta: eta ?? this.eta,
+    errorMessage: errorMessage ?? this.errorMessage,
+  );
 }

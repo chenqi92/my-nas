@@ -26,11 +26,11 @@ class FtpFileSystem implements NasFileSystem {
     int port = 21,
     String? user,
     String? pass,
-  })  : _ftp = ftp,
-        _host = host,
-        _port = port,
-        _user = user,
-        _pass = pass;
+  }) : _ftp = ftp,
+       _host = host,
+       _port = port,
+       _user = user,
+       _pass = pass;
 
   final FTPConnect _ftp;
 
@@ -44,16 +44,22 @@ class FtpFileSystem implements NasFileSystem {
   /// 串行化所有 FTP 调用——FTP 控制连接是单线程
   final _lock = Lock();
 
+  @override
+  bool get supportsWriteOperations => true;
+
+  @override
+  bool get supportsServerSideCopy => false;
+
+  @override
+  bool get supportsDirectFileUrl => false;
+
   /// 临时下载文件计数（避免命名冲突）
   int _tempCounter = 0;
 
   /// 关闭可能残留的临时文件
   final List<File> _pendingTempFiles = [];
 
-  Future<T> _withLock<T>(
-    String action,
-    Future<T> Function() body,
-  ) =>
+  Future<T> _withLock<T>(String action, Future<T> Function() body) =>
       _lock.synchronized(() async {
         try {
           return await body();
@@ -75,8 +81,9 @@ class FtpFileSystem implements NasFileSystem {
         return entries.map((e) {
           final isDir = e.type == FTPEntryType.dir;
           final entryName = e.name;
-          final fullPath =
-              normalized.endsWith('/') ? '$normalized$entryName' : '$normalized/$entryName';
+          final fullPath = normalized.endsWith('/')
+              ? '$normalized$entryName'
+              : '$normalized/$entryName';
           return FileItem(
             name: entryName,
             path: fullPath,
@@ -106,10 +113,13 @@ class FtpFileSystem implements NasFileSystem {
     FileRange? range,
   }) async {
     final normalized = _normalize(path);
-    // 带 range 时优先用原生 FTP REST+RETR 流式（只取所需字节，不整文件下载）
-    if (range != null && _host != null) {
-      final restStream =
-          await _tryRestRangeStream(normalized, range.start, range.end);
+    // 优先用原生 FTP RETR/REST 流式读取，避免默认整文件下载到临时目录。
+    if (_host != null) {
+      final restStream = await _tryRestRangeStream(
+        normalized,
+        range?.start ?? 0,
+        range?.end,
+      );
       if (restStream != null) return restStream;
     }
     // 回退：整文件下载到临时文件后本地读取（妥协路径，零破坏）
@@ -126,10 +136,12 @@ class FtpFileSystem implements NasFileSystem {
   ) async {
     final tempDir = await getTemporaryDirectory();
     _tempCounter++;
-    final tempFile = File(p.join(
-      tempDir.path,
-      'ftp_stream_${DateTime.now().millisecondsSinceEpoch}_$_tempCounter',
-    ));
+    final tempFile = File(
+      p.join(
+        tempDir.path,
+        'ftp_stream_${DateTime.now().millisecondsSinceEpoch}_$_tempCounter',
+      ),
+    );
     _pendingTempFiles.add(tempFile);
 
     final ok = await _ftp.downloadFile(normalizedPath, tempFile);
@@ -151,19 +163,21 @@ class FtpFileSystem implements NasFileSystem {
     }
 
     // 等流被消费完后清理临时文件
-    return stream.transform(StreamTransformer.fromHandlers(
-      handleDone: (sink) async {
-        sink.close();
-        _scheduleCleanup(tempFile);
-      },
-      handleError: (error, st, sink) {
-        sink.addError(error, st);
-        _scheduleCleanup(tempFile);
-      },
-    ));
+    return stream.transform(
+      StreamTransformer.fromHandlers(
+        handleDone: (sink) async {
+          sink.close();
+          _scheduleCleanup(tempFile);
+        },
+        handleError: (error, st, sink) {
+          sink.addError(error, st);
+          _scheduleCleanup(tempFile);
+        },
+      ),
+    );
   }
 
-  /// 用原生 FTP REST+RETR 实现 range 流式读取（不整文件下载）。
+  /// 用原生 FTP RETR/REST 实现流式读取（不整文件下载）。
   ///
   /// 仅支持明文 FTP（与当前 ftpconnect 配置一致）。流程：另开一条控制连接
   /// 登录 → TYPE I → PASV → REST start → RETR path，从被动数据连接读取
@@ -307,14 +321,14 @@ class FtpFileSystem implements NasFileSystem {
 
   @override
   Future<void> delete(String path) => _withLock('delete', () async {
-        final normalized = _normalize(path);
-        // 先尝试删文件，不行再尝试删目录
-        try {
-          await _ftp.deleteFile(normalized);
-        } on Exception {
-          await _ftp.deleteEmptyDirectory(normalized);
-        }
-      });
+    final normalized = _normalize(path);
+    // 先尝试删文件，不行再尝试删目录
+    try {
+      await _ftp.deleteFile(normalized);
+    } on Exception {
+      await _ftp.deleteEmptyDirectory(normalized);
+    }
+  });
 
   @override
   Future<void> rename(String oldPath, String newPath) =>
@@ -336,27 +350,30 @@ class FtpFileSystem implements NasFileSystem {
     String remotePath, {
     String? fileName,
     void Function(int sent, int total)? onProgress,
-  }) =>
-      _withLock('upload', () async {
-        final name = fileName ?? p.basename(localPath);
-        final dir = remotePath.endsWith('/')
-            ? remotePath.substring(0, remotePath.length - 1)
-            : remotePath;
-        await _ftp.changeDirectory(_normalize(dir));
-        final ok = await _ftp.uploadFile(File(localPath), sRemoteName: name);
-        if (!ok) {
-          throw Exception(appL10n.ftpFileSystemUploadFailed(localPath, remotePath, name));
-        }
-      });
+  }) => _withLock('upload', () async {
+    final name = fileName ?? p.basename(localPath);
+    final dir = remotePath.endsWith('/')
+        ? remotePath.substring(0, remotePath.length - 1)
+        : remotePath;
+    await _ftp.changeDirectory(_normalize(dir));
+    final ok = await _ftp.uploadFile(File(localPath), sRemoteName: name);
+    if (!ok) {
+      throw Exception(
+        appL10n.ftpFileSystemUploadFailed(localPath, remotePath, name),
+      );
+    }
+  });
 
   @override
   Future<void> writeFile(String remotePath, List<int> data) =>
       _withLock('writeFile', () async {
         final tempDir = await getTemporaryDirectory();
-        final tempFile = File(p.join(
-          tempDir.path,
-          'ftp_write_${DateTime.now().millisecondsSinceEpoch}',
-        ));
+        final tempFile = File(
+          p.join(
+            tempDir.path,
+            'ftp_write_${DateTime.now().millisecondsSinceEpoch}',
+          ),
+        );
         await tempFile.writeAsBytes(data);
         try {
           final dir = p.posix.dirname(_normalize(remotePath));
@@ -386,8 +403,10 @@ class FtpFileSystem implements NasFileSystem {
       null;
 
   @override
-  Future<Uint8List?> getThumbnailData(String path, {ThumbnailSize? size}) async =>
-      null;
+  Future<Uint8List?> getThumbnailData(
+    String path, {
+    ThumbnailSize? size,
+  }) async => null;
 
   /// 释放剩余的临时文件
   Future<void> dispose() async {
