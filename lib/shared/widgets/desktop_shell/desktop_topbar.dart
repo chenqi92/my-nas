@@ -37,7 +37,7 @@ class DesktopTopbar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         // 与侧栏同色，统一外壳 chrome；避免经典浅色下纯白顶栏过于突兀。
-        color: t.sidebarBg,
+        color: t.sidebarBg.withValues(alpha: 0.92),
         border: Border(bottom: BorderSide(color: t.hairline)),
       ),
       child: Row(
@@ -48,8 +48,7 @@ class DesktopTopbar extends StatelessWidget {
             tooltip: l.shellTopbarToggleSidebar,
           ),
           const SizedBox(width: 6),
-          if (crumb.isNotEmpty)
-            _Crumb(crumb: crumb),
+          if (crumb.isNotEmpty) _Crumb(crumb: crumb),
           const Spacer(),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 380),
@@ -83,25 +82,29 @@ class _Crumb extends StatelessWidget {
     final children = <InlineSpan>[];
     for (var i = 0; i < crumb.length; i++) {
       final isLast = i == crumb.length - 1;
-      children.add(TextSpan(
-        text: crumb[i],
-        style: TextStyle(
-          fontSize: 13.5,
-          fontWeight: isLast ? FontWeight.w700 : FontWeight.w500,
-          color: isLast ? t.text0 : t.text2,
+      children.add(
+        TextSpan(
+          text: crumb[i],
+          style: TextStyle(
+            fontSize: 13.5,
+            fontWeight: isLast ? FontWeight.w700 : FontWeight.w500,
+            color: isLast ? t.text0 : t.text2,
+          ),
         ),
-      ));
+      );
       if (!isLast) {
-        children.add(WidgetSpan(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Icon(
-              Icons.chevron_right_rounded,
-              size: 14,
-              color: t.text2,
+        children.add(
+          WidgetSpan(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Icon(
+                Icons.chevron_right_rounded,
+                size: 14,
+                color: t.text2,
+              ),
             ),
           ),
-        ));
+        );
       }
     }
     return Text.rich(TextSpan(children: children));
@@ -120,12 +123,13 @@ class _SearchTrigger extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+        borderRadius: BorderRadius.circular(DesignTokens.radius),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          height: 34,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: t.insetBg,
-            borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
+            color: t.cardBg,
+            borderRadius: BorderRadius.circular(DesignTokens.radius),
             border: Border.all(color: t.hairline, width: 1),
           ),
           child: Row(
@@ -197,12 +201,7 @@ class _TbIcon extends StatelessWidget {
       ),
     );
     final tip = tooltip;
-    return tip == null
-        ? btn
-        : Tooltip(
-            message: tip,
-            child: btn,
-          );
+    return tip == null ? btn : Tooltip(message: tip, child: btn);
   }
 }
 
@@ -220,12 +219,12 @@ class TopbarAnchoredPopover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Positioned(
-        top: DesignTokens.topbarH + 8,
-        right: 20,
-        child: GlassPanel(
-          strong: true,
-          padding: const EdgeInsets.all(14),
-          child: child,
-        ),
-      );
+    top: DesignTokens.topbarH + 8,
+    right: 20,
+    child: GlassPanel(
+      strong: true,
+      padding: const EdgeInsets.all(14),
+      child: child,
+    ),
+  );
 }

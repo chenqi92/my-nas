@@ -91,6 +91,7 @@ class _Seg<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final fg = selected ? t.text0 : t.text2;
     return Material(
       color: Colors.transparent,
@@ -110,9 +111,12 @@ class _Seg<T> extends StatelessWidget {
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.18),
-                      blurRadius: 2,
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.18 : 0.10,
+                      ),
+                      blurRadius: 6,
                       offset: const Offset(0, 1),
+                      spreadRadius: -3,
                     ),
                   ]
                 : null,

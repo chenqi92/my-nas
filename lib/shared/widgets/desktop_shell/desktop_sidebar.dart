@@ -134,7 +134,6 @@ class DesktopSidebar extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: t.text3,
-                            letterSpacing: 0.2,
                           ),
                         ),
                       )
@@ -205,35 +204,41 @@ class _Brand extends StatelessWidget {
       ),
     );
     return Padding(
-      padding: EdgeInsets.fromLTRB(collapsed ? 0 : 8, 12, collapsed ? 0 : 8, 12),
+      padding: EdgeInsets.fromLTRB(
+        collapsed ? 0 : 8,
+        12,
+        collapsed ? 0 : 8,
+        12,
+      ),
       child: Row(
-        mainAxisAlignment:
-            collapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+        mainAxisAlignment: collapsed
+            ? MainAxisAlignment.center
+            : MainAxisAlignment.start,
         children: [
           mark,
           if (!collapsed) ...[
             const SizedBox(width: 9),
             Text.rich(
-              TextSpan(children: [
-                TextSpan(
-                  text: 'My',
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: t.text0,
-                    letterSpacing: -0.1,
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'My',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: t.text0,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: 'NAS',
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: t.accentBright,
-                    letterSpacing: -0.1,
+                  TextSpan(
+                    text: 'NAS',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: t.accentBright,
+                    ),
                   ),
-                ),
-              ]),
+                ],
+              ),
             ),
           ],
         ],
@@ -268,11 +273,7 @@ class _CollapsedSpaceBtn extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
-            child: Icon(
-              icon,
-              size: 15,
-              color: selected ? t.accent : t.text2,
-            ),
+            child: Icon(icon, size: 15, color: selected ? t.accent : t.text2),
           ),
         ),
       ),
@@ -296,11 +297,9 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    final bg = active
-        ? t.accent
-        : null;
-    final fg = active ? t.accentContrast : t.text1;
-    final iconColor = active ? t.accentContrast : t.text2;
+    final bg = active ? t.chipBgActive : Colors.transparent;
+    final fg = active ? t.accentBright : t.text1;
+    final iconColor = active ? t.accentBright : t.text2;
 
     final body = collapsed
         ? Center(
@@ -309,16 +308,24 @@ class _NavItem extends StatelessWidget {
               children: [
                 Icon(entry.icon, size: 18, color: iconColor),
                 if (entry.live)
-                  const Positioned(
-                    right: -8,
-                    top: -4,
-                    child: LiveDot(size: 7),
-                  ),
+                  const Positioned(right: -8, top: -4, child: LiveDot(size: 7)),
               ],
             ),
           )
         : Row(
             children: [
+              if (active)
+                Container(
+                  width: 3,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: t.accentBright,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                )
+              else
+                const SizedBox(width: 3),
+              const SizedBox(width: 8),
               Icon(entry.icon, size: 18, color: iconColor),
               const SizedBox(width: 10),
               Expanded(
@@ -326,8 +333,7 @@ class _NavItem extends StatelessWidget {
                   entry.label,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight:
-                        active ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight: active ? FontWeight.w600 : FontWeight.w500,
                     color: fg,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -341,9 +347,7 @@ class _NavItem extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: active
-                        ? t.accentContrast.withValues(alpha: 0.85)
-                        : t.text2,
+                    color: active ? t.accentBright : t.text2,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -357,12 +361,12 @@ class _NavItem extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          hoverColor: active ? null : t.chipBg,
+          hoverColor: active ? t.chipBgActive : t.chipBg,
           borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
           child: Container(
             padding: collapsed
                 ? const EdgeInsets.symmetric(horizontal: 0, vertical: 9)
-                : const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                : const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
             decoration: BoxDecoration(
               color: bg,
               borderRadius: BorderRadius.circular(DesignTokens.radiusSm),

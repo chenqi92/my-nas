@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 
-/// 设计稿 `.tag` 原子：极小尺寸语义标签（10.5px / 大写 / 字间距）。
+/// 设计稿 `.tag` 原子：极小尺寸语义标签（10.5px / 语义色）。
 ///
 /// [variant] 决定背景/文字色：
 /// - [TagVariant.neutral]（默认）：text2 on insetBg
@@ -32,20 +32,20 @@ class AppTag extends StatelessWidget {
     // `html[data-theme="light"] .tag-*` 分支。
     final (bg, fg) = switch (variant) {
       TagVariant.neutral => (t.insetBg, t.text2),
-      TagVariant.plan => isLight
-          ? (const Color(0x29D39429), const Color(0xFF90600F))
-          : (const Color(0x24F5B754), const Color(0xFFF5B754)),
-      TagVariant.limit => isLight
-          ? (const Color(0x1F5A6474), const Color(0xFF5A6470))
-          : (const Color(0x1F94A3B8), const Color(0xFF94A3B8)),
-      TagVariant.free => isLight
-          ? (const Color(0x211F9D6B), const Color(0xFF107A52))
-          : (const Color(0x2434D399), const Color(0xFF34D399)),
+      TagVariant.plan =>
+        isLight
+            ? (const Color(0x29D39429), const Color(0xFF90600F))
+            : (const Color(0x24F5B754), const Color(0xFFF5B754)),
+      TagVariant.limit =>
+        isLight
+            ? (const Color(0x1F5A6474), const Color(0xFF5A6470))
+            : (const Color(0x1F94A3B8), const Color(0xFF94A3B8)),
+      TagVariant.free =>
+        isLight
+            ? (const Color(0x211F9D6B), const Color(0xFF107A52))
+            : (const Color(0x2434D399), const Color(0xFF34D399)),
       TagVariant.accent => (t.chipBgActive, t.accentBright),
-      TagVariant.hot => (
-          const Color(0x24E0322E),
-          const Color(0xFFE0322E),
-        ),
+      TagVariant.hot => (const Color(0x24E0322E), const Color(0xFFE0322E)),
     };
 
     return Container(
@@ -73,7 +73,6 @@ class AppTag extends StatelessWidget {
             style: TextStyle(
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
               color: fg,
             ),
           ),

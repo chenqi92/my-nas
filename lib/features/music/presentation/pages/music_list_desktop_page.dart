@@ -235,7 +235,6 @@ class _Stat extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4,
                         color: t.text0,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
@@ -1159,8 +1158,17 @@ class _Empty extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 38, color: t.text3),
-          const SizedBox(height: 10),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: t.chipBgActive,
+              borderRadius: BorderRadius.circular(DesignTokens.radius),
+              border: Border.all(color: t.accent.withValues(alpha: 0.18)),
+            ),
+            child: Icon(icon, size: 24, color: t.accentBright),
+          ),
+          const SizedBox(height: 12),
           Text(
             message,
             textAlign: TextAlign.center,

@@ -41,8 +41,8 @@ class _AppCardState extends State<AppCard> {
     final bg = hovered
         ? t.cardBgHover
         : widget.selected
-            ? t.chipBgActive
-            : t.cardBg;
+        ? t.chipBgActive
+        : t.cardBg;
     final borderColor = widget.selected ? t.accent : t.cardBorder;
 
     final card = AnimatedContainer(
@@ -53,15 +53,15 @@ class _AppCardState extends State<AppCard> {
         color: bg,
         borderRadius: br,
         border: Border.all(
-            color: borderColor, width: widget.selected ? 1.2 : 1),
-        // 对齐 `--card-elev: 0 12px 30px -18px rgba(0,0,0,.6)`（深色）/
-        // 浅色下显著减弱，避免卡片发灰。
+          color: borderColor,
+          width: widget.selected ? 1.2 : 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.16),
-            blurRadius: 30,
-            offset: const Offset(0, 12),
-            spreadRadius: -18,
+            color: Colors.black.withValues(alpha: isDark ? 0.36 : 0.045),
+            blurRadius: isDark ? 24 : 14,
+            offset: const Offset(0, 7),
+            spreadRadius: -12,
           ),
         ],
       ),
@@ -74,11 +74,7 @@ class _AppCardState extends State<AppCard> {
       onExit: (_) => setState(() => _hovering = false),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: widget.onTap,
-          borderRadius: br,
-          child: card,
-        ),
+        child: InkWell(onTap: widget.onTap, borderRadius: br, child: card),
       ),
     );
   }

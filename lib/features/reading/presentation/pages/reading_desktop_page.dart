@@ -18,6 +18,7 @@ import 'package:my_nas/features/reading/presentation/providers/reading_progress_
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -164,15 +165,15 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
                 style: TextStyle(fontSize: 13, color: t.text2),
               ),
               const SizedBox(height: 16),
-              FilledButton.icon(
+              AppButton(
                 onPressed: () {
                   ref
                     ..invalidate(comicListProvider)
                     ..invalidate(bookListProvider)
                     ..invalidate(notePageProvider);
                 },
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: Text(l.readingPageRetry),
+                icon: Icons.refresh_rounded,
+                label: l.readingPageRetry,
               ),
             ],
           ),
@@ -277,7 +278,6 @@ class _SectionHeader extends StatelessWidget {
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w800,
-          letterSpacing: -0.015 * 20,
           color: t.text0,
         ),
       ),

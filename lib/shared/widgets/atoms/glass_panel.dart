@@ -51,10 +51,10 @@ class GlassPanel extends StatelessWidget {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.10),
-                  blurRadius: isDark ? 28 : 22,
-                  offset: const Offset(0, 9),
-                  spreadRadius: -10,
+                  color: Colors.black.withValues(alpha: isDark ? 0.38 : 0.045),
+                  blurRadius: isDark ? 26 : 14,
+                  offset: const Offset(0, 7),
+                  spreadRadius: -11,
                 ),
               ],
       ),

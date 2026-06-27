@@ -51,7 +51,8 @@ Future<T?> showAdaptiveModalSheet<T>({
         ),
         clipBehavior: clipBehavior ?? Clip.antiAlias,
         child: ConstrainedBox(
-          constraints: desktopConstraints ??
+          constraints:
+              desktopConstraints ??
               const BoxConstraints(maxWidth: 560, maxHeight: 720),
           child: builder(ctx),
         ),
@@ -122,7 +123,11 @@ enum AdaptiveSheetSize {
 /// [actions] 底部操作按钮
 Future<T?> showAdaptiveSheet<T>({
   required BuildContext context,
-  required Widget Function(BuildContext context, ScrollController? scrollController) builder,
+  required Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder,
   AdaptiveSheetType type = AdaptiveSheetType.auto,
   AdaptiveSheetSize size = AdaptiveSheetSize.medium,
   String? title,
@@ -221,10 +226,7 @@ Future<bool?> showAdaptiveConfirmDialog({
     builder: (context, _) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: message != null
-          ? Text(
-              message,
-              style: context.textTheme.bodyLarge,
-            )
+          ? Text(message, style: context.textTheme.bodyLarge)
           : const SizedBox.shrink(),
     ),
     actions: [
@@ -235,9 +237,7 @@ Future<bool?> showAdaptiveConfirmDialog({
       FilledButton(
         onPressed: () => Navigator.pop(context, true),
         style: isDestructive
-            ? FilledButton.styleFrom(
-                backgroundColor: AppColors.error,
-              )
+            ? FilledButton.styleFrom(backgroundColor: AppColors.error)
             : null,
         child: Text(effectiveConfirmText),
       ),
@@ -251,16 +251,18 @@ Future<T?> showAdaptiveOptions<T>({
   required List<AdaptiveOptionItem<T>> options,
   String? title,
 }) => showAdaptiveSheet<T>(
-    context: context,
-    title: title,
-    size: AdaptiveSheetSize.small,
-    useScrollable: false,
-    showCloseButton: false,
-    builder: (context, _) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: options.map((option) => _AdaptiveOptionTile<T>(option: option)).toList(),
-    ),
-  );
+  context: context,
+  title: title,
+  size: AdaptiveSheetSize.small,
+  useScrollable: false,
+  showCloseButton: false,
+  builder: (context, _) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: options
+        .map((option) => _AdaptiveOptionTile<T>(option: option))
+        .toList(),
+  ),
+);
 
 /// 选项项
 class AdaptiveOptionItem<T> {
@@ -289,7 +291,10 @@ class AdaptiveOptionItem<T> {
 // 私有实现
 // ============================================================================
 
-AdaptiveSheetType _resolveSheetType(AdaptiveSheetType type, BuildContext context) {
+AdaptiveSheetType _resolveSheetType(
+  AdaptiveSheetType type,
+  BuildContext context,
+) {
   if (type != AdaptiveSheetType.auto) return type;
 
   // 与 MainScaffold 保持一致的 Shell 形态判断：桌面平台始终走 Dialog，
@@ -329,7 +334,11 @@ double _getSidePanelWidth(AdaptiveSheetSize size) {
 /// 显示底部弹框（移动端）
 Future<T?> _showBottomSheet<T>({
   required BuildContext context,
-  required Widget Function(BuildContext context, ScrollController? scrollController) builder,
+  required Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder,
   String? title,
   Widget? titleWidget,
   bool useScrollable = true,
@@ -340,27 +349,31 @@ Future<T?> _showBottomSheet<T>({
   bool enableDrag = true,
   List<Widget>? actions,
 }) => showModalBottomSheet<T>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: useSafeArea,
-    backgroundColor: Colors.transparent,
-    enableDrag: enableDrag,
-    builder: (context) => _MobileBottomSheet(
-      title: title,
-      titleWidget: titleWidget,
-      useScrollable: useScrollable,
-      initialChildSize: initialChildSize,
-      minChildSize: minChildSize,
-      maxChildSize: maxChildSize,
-      actions: actions,
-      builder: builder,
-    ),
-  );
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: useSafeArea,
+  backgroundColor: Colors.transparent,
+  enableDrag: enableDrag,
+  builder: (context) => _MobileBottomSheet(
+    title: title,
+    titleWidget: titleWidget,
+    useScrollable: useScrollable,
+    initialChildSize: initialChildSize,
+    minChildSize: minChildSize,
+    maxChildSize: maxChildSize,
+    actions: actions,
+    builder: builder,
+  ),
+);
 
 /// 显示居中对话框（桌面端）
 Future<T?> _showCenterDialog<T>({
   required BuildContext context,
-  required Widget Function(BuildContext context, ScrollController? scrollController) builder,
+  required Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder,
   AdaptiveSheetSize size = AdaptiveSheetSize.medium,
   String? title,
   Widget? titleWidget,
@@ -368,22 +381,26 @@ Future<T?> _showCenterDialog<T>({
   bool showCloseButton = true,
   List<Widget>? actions,
 }) => showDialog<T>(
-    context: context,
-    barrierDismissible: barrierDismissible,
-    builder: (context) => _DesktopDialog(
-      width: _getDialogWidth(size),
-      title: title,
-      titleWidget: titleWidget,
-      showCloseButton: showCloseButton,
-      actions: actions,
-      builder: builder,
-    ),
-  );
+  context: context,
+  barrierDismissible: barrierDismissible,
+  builder: (context) => _DesktopDialog(
+    width: _getDialogWidth(size),
+    title: title,
+    titleWidget: titleWidget,
+    showCloseButton: showCloseButton,
+    actions: actions,
+    builder: builder,
+  ),
+);
 
 /// 显示侧边面板（桌面端）
 Future<T?> _showSidePanel<T>({
   required BuildContext context,
-  required Widget Function(BuildContext context, ScrollController? scrollController) builder,
+  required Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder,
   AdaptiveSheetSize size = AdaptiveSheetSize.medium,
   String? title,
   Widget? titleWidget,
@@ -391,30 +408,27 @@ Future<T?> _showSidePanel<T>({
   bool showCloseButton = true,
   List<Widget>? actions,
 }) => showGeneralDialog<T>(
-    context: context,
-    barrierDismissible: barrierDismissible,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-    barrierColor: Colors.black54,
-    transitionDuration: const Duration(milliseconds: 250),
-    pageBuilder: (context, animation, secondaryAnimation) => _DesktopSidePanel(
-      width: _getSidePanelWidth(size),
-      title: title,
-      titleWidget: titleWidget,
-      showCloseButton: showCloseButton,
-      actions: actions,
-      builder: builder,
-    ),
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final offset = Tween<Offset>(
-        begin: const Offset(1, 0),
-        end: Offset.zero,
-      ).animate(CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-      ));
-      return SlideTransition(position: offset, child: child);
-    },
-  );
+  context: context,
+  barrierDismissible: barrierDismissible,
+  barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+  barrierColor: Colors.black54,
+  transitionDuration: const Duration(milliseconds: 250),
+  pageBuilder: (context, animation, secondaryAnimation) => _DesktopSidePanel(
+    width: _getSidePanelWidth(size),
+    title: title,
+    titleWidget: titleWidget,
+    showCloseButton: showCloseButton,
+    actions: actions,
+    builder: builder,
+  ),
+  transitionBuilder: (context, animation, secondaryAnimation, child) {
+    final offset = Tween<Offset>(
+      begin: const Offset(1, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+    return SlideTransition(position: offset, child: child);
+  },
+);
 
 // ============================================================================
 // 移动端底部弹框组件
@@ -432,7 +446,11 @@ class _MobileBottomSheet extends ConsumerWidget {
     this.actions,
   });
 
-  final Widget Function(BuildContext context, ScrollController? scrollController) builder;
+  final Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder;
   final String? title;
   final Widget? titleWidget;
   final bool useScrollable;
@@ -451,8 +469,12 @@ class _MobileBottomSheet extends ConsumerWidget {
 
     final bgColor = glassStyle.needsBlur
         ? (isDark
-            ? AppColors.darkSurface.withValues(alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0))
-            : AppColors.lightSurface.withValues(alpha: (glassStyle.backgroundOpacity + 0.1).clamp(0.0, 1.0)))
+              ? AppColors.darkSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0),
+                )
+              : AppColors.lightSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.1).clamp(0.0, 1.0),
+                ))
         : (isDark ? AppColors.darkSurface : AppColors.lightSurface);
 
     final decoration = BoxDecoration(
@@ -460,24 +482,27 @@ class _MobileBottomSheet extends ConsumerWidget {
       borderRadius: borderRadius,
       border: Border(
         top: BorderSide(
-          color: isDark ? AppColors.glassStroke : AppColors.lightOutline.withValues(alpha: 0.2),
+          color: isDark
+              ? AppColors.glassStroke
+              : AppColors.lightOutline.withValues(alpha: 0.2),
         ),
       ),
     );
 
     Widget buildContent(ScrollController? scrollController) => Column(
-          mainAxisSize: useScrollable ? MainAxisSize.max : MainAxisSize.min,
-          children: [
-            _buildDragHandle(isDark),
-            if (titleWidget != null || title != null) _buildHeader(context, isDark),
-            if (useScrollable)
-              Expanded(child: builder(context, scrollController))
-            else
-              Flexible(child: SingleChildScrollView(child: builder(context, null))),
-            if (actions != null && actions!.isNotEmpty) _buildActions(context, isDark),
-            SizedBox(height: bottomPadding),
-          ],
-        );
+      mainAxisSize: useScrollable ? MainAxisSize.max : MainAxisSize.min,
+      children: [
+        _buildDragHandle(isDark),
+        if (titleWidget != null || title != null) _buildHeader(context, isDark),
+        if (useScrollable)
+          Expanded(child: builder(context, scrollController))
+        else
+          Flexible(child: SingleChildScrollView(child: builder(context, null))),
+        if (actions != null && actions!.isNotEmpty)
+          _buildActions(context, isDark),
+        SizedBox(height: bottomPadding),
+      ],
+    );
 
     Widget content;
     if (useScrollable) {
@@ -492,19 +517,13 @@ class _MobileBottomSheet extends ConsumerWidget {
         ),
       );
     } else {
-      content = DecoratedBox(
-        decoration: decoration,
-        child: buildContent(null),
-      );
+      content = DecoratedBox(decoration: decoration, child: buildContent(null));
     }
 
     if (glassStyle.needsBlur) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(
-          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
-          child: content,
-        ),
+        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
       );
     }
 
@@ -512,28 +531,34 @@ class _MobileBottomSheet extends ConsumerWidget {
   }
 
   Widget _buildDragHandle(bool isDark) => Container(
-        margin: const EdgeInsets.only(top: 12, bottom: 8),
-        width: 40,
-        height: 4,
-        decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.3)
-              : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      );
+    margin: const EdgeInsets.only(top: 12, bottom: 8),
+    width: 40,
+    height: 4,
+    decoration: BoxDecoration(
+      color: isDark
+          ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.3)
+          : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.3),
+      borderRadius: BorderRadius.circular(2),
+    ),
+  );
 
   Widget _buildHeader(BuildContext context, bool isDark) {
     if (titleWidget != null) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm,
+        ),
         child: titleWidget,
       );
     }
 
     if (title != null && title!.isNotEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.sm,
+        ),
         child: Row(
           children: [
             Expanded(
@@ -541,7 +566,9 @@ class _MobileBottomSheet extends ConsumerWidget {
                 title!,
                 style: context.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                  color: isDark
+                      ? AppColors.darkOnSurface
+                      : AppColors.lightOnSurface,
                 ),
               ),
             ),
@@ -554,17 +581,20 @@ class _MobileBottomSheet extends ConsumerWidget {
   }
 
   Widget _buildActions(BuildContext context, bool isDark) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            for (int i = 0; i < actions!.length; i++) ...[
-              if (i > 0) const SizedBox(width: AppSpacing.sm),
-              actions![i],
-            ],
-          ],
-        ),
-      );
+    padding: const EdgeInsets.symmetric(
+      horizontal: AppSpacing.lg,
+      vertical: AppSpacing.md,
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        for (int i = 0; i < actions!.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
+          actions![i],
+        ],
+      ],
+    ),
+  );
 }
 
 // ============================================================================
@@ -581,7 +611,11 @@ class _DesktopDialog extends ConsumerWidget {
     this.actions,
   });
 
-  final Widget Function(BuildContext context, ScrollController? scrollController) builder;
+  final Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder;
   final double width;
   final String? title;
   final Widget? titleWidget;
@@ -598,8 +632,12 @@ class _DesktopDialog extends ConsumerWidget {
 
     final bgColor = glassStyle.needsBlur
         ? (isDark
-            ? AppColors.darkSurface.withValues(alpha: (glassStyle.backgroundOpacity + 0.2).clamp(0.0, 1.0))
-            : AppColors.lightSurface.withValues(alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0)))
+              ? AppColors.darkSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.2).clamp(0.0, 1.0),
+                )
+              : AppColors.lightSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0),
+                ))
         : (isDark ? AppColors.darkSurface : AppColors.lightSurface);
 
     final borderRadius = BorderRadius.circular(16);
@@ -611,7 +649,9 @@ class _DesktopDialog extends ConsumerWidget {
         color: bgColor,
         borderRadius: borderRadius,
         border: Border.all(
-          color: isDark ? AppColors.glassStroke : AppColors.lightOutline.withValues(alpha: 0.2),
+          color: isDark
+              ? AppColors.glassStroke
+              : AppColors.lightOutline.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
@@ -633,7 +673,8 @@ class _DesktopDialog extends ConsumerWidget {
               child: builder(context, null),
             ),
           ),
-          if (actions != null && actions!.isNotEmpty) _buildActions(context, isDark),
+          if (actions != null && actions!.isNotEmpty)
+            _buildActions(context, isDark),
         ],
       ),
     );
@@ -641,10 +682,7 @@ class _DesktopDialog extends ConsumerWidget {
     if (glassStyle.needsBlur) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(
-          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
-          child: content,
-        ),
+        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
       );
     }
 
@@ -656,46 +694,53 @@ class _DesktopDialog extends ConsumerWidget {
   }
 
   Widget _buildHeader(BuildContext context, bool isDark) => Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.md, AppSpacing.sm),
-        child: Row(
-          children: [
-            if (titleWidget != null)
-              Expanded(child: titleWidget!)
-            else if (title != null && title!.isNotEmpty)
-              Expanded(
-                child: Text(
-                  title!,
-                  style: context.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                  ),
-                ),
-              )
-            else
-              const Spacer(),
-            if (showCloseButton)
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close_rounded),
-                iconSize: 20,
-                tooltip: appL10n.adaptiveSheetClose,
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.lg,
+      AppSpacing.lg,
+      AppSpacing.md,
+      AppSpacing.sm,
+    ),
+    child: Row(
+      children: [
+        if (titleWidget != null)
+          Expanded(child: titleWidget!)
+        else if (title != null && title!.isNotEmpty)
+          Expanded(
+            child: Text(
+              title!,
+              style: context.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isDark
+                    ? AppColors.darkOnSurface
+                    : AppColors.lightOnSurface,
               ),
-          ],
-        ),
-      );
+            ),
+          )
+        else
+          const Spacer(),
+        if (showCloseButton)
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close_rounded),
+            iconSize: 20,
+            tooltip: appL10n.adaptiveSheetClose,
+          ),
+      ],
+    ),
+  );
 
   Widget _buildActions(BuildContext context, bool isDark) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            for (int i = 0; i < actions!.length; i++) ...[
-              if (i > 0) const SizedBox(width: AppSpacing.sm),
-              actions![i],
-            ],
-          ],
-        ),
-      );
+    padding: const EdgeInsets.all(AppSpacing.lg),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        for (int i = 0; i < actions!.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
+          actions![i],
+        ],
+      ],
+    ),
+  );
 }
 
 // ============================================================================
@@ -712,7 +757,11 @@ class _DesktopSidePanel extends ConsumerWidget {
     this.actions,
   });
 
-  final Widget Function(BuildContext context, ScrollController? scrollController) builder;
+  final Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder;
   final double width;
   final String? title;
   final Widget? titleWidget;
@@ -727,8 +776,12 @@ class _DesktopSidePanel extends ConsumerWidget {
 
     final bgColor = glassStyle.needsBlur
         ? (isDark
-            ? AppColors.darkSurface.withValues(alpha: (glassStyle.backgroundOpacity + 0.25).clamp(0.0, 1.0))
-            : AppColors.lightSurface.withValues(alpha: (glassStyle.backgroundOpacity + 0.2).clamp(0.0, 1.0)))
+              ? AppColors.darkSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.25).clamp(0.0, 1.0),
+                )
+              : AppColors.lightSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.2).clamp(0.0, 1.0),
+                ))
         : (isDark ? AppColors.darkSurface : AppColors.lightSurface);
 
     Widget content = Container(
@@ -737,7 +790,9 @@ class _DesktopSidePanel extends ConsumerWidget {
         color: bgColor,
         border: Border(
           left: BorderSide(
-            color: isDark ? AppColors.glassStroke : AppColors.lightOutline.withValues(alpha: 0.2),
+            color: isDark
+                ? AppColors.glassStroke
+                : AppColors.lightOutline.withValues(alpha: 0.2),
           ),
         ),
         boxShadow: [
@@ -760,7 +815,8 @@ class _DesktopSidePanel extends ConsumerWidget {
                 child: builder(context, null),
               ),
             ),
-            if (actions != null && actions!.isNotEmpty) _buildActions(context, isDark),
+            if (actions != null && actions!.isNotEmpty)
+              _buildActions(context, isDark),
           ],
         ),
       ),
@@ -768,61 +824,62 @@ class _DesktopSidePanel extends ConsumerWidget {
 
     if (glassStyle.needsBlur) {
       content = ClipRect(
-        child: BackdropFilter(
-          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
-          child: content,
-        ),
+        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
       );
     }
 
-    return Align(
-      alignment: Alignment.centerRight,
-      child: content,
-    );
+    return Align(alignment: Alignment.centerRight, child: content);
   }
 
   Widget _buildHeader(BuildContext context, bool isDark) => Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.md, AppSpacing.sm),
-        child: Row(
-          children: [
-            if (showCloseButton)
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close_rounded),
-                iconSize: 20,
-                tooltip: appL10n.adaptiveSheetClose,
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.lg,
+      AppSpacing.lg,
+      AppSpacing.md,
+      AppSpacing.sm,
+    ),
+    child: Row(
+      children: [
+        if (showCloseButton)
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.close_rounded),
+            iconSize: 20,
+            tooltip: appL10n.adaptiveSheetClose,
+          ),
+        const SizedBox(width: AppSpacing.sm),
+        if (titleWidget != null)
+          Expanded(child: titleWidget!)
+        else if (title != null && title!.isNotEmpty)
+          Expanded(
+            child: Text(
+              title!,
+              style: context.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isDark
+                    ? AppColors.darkOnSurface
+                    : AppColors.lightOnSurface,
               ),
-            const SizedBox(width: AppSpacing.sm),
-            if (titleWidget != null)
-              Expanded(child: titleWidget!)
-            else if (title != null && title!.isNotEmpty)
-              Expanded(
-                child: Text(
-                  title!,
-                  style: context.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                  ),
-                ),
-              )
-            else
-              const Spacer(),
-          ],
-        ),
-      );
+            ),
+          )
+        else
+          const Spacer(),
+      ],
+    ),
+  );
 
   Widget _buildActions(BuildContext context, bool isDark) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            for (int i = 0; i < actions!.length; i++) ...[
-              if (i > 0) const SizedBox(width: AppSpacing.sm),
-              actions![i],
-            ],
-          ],
-        ),
-      );
+    padding: const EdgeInsets.all(AppSpacing.lg),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        for (int i = 0; i < actions!.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
+          actions![i],
+        ],
+      ],
+    ),
+  );
 }
 
 // ============================================================================
@@ -840,7 +897,8 @@ class _AdaptiveOptionTile<T> extends StatelessWidget {
     final isDesktop = PlatformCapabilities.isDesktop || context.isDesktop;
     final effectiveColor = option.isDestructive
         ? AppColors.error
-        : (option.iconColor ?? (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface));
+        : (option.iconColor ??
+              (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface));
 
     // 桌面端使用更紧凑的布局
     final iconSize = isDesktop ? 18.0 : 20.0;
@@ -856,7 +914,10 @@ class _AdaptiveOptionTile<T> extends StatelessWidget {
         }
       },
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: verticalPadding),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: verticalPadding,
+        ),
         child: Row(
           children: [
             Container(
@@ -896,7 +957,11 @@ class _AdaptiveOptionTile<T> extends StatelessWidget {
               ),
             ),
             if (option.isSelected)
-              Icon(Icons.check_rounded, color: AppColors.primary, size: iconSize + 2),
+              Icon(
+                Icons.check_rounded,
+                color: AppColors.primary,
+                size: iconSize + 2,
+              ),
           ],
         ),
       ),

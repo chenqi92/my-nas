@@ -5,7 +5,7 @@ import 'package:my_nas/app/theme/ui_style.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 
 /// 通用玻璃效果容器
-/// 
+///
 /// 根据当前 UI 风格自动应用合适的视觉效果：
 /// - Classic 模式：传统不透明背景
 /// - Liquid Glass 模式：模糊背景 + 半透明 + 光晕边框
@@ -65,7 +65,8 @@ class GlassContainer extends ConsumerWidget {
     final glassStyle = GlassTheme.getStyle(uiStyle, isDark: isDark);
 
     // 计算背景色
-    final bgColor = backgroundColor ??
+    final bgColor =
+        backgroundColor ??
         GlassTheme.getBackgroundColor(
           glassStyle,
           isDark: isDark,
@@ -73,7 +74,8 @@ class GlassContainer extends ConsumerWidget {
         );
 
     // 计算边框
-    final effectiveBorder = border ??
+    final effectiveBorder =
+        border ??
         Border.all(
           color: GlassTheme.getBorderColor(glassStyle, isDark: isDark),
           width: glassStyle.enableBorderGlow ? 0.5 : 1.0,
@@ -107,10 +109,7 @@ class GlassContainer extends ConsumerWidget {
       content = ClipRRect(
         borderRadius: borderRadius,
         clipBehavior: clipBehavior,
-        child: BackdropFilter(
-          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
-          child: content,
-        ),
+        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
       );
     }
 
@@ -143,12 +142,12 @@ class GlassBottomSheetContainer extends ConsumerWidget {
     // 计算背景色 - 底部弹窗使用稍高的不透明度
     final bgColor = glassStyle.needsBlur
         ? (isDark
-            ? AppColors.darkSurface.withValues(
-                alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0),
-              )
-            : AppColors.lightSurface.withValues(
-                alpha: (glassStyle.backgroundOpacity + 0.1).clamp(0.0, 1.0),
-              ))
+              ? AppColors.darkSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0),
+                )
+              : AppColors.lightSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.1).clamp(0.0, 1.0),
+                ))
         : (isDark ? AppColors.darkSurface : AppColors.lightSurface);
 
     final decoration = BoxDecoration(
@@ -163,18 +162,12 @@ class GlassBottomSheetContainer extends ConsumerWidget {
       ),
     );
 
-    Widget content = DecoratedBox(
-      decoration: decoration,
-      child: child,
-    );
+    Widget content = DecoratedBox(decoration: decoration, child: child);
 
     if (glassStyle.needsBlur) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(
-          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
-          child: content,
-        ),
+        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
       );
     }
 
@@ -213,11 +206,11 @@ class GlassCard extends ConsumerWidget {
     // 卡片使用更轻微的效果
     final bgColor = glassStyle.needsBlur
         ? (isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.02))
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.02))
         : (isDark
-            ? AppColors.darkSurfaceVariant
-            : AppColors.lightSurfaceVariant);
+              ? AppColors.darkSurfaceVariant
+              : AppColors.lightSurfaceVariant);
 
     final card = Container(
       margin: margin,
@@ -236,10 +229,7 @@ class GlassCard extends ConsumerWidget {
           onTap: onTap,
           onLongPress: onLongPress,
           borderRadius: borderRadius,
-          child: Padding(
-            padding: padding,
-            child: child,
-          ),
+          child: Padding(padding: padding, child: child),
         ),
       ),
     );

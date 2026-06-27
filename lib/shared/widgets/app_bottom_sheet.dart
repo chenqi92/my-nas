@@ -15,7 +15,9 @@ import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 
 /// iOS 原生底部弹框通道
-const _nativeBottomSheetChannel = MethodChannel('com.kkape.mynas/glass_bottom_sheet');
+const _nativeBottomSheetChannel = MethodChannel(
+  'com.kkape.mynas/glass_bottom_sheet',
+);
 
 /// 底部弹框回调管理器（单例）
 /// 避免重复设置 MethodCallHandler 导致回调丢失
@@ -26,7 +28,8 @@ class _BottomSheetCallbackManager {
     _nativeBottomSheetChannel.setMethodCallHandler(_handleMethodCall);
   }
 
-  static final _BottomSheetCallbackManager _instance = _BottomSheetCallbackManager._();
+  static final _BottomSheetCallbackManager _instance =
+      _BottomSheetCallbackManager._();
 
   final Map<int, Completer<String?>> _completers = {};
   final Map<int, void Function(String)> _actionCallbacks = {};
@@ -79,9 +82,11 @@ class _BottomSheetCallbackManager {
         if (filterCompleter != null && !filterCompleter.isCompleted) {
           final result = args['result'] as Map<dynamic, dynamic>?;
           if (result != null) {
-            final typedResult = result.map(
-              (key, value) => MapEntry(key.toString(), value?.toString()),
-            ).cast<String, String?>();
+            final typedResult = result
+                .map(
+                  (key, value) => MapEntry(key.toString(), value?.toString()),
+                )
+                .cast<String, String?>();
             filterCompleter.complete(typedResult);
           } else {
             filterCompleter.complete(null);
@@ -94,7 +99,10 @@ class _BottomSheetCallbackManager {
   // 筛选弹框回调
   final Map<int, Completer<Map<String, String?>?>> _filterCompleters = {};
 
-  void registerFilterCompleter(int sheetId, Completer<Map<String, String?>?> completer) {
+  void registerFilterCompleter(
+    int sheetId,
+    Completer<Map<String, String?>?> completer,
+  ) {
     _filterCompleters[sheetId] = completer;
   }
 
@@ -120,7 +128,11 @@ final _callbackManager = _BottomSheetCallbackManager();
 /// [isDismissible] 是否可以点击背景关闭（默认 true）
 Future<T?> showAppBottomSheet<T>({
   required BuildContext context,
-  required Widget Function(BuildContext context, ScrollController? scrollController) builder,
+  required Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder,
   String? title,
   Widget? titleWidget,
   bool useScrollable = true,
@@ -131,27 +143,27 @@ Future<T?> showAppBottomSheet<T>({
   bool enableDrag = true,
   bool isDismissible = true,
 }) => showAdaptiveModalSheet<T>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: useSafeArea,
-    backgroundColor: Colors.transparent,
-    enableDrag: enableDrag,
-    isDismissible: isDismissible,
-    builder: (context) => useScrollable
-        ? _ScrollableBottomSheet(
-            title: title,
-            titleWidget: titleWidget,
-            initialChildSize: initialChildSize,
-            minChildSize: minChildSize,
-            maxChildSize: maxChildSize,
-            builder: builder,
-          )
-        : _FixedBottomSheet(
-            title: title,
-            titleWidget: titleWidget,
-            builder: builder,
-          ),
-  );
+  context: context,
+  isScrollControlled: true,
+  useSafeArea: useSafeArea,
+  backgroundColor: Colors.transparent,
+  enableDrag: enableDrag,
+  isDismissible: isDismissible,
+  builder: (context) => useScrollable
+      ? _ScrollableBottomSheet(
+          title: title,
+          titleWidget: titleWidget,
+          initialChildSize: initialChildSize,
+          minChildSize: minChildSize,
+          maxChildSize: maxChildSize,
+          builder: builder,
+        )
+      : _FixedBottomSheet(
+          title: title,
+          titleWidget: titleWidget,
+          builder: builder,
+        ),
+);
 
 /// 可滚动的底部弹窗（使用 DraggableScrollableSheet）
 class _ScrollableBottomSheet extends ConsumerWidget {
@@ -164,7 +176,11 @@ class _ScrollableBottomSheet extends ConsumerWidget {
     this.maxChildSize = 0.9,
   });
 
-  final Widget Function(BuildContext context, ScrollController? scrollController) builder;
+  final Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder;
   final String? title;
   final Widget? titleWidget;
   final double initialChildSize;
@@ -191,9 +207,7 @@ class _ScrollableBottomSheet extends ConsumerWidget {
             _buildDragHandle(isDark),
             if (titleWidget != null || title != null)
               _buildHeader(context, isDark),
-            Expanded(
-              child: builder(context, scrollController),
-            ),
+            Expanded(child: builder(context, scrollController)),
             // 底部安全区域（包含原生 Tab Bar 高度）
             SizedBox(height: _getBottomPadding(context, uiStyle)),
           ],
@@ -209,16 +223,16 @@ class _ScrollableBottomSheet extends ConsumerWidget {
     required Widget child,
   }) {
     final borderRadius = const BorderRadius.vertical(top: Radius.circular(24));
-    
+
     // 计算背景色 - 底部弹窗使用稍高的不透明度
     final bgColor = glassStyle.needsBlur
         ? (isDark
-            ? AppColors.darkSurface.withValues(
-                alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0),
-              )
-            : AppColors.lightSurface.withValues(
-                alpha: (glassStyle.backgroundOpacity + 0.1).clamp(0.0, 1.0),
-              ))
+              ? AppColors.darkSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0),
+                )
+              : AppColors.lightSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.1).clamp(0.0, 1.0),
+                ))
         : (isDark ? AppColors.darkSurface : AppColors.lightSurface);
 
     final decoration = BoxDecoration(
@@ -233,18 +247,12 @@ class _ScrollableBottomSheet extends ConsumerWidget {
       ),
     );
 
-    Widget content = DecoratedBox(
-      decoration: decoration,
-      child: child,
-    );
+    Widget content = DecoratedBox(decoration: decoration, child: child);
 
     if (glassStyle.needsBlur) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(
-          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
-          child: content,
-        ),
+        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
       );
     }
 
@@ -252,16 +260,16 @@ class _ScrollableBottomSheet extends ConsumerWidget {
   }
 
   Widget _buildDragHandle(bool isDark) => Container(
-      margin: const EdgeInsets.only(top: 12, bottom: 8),
-      width: 40,
-      height: 4,
-      decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.3)
-            : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(2),
-      ),
-    );
+    margin: const EdgeInsets.only(top: 12, bottom: 8),
+    width: 40,
+    height: 4,
+    decoration: BoxDecoration(
+      color: isDark
+          ? AppColors.darkOnSurfaceVariant.withValues(alpha: 0.3)
+          : AppColors.lightOnSurfaceVariant.withValues(alpha: 0.3),
+      borderRadius: BorderRadius.circular(2),
+    ),
+  );
 
   Widget _buildHeader(BuildContext context, bool isDark) {
     if (titleWidget != null) {
@@ -287,7 +295,9 @@ class _ScrollableBottomSheet extends ConsumerWidget {
                 title!,
                 style: context.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                  color: isDark
+                      ? AppColors.darkOnSurface
+                      : AppColors.lightOnSurface,
                 ),
               ),
             ),
@@ -298,7 +308,6 @@ class _ScrollableBottomSheet extends ConsumerWidget {
 
     return const SizedBox.shrink();
   }
-
 }
 
 /// 计算底部弹窗的底部间距
@@ -328,7 +337,11 @@ class _FixedBottomSheet extends ConsumerWidget {
     this.titleWidget,
   });
 
-  final Widget Function(BuildContext context, ScrollController? scrollController) builder;
+  final Widget Function(
+    BuildContext context,
+    ScrollController? scrollController,
+  )
+  builder;
   final String? title;
   final Widget? titleWidget;
 
@@ -343,12 +356,12 @@ class _FixedBottomSheet extends ConsumerWidget {
     // 计算背景色
     final bgColor = glassStyle.needsBlur
         ? (isDark
-            ? AppColors.darkSurface.withValues(
-                alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0),
-              )
-            : AppColors.lightSurface.withValues(
-                alpha: (glassStyle.backgroundOpacity + 0.1).clamp(0.0, 1.0),
-              ))
+              ? AppColors.darkSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.15).clamp(0.0, 1.0),
+                )
+              : AppColors.lightSurface.withValues(
+                  alpha: (glassStyle.backgroundOpacity + 0.1).clamp(0.0, 1.0),
+                ))
         : (isDark ? AppColors.darkSurface : AppColors.lightSurface);
 
     final decoration = BoxDecoration(
@@ -396,16 +409,14 @@ class _FixedBottomSheet extends ConsumerWidget {
                 title!,
                 style: context.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                  color: isDark
+                      ? AppColors.darkOnSurface
+                      : AppColors.lightOnSurface,
                 ),
               ),
             ),
           // 内容（使用 SingleChildScrollView 确保内容可以滚动）
-          Flexible(
-            child: SingleChildScrollView(
-              child: builder(context, null),
-            ),
-          ),
+          Flexible(child: SingleChildScrollView(child: builder(context, null))),
           // 底部安全区域（包含原生 Tab Bar 高度）
           SizedBox(height: bottomPadding),
         ],
@@ -415,10 +426,7 @@ class _FixedBottomSheet extends ConsumerWidget {
     if (glassStyle.needsBlur) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(
-          filter: glassStyle.blurFilter!, // needsBlur 分支内必非空
-          child: content,
-        ),
+        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
       );
     }
 
@@ -454,10 +462,7 @@ Future<T?> showOptionsBottomSheet<T>({
     isDismissible: true,
     builder: (context, _) => Column(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final option in options)
-          _OptionTile<T>(option: option),
-      ],
+      children: [for (final option in options) _OptionTile<T>(option: option)],
     ),
   );
 }
@@ -554,16 +559,19 @@ Future<T?> _showNativeListSheet<T>({
   }
 
   try {
-    final sheetId = await _nativeBottomSheetChannel.invokeMethod<int>('showSheet', {
-      'isDark': isDark,
-      'title': title,
-      'items': nativeItems,
-      'showDragHandle': true,
-      'showCancelButton': showCancelButton,
-      'dismissOnTapBackground': true,
-      'initialDetent': initialDetent,
-      'allowedDetents': ['medium', 'large'],
-    });
+    final sheetId = await _nativeBottomSheetChannel.invokeMethod<int>(
+      'showSheet',
+      {
+        'isDark': isDark,
+        'title': title,
+        'items': nativeItems,
+        'showDragHandle': true,
+        'showCancelButton': showCancelButton,
+        'dismissOnTapBackground': true,
+        'initialDetent': initialDetent,
+        'allowedDetents': ['medium', 'large'],
+      },
+    );
 
     if (sheetId == null) return null;
 
@@ -585,15 +593,15 @@ Future<T?> _showNativeListSheet<T>({
     return null;
   } catch (e) {
     // 回退到 Flutter 实现
-    logger.w('Native list sheet failed, falling back to Flutter implementation', e);
+    logger.w(
+      'Native list sheet failed, falling back to Flutter implementation',
+      e,
+    );
     return showAdaptiveModalSheet<T>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => _FlutterListSheet<T>(
-        items: items,
-        title: title,
-      ),
+      builder: (context) => _FlutterListSheet<T>(items: items, title: title),
     );
   }
 }
@@ -621,18 +629,12 @@ class FilterSection {
 
 /// 筛选选项
 class FilterItem {
-  const FilterItem({
-    required this.value,
-    required this.title,
-  });
+  const FilterItem({required this.value, required this.title});
 
   final String value;
   final String title;
 
-  Map<String, dynamic> toMap() => {
-    'value': value,
-    'title': title,
-  };
+  Map<String, dynamic> toMap() => {'value': value, 'title': title};
 }
 
 /// 筛选结果
@@ -705,18 +707,16 @@ Future<FilterResult?> _showNativeFilterSheetImpl({
   final isDark = Theme.of(context).brightness == Brightness.dark;
 
   try {
-    final sheetId = await _nativeBottomSheetChannel.invokeMethod<int>(
-      'showFilterSheet',
-      {
-        'isDark': isDark,
-        'title': title,
-        'sections': sections.map((s) => s.toMap()).toList(),
-        'selectedValues': initialSelectedValues ?? {},
-        'showResetButton': showResetButton,
-        'applyButtonText': applyButtonText,
-        'resetButtonText': resetButtonText,
-      },
-    );
+    final sheetId = await _nativeBottomSheetChannel
+        .invokeMethod<int>('showFilterSheet', {
+          'isDark': isDark,
+          'title': title,
+          'sections': sections.map((s) => s.toMap()).toList(),
+          'selectedValues': initialSelectedValues ?? {},
+          'showResetButton': showResetButton,
+          'applyButtonText': applyButtonText,
+          'resetButtonText': resetButtonText,
+        });
 
     if (sheetId == null) return null;
 
@@ -841,65 +841,70 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: widget.sections.map((section) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        section.title,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: section.items.map((item) {
-                          final isSelected = _selectedValues[section.id] == item.value;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                if (isSelected) {
-                                  _selectedValues.remove(section.id);
-                                } else {
-                                  _selectedValues[section.id] = item.value;
-                                }
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? cs.primary
-                                    : cs.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? cs.primary
-                                      : cs.outlineVariant,
-                                ),
-                              ),
-                              child: Text(
-                                item.title,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isSelected
-                                      ? cs.onPrimary
-                                      : cs.onSurface,
-                                ),
-                              ),
+                children: widget.sections
+                    .map(
+                      (section) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            section.title,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurfaceVariant,
                             ),
-                          );
-                        }).toList(),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: section.items.map((item) {
+                              final isSelected =
+                                  _selectedValues[section.id] == item.value;
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    if (isSelected) {
+                                      _selectedValues.remove(section.id);
+                                    } else {
+                                      _selectedValues[section.id] = item.value;
+                                    }
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? cs.primary
+                                        : cs.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? cs.primary
+                                          : cs.outlineVariant,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    item.title,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isSelected
+                                          ? cs.onPrimary
+                                          : cs.onSurface,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                    ],
-                  )).toList(),
+                    )
+                    .toList(),
               ),
             ),
           ),
@@ -913,16 +918,13 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
             ),
             decoration: BoxDecoration(
               color: cs.surface,
-              border: Border(
-                top: BorderSide(
-                  color: cs.outlineVariant,
-                ),
-              ),
+              border: Border(top: BorderSide(color: cs.outlineVariant)),
             ),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(FilterResult(_selectedValues)),
+                onPressed: () =>
+                    Navigator.of(context).pop(FilterResult(_selectedValues)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: cs.primary,
                   foregroundColor: cs.onPrimary,
@@ -933,7 +935,10 @@ class _FlutterFilterSheetState extends State<_FlutterFilterSheet> {
                 ),
                 child: Text(
                   widget.applyButtonText,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -962,92 +967,92 @@ class _FlutterListSheet<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.6,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.92),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 拖拽指示器
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white24,
-              borderRadius: BorderRadius.circular(2),
-            ),
+    constraints: BoxConstraints(
+      maxHeight: MediaQuery.of(context).size.height * 0.6,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: 0.92),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 拖拽指示器
+        Container(
+          margin: const EdgeInsets.only(top: 12),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Colors.white24,
+            borderRadius: BorderRadius.circular(2),
           ),
-          // 标题栏
+        ),
+        // 标题栏
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+          child: Row(
+            children: [
+              if (titleIcon != null) ...[
+                Icon(titleIcon, color: Colors.white70, size: 20),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded, color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+        const Divider(color: Colors.white24, height: 1),
+        // 列表内容
+        if (items.isEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
-            child: Row(
+            padding: const EdgeInsets.all(32),
+            child: Column(
               children: [
-                if (titleIcon != null) ...[
-                  Icon(titleIcon, color: Colors.white70, size: 20),
-                  const SizedBox(width: 8),
-                ],
+                Icon(
+                  emptyIcon ?? Icons.inbox_rounded,
+                  size: 48,
+                  color: Colors.white38,
+                ),
+                const SizedBox(height: 12),
                 Text(
-                  title,
+                  emptyMessage ?? appL10n.bottomSheetEmptyMessage,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.white70,
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
                     decoration: TextDecoration.none,
                   ),
                 ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded, color: Colors.white70),
-                ),
               ],
             ),
-          ),
-          const Divider(color: Colors.white24, height: 1),
-          // 列表内容
-          if (items.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                children: [
-                  Icon(
-                    emptyIcon ?? Icons.inbox_rounded,
-                    size: 48,
-                    color: Colors.white38,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    emptyMessage ?? appL10n.bottomSheetEmptyMessage,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                      decoration: TextDecoration.none,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return _ListSheetTile<T>(item: item);
-                },
-              ),
+          )
+        else
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return _ListSheetTile<T>(item: item);
+              },
             ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-        ],
-      ),
-    );
+          ),
+        SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+      ],
+    ),
+  );
 }
 
 /// 列表选项项
@@ -1058,69 +1063,68 @@ class _ListSheetTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => Navigator.pop(context, item.value),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
-              children: [
-                if (item.icon != null) ...[
-                  Icon(
-                    item.icon,
-                    color: item.isSelected ? Colors.white : Colors.white60,
-                    size: 20,
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: () => Navigator.pop(context, item.value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          children: [
+            if (item.icon != null) ...[
+              Icon(
+                item.icon,
+                color: item.isSelected ? Colors.white : Colors.white60,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: TextStyle(
+                      color: item.isSelected ? Colors.white : Colors.white70,
+                      fontSize: 14,
+                      fontWeight: item.isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      decoration: TextDecoration.none,
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.title,
-                        style: TextStyle(
-                          color: item.isSelected ? Colors.white : Colors.white70,
-                          fontSize: 14,
-                          fontWeight: item.isSelected ? FontWeight.w600 : FontWeight.normal,
-                          decoration: TextDecoration.none,
-                        ),
+                  if (item.subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      item.subtitle!,
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                        decoration: TextDecoration.none,
                       ),
-                      if (item.subtitle != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          item.subtitle!,
-                          style: const TextStyle(
-                            color: Colors.white38,
-                            fontSize: 11,
-                            decoration: TextDecoration.none,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (item.isSelected)
-                  const Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-              ],
+                    ),
+                  ],
+                ],
+              ),
             ),
-          ),
+            if (item.isSelected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }
 
 // MARK: - Sectioned Sheet Support
 
 /// 分区（用于 showNativeSectionedSheet）
 class SectionedSheetSection<T> {
-  const SectionedSheetSection({
-    required this.items,
-    this.header,
-  });
+  const SectionedSheetSection({required this.items, this.header});
 
   final String? header;
   final List<ListSheetItem<T>> items;
@@ -1209,7 +1213,11 @@ Future<SectionedSheetResult<T>?> _showNativeSectionedSheet<T>({
 
   // 构建分区数据并建立值映射
   final nativeSections = <Map<String, dynamic>>[];
-  final valueMap = <String, (int, int, T)>{}; // value -> (sectionIndex, itemIndex, actualValue)
+  final valueMap =
+      <
+        String,
+        (int, int, T)
+      >{}; // value -> (sectionIndex, itemIndex, actualValue)
 
   for (var si = 0; si < sections.length; si++) {
     final section = sections[si];
@@ -1233,31 +1241,35 @@ Future<SectionedSheetResult<T>?> _showNativeSectionedSheet<T>({
       });
     }
 
-    nativeSections.add({
-      'header': section.header,
-      'items': nativeItems,
-    });
+    nativeSections.add({'header': section.header, 'items': nativeItems});
   }
 
   // 构建操作按钮
-  final nativeActions = actions.map((a) => {
-    'id': a.id,
-    'title': a.title,
-    'icon': _iconDataToSFSymbol(a.icon),
-  }).toList();
+  final nativeActions = actions
+      .map(
+        (a) => {
+          'id': a.id,
+          'title': a.title,
+          'icon': _iconDataToSFSymbol(a.icon),
+        },
+      )
+      .toList();
 
   try {
-    final sheetId = await _nativeBottomSheetChannel.invokeMethod<int>('showSectionedSheet', {
-      'isDark': isDark,
-      'title': title,
-      'sections': nativeSections,
-      'actions': nativeActions,
-      'headerInfo': headerInfo,
-      'showDragHandle': true,
-      'showCancelButton': showCancelButton,
-      'initialDetent': initialDetent,
-      'allowedDetents': ['medium', 'large'],
-    });
+    final sheetId = await _nativeBottomSheetChannel.invokeMethod<int>(
+      'showSectionedSheet',
+      {
+        'isDark': isDark,
+        'title': title,
+        'sections': nativeSections,
+        'actions': nativeActions,
+        'headerInfo': headerInfo,
+        'showDragHandle': true,
+        'showCancelButton': showCancelButton,
+        'initialDetent': initialDetent,
+        'allowedDetents': ['medium', 'large'],
+      },
+    );
 
     if (sheetId == null) return null;
 
@@ -1284,7 +1296,11 @@ Future<SectionedSheetResult<T>?> _showNativeSectionedSheet<T>({
 
     if (selectedValueKey != null && valueMap.containsKey(selectedValueKey)) {
       final (si, ii, value) = valueMap[selectedValueKey]!;
-      return SectionedSheetResult<T>(sectionIndex: si, itemIndex: ii, value: value);
+      return SectionedSheetResult<T>(
+        sectionIndex: si,
+        itemIndex: ii,
+        value: value,
+      );
     }
     return null;
   } catch (e) {
@@ -1309,89 +1325,130 @@ class _FlutterSectionedSheet<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.92),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+    constraints: BoxConstraints(
+      maxHeight: MediaQuery.of(context).size.height * 0.7,
+    ),
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: 0.92),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 12),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Colors.white24,
+            borderRadius: BorderRadius.circular(2),
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
-              child: Row(
-                children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600, decoration: TextDecoration.none)),
-                  const Spacer(),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded, color: Colors.white70)),
-                ],
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+          child: Row(
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.none,
+                ),
               ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded, color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+        const Divider(color: Colors.white24, height: 1),
+        Flexible(
+          child: ListView.builder(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            itemCount: sections.fold<int>(
+              0,
+              (sum, s) => sum + s.items.length + (s.header != null ? 1 : 0),
             ),
-            const Divider(color: Colors.white24, height: 1),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: sections.fold<int>(0, (sum, s) => sum + s.items.length + (s.header != null ? 1 : 0)),
-                itemBuilder: (context, index) {
-                  var currentIndex = 0;
-                  for (var si = 0; si < sections.length; si++) {
-                    final section = sections[si];
-                    if (section.header != null) {
-                      if (currentIndex == index) {
-                        return Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                          child: Text(section.header!, style: const TextStyle(color: Colors.white54, fontSize: 13, fontWeight: FontWeight.w600, decoration: TextDecoration.none)),
-                        );
-                      }
-                      currentIndex++;
-                    }
-                    for (var ii = 0; ii < section.items.length; ii++) {
-                      if (currentIndex == index) {
-                        final item = section.items[ii];
-                        return _SectionedItemTile<T>(item: item, sectionIndex: si, itemIndex: ii);
-                      }
-                      currentIndex++;
-                    }
+            itemBuilder: (context, index) {
+              var currentIndex = 0;
+              for (var si = 0; si < sections.length; si++) {
+                final section = sections[si];
+                if (section.header != null) {
+                  if (currentIndex == index) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      child: Text(
+                        section.header!,
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    );
                   }
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-            if (actions.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: Row(
-                  children: actions.map((action) => Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: ElevatedButton.icon(
-                        onPressed: () => onActionTapped?.call(action.id),
-                        icon: action.icon != null ? Icon(action.icon, size: 18) : const SizedBox.shrink(),
-                        label: Text(action.title),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white12,
-                          foregroundColor: Colors.white,
+                  currentIndex++;
+                }
+                for (var ii = 0; ii < section.items.length; ii++) {
+                  if (currentIndex == index) {
+                    final item = section.items[ii];
+                    return _SectionedItemTile<T>(
+                      item: item,
+                      sectionIndex: si,
+                      itemIndex: ii,
+                    );
+                  }
+                  currentIndex++;
+                }
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+        if (actions.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Row(
+              children: actions
+                  .map(
+                    (action) => Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: ElevatedButton.icon(
+                          onPressed: () => onActionTapped?.call(action.id),
+                          icon: action.icon != null
+                              ? Icon(action.icon, size: 18)
+                              : const SizedBox.shrink(),
+                          label: Text(action.title),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white12,
+                            foregroundColor: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  )).toList(),
-                ),
-              ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-          ],
-        ),
-      );
+                  )
+                  .toList(),
+            ),
+          ),
+        SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+      ],
+    ),
+  );
 }
 
 class _SectionedItemTile<T> extends StatelessWidget {
-  const _SectionedItemTile({required this.item, required this.sectionIndex, required this.itemIndex});
+  const _SectionedItemTile({
+    required this.item,
+    required this.sectionIndex,
+    required this.itemIndex,
+  });
 
   final ListSheetItem<T> item;
   final int sectionIndex;
@@ -1399,35 +1456,67 @@ class _SectionedItemTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => Navigator.pop(context, SectionedSheetResult<T>(sectionIndex: sectionIndex, itemIndex: itemIndex, value: item.value as T)),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
-              children: [
-                if (item.icon != null) ...[
-                  Icon(item.icon, color: item.isSelected ? Colors.white : Colors.white60, size: 20),
-                  const SizedBox(width: 12),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(item.title, style: TextStyle(color: item.isSelected ? Colors.white : Colors.white70, fontSize: 14, fontWeight: item.isSelected ? FontWeight.w600 : FontWeight.normal, decoration: TextDecoration.none)),
-                      if (item.subtitle != null)
-                        Text(item.subtitle!, style: const TextStyle(color: Colors.white38, fontSize: 11, decoration: TextDecoration.none)),
-                    ],
-                  ),
-                ),
-                if (item.isSelected) const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              ],
-            ),
-          ),
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: () => Navigator.pop(
+        context,
+        SectionedSheetResult<T>(
+          sectionIndex: sectionIndex,
+          itemIndex: itemIndex,
+          value: item.value as T,
         ),
-      );
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          children: [
+            if (item.icon != null) ...[
+              Icon(
+                item.icon,
+                color: item.isSelected ? Colors.white : Colors.white60,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: TextStyle(
+                      color: item.isSelected ? Colors.white : Colors.white70,
+                      fontSize: 14,
+                      fontWeight: item.isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                  if (item.subtitle != null)
+                    Text(
+                      item.subtitle!,
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (item.isSelected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
-
 
 /// iOS 原生选项底部弹框
 Future<T?> _showNativeOptionsBottomSheet<T>({
@@ -1462,16 +1551,19 @@ Future<T?> _showNativeOptionsBottomSheet<T>({
   }
 
   try {
-    final sheetId = await _nativeBottomSheetChannel.invokeMethod<int>('showSheet', {
-      'isDark': isDark,
-      'title': title,
-      'items': items,
-      'showDragHandle': true,
-      'showCancelButton': showCancelButton,
-      'dismissOnTapBackground': true,
-      'initialDetent': 'medium',
-      'allowedDetents': ['medium', 'large'],
-    });
+    final sheetId = await _nativeBottomSheetChannel.invokeMethod<int>(
+      'showSheet',
+      {
+        'isDark': isDark,
+        'title': title,
+        'items': items,
+        'showDragHandle': true,
+        'showCancelButton': showCancelButton,
+        'dismissOnTapBackground': true,
+        'initialDetent': 'medium',
+        'allowedDetents': ['medium', 'large'],
+      },
+    );
 
     if (sheetId == null) return null;
 
@@ -1493,7 +1585,10 @@ Future<T?> _showNativeOptionsBottomSheet<T>({
     return null;
   } catch (e) {
     // 回退到 Flutter 实现
-    logger.w('Native bottom sheet failed, falling back to Flutter implementation', e);
+    logger.w(
+      'Native bottom sheet failed, falling back to Flutter implementation',
+      e,
+    );
     return showAppBottomSheet<T>(
       context: context,
       title: title,
@@ -1502,8 +1597,7 @@ Future<T?> _showNativeOptionsBottomSheet<T>({
       builder: (context, _) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (final option in options)
-            _OptionTile<T>(option: option),
+          for (final option in options) _OptionTile<T>(option: option),
         ],
       ),
     );
@@ -1678,7 +1772,8 @@ String? _iconDataToSFSymbol(IconData? icon) {
     Icons.zoom_in_rounded.codePoint: 'plus.magnifyingglass',
     Icons.zoom_out_rounded.codePoint: 'minus.magnifyingglass',
     Icons.fullscreen_rounded.codePoint: 'arrow.up.left.and.arrow.down.right',
-    Icons.fullscreen_exit_rounded.codePoint: 'arrow.down.right.and.arrow.up.left',
+    Icons.fullscreen_exit_rounded.codePoint:
+        'arrow.down.right.and.arrow.up.left',
     Icons.cast_rounded.codePoint: 'airplayvideo',
     Icons.airplay_rounded.codePoint: 'airplayvideo',
     Icons.subtitles_rounded.codePoint: 'captions.bubble',
@@ -1726,7 +1821,7 @@ class _OptionTile<T> extends StatelessWidget {
     final effectiveColor = option.isDestructive
         ? AppColors.error
         : (option.iconColor ??
-            (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface));
+              (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface));
 
     return ListTile(
       leading: Container(
@@ -1736,11 +1831,7 @@ class _OptionTile<T> extends StatelessWidget {
           color: effectiveColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(
-          option.icon,
-          color: effectiveColor,
-          size: 20,
-        ),
+        child: Icon(option.icon, color: effectiveColor, size: 20),
       ),
       title: Text(
         option.title,

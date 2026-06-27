@@ -14,6 +14,7 @@ import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_empty_state.dart';
 
 /// 桌面端「直播 / EPG」页面。
 ///
@@ -77,8 +78,8 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
     final channels = active == _kAllCategory
         ? allChannels
         : allChannels
-            .where((c) => (c.category ?? l.livePageUncategorized) == active)
-            .toList();
+              .where((c) => (c.category ?? l.livePageUncategorized) == active)
+              .toList();
     final featured = channels.isNotEmpty ? channels.first : null;
 
     // EPG（XMLTV）：取首个带 epgUrl 的频道地址，拉取并按 tvgId 匹配节目。
@@ -87,7 +88,7 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
         .firstWhere((u) => u != null && u.isNotEmpty, orElse: () => null);
     final epg = epgUrl != null
         ? (ref.watch(liveEpgProvider(epgUrl)).valueOrNull ??
-            const <String, List<EpgProgramme>>{})
+              const <String, List<EpgProgramme>>{})
         : const <String, List<EpgProgramme>>{};
     final hasEpg = epg.isNotEmpty;
     final featuredProgs = (featured?.tvgId != null)
@@ -105,7 +106,7 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
       padding: const EdgeInsets.fromLTRB(30, 26, 30, 120),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1340),
+          constraints: const BoxConstraints(maxWidth: 1280),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -135,16 +136,16 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
                     children: [
                       _PulseDot(color: t.hot, size: 8),
                       const SizedBox(width: 6),
-                      Text(l.livePageRedLineHint,
-                          style: TextStyle(fontSize: 12, color: t.text2)),
+                      Text(
+                        l.livePageRedLineHint,
+                        style: TextStyle(fontSize: 12, color: t.text2),
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  hasEpg
-                      ? l.livePageEpgFromXmltv
-                      : l.livePageEpgNoData,
+                  hasEpg ? l.livePageEpgFromXmltv : l.livePageEpgNoData,
                   style: TextStyle(fontSize: 12, color: t.text3, height: 1.4),
                 ),
                 const SizedBox(height: 12),
@@ -159,77 +160,84 @@ class _LiveTvDesktopPageState extends ConsumerState<LiveTvDesktopPage> {
 
   // ── header ────────────────────────────────────────────────────────────
   Widget _buildHeader(
-      DesignTokens t, AppLocalizations l, List<String> cats, String active) => Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  l.livePageTitle,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: t.text0,
-                  ),
+    DesignTokens t,
+    AppLocalizations l,
+    List<String> cats,
+    String active,
+  ) => Row(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                l.livePageTitle,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: t.text0,
                 ),
-                const SizedBox(width: 12),
-                const _LiveBadge('LIVE'),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l.livePageSubtitle,
-              style: TextStyle(fontSize: 13, color: t.text2),
+              ),
+              const SizedBox(width: 12),
+              const _LiveBadge('LIVE'),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l.livePageSubtitle,
+            style: TextStyle(fontSize: 13, color: t.text2),
+          ),
+        ],
+      ),
+      const SizedBox(width: 16),
+      Expanded(
+        child: Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 8,
+          runSpacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            for (final c in cats)
+              AppChip(
+                label: c == _kAllCategory ? l.livePageCategoryAll : c,
+                active: c == active,
+                onTap: () => setState(() => _cat = c),
+                compact: true,
+              ),
+            AppChip(
+              label: l.livePageManageM3u8Source,
+              icon: Icons.add_rounded,
+              compact: true,
+              onTap: _manageSources,
             ),
           ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Wrap(
-            alignment: WrapAlignment.end,
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              for (final c in cats)
-                AppChip(
-                  label: c == _kAllCategory ? l.livePageCategoryAll : c,
-                  active: c == active,
-                  onTap: () => setState(() => _cat = c),
-                  compact: true,
-                ),
-              AppChip(
-                label: l.livePageManageM3u8Source,
-                icon: Icons.add_rounded,
-                compact: true,
-                onTap: _manageSources,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+      ),
+    ],
+  );
 
-  Widget _sectionHead(DesignTokens t, AppLocalizations l,
-      {required String sub, Widget? right}) => Row(
-      children: [
-        Text(
-          l.livePageProgramGuide,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: t.text0,
-            letterSpacing: -0.3,
-          ),
+  Widget _sectionHead(
+    DesignTokens t,
+    AppLocalizations l, {
+    required String sub,
+    Widget? right,
+  }) => Row(
+    children: [
+      Text(
+        l.livePageProgramGuide,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+          color: t.text0,
         ),
-        const SizedBox(width: 10),
-        Text(sub, style: TextStyle(fontSize: 12.5, color: t.text2)),
-        if (right != null) ...[const Spacer(), right],
-      ],
-    );
+      ),
+      const SizedBox(width: 10),
+      Text(sub, style: TextStyle(fontSize: 12.5, color: t.text2)),
+      if (right != null) ...[const Spacer(), right],
+    ],
+  );
 
   String? _sourceNameFor(LiveChannel ch, List<LiveStreamSource> sources) {
     for (final s in sources) {
@@ -373,7 +381,6 @@ class _Hero extends StatelessWidget {
                         fontSize: 34,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        letterSpacing: -0.6,
                         height: 1.05,
                       ),
                     ),
@@ -401,8 +408,10 @@ class _Hero extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           l.livePageUpNext(
-                            _fmtClock(nextProgramme!.start.hour * 60 +
-                                nextProgramme!.start.minute),
+                            _fmtClock(
+                              nextProgramme!.start.hour * 60 +
+                                  nextProgramme!.start.minute,
+                            ),
                             nextProgramme!.title,
                           ),
                           maxLines: 1,
@@ -463,20 +472,20 @@ class _Hero extends StatelessWidget {
   }
 
   Widget _whiteTag(String label) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.13),
-          borderRadius: BorderRadius.circular(5),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.13),
+      borderRadius: BorderRadius.circular(5),
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: Colors.white,
+      ),
+    ),
+  );
 }
 
 enum _HeroBtnVariant { primary, outline, ghost }
@@ -622,10 +631,7 @@ class _EpgGuide extends StatelessWidget {
               decoration: BoxDecoration(
                 color: t.hot,
                 boxShadow: [
-                  BoxShadow(
-                    color: t.hot.withValues(alpha: 0.6),
-                    blurRadius: 8,
-                  ),
+                  BoxShadow(color: t.hot.withValues(alpha: 0.6), blurRadius: 8),
                 ],
               ),
             ),
@@ -638,8 +644,7 @@ class _EpgGuide extends StatelessWidget {
             child: FractionalTranslation(
               translation: const Offset(-0.5, 0),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
                   color: t.hot,
                   borderRadius: BorderRadius.circular(5),
@@ -665,10 +670,7 @@ class _EpgGuide extends StatelessWidget {
     );
     // 仅在内容超高时套竖向滚动，避免短列表抢占整页滚动手势。
     if (contentH > 540) {
-      body = SizedBox(
-        height: 540,
-        child: SingleChildScrollView(child: body),
-      );
+      body = SizedBox(height: 540, child: SingleChildScrollView(child: body));
     }
 
     return GlassPanel(
@@ -681,14 +683,15 @@ class _EpgGuide extends StatelessWidget {
     );
   }
 
-  Widget _header(DesignTokens t, AppLocalizations l, List<int> slots, int base,
-      double timelineW) {
-    TextStyle cornerStyle() => TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.88,
-          color: t.text3,
-        );
+  Widget _header(
+    DesignTokens t,
+    AppLocalizations l,
+    List<int> slots,
+    int base,
+    double timelineW,
+  ) {
+    TextStyle cornerStyle() =>
+        TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: t.text3);
     return Container(
       height: _epgHeaderH,
       decoration: BoxDecoration(
@@ -747,75 +750,75 @@ class _EpgGuide extends StatelessWidget {
     int end,
     DateTime todayMidnight,
   ) => Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => onPlay(ch),
-        hoverColor: t.cardBgHover,
-        child: Container(
-          height: _epgRowH,
-          decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: t.hairline)),
-          ),
-          child: Row(
-            children: [
-              // 频道列
-              Container(
-                width: _channelColW,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Row(
-                  children: [
-                    _ChannelLogo(channel: ch),
-                    const SizedBox(width: 11),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  ch.displayName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    fontWeight: FontWeight.w700,
-                                    color: t.text0,
-                                  ),
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: () => onPlay(ch),
+      hoverColor: t.cardBgHover,
+      child: Container(
+        height: _epgRowH,
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: t.hairline)),
+        ),
+        child: Row(
+          children: [
+            // 频道列
+            Container(
+              width: _channelColW,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                children: [
+                  _ChannelLogo(channel: ch),
+                  const SizedBox(width: 11),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                ch.displayName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: t.text0,
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            ch.categoryDisplayName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 10.5, color: t.text2),
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          ch.categoryDisplayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 10.5, color: t.text2),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              // 节目轨道：把命中本时间窗的 EPG 节目按起止时间定位为块。
-              SizedBox(
-                width: timelineW,
-                height: _epgRowH,
-                child: Stack(
-                  children: [
-                    for (final p in programmes)
-                      ..._programmeBlock(t, p, base, end, todayMidnight),
-                  ],
-                ),
+            ),
+            // 节目轨道：把命中本时间窗的 EPG 节目按起止时间定位为块。
+            SizedBox(
+              width: timelineW,
+              height: _epgRowH,
+              child: Stack(
+                children: [
+                  for (final p in programmes)
+                    ..._programmeBlock(t, p, base, end, todayMidnight),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
+    ),
+  );
 
   /// 把单个节目按起止时间（相对今日 0 点的分钟）定位为时间轴上的块；
   /// 与时间窗 [base, end] 无交集则不渲染。当前正在播放的节目高亮。
@@ -847,7 +850,8 @@ class _EpgGuide extends StatelessWidget {
             color: live ? t.chipBgActive : t.insetBg,
             borderRadius: BorderRadius.circular(9),
             border: Border.all(
-                color: live ? t.accent.withValues(alpha: 0.4) : t.hairline),
+              color: live ? t.accent.withValues(alpha: 0.4) : t.hairline,
+            ),
           ),
           alignment: Alignment.centerLeft,
           child: Text(
@@ -930,7 +934,6 @@ class _LiveBadge extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: Colors.white,
-              letterSpacing: 0.55,
             ),
           ),
         ],
@@ -964,24 +967,22 @@ class _PulseDotState extends State<_PulseDot>
 
   @override
   Widget build(BuildContext context) => FadeTransition(
-      opacity: Tween<double>(begin: 1, end: 0.35).animate(
-        CurvedAnimation(parent: _c, curve: DesignTokens.ease),
+    opacity: Tween<double>(
+      begin: 1,
+      end: 0.35,
+    ).animate(CurvedAnimation(parent: _c, curve: DesignTokens.ease)),
+    child: Container(
+      width: widget.size,
+      height: widget.size,
+      decoration: BoxDecoration(
+        color: widget.color,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: widget.color.withValues(alpha: 0.7), blurRadius: 8),
+        ],
       ),
-      child: Container(
-        width: widget.size,
-        height: widget.size,
-        decoration: BoxDecoration(
-          color: widget.color,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: widget.color.withValues(alpha: 0.7),
-              blurRadius: 8,
-            ),
-          ],
-        ),
-      ),
-    );
+    ),
+  );
 }
 
 // ── empty states ──────────────────────────────────────────────────────────
@@ -1035,7 +1036,6 @@ class _EmptyHero extends StatelessWidget {
                       fontSize: 34,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      letterSpacing: -0.6,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -1068,32 +1068,11 @@ class _EpgEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = DesignTokens.of(context);
     final l = AppLocalizations.of(context);
-    return GlassPanel(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 38),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(Icons.live_tv_outlined, size: 40, color: t.text3),
-            const SizedBox(height: 12),
-            Text(
-              l.livePageNoSourceTitle,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: t.text1,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              l.livePageNoSourceDesc,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12.5, color: t.text2, height: 1.5),
-            ),
-          ],
-        ),
-      ),
+    return DesktopEmptyState(
+      icon: Icons.live_tv_outlined,
+      title: l.livePageNoSourceTitle,
+      message: l.livePageNoSourceDesc,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_empty_state.dart';
 
 /// 所有「桌面变体」page 共用的页眉外框，统一 24/13.5 字号 + 上方 22px 间距
 /// + 居中 maxWidth 1340。子组件在 [body] slot 自由排版。
@@ -9,7 +10,7 @@ class DesktopPageScaffold extends StatelessWidget {
     required this.body,
     this.subtitle,
     this.actions,
-    this.maxWidth = 1340,
+    this.maxWidth = 1280,
     super.key,
   });
 
@@ -23,7 +24,7 @@ class DesktopPageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(30, 26, 30, 120),
+      padding: const EdgeInsets.fromLTRB(28, 24, 28, 112),
       child: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
@@ -49,19 +50,16 @@ class DesktopPageScaffold extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(
                             s,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: t.text2,
-                            ),
+                            style: TextStyle(fontSize: 13, color: t.text2),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  ?actions,
+                  if (actions != null) ...[const SizedBox(width: 18), actions!],
                 ],
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 20),
               body,
             ],
           ),
@@ -83,32 +81,6 @@ class DesktopComingSoon extends StatelessWidget {
   final IconData icon;
 
   @override
-  Widget build(BuildContext context) {
-    final t = DesignTokens.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 38),
-      decoration: BoxDecoration(
-        color: t.panelBg,
-        border: Border.all(color: t.panelBorder),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-      ),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(icon, size: 40, color: t.text3),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13.5,
-                color: t.text2,
-                height: 1.6,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      DesktopEmptyState(icon: icon, message: message);
 }

@@ -19,6 +19,7 @@ import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/download_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/animated_list_item.dart';
+import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/download_manager_sheet.dart';
 import 'package:my_nas/shared/widgets/empty_widget.dart';
@@ -29,11 +30,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 class FileBrowserPage extends ConsumerStatefulWidget {
-  const FileBrowserPage({
-    this.sourceId,
-    this.sourceName,
-    super.key,
-  });
+  const FileBrowserPage({this.sourceId, this.sourceName, super.key});
 
   /// 指定要浏览的源 ID（如果为空则使用当前选中的源）
   final String? sourceId;
@@ -190,14 +187,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   child: _buildDesktopSourceSidebar(
                     browsableSources,
                     selectedSourceId,
-                    isDark,
                   ),
                 ),
-                VerticalDivider(
-                  width: 1,
-                  thickness: 1,
-                  color: t.panelBorder,
-                ),
+                VerticalDivider(width: 1, thickness: 1, color: t.panelBorder),
                 Expanded(child: rightPanel),
               ],
             ),
@@ -212,55 +204,52 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     bool isGridView,
     bool isDark,
     AppLocalizations l,
-  ) =>
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildIconButton(
-            icon: isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
-            onTap: () {
-              ref.read(viewModeProvider.notifier).state =
-                  isGridView ? ViewMode.list : ViewMode.grid;
-            },
-            isDark: isDark,
-            tooltip: isGridView ? l.filesListView : l.filesGridView,
-          ),
-          _buildIconButton(
-            icon: Icons.swap_vert_rounded,
-            onTap: () => _showSortOptions(context, isDark),
-            isDark: isDark,
-            tooltip: l.filesSort,
-          ),
-          _buildIconButton(
-            icon: Icons.download_rounded,
-            onTap: () => showDownloadManager(context),
-            isDark: isDark,
-            tooltip: l.filesDownloadManager,
-          ),
-          _buildIconButton(
-            icon: Icons.create_new_folder_rounded,
-            onTap: () => _showCreateFolderDialog(isDark),
-            isDark: isDark,
-            tooltip: l.filesNewFolder,
-          ),
-          const SizedBox(width: 8),
-          FilledButton.icon(
-            onPressed: _pickAndUploadFiles,
-            icon: const Icon(Icons.upload_file_rounded, size: 16),
-            label: Text(l.filesUploadFile),
-          ),
-        ],
-      );
+  ) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _buildIconButton(
+        icon: isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
+        onTap: () {
+          ref.read(viewModeProvider.notifier).state = isGridView
+              ? ViewMode.list
+              : ViewMode.grid;
+        },
+        tooltip: isGridView ? l.filesListView : l.filesGridView,
+      ),
+      _buildIconButton(
+        icon: Icons.swap_vert_rounded,
+        onTap: () => _showSortOptions(context, isDark),
+        tooltip: l.filesSort,
+      ),
+      _buildIconButton(
+        icon: Icons.download_rounded,
+        onTap: () => showDownloadManager(context),
+        tooltip: l.filesDownloadManager,
+      ),
+      _buildIconButton(
+        icon: Icons.create_new_folder_rounded,
+        onTap: () => _showCreateFolderDialog(isDark),
+        tooltip: l.filesNewFolder,
+      ),
+      const SizedBox(width: 8),
+      AppButton(
+        variant: AppButtonVariant.primary,
+        onPressed: _pickAndUploadFiles,
+        icon: Icons.upload_file_rounded,
+        label: l.filesUploadFile,
+      ),
+    ],
+  );
 
   /// 桌面端左侧 source sidebar：每个已连接源一个 entry，点击切换当前源。
   Widget _buildDesktopSourceSidebar(
     List<(SourceEntity, BrowsableConnection)> browsableSources,
     String? selectedSourceId,
-    bool isDark,
   ) {
     final l = AppLocalizations.of(context);
+    final t = DesignTokens.of(context);
     return ColoredBox(
-      color: isDark ? AppColors.darkSurface : context.colorScheme.surface,
+      color: t.panelBgStrong,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -268,12 +257,10 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             child: Text(
               l.filesConnectedSources,
-              style: context.textTheme.labelSmall?.copyWith(
-                color: isDark
-                    ? AppColors.darkOnSurfaceVariant
-                    : AppColors.lightOnSurfaceVariant,
+              style: TextStyle(
+                fontSize: 11,
+                color: t.text3,
                 fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
               ),
             ),
           ),
@@ -284,11 +271,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               itemBuilder: (context, index) {
                 final (source, _) = browsableSources[index];
                 final isSelected = source.id == selectedSourceId;
-                final fg = isSelected
-                    ? AppColors.primary
-                    : (isDark
-                        ? AppColors.darkOnSurfaceVariant
-                        : context.colorScheme.onSurfaceVariant);
+                final fg = isSelected ? t.accentBright : t.text1;
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Material(
@@ -298,9 +281,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                         ref.read(selectedSourceIdProvider.notifier).state =
                             source.id;
                         ref.read(currentPathProvider.notifier).state = '/';
-                        ref
-                            .read(fileListProvider.notifier)
-                            .loadDirectory('/');
+                        ref.read(fileListProvider.notifier).loadDirectory('/');
                       },
                       borderRadius: BorderRadius.circular(8),
                       child: AnimatedContainer(
@@ -311,8 +292,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppColors.primary.withValues(
-                                  alpha: isDark ? 0.18 : 0.1)
+                              ? t.chipBgActive
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -346,11 +326,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                                       source.host,
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: isDark
-                                            ? AppColors.darkOnSurfaceVariant
-                                                .withValues(alpha: 0.7)
-                                            : AppColors.lightOnSurfaceVariant
-                                                .withValues(alpha: 0.8),
+                                        color: t.text2,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -372,7 +348,12 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     );
   }
 
-  Widget _buildAppBar(BuildContext context, String currentPath, bool isGridView, bool isDark) {
+  Widget _buildAppBar(
+    BuildContext context,
+    String currentPath,
+    bool isGridView,
+    bool isDark,
+  ) {
     final l = AppLocalizations.of(context);
     // 确定标题文本
     final title = widget.sourceName ?? l.filesTitle;
@@ -400,7 +381,6 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 _buildIconButton(
                   icon: Icons.arrow_back_rounded,
                   onTap: () => Navigator.of(context).pop(),
-                  isDark: isDark,
                   tooltip: l.filesBack,
                 )
               else if (currentPath != '/')
@@ -408,7 +388,6 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 _buildIconButton(
                   icon: Icons.arrow_back_rounded,
                   onTap: () => ref.read(fileListProvider.notifier).navigateUp(),
-                  isDark: isDark,
                   tooltip: l.filesBackToParent,
                 )
               else
@@ -426,30 +405,29 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               ),
               // 操作按钮
               _buildIconButton(
-                icon: isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
+                icon: isGridView
+                    ? Icons.view_list_rounded
+                    : Icons.grid_view_rounded,
                 onTap: () {
-                  ref.read(viewModeProvider.notifier).state =
-                      isGridView ? ViewMode.list : ViewMode.grid;
+                  ref.read(viewModeProvider.notifier).state = isGridView
+                      ? ViewMode.list
+                      : ViewMode.grid;
                 },
-                isDark: isDark,
                 tooltip: isGridView ? l.filesListView : l.filesGridView,
               ),
               _buildIconButton(
                 icon: Icons.swap_vert_rounded,
                 onTap: () => _showSortOptions(context, isDark),
-                isDark: isDark,
                 tooltip: l.filesSort,
               ),
               _buildIconButton(
                 icon: Icons.download_rounded,
                 onTap: () => showDownloadManager(context),
-                isDark: isDark,
                 tooltip: l.filesDownloadManager,
               ),
               _buildIconButton(
                 icon: Icons.more_vert_rounded,
                 onTap: () => _showMoreOptions(context, isDark),
-                isDark: isDark,
                 tooltip: l.filesMore,
               ),
             ],
@@ -459,12 +437,19 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     );
   }
 
-  Widget _buildMultiSelectAppBar(BuildContext context, Set<String> selectedFiles, bool isDark) {
+  Widget _buildMultiSelectAppBar(
+    BuildContext context,
+    Set<String> selectedFiles,
+    bool isDark,
+  ) {
     final l = AppLocalizations.of(context);
     final fileState = ref.watch(fileListProvider);
-    final allFiles = fileState is FileListLoaded ? fileState.files : <FileItem>[];
+    final allFiles = fileState is FileListLoaded
+        ? fileState.files
+        : <FileItem>[];
     final selectedCount = selectedFiles.length;
-    final allSelected = allFiles.isNotEmpty && selectedFiles.length == allFiles.length;
+    final allSelected =
+        allFiles.isNotEmpty && selectedFiles.length == allFiles.length;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -487,7 +472,6 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               _buildIconButton(
                 icon: Icons.close_rounded,
                 onTap: _exitMultiSelectMode,
-                isDark: isDark,
                 tooltip: l.filesCancel,
               ),
               const SizedBox(width: 8),
@@ -503,9 +487,10 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               ),
               // 全选/取消全选
               _buildIconButton(
-                icon: allSelected ? Icons.deselect_rounded : Icons.select_all_rounded,
+                icon: allSelected
+                    ? Icons.deselect_rounded
+                    : Icons.select_all_rounded,
                 onTap: () => _toggleSelectAll(allFiles),
-                isDark: isDark,
                 tooltip: allSelected ? l.filesDeselectAll : l.filesSelectAll,
               ),
               // 删除按钮
@@ -513,15 +498,14 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 _buildIconButton(
                   icon: Icons.delete_rounded,
                   onTap: () => _showBatchDeleteConfirm(selectedFiles, isDark),
-                  isDark: isDark,
                   tooltip: l.filesDelete,
                 ),
               // 更多操作
               if (selectedCount > 0)
                 _buildIconButton(
                   icon: Icons.more_vert_rounded,
-                  onTap: () => _showBatchOperations(context, selectedFiles, isDark),
-                  isDark: isDark,
+                  onTap: () =>
+                      _showBatchOperations(context, selectedFiles, isDark),
                   tooltip: l.filesMoreActions,
                 ),
             ],
@@ -563,38 +547,39 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       ref.read(selectedFilesProvider.notifier).state = {};
     } else {
       // 全选
-      ref.read(selectedFilesProvider.notifier).state =
-          allFiles.map((f) => f.path).toSet();
+      ref.read(selectedFilesProvider.notifier).state = allFiles
+          .map((f) => f.path)
+          .toSet();
     }
   }
 
   Widget _buildIconButton({
     required IconData icon,
     required VoidCallback onTap,
-    required bool isDark,
     String? tooltip,
-  }) => Tooltip(
+  }) {
+    final t = DesignTokens.of(context);
+    final desktop = context.isDesktopLayout;
+    return Tooltip(
       message: tooltip ?? '',
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
+          hoverColor: t.chipBg,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
           child: Container(
-            width: 40,
-            height: 40,
+            width: desktop ? 34 : 40,
+            height: desktop ? 34 : 40,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
             ),
-            child: Icon(
-              icon,
-              color: isDark ? AppColors.darkOnSurfaceVariant : null,
-              size: 22,
-            ),
+            child: Icon(icon, color: t.text2, size: desktop ? 19 : 22),
           ),
         ),
       ),
     );
+  }
 
   Widget _buildSourceSelector(
     List<(SourceEntity, BrowsableConnection)> browsableSources,
@@ -729,7 +714,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   Icon(
                     Icons.unfold_more_rounded,
                     size: 20,
-                    color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                    color: isDark
+                        ? AppColors.darkOnSurfaceVariant
+                        : AppColors.lightOnSurfaceVariant,
                   ),
                 ],
               ),
@@ -741,16 +728,16 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   IconData _getSourceIcon(SourceType type) => switch (type) {
-        SourceType.synology => Icons.storage_rounded,
-        SourceType.qnap => Icons.storage_rounded,
-        SourceType.webdav => Icons.cloud_rounded,
-        SourceType.smb => Icons.lan_rounded,
-        SourceType.jellyfin => Icons.play_circle_rounded,
-        SourceType.emby => Icons.play_circle_rounded,
-        SourceType.plex => Icons.play_circle_rounded,
-        SourceType.local => Icons.phone_android_rounded,
-        _ => Icons.dns_rounded,
-      };
+    SourceType.synology => Icons.storage_rounded,
+    SourceType.qnap => Icons.storage_rounded,
+    SourceType.webdav => Icons.cloud_rounded,
+    SourceType.smb => Icons.lan_rounded,
+    SourceType.jellyfin => Icons.play_circle_rounded,
+    SourceType.emby => Icons.play_circle_rounded,
+    SourceType.plex => Icons.play_circle_rounded,
+    SourceType.local => Icons.phone_android_rounded,
+    _ => Icons.dns_rounded,
+  };
 
   Widget _buildBreadcrumb(String currentPath, bool isDark) {
     final l = AppLocalizations.of(context);
@@ -781,7 +768,8 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               context: context,
               label: label,
               isDark: isDark,
-              onTap: () => ref.read(fileListProvider.notifier).loadDirectory(path),
+              onTap: () =>
+                  ref.read(fileListProvider.notifier).loadDirectory(path),
             ),
         ],
       ),
@@ -795,7 +783,8 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     final result = <(String, String)>[];
 
     // 检测是否是 Windows 路径（包含驱动器字母如 C: 或 D:）
-    final isWindowsPath = currentPath.length >= 2 &&
+    final isWindowsPath =
+        currentPath.length >= 2 &&
         currentPath[1] == ':' &&
         RegExp('^[A-Za-z]').hasMatch(currentPath);
 
@@ -836,74 +825,77 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     IconData? icon,
     bool isFirst = false,
   }) => Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (!isFirst)
-          Icon(
-            Icons.chevron_right_rounded,
-            size: 20,
-            color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-          ),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (icon != null) ...[
-                    Icon(
-                      icon,
-                      size: 16,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  Text(
-                    label,
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (!isFirst)
+        Icon(
+          Icons.chevron_right_rounded,
+          size: 20,
+          color: isDark
+              ? AppColors.darkOnSurfaceVariant
+              : AppColors.lightOnSurfaceVariant,
+        ),
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 6),
                 ],
-              ),
+                Text(
+                  label,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: isDark
+                        ? AppColors.darkOnSurface
+                        : AppColors.lightOnSurface,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ],
-    );
+      ),
+    ],
+  );
 
   Widget _buildContent(FileListState state, bool isGridView, bool isDark) {
     final l = AppLocalizations.of(context);
     final content = switch (state) {
       FileListLoading() => KeyedSubtree(
-          key: const ValueKey('loading'),
-          child: FileListSkeleton(isGridView: isGridView),
-        ),
+        key: const ValueKey('loading'),
+        child: FileListSkeleton(isGridView: isGridView),
+      ),
       FileListNotConnected() => KeyedSubtree(
-          key: const ValueKey('not_connected'),
-          child: _buildNotConnectedPrompt(isDark),
-        ),
-      FileListError(:final message, :final hasCustomPath, :final failedPath) => KeyedSubtree(
+        key: const ValueKey('not_connected'),
+        child: _buildNotConnectedPrompt(isDark),
+      ),
+      FileListError(:final message, :final hasCustomPath, :final failedPath) =>
+        KeyedSubtree(
           key: const ValueKey('error'),
           child: _buildErrorContent(message, hasCustomPath, failedPath, isDark),
         ),
       FileListLoaded(:final files) when files.isEmpty => KeyedSubtree(
-          key: const ValueKey('empty'),
-          child: EmptyWidget(
-            icon: Icons.folder_open_outlined,
-            title: l.filesEmptyTitle,
-            message: l.filesEmptyMessage,
-          ),
+        key: const ValueKey('empty'),
+        child: EmptyWidget(
+          icon: Icons.folder_open_outlined,
+          title: l.filesEmptyTitle,
+          message: l.filesEmptyMessage,
         ),
+      ),
       FileListLoaded(:final files) => KeyedSubtree(
-          key: ValueKey('loaded_${files.length}'),
-          child: isGridView ? _buildGrid(files, isDark) : _buildList(files, isDark),
-        ),
+        key: ValueKey('loaded_${files.length}'),
+        child: isGridView
+            ? _buildGrid(files, isDark)
+            : _buildList(files, isDark),
+      ),
     };
 
     return AnimatedContentSwitcher(child: content);
@@ -942,7 +934,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             Text(
               l.filesNotConnectedMessage,
               style: context.textTheme.bodyMedium?.copyWith(
-                color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                color: isDark
+                    ? AppColors.darkOnSurfaceVariant
+                    : AppColors.lightOnSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -964,11 +958,16 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 child: InkWell(
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute<void>(builder: (_) => const SourcesPage()),
+                    MaterialPageRoute<void>(
+                      builder: (_) => const SourcesPage(),
+                    ),
                   ),
                   borderRadius: BorderRadius.circular(16),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 14,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -995,7 +994,12 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   /// 构建错误内容，支持自定义路径失败时返回根目录
-  Widget _buildErrorContent(String message, bool hasCustomPath, String? failedPath, bool isDark) {
+  Widget _buildErrorContent(
+    String message,
+    bool hasCustomPath,
+    String? failedPath,
+    bool isDark,
+  ) {
     final l = AppLocalizations.of(context);
     return Center(
       child: Padding(
@@ -1029,7 +1033,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               Text(
                 l.filesDirNotExistOrNoPermission(failedPath),
                 style: context.textTheme.bodyMedium?.copyWith(
-                  color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                  color: isDark
+                      ? AppColors.darkOnSurfaceVariant
+                      : AppColors.lightOnSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -1050,19 +1056,21 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 重试按钮
-                OutlinedButton.icon(
-                  onPressed: () => ref.read(fileListProvider.notifier).refresh(),
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: Text(l.filesRetry),
+                AppButton(
+                  onPressed: () =>
+                      ref.read(fileListProvider.notifier).refresh(),
+                  icon: Icons.refresh_rounded,
+                  label: l.filesRetry,
                 ),
                 // 如果有自定义路径，显示返回根目录按钮
                 if (hasCustomPath) ...[
                   const SizedBox(width: 16),
-                  FilledButton.icon(
-                    onPressed: () => ref.read(fileListProvider.notifier).loadRootDirectory(),
-                    icon: const Icon(Icons.folder_rounded),
-                    label: Text(l.filesBrowseAllShares),
+                  AppButton(
+                    variant: AppButtonVariant.primary,
+                    onPressed: () =>
+                        ref.read(fileListProvider.notifier).loadRootDirectory(),
+                    icon: Icons.folder_rounded,
+                    label: l.filesBrowseAllShares,
                   ),
                 ],
               ],
@@ -1149,34 +1157,30 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   Widget _buildFab(bool isDark) => DecoratedBox(
-      decoration: BoxDecoration(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(18),
+      gradient: AppColors.primaryGradient,
+      boxShadow: [
+        BoxShadow(
+          color: AppColors.primary.withValues(alpha: 0.4),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    ),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showCreateOptions(context, isDark),
         borderRadius: BorderRadius.circular(18),
-        gradient: AppColors.primaryGradient,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showCreateOptions(context, isDark),
-          borderRadius: BorderRadius.circular(18),
-          child: const SizedBox(
-            width: 60,
-            height: 60,
-            child: Icon(
-              Icons.add_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
+        child: const SizedBox(
+          width: 60,
+          height: 60,
+          child: Icon(Icons.add_rounded, color: Colors.white, size: 28),
         ),
       ),
-    );
+    ),
+  );
 
   void _handleFileTap(FileItem file) {
     final isMultiSelectMode = ref.read(multiSelectModeProvider);
@@ -1246,18 +1250,18 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
   }
 
   IconData _getSortModeIcon(SortMode mode) => switch (mode) {
-        SortMode.name => Icons.sort_by_alpha_rounded,
-        SortMode.size => Icons.straighten_rounded,
-        SortMode.date => Icons.schedule_rounded,
-        SortMode.type => Icons.category_rounded,
-      };
+    SortMode.name => Icons.sort_by_alpha_rounded,
+    SortMode.size => Icons.straighten_rounded,
+    SortMode.date => Icons.schedule_rounded,
+    SortMode.type => Icons.category_rounded,
+  };
 
   String _getSortModeName(AppLocalizations l, SortMode mode) => switch (mode) {
-        SortMode.name => l.filesSortByName,
-        SortMode.size => l.filesSortBySize,
-        SortMode.date => l.filesSortByDate,
-        SortMode.type => l.filesSortByType,
-      };
+    SortMode.name => l.filesSortByName,
+    SortMode.size => l.filesSortBySize,
+    SortMode.date => l.filesSortByDate,
+    SortMode.type => l.filesSortByType,
+  };
 
   void _showMoreOptions(BuildContext context, bool isDark) {
     final l = AppLocalizations.of(context);
@@ -1394,13 +1398,18 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               child: InkWell(
                 onTap: () {
                   if (controller.text.isNotEmpty) {
-                    ref.read(fileListProvider.notifier).createFolder(controller.text);
+                    ref
+                        .read(fileListProvider.notifier)
+                        .createFolder(controller.text);
                     Navigator.pop(context);
                   }
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Text(
                     l.filesCreateAction,
                     style: const TextStyle(
@@ -1559,41 +1568,37 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(
-        _getFileIcon(file),
-        color: color,
-        size: 26,
-      ),
+      child: Icon(_getFileIcon(file), color: color, size: 26),
     );
   }
 
   IconData _getFileIcon(FileItem file) => switch (file.type) {
-        FileType.folder => Icons.folder_rounded,
-        FileType.image => Icons.image_rounded,
-        FileType.video => Icons.play_circle_rounded,
-        FileType.audio => Icons.music_note_rounded,
-        FileType.document => Icons.description_rounded,
-        FileType.archive => Icons.folder_zip_rounded,
-        FileType.code => Icons.code_rounded,
-        FileType.text => Icons.article_rounded,
-        FileType.pdf => Icons.picture_as_pdf_rounded,
-        FileType.epub || FileType.comic => Icons.menu_book_rounded,
-        FileType.other => Icons.insert_drive_file_rounded,
-      };
+    FileType.folder => Icons.folder_rounded,
+    FileType.image => Icons.image_rounded,
+    FileType.video => Icons.play_circle_rounded,
+    FileType.audio => Icons.music_note_rounded,
+    FileType.document => Icons.description_rounded,
+    FileType.archive => Icons.folder_zip_rounded,
+    FileType.code => Icons.code_rounded,
+    FileType.text => Icons.article_rounded,
+    FileType.pdf => Icons.picture_as_pdf_rounded,
+    FileType.epub || FileType.comic => Icons.menu_book_rounded,
+    FileType.other => Icons.insert_drive_file_rounded,
+  };
 
   Color _getFileColor(FileItem file) => switch (file.type) {
-        FileType.folder => AppColors.fileFolder,
-        FileType.image => AppColors.fileImage,
-        FileType.video => AppColors.fileVideo,
-        FileType.audio => AppColors.fileAudio,
-        FileType.document => AppColors.fileDocument,
-        FileType.archive => AppColors.fileArchive,
-        FileType.code => AppColors.fileCode,
-        FileType.pdf => AppColors.error,
-        FileType.epub || FileType.comic => AppColors.accent,
-        FileType.text => AppColors.fileDocument,
-        FileType.other => AppColors.fileOther,
-      };
+    FileType.folder => AppColors.fileFolder,
+    FileType.image => AppColors.fileImage,
+    FileType.video => AppColors.fileVideo,
+    FileType.audio => AppColors.fileAudio,
+    FileType.document => AppColors.fileDocument,
+    FileType.archive => AppColors.fileArchive,
+    FileType.code => AppColors.fileCode,
+    FileType.pdf => AppColors.error,
+    FileType.epub || FileType.comic => AppColors.accent,
+    FileType.text => AppColors.fileDocument,
+    FileType.other => AppColors.fileOther,
+  };
 
   void _showRenameDialog(FileItem file, bool isDark) {
     final l = AppLocalizations.of(context);
@@ -1653,14 +1658,20 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
               color: Colors.transparent,
               child: InkWell(
                 onTap: () {
-                  if (controller.text.isNotEmpty && controller.text != file.name) {
-                    ref.read(fileListProvider.notifier).rename(file.path, controller.text);
+                  if (controller.text.isNotEmpty &&
+                      controller.text != file.name) {
+                    ref
+                        .read(fileListProvider.notifier)
+                        .rename(file.path, controller.text);
                     Navigator.pop(context);
                   }
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Text(
                     l.filesConfirm,
                     style: const TextStyle(
@@ -1723,7 +1734,10 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Text(
                     l.filesDelete,
                     style: const TextStyle(
@@ -1788,7 +1802,10 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 },
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Text(
                     l.filesDelete,
                     style: const TextStyle(
@@ -1845,7 +1862,11 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     }
   }
 
-  void _showBatchOperations(BuildContext context, Set<String> selectedFiles, bool isDark) {
+  void _showBatchOperations(
+    BuildContext context,
+    Set<String> selectedFiles,
+    bool isDark,
+  ) {
     final l = AppLocalizations.of(context);
     showAdaptiveModalSheet<void>(
       context: context,
@@ -1906,7 +1927,11 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     );
   }
 
-  void _showBatchDestinationPicker(Set<String> selectedFiles, bool isDark, {required bool isCopy}) {
+  void _showBatchDestinationPicker(
+    Set<String> selectedFiles,
+    bool isDark, {
+    required bool isCopy,
+  }) {
     final l = AppLocalizations.of(context);
     var selectedPath = '/';
 
@@ -1915,7 +1940,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: isDark ? AppColors.darkSurface : null,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Text(
             isCopy ? l.filesCopyToTitle : l.filesMoveToTitle,
             style: TextStyle(
@@ -1960,7 +1987,10 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     child: Text(
                       isCopy ? l.filesCopyHere : l.filesMoveHere,
                       style: const TextStyle(
@@ -2060,7 +2090,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
   Future<void> _batchDownload(Set<String> paths) async {
     final connection = ref.read(selectedBrowsableConnectionProvider);
-    if (connection == null || connection.status != SourceStatus.connected) return;
+    if (connection == null || connection.status != SourceStatus.connected) {
+      return;
+    }
 
     final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -2070,7 +2102,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     if (fileState is! FileListLoaded) return;
 
     // 获取选中的文件（排除文件夹）
-    final files = fileState.files.where((f) => paths.contains(f.path) && !f.isDirectory).toList();
+    final files = fileState.files
+        .where((f) => paths.contains(f.path) && !f.isDirectory)
+        .toList();
 
     if (files.isEmpty) {
       scaffoldMessenger.showSnackBar(
@@ -2175,20 +2209,22 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       loadingController.close();
 
       if (!mounted) {
-        AppError.fireAndForget(tempFile.delete(), action: 'fileBrowser.share.cleanupAfterUnmount');
+        AppError.fireAndForget(
+          tempFile.delete(),
+          action: 'fileBrowser.share.cleanupAfterUnmount',
+        );
         return;
       }
 
-      final result = await Share.shareXFiles(
-        [XFile(tempFile.path, name: file.name)],
-        subject: file.name,
-      );
+      final result = await Share.shareXFiles([
+        XFile(tempFile.path, name: file.name),
+      ], subject: file.name);
 
       // 用户取消分享时也属正常路径
       if (result.status == ShareResultStatus.unavailable && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.filesShareNotSupported)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.filesShareNotSupported)));
       }
     } on Exception catch (e, st) {
       loadingController.close();
@@ -2216,7 +2252,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
   Future<void> _downloadFile(FileItem file) async {
     final connection = ref.read(selectedBrowsableConnectionProvider);
-    if (connection == null || connection.status != SourceStatus.connected) return;
+    if (connection == null || connection.status != SourceStatus.connected) {
+      return;
+    }
 
     final l = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -2242,7 +2280,13 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       );
     } on Exception catch (e, st) {
       if (!mounted) return;
-      AppError.handleWithUI(context, e, st, l.filesDownloadFailed, 'downloadFile');
+      AppError.handleWithUI(
+        context,
+        e,
+        st,
+        l.filesDownloadFailed,
+        'downloadFile',
+      );
     }
   }
 
@@ -2270,10 +2314,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           ),
         );
 
-        await ref.read(fileListProvider.notifier).uploadFile(
-              file.path!,
-              fileName: file.name,
-            );
+        await ref
+            .read(fileListProvider.notifier)
+            .uploadFile(file.path!, fileName: file.name);
       }
 
       if (!mounted) return;
@@ -2290,7 +2333,11 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     }
   }
 
-  void _showDestinationPicker(FileItem file, bool isDark, {required bool isCopy}) {
+  void _showDestinationPicker(
+    FileItem file,
+    bool isDark, {
+    required bool isCopy,
+  }) {
     final l = AppLocalizations.of(context);
     var selectedPath = '/';
 
@@ -2299,7 +2346,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           backgroundColor: isDark ? AppColors.darkSurface : null,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Text(
             isCopy ? l.filesCopyToTitle : l.filesMoveToTitle,
             style: TextStyle(
@@ -2339,19 +2388,27 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                     Navigator.pop(context);
                     try {
                       if (isCopy) {
-                        await ref.read(fileListProvider.notifier).copyTo(file.path, selectedPath);
+                        await ref
+                            .read(fileListProvider.notifier)
+                            .copyTo(file.path, selectedPath);
                         scaffoldMessenger.showSnackBar(
                           SnackBar(
                             content: Text(l.filesCopiedTo(selectedPath)),
-                            backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
+                            backgroundColor: isDark
+                                ? AppColors.darkSurfaceElevated
+                                : null,
                           ),
                         );
                       } else {
-                        await ref.read(fileListProvider.notifier).moveTo(file.path, selectedPath);
+                        await ref
+                            .read(fileListProvider.notifier)
+                            .moveTo(file.path, selectedPath);
                         scaffoldMessenger.showSnackBar(
                           SnackBar(
                             content: Text(l.filesMovedTo(selectedPath)),
-                            backgroundColor: isDark ? AppColors.darkSurfaceElevated : null,
+                            backgroundColor: isDark
+                                ? AppColors.darkSurfaceElevated
+                                : null,
                           ),
                         );
                       }
@@ -2359,7 +2416,11 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                       AppError.handle(e, st, isCopy ? 'copyFile' : 'moveFile');
                       scaffoldMessenger.showSnackBar(
                         SnackBar(
-                          content: Text(l.filesOperationFailed(AppError.getUserFriendlyMessage(e))),
+                          content: Text(
+                            l.filesOperationFailed(
+                              AppError.getUserFriendlyMessage(e),
+                            ),
+                          ),
                           backgroundColor: AppColors.error,
                         ),
                       );
@@ -2367,7 +2428,10 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                   },
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     child: Text(
                       isCopy ? l.filesCopyHere : l.filesMoveHere,
                       style: const TextStyle(
@@ -2409,7 +2473,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border(
               top: BorderSide(
-                color: isDark ? AppColors.glassStroke : AppColors.lightOutline.withValues(alpha: 0.2),
+                color: isDark
+                    ? AppColors.glassStroke
+                    : AppColors.lightOutline.withValues(alpha: 0.2),
               ),
             ),
           ),
@@ -2426,7 +2492,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                     title,
                     style: context.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                      color: isDark
+                          ? AppColors.darkOnSurface
+                          : AppColors.lightOnSurface,
                     ),
                   ),
                 ),
@@ -2440,7 +2508,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 ),
               ),
               // 底部安全区域
-              SizedBox(height: bottomPadding > 0 ? bottomPadding : AppSpacing.lg),
+              SizedBox(
+                height: bottomPadding > 0 ? bottomPadding : AppSpacing.lg,
+              ),
             ],
           ),
         ),
@@ -2456,63 +2526,69 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     required bool isSelected,
     required VoidCallback onTap,
   }) => Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.15)
-                      : (isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant)
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.15)
+                    : (isDark
+                              ? AppColors.darkSurfaceVariant
+                              : AppColors.lightSurfaceVariant)
                           .withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: isSelected
-                      ? AppColors.primary
-                      : (isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
-                  size: 20,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected
+                    ? AppColors.primary
+                    : (isDark
+                          ? AppColors.darkOnSurfaceVariant
+                          : AppColors.lightOnSurfaceVariant),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                title,
+                style: context.textTheme.bodyLarge?.copyWith(
+                  color: isDark
+                      ? AppColors.darkOnSurface
+                      : AppColors.lightOnSurface,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  title,
-                  style: context.textTheme.bodyLarge?.copyWith(
-                    color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  ),
+            ),
+            if (isSelected)
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.primaryGradient,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: Colors.white,
+                  size: 16,
                 ),
               ),
-              if (isSelected)
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.primaryGradient,
-                  ),
-                  child: const Icon(
-                    Icons.check_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
-    );
+    ),
+  );
 
   Widget _buildSwitchTile(
     BuildContext context,
@@ -2521,43 +2597,50 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     required bool value,
     required ValueChanged<bool> onChanged,
   }) => Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: (isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant)
-                  .withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              value ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-              size: 20,
+    padding: const EdgeInsets.symmetric(
+      horizontal: AppSpacing.lg,
+      vertical: AppSpacing.sm,
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color:
+                (isDark
+                        ? AppColors.darkSurfaceVariant
+                        : AppColors.lightSurfaceVariant)
+                    .withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            value ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+            color: isDark
+                ? AppColors.darkOnSurfaceVariant
+                : AppColors.lightOnSurfaceVariant,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Text(
+            title,
+            style: context.textTheme.bodyLarge?.copyWith(
+              color: isDark
+                  ? AppColors.darkOnSurface
+                  : AppColors.lightOnSurface,
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Text(
-              title,
-              style: context.textTheme.bodyLarge?.copyWith(
-                color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
-              ),
-            ),
-          ),
-          Switch.adaptive(
-            value: value,
-            onChanged: onChanged,
-            activeTrackColor: AppColors.primary,
-          ),
-        ],
-      ),
-    );
+        ),
+        Switch.adaptive(
+          value: value,
+          onChanged: onChanged,
+          activeTrackColor: AppColors.primary,
+        ),
+      ],
+    ),
+  );
 
   Widget _buildActionTile(
     BuildContext context,
@@ -2565,45 +2648,45 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     required IconData icon,
     required Color iconColor,
     required String title,
-    required VoidCallback onTap, Color? titleColor,
+    required VoidCallback onTap,
+    Color? titleColor,
   }) => Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 20,
-                ),
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Text(
-                title,
-                style: context.textTheme.bodyLarge?.copyWith(
-                  color: titleColor ??
-                      (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface),
-                  fontWeight: FontWeight.w500,
-                ),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Text(
+              title,
+              style: context.textTheme.bodyLarge?.copyWith(
+                color:
+                    titleColor ??
+                    (isDark
+                        ? AppColors.darkOnSurface
+                        : AppColors.lightOnSurface),
+                fontWeight: FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
+    ),
+  );
 }
 
 /// 目录选择器组件
@@ -2619,7 +2702,8 @@ class _DestinationBrowser extends ConsumerStatefulWidget {
   final ValueChanged<String> onPathChanged;
 
   @override
-  ConsumerState<_DestinationBrowser> createState() => _DestinationBrowserState();
+  ConsumerState<_DestinationBrowser> createState() =>
+      _DestinationBrowserState();
 }
 
 class _DestinationBrowserState extends ConsumerState<_DestinationBrowser> {
@@ -2704,7 +2788,10 @@ class _DestinationBrowserState extends ConsumerState<_DestinationBrowser> {
                   icon: const Icon(Icons.arrow_back_rounded, size: 20),
                   onPressed: _navigateUp,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                   color: widget.isDark ? AppColors.darkOnSurface : null,
                 ),
               Expanded(
@@ -2726,55 +2813,61 @@ class _DestinationBrowserState extends ConsumerState<_DestinationBrowser> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-                  ? Center(
-                      child: Text(
-                        _error!,
-                        style: TextStyle(
-                          color: widget.isDark ? AppColors.darkOnSurfaceVariant : null,
+              ? Center(
+                  child: Text(
+                    _error!,
+                    style: TextStyle(
+                      color: widget.isDark
+                          ? AppColors.darkOnSurfaceVariant
+                          : null,
+                    ),
+                  ),
+                )
+              : _directories == null || _directories!.isEmpty
+              ? Center(
+                  child: Text(
+                    l.filesNoSubfolders,
+                    style: TextStyle(
+                      color: widget.isDark
+                          ? AppColors.darkOnSurfaceVariant
+                          : null,
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _directories!.length,
+                  itemBuilder: (context, index) {
+                    final dir = _directories![index];
+                    return ListTile(
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.fileFolder.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.folder_rounded,
+                          color: AppColors.fileFolder,
+                          size: 22,
                         ),
                       ),
-                    )
-                  : _directories == null || _directories!.isEmpty
-                      ? Center(
-                          child: Text(
-                            l.filesNoSubfolders,
-                            style: TextStyle(
-                              color: widget.isDark ? AppColors.darkOnSurfaceVariant : null,
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: _directories!.length,
-                          itemBuilder: (context, index) {
-                            final dir = _directories![index];
-                            return ListTile(
-                              leading: Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: AppColors.fileFolder.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.folder_rounded,
-                                  color: AppColors.fileFolder,
-                                  size: 22,
-                                ),
-                              ),
-                              title: Text(
-                                dir.name,
-                                style: TextStyle(
-                                  color: widget.isDark ? AppColors.darkOnSurface : null,
-                                ),
-                              ),
-                              trailing: Icon(
-                                Icons.chevron_right_rounded,
-                                color: widget.isDark ? AppColors.darkOnSurfaceVariant : null,
-                              ),
-                              onTap: () => _navigateTo(dir.path),
-                            );
-                          },
+                      title: Text(
+                        dir.name,
+                        style: TextStyle(
+                          color: widget.isDark ? AppColors.darkOnSurface : null,
                         ),
+                      ),
+                      trailing: Icon(
+                        Icons.chevron_right_rounded,
+                        color: widget.isDark
+                            ? AppColors.darkOnSurfaceVariant
+                            : null,
+                      ),
+                      onTap: () => _navigateTo(dir.path),
+                    );
+                  },
+                ),
         ),
       ],
     );

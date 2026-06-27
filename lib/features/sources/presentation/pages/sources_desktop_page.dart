@@ -8,6 +8,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
+import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
@@ -49,14 +50,15 @@ class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
       subtitle: l.sourcesPageSubtitle,
       actions: Padding(
         padding: const EdgeInsets.only(left: 12),
-        child: FilledButton.icon(
+        child: AppButton(
+          variant: AppButtonVariant.primary,
           onPressed: () => showDialog<void>(
             context: context,
             barrierColor: Colors.black.withValues(alpha: 0.5),
             builder: (_) => const SourceWizardDialog(),
           ),
-          icon: const Icon(Icons.add_rounded, size: 16),
-          label: Text(l.sourcesPageAddSource),
+          icon: Icons.add_rounded,
+          label: l.sourcesPageAddSource,
         ),
       ),
       body: Column(
@@ -79,8 +81,9 @@ class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
               }
               // 库映射来自 mediaLibraryConfig 派生：源 → 已映射的媒体类型集合，
               // 设计稿 s.libs 没有对应后端字段，故从既有 state 派生而非臆造。
-              final libsConfig =
-                  ref.watch(mediaLibraryConfigProvider).valueOrNull;
+              final libsConfig = ref
+                  .watch(mediaLibraryConfigProvider)
+                  .valueOrNull;
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -143,10 +146,10 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
     final statusText = state.error != null
         ? l.paneSourcesDiscoveryError('${state.error}')
         : state.isDiscovering
-            ? l.paneSourcesDiscoveryScanning
-            : devices.isNotEmpty
-                ? l.paneSourcesDiscoveryFound(devices.length)
-                : l.paneSourcesDiscoveryIdle;
+        ? l.paneSourcesDiscoveryScanning
+        : devices.isNotEmpty
+        ? l.paneSourcesDiscoveryFound(devices.length)
+        : l.paneSourcesDiscoveryIdle;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
@@ -204,13 +207,12 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
                   onTap: state.isDiscovering
                       ? null
                       : () => ref
-                          .read(networkDiscoveryProvider.notifier)
-                          .startDiscovery(),
+                            .read(networkDiscoveryProvider.notifier)
+                            .startDiscovery(),
                 ),
               ],
             ),
-            for (final device in devices)
-              _DiscoveryRow(device: device),
+            for (final device in devices) _DiscoveryRow(device: device),
           ],
         ),
       ),
@@ -306,8 +308,9 @@ class _SourceCard extends ConsumerWidget {
       ..showSnackBar(
         SnackBar(content: Text(l.sourcesPageConnecting(source.name))),
       );
-    final result =
-        await ref.read(activeConnectionsProvider.notifier).reconnect(source.id);
+    final result = await ref
+        .read(activeConnectionsProvider.notifier)
+        .reconnect(source.id);
     if (!context.mounted) return;
     final ok = result?.status == SourceStatus.connected;
     final need2fa = result?.status == SourceStatus.requires2FA;
@@ -319,13 +322,13 @@ class _SourceCard extends ConsumerWidget {
             ok
                 ? l.sourcesPageConnectSuccess(source.name)
                 : need2fa
-                    ? l.sourcesPageConnectNeeds2FA(source.name)
-                    : l.sourcesPageConnectFailed(
-                        source.name,
-                        result?.errorMessage != null
-                            ? l.sourcesPageErrorSuffix(result!.errorMessage!)
-                            : '',
-                      ),
+                ? l.sourcesPageConnectNeeds2FA(source.name)
+                : l.sourcesPageConnectFailed(
+                    source.name,
+                    result?.errorMessage != null
+                        ? l.sourcesPageErrorSuffix(result!.errorMessage!)
+                        : '',
+                  ),
           ),
         ),
       );
@@ -373,8 +376,12 @@ class _SourceCard extends ConsumerWidget {
     // 未实现的源类型即「即将推出」，与设计稿 plan 态对齐。
     final isPlan = !source.type.isSupported;
     final status = conn?.status;
-    final (dot, label, isErr) =
-        _statusView(l, isPlan, status, conn?.errorMessage);
+    final (dot, label, isErr) = _statusView(
+      l,
+      isPlan,
+      status,
+      conn?.errorMessage,
+    );
 
     final card = AppCard(
       padding: const EdgeInsets.all(18),
@@ -494,13 +501,28 @@ class _SourceCard extends ConsumerWidget {
   ) {
     if (isPlan) return (DotStatus.off, l.sourcesPageComingSoon, false);
     return switch (status) {
-      SourceStatus.connected => (DotStatus.ok, l.sourcesPageStatusConnected, false),
-      SourceStatus.requires2FA => (DotStatus.warn, l.sourcesPageStatusNeeds2FA, false),
-      SourceStatus.connecting => (DotStatus.warn, l.sourcesPageStatusConnecting, false),
-      SourceStatus.error =>
-        (DotStatus.err, errorMessage ?? l.sourcesPageStatusError, true),
-      SourceStatus.disconnected || null =>
-        (DotStatus.off, l.sourcesPageStatusDisconnected, false),
+      SourceStatus.connected => (
+        DotStatus.ok,
+        l.sourcesPageStatusConnected,
+        false,
+      ),
+      SourceStatus.requires2FA => (
+        DotStatus.warn,
+        l.sourcesPageStatusNeeds2FA,
+        false,
+      ),
+      SourceStatus.connecting => (
+        DotStatus.warn,
+        l.sourcesPageStatusConnecting,
+        false,
+      ),
+      SourceStatus.error => (
+        DotStatus.err,
+        errorMessage ?? l.sourcesPageStatusError,
+        true,
+      ),
+      SourceStatus.disconnected ||
+      null => (DotStatus.off, l.sourcesPageStatusDisconnected, false),
     };
   }
 }

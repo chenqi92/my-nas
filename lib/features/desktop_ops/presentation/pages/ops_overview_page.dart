@@ -12,6 +12,7 @@ import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_empty_state.dart';
 
 /// 桌面端「运维总览」。
 ///
@@ -60,20 +61,23 @@ class OpsOverviewPage extends ConsumerWidget {
     final subscribeValue = nastoolSources.isEmpty
         ? '—'
         : nastoolSources
-            .fold<int>(
-              0,
-              (sum, s) =>
-                  sum +
-                  (ref.watch(nastoolSubscribesProvider(s.id)).valueOrNull?.length ??
-                      0),
-            )
-            .toString();
+              .fold<int>(
+                0,
+                (sum, s) =>
+                    sum +
+                    (ref
+                            .watch(nastoolSubscribesProvider(s.id))
+                            .valueOrNull
+                            ?.length ??
+                        0),
+              )
+              .toString();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(30, 26, 30, 120),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1500),
+          constraints: const BoxConstraints(maxWidth: 1280),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -146,7 +150,12 @@ class _LiveThroughput extends StatelessWidget {
                 style: TextStyle(fontSize: 11.5, color: t.text2),
               ),
               const Spacer(),
-              _speed('↓', formatSpeed(throughput.downloadSpeed), t.accentBright, t),
+              _speed(
+                '↓',
+                formatSpeed(throughput.downloadSpeed),
+                t.accentBright,
+                t,
+              ),
               const SizedBox(width: 18),
               _speed('↑', formatSpeed(throughput.uploadSpeed), t.text0, t),
             ],
@@ -159,21 +168,21 @@ class _LiveThroughput extends StatelessWidget {
   }
 
   Widget _speed(String arrow, String value, Color color, DesignTokens t) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(arrow, style: TextStyle(fontSize: 13, color: t.text2)),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: color,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(arrow, style: TextStyle(fontSize: 13, color: t.text2)),
+      const SizedBox(width: 4),
+      Text(
+        value,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          color: color,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    ],
+  );
 }
 
 /// 简易吞吐图：用两条静态 ribbon 表达 dn / up（视觉氛围，数值见上方读数）。
@@ -212,10 +221,9 @@ class _RibbonPainter extends CustomPainter {
     const points = 60;
     for (var i = 0; i <= points; i++) {
       final x = w * i / points;
-      final dnY = h - h * 0.55 *
-          (0.42 + 0.5 * (0.5 + 0.5 * _sinish(i * 0.42)));
-      final upY = h - h * 0.28 *
-          (0.30 + 0.5 * (0.5 + 0.5 * _sinish(i * 0.55 + 1.4)));
+      final dnY = h - h * 0.55 * (0.42 + 0.5 * (0.5 + 0.5 * _sinish(i * 0.42)));
+      final upY =
+          h - h * 0.28 * (0.30 + 0.5 * (0.5 + 0.5 * _sinish(i * 0.55 + 1.4)));
       dnPath.lineTo(x, dnY);
       upPath.lineTo(x, upY);
     }
@@ -233,8 +241,7 @@ class _RibbonPainter extends CustomPainter {
       ).createShader(Offset.zero & size);
     canvas.drawPath(dnPath, dnFill);
 
-    final upFill = Paint()
-      ..color = text2.withValues(alpha: 0.10);
+    final upFill = Paint()..color = text2.withValues(alpha: 0.10);
     canvas.drawPath(upPath, upFill);
   }
 
@@ -294,7 +301,11 @@ class _StatRow extends StatelessWidget {
           label: l.opsStatPtAvgRatio,
           value: avgRatio == null ? '—' : avgRatio!.toStringAsFixed(2),
         ),
-        _StatTile(label: l.opsStatSubscribing, value: subscribeValue, accent: true),
+        _StatTile(
+          label: l.opsStatSubscribing,
+          value: subscribeValue,
+          accent: true,
+        ),
       ],
     );
   }
@@ -324,36 +335,34 @@ class _StatTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text.rich(TextSpan(
-            children: [
-              TextSpan(
-                text: value,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: accent ? t.accentBright : t.text0,
-                  letterSpacing: -0.52,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
-              ),
-              if (unit != null)
+          Text.rich(
+            TextSpan(
+              children: [
                 TextSpan(
-                  text: ' $unit',
+                  text: value,
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: t.text2,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: accent ? t.accentBright : t.text0,
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
-            ],
-          )),
+                if (unit != null)
+                  TextSpan(
+                    text: ' $unit',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: t.text2,
+                    ),
+                  ),
+              ],
+            ),
+          ),
           const SizedBox(height: 3),
           Row(
             children: [
-              if (dot != null) ...[
-                StatusDot(dot!),
-                const SizedBox(width: 6),
-              ],
+              if (dot != null) ...[StatusDot(dot!), const SizedBox(width: 6)],
               Flexible(
                 child: Text(
                   label,
@@ -457,7 +466,9 @@ class _ClientCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                connected ? l.opsClientTaskCount(taskCount) : l.opsClientNotConnected,
+                connected
+                    ? l.opsClientTaskCount(taskCount)
+                    : l.opsClientNotConnected,
                 style: TextStyle(fontSize: 11, color: t.text2),
               ),
             ],
@@ -511,10 +522,11 @@ class _BottomTwoCol extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     final l = AppLocalizations.of(context);
-    final downloading = tasks
-        .where((task) => task.status == UnifiedDownloadStatus.downloading)
-        .toList()
-      ..sort((a, b) => b.downloadSpeed.compareTo(a.downloadSpeed));
+    final downloading =
+        tasks
+            .where((task) => task.status == UnifiedDownloadStatus.downloading)
+            .toList()
+          ..sort((a, b) => b.downloadSpeed.compareTo(a.downloadSpeed));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -547,14 +559,11 @@ class _BottomTwoCol extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 if (downloading.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: Text(
-                        l.opsNoDownloadingTasks,
-                        style: TextStyle(fontSize: 13, color: t.text2),
-                      ),
-                    ),
+                  DesktopEmptyState(
+                    icon: Icons.download_done_rounded,
+                    message: l.opsNoDownloadingTasks,
+                    compact: true,
+                    embedded: true,
                   )
                 else
                   for (final task in downloading.take(6))
@@ -592,14 +601,11 @@ class _BottomTwoCol extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 if (ptRows.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: Text(
-                        l.opsNoPtSites,
-                        style: TextStyle(fontSize: 13, color: t.text2),
-                      ),
-                    ),
+                  DesktopEmptyState(
+                    icon: Icons.flag_circle_outlined,
+                    message: l.opsNoPtSites,
+                    compact: true,
+                    embedded: true,
                   )
                 else
                   for (final row in ptRows.take(6)) _PtRow(row: row),
@@ -667,7 +673,10 @@ class _PtRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(l.opsRatioLabel, style: TextStyle(fontSize: 10.5, color: t.text2)),
+              Text(
+                l.opsRatioLabel,
+                style: TextStyle(fontSize: 10.5, color: t.text2),
+              ),
             ],
           ),
         ],

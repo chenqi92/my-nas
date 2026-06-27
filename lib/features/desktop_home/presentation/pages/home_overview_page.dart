@@ -19,6 +19,7 @@ import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
+import 'package:my_nas/shared/widgets/desktop_shell/desktop_empty_state.dart';
 
 /// 桌面端「概览 / 此刻」首屏。
 ///
@@ -68,7 +69,7 @@ class _HomeOverviewPageState extends ConsumerState<HomeOverviewPage> {
       padding: const EdgeInsets.fromLTRB(30, 26, 30, 120),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1340),
+          constraints: const BoxConstraints(maxWidth: 1280),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -89,7 +90,10 @@ class _HomeOverviewPageState extends ConsumerState<HomeOverviewPage> {
               const SizedBox(height: 14),
               _QuickGrid(),
               const SizedBox(height: 30),
-              _SectionHead(title: l.homeSectionRecentlyAdded, sub: l.homeSectionRecentlyAddedSub),
+              _SectionHead(
+                title: l.homeSectionRecentlyAdded,
+                sub: l.homeSectionRecentlyAddedSub,
+              ),
               const SizedBox(height: 14),
               const _RecentlyAdded(),
             ],
@@ -121,15 +125,11 @@ class _SectionHead extends StatelessWidget {
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
                 color: t.text0,
-                letterSpacing: -0.2,
               ),
             ),
             if (sub != null) ...[
               const SizedBox(height: 3),
-              Text(
-                sub!,
-                style: TextStyle(fontSize: 12.5, color: t.text2),
-              ),
+              Text(sub!, style: TextStyle(fontSize: 12.5, color: t.text2)),
             ],
           ],
         ),
@@ -159,10 +159,7 @@ class _NowHero extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            flex: 31,
-            child: _SpotlightCard(),
-          ),
+          Expanded(flex: 31, child: _SpotlightCard()),
           const SizedBox(width: 18),
           Expanded(
             flex: 20,
@@ -191,10 +188,7 @@ class _NowHero extends StatelessWidget {
                             fontSize: 40,
                             fontWeight: FontWeight.w900,
                             color: t.text0,
-                            letterSpacing: -1.2,
-                            fontFeatures: const [
-                              FontFeature.tabularFigures(),
-                            ],
+                            fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -222,14 +216,14 @@ class _NowHero extends StatelessWidget {
   }
 
   String _zhWeek(AppLocalizations l, int w) => [
-        l.homeWeekdayMon,
-        l.homeWeekdayTue,
-        l.homeWeekdayWed,
-        l.homeWeekdayThu,
-        l.homeWeekdayFri,
-        l.homeWeekdaySat,
-        l.homeWeekdaySun,
-      ][w - 1];
+    l.homeWeekdayMon,
+    l.homeWeekdayTue,
+    l.homeWeekdayWed,
+    l.homeWeekdayThu,
+    l.homeWeekdayFri,
+    l.homeWeekdaySat,
+    l.homeWeekdaySun,
+  ][w - 1];
 }
 
 class _SpotlightCard extends ConsumerWidget {
@@ -288,8 +282,10 @@ class _SpotlightCard extends ConsumerWidget {
                   Wrap(
                     spacing: 8,
                     children: [
-                      AppTag(l.homeTagContinueWatching,
-                          variant: TagVariant.accent),
+                      AppTag(
+                        l.homeTagContinueWatching,
+                        variant: TagVariant.accent,
+                      ),
                       AppTag(l.homeTagLocalFirst),
                       AppTag(l.homeTagTraktSync, variant: TagVariant.accent),
                     ],
@@ -303,7 +299,6 @@ class _SpotlightCard extends ConsumerWidget {
                       fontSize: 34,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      letterSpacing: -0.6,
                       shadows: [
                         const Shadow(color: Colors.black54, blurRadius: 12),
                       ],
@@ -395,8 +390,8 @@ class _SystemPulse extends ConsumerWidget {
     final downloadSub = tp.activeCount > 0
         ? l.homePulseDownloadActive(_fmtSpeed(tp.downloadSpeed), tp.activeCount)
         : tp.connectedClients > 0
-            ? l.homePulseDownloadIdle(tp.connectedClients)
-            : l.homePulseDownloadDisconnected;
+        ? l.homePulseDownloadIdle(tp.connectedClients)
+        : l.homePulseDownloadDisconnected;
     return GlassPanel(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       child: SizedBox(
@@ -519,10 +514,7 @@ class _PulseRow extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 10),
-            trailing!,
-          ],
+          if (trailing != null) ...[const SizedBox(width: 10), trailing!],
         ],
       ),
     );
@@ -536,10 +528,10 @@ class _Sparkline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: 64,
-        height: 24,
-        child: CustomPaint(painter: _SparkPainter(color)),
-      );
+    width: 64,
+    height: 24,
+    child: CustomPaint(painter: _SparkPainter(color)),
+  );
 }
 
 class _SparkPainter extends CustomPainter {
@@ -572,7 +564,10 @@ class _SparkPainter extends CustomPainter {
           ..shader = LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [color.withValues(alpha: 0.28), color.withValues(alpha: 0.0)],
+            colors: [
+              color.withValues(alpha: 0.28),
+              color.withValues(alpha: 0.0),
+            ],
           ).createShader(Offset.zero & size),
       )
       ..drawPath(path, line);
@@ -624,8 +619,7 @@ class _ContinueStrip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items =
-        ref.watch(continueWatchingProvider).valueOrNull ?? const [];
+    final items = ref.watch(continueWatchingProvider).valueOrNull ?? const [];
     if (items.isEmpty) return const _EmptyContinue();
     final list = items.take(8).toList();
     return SizedBox(
@@ -708,22 +702,11 @@ class _EmptyContinue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = DesignTokens.of(context);
     final l = AppLocalizations.of(context);
-    return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
-      child: Row(
-        children: [
-          Icon(Icons.history_rounded, size: 22, color: t.text3),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              l.homeEmptyContinueHint,
-              style: TextStyle(fontSize: 13, color: t.text2),
-            ),
-          ),
-        ],
-      ),
+    return DesktopEmptyState(
+      icon: Icons.history_rounded,
+      message: l.homeEmptyContinueHint,
+      compact: true,
     );
   }
 }
@@ -814,10 +797,7 @@ class _QuickItem extends StatelessWidget {
                     color: t.text0,
                   ),
                 ),
-                Text(
-                  desc,
-                  style: TextStyle(fontSize: 11, color: t.text2),
-                ),
+                Text(desc, style: TextStyle(fontSize: 11, color: t.text2)),
               ],
             ),
           ),
@@ -837,27 +817,18 @@ class _RecentlyAdded extends ConsumerWidget {
     final t = DesignTokens.of(context);
     final l = AppLocalizations.of(context);
     final state = ref.watch(videoListProvider);
-    final recents = (state is VideoListLoaded
-            ? state.recentVideos
-            : const <VideoMetadata>[])
-        .take(7)
-        .toList();
+    final recents =
+        (state is VideoListLoaded
+                ? state.recentVideos
+                : const <VideoMetadata>[])
+            .take(7)
+            .toList();
 
     if (recents.isEmpty) {
-      return AppCard(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
-        child: Row(
-          children: [
-            Icon(Icons.movie_outlined, size: 22, color: t.text3),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                l.homeEmptyRecentlyAddedHint,
-                style: TextStyle(fontSize: 13, color: t.text2),
-              ),
-            ),
-          ],
-        ),
+      return DesktopEmptyState(
+        icon: Icons.movie_outlined,
+        message: l.homeEmptyRecentlyAddedHint,
+        compact: true,
       );
     }
 
@@ -931,6 +902,10 @@ class _Poster extends StatelessWidget {
         errorBuilder: (_, _, _) => fb,
       );
     }
-    return Image.network(url!, fit: BoxFit.cover, errorBuilder: (_, _, _) => fb);
+    return Image.network(
+      url!,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => fb,
+    );
   }
 }
