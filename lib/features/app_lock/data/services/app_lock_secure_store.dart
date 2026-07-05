@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -12,6 +13,30 @@ import 'package:pointycastle/digests/sha256.dart';
 import 'package:pointycastle/key_derivators/api.dart';
 import 'package:pointycastle/key_derivators/pbkdf2.dart';
 import 'package:pointycastle/macs/hmac.dart';
+
+class _Pbkdf2Request {
+  const _Pbkdf2Request({
+    required this.pin,
+    required this.salt,
+    required this.iterations,
+    required this.hashLengthBytes,
+  });
+
+  final String pin;
+  final Uint8List salt;
+  final int iterations;
+  final int hashLengthBytes;
+}
+
+Uint8List _derivePbkdf2InIsolate(_Pbkdf2Request request) {
+  final params = Pbkdf2Parameters(
+    request.salt,
+    request.iterations,
+    request.hashLengthBytes,
+  );
+  final kdf = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))..init(params);
+  return kdf.process(Uint8List.fromList(utf8.encode(request.pin)));
+}
 
 /// 应用锁安全存储
 ///
@@ -167,16 +192,21 @@ class AppLockSecureStore {
     return bytes;
   }
 
-  Uint8List _pbkdf2(String pin, Uint8List salt) {
-    final params = Pbkdf2Parameters(salt, _pbkdf2Iterations, _hashLengthBytes);
-    final kdf = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))..init(params);
-    return kdf.process(Uint8List.fromList(utf8.encode(pin)));
-  }
+  Future<Uint8List> _pbkdf2(String pin, Uint8List salt) =>
+      compute<_Pbkdf2Request, Uint8List>(
+        _derivePbkdf2InIsolate,
+        _Pbkdf2Request(
+          pin: pin,
+          salt: salt,
+          iterations: _pbkdf2Iterations,
+          hashLengthBytes: _hashLengthBytes,
+        ),
+      );
 
   /// 保存新 PIN。同时生成新 salt + 计算并存储哈希
   Future<bool> savePin(String pin) async {
     final salt = _generateSalt();
-    final hash = _pbkdf2(pin, salt);
+    final hash = await _pbkdf2(pin, salt);
     final okSalt = await _safeWrite(_keySalt, base64Encode(salt));
     if (!okSalt) return false;
     final okHash = await _safeWrite(_keyHash, base64Encode(hash));
@@ -195,7 +225,7 @@ class AppLockSecureStore {
     try {
       final salt = base64Decode(saltStr);
       final expected = base64Decode(hashStr);
-      final actual = _pbkdf2(pin, salt);
+      final actual = await _pbkdf2(pin, salt);
       return _constantTimeEquals(actual, expected);
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'appLock.verifyPin');

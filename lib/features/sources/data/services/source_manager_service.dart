@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -46,21 +47,17 @@ class SourceConnection {
     NasAdapter? adapter,
     SourceStatus? status,
     String? errorMessage,
-  }) =>
-      SourceConnection(
-        source: source ?? this.source,
-        adapter: adapter ?? this.adapter,
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
+  }) => SourceConnection(
+    source: source ?? this.source,
+    adapter: adapter ?? this.adapter,
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+  );
 }
 
 /// 凭证信息
 class SourceCredential {
-  const SourceCredential({
-    required this.password,
-    this.deviceId,
-  });
+  const SourceCredential({required this.password, this.deviceId});
 
   factory SourceCredential.fromJson(Map<String, dynamic> json) =>
       SourceCredential(
@@ -71,10 +68,7 @@ class SourceCredential {
   final String password;
   final String? deviceId;
 
-  Map<String, dynamic> toJson() => {
-        'password': password,
-        'deviceId': deviceId,
-      };
+  Map<String, dynamic> toJson() => {'password': password, 'deviceId': deviceId};
 }
 
 /// 媒体服务器连接信息
@@ -96,13 +90,12 @@ class MediaServerConnection {
     MediaServerAdapter? adapter,
     SourceStatus? status,
     String? errorMessage,
-  }) =>
-      MediaServerConnection(
-        source: source ?? this.source,
-        adapter: adapter ?? this.adapter,
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
+  }) => MediaServerConnection(
+    source: source ?? this.source,
+    adapter: adapter ?? this.adapter,
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+  );
 }
 
 /// 源管理服务
@@ -122,8 +115,12 @@ class SourceManagerService {
   /// 安全存储（用于凭证和设备ID，不受应用沙箱影响）
   static const _secureStorage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
-    mOptions: MacOsOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
+    mOptions: MacOsOptions(
+      accessibility: KeychainAccessibility.first_unlock_this_device,
+    ),
   );
 
   /// 凭证存储键前缀
@@ -202,7 +199,9 @@ class SourceManagerService {
 
     try {
       return data
-          .map((e) => SourceEntity.fromJson(Map<String, dynamic>.from(e as Map)))
+          .map(
+            (e) => SourceEntity.fromJson(Map<String, dynamic>.from(e as Map)),
+          )
           .toList();
     } on Exception catch (e, st) {
       // 捕获所有错误，包括 TypeError（类型转换失败）
@@ -290,7 +289,10 @@ class SourceManagerService {
   /// 保存凭证到安全存储
   ///
   /// 返回 true 表示保存成功，false 表示存储不可用
-  Future<bool> saveCredential(String sourceId, SourceCredential credential) async {
+  Future<bool> saveCredential(
+    String sourceId,
+    SourceCredential credential,
+  ) async {
     if (!_secureStorageAvailable) {
       logger.d('SourceManagerService: 安全存储不可用，跳过保存凭证 $sourceId');
       return false;
@@ -300,7 +302,9 @@ class SourceManagerService {
       final key = '$_credentialPrefix$sourceId';
       final value = jsonEncode(credential.toJson());
       await _secureStorage.write(key: key, value: value);
-      logger.i('SourceManagerService: 保存凭证到安全存储 $sourceId (deviceId: ${credential.deviceId != null ? "有" : "无"})');
+      logger.i(
+        'SourceManagerService: 保存凭证到安全存储 $sourceId (deviceId: ${credential.deviceId != null ? "有" : "无"})',
+      );
       return true;
     } on Exception catch (e) {
       if (_handleSecureStorageError(e, 'saveCredential')) {
@@ -326,7 +330,9 @@ class SourceManagerService {
 
       final json = jsonDecode(value) as Map<String, dynamic>;
       final credential = SourceCredential.fromJson(json);
-      logger.d('SourceManagerService: 读取凭证成功 $sourceId (deviceId: ${credential.deviceId != null ? "有" : "无"})');
+      logger.d(
+        'SourceManagerService: 读取凭证成功 $sourceId (deviceId: ${credential.deviceId != null ? "有" : "无"})',
+      );
       return credential;
     } on Exception catch (e) {
       if (_handleSecureStorageError(e, 'getCredential')) {
@@ -360,10 +366,7 @@ class SourceManagerService {
     if (credential != null) {
       await saveCredential(
         sourceId,
-        SourceCredential(
-          password: credential.password,
-          deviceId: deviceId,
-        ),
+        SourceCredential(password: credential.password, deviceId: deviceId),
       );
       logger.i('SourceManagerService: 更新设备ID $sourceId');
     } else {
@@ -380,8 +383,9 @@ class SourceManagerService {
   SourceConnection? getConnection(String sourceId) => _connections[sourceId];
 
   /// 获取所有活跃连接
-  List<SourceConnection> getActiveConnections() =>
-      _connections.values.where((c) => c.status == SourceStatus.connected).toList();
+  List<SourceConnection> getActiveConnections() => _connections.values
+      .where((c) => c.status == SourceStatus.connected)
+      .toList();
 
   /// 连接到源
   Future<SourceConnection> connect(
@@ -405,7 +409,9 @@ class SourceManagerService {
     final savedCredential = await getCredential(source.id);
     final deviceId = savedCredential?.deviceId;
 
-    logger.d('SourceManagerService: 连接配置 - rememberDevice: ${source.rememberDevice}, deviceId: ${deviceId != null ? "有" : "无"}');
+    logger.d(
+      'SourceManagerService: 连接配置 - rememberDevice: ${source.rememberDevice}, deviceId: ${deviceId != null ? "有" : "无"}',
+    );
 
     final config = ConnectionConfig(
       type: _getAdapterType(source.type),
@@ -414,7 +420,7 @@ class SourceManagerService {
       username: source.username,
       password: password,
       useSsl: source.useSsl,
-      verifySSL: false,
+      verifySSL: !InsecureHttpClient.trustSelfSigned,
       deviceId: deviceId,
       enableDeviceToken: source.rememberDevice,
       basePath: source.extraConfig?['basePath'] as String?,
@@ -491,20 +497,11 @@ class SourceManagerService {
     ConnectionResult? result;
 
     if (adapter is SynologyAdapter) {
-      result = await adapter.verify2FA(
-        otpCode,
-        rememberDevice: rememberDevice,
-      );
+      result = await adapter.verify2FA(otpCode, rememberDevice: rememberDevice);
     } else if (adapter is UGreenAdapter) {
-      result = await adapter.verify2FA(
-        otpCode,
-        rememberDevice: rememberDevice,
-      );
+      result = await adapter.verify2FA(otpCode, rememberDevice: rememberDevice);
     } else if (adapter is QnapAdapter) {
-      result = await adapter.verify2FA(
-        otpCode,
-        rememberDevice: rememberDevice,
-      );
+      result = await adapter.verify2FA(otpCode, rememberDevice: rememberDevice);
     }
 
     if (result != null) {
@@ -535,11 +532,10 @@ class SourceManagerService {
 
           // 更新最后连接时间
           await updateSource(
-              connection.source.copyWith(lastConnected: DateTime.now()));
-
-          newConnection = connection.copyWith(
-            status: SourceStatus.connected,
+            connection.source.copyWith(lastConnected: DateTime.now()),
           );
+
+          newConnection = connection.copyWith(status: SourceStatus.connected);
 
         case ConnectionFailure(:final error):
           newConnection = connection.copyWith(
@@ -587,12 +583,9 @@ class SourceManagerService {
 
   /// 检查源类型是否为媒体服务器
   bool isMediaServerType(SourceType type) => switch (type) {
-        SourceType.jellyfin ||
-        SourceType.emby ||
-        SourceType.plex =>
-          true,
-        _ => false,
-      };
+    SourceType.jellyfin || SourceType.emby || SourceType.plex => true,
+    _ => false,
+  };
 
   /// 获取媒体服务器连接
   MediaServerConnection? getMediaServerConnection(String sourceId) =>
@@ -616,7 +609,9 @@ class SourceManagerService {
     logger.i('SourceManagerService: 连接到媒体服务器 ${source.name}');
 
     if (!isMediaServerType(source.type)) {
-      throw UnsupportedError(appL10n.sourceManagerErrorNotMediaServerType(source.type.displayName));
+      throw UnsupportedError(
+        appL10n.sourceManagerErrorNotMediaServerType(source.type.displayName),
+      );
     }
 
     // 创建适配器
@@ -636,6 +631,7 @@ class SourceManagerService {
       password: password,
       apiKey: apiKey ?? source.apiKey,
       extraConfig: source.extraConfig,
+      verifySSL: !InsecureHttpClient.trustSelfSigned,
     );
 
     try {
@@ -682,11 +678,14 @@ class SourceManagerService {
   }
 
   /// 创建媒体服务器适配器
-  MediaServerAdapter _createMediaServerAdapter(SourceType type) => switch (type) {
+  MediaServerAdapter _createMediaServerAdapter(SourceType type) =>
+      switch (type) {
         SourceType.jellyfin => JellyfinAdapter(),
         SourceType.emby => EmbyAdapter(),
         SourceType.plex => PlexAdapter(),
-        _ => throw UnsupportedError(appL10n.sourceManagerErrorNotMediaServerType(type.displayName)),
+        _ => throw UnsupportedError(
+          appL10n.sourceManagerErrorNotMediaServerType(type.displayName),
+        ),
       };
 
   /// 检查连接健康状态
@@ -712,7 +711,10 @@ class SourceManagerService {
   /// 否则尝试从安全存储中获取保存的凭证。
   ///
   /// 返回新的连接对象
-  Future<SourceConnection?> reconnect(String sourceId, {String? password}) async {
+  Future<SourceConnection?> reconnect(
+    String sourceId, {
+    String? password,
+  }) async {
     logger.i('SourceManagerService: 开始重连 $sourceId');
 
     // 获取源信息
@@ -749,24 +751,29 @@ class SourceManagerService {
 
     // 重新连接
     try {
-      final connection = await connect(
-        source,
-        password: pwd,
-        saveCredential: false, // 凭证已保存，不需要再次保存
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          logger.w('SourceManagerService: 重连超时 $sourceId');
-          // 注意：这里不创建新适配器，返回 null 表示超时
-          // 由调用方处理超时情况
-          throw TimeoutException(appL10n.sourceManagerErrorReconnectTimeout);
-        },
-      );
+      final connection =
+          await connect(
+            source,
+            password: pwd,
+            saveCredential: false, // 凭证已保存，不需要再次保存
+          ).timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              logger.w('SourceManagerService: 重连超时 $sourceId');
+              // 注意：这里不创建新适配器，返回 null 表示超时
+              // 由调用方处理超时情况
+              throw TimeoutException(
+                appL10n.sourceManagerErrorReconnectTimeout,
+              );
+            },
+          );
 
       if (connection.status == SourceStatus.connected) {
         logger.i('SourceManagerService: 重连成功 $sourceId');
       } else {
-        logger.e('SourceManagerService: 重连失败 $sourceId: ${connection.errorMessage}');
+        logger.e(
+          'SourceManagerService: 重连失败 $sourceId: ${connection.errorMessage}',
+        );
       }
 
       return connection;
@@ -862,7 +869,9 @@ class SourceManagerService {
     try {
       // 本地存储不需要凭证，直接连接
       if (source.type == SourceType.local) {
-        logger.i('SourceManagerService: 自动连接 ${source.type.displayName} ${source.name}');
+        logger.i(
+          'SourceManagerService: 自动连接 ${source.type.displayName} ${source.name}',
+        );
         try {
           final connection = await connect(
             source,
@@ -873,7 +882,9 @@ class SourceManagerService {
           if (connection.status == SourceStatus.connected) {
             logger.i('SourceManagerService: ${source.name} 自动连接成功');
           } else {
-            logger.e('SourceManagerService: ${source.name} 连接失败: ${connection.errorMessage}');
+            logger.e(
+              'SourceManagerService: ${source.name} 连接失败: ${connection.errorMessage}',
+            );
           }
         } on TimeoutException {
           logger.w('SourceManagerService: ${source.name} 连接超时');
@@ -883,13 +894,17 @@ class SourceManagerService {
 
       final credential = await getCredential(source.id);
       if (credential != null) {
-        logger.i('SourceManagerService: 自动连接 ${source.name} (deviceId: ${credential.deviceId != null ? "有" : "无"})');
+        logger.i(
+          'SourceManagerService: 自动连接 ${source.name} (deviceId: ${credential.deviceId != null ? "有" : "无"})',
+        );
 
         // 带重试的连接逻辑
         SourceConnection? connection;
         for (var attempt = 1; attempt <= maxRetries; attempt++) {
           if (attempt > 1) {
-            logger.i('SourceManagerService: ${source.name} 重试连接 (第 $attempt 次)');
+            logger.i(
+              'SourceManagerService: ${source.name} 重试连接 (第 $attempt 次)',
+            );
             // 重试前等待一小段时间
             await Future<void>.delayed(const Duration(seconds: 2));
           }
@@ -907,7 +922,9 @@ class SourceManagerService {
               break;
             }
           } on TimeoutException {
-            logger.w('SourceManagerService: ${source.name} 连接超时 (第 $attempt 次)');
+            logger.w(
+              'SourceManagerService: ${source.name} 连接超时 (第 $attempt 次)',
+            );
             // 超时时不创建无效的 SourceConnection，继续重试或退出
             if (attempt == maxRetries) {
               logger.e('SourceManagerService: ${source.name} 连接超时，已达最大重试次数');
@@ -921,9 +938,13 @@ class SourceManagerService {
             case SourceStatus.connected:
               logger.i('SourceManagerService: ${source.name} 自动连接成功');
             case SourceStatus.requires2FA:
-              logger.w('SourceManagerService: ${source.name} 需要2FA (deviceId 可能已失效)');
+              logger.w(
+                'SourceManagerService: ${source.name} 需要2FA (deviceId 可能已失效)',
+              );
             case SourceStatus.error:
-              logger.e('SourceManagerService: ${source.name} 连接失败: ${connection.errorMessage}');
+              logger.e(
+                'SourceManagerService: ${source.name} 连接失败: ${connection.errorMessage}',
+              );
             default:
               break;
           }
@@ -938,62 +959,68 @@ class SourceManagerService {
   }
 
   NasAdapter _createAdapter(SourceType type) => switch (type) {
-      SourceType.synology => SynologyAdapter(),
-      SourceType.ugreen => UGreenAdapter(),
-      SourceType.fnos => FnOSAdapter(),
-      SourceType.qnap => QnapAdapter(),
-      SourceType.webdav => WebDavAdapter(),
-      SourceType.smb => SmbAdapter(),
-      SourceType.ftp => FtpAdapter(),
-      SourceType.sftp => SftpAdapter(),
-      SourceType.upnp => UpnpAdapter(),
-      SourceType.local => LocalAdapter(),
-      // 尚未接入的通用协议
-      SourceType.nfs =>
-        throw UnsupportedError(appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName)),
-      // 服务类源不使用 NasAdapter，需要使用各自的 ServiceAdapter
-      SourceType.qbittorrent ||
-      SourceType.transmission ||
-      SourceType.aria2 ||
-      SourceType.trakt ||
-      SourceType.nastool ||
-      SourceType.moviepilot ||
-      SourceType.jellyfin ||
-      SourceType.emby ||
-      SourceType.plex ||
-      SourceType.ptSite ||
-      SourceType.opensubtitles =>
-        throw UnsupportedError(appL10n.sourceManagerErrorServiceTypeNotSupportedNas(type.displayName)),
-    };
+    SourceType.synology => SynologyAdapter(),
+    SourceType.ugreen => UGreenAdapter(),
+    SourceType.fnos => FnOSAdapter(),
+    SourceType.qnap => QnapAdapter(),
+    SourceType.webdav => WebDavAdapter(),
+    SourceType.smb => SmbAdapter(),
+    SourceType.ftp => FtpAdapter(),
+    SourceType.sftp => SftpAdapter(),
+    SourceType.upnp => UpnpAdapter(),
+    SourceType.local => LocalAdapter(),
+    // 尚未接入的通用协议
+    SourceType.nfs => throw UnsupportedError(
+      appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName),
+    ),
+    // 服务类源不使用 NasAdapter，需要使用各自的 ServiceAdapter
+    SourceType.qbittorrent ||
+    SourceType.transmission ||
+    SourceType.aria2 ||
+    SourceType.trakt ||
+    SourceType.nastool ||
+    SourceType.moviepilot ||
+    SourceType.jellyfin ||
+    SourceType.emby ||
+    SourceType.plex ||
+    SourceType.ptSite ||
+    SourceType.opensubtitles => throw UnsupportedError(
+      appL10n.sourceManagerErrorServiceTypeNotSupportedNas(type.displayName),
+    ),
+  };
 
   NasAdapterType _getAdapterType(SourceType type) => switch (type) {
-      SourceType.synology => NasAdapterType.synology,
-      SourceType.ugreen => NasAdapterType.ugreen,
-      SourceType.fnos => NasAdapterType.fnos,
-      SourceType.qnap => NasAdapterType.qnap,
-      SourceType.webdav => NasAdapterType.webdav,
-      SourceType.smb => NasAdapterType.smb,
-      SourceType.ftp => NasAdapterType.ftp,
-      SourceType.sftp => NasAdapterType.sftp,
-      SourceType.upnp => NasAdapterType.upnp,
-      SourceType.local => NasAdapterType.local,
-      // 尚未接入的通用协议
-      SourceType.nfs =>
-        throw UnsupportedError(appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName)),
-      // 服务类源不使用 NasAdapterType
-      SourceType.qbittorrent ||
-      SourceType.transmission ||
-      SourceType.aria2 ||
-      SourceType.trakt ||
-      SourceType.nastool ||
-      SourceType.moviepilot ||
-      SourceType.jellyfin ||
-      SourceType.emby ||
-      SourceType.plex ||
-      SourceType.ptSite ||
-      SourceType.opensubtitles =>
-        throw UnsupportedError(appL10n.sourceManagerErrorServiceTypeNotSupportedNasType(type.displayName)),
-    };
+    SourceType.synology => NasAdapterType.synology,
+    SourceType.ugreen => NasAdapterType.ugreen,
+    SourceType.fnos => NasAdapterType.fnos,
+    SourceType.qnap => NasAdapterType.qnap,
+    SourceType.webdav => NasAdapterType.webdav,
+    SourceType.smb => NasAdapterType.smb,
+    SourceType.ftp => NasAdapterType.ftp,
+    SourceType.sftp => NasAdapterType.sftp,
+    SourceType.upnp => NasAdapterType.upnp,
+    SourceType.local => NasAdapterType.local,
+    // 尚未接入的通用协议
+    SourceType.nfs => throw UnsupportedError(
+      appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName),
+    ),
+    // 服务类源不使用 NasAdapterType
+    SourceType.qbittorrent ||
+    SourceType.transmission ||
+    SourceType.aria2 ||
+    SourceType.trakt ||
+    SourceType.nastool ||
+    SourceType.moviepilot ||
+    SourceType.jellyfin ||
+    SourceType.emby ||
+    SourceType.plex ||
+    SourceType.ptSite ||
+    SourceType.opensubtitles => throw UnsupportedError(
+      appL10n.sourceManagerErrorServiceTypeNotSupportedNasType(
+        type.displayName,
+      ),
+    ),
+  };
 
   // ============ 媒体库配置 ============
 
@@ -1009,8 +1036,12 @@ class SourceManagerService {
     }
 
     try {
-      final config = MediaLibraryConfig.fromJson(Map<String, dynamic>.from(data as Map));
-      logger.i('SourceManagerService: 解析媒体库配置成功 - 视频路径: ${config.videoPaths.length}, 音乐路径: ${config.musicPaths.length}');
+      final config = MediaLibraryConfig.fromJson(
+        Map<String, dynamic>.from(data as Map),
+      );
+      logger.i(
+        'SourceManagerService: 解析媒体库配置成功 - 视频路径: ${config.videoPaths.length}, 音乐路径: ${config.musicPaths.length}',
+      );
       return config;
     } on Exception catch (e, st) {
       // 捕获所有错误，包括 TypeError（类型转换失败）

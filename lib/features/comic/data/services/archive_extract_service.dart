@@ -108,7 +108,9 @@ class ArchiveExtractService {
             files.add(
               ExtractedFile(
                 name: file.name,
-                bytes: Uint8List.fromList(content),
+                bytes: content is Uint8List
+                    ? content
+                    : Uint8List.fromList(content),
               ),
             );
           }
@@ -212,7 +214,9 @@ class ArchiveExtractService {
       );
 
       if (!result) {
-        return ExtractResult.failure(appL10n.archiveExtractFormatFailed(formatName));
+        return ExtractResult.failure(
+          appL10n.archiveExtractFormatFailed(formatName),
+        );
       }
 
       // 读取解压出的图片文件

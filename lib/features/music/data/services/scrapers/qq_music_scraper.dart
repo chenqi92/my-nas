@@ -1,10 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
@@ -16,41 +13,28 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 ///
 /// 使用 QQ音乐 API 获取元数据、封面和歌词
 class QQMusicScraper implements MusicScraper {
-  QQMusicScraper({
-    this.cookie,
-  }) {
-    _dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://y.qq.com/',
-        'Origin': 'https://y.qq.com',
-        if (cookie != null && cookie!.isNotEmpty) 'Cookie': cookie,
-      },
-    ));
-
-    // QQ音乐可能使用腾讯云 CDN，可能存在证书域名不匹配问题
-    // 仅针对 QQ 音乐的请求跳过 SSL 验证
-    // Web 平台使用浏览器的 HTTP 实现，不需要此配置
-    if (!kIsWeb) {
-      _dio.httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: () {
-          final client = HttpClient()
-          ..badCertificateCallback = (cert, host, port) => host.endsWith('.qq.com') ||
-                   host.endsWith('.myqcloud.com') ||
-                   host == 'y.qq.com' ||
-                   host == 'c.y.qq.com';
-          return client;
+  QQMusicScraper({this.cookie}) {
+    _dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://y.qq.com/',
+          'Origin': 'https://y.qq.com',
+          if (cookie != null && cookie!.isNotEmpty) 'Cookie': cookie,
         },
-      );
-    }
+      ),
+    );
   }
 
-  static const String _searchUrl = 'https://c.y.qq.com/soso/fcgi-bin/client_search_cp';
-  static const String _songDetailUrl = 'https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg';
-  static const String _lyricUrl = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg';
+  static const String _searchUrl =
+      'https://c.y.qq.com/soso/fcgi-bin/client_search_cp';
+  static const String _songDetailUrl =
+      'https://c.y.qq.com/v8/fcg-bin/fcg_play_single_song.fcg';
+  static const String _lyricUrl =
+      'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg';
 
   final String? cookie;
   late final Dio _dio;
@@ -95,19 +79,21 @@ class QQMusicScraper implements MusicScraper {
         searchQuery += ' $album';
       }
 
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            _searchUrl,
-            queryParameters: {
-              'w': searchQuery,
-              'p': page,
-              'n': limit,
-              'format': 'json',
-              'inCharset': 'utf8',
-              'outCharset': 'utf-8',
-              'platform': 'yqq.json',
-              'needNewCode': 0,
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          _searchUrl,
+          queryParameters: {
+            'w': searchQuery,
+            'p': page,
+            'n': limit,
+            'format': 'json',
+            'inCharset': 'utf8',
+            'outCharset': 'utf-8',
+            'platform': 'yqq.json',
+            'needNewCode': 0,
+          },
+        ),
+      );
 
       // QQ音乐返回的是 JSONP，需要处理
       var dataStr = response.data.toString();
@@ -123,7 +109,8 @@ class QQMusicScraper implements MusicScraper {
         return MusicScraperSearchResult.empty(type);
       }
 
-      final songs = (songData['list'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final songs =
+          (songData['list'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       final totalNum = songData['totalnum'] as int? ?? 0;
 
       final items = songs.map(_parseSong).toList();
@@ -149,20 +136,24 @@ class QQMusicScraper implements MusicScraper {
   @override
   Future<MusicScraperDetail?> getDetail(String externalId) async {
     try {
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            _songDetailUrl,
-            queryParameters: {
-              'songmid': externalId,
-              'format': 'json',
-              'inCharset': 'utf8',
-              'outCharset': 'utf-8',
-              'platform': 'yqq.json',
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          _songDetailUrl,
+          queryParameters: {
+            'songmid': externalId,
+            'format': 'json',
+            'inCharset': 'utf8',
+            'outCharset': 'utf-8',
+            'platform': 'yqq.json',
+          },
+        ),
+      );
 
       // 检查返回数据类型
       if (response.data is! Map<String, dynamic>) {
-        logger.w('QQMusicScraper: getDetail 返回非 JSON 数据: ${response.data.runtimeType}');
+        logger.w(
+          'QQMusicScraper: getDetail 返回非 JSON 数据: ${response.data.runtimeType}',
+        );
         return null;
       }
 
@@ -206,24 +197,26 @@ class QQMusicScraper implements MusicScraper {
   @override
   Future<LyricScraperResult?> getLyrics(String externalId) async {
     try {
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            _lyricUrl,
-            queryParameters: {
-              'songmid': externalId,
-              'format': 'json',
-              'nobase64': 1,
-              'g_tk': 5381,
-            },
-            options: Options(
-              headers: {
-                'Referer': 'https://y.qq.com/portal/player.html',
-              },
-            ),
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          _lyricUrl,
+          queryParameters: {
+            'songmid': externalId,
+            'format': 'json',
+            'nobase64': 1,
+            'g_tk': 5381,
+          },
+          options: Options(
+            headers: {'Referer': 'https://y.qq.com/portal/player.html'},
+          ),
+        ),
+      );
 
       // 检查返回数据类型，API 可能返回字符串（错误信息或 HTML）
       if (response.data is! Map<String, dynamic>) {
-        logger.w('QQMusicScraper: getLyrics 返回非 JSON 数据: ${response.data.runtimeType}');
+        logger.w(
+          'QQMusicScraper: getLyrics 返回非 JSON 数据: ${response.data.runtimeType}',
+        );
         return null;
       }
 
@@ -295,7 +288,8 @@ class QQMusicScraper implements MusicScraper {
     final name = data['songname'] as String? ?? data['name'] as String? ?? '';
 
     // 艺术家
-    final singers = (data['singer'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final singers =
+        (data['singer'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final artist = singers
         .map((s) => s['name'] as String? ?? '')
         .where((n) => n.isNotEmpty)
@@ -308,7 +302,8 @@ class QQMusicScraper implements MusicScraper {
     // 封面 URL
     String? coverUrl;
     if (albumMid != null && albumMid.isNotEmpty) {
-      coverUrl = 'https://y.qq.com/music/photo_new/T002R300x300M000$albumMid.jpg';
+      coverUrl =
+          'https://y.qq.com/music/photo_new/T002R300x300M000$albumMid.jpg';
     }
 
     // 时长（秒转毫秒）
@@ -332,7 +327,8 @@ class QQMusicScraper implements MusicScraper {
     final name = data['name'] as String? ?? '';
 
     // 艺术家
-    final singers = (data['singer'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final singers =
+        (data['singer'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final artist = singers
         .map((s) => s['name'] as String? ?? '')
         .where((n) => n.isNotEmpty)
@@ -346,7 +342,8 @@ class QQMusicScraper implements MusicScraper {
     // 封面 URL
     String? coverUrl;
     if (albumMid != null && albumMid.isNotEmpty) {
-      coverUrl = 'https://y.qq.com/music/photo_new/T002R300x300M000$albumMid.jpg';
+      coverUrl =
+          'https://y.qq.com/music/photo_new/T002R300x300M000$albumMid.jpg';
     }
 
     // 时长（秒转毫秒）
@@ -429,7 +426,10 @@ class QQMusicScraper implements MusicScraper {
       final errorDetail = e.error?.toString() ?? '';
       return MusicScraperNetworkException(
         errorDetail.isNotEmpty
-            ? appL10n.qqMusicScraperNetworkErrorWithDetails(e.type.name, errorDetail)
+            ? appL10n.qqMusicScraperNetworkErrorWithDetails(
+                e.type.name,
+                errorDetail,
+              )
             : appL10n.qqMusicScraperNetworkError(e.type.name),
         source: type,
         cause: e,
@@ -445,19 +445,21 @@ class QQMusicScraper implements MusicScraper {
       }
       // 尝试从响应中提取错误信息
       if (responseData is Map<String, dynamic>) {
-        final errMsg = responseData['errcode'] ?? responseData['error'] ?? responseData['message'];
+        final errMsg =
+            responseData['errcode'] ??
+            responseData['error'] ??
+            responseData['message'];
         if (errMsg != null) {
           errorMessage += ': $errMsg';
         }
       }
     } else {
-      errorMessage = e.message ?? e.error?.toString() ?? appL10n.qqMusicScraperUnknownError(e.type.name);
+      errorMessage =
+          e.message ??
+          e.error?.toString() ??
+          appL10n.qqMusicScraperUnknownError(e.type.name);
     }
 
-    return MusicScraperException(
-      errorMessage,
-      source: type,
-      cause: e,
-    );
+    return MusicScraperException(errorMessage, source: type, cause: e);
   }
 }

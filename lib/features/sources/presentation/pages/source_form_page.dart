@@ -1257,17 +1257,20 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
                 'accessToken': _quickConnectAccessToken,
                 'userId': _quickConnectUserId,
               },
+              verifySSL: !ref.read(trustSelfSignedCertProvider),
             );
           } else if (jellyfinAuthType == 'API Key') {
             config = ServiceConnectionConfig(
               baseUrl: source.baseUrl,
               apiKey: _formValues['apiKey'] as String? ?? '',
+              verifySSL: !ref.read(trustSelfSignedCertProvider),
             );
           } else {
             config = ServiceConnectionConfig(
               baseUrl: source.baseUrl,
               username: source.username,
               password: _formValues['password'] as String? ?? '',
+              verifySSL: !ref.read(trustSelfSignedCertProvider),
             );
           }
           final result = await jellyfinAdapter.connect(config);
@@ -1297,6 +1300,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           final config = ServiceConnectionConfig(
             baseUrl: source.baseUrl,
             apiKey: plexToken,
+            verifySSL: !ref.read(trustSelfSignedCertProvider),
           );
           final result = await plexAdapter.connect(config);
           return result.when(success: (_) => true, failure: (_) => false);
@@ -1316,12 +1320,14 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             config = ServiceConnectionConfig(
               baseUrl: source.baseUrl,
               apiKey: apiKey,
+              verifySSL: !ref.read(trustSelfSignedCertProvider),
             );
           } else {
             config = ServiceConnectionConfig(
               baseUrl: source.baseUrl,
               username: source.username,
               password: _formValues['password'] as String? ?? '',
+              verifySSL: !ref.read(trustSelfSignedCertProvider),
             );
           }
           final result = await embyAdapter.connect(config);

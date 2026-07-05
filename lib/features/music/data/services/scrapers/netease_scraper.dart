@@ -1,14 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 
 // ignore: unused_import
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
-import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
@@ -19,36 +16,21 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 ///
 /// 使用网易云音乐 API 获取元数据、封面和歌词
 class NeteaseScraper implements MusicScraper {
-  NeteaseScraper({
-    this.cookie,
-  }) {
-    _dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://music.163.com/',
-        'Origin': 'https://music.163.com',
-        if (cookie != null && cookie!.isNotEmpty) 'Cookie': cookie,
-      },
-      contentType: 'application/x-www-form-urlencoded',
-    ));
-
-    // 网易云音乐可能使用 CDN，可能存在证书问题
-    // 仅针对网易云音乐的请求跳过 SSL 验证
-    // Web 平台使用浏览器的 HTTP 实现，不需要此配置
-    if (!kIsWeb) {
-      _dio.httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: () {
-          final client = HttpClient()
-          ..badCertificateCallback = (cert, host, port) => host.endsWith('.163.com') ||
-                host.endsWith('.netease.com') ||
-                host == 'music.163.com';
-          return client;
+  NeteaseScraper({this.cookie}) {
+    _dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://music.163.com/',
+          'Origin': 'https://music.163.com',
+          if (cookie != null && cookie!.isNotEmpty) 'Cookie': cookie,
         },
-      );
-    }
+        contentType: 'application/x-www-form-urlencoded',
+      ),
+    );
   }
 
   static const String _baseUrl = 'https://music.163.com';
@@ -105,23 +87,37 @@ class NeteaseScraper implements MusicScraper {
         'offset': offset,
       };
 
-      scraperDebug('[NeteaseScraper] search: query=$searchQuery, page=$page, limit=$limit');
-      scraperDebug('[NeteaseScraper] request URL: $_baseUrl/weapi/cloudsearch/get/web');
+      scraperDebug(
+        '[NeteaseScraper] search: query=$searchQuery, page=$page, limit=$limit',
+      );
+      scraperDebug(
+        '[NeteaseScraper] request URL: $_baseUrl/weapi/cloudsearch/get/web',
+      );
 
       final encryptedData = _encryptParams(params);
-      scraperDebug('[NeteaseScraper] encrypted params length: ${encryptedData.length}');
-      scraperDebug('[NeteaseScraper] encrypted params (first 200 chars): ${encryptedData.length > 200 ? encryptedData.substring(0, 200) : encryptedData}');
+      scraperDebug(
+        '[NeteaseScraper] encrypted params length: ${encryptedData.length}',
+      );
+      scraperDebug(
+        '[NeteaseScraper] encrypted params (first 200 chars): ${encryptedData.length > 200 ? encryptedData.substring(0, 200) : encryptedData}',
+      );
 
-      final response = await _rateLimitedRequest(() => _dio.post<dynamic>(
-            '$_baseUrl/weapi/cloudsearch/get/web',
-            data: encryptedData,
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.post<dynamic>(
+          '$_baseUrl/weapi/cloudsearch/get/web',
+          data: encryptedData,
+        ),
+      );
 
       scraperDebug('[NeteaseScraper] response status: ${response.statusCode}');
-      scraperDebug('[NeteaseScraper] response data type: ${response.data.runtimeType}');
+      scraperDebug(
+        '[NeteaseScraper] response data type: ${response.data.runtimeType}',
+      );
       // 截断响应数据避免日志过长
       final dataStr = response.data.toString();
-      scraperDebug('[NeteaseScraper] response data (first 500 chars): ${dataStr.length > 500 ? dataStr.substring(0, 500) : dataStr}');
+      scraperDebug(
+        '[NeteaseScraper] response data (first 500 chars): ${dataStr.length > 500 ? dataStr.substring(0, 500) : dataStr}',
+      );
 
       // 处理响应数据 - 可能是 String 或 Map
       Map<String, dynamic> data;
@@ -140,7 +136,9 @@ class NeteaseScraper implements MusicScraper {
       } else if (response.data is Map<String, dynamic>) {
         data = response.data as Map<String, dynamic>;
       } else {
-        scraperDebug('[NeteaseScraper] Invalid response data format: ${response.data.runtimeType}');
+        scraperDebug(
+          '[NeteaseScraper] Invalid response data format: ${response.data.runtimeType}',
+        );
         return MusicScraperSearchResult.empty(type);
       }
 
@@ -148,7 +146,9 @@ class NeteaseScraper implements MusicScraper {
       final code = data['code'] as int?;
       scraperDebug('[NeteaseScraper] response code: $code');
       if (code != null && code != 200) {
-        scraperDebug('[NeteaseScraper] API returned error code: $code, message: ${data['message']}');
+        scraperDebug(
+          '[NeteaseScraper] API returned error code: $code, message: ${data['message']}',
+        );
         // 如果加密 API 失败，尝试使用备用 API
         if (code == 50000005 || code == -460) {
           scraperDebug('[NeteaseScraper] Trying fallback API...');
@@ -163,10 +163,16 @@ class NeteaseScraper implements MusicScraper {
         return MusicScraperSearchResult.empty(type);
       }
 
-      final songs = (result['songs'] as List?)?.whereType<Map<String, dynamic>>().toList() ?? [];
+      final songs =
+          (result['songs'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .toList() ??
+          [];
       final songCount = result['songCount'] as int? ?? 0;
 
-      scraperDebug('[NeteaseScraper] Found ${songs.length} songs, total: $songCount');
+      scraperDebug(
+        '[NeteaseScraper] Found ${songs.length} songs, total: $songCount',
+      );
 
       final items = songs.map(_parseSong).toList();
 
@@ -178,7 +184,9 @@ class NeteaseScraper implements MusicScraper {
         totalResults: songCount,
       );
     } on DioException catch (e) {
-      scraperDebug('[NeteaseScraper] DioException: ${e.type}, message: ${e.message}');
+      scraperDebug(
+        '[NeteaseScraper] DioException: ${e.type}, message: ${e.message}',
+      );
       scraperDebug('[NeteaseScraper] Response: ${e.response?.data}');
       throw _handleDioError(e);
     } on Exception catch (e, st) {
@@ -191,21 +199,25 @@ class NeteaseScraper implements MusicScraper {
   @override
   Future<MusicScraperDetail?> getDetail(String externalId) async {
     try {
-      final params = {
-        'c': '[{"id":$externalId}]',
-      };
+      final params = {'c': '[{"id":$externalId}]'};
 
-      final response = await _rateLimitedRequest(() => _dio.post<dynamic>(
-            '$_baseUrl/weapi/v3/song/detail',
-            data: _encryptParams(params),
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.post<dynamic>(
+          '$_baseUrl/weapi/v3/song/detail',
+          data: _encryptParams(params),
+        ),
+      );
 
       // 检查响应数据是否有效
       if (response.data == null || response.data is! Map<String, dynamic>) {
         return null;
       }
       final data = response.data as Map<String, dynamic>;
-      final songs = (data['songs'] as List?)?.whereType<Map<String, dynamic>>().toList() ?? [];
+      final songs =
+          (data['songs'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .toList() ??
+          [];
 
       if (songs.isEmpty) {
         return null;
@@ -244,17 +256,14 @@ class NeteaseScraper implements MusicScraper {
   @override
   Future<LyricScraperResult?> getLyrics(String externalId) async {
     try {
-      final params = {
-        'id': externalId,
-        'lv': -1,
-        'tv': -1,
-        'kv': -1,
-      };
+      final params = {'id': externalId, 'lv': -1, 'tv': -1, 'kv': -1};
 
-      final response = await _rateLimitedRequest(() => _dio.post<dynamic>(
-            '$_baseUrl/weapi/song/lyric',
-            data: _encryptParams(params),
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.post<dynamic>(
+          '$_baseUrl/weapi/song/lyric',
+          data: _encryptParams(params),
+        ),
+      );
 
       // 检查响应数据是否有效
       if (response.data == null || response.data is! Map<String, dynamic>) {
@@ -313,18 +322,24 @@ class NeteaseScraper implements MusicScraper {
       final offset = (page - 1) * limit;
 
       // 使用公开 API（无需加密）
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            '$_baseUrl/api/search/get',
-            queryParameters: {
-              's': query,
-              'type': 1, // 1: 单曲
-              'limit': limit,
-              'offset': offset,
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          '$_baseUrl/api/search/get',
+          queryParameters: {
+            's': query,
+            'type': 1, // 1: 单曲
+            'limit': limit,
+            'offset': offset,
+          },
+        ),
+      );
 
-      scraperDebug('[NeteaseScraper] Fallback API response status: ${response.statusCode}');
-      scraperDebug('[NeteaseScraper] Fallback API response type: ${response.data.runtimeType}');
+      scraperDebug(
+        '[NeteaseScraper] Fallback API response status: ${response.statusCode}',
+      );
+      scraperDebug(
+        '[NeteaseScraper] Fallback API response type: ${response.data.runtimeType}',
+      );
 
       // 处理响应数据
       Map<String, dynamic> data;
@@ -354,7 +369,11 @@ class NeteaseScraper implements MusicScraper {
         return MusicScraperSearchResult.empty(type);
       }
 
-      final songs = (result['songs'] as List?)?.whereType<Map<String, dynamic>>().toList() ?? [];
+      final songs =
+          (result['songs'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .toList() ??
+          [];
       final songCount = result['songCount'] as int? ?? 0;
 
       scraperDebug('[NeteaseScraper] Fallback API found ${songs.length} songs');
@@ -380,7 +399,8 @@ class NeteaseScraper implements MusicScraper {
     final name = data['name'] as String? ?? '';
 
     // 艺术家
-    final artists = (data['ar'] as List?)?.cast<Map<String, dynamic>>() ??
+    final artists =
+        (data['ar'] as List?)?.cast<Map<String, dynamic>>() ??
         (data['artists'] as List?)?.cast<Map<String, dynamic>>() ??
         [];
     final artist = artists
@@ -389,7 +409,8 @@ class NeteaseScraper implements MusicScraper {
         .join(' / ');
 
     // 专辑
-    final album = data['al'] as Map<String, dynamic>? ??
+    final album =
+        data['al'] as Map<String, dynamic>? ??
         data['album'] as Map<String, dynamic>?;
     final albumName = album?['name'] as String?;
     final coverUrl = album?['picUrl'] as String?;
@@ -414,7 +435,8 @@ class NeteaseScraper implements MusicScraper {
     final name = data['name'] as String? ?? '';
 
     // 艺术家
-    final artists = (data['ar'] as List?)?.cast<Map<String, dynamic>>() ??
+    final artists =
+        (data['ar'] as List?)?.cast<Map<String, dynamic>>() ??
         (data['artists'] as List?)?.cast<Map<String, dynamic>>() ??
         [];
     final artist = artists
@@ -423,7 +445,8 @@ class NeteaseScraper implements MusicScraper {
         .join(' / ');
 
     // 专辑信息
-    final album = data['al'] as Map<String, dynamic>? ??
+    final album =
+        data['al'] as Map<String, dynamic>? ??
         data['album'] as Map<String, dynamic>?;
     final albumName = album?['name'] as String?;
     final coverUrl = album?['picUrl'] as String?;
@@ -435,7 +458,9 @@ class NeteaseScraper implements MusicScraper {
     final trackNumber = data['no'] as int?;
 
     // 碟号
-    final discNumber = data['cd'] != null ? int.tryParse(data['cd'].toString()) : null;
+    final discNumber = data['cd'] != null
+        ? int.tryParse(data['cd'].toString())
+        : null;
 
     return MusicScraperDetail(
       externalId: id,
@@ -476,7 +501,9 @@ class NeteaseScraper implements MusicScraper {
       );
     }
     return MusicScraperException(
-      (e.message?.isNotEmpty ?? false) ? e.message! : appL10n.neteaseScraperUnknownError,
+      (e.message?.isNotEmpty ?? false)
+          ? e.message!
+          : appL10n.neteaseScraperUnknownError,
       source: type,
       cause: e,
     );
@@ -486,8 +513,7 @@ class NeteaseScraper implements MusicScraper {
 
   static const String _secretKey = '0CoJUm6Qyw8W8jud';
   static const String _iv = '0102030405060708';
-  static const String _pubKey =
-      '010001';
+  static const String _pubKey = '010001';
   static const String _modulus =
       '00e0b509f6259df8642dbc35662901477df22677ec152b5ff68ace615bb7b725152b3ab17a876aea8a5aa76d2e417629ec4ee341f56135fccf695280104e0312ecbda92557c93870114af6c9d05c4f7f0c3685b7a46bee255932575cce10b424d813cfe4875d3e82047b97ddef52741d546b8e289dc6935b3ece0462db0a22b8e7';
 
@@ -502,7 +528,11 @@ class NeteaseScraper implements MusicScraper {
     final encText = _aesEncrypt(_aesEncrypt(text, _secretKey), secKey);
 
     // RSA 加密 secKey
-    final encSecKey = _rsaEncrypt(secKey.split('').reversed.join(), _pubKey, _modulus);
+    final encSecKey = _rsaEncrypt(
+      secKey.split('').reversed.join(),
+      _pubKey,
+      _modulus,
+    );
 
     return 'params=${Uri.encodeComponent(encText)}&encSecKey=$encSecKey';
   }
@@ -511,14 +541,18 @@ class NeteaseScraper implements MusicScraper {
   String _aesEncrypt(String text, String secKey) {
     final key = encrypt.Key.fromUtf8(secKey);
     final iv = encrypt.IV.fromUtf8(_iv);
-    final encrypter = encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.cbc));
+    final encrypter = encrypt.Encrypter(
+      encrypt.AES(key, mode: encrypt.AESMode.cbc),
+    );
     return encrypter.encrypt(text, iv: iv).base64;
   }
 
   /// RSA 加密（简化实现）
   String _rsaEncrypt(String text, String pubKey, String modulus) {
     final textBytes = utf8.encode(text);
-    final textHex = textBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    final textHex = textBytes
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
 
     // 使用 BigInt 进行模幂运算
     final base = BigInt.parse(textHex, radix: 16);
@@ -531,8 +565,12 @@ class NeteaseScraper implements MusicScraper {
 
   /// 生成随机字符串
   String _createSecretKey(int length) {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final random = Random();
-    return List.generate(length, (_) => chars[random.nextInt(chars.length)]).join();
+    return List.generate(
+      length,
+      (_) => chars[random.nextInt(chars.length)],
+    ).join();
   }
 }

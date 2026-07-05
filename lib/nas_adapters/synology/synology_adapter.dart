@@ -16,7 +16,7 @@ import 'package:my_nas/nas_adapters/synology/synology_media_service.dart';
 class SynologyAdapter implements NasAdapter {
   SynologyAdapter() {
     logger.i('SynologyAdapter: 初始化适配器');
-    _dioClient = DioClient(allowSelfSigned: true);
+    _dioClient = DioClient();
     _api = SynologyApi(dio: _dioClient.dio);
   }
 
@@ -34,11 +34,11 @@ class SynologyAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-        type: NasAdapterType.synology,
-        name: appL10n.synologyAdapterName,
-        version: AppConstants.appVersion,
-        supportsMediaService: true,
-      );
+    type: NasAdapterType.synology,
+    name: appL10n.synologyAdapterName,
+    version: AppConstants.appVersion,
+    supportsMediaService: true,
+  );
 
   @override
   bool get isConnected => _connected;
@@ -50,19 +50,19 @@ class SynologyAdapter implements NasAdapter {
 
   @override
   Future<ConnectionResult> connect(ConnectionConfig config) async {
-    logger..i('SynologyAdapter: 开始连接')
-    ..i('SynologyAdapter: 目标地址 => ${config.baseUrl}')
-    ..i('SynologyAdapter: 用户名 => ${config.username}')
-    ..i('SynologyAdapter: 使用 SSL => ${config.useSsl}')
-    ..i('SynologyAdapter: 验证 SSL => ${config.verifySSL}');
+    logger
+      ..i('SynologyAdapter: 开始连接')
+      ..i('SynologyAdapter: 目标地址 => ${config.baseUrl}')
+      ..i('SynologyAdapter: 用户名 => ${config.username}')
+      ..i('SynologyAdapter: 使用 SSL => ${config.useSsl}')
+      ..i('SynologyAdapter: 验证 SSL => ${config.verifySSL}');
 
     _config = config;
-    _dioClient.updateBaseUrl(config.baseUrl);
-
-    // 如果不验证 SSL，添加相应配置
+    _dioClient
+      ..updateBaseUrl(config.baseUrl)
+      ..setAllowSelfSignedCert(allow: !config.verifySSL);
     if (!config.verifySSL) {
       logger.i('SynologyAdapter: 跳过 SSL 证书验证');
-      _dioClient.setAllowSelfSignedCert(allow: true);
     }
 
     // 尝试登录
@@ -78,18 +78,18 @@ class SynologyAdapter implements NasAdapter {
     logger.i('SynologyAdapter: 登录结果 => ${authResult.runtimeType}');
 
     return switch (authResult) {
-      AuthSuccess(:final sid, :final deviceId) =>
-        await _handleLoginSuccess(sid, deviceId: deviceId),
+      AuthSuccess(:final sid, :final deviceId) => await _handleLoginSuccess(
+        sid,
+        deviceId: deviceId,
+      ),
       AuthFailure(:final error) => () {
-          logger.e('SynologyAdapter: 登录失败 => $error');
-          return ConnectionFailure(error: error);
-        }(),
+        logger.e('SynologyAdapter: 登录失败 => $error');
+        return ConnectionFailure(error: error);
+      }(),
       AuthRequires2FA() => () {
-          logger.i('SynologyAdapter: 需要二次验证');
-          return const ConnectionRequires2FA(
-            methods: [TwoFactorMethod.totp],
-          );
-        }(),
+        logger.i('SynologyAdapter: 需要二次验证');
+        return const ConnectionRequires2FA(methods: [TwoFactorMethod.totp]);
+      }(),
     };
   }
 
@@ -105,10 +105,14 @@ class SynologyAdapter implements NasAdapter {
     // 如果需要记住设备，必须提供设备名称
     // 优先使用传入的设备名，其次使用配置中的设备名，最后使用默认名称
     final effectiveDeviceName = rememberDevice
-        ? (deviceName ?? _config!.deviceName ?? 'MyNAS-${DateTime.now().millisecondsSinceEpoch}')
+        ? (deviceName ??
+              _config!.deviceName ??
+              'MyNAS-${DateTime.now().millisecondsSinceEpoch}')
         : null;
 
-    logger.d('SynologyAdapter: verify2FA - rememberDevice=$rememberDevice, deviceName=$effectiveDeviceName');
+    logger.d(
+      'SynologyAdapter: verify2FA - rememberDevice=$rememberDevice, deviceName=$effectiveDeviceName',
+    );
 
     final authResult = await _api.login(
       account: _config!.username,
@@ -119,10 +123,14 @@ class SynologyAdapter implements NasAdapter {
     );
 
     return switch (authResult) {
-      AuthSuccess(:final sid, :final deviceId) =>
-        await _handleLoginSuccess(sid, deviceId: deviceId),
+      AuthSuccess(:final sid, :final deviceId) => await _handleLoginSuccess(
+        sid,
+        deviceId: deviceId,
+      ),
       AuthFailure(:final error) => ConnectionFailure(error: error),
-      AuthRequires2FA() => ConnectionFailure(error: appL10n.synologyAdapter2FaVerificationFailed),
+      AuthRequires2FA() => ConnectionFailure(
+        error: appL10n.synologyAdapter2FaVerificationFailed,
+      ),
     };
   }
 
@@ -189,20 +197,20 @@ class SynologyAdapter implements NasAdapter {
 
       final result = switch (authResult) {
         AuthSuccess(:final sid) => () {
-            logger.i('SynologyAdapter: 会话刷新成功');
-            return sid;
-          }(),
+          logger.i('SynologyAdapter: 会话刷新成功');
+          return sid;
+        }(),
         AuthFailure(:final error) => () {
-            logger.e('SynologyAdapter: 会话刷新失败 => $error');
-            _connected = false;
-            return null;
-          }(),
+          logger.e('SynologyAdapter: 会话刷新失败 => $error');
+          _connected = false;
+          return null;
+        }(),
         AuthRequires2FA() => () {
-            // 如果需要 2FA，无法自动刷新
-            logger.w('SynologyAdapter: 会话刷新需要 2FA，无法自动完成');
-            _connected = false;
-            return null;
-          }(),
+          // 如果需要 2FA，无法自动刷新
+          logger.w('SynologyAdapter: 会话刷新需要 2FA，无法自动完成');
+          _connected = false;
+          return null;
+        }(),
       };
 
       _sessionRefreshCompleter!.complete(result);

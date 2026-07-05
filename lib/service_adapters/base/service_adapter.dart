@@ -1,3 +1,4 @@
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 
 /// 服务适配器基础接口
@@ -46,6 +47,7 @@ class ServiceConnectionConfig {
     this.password,
     this.apiKey,
     this.extraConfig,
+    this.verifySSL = true,
   });
 
   /// 从 SourceEntity 创建配置
@@ -53,18 +55,20 @@ class ServiceConnectionConfig {
     SourceEntity source, {
     String? password,
   }) => ServiceConnectionConfig(
-      baseUrl: source.baseUrl,
-      username: source.username,
-      password: password,
-      apiKey: source.apiKey,
-      extraConfig: source.extraConfig,
-    );
+    baseUrl: source.baseUrl,
+    username: source.username,
+    password: password,
+    apiKey: source.apiKey,
+    extraConfig: source.extraConfig,
+    verifySSL: !InsecureHttpClient.trustSelfSigned,
+  );
 
   final String baseUrl;
   final String? username;
   final String? password;
   final String? apiKey;
   final Map<String, dynamic>? extraConfig;
+  final bool verifySSL;
 }
 
 /// 服务连接结果（sealed class 用于类型安全的错误处理）
@@ -76,9 +80,9 @@ sealed class ServiceConnectionResult {
     required T Function(ServiceAdapter adapter) success,
     required T Function(String error) failure,
   }) => switch (this) {
-      ServiceConnectionSuccess(:final adapter) => success(adapter),
-      ServiceConnectionFailure(:final error) => failure(error),
-    };
+    ServiceConnectionSuccess(:final adapter) => success(adapter),
+    ServiceConnectionFailure(:final error) => failure(error),
+  };
 }
 
 /// 连接成功

@@ -1,10 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
@@ -17,29 +14,17 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 /// 咪咕音乐是中国移动旗下的音乐平台，无损音源丰富
 class MiguScraper implements MusicScraper {
   MiguScraper() {
-    _dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Referer': 'https://music.migu.cn/',
-      },
-    ));
-
-    // 咪咕部分接口可能存在证书问题
-    if (!kIsWeb) {
-      _dio.httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: () {
-          final client = HttpClient()
-            ..badCertificateCallback = (cert, host, port) =>
-                host.endsWith('.migu.cn') ||
-                host.endsWith('.miguvideo.com') ||
-                host == 'music.migu.cn';
-          return client;
+    _dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://music.migu.cn/',
         },
-      );
-    }
+      ),
+    );
   }
 
   // 咪咕搜索 API
@@ -92,17 +77,20 @@ class MiguScraper implements MusicScraper {
       }
 
       scraperDebug(
-          '[MiguScraper] search: query=$searchQuery, page=$page, limit=$limit');
+        '[MiguScraper] search: query=$searchQuery, page=$page, limit=$limit',
+      );
 
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            _searchUrl,
-            queryParameters: {
-              'keyword': searchQuery,
-              'pgc': page,
-              'rows': limit,
-              'type': 2, // 2 表示歌曲搜索
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          _searchUrl,
+          queryParameters: {
+            'keyword': searchQuery,
+            'pgc': page,
+            'rows': limit,
+            'type': 2, // 2 表示歌曲搜索
+          },
+        ),
+      );
 
       scraperDebug('[MiguScraper] response status: ${response.statusCode}');
 
@@ -117,11 +105,15 @@ class MiguScraper implements MusicScraper {
       // 如果 Dio 已自动解析为 Map，直接使用
       if (response.data is Map<String, dynamic>) {
         data = response.data as Map<String, dynamic>;
-        scraperDebug('[MiguScraper] Response is Map, keys: ${data.keys.take(5).join(', ')}...');
+        scraperDebug(
+          '[MiguScraper] Response is Map, keys: ${data.keys.take(5).join(', ')}...',
+        );
       } else if (response.data is String) {
         final responseStr = response.data as String;
         // 打印前200字符用于调试
-        scraperDebug('[MiguScraper] Response preview: ${responseStr.substring(0, responseStr.length > 200 ? 200 : responseStr.length)}');
+        scraperDebug(
+          '[MiguScraper] Response preview: ${responseStr.substring(0, responseStr.length > 200 ? 200 : responseStr.length)}',
+        );
 
         try {
           data = json.decode(responseStr) as Map<String, dynamic>;
@@ -130,7 +122,9 @@ class MiguScraper implements MusicScraper {
           return MusicScraperSearchResult.empty(type);
         }
       } else {
-        scraperDebug('[MiguScraper] Invalid response type: ${response.data.runtimeType}');
+        scraperDebug(
+          '[MiguScraper] Invalid response type: ${response.data.runtimeType}',
+        );
         return MusicScraperSearchResult.empty(type);
       }
 
@@ -140,13 +134,16 @@ class MiguScraper implements MusicScraper {
         return MusicScraperSearchResult.empty(type);
       }
 
-      final songs = (data['musics'] as List?)
+      final songs =
+          (data['musics'] as List?)
               ?.whereType<Map<String, dynamic>>()
               .toList() ??
           [];
       final total = int.tryParse(data['pgt']?.toString() ?? '0') ?? 0;
 
-      scraperDebug('[MiguScraper] Found ${songs.length} songs, totalPages: $total');
+      scraperDebug(
+        '[MiguScraper] Found ${songs.length} songs, totalPages: $total',
+      );
 
       final items = songs.map(_parseSong).toList();
 
@@ -158,7 +155,9 @@ class MiguScraper implements MusicScraper {
         totalResults: total * limit,
       );
     } on DioException catch (e) {
-      scraperDebug('[MiguScraper] DioException: ${e.type}, message: ${e.message}');
+      scraperDebug(
+        '[MiguScraper] DioException: ${e.type}, message: ${e.message}',
+      );
       throw _handleDioError(e);
     } on Exception catch (e, st) {
       scraperDebug('[MiguScraper] Exception: $e');
@@ -229,12 +228,12 @@ class MiguScraper implements MusicScraper {
 
       scraperDebug('[MiguScraper] getLyrics: copyrightId=$copyrightId');
 
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            _lyricUrl,
-            queryParameters: {
-              'copyrightId': copyrightId,
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          _lyricUrl,
+          queryParameters: {'copyrightId': copyrightId},
+        ),
+      );
 
       if (response.data == null) {
         return null;
@@ -298,11 +297,14 @@ class MiguScraper implements MusicScraper {
   /// 解析歌曲搜索结果
   MusicScraperItem _parseSong(Map<String, dynamic> data) {
     final copyrightId = data['copyrightId'] as String? ?? '';
-    final songName = data['songName'] as String? ?? data['title'] as String? ?? '';
-    final artistName = data['singerName'] as String? ?? data['artist'] as String? ?? '';
+    final songName =
+        data['songName'] as String? ?? data['title'] as String? ?? '';
+    final artistName =
+        data['singerName'] as String? ?? data['artist'] as String? ?? '';
     final albumName = data['albumName'] as String? ?? '';
     final albumId = data['albumId'] as String? ?? '';
-    final cover = data['cover'] as String? ?? data['albumPicM'] as String? ?? '';
+    final cover =
+        data['cover'] as String? ?? data['albumPicM'] as String? ?? '';
 
     // 时长：咪咕返回秒数（兼容 int 和 String 类型）
     var duration = 0;

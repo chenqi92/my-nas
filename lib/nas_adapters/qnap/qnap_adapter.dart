@@ -14,7 +14,7 @@ import 'package:my_nas/nas_adapters/qnap/qnap_media_service.dart';
 class QnapAdapter implements NasAdapter {
   QnapAdapter() {
     logger.i('QnapAdapter: 初始化适配器');
-    _dioClient = DioClient(allowSelfSigned: true);
+    _dioClient = DioClient();
     _api = QnapApi(dio: _dioClient.dio);
   }
 
@@ -29,13 +29,13 @@ class QnapAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-        type: NasAdapterType.qnap,
-        name: 'QNAP NAS',
-        version: AppConstants.appVersion,
-        // 基于 File Station HTTP API（get_list 媒体过滤 + get_viewer 流地址）
-        // 实现媒体库浏览与播放，无需依赖已停更的 Music/Photo/Video Station 套件
-        supportsMediaService: true,
-      );
+    type: NasAdapterType.qnap,
+    name: 'QNAP NAS',
+    version: AppConstants.appVersion,
+    // 基于 File Station HTTP API（get_list 媒体过滤 + get_viewer 流地址）
+    // 实现媒体库浏览与播放，无需依赖已停更的 Music/Photo/Video Station 套件
+    supportsMediaService: true,
+  );
 
   @override
   bool get isConnected => _connected;
@@ -47,19 +47,19 @@ class QnapAdapter implements NasAdapter {
 
   @override
   Future<ConnectionResult> connect(ConnectionConfig config) async {
-    logger..i('QnapAdapter: 开始连接')
-    ..i('QnapAdapter: 目标地址 => ${config.baseUrl}')
-    ..i('QnapAdapter: 用户名 => ${config.username}')
-    ..i('QnapAdapter: 使用 SSL => ${config.useSsl}')
-    ..i('QnapAdapter: 验证 SSL => ${config.verifySSL}');
+    logger
+      ..i('QnapAdapter: 开始连接')
+      ..i('QnapAdapter: 目标地址 => ${config.baseUrl}')
+      ..i('QnapAdapter: 用户名 => ${config.username}')
+      ..i('QnapAdapter: 使用 SSL => ${config.useSsl}')
+      ..i('QnapAdapter: 验证 SSL => ${config.verifySSL}');
 
     _config = config;
-    _dioClient.updateBaseUrl(config.baseUrl);
-
-    // 如果不验证 SSL，添加相应配置
+    _dioClient
+      ..updateBaseUrl(config.baseUrl)
+      ..setAllowSelfSignedCert(allow: !config.verifySSL);
     if (!config.verifySSL) {
       logger.i('QnapAdapter: 跳过 SSL 证书验证');
-      _dioClient.setAllowSelfSignedCert(allow: true);
     }
 
     // 尝试登录
@@ -74,15 +74,13 @@ class QnapAdapter implements NasAdapter {
     return switch (authResult) {
       QnapAuthSuccess(:final sid) => await _handleLoginSuccess(sid),
       QnapAuthFailure(:final error) => () {
-          logger.e('QnapAdapter: 登录失败 => $error');
-          return ConnectionFailure(error: error);
-        }(),
+        logger.e('QnapAdapter: 登录失败 => $error');
+        return ConnectionFailure(error: error);
+      }(),
       QnapAuthRequires2FA() => () {
-          logger.i('QnapAdapter: 需要二次验证');
-          return const ConnectionRequires2FA(
-            methods: [TwoFactorMethod.totp],
-          );
-        }(),
+        logger.i('QnapAdapter: 需要二次验证');
+        return const ConnectionRequires2FA(methods: [TwoFactorMethod.totp]);
+      }(),
     };
   }
 
@@ -104,7 +102,9 @@ class QnapAdapter implements NasAdapter {
     return switch (authResult) {
       QnapAuthSuccess(:final sid) => await _handleLoginSuccess(sid),
       QnapAuthFailure(:final error) => ConnectionFailure(error: error),
-      QnapAuthRequires2FA() => ConnectionFailure(error: appL10n.qnapAdapter2FAVerificationFailed),
+      QnapAuthRequires2FA() => ConnectionFailure(
+        error: appL10n.qnapAdapter2FAVerificationFailed,
+      ),
     };
   }
 
@@ -127,10 +127,7 @@ class QnapAdapter implements NasAdapter {
       AppError.ignore(e, st, '获取服务器信息失败不影响连接');
     }
 
-    return ConnectionSuccess(
-      sessionId: sid,
-      serverInfo: _serverInfo,
-    );
+    return ConnectionSuccess(sessionId: sid, serverInfo: _serverInfo);
   }
 
   @override

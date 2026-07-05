@@ -14,7 +14,7 @@ import 'package:my_nas/service_adapters/base/service_adapter.dart';
 class JellyfinAdapter extends MediaServerAdapter {
   JellyfinAdapter() {
     logger.i('JellyfinAdapter: 初始化适配器');
-    _dioClient = DioClient(allowSelfSigned: true);
+    _dioClient = DioClient();
     _api = JellyfinApi(dio: _dioClient.dio);
   }
 
@@ -32,10 +32,10 @@ class JellyfinAdapter extends MediaServerAdapter {
 
   @override
   ServiceAdapterInfo get info => const ServiceAdapterInfo(
-        name: 'Jellyfin',
-        type: SourceType.jellyfin,
-        description: 'Jellyfin 媒体服务器',
-      );
+    name: 'Jellyfin',
+    type: SourceType.jellyfin,
+    description: 'Jellyfin 媒体服务器',
+  );
 
   @override
   bool get isConnected => _connected;
@@ -44,13 +44,16 @@ class JellyfinAdapter extends MediaServerAdapter {
   ServiceConnectionConfig? get connection => _connection;
 
   @override
-  Future<ServiceConnectionResult> connect(ServiceConnectionConfig config) async {
+  Future<ServiceConnectionResult> connect(
+    ServiceConnectionConfig config,
+  ) async {
     logger
       ..i('JellyfinAdapter: 开始连接')
       ..i('JellyfinAdapter: 目标地址 => ${config.baseUrl}')
       ..i('JellyfinAdapter: 用户名 => ${config.username}');
 
     _connection = config;
+    _dioClient.setAllowSelfSignedCert(allow: !config.verifySSL);
     _api.setBaseUrl(config.baseUrl);
 
     try {
@@ -88,14 +91,18 @@ class JellyfinAdapter extends MediaServerAdapter {
         try {
           await _api.getLibraries();
         } on Exception {
-          return ServiceConnectionFailure(appL10n.jellyfinAdapterAccessTokenExpiredError);
+          return ServiceConnectionFailure(
+            appL10n.jellyfinAdapterAccessTokenExpiredError,
+          );
         }
       } else if (config.apiKey != null && config.apiKey!.isNotEmpty) {
         // 使用 API Key 认证
         logger.i('JellyfinAdapter: 使用 API Key 认证');
         final success = await _api.authenticateWithApiKey(config.apiKey!);
         if (!success) {
-          return ServiceConnectionFailure(appL10n.jellyfinAdapterInvalidApiKeyError);
+          return ServiceConnectionFailure(
+            appL10n.jellyfinAdapterInvalidApiKeyError,
+          );
         }
       } else if (config.username != null && config.password != null) {
         // 使用用户名密码认证
@@ -105,7 +112,9 @@ class JellyfinAdapter extends MediaServerAdapter {
           password: config.password!,
         );
       } else {
-        return ServiceConnectionFailure(appL10n.jellyfinAdapterMissingCredentialsError);
+        return ServiceConnectionFailure(
+          appL10n.jellyfinAdapterMissingCredentialsError,
+        );
       }
 
       _connected = true;
@@ -114,7 +123,9 @@ class JellyfinAdapter extends MediaServerAdapter {
       logger.i('JellyfinAdapter: 连接成功');
       return ServiceConnectionSuccess(this);
     } on Exception catch (e, st) {
-      AppError.handle(e, st, 'jellyfinAdapter.connect', {'host': config.baseUrl});
+      AppError.handle(e, st, 'jellyfinAdapter.connect', {
+        'host': config.baseUrl,
+      });
       return ServiceConnectionFailure(_parseError(e));
     }
   }
@@ -203,12 +214,12 @@ class JellyfinAdapter extends MediaServerAdapter {
     int? maxHeight,
     String? tag,
   }) => _api.getImageUrl(
-      itemId,
-      imageType,
-      maxWidth: maxWidth,
-      maxHeight: maxHeight,
-      tag: tag,
-    );
+    itemId,
+    imageType,
+    maxWidth: maxWidth,
+    maxHeight: maxHeight,
+    tag: tag,
+  );
 
   @override
   Future<MediaStreamInfo> getStreamInfo(
@@ -372,17 +383,17 @@ class JellyfinAdapter extends MediaServerAdapter {
 
   /// 将 MediaItemType 转换为 Jellyfin 类型字符串
   String _toJellyfinType(MediaItemType type) => switch (type) {
-        MediaItemType.movie => 'Movie',
-        MediaItemType.series => 'Series',
-        MediaItemType.season => 'Season',
-        MediaItemType.episode => 'Episode',
-        MediaItemType.musicAlbum => 'MusicAlbum',
-        MediaItemType.audio => 'Audio',
-        MediaItemType.photo => 'Photo',
-        MediaItemType.folder => 'Folder',
-        MediaItemType.person => 'Person',
-        MediaItemType.unknown => 'Unknown',
-      };
+    MediaItemType.movie => 'Movie',
+    MediaItemType.series => 'Series',
+    MediaItemType.season => 'Season',
+    MediaItemType.episode => 'Episode',
+    MediaItemType.musicAlbum => 'MusicAlbum',
+    MediaItemType.audio => 'Audio',
+    MediaItemType.photo => 'Photo',
+    MediaItemType.folder => 'Folder',
+    MediaItemType.person => 'Person',
+    MediaItemType.unknown => 'Unknown',
+  };
 
   /// 解析错误信息
   String _parseError(Object e) {

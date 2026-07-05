@@ -8,7 +8,7 @@ import 'package:my_nas/media_server_adapters/jellyfin/api/jellyfin_models.dart';
 
 /// Jellyfin API 客户端
 class JellyfinApi {
-  JellyfinApi({Dio? dio}) : _dio = dio ?? DioClient(allowSelfSigned: true).dio;
+  JellyfinApi({Dio? dio}) : _dio = dio ?? DioClient().dio;
 
   final Dio _dio;
   String? _baseUrl;
@@ -167,10 +167,7 @@ class JellyfinApi {
     logger.i('JellyfinApi: 开始用户名密码认证, username=$username');
     final response = await _post<Map<String, dynamic>>(
       '/Users/AuthenticateByName',
-      data: {
-        'Username': username,
-        'Pw': password,
-      },
+      data: {'Username': username, 'Pw': password},
       requireAuth: false,
     );
 
@@ -289,7 +286,9 @@ class JellyfinApi {
   /// 使用 Quick Connect 完成认证
   ///
   /// [secret] Quick Connect 的 secret
-  Future<JellyfinAuthResult?> authenticateWithQuickConnect(String secret) async {
+  Future<JellyfinAuthResult?> authenticateWithQuickConnect(
+    String secret,
+  ) async {
     logger.i('JellyfinApi: 使用 Quick Connect 完成认证');
     try {
       final response = await _post<Map<String, dynamic>>(
@@ -335,9 +334,7 @@ class JellyfinApi {
   /// 获取媒体库列表
   Future<List<JellyfinLibrary>> getLibraries() async {
     logger.i('JellyfinApi: 获取媒体库列表');
-    final response = await _get<Map<String, dynamic>>(
-      '/Users/$_userId/Views',
-    );
+    final response = await _get<Map<String, dynamic>>('/Users/$_userId/Views');
     final items = response.data?['Items'] as List? ?? [];
     return items
         .map((e) => JellyfinLibrary.fromJson(e as Map<String, dynamic>))
@@ -373,7 +370,8 @@ class JellyfinApi {
     if (searchTerm != null) queryParams['SearchTerm'] = searchTerm;
 
     // 默认请求的字段
-    final requestFields = fields ??
+    final requestFields =
+        fields ??
         [
           'Overview',
           'Genres',
@@ -474,10 +472,7 @@ class JellyfinApi {
         .map((e) => JellyfinItem.fromJson(e as Map<String, dynamic>))
         .toList();
 
-    return JellyfinItemsResult(
-      items: items,
-      totalRecordCount: items.length,
-    );
+    return JellyfinItemsResult(items: items, totalRecordCount: items.length);
   }
 
   /// 获取继续观看列表
@@ -489,11 +484,7 @@ class JellyfinApi {
       sortOrder: 'Descending',
       limit: limit,
       recursive: true,
-      fields: [
-        'Overview',
-        'PrimaryImageAspectRatio',
-        'MediaStreams',
-      ],
+      fields: ['Overview', 'PrimaryImageAspectRatio', 'MediaStreams'],
     );
   }
 
@@ -545,46 +536,41 @@ class JellyfinApi {
     final response = await _post<Map<String, dynamic>>(
       '/Items/$itemId/PlaybackInfo',
       queryParams: {'UserId': _userId},
-      data: {
-        'DeviceProfile': _buildDeviceProfile(),
-      },
+      data: {'DeviceProfile': _buildDeviceProfile()},
     );
     return JellyfinPlaybackInfo.fromJson(response.data!);
   }
 
   /// 构建设备配置文件（用于确定播放能力）
   Map<String, dynamic> _buildDeviceProfile() => {
-        'MaxStreamingBitrate': 120000000, // 120 Mbps
-        'MaxStaticBitrate': 100000000,
-        'MusicStreamingTranscodingBitrate': 384000,
-        'DirectPlayProfiles': [
-          {'Container': 'mp4,mkv,webm,mov,avi,wmv', 'Type': 'Video'},
-          {'Container': 'mp3,flac,aac,m4a,ogg,wav', 'Type': 'Audio'},
-        ],
-        'TranscodingProfiles': [
-          {
-            'Container': 'ts',
-            'Type': 'Video',
-            'VideoCodec': 'h264',
-            'AudioCodec': 'aac',
-            'Protocol': 'hls',
-          },
-        ],
-        'ContainerProfiles': <Map<String, dynamic>>[],
-        'CodecProfiles': <Map<String, dynamic>>[],
-        'SubtitleProfiles': [
-          {'Format': 'srt', 'Method': 'External'},
-          {'Format': 'ass', 'Method': 'External'},
-          {'Format': 'vtt', 'Method': 'External'},
-        ],
-      };
+    'MaxStreamingBitrate': 120000000, // 120 Mbps
+    'MaxStaticBitrate': 100000000,
+    'MusicStreamingTranscodingBitrate': 384000,
+    'DirectPlayProfiles': [
+      {'Container': 'mp4,mkv,webm,mov,avi,wmv', 'Type': 'Video'},
+      {'Container': 'mp3,flac,aac,m4a,ogg,wav', 'Type': 'Audio'},
+    ],
+    'TranscodingProfiles': [
+      {
+        'Container': 'ts',
+        'Type': 'Video',
+        'VideoCodec': 'h264',
+        'AudioCodec': 'aac',
+        'Protocol': 'hls',
+      },
+    ],
+    'ContainerProfiles': <Map<String, dynamic>>[],
+    'CodecProfiles': <Map<String, dynamic>>[],
+    'SubtitleProfiles': [
+      {'Format': 'srt', 'Method': 'External'},
+      {'Format': 'ass', 'Method': 'External'},
+      {'Format': 'vtt', 'Method': 'External'},
+    ],
+  };
 
   /// 获取直接播放 URL
   String getDirectStreamUrl(String itemId, {String? mediaSourceId}) {
-    final params = <String>[
-      'static=true',
-      'api_key=$_accessToken',
-    ];
+    final params = <String>['static=true', 'api_key=$_accessToken'];
     if (mediaSourceId != null) {
       params.add('MediaSourceId=$mediaSourceId');
     }
@@ -684,10 +670,7 @@ class JellyfinApi {
   Future<void> markUnwatched(String itemId) async {
     logger.i('JellyfinApi: 标记未观看, itemId=$itemId');
     final url = '$_baseUrl/Users/$_userId/PlayedItems/$itemId';
-    await _dio.delete<void>(
-      url,
-      options: Options(headers: _buildHeaders()),
-    );
+    await _dio.delete<void>(url, options: Options(headers: _buildHeaders()));
   }
 
   /// 切换收藏状态
@@ -695,15 +678,9 @@ class JellyfinApi {
     logger.i('JellyfinApi: ${isFavorite ? '添加' : '移除'}收藏, itemId=$itemId');
     final url = '$_baseUrl/Users/$_userId/FavoriteItems/$itemId';
     if (isFavorite) {
-      await _dio.post<void>(
-        url,
-        options: Options(headers: _buildHeaders()),
-      );
+      await _dio.post<void>(url, options: Options(headers: _buildHeaders()));
     } else {
-      await _dio.delete<void>(
-        url,
-        options: Options(headers: _buildHeaders()),
-      );
+      await _dio.delete<void>(url, options: Options(headers: _buildHeaders()));
     }
   }
 

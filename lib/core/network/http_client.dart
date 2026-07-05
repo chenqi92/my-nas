@@ -13,16 +13,16 @@ class InsecureHttpClient {
 
   /// 是否信任 HTTPS 自签名证书。
   ///
-  /// 历史上网络层恒为放行（true），故默认保持 true 以不改变现状行为；可通过
-  /// 「设置 · 数据源 · 信任自签名证书」持久化开关切换（见
+  /// 默认使用系统证书校验；只有用户显式开启
+  /// 「设置 · 数据源 · 信任自签名证书」时才放行无效证书（见
   /// `trustSelfSignedCertProvider`）。该值在 [badCertificateCallback] 中被同步读取，
   /// 因此用静态字段缓存（关闭时拒绝自签名证书 = 默认安全校验）。
-  static bool trustSelfSigned = true;
+  static bool trustSelfSigned = false;
 
   static const _trustKey = 'trust_self_signed_cert';
 
   /// 在应用启动时从持久化存储恢复「信任自签名证书」开关。
-  /// 需在首次发起 HTTPS 请求前调用（settings box 已打开）。失败时保持默认 true。
+  /// 需在首次发起 HTTPS 请求前调用（settings box 已打开）。失败时保持默认 false。
   static Future<void> loadTrustSetting() async {
     try {
       final box = await HiveUtils.getSettingsBox();
@@ -45,7 +45,8 @@ class InsecureHttpClient {
   }
 
   /// GET 请求
-  static Future<http.Response> get(Uri url, {Map<String, String>? headers}) => client.get(url, headers: headers);
+  static Future<http.Response> get(Uri url, {Map<String, String>? headers}) =>
+      client.get(url, headers: headers);
 
   /// POST 请求
   static Future<http.Response> post(

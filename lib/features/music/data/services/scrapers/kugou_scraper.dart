@@ -1,10 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:dio/io.dart';
-import 'package:flutter/foundation.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
@@ -17,35 +14,20 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 /// 歌词库丰富，特别是翻唱和小众歌曲
 class KugouScraper implements MusicScraper {
   KugouScraper() {
-    _dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {
-        'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    ));
-
-    // 酷狗 CDN 使用腾讯云，可能存在证书域名不匹配问题（*.cdn.myqcloud.com）
-    // 仅针对酷狗的请求跳过 SSL 验证
-    // Web 平台使用浏览器的 HTTP 实现，不需要此配置
-    if (!kIsWeb) {
-      _dio.httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: () {
-          final client = HttpClient()
-          ..badCertificateCallback = (cert, host, port) => host.endsWith('.kugou.com') ||
-                   host.endsWith('.myqcloud.com') ||
-                   host == 'mobilecdn.kugou.com' ||
-                   host == 'krcs.kugou.com' ||
-                   host == 'lyrics.kugou.com' ||
-                   host == 'imge.kugou.com';
-          return client;
+    _dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
-      );
-    }
+      ),
+    );
   }
 
-  static const String _searchUrl = 'https://mobilecdn.kugou.com/api/v3/search/song';
+  static const String _searchUrl =
+      'https://mobilecdn.kugou.com/api/v3/search/song';
   static const String _lyricSearchUrl = 'https://krcs.kugou.com/search';
   static const String _lyricDownloadUrl = 'https://lyrics.kugou.com/download';
 
@@ -91,21 +73,27 @@ class KugouScraper implements MusicScraper {
         searchQuery += ' $album';
       }
 
-      scraperDebug('[KugouScraper] search: query=$searchQuery, page=$page, limit=$limit');
+      scraperDebug(
+        '[KugouScraper] search: query=$searchQuery, page=$page, limit=$limit',
+      );
       scraperDebug('[KugouScraper] request URL: $_searchUrl');
 
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            _searchUrl,
-            queryParameters: {
-              'keyword': searchQuery,
-              'page': page,
-              'pagesize': limit,
-              'showtype': 1,
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          _searchUrl,
+          queryParameters: {
+            'keyword': searchQuery,
+            'page': page,
+            'pagesize': limit,
+            'showtype': 1,
+          },
+        ),
+      );
 
       scraperDebug('[KugouScraper] response status: ${response.statusCode}');
-      scraperDebug('[KugouScraper] response data type: ${response.data.runtimeType}');
+      scraperDebug(
+        '[KugouScraper] response data type: ${response.data.runtimeType}',
+      );
       scraperDebug('[KugouScraper] response data: ${response.data}');
 
       // 处理响应数据 - 可能是 String 或 Map
@@ -125,7 +113,9 @@ class KugouScraper implements MusicScraper {
       } else if (response.data is Map<String, dynamic>) {
         data = response.data as Map<String, dynamic>;
       } else {
-        scraperDebug('[KugouScraper] Invalid response data format: ${response.data.runtimeType}');
+        scraperDebug(
+          '[KugouScraper] Invalid response data format: ${response.data.runtimeType}',
+        );
         return MusicScraperSearchResult.empty(type);
       }
       final status = data['status'] as int?;
@@ -133,7 +123,9 @@ class KugouScraper implements MusicScraper {
       scraperDebug('[KugouScraper] status: $status, errcode: $errcode');
 
       if (status != 1) {
-        scraperDebug('[KugouScraper] API returned error status: $status, error: ${data['error']}');
+        scraperDebug(
+          '[KugouScraper] API returned error status: $status, error: ${data['error']}',
+        );
         return MusicScraperSearchResult.empty(type);
       }
 
@@ -143,7 +135,8 @@ class KugouScraper implements MusicScraper {
         return MusicScraperSearchResult.empty(type);
       }
 
-      final songs = (dataSection['info'] as List?)
+      final songs =
+          (dataSection['info'] as List?)
               ?.whereType<Map<String, dynamic>>()
               .toList() ??
           [];
@@ -161,7 +154,9 @@ class KugouScraper implements MusicScraper {
         totalResults: total,
       );
     } on DioException catch (e) {
-      scraperDebug('[KugouScraper] DioException: ${e.type}, message: ${e.message}');
+      scraperDebug(
+        '[KugouScraper] DioException: ${e.type}, message: ${e.message}',
+      );
       scraperDebug('[KugouScraper] Response: ${e.response?.data}');
       throw _handleDioError(e);
     } on Exception catch (e, st) {
@@ -233,17 +228,19 @@ class KugouScraper implements MusicScraper {
       final duration = int.tryParse(parts[4]) ?? 0;
 
       // 搜索歌词
-      final searchResponse = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            _lyricSearchUrl,
-            queryParameters: {
-              'ver': 1,
-              'man': 'yes',
-              'client': 'mobi',
-              'keyword': '$songName - $singerName',
-              'duration': duration * 1000,
-              'hash': hash,
-            },
-          ));
+      final searchResponse = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          _lyricSearchUrl,
+          queryParameters: {
+            'ver': 1,
+            'man': 'yes',
+            'client': 'mobi',
+            'keyword': '$songName - $singerName',
+            'duration': duration * 1000,
+            'hash': hash,
+          },
+        ),
+      );
 
       if (searchResponse.data == null ||
           searchResponse.data is! Map<String, dynamic>) {
@@ -252,7 +249,10 @@ class KugouScraper implements MusicScraper {
 
       final searchData = searchResponse.data as Map<String, dynamic>;
       final candidates =
-          (searchData['candidates'] as List?)?.whereType<Map<String, dynamic>>().toList() ?? [];
+          (searchData['candidates'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .toList() ??
+          [];
 
       if (candidates.isEmpty) {
         return null;
@@ -268,17 +268,19 @@ class KugouScraper implements MusicScraper {
       }
 
       // 下载歌词
-      final downloadResponse = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            _lyricDownloadUrl,
-            queryParameters: {
-              'ver': 1,
-              'client': 'pc',
-              'id': id,
-              'accesskey': accesskey,
-              'fmt': 'lrc',
-              'charset': 'utf8',
-            },
-          ));
+      final downloadResponse = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          _lyricDownloadUrl,
+          queryParameters: {
+            'ver': 1,
+            'client': 'pc',
+            'id': id,
+            'accesskey': accesskey,
+            'fmt': 'lrc',
+            'charset': 'utf8',
+          },
+        ),
+      );
 
       if (downloadResponse.data == null ||
           downloadResponse.data is! Map<String, dynamic>) {
@@ -392,7 +394,10 @@ class KugouScraper implements MusicScraper {
         e.type == DioExceptionType.connectionError) {
       final errorDetail = e.error?.toString() ?? '';
       return MusicScraperNetworkException(
-        appL10n.kugouScraperNetworkError(e.type.name, errorDetail.isNotEmpty ? ' ($errorDetail)' : ''),
+        appL10n.kugouScraperNetworkError(
+          e.type.name,
+          errorDetail.isNotEmpty ? ' ($errorDetail)' : '',
+        ),
         source: type,
         cause: e,
       );
@@ -407,19 +412,21 @@ class KugouScraper implements MusicScraper {
       }
       // 尝试从响应中提取错误信息
       if (responseData is Map<String, dynamic>) {
-        final errMsg = responseData['errcode'] ?? responseData['error'] ?? responseData['message'];
+        final errMsg =
+            responseData['errcode'] ??
+            responseData['error'] ??
+            responseData['message'];
         if (errMsg != null) {
           errorMessage += ': $errMsg';
         }
       }
     } else {
-      errorMessage = e.message ?? e.error?.toString() ?? appL10n.kugouScraperUnknownError(e.type.name);
+      errorMessage =
+          e.message ??
+          e.error?.toString() ??
+          appL10n.kugouScraperUnknownError(e.type.name);
     }
 
-    return MusicScraperException(
-      errorMessage,
-      source: type,
-      cause: e,
-    );
+    return MusicScraperException(errorMessage, source: type, cause: e);
   }
 }

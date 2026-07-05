@@ -21,10 +21,7 @@ class DioClient {
       ),
     );
 
-    _dio.interceptors.addAll([
-      _LoggingInterceptor(),
-      _ErrorInterceptor(),
-    ]);
+    _dio.interceptors.addAll([_LoggingInterceptor(), _ErrorInterceptor()]);
 
     if (allowSelfSigned) {
       setAllowSelfSignedCert(allow: true);
@@ -52,24 +49,35 @@ class DioClient {
   void setAllowSelfSignedCert({required bool allow}) {
     if (allow) {
       logger.i('DioClient: 允许自签名 SSL 证书');
-      (_dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-        final client = HttpClient()
-        ..badCertificateCallback = (cert, host, port) {
-          logger.w('DioClient: 接受自签名证书 - host: $host, port: $port');
-          return true;
-        };
-        return client;
-      };
+      _replaceHttpClientAdapter(
+        IOHttpClientAdapter(
+          createHttpClient: () {
+            final client = HttpClient()
+              ..badCertificateCallback = (cert, host, port) {
+                logger.w('DioClient: 接受自签名证书 - host: $host, port: $port');
+                return true;
+              };
+            return client;
+          },
+        ),
+      );
+    } else {
+      logger.i('DioClient: 使用系统 SSL 证书校验');
+      _replaceHttpClientAdapter(IOHttpClientAdapter());
     }
+  }
+
+  void _replaceHttpClientAdapter(IOHttpClientAdapter adapter) {
+    final oldAdapter = _dio.httpClientAdapter;
+    _dio.httpClientAdapter = adapter;
+    oldAdapter.close(force: true);
   }
 }
 
 class _LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    logger.d(
-      'REQUEST[${options.method}] => PATH: ${options.path}',
-    );
+    logger.d('REQUEST[${options.method}] => PATH: ${options.path}');
     super.onRequest(options, handler);
   }
 
@@ -101,25 +109,24 @@ class _ErrorInterceptor extends Interceptor {
     final exception = switch (err.type) {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.sendTimeout ||
-      DioExceptionType.receiveTimeout =>
-        NetworkException(
-          message: appL10n.dioErrorConnectionTimeout,
-          stackTrace: err.stackTrace,
-        ),
+      DioExceptionType.receiveTimeout => NetworkException(
+        message: appL10n.dioErrorConnectionTimeout,
+        stackTrace: err.stackTrace,
+      ),
       DioExceptionType.connectionError => NetworkException(
-          message: appL10n.dioErrorNetworkFailed,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorNetworkFailed,
+        stackTrace: err.stackTrace,
+      ),
       DioExceptionType.badResponse => _handleBadResponse(err),
       DioExceptionType.cancel => NetworkException(
-          message: appL10n.dioErrorCancelled,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorCancelled,
+        stackTrace: err.stackTrace,
+      ),
       _ => ServerException(
-          message: err.message ?? appL10n.dioErrorUnknown,
-          stackTrace: err.stackTrace,
-          statusCode: err.response?.statusCode,
-        ),
+        message: err.message ?? appL10n.dioErrorUnknown,
+        stackTrace: err.stackTrace,
+        statusCode: err.response?.statusCode,
+      ),
     };
 
     handler.reject(
@@ -136,28 +143,28 @@ class _ErrorInterceptor extends Interceptor {
     final statusCode = err.response?.statusCode;
     return switch (statusCode) {
       401 => AuthException(
-          message: appL10n.dioErrorAuthFailed,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorAuthFailed,
+        stackTrace: err.stackTrace,
+      ),
       403 => AuthException(
-          message: appL10n.dioErrorForbidden,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorForbidden,
+        stackTrace: err.stackTrace,
+      ),
       404 => ServerException(
-          message: appL10n.dioErrorNotFound,
-          statusCode: statusCode,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorNotFound,
+        statusCode: statusCode,
+        stackTrace: err.stackTrace,
+      ),
       final code when code != null && code >= 500 => ServerException(
-          message: appL10n.dioErrorServer,
-          statusCode: code,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorServer,
+        statusCode: code,
+        stackTrace: err.stackTrace,
+      ),
       _ => ServerException(
-          message: err.message ?? appL10n.dioErrorRequestFailed,
-          statusCode: statusCode,
-          stackTrace: err.stackTrace,
-        ),
+        message: err.message ?? appL10n.dioErrorRequestFailed,
+        statusCode: statusCode,
+        stackTrace: err.stackTrace,
+      ),
     };
   }
 }

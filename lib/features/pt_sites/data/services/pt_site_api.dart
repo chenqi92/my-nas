@@ -5,13 +5,22 @@ import 'package:html/dom.dart' as html_dom;
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
-import 'package:logger/logger.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/http_client.dart';
+import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 
-final _logger = Logger();
+final _logger = logger;
+
+bool _allowInvalidCertificatesForSource(SourceEntity source) {
+  final verifySSL = source.extraConfig?['verifySSL'];
+  if (verifySSL is bool) return !verifySSL;
+  return InsecureHttpClient.trustSelfSigned;
+}
+
+String _headerNames(Map<String, String> headers) => headers.keys.join(', ');
 
 /// PT 站点 API 基类
 abstract class PTSiteApi {
@@ -90,13 +99,17 @@ enum PTTorrentSortBy { uploadTime, size, seeders, leechers, snatched, name }
 /// 馒头 M-Team API
 class MTeamApi extends PTSiteApi {
   MTeamApi({required super.source, super.client})
-    : _ioClient = _createIOClient();
+    : _ioClient = _createIOClient(
+        allowInvalidCertificates: _allowInvalidCertificatesForSource(source),
+      );
 
   /// 创建禁用自动重定向的 IOClient，以便更好地处理 302 等状态码
-  static http.Client _createIOClient() {
+  static http.Client _createIOClient({required bool allowInvalidCertificates}) {
     final httpClient = HttpClient();
-    // ignore: cascade_invocations
-    httpClient.badCertificateCallback = (cert, host, port) => true;
+    if (allowInvalidCertificates) {
+      // ignore: cascade_invocations
+      httpClient.badCertificateCallback = (cert, host, port) => true;
+    }
     // ignore: cascade_invocations
     httpClient.connectionTimeout = const Duration(seconds: 30);
     // 禁用自动重定向，以便能够检测到 302 等认证问题
@@ -138,13 +151,21 @@ class MTeamApi extends PTSiteApi {
     try {
       // 检查必要的认证信息（只需要 x-api-key）
       final xApiKey = source.extraConfig?['xApiKey'] as String? ?? '';
+      final requestHeaders = headers;
 
       _logger
-        ..d('MTeamApi.testConnection: extraConfig = ${source.extraConfig}')
         ..d(
-          'MTeamApi.testConnection: xApiKey = ${xApiKey.isNotEmpty ? "已配置(${xApiKey.length}字符)" : "未配置"}',
+          'MTeamApi.testConnection: extraConfig keys = '
+          '${source.extraConfig?.keys.join(', ') ?? '无'}',
         )
-        ..d('MTeamApi.testConnection: headers = $headers');
+        ..d(
+          'MTeamApi.testConnection: API key '
+          '${xApiKey.isNotEmpty ? "已配置(${xApiKey.length}字符)" : "未配置"}',
+        )
+        ..d(
+          'MTeamApi.testConnection: header keys = '
+          '${_headerNames(requestHeaders)}',
+        );
 
       if (xApiKey.isEmpty) {
         _logger.w('MTeamApi.testConnection: 缺少 x-api-key');
@@ -172,7 +193,7 @@ class MTeamApi extends PTSiteApi {
 
       final response = await _ioClient.post(
         Uri.parse('$_apiBase/api/torrent/search'),
-        headers: headers,
+        headers: requestHeaders,
         body: searchBody,
       );
 
@@ -811,6 +832,15 @@ class MTeamApi extends PTSiteApi {
 class GenericPTSiteApi extends PTSiteApi {
   GenericPTSiteApi({required super.source, super.client});
 
+  HttpClient _createHttpClient() {
+    final httpClient = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 30);
+    if (_allowInvalidCertificatesForSource(source)) {
+      httpClient.badCertificateCallback = (cert, host, port) => true;
+    }
+    return httpClient;
+  }
+
   @override
   Map<String, String> get headers {
     final authType = source.extraConfig?['authType'] as String? ?? 'Cookie';
@@ -851,11 +881,6 @@ class GenericPTSiteApi extends PTSiteApi {
         _logger.w('GenericPTSiteApi.headers: Cookie 为空！请检查配置');
       } else {
         result['Cookie'] = cookie;
-        // 打印 Cookie 前50个字符用于调试
-        final preview = cookie.length > 50
-            ? '${cookie.substring(0, 50)}...'
-            : cookie;
-        _logger.d('GenericPTSiteApi.headers: Cookie 预览 = $preview');
       }
     }
 
@@ -866,14 +891,11 @@ class GenericPTSiteApi extends PTSiteApi {
   Future<bool> testConnection() async {
     try {
       // 使用 IOClient 以更好地处理各种 Content-Type
-      final httpClient = HttpClient();
-      // ignore: cascade_invocations
-      httpClient.badCertificateCallback = (cert, host, port) => true;
-      // ignore: cascade_invocations
-      httpClient.connectionTimeout = const Duration(seconds: 30);
+      final httpClient = _createHttpClient();
+      final requestHeaders = headers;
 
       final request = await httpClient.getUrl(Uri.parse(baseUrl));
-      headers.forEach((key, value) {
+      requestHeaders.forEach((key, value) {
         request.headers.set(key, value);
       });
 
@@ -936,18 +958,18 @@ class GenericPTSiteApi extends PTSiteApi {
       final uri = Uri.parse(
         '$baseUrl/torrents.php',
       ).replace(queryParameters: params);
+      final requestHeaders = headers;
       _logger
         ..d('GenericPTSiteApi.getTorrents: 请求 URL = $uri')
-        ..d('GenericPTSiteApi.getTorrents: headers = $headers');
+        ..d(
+          'GenericPTSiteApi.getTorrents: header keys = '
+          '${_headerNames(requestHeaders)}',
+        );
 
-      final httpClient = HttpClient();
-      // ignore: cascade_invocations
-      httpClient.badCertificateCallback = (cert, host, port) => true;
-      // ignore: cascade_invocations
-      httpClient.connectionTimeout = const Duration(seconds: 30);
+      final httpClient = _createHttpClient();
 
       final request = await httpClient.getUrl(uri);
-      headers.forEach((key, value) {
+      requestHeaders.forEach((key, value) {
         request.headers.set(key, value);
       });
 
@@ -1433,7 +1455,10 @@ class PTSiteApiFactory {
       ..d(
         'PTSiteApiFactory.create: source.name = ${source.name}, host = ${source.host}',
       )
-      ..d('PTSiteApiFactory.create: extraConfig = ${source.extraConfig}');
+      ..d(
+        'PTSiteApiFactory.create: extraConfig keys = '
+        '${source.extraConfig?.keys.join(', ') ?? '无'}',
+      );
 
     // 判断是否是馒头站点（只检查 host）
     if (_isMTeamSite(source)) {
@@ -1442,7 +1467,8 @@ class PTSiteApiFactory {
       // 预处理：从 customHeaders 或表单字段提取 API Key
       final preparedSource = _prepareApiKeyConfig(source);
       _logger.d(
-        'PTSiteApiFactory.create: 预处理后 extraConfig = ${preparedSource.extraConfig}',
+        'PTSiteApiFactory.create: 预处理后 extraConfig keys = '
+        '${preparedSource.extraConfig?.keys.join(', ') ?? '无'}',
       );
 
       return MTeamApi(source: preparedSource);
