@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +23,7 @@ import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -32,16 +36,20 @@ class ComicPage {
     this.bytes,
     this.fileName,
     this.filePath,
+    this.localFilePath,
   });
 
   final int index;
   final String? url;
   final Uint8List? bytes;
   final String? fileName;
+
   /// 文件路径（用于流式加载）
   final String? filePath;
+  final String? localFilePath;
 
-  bool get isLoaded => url != null || bytes != null || filePath != null;
+  bool get isLoaded =>
+      url != null || bytes != null || filePath != null || localFilePath != null;
 }
 
 /// 漫画阅读器状态
@@ -72,34 +80,38 @@ class ComicReaderState {
     bool? showControls,
     bool? showSettings,
     bool? isProgressRestored,
-  }) =>
-      ComicReaderState(
-        pages: pages ?? this.pages,
-        currentPage: currentPage ?? this.currentPage,
-        isLoading: isLoading ?? this.isLoading,
-        error: error,
-        showControls: showControls ?? this.showControls,
-        showSettings: showSettings ?? this.showSettings,
-        isProgressRestored: isProgressRestored ?? this.isProgressRestored,
-      );
+  }) => ComicReaderState(
+    pages: pages ?? this.pages,
+    currentPage: currentPage ?? this.currentPage,
+    isLoading: isLoading ?? this.isLoading,
+    error: error,
+    showControls: showControls ?? this.showControls,
+    showSettings: showSettings ?? this.showSettings,
+    isProgressRestored: isProgressRestored ?? this.isProgressRestored,
+  );
 }
 
 /// 漫画阅读器 Notifier
 class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
   ComicReaderNotifier(this._ref, this._comic)
-      : super(ComicReaderState(
-          pages: [],
-          currentPage: 0,
-        )) {
+    : super(ComicReaderState(pages: [], currentPage: 0)) {
     _init();
   }
 
   final Ref _ref;
   final ComicItem _comic;
   final ReadingProgressService _progressService = ReadingProgressService();
+  Directory? _archiveWorkDir;
 
   // 支持的图片格式
-  static const _imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+  static const _imageExtensions = [
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.webp',
+    '.bmp',
+  ];
 
   Future<void> _init() async {
     await _progressService.init();
@@ -118,7 +130,10 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
       }
     } on Exception catch (e) {
       logger.e('加载漫画页面失败', e);
-      state = state.copyWith(isLoading: false, error: appL10n.comicReaderLoadFailedWithError(e));
+      state = state.copyWith(
+        isLoading: false,
+        error: appL10n.comicReaderLoadFailedWithError(e),
+      );
     }
   }
 
@@ -126,7 +141,10 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
     final connections = _ref.read(activeConnectionsProvider);
     final conn = connections[_comic.sourceId];
     if (conn == null) {
-      state = state.copyWith(isLoading: false, error: appL10n.comicReaderConnectionUnavailable);
+      state = state.copyWith(
+        isLoading: false,
+        error: appL10n.comicReaderConnectionUnavailable,
+      );
       return;
     }
 
@@ -137,20 +155,14 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
       if (item.isDirectory) return false;
       final ext = item.name.toLowerCase();
       return _imageExtensions.any(ext.endsWith);
-    }).toList()
-
-    ..sort((a, b) => a.name.compareTo(b.name));
+    }).toList()..sort((a, b) => a.name.compareTo(b.name));
 
     final pages = <ComicPage>[];
     for (var i = 0; i < imageFiles.length; i++) {
       final file = imageFiles[i];
       // 存储文件路径用于流式加载，而不是 URL
       // 因为 SMB/WebDAV 的 URL 格式 (smb://, webdav://) 无法被 Image.network 加载
-      pages.add(ComicPage(
-        index: i,
-        filePath: file.path,
-        fileName: file.name,
-      ));
+      pages.add(ComicPage(index: i, filePath: file.path, fileName: file.name));
     }
 
     state = state.copyWith(pages: pages, isLoading: false);
@@ -160,46 +172,68 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
     final connections = _ref.read(activeConnectionsProvider);
     final conn = connections[_comic.sourceId];
     if (conn == null) {
-      state = state.copyWith(isLoading: false, error: appL10n.comicReaderConnectionUnavailable);
+      state = state.copyWith(
+        isLoading: false,
+        error: appL10n.comicReaderConnectionUnavailable,
+      );
       return;
     }
 
     final fs = conn.adapter.fileSystem;
+    await _deleteArchiveWorkDir();
 
-    // 下载压缩包
-    final stream = await fs.getFileStream(_comic.folderPath);
-    final chunks = <List<int>>[];
-    await for (final chunk in stream) {
-      chunks.add(chunk);
-    }
-    final archiveBytes = Uint8List.fromList(chunks.expand((e) => e).toList());
-
-    // 获取压缩类型
-    final fileName = path.basename(_comic.folderPath);
     final archiveType = _getArchiveType(_comic.type);
+    final fileName = path.basename(_comic.folderPath);
+    final tempDir = await getTemporaryDirectory();
+    final workDir = Directory(
+      path.join(
+        tempDir.path,
+        'comic_archive_${DateTime.now().microsecondsSinceEpoch}',
+      ),
+    );
+    final extractDir = Directory(path.join(workDir.path, 'pages'));
+    await workDir.create(recursive: true);
+    _archiveWorkDir = workDir;
 
-    // 使用解压服务解压
+    final archiveFile = File(path.join(workDir.path, fileName));
+    final sink = archiveFile.openWrite();
+    try {
+      final stream = await fs.getFileStream(_comic.folderPath);
+      await for (final chunk in stream) {
+        sink.add(chunk);
+      }
+    } finally {
+      await sink.close();
+    }
+
     final extractService = ArchiveExtractService();
-    final result = await extractService.extractImages(
-      archiveBytes: archiveBytes,
+    final result = await extractService.extractImagesToDirectory(
+      archiveFile: archiveFile,
       archiveType: archiveType,
-      fileName: fileName,
+      outputDir: extractDir,
     );
 
     if (!result.success) {
+      await _deleteArchiveWorkDir();
       state = state.copyWith(isLoading: false, error: result.error);
       return;
+    }
+
+    try {
+      if (await archiveFile.exists()) {
+        await archiveFile.delete();
+      }
+    } on Exception catch (e, st) {
+      logger.w('删除漫画临时压缩包失败', e, st);
     }
 
     // 转换为 ComicPage
     final pages = <ComicPage>[];
     for (var i = 0; i < result.files.length; i++) {
       final file = result.files[i];
-      pages.add(ComicPage(
-        index: i,
-        bytes: file.bytes,
-        fileName: file.name,
-      ));
+      pages.add(
+        ComicPage(index: i, localFilePath: file.path, fileName: file.name),
+      );
     }
 
     state = state.copyWith(pages: pages, isLoading: false);
@@ -207,14 +241,17 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
 
   /// 将 ComicType 转换为 ArchiveType
   ArchiveType _getArchiveType(ComicType type) => switch (type) {
-        ComicType.cbz => ArchiveType.zip,
-        ComicType.cbr => ArchiveType.rar,
-        ComicType.cb7 => ArchiveType.sevenZip,
-        ComicType.folder => ArchiveType.unknown,
-      };
+    ComicType.cbz => ArchiveType.zip,
+    ComicType.cbr => ArchiveType.rar,
+    ComicType.cb7 => ArchiveType.sevenZip,
+    ComicType.folder => ArchiveType.unknown,
+  };
 
   Future<void> _restoreProgress() async {
-    final itemId = _progressService.generateItemId(_comic.sourceId, _comic.folderPath);
+    final itemId = _progressService.generateItemId(
+      _comic.sourceId,
+      _comic.folderPath,
+    );
     final progress = _progressService.getProgress(itemId);
     if (progress != null && state.pages.isNotEmpty) {
       final page = progress.position.toInt().clamp(0, state.pages.length - 1);
@@ -247,7 +284,10 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
   }
 
   void toggleControls() {
-    state = state.copyWith(showControls: !state.showControls, showSettings: false);
+    state = state.copyWith(
+      showControls: !state.showControls,
+      showSettings: false,
+    );
   }
 
   void toggleSettings() {
@@ -261,7 +301,10 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
   }
 
   Future<void> _saveProgress() async {
-    final itemId = _progressService.generateItemId(_comic.sourceId, _comic.folderPath);
+    final itemId = _progressService.generateItemId(
+      _comic.sourceId,
+      _comic.folderPath,
+    );
     await _progressService.saveProgress(
       ReadingProgress(
         itemId: itemId,
@@ -271,6 +314,26 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
         lastReadAt: DateTime.now(),
       ),
     );
+  }
+
+  Future<void> _deleteArchiveWorkDir() async {
+    final dir = _archiveWorkDir;
+    _archiveWorkDir = null;
+    if (dir == null) return;
+
+    try {
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
+      }
+    } on Exception catch (e, st) {
+      logger.w('清理漫画临时目录失败', e, st);
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_deleteArchiveWorkDir());
+    super.dispose();
   }
 }
 
@@ -285,7 +348,8 @@ class ComicReaderPage extends ConsumerStatefulWidget {
 }
 
 class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
-  late final StateNotifierProvider<ComicReaderNotifier, ComicReaderState> _provider;
+  late final StateNotifierProvider<ComicReaderNotifier, ComicReaderState>
+  _provider;
   PageController? _pageController;
   ScrollController? _scrollController;
   int? _lastInitializedPage; // 记录 PageController 初始化的页码
@@ -329,14 +393,16 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
   /// 显示页面列表抽屉
   void _showPageListDrawer(BuildContext context, ComicReaderState state) {
     final settings = ref.read(comicReaderSettingsProvider);
-    final isDarkBg = settings.backgroundColor == ComicBackgroundColor.black ||
+    final isDarkBg =
+        settings.backgroundColor == ComicBackgroundColor.black ||
         settings.backgroundColor == ComicBackgroundColor.darkGray ||
         settings.backgroundColor == ComicBackgroundColor.gray;
 
     showAdaptiveModalSheet<void>(
       context: context,
-      backgroundColor:
-          isDarkBg ? const Color(0xFF1A1A1A) : Theme.of(context).colorScheme.surface,
+      backgroundColor: isDarkBg
+          ? const Color(0xFF1A1A1A)
+          : Theme.of(context).colorScheme.surface,
       isScrollControlled: true,
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.6,
@@ -365,7 +431,9 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                     '${state.currentPage + 1}/${state.pages.length}',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDarkBg ? Colors.grey.shade400 : Colors.grey.shade600,
+                      color: isDarkBg
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
                     ),
                   ),
                 ],
@@ -401,7 +469,9 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                         border: Border.all(
                           color: isCurrentPage
                               ? AppColors.primary
-                              : (isDarkBg ? Colors.grey.shade700 : Colors.grey.shade300),
+                              : (isDarkBg
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.shade300),
                           width: isCurrentPage ? 2 : 1,
                         ),
                         borderRadius: BorderRadius.circular(4),
@@ -415,7 +485,9 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                               children: [
                                 Icon(
                                   Icons.image_outlined,
-                                  color: isDarkBg ? Colors.grey.shade600 : Colors.grey.shade400,
+                                  color: isDarkBg
+                                      ? Colors.grey.shade600
+                                      : Colors.grey.shade400,
                                   size: 24,
                                 ),
                                 const SizedBox(height: 4),
@@ -423,10 +495,14 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                                   '${index + 1}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    fontWeight: isCurrentPage ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: isCurrentPage
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
                                     color: isCurrentPage
                                         ? AppColors.primary
-                                        : (isDarkBg ? Colors.grey.shade400 : Colors.grey.shade600),
+                                        : (isDarkBg
+                                              ? Colors.grey.shade400
+                                              : Colors.grey.shade600),
                                   ),
                                 ),
                               ],
@@ -494,9 +570,10 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
           curve: Curves.easeOut,
         );
       } else if (_scrollController != null && _scrollController!.hasClients) {
-        final offset = (_scrollController!.offset -
-                MediaQuery.of(context).size.height * 0.8)
-            .clamp(0.0, _scrollController!.position.maxScrollExtent);
+        final offset =
+            (_scrollController!.offset -
+                    MediaQuery.of(context).size.height * 0.8)
+                .clamp(0.0, _scrollController!.position.maxScrollExtent);
         _scrollController!.animateTo(
           offset,
           duration: const Duration(milliseconds: 300),
@@ -513,9 +590,10 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
           curve: Curves.easeOut,
         );
       } else if (_scrollController != null && _scrollController!.hasClients) {
-        final offset = (_scrollController!.offset +
-                MediaQuery.of(context).size.height * 0.8)
-            .clamp(0.0, _scrollController!.position.maxScrollExtent);
+        final offset =
+            (_scrollController!.offset +
+                    MediaQuery.of(context).size.height * 0.8)
+                .clamp(0.0, _scrollController!.position.maxScrollExtent);
         _scrollController!.animateTo(
           offset,
           duration: const Duration(milliseconds: 300),
@@ -598,14 +676,14 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
               children: [
                 // 固定顶栏 - 避免摄像头遮挡内容
                 _buildFixedHeader(state, settings),
-                Expanded(
-                  child: _buildMainContent(state, notifier, settings),
-                ),
+                Expanded(child: _buildMainContent(state, notifier, settings)),
               ],
             ),
 
             // 点击翻页区域
-            if (settings.tapToTurn && !state.isLoading && state.pages.isNotEmpty)
+            if (settings.tapToTurn &&
+                !state.isLoading &&
+                state.pages.isNotEmpty)
               _buildTapZones(state, notifier, settings),
 
             // 控制栏
@@ -622,7 +700,13 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: _buildBottomBar(context, state, notifier, settings, isDark),
+                child: _buildBottomBar(
+                  context,
+                  state,
+                  notifier,
+                  settings,
+                  isDark,
+                ),
               ),
             ],
           ],
@@ -632,10 +716,14 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
   }
 
   /// 构建固定顶栏，显示漫画名和页码
-  Widget _buildFixedHeader(ComicReaderState state, ComicReaderSettings settings) {
+  Widget _buildFixedHeader(
+    ComicReaderState state,
+    ComicReaderSettings settings,
+  ) {
     final bgColor = settings.backgroundColor.color;
     // 根据背景颜色选择文字颜色
-    final isDarkBg = settings.backgroundColor == ComicBackgroundColor.black ||
+    final isDarkBg =
+        settings.backgroundColor == ComicBackgroundColor.black ||
         settings.backgroundColor == ComicBackgroundColor.darkGray ||
         settings.backgroundColor == ComicBackgroundColor.gray;
     final textColor = isDarkBg ? Colors.grey.shade400 : Colors.grey.shade600;
@@ -645,12 +733,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: bgColor,
-        border: Border(
-          bottom: BorderSide(
-            color: borderColor,
-            width: 0.5,
-          ),
-        ),
+        border: Border(bottom: BorderSide(color: borderColor, width: 0.5)),
       ),
       child: SafeArea(
         bottom: false,
@@ -672,10 +755,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
               const SizedBox(width: 8),
               Text(
                 '${state.currentPage + 1}/${state.pages.length}',
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: textColor, fontSize: 12),
               ),
             ],
           ],
@@ -701,7 +781,11 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: Colors.white54),
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: Colors.white54,
+            ),
             const SizedBox(height: 16),
             Text(
               state.error!,
@@ -746,9 +830,10 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         );
       } else if (_scrollController != null && _scrollController!.hasClients) {
         // webtoon 模式：向上滚动一屏
-        final offset = (_scrollController!.offset -
-                MediaQuery.of(context).size.height * 0.8)
-            .clamp(0.0, _scrollController!.position.maxScrollExtent);
+        final offset =
+            (_scrollController!.offset -
+                    MediaQuery.of(context).size.height * 0.8)
+                .clamp(0.0, _scrollController!.position.maxScrollExtent);
         _scrollController!.animateTo(
           offset,
           duration: const Duration(milliseconds: 300),
@@ -765,9 +850,10 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         );
       } else if (_scrollController != null && _scrollController!.hasClients) {
         // webtoon 模式：向下滚动一屏
-        final offset = (_scrollController!.offset +
-                MediaQuery.of(context).size.height * 0.8)
-            .clamp(0.0, _scrollController!.position.maxScrollExtent);
+        final offset =
+            (_scrollController!.offset +
+                    MediaQuery.of(context).size.height * 0.8)
+                .clamp(0.0, _scrollController!.position.maxScrollExtent);
         _scrollController!.animateTo(
           offset,
           duration: const Duration(milliseconds: 300),
@@ -864,10 +950,12 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
 
     final isRtl = settings.readingDirection == ComicReadingDirection.rtl;
 
-    // 检查是否有需要流式加载的页面（文件夹类型漫画）
-    final hasStreamPages = state.pages.any((p) => p.bytes == null && p.filePath != null);
+    // 检查是否有需要按路径加载的页面（远程文件夹或本地解压目录）
+    final hasPathPages = state.pages.any(
+      (p) => p.bytes == null && (p.filePath != null || p.localFilePath != null),
+    );
 
-    if (hasStreamPages) {
+    if (hasPathPages) {
       // 使用 PageView + PhotoView 组合，支持流式加载
       return PageView.builder(
         controller: _pageController,
@@ -902,10 +990,11 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         notifier.goToPage(index);
       },
       scrollPhysics: const BouncingScrollPhysics(),
-      backgroundDecoration: BoxDecoration(color: settings.backgroundColor.color),
-      loadingBuilder: (context, event) => const Center(
-        child: CircularProgressIndicator(color: Colors.white54),
+      backgroundDecoration: BoxDecoration(
+        color: settings.backgroundColor.color,
       ),
+      loadingBuilder: (context, event) =>
+          const Center(child: CircularProgressIndicator(color: Colors.white54)),
     );
   }
 
@@ -922,7 +1011,24 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         minScale: _getMinScale(settings.scaleMode),
         maxScale: PhotoViewComputedScale.covered * 3,
         initialScale: _getInitialScale(settings.scaleMode),
-        backgroundDecoration: BoxDecoration(color: settings.backgroundColor.color),
+        backgroundDecoration: BoxDecoration(
+          color: settings.backgroundColor.color,
+        ),
+        heroAttributes: PhotoViewHeroAttributes(tag: 'comic_page_$index'),
+        loadingBuilder: (context, event) => _buildLoadingPlaceholder(),
+        errorBuilder: (context, error, stackTrace) => _buildErrorPlaceholder(),
+      );
+    }
+
+    if (page.localFilePath != null) {
+      return PhotoView(
+        imageProvider: FileImage(File(page.localFilePath!)),
+        minScale: _getMinScale(settings.scaleMode),
+        maxScale: PhotoViewComputedScale.covered * 3,
+        initialScale: _getInitialScale(settings.scaleMode),
+        backgroundDecoration: BoxDecoration(
+          color: settings.backgroundColor.color,
+        ),
         heroAttributes: PhotoViewHeroAttributes(tag: 'comic_page_$index'),
         loadingBuilder: (context, event) => _buildLoadingPlaceholder(),
         errorBuilder: (context, error, stackTrace) => _buildErrorPlaceholder(),
@@ -958,10 +1064,13 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
           minScale: _getMinScale(settings.scaleMode),
           maxScale: PhotoViewComputedScale.covered * 3,
           initialScale: _getInitialScale(settings.scaleMode),
-          backgroundDecoration: BoxDecoration(color: settings.backgroundColor.color),
+          backgroundDecoration: BoxDecoration(
+            color: settings.backgroundColor.color,
+          ),
           heroAttributes: PhotoViewHeroAttributes(tag: 'comic_page_$index'),
           loadingBuilder: (context, event) => _buildLoadingPlaceholder(),
-          errorBuilder: (context, error, stackTrace) => _buildErrorPlaceholder(),
+          errorBuilder: (context, error, stackTrace) =>
+              _buildErrorPlaceholder(),
         );
       }
     }
@@ -970,13 +1079,14 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
   }
 
   PhotoViewComputedScale _getMinScale(ComicScaleMode mode) => switch (mode) {
-        ComicScaleMode.fitWidth => PhotoViewComputedScale.contained,
-        ComicScaleMode.fitHeight => PhotoViewComputedScale.contained,
-        ComicScaleMode.fitScreen => PhotoViewComputedScale.contained,
-        ComicScaleMode.original => PhotoViewComputedScale.contained,
-      };
+    ComicScaleMode.fitWidth => PhotoViewComputedScale.contained,
+    ComicScaleMode.fitHeight => PhotoViewComputedScale.contained,
+    ComicScaleMode.fitScreen => PhotoViewComputedScale.contained,
+    ComicScaleMode.original => PhotoViewComputedScale.contained,
+  };
 
-  PhotoViewComputedScale _getInitialScale(ComicScaleMode mode) => switch (mode) {
+  PhotoViewComputedScale _getInitialScale(ComicScaleMode mode) =>
+      switch (mode) {
         ComicScaleMode.fitWidth => PhotoViewComputedScale.contained,
         ComicScaleMode.fitHeight => PhotoViewComputedScale.contained,
         ComicScaleMode.fitScreen => PhotoViewComputedScale.contained,
@@ -1085,6 +1195,14 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
       );
     }
 
+    if (page.localFilePath != null) {
+      return Image.file(
+        File(page.localFilePath!),
+        fit: fit,
+        errorBuilder: (_, _, _) => _buildErrorPlaceholder(),
+      );
+    }
+
     // 使用文件路径流式加载（文件夹类型漫画）
     if (page.filePath != null) {
       final fs = _getFileSystem();
@@ -1132,17 +1250,18 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
     return _buildErrorPlaceholder();
   }
 
-  Widget _buildLoadingPlaceholder() => const Center(
-        child: CircularProgressIndicator(color: Colors.white54),
-      );
+  Widget _buildLoadingPlaceholder() =>
+      const Center(child: CircularProgressIndicator(color: Colors.white54));
 
   Widget _buildErrorPlaceholder() => const Center(
-        child: Icon(Icons.broken_image, size: 48, color: Colors.white24),
-      );
+    child: Icon(Icons.broken_image, size: 48, color: Colors.white24),
+  );
 
   ImageProvider _getImageProvider(ComicPage page) {
     if (page.bytes != null) {
       return MemoryImage(page.bytes!);
+    } else if (page.localFilePath != null) {
+      return FileImage(File(page.localFilePath!));
     } else if (page.url != null) {
       return NetworkImage(page.url!);
     }
@@ -1154,52 +1273,48 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
     ComicReaderState state,
     ComicReaderSettings settings,
     bool isDark,
-  ) =>
-      DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black.withValues(alpha: 0.7),
-              Colors.transparent,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                Expanded(
-                  child: Text(
-                    widget.comic.folderName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                // 目录按钮（显示页面列表）
-                IconButton(
-                  icon: const Icon(Icons.list, color: Colors.white),
-                  onPressed: state.pages.isNotEmpty
-                      ? () => _showPageListDrawer(context, state)
-                      : null,
-                  tooltip: context.l10n.comicReaderPageListTooltip,
-                ),
-              ],
+  ) => DecoratedBox(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
+      ),
+    ),
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
-          ),
+            Expanded(
+              child: Text(
+                widget.comic.folderName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            // 目录按钮（显示页面列表）
+            IconButton(
+              icon: const Icon(Icons.list, color: Colors.white),
+              onPressed: state.pages.isNotEmpty
+                  ? () => _showPageListDrawer(context, state)
+                  : null,
+              tooltip: context.l10n.comicReaderPageListTooltip,
+            ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 
   Widget _buildBottomBar(
     BuildContext context,
@@ -1215,10 +1330,7 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.transparent,
-          ],
+          colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
         ),
       ),
       child: SafeArea(
@@ -1263,12 +1375,15 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                 children: [
                   IconButton(
                     icon: Icon(
-                      isRtl ? Icons.skip_next_rounded : Icons.skip_previous_rounded,
+                      isRtl
+                          ? Icons.skip_next_rounded
+                          : Icons.skip_previous_rounded,
                       color: Colors.white,
                     ),
                     onPressed: state.currentPage > 0
                         ? () {
-                            if (_pageController != null && _pageController!.hasClients) {
+                            if (_pageController != null &&
+                                _pageController!.hasClients) {
                               _pageController!.previousPage(
                                 duration: const Duration(milliseconds: 300),
                                 curve: Curves.easeOut,
@@ -1287,7 +1402,10 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                     tooltip: context.l10n.comicReaderFirstPage,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                    icon: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.white,
+                    ),
                     onPressed: _showSettingsSheet,
                     tooltip: context.l10n.comicReaderSettings,
                   ),
@@ -1306,12 +1424,15 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
                   ),
                   IconButton(
                     icon: Icon(
-                      isRtl ? Icons.skip_previous_rounded : Icons.skip_next_rounded,
+                      isRtl
+                          ? Icons.skip_previous_rounded
+                          : Icons.skip_next_rounded,
                       color: Colors.white,
                     ),
                     onPressed: state.currentPage < state.pages.length - 1
                         ? () {
-                            if (_pageController != null && _pageController!.hasClients) {
+                            if (_pageController != null &&
+                                _pageController!.hasClients) {
                               _pageController!.nextPage(
                                 duration: const Duration(milliseconds: 300),
                                 curve: Curves.easeOut,
@@ -1343,7 +1464,10 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
     // 阅读方向选项
     final readingDirections = [
       (icon: Icons.arrow_forward, label: context.l10n.comicReaderLeftToRight),
-      (icon: Icons.arrow_back_rounded, label: context.l10n.comicReaderRightToLeft),
+      (
+        icon: Icons.arrow_back_rounded,
+        label: context.l10n.comicReaderRightToLeft,
+      ),
     ];
 
     // 缩放模式选项
@@ -1374,7 +1498,9 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         SettingPageTurnModePicker(
           modes: readingDirections,
           selectedIndex: settings.readingDirection.index,
-          onSelect: (index) => settingsNotifier.setReadingDirection(ComicReadingDirection.values[index]),
+          onSelect: (index) => settingsNotifier.setReadingDirection(
+            ComicReadingDirection.values[index],
+          ),
         ),
         const SizedBox(height: 24),
 
@@ -1383,7 +1509,8 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         SettingPageTurnModePicker(
           modes: scaleModes,
           selectedIndex: settings.scaleMode.index,
-          onSelect: (index) => settingsNotifier.setScaleMode(ComicScaleMode.values[index]),
+          onSelect: (index) =>
+              settingsNotifier.setScaleMode(ComicScaleMode.values[index]),
         ),
         const SizedBox(height: 24),
 
@@ -1391,8 +1518,12 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         SettingSectionTitle(title: context.l10n.comicReaderBackgroundColor),
         SettingColorPicker(
           colors: ComicBackgroundColor.values.map((c) => c.color).toList(),
-          selectedIndex: ComicBackgroundColor.values.indexOf(settings.backgroundColor),
-          onSelect: (index) => settingsNotifier.setBackgroundColor(ComicBackgroundColor.values[index]),
+          selectedIndex: ComicBackgroundColor.values.indexOf(
+            settings.backgroundColor,
+          ),
+          onSelect: (index) => settingsNotifier.setBackgroundColor(
+            ComicBackgroundColor.values[index],
+          ),
         ),
         const SizedBox(height: 24),
 
@@ -1414,7 +1545,8 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
         SettingSwitchRow(
           title: context.l10n.comicReaderShowPageNumber,
           value: settings.showPageNumber,
-          onChanged: (value) => settingsNotifier.setShowPageNumber(value: value),
+          onChanged: (value) =>
+              settingsNotifier.setShowPageNumber(value: value),
         ),
         SettingSwitchRow(
           title: context.l10n.comicReaderKeepScreenOn,

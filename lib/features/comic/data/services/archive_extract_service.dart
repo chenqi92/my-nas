@@ -37,6 +37,33 @@ class ExtractedFile {
   final Uint8List bytes;
 }
 
+/// 解压到磁盘后的图片文件
+class ExtractedImageFile {
+  const ExtractedImageFile({required this.name, required this.path});
+
+  final String name;
+  final String path;
+}
+
+/// 解压到磁盘的结果
+class ExtractToDirectoryResult {
+  const ExtractToDirectoryResult({
+    required this.success,
+    this.files = const [],
+    this.error,
+  });
+
+  factory ExtractToDirectoryResult.failure(String error) =>
+      ExtractToDirectoryResult(success: false, error: error);
+
+  factory ExtractToDirectoryResult.fromFiles(List<ExtractedImageFile> files) =>
+      ExtractToDirectoryResult(success: true, files: files);
+
+  final bool success;
+  final List<ExtractedImageFile> files;
+  final String? error;
+}
+
 /// 跨平台压缩文件解压服务
 ///
 /// 支持的格式：
@@ -95,6 +122,28 @@ class ArchiveExtractService {
     }
   }
 
+  /// 解压压缩文件到目录并返回图片文件路径。
+  ///
+  /// 调用方负责管理 [outputDir] 的生命周期。该方法避免把所有图片字节常驻内存。
+  Future<ExtractToDirectoryResult> extractImagesToDirectory({
+    required File archiveFile,
+    required ArchiveType archiveType,
+    required Directory outputDir,
+  }) async {
+    switch (archiveType) {
+      case ArchiveType.zip:
+        return _extractZipToDirectory(archiveFile, outputDir);
+      case ArchiveType.rar:
+        return _extractRarToDirectory(archiveFile, outputDir);
+      case ArchiveType.sevenZip:
+        return _extract7zToDirectory(archiveFile, outputDir);
+      case ArchiveType.unknown:
+        return ExtractToDirectoryResult.failure(
+          appL10n.archiveExtractUnknownFormat,
+        );
+    }
+  }
+
   /// 解压 ZIP 文件
   Future<ExtractResult> _extractZip(Uint8List bytes) async {
     try {
@@ -125,6 +174,49 @@ class ArchiveExtractService {
     }
   }
 
+  Future<ExtractToDirectoryResult> _extractZipToDirectory(
+    File archiveFile,
+    Directory outputDir,
+  ) async {
+    archive_lib.InputFileStream? input;
+    archive_lib.Archive? archive;
+    try {
+      await outputDir.create(recursive: true);
+
+      input = archive_lib.InputFileStream(archiveFile.path);
+      archive = archive_lib.ZipDecoder().decodeStream(input);
+
+      final files = <ExtractedImageFile>[];
+      for (final file in archive.files) {
+        if (!file.isFile || !_isImageFile(file.name)) continue;
+
+        final filePath = _safeOutputPath(outputDir.path, file.name);
+        if (filePath == null) continue;
+
+        await Directory(path.dirname(filePath)).create(recursive: true);
+        final output = archive_lib.OutputFileStream(filePath);
+        try {
+          file.writeContent(output);
+        } finally {
+          await output.close();
+        }
+
+        files.add(ExtractedImageFile(name: file.name, path: filePath));
+      }
+
+      files.sort((a, b) => a.name.compareTo(b.name));
+      return ExtractToDirectoryResult.fromFiles(files);
+    } on Exception catch (e, st) {
+      AppError.handle(e, st, 'extractZipToDirectory');
+      return ExtractToDirectoryResult.failure(
+        appL10n.archiveExtractZipFailed(e),
+      );
+    } finally {
+      await input?.close();
+      await archive?.clear();
+    }
+  }
+
   /// 解压 RAR 文件
   Future<ExtractResult> _extractRar(Uint8List bytes, String fileName) async {
     // 桌面平台使用系统命令
@@ -146,6 +238,29 @@ class ArchiveExtractService {
     }
   }
 
+  Future<ExtractToDirectoryResult> _extractRarToDirectory(
+    File archiveFile,
+    Directory outputDir,
+  ) async {
+    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+      return _extractFileWithSystemCommand(
+        archiveFile: archiveFile,
+        outputDir: outputDir,
+        commands: _getRarCommands(),
+        formatName: 'RAR',
+      );
+    }
+
+    try {
+      return await _extractZipToDirectory(archiveFile, outputDir);
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, 'RAR格式在移动平台不支持，尝试ZIP解压失败');
+      return ExtractToDirectoryResult.failure(
+        appL10n.archiveExtractRarUnsupported,
+      );
+    }
+  }
+
   /// 解压 7z 文件
   Future<ExtractResult> _extract7z(Uint8List bytes, String fileName) async {
     // 桌面平台使用系统命令
@@ -159,6 +274,24 @@ class ArchiveExtractService {
     }
 
     return ExtractResult.failure(appL10n.archiveExtract7zUnsupported);
+  }
+
+  Future<ExtractToDirectoryResult> _extract7zToDirectory(
+    File archiveFile,
+    Directory outputDir,
+  ) async {
+    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
+      return _extractFileWithSystemCommand(
+        archiveFile: archiveFile,
+        outputDir: outputDir,
+        commands: _get7zCommands(),
+        formatName: '7z',
+      );
+    }
+
+    return ExtractToDirectoryResult.failure(
+      appL10n.archiveExtract7zUnsupported,
+    );
   }
 
   /// 使用系统命令解压
@@ -235,6 +368,49 @@ class ArchiveExtractService {
     }
   }
 
+  Future<ExtractToDirectoryResult> _extractFileWithSystemCommand({
+    required File archiveFile,
+    required Directory outputDir,
+    required List<String> commands,
+    required String formatName,
+  }) async {
+    String? availableCommand;
+    for (final cmd in commands) {
+      if (await _isCommandAvailable(cmd)) {
+        availableCommand = cmd;
+        break;
+      }
+    }
+
+    if (availableCommand == null) {
+      return ExtractToDirectoryResult.failure(
+        appL10n.archiveExtractToolNotInstalled(
+          formatName,
+          commands.join(', '),
+          _getInstallHint(formatName),
+        ),
+      );
+    }
+
+    await outputDir.create(recursive: true);
+    final result = await _runExtractCommand(
+      command: availableCommand,
+      archivePath: archiveFile.path,
+      extractPath: outputDir.path,
+    );
+
+    if (!result) {
+      return ExtractToDirectoryResult.failure(
+        appL10n.archiveExtractFormatFailed(formatName),
+      );
+    }
+
+    final files = <ExtractedImageFile>[];
+    await _collectImageFilePaths(outputDir, outputDir, files);
+    files.sort((a, b) => a.name.compareTo(b.name));
+    return ExtractToDirectoryResult.fromFiles(files);
+  }
+
   /// 递归收集图片文件
   Future<void> _collectImageFiles(
     Directory dir,
@@ -248,6 +424,42 @@ class ArchiveExtractService {
         );
       }
     }
+  }
+
+  Future<void> _collectImageFilePaths(
+    Directory root,
+    Directory dir,
+    List<ExtractedImageFile> files,
+  ) async {
+    await for (final entity in dir.list(recursive: true)) {
+      if (entity is File && _isImageFile(entity.path)) {
+        files.add(
+          ExtractedImageFile(
+            name: path.relative(entity.path, from: root.path),
+            path: entity.path,
+          ),
+        );
+      }
+    }
+  }
+
+  String? _safeOutputPath(String outputDir, String entryName) {
+    final normalizedName = path.normalize(entryName.replaceAll(r'\', '/'));
+    if (normalizedName == '.' ||
+        normalizedName == '..' ||
+        path.isAbsolute(normalizedName) ||
+        normalizedName.startsWith('../')) {
+      return null;
+    }
+
+    final outputPath = path.normalize(path.join(outputDir, normalizedName));
+    if (!path.isWithin(
+      path.canonicalize(outputDir),
+      path.canonicalize(outputPath),
+    )) {
+      return null;
+    }
+    return outputPath;
   }
 
   /// 检查命令是否可用
