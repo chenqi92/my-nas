@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:pointycastle/digests/sha256.dart';
 import 'package:pointycastle/key_derivators/api.dart';
@@ -45,16 +46,7 @@ Uint8List _derivePbkdf2InIsolate(_Pbkdf2Request request) {
 /// 安全存储不可用（macOS 未配置 entitlement 等）时切到本地加密 box，
 /// 安全级别低于 Keychain 但避免明文持久化。
 class AppLockSecureStore {
-  AppLockSecureStore()
-    : _storage = const FlutterSecureStorage(
-        aOptions: AndroidOptions(encryptedSharedPreferences: true),
-        iOptions: IOSOptions(
-          accessibility: KeychainAccessibility.first_unlock_this_device,
-        ),
-        mOptions: MacOsOptions(
-          accessibility: KeychainAccessibility.first_unlock_this_device,
-        ),
-      );
+  AppLockSecureStore() : _storage = defaultSecureStorage;
 
   final FlutterSecureStorage _storage;
 

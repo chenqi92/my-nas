@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_hook.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
+import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 漫画缓存条目
@@ -94,7 +94,7 @@ class ComicLibraryCacheService {
   static const _cacheKey = 'comic_library_cache';
   static const _cacheDuration = Duration(hours: 24);
 
-  final _storage = const FlutterSecureStorage();
+  final _storage = defaultSecureStorage;
   ComicLibraryCache? _cache;
   bool _initialized = false;
 

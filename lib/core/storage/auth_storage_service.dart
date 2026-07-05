@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// 安全存储异常
@@ -37,16 +38,7 @@ class SecureStorageException implements Exception {
 ///
 /// 使用安全存储来保存用户凭证和设备信息
 class AuthStorageService {
-  AuthStorageService()
-    : _storage = const FlutterSecureStorage(
-        aOptions: AndroidOptions(encryptedSharedPreferences: true),
-        iOptions: IOSOptions(
-          accessibility: KeychainAccessibility.first_unlock_this_device,
-        ),
-        mOptions: MacOsOptions(
-          accessibility: KeychainAccessibility.first_unlock_this_device,
-        ),
-      );
+  AuthStorageService() : _storage = defaultSecureStorage;
 
   final FlutterSecureStorage _storage;
 

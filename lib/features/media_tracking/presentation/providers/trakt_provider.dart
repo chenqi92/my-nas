@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/service_adapters/trakt/api/trakt_api.dart';
 import 'package:my_nas/service_adapters/trakt/trakt_config.dart';
@@ -154,13 +154,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
     _init();
   }
 
-  static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions:
-        IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
-    mOptions:
-        MacOsOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
-  );
+  static const _storage = defaultSecureStorage;
 
   static const _configKey = 'trakt_config';
   static const _pendingOAuthKey = 'trakt_pending_oauth';

@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/features/music/data/services/music_scraper_factory.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
@@ -15,9 +16,7 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 ///
 /// 管理多个刮削源，提供统一的搜索、获取元数据、封面、歌词接口
 class MusicScraperManagerService {
-  MusicScraperManagerService() {
-    _secureStorage = const FlutterSecureStorage();
-  }
+  MusicScraperManagerService() : _secureStorage = defaultSecureStorage;
 
   static const String _boxName = 'music_scrapers';
   static const String _credentialPrefix = 'music_scraper_credential_';

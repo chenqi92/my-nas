@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/scraper_factory.dart';
@@ -65,11 +65,7 @@ class ScraperManagerService {
   Stream<ScraperSourceEvent> get onSourceChanged => _eventController.stream;
 
   /// 安全存储（用于存储 API Key、Cookie 等敏感信息）
-  static const _secureStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
-  );
+  static const _secureStorage = defaultSecureStorage;
 
   /// 初始化服务
   Future<void> init() async {
