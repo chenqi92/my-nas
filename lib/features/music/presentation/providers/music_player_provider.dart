@@ -38,12 +38,15 @@ final currentMusicProvider = StateProvider<MusicItem?>((ref) => null);
 
 /// 播放队列
 final playQueueProvider =
-    StateNotifierProvider<PlayQueueNotifier, List<MusicItem>>((ref) =>
-        PlayQueueNotifier());
+    StateNotifierProvider<PlayQueueNotifier, List<MusicItem>>(
+      (ref) => PlayQueueNotifier(),
+    );
 
 /// 音乐播放器控制器
 final musicPlayerControllerProvider =
-    StateNotifierProvider<MusicPlayerNotifier, MusicPlayerState>(MusicPlayerNotifier.new);
+    StateNotifierProvider<MusicPlayerNotifier, MusicPlayerState>(
+      MusicPlayerNotifier.new,
+    );
 
 /// 播放模式
 enum PlayMode {
@@ -59,12 +62,17 @@ enum PlayMode {
 
 /// FLAC 文件已修复，需要重试播放的异常
 /// 用于内部通知 play() 方法重新尝试
- class FlacRepairedNeedRetryException implements Exception {
+class FlacRepairedNeedRetryException implements Exception {
   FlacRepairedNeedRetryException(this.music);
   final MusicItem music;
 
   @override
-  String toString() => 'FlacRepairedNeedRetryException: ${appL10n.musicPlayerFlacRepairedNeedRetry}';
+  String toString() =>
+      'FlacRepairedNeedRetryException: ${appL10n.musicPlayerFlacRepairedNeedRetry}';
+}
+
+class _PlayOperationCancelled implements Exception {
+  const _PlayOperationCancelled();
 }
 
 /// 播放器状态
@@ -91,12 +99,14 @@ class MusicPlayerState {
   final int currentIndex;
   final String? errorMessage;
 
-  double get progress =>
-      duration.inMilliseconds > 0 ? position.inMilliseconds / duration.inMilliseconds : 0;
+  double get progress => duration.inMilliseconds > 0
+      ? position.inMilliseconds / duration.inMilliseconds
+      : 0;
 
   /// 缓冲进度 (0.0 - 1.0)
-  double get bufferedProgress =>
-      duration.inMilliseconds > 0 ? bufferedPosition.inMilliseconds / duration.inMilliseconds : 0;
+  double get bufferedProgress => duration.inMilliseconds > 0
+      ? bufferedPosition.inMilliseconds / duration.inMilliseconds
+      : 0;
 
   String get positionText => _formatDuration(position);
   String get durationText => _formatDuration(duration);
@@ -117,18 +127,17 @@ class MusicPlayerState {
     PlayMode? playMode,
     int? currentIndex,
     String? errorMessage,
-  }) =>
-      MusicPlayerState(
-        isPlaying: isPlaying ?? this.isPlaying,
-        isBuffering: isBuffering ?? this.isBuffering,
-        position: position ?? this.position,
-        bufferedPosition: bufferedPosition ?? this.bufferedPosition,
-        duration: duration ?? this.duration,
-        volume: volume ?? this.volume,
-        playMode: playMode ?? this.playMode,
-        currentIndex: currentIndex ?? this.currentIndex,
-        errorMessage: errorMessage,
-      );
+  }) => MusicPlayerState(
+    isPlaying: isPlaying ?? this.isPlaying,
+    isBuffering: isBuffering ?? this.isBuffering,
+    position: position ?? this.position,
+    bufferedPosition: bufferedPosition ?? this.bufferedPosition,
+    duration: duration ?? this.duration,
+    volume: volume ?? this.volume,
+    playMode: playMode ?? this.playMode,
+    currentIndex: currentIndex ?? this.currentIndex,
+    errorMessage: errorMessage,
+  );
 }
 
 /// 播放队列管理
@@ -156,8 +165,7 @@ class PlayQueueNotifier extends StateNotifier<List<MusicItem>> {
 
   void removeFromQueue(int index) {
     if (index >= 0 && index < state.length) {
-      final newList = [...state]
-      ..removeAt(index);
+      final newList = [...state]..removeAt(index);
       state = newList;
     }
   }
@@ -177,13 +185,14 @@ class PlayQueueNotifier extends StateNotifier<List<MusicItem>> {
   }
 
   /// 更新队列中指定歌曲的封面
-  void updateTrackCover(String musicId, {List<int>? coverData, String? coverUrl}) {
+  void updateTrackCover(
+    String musicId, {
+    List<int>? coverData,
+    String? coverUrl,
+  }) {
     final newList = state.map((track) {
       if (track.id == musicId) {
-        return track.copyWith(
-          coverData: coverData,
-          coverUrl: coverUrl,
-        );
+        return track.copyWith(coverData: coverData, coverUrl: coverUrl);
       }
       return track;
     }).toList();
@@ -204,12 +213,20 @@ class PlayQueueNotifier extends StateNotifier<List<MusicItem>> {
       if (track.id == musicId) {
         return track.copyWith(
           // 只补充缺失的字段
-          title: (track.title == null || track.title!.isEmpty) ? title : track.title,
-          artist: (track.artist == null || track.artist!.isEmpty) ? artist : track.artist,
-          album: (track.album == null || track.album!.isEmpty) ? album : track.album,
+          title: (track.title == null || track.title!.isEmpty)
+              ? title
+              : track.title,
+          artist: (track.artist == null || track.artist!.isEmpty)
+              ? artist
+              : track.artist,
+          album: (track.album == null || track.album!.isEmpty)
+              ? album
+              : track.album,
           year: track.year ?? year,
           trackNumber: track.trackNumber ?? trackNumber,
-          genre: (track.genre == null || track.genre!.isEmpty) ? genre : track.genre,
+          genre: (track.genre == null || track.genre!.isEmpty)
+              ? genre
+              : track.genre,
         );
       }
       return track;
@@ -256,6 +273,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
   // 防止并发播放的标志
   // 当 play() 正在执行时，新的 play() 调用会等待或取消
   bool _isPlayOperationInProgress = false;
+  int _playGeneration = 0;
 
   // 随机数生成器（用于随机播放模式）
   final math.Random _random = math.Random();
@@ -280,7 +298,8 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
   static const _stateSaveInterval = Duration(seconds: 10);
 
   // Android 灵动岛服务
-  final AndroidDynamicIslandService _dynamicIslandService = AndroidDynamicIslandService();
+  final AndroidDynamicIslandService _dynamicIslandService =
+      AndroidDynamicIslandService();
   bool _dynamicIslandEnabled = true; // 默认开启，不在 UI 上显示开关
 
   /// iOS 不支持的音频格式回调
@@ -294,13 +313,13 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
   /// 注意：FLAC 自 iOS 11 起已被 AVFoundation 原生支持，因此不在此列表中
   /// 参考：https://developer.apple.com/documentation/avfoundation/audio_track_engineering/audio_format_support
   static const _iosUnsupportedFormats = {
-    '.ape',  // Monkey's Audio
-    '.tta',  // True Audio
-    '.wma',  // Windows Media Audio
-    '.dsd',  // Direct Stream Digital
-    '.dsf',  // DSD Stream File
-    '.dff',  // DSD Interchange File Format
-    '.mka',  // Matroska Audio
+    '.ape', // Monkey's Audio
+    '.tta', // True Audio
+    '.wma', // Windows Media Audio
+    '.dsd', // Direct Stream Digital
+    '.dsf', // DSD Stream File
+    '.dff', // DSD Interchange File Format
+    '.mka', // Matroska Audio
     // 以下格式在现代 iOS 上通常支持，但可能存在兼容性问题
     // '.ogg',  // Ogg Vorbis（iOS 部分支持）
     // '.opus', // Opus（iOS 14+ 支持）
@@ -337,7 +356,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
   }
 
   void _initPlayer() {
-    logger.i('MusicPlayer: 使用全局 AudioHandler (engine=${_isJustAudioEngine ? "just_audio" : "media_kit"})');
+    logger.i(
+      'MusicPlayer: 使用全局 AudioHandler (engine=${_isJustAudioEngine ? "just_audio" : "media_kit"})',
+    );
 
     // 设置 audioHandler 的切歌回调
     // 当用户通过锁屏、控制中心或蓝牙耳机点击上一首/下一首时调用
@@ -346,8 +367,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     };
 
     // 注册 Android Auto / CarPlay 浏览播放回调
-    MusicBrowserService.instance.playFromPathsHandler =
-        _playFromBrowserPaths;
+    MusicBrowserService.instance.playFromPathsHandler = _playFromBrowserPaths;
 
     // 配置 AudioSession（关键：确保灵动岛/Now Playing 正常显示）
     _configureAudioSession();
@@ -362,9 +382,15 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     _audioHandler.playingStream.listen((playing) {
       state = state.copyWith(isPlaying: playing);
       // 更新 Android 灵动岛播放状态
-      AppError.fireAndForget(_updateDynamicIsland(), action: 'musicPlayer.updateDynamicIsland');
+      AppError.fireAndForget(
+        _updateDynamicIsland(),
+        action: 'musicPlayer.updateDynamicIsland',
+      );
       // 更新 iOS/macOS 媒体小组件
-      AppError.fireAndForget(_updateMediaWidget(), action: 'musicPlayer.updateMediaWidget');
+      AppError.fireAndForget(
+        _updateMediaWidget(),
+        action: 'musicPlayer.updateMediaWidget',
+      );
     });
 
     // 监听缓冲状态（使用接口提供的流）
@@ -378,8 +404,8 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         .distinct()
         .where((completed) => completed)
         .listen((_) {
-      _onTrackCompleted();
-    });
+          _onTrackCompleted();
+        });
 
     // 监听播放位置（使用播放器原生的 positionStream，无需定时器）
     _audioHandler.positionStream.listen((position) {
@@ -518,7 +544,8 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     // 获取封面数据
     var coverData = _audioHandler.currentArtworkData;
     if (coverData == null || coverData.isEmpty) {
-      if (currentMusic.coverData != null && currentMusic.coverData!.isNotEmpty) {
+      if (currentMusic.coverData != null &&
+          currentMusic.coverData!.isNotEmpty) {
         coverData = Uint8List.fromList(currentMusic.coverData!);
       }
     }
@@ -570,22 +597,24 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       // - category: playback - 音频应用，即使静音开关开启也播放
       // - mode: defaultMode - 默认模式
       // - 注意：不使用 mixWithOthers，这样系统才会将此 app 识别为 Now Playing app
-      await session.configure(const AudioSessionConfiguration(
-        // iOS 配置
-        avAudioSessionCategory: AVAudioSessionCategory.playback,
-        avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.none,
-        avAudioSessionMode: AVAudioSessionMode.defaultMode,
-        avAudioSessionRouteSharingPolicy:
-            AVAudioSessionRouteSharingPolicy.defaultPolicy,
-        avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-        // Android 配置
-        androidAudioAttributes: AndroidAudioAttributes(
-          contentType: AndroidAudioContentType.music,
-          usage: AndroidAudioUsage.media,
+      await session.configure(
+        const AudioSessionConfiguration(
+          // iOS 配置
+          avAudioSessionCategory: AVAudioSessionCategory.playback,
+          avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.none,
+          avAudioSessionMode: AVAudioSessionMode.defaultMode,
+          avAudioSessionRouteSharingPolicy:
+              AVAudioSessionRouteSharingPolicy.defaultPolicy,
+          avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+          // Android 配置
+          androidAudioAttributes: AndroidAudioAttributes(
+            contentType: AndroidAudioContentType.music,
+            usage: AndroidAudioUsage.media,
+          ),
+          androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+          androidWillPauseWhenDucked: true,
         ),
-        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-        androidWillPauseWhenDucked: true,
-      ));
+      );
 
       logger.i('MusicPlayer: AudioSession 已配置为 playback category（非 mixable）');
     } on Exception catch (e) {
@@ -601,7 +630,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
 
       // 监听音频中断事件（如来电、其他应用播放等）
       session.interruptionEventStream.listen((event) {
-        logger.d('MusicPlayer: 音频中断事件 - begin=${event.begin}, type=${event.type}');
+        logger.d(
+          'MusicPlayer: 音频中断事件 - begin=${event.begin}, type=${event.type}',
+        );
         if (event.begin) {
           // 中断开始
           switch (event.type) {
@@ -678,9 +709,11 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
 
   void _onTrackCompleted() {
     final currentMusic = _ref.read(currentMusicProvider);
-    logger.i('MusicPlayer: _onTrackCompleted 触发, '
-        'isCrossfading=$_isCrossfading, '
-        'currentMusic=${currentMusic?.name}');
+    logger.i(
+      'MusicPlayer: _onTrackCompleted 触发, '
+      'isCrossfading=$_isCrossfading, '
+      'currentMusic=${currentMusic?.name}',
+    );
 
     // 听歌统计：歌曲播完，结算当前会话
     AppError.fireAndForget(
@@ -697,9 +730,13 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     if (_isCrossfading) {
       // 检查交叉淡化是否超时
       if (_crossfadeStartTime != null) {
-        final elapsed = DateTime.now().difference(_crossfadeStartTime!).inSeconds;
+        final elapsed = DateTime.now()
+            .difference(_crossfadeStartTime!)
+            .inSeconds;
         if (elapsed > _crossfadeTimeoutSeconds) {
-          logger.w('MusicPlayer: 交叉淡化超时 (${elapsed}s > ${_crossfadeTimeoutSeconds}s)，强制重置状态');
+          logger.w(
+            'MusicPlayer: 交叉淡化超时 (${elapsed}s > ${_crossfadeTimeoutSeconds}s)，强制重置状态',
+          );
           _isCrossfading = false;
           _crossfadeStartTime = null;
           // 继续执行后续逻辑，播放下一首
@@ -718,7 +755,10 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     // 重置状态
     _isFadingOut = false;
     _isFadingIn = false;
-    AppError.fireAndForget(_cleanupPreload(), action: 'musicPlayer.cleanupPreload');
+    AppError.fireAndForget(
+      _cleanupPreload(),
+      action: 'musicPlayer.cleanupPreload',
+    );
 
     switch (state.playMode) {
       case PlayMode.repeatOne:
@@ -798,11 +838,10 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     final crossfadeStart = Duration(seconds: crossfadeDuration);
 
     // 预加载下一首（提前2秒）
-    if (remaining <= preloadStart && remaining > crossfadeStart && !_isPreloading) {
-      AppError.fireAndForget(
-        _preloadNextTrack(),
-        action: 'preloadNextTrack',
-      );
+    if (remaining <= preloadStart &&
+        remaining > crossfadeStart &&
+        !_isPreloading) {
+      AppError.fireAndForget(_preloadNextTrack(), action: 'preloadNextTrack');
     }
 
     // 开始交叉淡化
@@ -899,9 +938,15 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
 
       if (music.sourceId != null) {
         // NAS 源：检查是否已有缓存
-        final isCached = await _audioCacheService.isCached(music.sourceId, music.path);
+        final isCached = await _audioCacheService.isCached(
+          music.sourceId,
+          music.path,
+        );
         if (isCached) {
-          final cacheFile = await _audioCacheService.getCacheFile(music.sourceId, music.path);
+          final cacheFile = await _audioCacheService.getCacheFile(
+            music.sourceId,
+            music.path,
+          );
           return Uri.file(cacheFile.path).toString();
         }
 
@@ -910,7 +955,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         final connection = connections[music.sourceId];
         if (connection == null) return null;
 
-        final fileInfo = await connection.adapter.fileSystem.getFileInfo(music.path);
+        final fileInfo = await connection.adapter.fileSystem.getFileInfo(
+          music.path,
+        );
         final proxyUrl = await _mediaProxyServer.registerFile(
           sourceId: music.sourceId!,
           filePath: music.path,
@@ -974,8 +1021,12 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         final fadeInGain = math.sin(t * math.pi / 2);
 
         await Future.wait([
-          _audioHandler.setVolume((_targetVolume * fadeOutGain).clamp(0.0, 1.0)),
-          _crossfadePlayer!.setVolume((_targetVolume * fadeInGain).clamp(0.0, 1.0)),
+          _audioHandler.setVolume(
+            (_targetVolume * fadeOutGain).clamp(0.0, 1.0),
+          ),
+          _crossfadePlayer!.setVolume(
+            (_targetVolume * fadeInGain).clamp(0.0, 1.0),
+          ),
         ]);
 
         if (i < steps) {
@@ -1044,7 +1095,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       // 确保清理状态
       _preloadedMusic = null;
       await _cleanupPreload();
-      
+
       // 尝试使用 playNextWithRetry 重新播放
       try {
         await _playNextWithRetry();
@@ -1119,7 +1170,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       return false;
     }
 
-    logger.i('MusicPlayer: 恢复播放状态 ${lastState.music.name} @ ${lastState.position.inSeconds}s');
+    logger.i(
+      'MusicPlayer: 恢复播放状态 ${lastState.music.name} @ ${lastState.position.inSeconds}s',
+    );
 
     // 恢复队列
     if (lastState.queue.isNotEmpty) {
@@ -1178,9 +1231,53 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     _isFadingIn = false;
   }
 
+  void _ensurePlayOperationCurrent(int generation) {
+    if (generation != _playGeneration) {
+      throw const _PlayOperationCancelled();
+    }
+  }
+
+  Future<void> _finishCancelledPlay(MusicItem music) async {
+    logger.d('MusicPlayer: 播放请求已取消: ${music.name}');
+    try {
+      // stop() 可能先于底层 setAudioSource/play 完成；这里再次停止，封住
+      // “stop 已返回、旧 play 随后继续”的竞态。
+      await _audioHandler.stop();
+    } on Exception catch (e, st) {
+      logger.w('MusicPlayer: 清理已取消的播放请求失败', e, st);
+    }
+    _cleanupCurrentProxy();
+    if (_ref.read(currentMusicProvider)?.id == music.id) {
+      _ref.read(currentMusicProvider.notifier).state = null;
+    }
+    state = state.copyWith(
+      isPlaying: false,
+      isBuffering: false,
+      position: Duration.zero,
+      duration: Duration.zero,
+    );
+  }
+
+  Future<void> _startDynamicIslandForPlay({
+    required MusicItem music,
+    required Uint8List? coverData,
+    required int generation,
+  }) async {
+    if (generation != _playGeneration) return;
+    await _startDynamicIsland(music: music, coverData: coverData);
+    if (generation != _playGeneration) {
+      await _hideDynamicIsland();
+    }
+  }
+
   /// 播放指定音乐
   /// [skipFadeIn] 如果为 true，跳过淡入效果（用于交叉淡化完成后）
-  Future<void> play(MusicItem music, {Duration? startPosition, bool skipFadeIn = false, bool isRetryAfterRepair = false}) async {
+  Future<void> play(
+    MusicItem music, {
+    Duration? startPosition,
+    bool skipFadeIn = false,
+    bool isRetryAfterRepair = false,
+  }) async {
     // 防止并发播放操作
     // 如果已有播放操作进行中，等待一小段时间后再尝试
     if (_isPlayOperationInProgress && !isRetryAfterRepair) {
@@ -1189,51 +1286,67 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     }
 
     _isPlayOperationInProgress = true;
-
-    // 如果不是交叉淡化完成后的调用，清理预加载状态
-    if (!_isCrossfading) {
-      await _cleanupPreload();
-    }
-
-    _ref.read(currentMusicProvider.notifier).state = music;
-    state = state.copyWith(isBuffering: true);
-
-    // 听歌统计：开启新会话（内部会先 endSession 上一首）
-    AppError.fireAndForget(
-      PlayHistoryStore.instance.beginSession(music),
-      action: 'playHistory.beginSession',
-    );
-    // Scrobble：开启新会话（now playing 上报 + 内部 endSession 上一首）
-    AppError.fireAndForget(
-      MusicScrobbleService.instance.beginSession(music),
-      action: 'scrobble.beginSession',
-    );
-
-    logger..i('MusicPlayer: 开始播放 ${music.name}')
-      ..d('MusicPlayer: URL => ${music.url}')
-      ..d('MusicPlayer: size=${music.size}, path=${music.path}, sourceId=${music.sourceId}');
-
-    // iOS 不支持格式检测：当使用 just_audio 引擎在 iOS 上播放 FLAC 等格式时
-    // 通知 UI 层显示切换引擎的提示
-    if (_isJustAudioEngine && isUnsupportedOnIosWithJustAudio(music.path)) {
-      final formatName = _getFormatDisplayName(music.path);
-      logger.w('MusicPlayer: 检测到 iOS 不支持的格式 $formatName，当前使用 just_audio 引擎');
-      onUnsupportedFormatDetected?.call(formatName);
-      // 继续尝试播放，可能会失败（让用户看到错误信息以便理解问题）
-    }
+    final playGeneration = ++_playGeneration;
 
     try {
+      // 如果不是交叉淡化完成后的调用，清理预加载状态
+      if (!_isCrossfading) {
+        await _cleanupPreload();
+      }
+      _ensurePlayOperationCurrent(playGeneration);
+
+      final queueAtRequest = _ref.read(playQueueProvider);
+      if (queueAtRequest.isNotEmpty) {
+        final queueIndex = queueAtRequest.indexWhere((m) => m.id == music.id);
+        if (queueIndex >= 0 && queueIndex != state.currentIndex) {
+          state = state.copyWith(currentIndex: queueIndex);
+        }
+      }
+
+      _ref.read(currentMusicProvider.notifier).state = music;
+      state = state.copyWith(isBuffering: true);
+
+      // 听歌统计：开启新会话（内部会先 endSession 上一首）
+      AppError.fireAndForget(
+        PlayHistoryStore.instance.beginSession(music),
+        action: 'playHistory.beginSession',
+      );
+      // Scrobble：开启新会话（now playing 上报 + 内部 endSession 上一首）
+      AppError.fireAndForget(
+        MusicScrobbleService.instance.beginSession(music),
+        action: 'scrobble.beginSession',
+      );
+
+      logger
+        ..i('MusicPlayer: 开始播放 ${music.name}')
+        ..d('MusicPlayer: URL => ${music.url}')
+        ..d(
+          'MusicPlayer: size=${music.size}, path=${music.path}, sourceId=${music.sourceId}',
+        );
+
+      // iOS 不支持格式检测：当使用 just_audio 引擎在 iOS 上播放 FLAC 等格式时
+      // 通知 UI 层显示切换引擎的提示
+      if (_isJustAudioEngine && isUnsupportedOnIosWithJustAudio(music.path)) {
+        final formatName = _getFormatDisplayName(music.path);
+        logger.w('MusicPlayer: 检测到 iOS 不支持的格式 $formatName，当前使用 just_audio 引擎');
+        onUnsupportedFormatDetected?.call(formatName);
+        // 继续尝试播放，可能会失败（让用户看到错误信息以便理解问题）
+      }
+
       // 重要：在播放开始前显式激活 Audio Session
       // 这是确保 Live Activity 在后台正常工作的关键
       // 如果 Audio Session 没有在 App 进入后台前激活，Live Activity 可能不会出现
       await _activateAudioSession();
+      _ensurePlayOperationCurrent(playGeneration);
 
       // 重要：通过 audioHandler 准备切换歌曲
       // 这会正确暂停当前播放并广播状态，避免灵动岛内容不同步
       await _audioHandler.prepareForNewTrack();
+      _ensurePlayOperationCurrent(playGeneration);
 
       // 停止播放器并清理资源
       await _audioHandler.stopPlayer();
+      _ensurePlayOperationCurrent(playGeneration);
       _cleanupCurrentProxy();
       state = state.copyWith(position: Duration.zero, duration: Duration.zero);
       logger.d('MusicPlayer: 已停止当前播放并重置状态');
@@ -1243,7 +1356,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       if (uri == null || !uri.hasScheme) {
         throw Exception(appL10n.musicPlayerInvalidAudioUrl(music.url));
       }
-      logger.d('MusicPlayer: URI 解析成功 - scheme: ${uri.scheme}, host: ${uri.host}');
+      logger.d(
+        'MusicPlayer: URI 解析成功 - scheme: ${uri.scheme}, host: ${uri.host}',
+      );
 
       // 根据音频来源选择合适的播放方式
       AudioSource audioSource;
@@ -1266,25 +1381,30 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
 
         // 检查是否已有完整缓存（包含文件大小验证）
         // 注意：LockCachingAudioSource 可能在缓存时混入额外数据导致大小不匹配
-        final cacheFile = await _audioCacheService.getCacheFile(music.sourceId, music.path);
+        final cacheFile = await _audioCacheService.getCacheFile(
+          music.sourceId,
+          music.path,
+        );
         final isCached = await _audioCacheService.isCachedWithSizeCheck(
-          music.sourceId, 
+          music.sourceId,
           music.path,
           music.size ?? 0,
         );
-        
+
         // 诊断日志：缓存状态
         final cacheExists = await cacheFile.exists();
         final cacheSize = cacheExists ? await cacheFile.length() : 0;
         final partFile = File('${cacheFile.path}.part');
         final partExists = await partFile.exists();
-        logger.d('MusicPlayer: 缓存诊断 => '
-            'file=${cacheFile.path}, '
-            'exists=$cacheExists, '
-            'cacheSize=$cacheSize, '
-            'expectedSize=${music.size}, '
-            'partExists=$partExists, '
-            'isCached=$isCached');
+        logger.d(
+          'MusicPlayer: 缓存诊断 => '
+          'file=${cacheFile.path}, '
+          'exists=$cacheExists, '
+          'cacheSize=$cacheSize, '
+          'expectedSize=${music.size}, '
+          'partExists=$partExists, '
+          'isCached=$isCached',
+        );
 
         if (isCached) {
           // iOS 上使用 LockCachingAudioSource 播放缓存的 FLAC 文件
@@ -1327,11 +1447,15 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
           final connection = connections[music.sourceId];
 
           if (connection == null) {
-            throw Exception(appL10n.musicPlayerSourceNotConnected(music.sourceId ?? ''));
+            throw Exception(
+              appL10n.musicPlayerSourceNotConnected(music.sourceId ?? ''),
+            );
           }
 
           // 获取文件大小
-          final fileInfo = await connection.adapter.fileSystem.getFileInfo(music.path);
+          final fileInfo = await connection.adapter.fileSystem.getFileInfo(
+            music.path,
+          );
           final fileSize = fileInfo.size;
 
           // 确保缓存配额足够
@@ -1347,8 +1471,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
           // 保存代理 ID 以便清理
           _currentProxyId = proxyUrl.split('/').last;
 
-          logger..i('MusicPlayer: 使用流式播放模式 (边下边播并缓存到 ${cacheFile.path})')
-          ..d('MusicPlayer: 代理URL => $proxyUrl');
+          logger
+            ..i('MusicPlayer: 使用流式播放模式 (边下边播并缓存到 ${cacheFile.path})')
+            ..d('MusicPlayer: 代理URL => $proxyUrl');
 
           audioSourceUrl = proxyUrl;
           // 使用 LockCachingAudioSource 实现边下边播并自动缓存到指定文件
@@ -1371,20 +1496,24 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         // ignore: experimental_member_use
         audioSource = LockCachingAudioSource(uri);
       } else {
-        throw Exception(appL10n.musicPlayerUnsupportedAudioProtocol(uri.scheme));
+        throw Exception(
+          appL10n.musicPlayerUnsupportedAudioProtocol(uri.scheme),
+        );
       }
+      _ensurePlayOperationCurrent(playGeneration);
 
       // 设置音频源
       logger.d('MusicPlayer: 设置音频源...');
       Duration? playerDuration;
-      
+
       // 标记是否使用了缓存文件（用于失败时的回退处理）
       final usedCacheFile = isCachedLocalFile && music.sourceId != null;
-      
+
       try {
         if (_isJustAudioEngine && audioHandler is MusicAudioHandler) {
           // just_audio 模式：使用原始 AudioSource（支持 cacheFile 等特殊功能）
-          playerDuration = await (audioHandler as MusicAudioHandler).setAudioSourceRaw(audioSource);
+          playerDuration = await (audioHandler as MusicAudioHandler)
+              .setAudioSourceRaw(audioSource);
         } else {
           // MediaKit 模式：使用 URL 字符串
           playerDuration = await _audioHandler.setAudioSource(audioSourceUrl);
@@ -1396,31 +1525,38 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         if (usedCacheFile) {
           logger.w('MusicPlayer: 缓存播放失败 ($e)，删除缓存并重试流式播放');
           await _audioCacheService.deleteCache(music.sourceId, music.path);
-          
+
           // 重新使用流式播放模式
           final connections = _ref.read(activeConnectionsProvider);
           final connection = connections[music.sourceId];
           if (connection != null) {
-            final fileInfo = await connection.adapter.fileSystem.getFileInfo(music.path);
+            final fileInfo = await connection.adapter.fileSystem.getFileInfo(
+              music.path,
+            );
             final proxyUrl = await _mediaProxyServer.registerFile(
               sourceId: music.sourceId!,
               filePath: music.path,
               fileSize: fileInfo.size,
             );
-            final cacheFile = await _audioCacheService.getCacheFile(music.sourceId, music.path);
-            
+            final cacheFile = await _audioCacheService.getCacheFile(
+              music.sourceId,
+              music.path,
+            );
+
             logger.i('MusicPlayer: 回退到流式播放模式');
             // ignore: experimental_member_use
             final streamingSource = LockCachingAudioSource(
               Uri.parse(proxyUrl),
               cacheFile: cacheFile,
             );
-            
+
             if (_isJustAudioEngine && audioHandler is MusicAudioHandler) {
-              playerDuration = await (audioHandler as MusicAudioHandler).setAudioSourceRaw(streamingSource);
+              playerDuration = await (audioHandler as MusicAudioHandler)
+                  .setAudioSourceRaw(streamingSource);
             } else {
               playerDuration = await _audioHandler.setAudioSource(proxyUrl);
             }
+            _ensurePlayOperationCurrent(playGeneration);
           } else {
             // 无法获取连接，重新抛出原始异常
             AppError.handle(e, st, 'MusicPlayer.play.cachePlaybackFailed');
@@ -1430,11 +1566,11 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
           // 非缓存文件播放失败
           // 检查是否是 iOS FLAC -11800 错误，尝试自动修复
           final errorMessage = e.toString();
-          if (Platform.isIOS && 
-              _isFlacFile(music.path) && 
+          if (Platform.isIOS &&
+              _isFlacFile(music.path) &&
               errorMessage.contains('-11800')) {
             logger.w('MusicPlayer: iOS FLAC -11800 错误检测，尝试自动修复文件');
-            
+
             // 尝试修复文件
             final repaired = await _tryRepairFlacFile(music);
             if (repaired) {
@@ -1445,12 +1581,13 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
               throw FlacRepairedNeedRetryException(music);
             }
           }
-          
+
           AppError.handle(e, st, 'MusicPlayer.play.setAudioSource');
           rethrow;
         }
       }
-      
+      _ensurePlayOperationCurrent(playGeneration);
+
       logger
         ..d('MusicPlayer: 音频源设置成功')
         // 获取播放器时长
@@ -1459,7 +1596,8 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       // 使用播放器时长或 MusicItem 的元数据时长
       var effectiveDuration = playerDuration;
       if ((effectiveDuration == null || effectiveDuration == Duration.zero) &&
-          music.duration != null && music.duration! > Duration.zero) {
+          music.duration != null &&
+          music.duration! > Duration.zero) {
         effectiveDuration = music.duration;
         logger.i('MusicPlayer: 使用 MusicItem 的时长信息 => ${music.duration}');
       }
@@ -1473,6 +1611,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       if (startPosition != null && startPosition > Duration.zero) {
         logger.d('MusicPlayer: 跳转到位置 $startPosition');
         await _audioHandler.seekTo(startPosition);
+        _ensurePlayOperationCurrent(playGeneration);
       }
 
       // 获取淡入淡出设置
@@ -1482,10 +1621,12 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       // 如果启用了淡入淡出且不跳过，先将音量设为0，播放后再淡入
       if (hasCrossfade) {
         await _audioHandler.setVolume(0);
+        _ensurePlayOperationCurrent(playGeneration);
         logger.d('MusicPlayer: 淡入淡出已启用，初始音量设为0');
       } else {
         // 确保音量正确（交叉淡化完成后或未启用淡入淡出时）
         await _audioHandler.setVolume(_targetVolume);
+        _ensurePlayOperationCurrent(playGeneration);
         state = state.copyWith(volume: _targetVolume);
       }
 
@@ -1500,12 +1641,18 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         final uniqueKey = '${music.sourceId ?? ''}_${music.path}';
         final coverCacheService = MusicCoverCacheService();
         coverData = await coverCacheService.getCover(uniqueKey);
+        _ensurePlayOperationCurrent(playGeneration);
       }
       await _audioHandler.setCurrentMusic(music, artworkData: coverData);
+      _ensurePlayOperationCurrent(playGeneration);
 
       // 启动 Android 灵动岛
       AppError.fireAndForget(
-        _startDynamicIsland(music: music, coverData: coverData),
+        _startDynamicIslandForPlay(
+          music: music,
+          coverData: coverData,
+          generation: playGeneration,
+        ),
         action: 'musicPlayer.startDynamicIsland',
       );
 
@@ -1515,25 +1662,26 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       }
 
       // 设置队列信息（如果有）
-      final queue = _ref.read(playQueueProvider);
-      if (queue.isNotEmpty) {
-        final currentIndex = queue.indexWhere((m) => m.id == music.id);
+      // 音频准备期间队列可能被重排或增删，这里必须读取最新快照。
+      final currentQueue = _ref.read(playQueueProvider);
+      if (currentQueue.isNotEmpty) {
+        final currentIndex = currentQueue.indexWhere((m) => m.id == music.id);
         if (currentIndex >= 0) {
-          _audioHandler.setQueue(queue, startIndex: currentIndex);
+          state = state.copyWith(currentIndex: currentIndex);
+          _audioHandler.setQueue(currentQueue, startIndex: currentIndex);
         }
       }
 
       // 开始播放
       logger.d('MusicPlayer: 调用 play()...');
+      _ensurePlayOperationCurrent(playGeneration);
       await _audioHandler.play(); // 使用 audioHandler.play() 确保正确广播状态
+      _ensurePlayOperationCurrent(playGeneration);
       logger.i('MusicPlayer: play() 调用完成');
 
       // 如果启用了淡入淡出，开始淡入（异步执行，不阻塞）
       if (hasCrossfade) {
-        AppError.fireAndForget(
-          _startFadeIn(),
-          action: 'musicFadeIn',
-        );
+        AppError.fireAndForget(_startFadeIn(), action: 'musicFadeIn');
       }
 
       // 添加到播放历史
@@ -1544,20 +1692,41 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         _extractMetadataInBackground(music),
         action: 'extractMusicMetadata',
       );
+    } on _PlayOperationCancelled {
+      await _finishCancelledPlay(music);
     } on FlacRepairedNeedRetryException catch (e) {
+      if (playGeneration != _playGeneration) {
+        await _finishCancelledPlay(music);
+        return;
+      }
       // FLAC 文件已修复，需要重试播放
       if (!isRetryAfterRepair) {
         logger.i('MusicPlayer: FLAC 文件已修复，重新尝试播放');
         _isPlayOperationInProgress = false;
-        return play(e.music, startPosition: startPosition, skipFadeIn: skipFadeIn, isRetryAfterRepair: true);
+        return play(
+          e.music,
+          startPosition: startPosition,
+          skipFadeIn: skipFadeIn,
+          isRetryAfterRepair: true,
+        );
       } else {
         // 已经是重试了，不再继续
         logger.e('MusicPlayer: FLAC 修复后仍然无法播放');
-        state = state.copyWith(errorMessage: appL10n.musicPlayerFlacCompatibilityError, isBuffering: false);
+        state = state.copyWith(
+          errorMessage: appL10n.musicPlayerFlacCompatibilityError,
+          isBuffering: false,
+        );
       }
     } on Exception catch (e, stackTrace) {
+      if (playGeneration != _playGeneration) {
+        await _finishCancelledPlay(music);
+        return;
+      }
       logger.e('MusicPlayer: 播放失败', e, stackTrace);
-      state = state.copyWith(errorMessage: appL10n.musicPlayerPlaybackError(e), isBuffering: false);
+      state = state.copyWith(
+        errorMessage: appL10n.musicPlayerPlaybackError(e),
+        isBuffering: false,
+      );
     } finally {
       // 重置播放操作标志
       _isPlayOperationInProgress = false;
@@ -1628,7 +1797,10 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         logger.d('MusicPlayer: FLAC 文件下载完成，大小: ${await tempInput.length()} 字节');
 
         // 使用 FFmpeg 修复
-        final success = await ffmpegService.repairFlacFile(tempInput, tempOutput);
+        final success = await ffmpegService.repairFlacFile(
+          tempInput,
+          tempOutput,
+        );
         if (!success) {
           logger.w('MusicPlayer: FFmpeg 修复失败');
           return false;
@@ -1663,7 +1835,10 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     final originalPath = music.path;
 
     // 计算缓存文件路径（去掉 .ncm 后缀，添加解密后的格式后缀）
-    final cacheFile = await _audioCacheService.getCacheFile(sourceId, originalPath);
+    final cacheFile = await _audioCacheService.getCacheFile(
+      sourceId,
+      originalPath,
+    );
 
     // NCM 解密后的文件需要替换后缀
     // 先检查是否已有解密缓存（mp3 或 flac）
@@ -1693,7 +1868,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         return null;
       }
 
-      final stream = await connection.adapter.fileSystem.getFileStream(music.path);
+      final stream = await connection.adapter.fileSystem.getFileStream(
+        music.path,
+      );
       final chunks = <int>[];
       await for (final chunk in stream) {
         chunks.addAll(chunk);
@@ -1735,7 +1912,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
 
     // 保存解密后的音频
     await outputFile.writeAsBytes(result.audioData);
-    logger.i('MusicPlayer: NCM 解密完成，保存到: ${outputFile.path} (${result.audioData.length} bytes)');
+    logger.i(
+      'MusicPlayer: NCM 解密完成，保存到: ${outputFile.path} (${result.audioData.length} bytes)',
+    );
 
     return outputFile;
   }
@@ -1785,21 +1964,28 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
 
   /// 在后台提取音乐元数据
   Future<void> _extractMetadataInBackground(MusicItem music) async {
-    logger.d('MusicPlayer: 开始提取元数据 - name=${music.name}, sourceId=${music.sourceId}, url=${music.url}');
+    logger.d(
+      'MusicPlayer: 开始提取元数据 - name=${music.name}, sourceId=${music.sourceId}, url=${music.url}',
+    );
 
     // 检查是否需要提取元数据
     // 需要提取的情况：没有封面数据、没有歌词、或者没有时长
     final needsCover = music.coverData == null || music.coverData!.isEmpty;
     final needsLyrics = music.lyrics == null || music.lyrics!.isEmpty;
-    final needsDuration = music.duration == null || music.duration == Duration.zero;
+    final needsDuration =
+        music.duration == null || music.duration == Duration.zero;
 
     // 如果所有元数据都已存在，跳过提取
     if (!needsCover && !needsLyrics && !needsDuration) {
-      logger.d('MusicPlayer: 元数据完整，跳过提取 - hasCover=true, hasLyrics=true, hasDuration=true');
+      logger.d(
+        'MusicPlayer: 元数据完整，跳过提取 - hasCover=true, hasLyrics=true, hasDuration=true',
+      );
       return;
     }
 
-    logger.d('MusicPlayer: 需要提取元数据 - needsCover=$needsCover, needsLyrics=$needsLyrics, needsDuration=$needsDuration');
+    logger.d(
+      'MusicPlayer: 需要提取元数据 - needsCover=$needsCover, needsLyrics=$needsLyrics, needsDuration=$needsDuration',
+    );
 
     try {
       final metadataService = MusicMetadataService();
@@ -1825,7 +2011,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
           metadata = await metadataService.extractFromLocalFile(file);
           logger.d('MusicPlayer: 提取完成 - metadata=${metadata != null}');
           if (metadata != null) {
-            logger.d('MusicPlayer: 元数据详情 - title=${metadata.title}, artist=${metadata.artist}, album=${metadata.album}, hasCover=${metadata.coverData != null}, hasLyrics=${metadata.lyrics != null}');
+            logger.d(
+              'MusicPlayer: 元数据详情 - title=${metadata.title}, artist=${metadata.artist}, album=${metadata.album}, hasCover=${metadata.coverData != null}, hasLyrics=${metadata.lyrics != null}',
+            );
           }
         }
       } else if (music.sourceId != null) {
@@ -1839,34 +2027,49 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
             music.path,
           );
         } else {
-          logger.w('MusicPlayer: NAS连接不可用 - connection=${connection != null}, status=${connection?.status}');
+          logger.w(
+            'MusicPlayer: NAS连接不可用 - connection=${connection != null}, status=${connection?.status}',
+          );
         }
       } else {
-        logger.w('MusicPlayer: 无法确定文件类型 - url=${music.url}, sourceId=${music.sourceId}');
+        logger.w(
+          'MusicPlayer: 无法确定文件类型 - url=${music.url}, sourceId=${music.sourceId}',
+        );
       }
 
       if (metadata != null) {
         // 更新当前播放的音乐信息
-        final updatedMusic = metadataService.applyMetadataToItem(music, metadata);
+        final updatedMusic = metadataService.applyMetadataToItem(
+          music,
+          metadata,
+        );
         final currentMusic = _ref.read(currentMusicProvider);
-        logger.d('MusicPlayer: 当前播放ID=${currentMusic?.id}, 提取的音乐ID=${music.id}');
+        logger.d(
+          'MusicPlayer: 当前播放ID=${currentMusic?.id}, 提取的音乐ID=${music.id}',
+        );
 
         if (currentMusic?.id == music.id) {
           _ref.read(currentMusicProvider.notifier).state = updatedMusic;
-          logger.i('MusicPlayer: 元数据已更新 - artist=${metadata.artist}, album=${metadata.album}, hasCover=${metadata.coverData != null}, hasLyrics=${metadata.lyrics != null}, duration=${metadata.duration}');
+          logger.i(
+            'MusicPlayer: 元数据已更新 - artist=${metadata.artist}, album=${metadata.album}, hasCover=${metadata.coverData != null}, hasLyrics=${metadata.lyrics != null}, duration=${metadata.duration}',
+          );
 
           // 如果提取到了有效的 duration，且当前没有时长或者时长为零，更新播放器状态
           if (metadata.duration != null && metadata.duration! > Duration.zero) {
             final currentDuration = state.duration;
             // 更新条件：当前没有时长，或者元数据时长与当前时长差异较大（可能之前是估算值）
-            final shouldUpdate = currentDuration == Duration.zero ||
+            final shouldUpdate =
+                currentDuration == Duration.zero ||
                 (currentDuration.inSeconds > 0 &&
-                    (metadata.duration!.inSeconds - currentDuration.inSeconds).abs() >
+                    (metadata.duration!.inSeconds - currentDuration.inSeconds)
+                            .abs() >
                         currentDuration.inSeconds * 0.1); // 差异超过 10%
 
             if (shouldUpdate) {
               state = state.copyWith(duration: metadata.duration);
-              logger.i('MusicPlayer: 从元数据更新播放器时长 => ${metadata.duration} (之前: $currentDuration)');
+              logger.i(
+                'MusicPlayer: 从元数据更新播放器时长 => ${metadata.duration} (之前: $currentDuration)',
+              );
             }
           }
 
@@ -1896,7 +2099,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
             if (currentMusic?.id == music.id) {
               state = state.copyWith(duration: estimatedDuration);
               logger.i('MusicPlayer: 元数据提取失败，使用文件大小估算时长 => $estimatedDuration');
-              _ref.read(currentMusicProvider.notifier).state = music.copyWith(duration: estimatedDuration);
+              _ref.read(currentMusicProvider.notifier).state = music.copyWith(
+                duration: estimatedDuration,
+              );
             }
           }
         }
@@ -1911,7 +2116,9 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
           if (currentMusic?.id == music.id) {
             state = state.copyWith(duration: estimatedDuration);
             logger.i('MusicPlayer: 元数据提取异常，使用文件大小估算时长 => $estimatedDuration');
-            _ref.read(currentMusicProvider.notifier).state = music.copyWith(duration: estimatedDuration);
+            _ref.read(currentMusicProvider.notifier).state = music.copyWith(
+              duration: estimatedDuration,
+            );
           }
         }
       }
@@ -1971,18 +2178,20 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       }
       final h = histByPath[e.path];
       if (h != null) {
-        items.add(MusicItem(
-          id: '${h.sourceId ?? ''}_${h.musicPath}',
-          name: h.musicName,
-          path: h.musicPath,
-          url: h.musicUrl,
-          sourceId: h.sourceId,
-          title: h.musicName,
-          artist: h.artist,
-          album: h.album,
-          coverUrl: h.coverUrl,
-          duration: h.duration,
-        ));
+        items.add(
+          MusicItem(
+            id: '${h.sourceId ?? ''}_${h.musicPath}',
+            name: h.musicName,
+            path: h.musicPath,
+            url: h.musicUrl,
+            sourceId: h.sourceId,
+            title: h.musicName,
+            artist: h.artist,
+            album: h.album,
+            coverUrl: h.coverUrl,
+            duration: h.duration,
+          ),
+        );
         continue;
       }
 
@@ -1993,14 +2202,16 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       if (conn == null || conn.status != SourceStatus.connected) continue;
       try {
         final url = await conn.adapter.fileSystem.getFileUrl(e.path);
-        items.add(MusicItem(
-          id: '${sid}_${e.path}',
-          name: _basenameOf(e.path),
-          path: e.path,
-          url: url,
-          sourceId: sid,
-          title: _basenameOf(e.path),
-        ));
+        items.add(
+          MusicItem(
+            id: '${sid}_${e.path}',
+            name: _basenameOf(e.path),
+            path: e.path,
+            url: url,
+            sourceId: sid,
+            title: _basenameOf(e.path),
+          ),
+        );
       } on Exception catch (ex, st) {
         AppError.handle(ex, st, 'browser.resolveUrl', {
           'sourceId': sid,
@@ -2044,14 +2255,39 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
 
   /// 停止
   Future<void> stop() async {
-    await _audioHandler.stop();
-    _cleanupCurrentProxy();
-    state = state.copyWith(position: Duration.zero, duration: Duration.zero);
-    _ref.read(currentMusicProvider.notifier).state = null;
+    // 先同步作废当前 play()；任何尚未返回的 await 都只能进入取消清理，
+    // 不能在本次 stop() 之后重新 setCurrentMusic/play。
+    _playGeneration++;
+    _isFadingIn = false;
+    _isFadingOut = false;
+    _isCrossfading = false;
+    try {
+      await _audioHandler.stop();
+    } finally {
+      try {
+        await _cleanupPreload();
+      } on Exception catch (e, st) {
+        logger.w('MusicPlayer: 停止时清理预加载失败', e, st);
+      }
+      _cleanupCurrentProxy();
+      state = state.copyWith(
+        isPlaying: false,
+        isBuffering: false,
+        position: Duration.zero,
+        duration: Duration.zero,
+      );
+      _ref.read(currentMusicProvider.notifier).state = null;
+    }
     // 隐藏 Android 灵动岛
-    AppError.fireAndForget(_hideDynamicIsland(), action: 'musicPlayer.hideDynamicIsland');
+    AppError.fireAndForget(
+      _hideDynamicIsland(),
+      action: 'musicPlayer.hideDynamicIsland',
+    );
     // 清空 iOS/macOS 媒体小组件
-    AppError.fireAndForget(widgetDataService.clearMediaWidget(), action: 'musicPlayer.clearMediaWidget');
+    AppError.fireAndForget(
+      widgetDataService.clearMediaWidget(),
+      action: 'musicPlayer.clearMediaWidget',
+    );
   }
 
   /// 下一曲
@@ -2076,8 +2312,7 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       return;
     }
 
-    final prevIndex =
-        (state.currentIndex - 1 + queue.length) % queue.length;
+    final prevIndex = (state.currentIndex - 1 + queue.length) % queue.length;
     await playAt(prevIndex);
   }
 
@@ -2131,7 +2366,6 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
     // 注意：不要在这里调用 musicSettingsProvider.notifier.setPlayMode
     // 否则会形成循环调用导致无限闪烁
   }
-
 
   /// 更新当前索引（用于队列重排序后同步）
   void updateCurrentIndex(int index) {

@@ -138,7 +138,10 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
         }
       }
       // 异步加载字幕，不阻塞播放流程
-      AppError.fireAndForget(_loadSubtitles(), action: 'videoPlayer.loadSubtitles');
+      AppError.fireAndForget(
+        _loadSubtitles(),
+        action: 'videoPlayer.loadSubtitles',
+      );
     });
     _startHideControlsTimer();
   }
@@ -263,8 +266,9 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
         if (!mounted) return;
         try {
           final currentSubtitle = ref.read(currentSubtitleProvider);
-          final currentTranslated =
-              ref.read(currentTranslatedSubtitleIdProvider);
+          final currentTranslated = ref.read(
+            currentTranslatedSubtitleIdProvider,
+          );
           if (currentSubtitle == null && currentTranslated == null) {
             await _playerNotifier?.setSubtitle(subtitles.first);
             logger.i('VideoPlayerPage: 自动加载字幕 ${subtitles.first.name}');
@@ -454,20 +458,31 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
 
   /// 根据画面比例模式构建视频组件
   Widget _buildVideoWidget(
+    VideoPlayerNotifier playerNotifier,
     VideoController controller,
     AspectRatioMode mode,
     SubtitleStyle subtitleStyle,
   ) {
+    final fit = switch (mode) {
+      AspectRatioMode.fill => BoxFit.fill,
+      AspectRatioMode.contain => BoxFit.contain,
+      AspectRatioMode.cover => BoxFit.cover,
+      _ => BoxFit.contain,
+    };
+
+    if (playerNotifier.isUsingNativePlayer) {
+      final nativeVideo = playerNotifier.buildVideoWidget(fit: fit);
+      if (mode.ratio != null) {
+        return AspectRatio(aspectRatio: mode.ratio!, child: nativeVideo);
+      }
+      return nativeVideo;
+    }
+
     // 视频组件（禁用内置字幕，使用自定义覆盖层）
     final video = Video(
       controller: controller,
       controls: (state) => const SizedBox.shrink(),
-      fit: switch (mode) {
-        AspectRatioMode.fill => BoxFit.fill,
-        AspectRatioMode.contain => BoxFit.contain,
-        AspectRatioMode.cover => BoxFit.cover,
-        _ => BoxFit.contain,
-      },
+      fit: fit,
       // 禁用内置字幕（因为它只支持底部对齐）
       subtitleViewConfiguration: const SubtitleViewConfiguration(
         visible: false,
@@ -649,6 +664,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                           });
 
                           return _buildVideoWidget(
+                            playerNotifier,
                             playerNotifier.videoController,
                             aspectMode,
                             subtitleStyle,
@@ -843,7 +859,9 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                                   color: Colors.white,
                                   size: 24,
                                 ),
-                                tooltip: _isLocked ? context.l10n.videoPlayerUnlock : context.l10n.videoPlayerLock,
+                                tooltip: _isLocked
+                                    ? context.l10n.videoPlayerUnlock
+                                    : context.l10n.videoPlayerLock,
                               ),
                             ),
                           ],
@@ -1076,18 +1094,33 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
       context,
       title: context.l10n.videoPlayerKeyboardHelpTitle,
       shortcuts: [
-        (key: 'Space / K', description: context.l10n.videoPlayerShortcutPlayPause),
-        (key: '← / J', description: context.l10n.videoPlayerShortcutSeekBackward),
-        (key: '→ / L', description: context.l10n.videoPlayerShortcutSeekForward),
+        (
+          key: 'Space / K',
+          description: context.l10n.videoPlayerShortcutPlayPause,
+        ),
+        (
+          key: '← / J',
+          description: context.l10n.videoPlayerShortcutSeekBackward,
+        ),
+        (
+          key: '→ / L',
+          description: context.l10n.videoPlayerShortcutSeekForward,
+        ),
         (key: '↑', description: context.l10n.videoPlayerShortcutVolumeUp),
         (key: '↓', description: context.l10n.videoPlayerShortcutVolumeDown),
         (key: 'M', description: context.l10n.videoPlayerShortcutMute),
-        (key: 'F / F11', description: context.l10n.videoPlayerShortcutToggleFullscreen),
+        (
+          key: 'F / F11',
+          description: context.l10n.videoPlayerShortcutToggleFullscreen,
+        ),
         (key: 'C', description: context.l10n.videoPlayerShortcutToggleControls),
         (key: '[', description: context.l10n.videoPlayerShortcutSpeedDown),
         (key: ']', description: context.l10n.videoPlayerShortcutSpeedUp),
         (key: r'\', description: context.l10n.videoPlayerShortcutSpeedNormal),
-        (key: '0-9', description: context.l10n.videoPlayerShortcutJumpToPercent),
+        (
+          key: '0-9',
+          description: context.l10n.videoPlayerShortcutJumpToPercent,
+        ),
         (key: 'Esc', description: context.l10n.videoPlayerShortcutExit),
         (key: '?', description: context.l10n.videoPlayerShortcutHelp),
       ],
@@ -1120,7 +1153,9 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
             color: isCached ? AppColors.success : Colors.white,
             size: 24,
           ),
-          tooltip: isCached ? context.l10n.videoPlayerCacheCached : context.l10n.videoPlayerCacheVideo,
+          tooltip: isCached
+              ? context.l10n.videoPlayerCacheCached
+              : context.l10n.videoPlayerCacheVideo,
         ),
       ),
       loading: () => DecoratedBox(

@@ -14,10 +14,11 @@ import 'package:my_nas/features/video/presentation/widgets/native_av_player_view
 /// 使用 iOS/macOS 原生 AVPlayer 播放视频，支持 Dolby Vision
 class NativeAVPlayerBackend implements VideoPlayerBackend {
   NativeAVPlayerBackend() {
-    _init();
+    _initFuture = _init();
   }
 
   final NativeAVPlayerChannel _channel = NativeAVPlayerChannel.instance;
+  late final Future<void> _initFuture;
   int _playerId = 0;
 
   bool _isInitialized = false;
@@ -45,17 +46,28 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
   final _speedController = StreamController<double>.broadcast();
   final _errorController = StreamController<String?>.broadcast();
   final _completedController = StreamController<bool>.broadcast();
-  final _audioTracksController = StreamController<List<AudioTrackInfo>>.broadcast();
-  final _subtitleTracksController = StreamController<List<SubtitleTrackInfo>>.broadcast();
+  final _audioTracksController =
+      StreamController<List<AudioTrackInfo>>.broadcast();
+  final _subtitleTracksController =
+      StreamController<List<SubtitleTrackInfo>>.broadcast();
 
   Future<void> _init() async {
     // 确保只在 Apple 平台上使用
     if (!Platform.isIOS && !Platform.isMacOS) {
-      throw UnsupportedError('NativeAVPlayerBackend is only supported on iOS and macOS');
+      throw UnsupportedError(
+        'NativeAVPlayerBackend is only supported on iOS and macOS',
+      );
     }
 
+    if (_isDisposed) return;
+
     _channel.initialize();
-    _playerId = await _channel.create();
+    final playerId = await _channel.create();
+    if (_isDisposed) {
+      unawaited(_channel.disposePlayer(playerId));
+      return;
+    }
+    _playerId = playerId;
 
     // 监听事件
     _eventSubscription = _channel.eventStream
@@ -64,6 +76,16 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
 
     _isInitialized = true;
     logger.i('NativeAVPlayerBackend: 初始化完成 (playerId: $_playerId)');
+  }
+
+  Future<void> _ensureInitialized() async {
+    await _initFuture;
+    if (_isDisposed) {
+      throw StateError('NativeAVPlayerBackend has been disposed');
+    }
+    if (_playerId == 0) {
+      throw StateError('NativeAVPlayerBackend failed to initialize');
+    }
   }
 
   void _handleEvent(NativeAVPlayerEvent event) {
@@ -129,12 +151,14 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
 
   @override
   Future<void> open(String url, {Map<String, String>? headers}) async {
+    await _ensureInitialized();
     logger.i('NativeAVPlayerBackend: 打开视频 $url');
     await _channel.open(_playerId, url, headers: headers);
   }
 
   @override
   Future<void> close() async {
+    await _ensureInitialized();
     await _channel.pause(_playerId);
   }
 
@@ -146,7 +170,9 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
     _eventSubscription?.cancel();
     _eventSubscription = null;
 
-    _channel.disposePlayer(_playerId);
+    if (_playerId != 0) {
+      _channel.disposePlayer(_playerId);
+    }
 
     _playingController.close();
     _bufferingController.close();
@@ -163,10 +189,16 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
   }
 
   @override
-  Future<void> play() async => _channel.play(_playerId);
+  Future<void> play() async {
+    await _ensureInitialized();
+    await _channel.play(_playerId);
+  }
 
   @override
-  Future<void> pause() async => _channel.pause(_playerId);
+  Future<void> pause() async {
+    await _ensureInitialized();
+    await _channel.pause(_playerId);
+  }
 
   @override
   Future<void> playOrPause() async {
@@ -179,11 +211,13 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
 
   @override
   Future<void> seek(Duration position) async {
+    await _ensureInitialized();
     await _channel.seek(_playerId, position.inMilliseconds);
   }
 
   @override
   Future<void> setSpeed(double speed) async {
+    await _ensureInitialized();
     _speed = speed;
     await _channel.setSpeed(_playerId, speed);
     _speedController.add(speed);
@@ -191,6 +225,7 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
 
   @override
   Future<void> setVolume(double volume) async {
+    await _ensureInitialized();
     _volume = volume;
     await _channel.setVolume(_playerId, volume);
     _volumeController.add(volume);
@@ -198,44 +233,58 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
 
   @override
   Future<List<AudioTrackInfo>> getAudioTracks() async {
+    await _ensureInitialized();
     final tracks = await _channel.getAudioTracks(_playerId);
-    return tracks.map((t) => AudioTrackInfo(
-      index: t['index'] as int? ?? 0,
-      id: t['id'] as String? ?? '',
-      title: t['title'] as String?,
-      language: t['language'] as String?,
-    )).toList();
+    return tracks
+        .map(
+          (t) => AudioTrackInfo(
+            index: t['index'] as int? ?? 0,
+            id: t['id'] as String? ?? '',
+            title: t['title'] as String?,
+            language: t['language'] as String?,
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<void> setAudioTrack(int index) async {
+    await _ensureInitialized();
     await _channel.setAudioTrack(_playerId, index);
     _currentAudioTrackIndex = index;
   }
 
   @override
-  int? get currentAudioTrackIndex => _currentAudioTrackIndex >= 0 ? _currentAudioTrackIndex : null;
+  int? get currentAudioTrackIndex =>
+      _currentAudioTrackIndex >= 0 ? _currentAudioTrackIndex : null;
 
   @override
   Future<List<SubtitleTrackInfo>> getSubtitleTracks() async {
+    await _ensureInitialized();
     final tracks = await _channel.getSubtitleTracks(_playerId);
-    return tracks.map((t) => SubtitleTrackInfo(
-      index: t['index'] as int? ?? 0,
-      id: t['id'] as String? ?? '',
-      title: t['title'] as String?,
-      language: t['language'] as String?,
-      isForced: t['isForced'] as bool? ?? false,
-    )).toList();
+    return tracks
+        .map(
+          (t) => SubtitleTrackInfo(
+            index: t['index'] as int? ?? 0,
+            id: t['id'] as String? ?? '',
+            title: t['title'] as String?,
+            language: t['language'] as String?,
+            isForced: t['isForced'] as bool? ?? false,
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<void> setSubtitleTrack(int index) async {
+    await _ensureInitialized();
     await _channel.setSubtitleTrack(_playerId, index);
     _currentSubtitleTrackIndex = index;
   }
 
   @override
   Future<void> disableSubtitle() async {
+    await _ensureInitialized();
     await _channel.disableSubtitle(_playerId);
     _currentSubtitleTrackIndex = -1;
   }
@@ -243,6 +292,7 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
   @override
   Future<void> loadExternalSubtitle(String url, {String? title}) async {
     try {
+      await _ensureInitialized();
       final index = await _channel.loadExternalSubtitle(
         _playerId,
         url,
@@ -271,16 +321,25 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
   Future<bool> get isPipSupported async => Platform.isIOS || Platform.isMacOS;
 
   @override
-  Future<bool> enterPictureInPicture() async => _channel.enterPiP(_playerId);
+  Future<bool> enterPictureInPicture() async {
+    await _ensureInitialized();
+    return _channel.enterPiP(_playerId);
+  }
 
   @override
-  Future<bool> exitPictureInPicture() async => _channel.exitPiP(_playerId);
+  Future<bool> exitPictureInPicture() async {
+    await _ensureInitialized();
+    return _channel.exitPiP(_playerId);
+  }
 
   @override
   bool get isPictureInPicture => _isPiPActive;
 
   @override
-  Future<List<int>?> screenshot() async => _channel.screenshot(_playerId);
+  Future<List<int>?> screenshot() async {
+    await _ensureInitialized();
+    return _channel.screenshot(_playerId);
+  }
 
   // ==================== 状态流 ====================
 
@@ -358,8 +417,6 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
   // ==================== 视图 ====================
 
   @override
-  Widget buildVideoWidget({BoxFit fit = BoxFit.contain}) => NativeAVPlayerView(
-      playerId: _playerId,
-      fit: fit,
-    );
+  Widget buildVideoWidget({BoxFit fit = BoxFit.contain}) =>
+      NativeAVPlayerView(playerId: _playerId, fit: fit);
 }

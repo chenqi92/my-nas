@@ -222,6 +222,108 @@ void main() {
         verify(() => mockProxyServer.unregisterStream('test-token')).called(1);
       });
 
+      test('should unregister stream when the adapter throws', () async {
+        when(() => mockProxyServer.ensureRunning()).thenAnswer((_) async {});
+        when(
+          () => mockProxyServer.registerStream(
+            path: any(named: 'path'),
+            fileSystem: any(named: 'fileSystem'),
+            fileSize: any(named: 'fileSize'),
+            subtitlePath: any(named: 'subtitlePath'),
+          ),
+        ).thenReturn('test-token');
+        when(
+          () => mockProxyServer.getStreamUrl(any()),
+        ).thenAnswer((_) async => 'http://192.168.1.1:8899/stream/test-token');
+        when(
+          () => mockProxyServer.getSubtitleUrl(any()),
+        ).thenAnswer((_) async => null);
+        when(() => mockProxyServer.unregisterStream(any())).thenReturn(null);
+        when(
+          () => mockDlnaAdapter.castVideo(
+            deviceId: any(named: 'deviceId'),
+            videoUrl: any(named: 'videoUrl'),
+            title: any(named: 'title'),
+            subtitleUrl: any(named: 'subtitleUrl'),
+          ),
+        ).thenThrow(Exception('adapter failed'));
+
+        final session = await castService.cast(
+          device: testDevice,
+          videoPath: '/test/video.mp4',
+          videoTitle: 'Test Video',
+          fileSystem: mockFileSystem,
+        );
+
+        expect(session, isNull);
+        expect(castService.isCasting, isFalse);
+        verify(() => mockProxyServer.unregisterStream('test-token')).called(1);
+      });
+
+      test('new cast supersedes an in-flight cast without stale state', () async {
+        var tokenIndex = 0;
+        final firstCastResult = Completer<bool>();
+        final firstCastStarted = Completer<void>();
+        var adapterCalls = 0;
+
+        when(() => mockProxyServer.ensureRunning()).thenAnswer((_) async {});
+        when(
+          () => mockProxyServer.registerStream(
+            path: any(named: 'path'),
+            fileSystem: any(named: 'fileSystem'),
+            fileSize: any(named: 'fileSize'),
+            subtitlePath: any(named: 'subtitlePath'),
+          ),
+        ).thenAnswer((_) => 'token-${++tokenIndex}');
+        when(() => mockProxyServer.getStreamUrl(any())).thenAnswer(
+          (invocation) async =>
+              'http://192.168.1.1:8899/stream/${invocation.positionalArguments.first}',
+        );
+        when(
+          () => mockProxyServer.getSubtitleUrl(any()),
+        ).thenAnswer((_) async => null);
+        when(() => mockProxyServer.unregisterStream(any())).thenReturn(null);
+        when(() => mockDlnaAdapter.stop()).thenAnswer((_) async {});
+        when(
+          () => mockDlnaAdapter.castVideo(
+            deviceId: any(named: 'deviceId'),
+            videoUrl: any(named: 'videoUrl'),
+            title: any(named: 'title'),
+            subtitleUrl: any(named: 'subtitleUrl'),
+          ),
+        ).thenAnswer((_) {
+          adapterCalls++;
+          if (adapterCalls == 1) {
+            firstCastStarted.complete();
+            return firstCastResult.future;
+          }
+          return Future<bool>.value(true);
+        });
+
+        final first = castService.cast(
+          device: testDevice,
+          videoPath: '/test/first.mp4',
+          videoTitle: 'First',
+          fileSystem: mockFileSystem,
+        );
+        await firstCastStarted.future;
+
+        final second = castService.cast(
+          device: testDevice,
+          videoPath: '/test/second.mp4',
+          videoTitle: 'Second',
+          fileSystem: mockFileSystem,
+        );
+        firstCastResult.complete(true);
+
+        expect(await first, isNull);
+        final secondSession = await second;
+        expect(secondSession?.videoTitle, 'Second');
+        expect(castService.currentSession?.videoTitle, 'Second');
+        verify(() => mockProxyServer.unregisterStream('token-1')).called(1);
+        verify(() => mockDlnaAdapter.stop()).called(1);
+      });
+
       test('should handle IP address failure', () async {
         when(() => mockProxyServer.ensureRunning()).thenAnswer((_) async {});
         when(

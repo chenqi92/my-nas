@@ -16,9 +16,9 @@ class CastService {
     CastMediaProxyServer? proxyServer,
     DlnaAdapter? dlnaAdapter,
     AirPlayAdapter? airplayAdapter,
-  })  : _proxyServer = proxyServer ?? CastMediaProxyServer(),
-        _dlnaAdapter = dlnaAdapter ?? DlnaAdapter(),
-        _airplayAdapter = airplayAdapter ?? AirPlayAdapter() {
+  }) : _proxyServer = proxyServer ?? CastMediaProxyServer(),
+       _dlnaAdapter = dlnaAdapter ?? DlnaAdapter(),
+       _airplayAdapter = airplayAdapter ?? AirPlayAdapter() {
     _initDeviceStreams();
   }
 
@@ -37,6 +37,9 @@ class CastService {
 
   /// 连续轮询错误计数
   int _pollErrorCount = 0;
+  int _operationGeneration = 0;
+  bool _pollInFlight = false;
+  Future<void> _operationQueue = Future<void>.value();
 
   /// 最大连续错误次数（超过后认为连接断开）
   static const _maxPollErrors = 5;
@@ -89,7 +92,9 @@ class CastService {
   }
 
   /// 开始设备发现
-  Future<void> startDiscovery({Duration timeout = const Duration(seconds: 15)}) async {
+  Future<void> startDiscovery({
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
     logger.i('开始设备发现');
 
     // 并行启动 DLNA 和 AirPlay 搜索
@@ -123,15 +128,45 @@ class CastService {
     String? subtitlePath,
     Duration? startPosition,
     int? fileSize,
+  }) {
+    final generation = ++_operationGeneration;
+    return _enqueueOperation(() async {
+      if (generation != _operationGeneration) return null;
+      return _castInternal(
+        generation: generation,
+        device: device,
+        videoPath: videoPath,
+        videoTitle: videoTitle,
+        fileSystem: fileSystem,
+        subtitlePath: subtitlePath,
+        startPosition: startPosition,
+        fileSize: fileSize,
+      );
+    });
+  }
+
+  Future<CastSession?> _castInternal({
+    required int generation,
+    required CastDevice device,
+    required String videoPath,
+    required String videoTitle,
+    required NasFileSystem fileSystem,
+    String? subtitlePath,
+    Duration? startPosition,
+    int? fileSize,
   }) async {
+    String? registeredToken;
+    var adapterInvoked = false;
     try {
       // 0. 如果有正在进行的投屏，先停止并清理
-      if (_currentSession != null) {
-        await stop();
+      if (_currentSession != null || _currentStreamToken != null) {
+        await _stopCurrent();
       }
+      if (generation != _operationGeneration) return null;
 
       // 1. 确保代理服务器运行
       await _proxyServer.ensureRunning();
+      if (generation != _operationGeneration) return null;
 
       // 2. 注册媒体流
       final token = _proxyServer.registerStream(
@@ -140,19 +175,27 @@ class CastService {
         fileSize: fileSize,
         subtitlePath: subtitlePath,
       );
+      registeredToken = token;
 
       // 保存 token 以便停止时清理
       _currentStreamToken = token;
 
       // 3. 获取流 URL
       final videoUrl = await _proxyServer.getStreamUrl(token);
+      if (generation != _operationGeneration) {
+        _unregisterOwnedStream(token);
+        return null;
+      }
       if (videoUrl == null) {
-        _proxyServer.unregisterStream(token);
-        _currentStreamToken = null;
+        _unregisterOwnedStream(token);
         throw Exception(appL10n.castServiceNoLocalIpError);
       }
 
       final subtitleUrl = await _proxyServer.getSubtitleUrl(token);
+      if (generation != _operationGeneration) {
+        _unregisterOwnedStream(token);
+        return null;
+      }
 
       logger.i('投屏URL: $videoUrl');
       if (subtitleUrl != null) {
@@ -161,6 +204,7 @@ class CastService {
 
       // 4. 根据协议类型投屏
       bool success;
+      adapterInvoked = true;
       switch (device.protocol) {
         case CastProtocol.dlna:
           success = await _dlnaAdapter.castVideo(
@@ -179,9 +223,14 @@ class CastService {
           );
       }
 
+      if (generation != _operationGeneration) {
+        if (success) await _stopAdapter(device.protocol);
+        _unregisterOwnedStream(token);
+        return null;
+      }
+
       if (!success) {
-        _proxyServer.unregisterStream(token);
-        _currentStreamToken = null;
+        _unregisterOwnedStream(token);
         return null;
       }
 
@@ -199,18 +248,23 @@ class CastService {
       _sessionController.add(_currentSession);
 
       // 6. 启动状态轮询
-      _startStatusPolling();
+      _startStatusPolling(generation);
 
       // 7. 跳转到起始位置（DLNA 需要单独处理）
       if (device.protocol == CastProtocol.dlna &&
           startPosition != null &&
           startPosition > Duration.zero) {
         await Future<void>.delayed(const Duration(seconds: 1));
+        if (generation != _operationGeneration) return null;
         await seek(startPosition);
       }
 
-      return _currentSession;
+      return generation == _operationGeneration ? _currentSession : null;
     } catch (e, st) {
+      if (generation != _operationGeneration && adapterInvoked) {
+        await _stopAdapter(device.protocol);
+      }
+      if (registeredToken != null) _unregisterOwnedStream(registeredToken);
       AppError.handle(e, st, 'castVideo', {
         'device': device.name,
         'videoPath': videoPath,
@@ -253,12 +307,19 @@ class CastService {
 
   /// 停止投屏
   Future<void> stop() async {
+    _operationGeneration++;
+    await _enqueueOperation<bool>(() async {
+      await _stopCurrent();
+      return true;
+    });
+  }
+
+  Future<void> _stopCurrent() async {
     _stopStatusPolling();
 
     // 清理流注册
     if (_currentStreamToken != null) {
-      _proxyServer.unregisterStream(_currentStreamToken!);
-      _currentStreamToken = null;
+      _unregisterOwnedStream(_currentStreamToken!);
     }
 
     if (_currentSession == null) return;
@@ -277,6 +338,37 @@ class CastService {
       _pollErrorCount = 0;
       _sessionController.add(null);
       logger.i('投屏已停止');
+    }
+  }
+
+  Future<T> _enqueueOperation<T>(Future<T> Function() operation) {
+    final result = Completer<T>();
+    _operationQueue = _operationQueue.then((_) async {
+      try {
+        result.complete(await operation());
+      } catch (e, st) {
+        result.completeError(e, st);
+      }
+    });
+    return result.future;
+  }
+
+  void _unregisterOwnedStream(String token) {
+    if (_currentStreamToken != token) return;
+    _proxyServer.unregisterStream(token);
+    _currentStreamToken = null;
+  }
+
+  Future<void> _stopAdapter(CastProtocol protocol) async {
+    try {
+      switch (protocol) {
+        case CastProtocol.dlna:
+          await _dlnaAdapter.stop();
+        case CastProtocol.airplay:
+          await _airplayAdapter.stop();
+      }
+    } catch (e, st) {
+      AppError.ignore(e, st, '清理过期投屏会话失败');
     }
   }
 
@@ -299,17 +391,23 @@ class CastService {
   /// 设置音量
   Future<void> setVolume(double volume) async {
     if (_currentSession == null) return;
+    final generation = _operationGeneration;
+    final session = _currentSession!;
 
     try {
       final intVolume = (volume * 100).round();
-      switch (_currentSession!.device.protocol) {
+      switch (session.device.protocol) {
         case CastProtocol.dlna:
           await _dlnaAdapter.setVolume(intVolume);
         case CastProtocol.airplay:
           await _airplayAdapter.setVolume(intVolume);
       }
 
-      _currentSession = _currentSession!.copyWith(volume: volume);
+      if (generation != _operationGeneration ||
+          !identical(_currentSession, session)) {
+        return;
+      }
+      _currentSession = session.copyWith(volume: volume);
       _sessionController.add(_currentSession);
     } catch (e, st) {
       AppError.handle(e, st, 'castSetVolume');
@@ -317,9 +415,12 @@ class CastService {
   }
 
   /// 启动状态轮询
-  void _startStatusPolling() {
+  void _startStatusPolling(int generation) {
     _stopStatusPolling();
-    _statusTimer = Timer.periodic(const Duration(seconds: 1), (_) => _pollStatus());
+    _statusTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _pollStatus(generation),
+    );
   }
 
   /// 停止状态轮询
@@ -333,6 +434,7 @@ class CastService {
   /// 当状态轮询检测到连接断开后，可以调用此方法尝试恢复
   Future<bool> tryReconnect() async {
     if (_currentSession == null) return false;
+    final generation = _operationGeneration;
 
     logger.i('尝试恢复投屏连接...');
 
@@ -340,10 +442,11 @@ class CastService {
     _pollErrorCount = 0;
 
     // 重新启动状态轮询
-    _startStatusPolling();
+    _startStatusPolling(generation);
 
     // 等待一次轮询完成
     await Future<void>.delayed(const Duration(seconds: 2));
+    if (generation != _operationGeneration) return false;
 
     // 检查是否恢复成功
     if (_currentSession?.playbackState == CastPlaybackState.error) {
@@ -356,15 +459,21 @@ class CastService {
   }
 
   /// 轮询状态
-  Future<void> _pollStatus() async {
-    if (_currentSession == null) return;
+  Future<void> _pollStatus(int generation) async {
+    if (_pollInFlight ||
+        generation != _operationGeneration ||
+        _currentSession == null) {
+      return;
+    }
+    _pollInFlight = true;
+    final session = _currentSession!;
 
     try {
       Duration? position;
       Duration? duration;
       CastPlaybackState? state;
 
-      switch (_currentSession!.device.protocol) {
+      switch (session.device.protocol) {
         case CastProtocol.dlna:
           position = await _dlnaAdapter.getPosition();
           duration = await _dlnaAdapter.getDuration();
@@ -373,6 +482,14 @@ class CastService {
           position = await _airplayAdapter.getPosition();
           duration = await _airplayAdapter.getDuration();
           state = await _airplayAdapter.getPlaybackState();
+      }
+
+      if (!_hasValidPollStatus(position, duration, state)) {
+        throw StateError('投屏设备未返回有效播放状态');
+      }
+      if (generation != _operationGeneration ||
+          !identical(_currentSession, session)) {
+        return;
       }
 
       // 重置错误计数（成功获取状态）
@@ -385,6 +502,10 @@ class CastService {
       );
       _sessionController.add(_currentSession);
     } catch (e, st) {
+      if (generation != _operationGeneration ||
+          !identical(_currentSession, session)) {
+        return;
+      }
       _pollErrorCount++;
 
       if (_pollErrorCount >= _maxPollErrors) {
@@ -407,7 +528,19 @@ class CastService {
         // 只是偶发错误，记录但不上报
         AppError.ignore(e, st, '投屏状态轮询失败 ($_pollErrorCount/$_maxPollErrors)');
       }
+    } finally {
+      _pollInFlight = false;
     }
+  }
+
+  bool _hasValidPollStatus(
+    Duration? position,
+    Duration? duration,
+    CastPlaybackState? state,
+  ) {
+    if (state == null) return false;
+    if (state != CastPlaybackState.idle) return true;
+    return position != null || duration != null;
   }
 
   /// 释放资源
