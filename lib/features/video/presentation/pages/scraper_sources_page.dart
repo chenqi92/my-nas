@@ -127,7 +127,8 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
   ) => ReorderableListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: sortedTypes.length,
-        onReorder: (oldIndex, newIndex) => _handleReorder(sources, sortedTypes, oldIndex, newIndex),
+        onReorderItem: (oldIndex, newIndex) =>
+            _handleReorder(sources, sortedTypes, oldIndex, newIndex),
         proxyDecorator: (child, index, animation) => AnimatedBuilder(
           animation: animation,
           builder: (context, child) {
@@ -171,16 +172,11 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
     int oldIndex,
     int newIndex,
   ) {
-    var adjustedNewIndex = newIndex;
-    if (oldIndex < adjustedNewIndex) {
-      adjustedNewIndex -= 1;
-    }
-
     final type = sortedTypes[oldIndex];
     final sourceIndex = sources.indexWhere((s) => s.type == type);
     if (sourceIndex == -1) return;
 
-    final targetType = sortedTypes[adjustedNewIndex];
+    final targetType = sortedTypes[newIndex];
     final targetSourceIndex = sources.indexWhere((s) => s.type == targetType);
     if (targetSourceIndex == -1) return;
 

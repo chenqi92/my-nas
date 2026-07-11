@@ -149,11 +149,8 @@ class _PrioritySection extends ConsumerWidget {
             physics: const NeverScrollableScrollPhysics(),
             buildDefaultDragHandles: false,
             itemCount: languages.length,
-            onReorder: (oldIndex, newIndex) {
-              var target = newIndex;
-              if (target > oldIndex) target -= 1;
-              notifier.reorderLanguages(type, oldIndex, target);
-            },
+            onReorderItem: (oldIndex, newIndex) =>
+                notifier.reorderLanguages(type, oldIndex, newIndex),
             proxyDecorator: (child, index, animation) => Material(
               color: Colors.transparent,
               child: child,

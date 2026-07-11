@@ -263,16 +263,17 @@ class BookSourceManagerService {
   Future<void> reorderSources(int oldIndex, int newIndex) async {
     await _ensureInitialized();
 
-    if (_sourcesCache == null || _sourcesCache!.isEmpty) return;
-
-    // 调整索引
-    var adjustedNewIndex = newIndex;
-    if (newIndex > oldIndex) {
-      adjustedNewIndex--;
+    if (_sourcesCache == null ||
+        oldIndex < 0 ||
+        oldIndex >= _sourcesCache!.length ||
+        newIndex < 0 ||
+        newIndex >= _sourcesCache!.length ||
+        oldIndex == newIndex) {
+      return;
     }
 
     final source = _sourcesCache!.removeAt(oldIndex);
-    _sourcesCache!.insert(adjustedNewIndex, source);
+    _sourcesCache!.insert(newIndex, source);
 
     // 更新所有书源的 customOrder
     for (var i = 0; i < _sourcesCache!.length; i++) {
@@ -282,7 +283,7 @@ class BookSourceManagerService {
     }
 
     _eventController.add(const BookSourceEvent(BookSourceEventType.reloaded, null));
-    logger.i('重新排序书源: $oldIndex -> $adjustedNewIndex');
+    logger.i('重新排序书源: $oldIndex -> $newIndex');
   }
 
   /// 启用/禁用书源

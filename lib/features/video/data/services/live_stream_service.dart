@@ -157,12 +157,7 @@ class LiveStreamService {
   /// 重新排序
   Future<void> reorder(int oldIndex, int newIndex) async {
     await init();
-    // 处理 Flutter ReorderableListView 的索引行为
-    var actualNewIndex = newIndex;
-    if (newIndex > oldIndex) {
-      actualNewIndex -= 1;
-    }
-    _currentSettings = settings.reorder(oldIndex, actualNewIndex);
+    _currentSettings = settings.reorder(oldIndex, newIndex);
     await _saveSettings();
   }
 

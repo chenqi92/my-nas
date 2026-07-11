@@ -42,12 +42,7 @@ class VideoCategorySettingsNotifier extends StateNotifier<VideoCategorySettings>
 
   /// 重新排序分类
   Future<void> reorder(int oldIndex, int newIndex) async {
-    // 处理 Flutter ReorderableListView 的索引行为
-    var actualNewIndex = newIndex;
-    if (newIndex > oldIndex) {
-      actualNewIndex -= 1;
-    }
-    await _service.reorder(oldIndex, actualNewIndex);
+    await _service.reorder(oldIndex, newIndex);
   }
 
   /// 添加动态分类

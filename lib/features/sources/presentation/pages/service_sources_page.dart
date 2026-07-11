@@ -133,7 +133,7 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
       ReorderableListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: sources.length,
-        onReorder: (oldIndex, newIndex) {
+        onReorderItem: (oldIndex, newIndex) {
           // 需要找到在全局列表中的真实索引
           final allSources = ref.read(sourcesProvider).valueOrNull ?? [];
           final sourceIds = sources.map((s) => s.id).toList();
@@ -141,10 +141,8 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
           // 获取全局索引
           final oldGlobalIndex =
               allSources.indexWhere((s) => s.id == sourceIds[oldIndex]);
-          final newGlobalIndex = oldIndex < newIndex
-              ? allSources.indexWhere((s) => s.id == sourceIds[newIndex - 1]) +
-                  1
-              : allSources.indexWhere((s) => s.id == sourceIds[newIndex]);
+          final newGlobalIndex =
+              allSources.indexWhere((s) => s.id == sourceIds[newIndex]);
 
           if (oldGlobalIndex != -1 && newGlobalIndex != -1) {
             ref

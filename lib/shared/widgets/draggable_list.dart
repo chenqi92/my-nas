@@ -110,7 +110,7 @@ class _DraggableListState<T> extends State<DraggableList<T>> {
       padding: widget.padding,
       itemExtent: widget.itemExtent,
       itemCount: widget.items.length,
-      onReorder: _handleReorder,
+      onReorderItem: _handleReorder,
       proxyDecorator: widget.proxyDecorator ?? _defaultProxyDecorator,
       buildDefaultDragHandles: widget.dragHandleBuilder == null,
       itemBuilder: (context, index) {
@@ -144,11 +144,7 @@ class _DraggableListState<T> extends State<DraggableList<T>> {
   }
 
   void _handleReorder(int oldIndex, int newIndex) {
-    var adjustedNewIndex = newIndex;
-    if (oldIndex < newIndex) {
-      adjustedNewIndex -= 1;
-    }
-    widget.onReorder(oldIndex, adjustedNewIndex);
+    widget.onReorder(oldIndex, newIndex);
   }
 
   Widget _defaultProxyDecorator(

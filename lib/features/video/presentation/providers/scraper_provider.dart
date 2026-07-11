@@ -95,12 +95,9 @@ class ScraperSourcesNotifier extends StateNotifier<AsyncValue<List<ScraperSource
     // 创建可变副本
     final mutableSources = List<ScraperSourceEntity>.from(sources);
 
-    // 调整新索引（如果是向后移动）
-    final adjustedNewIndex = oldIndex < newIndex ? newIndex - 1 : newIndex;
-
     // 移动元素
     final item = mutableSources.removeAt(oldIndex);
-    mutableSources.insert(adjustedNewIndex, item);
+    mutableSources.insert(newIndex, item);
 
     // 更新排序顺序
     final updatedSources = <ScraperSourceEntity>[];

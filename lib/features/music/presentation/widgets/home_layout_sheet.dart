@@ -106,7 +106,7 @@ class _HomeLayoutSheetState extends ConsumerState<HomeLayoutSheet> {
                     itemCount: _sections.length,
                     proxyDecorator: (child, index, animation) =>
                         _buildProxyDecorator(child, animation, isDark),
-                    onReorder: _onReorder,
+                    onReorderItem: _onReorder,
                     itemBuilder: (context, index) {
                       final config = _sections[index];
                       return _SectionTile(
@@ -223,16 +223,12 @@ class _HomeLayoutSheetState extends ConsumerState<HomeLayoutSheet> {
       );
 
   void _onReorder(int oldIndex, int newIndex) {
-    var adjustedNewIndex = newIndex;
-    if (adjustedNewIndex > oldIndex) {
-      adjustedNewIndex -= 1;
-    }
     setState(() {
       final item = _sections.removeAt(oldIndex);
-      _sections.insert(adjustedNewIndex, item);
+      _sections.insert(newIndex, item);
     });
     // 保存到 provider
-    ref.read(homeLayoutProvider.notifier).reorderSections(oldIndex, adjustedNewIndex);
+    ref.read(homeLayoutProvider.notifier).reorderSections(oldIndex, newIndex);
   }
 
   void _toggleVisibility(int index) {

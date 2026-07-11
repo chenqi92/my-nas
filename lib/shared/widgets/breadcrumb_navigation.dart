@@ -552,7 +552,7 @@ class BreadcrumbBar extends StatelessWidget {
           ),
 
           // 操作按钮
-          if (actions != null) ...actions!,
+          ...?actions,
         ],
       ),
     );

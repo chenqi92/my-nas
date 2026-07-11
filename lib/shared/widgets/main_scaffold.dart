@@ -609,7 +609,7 @@ class _AnimatedBottomNavState extends State<_AnimatedBottomNav>
   @override
   Widget build(BuildContext context) => SizeTransition(
         sizeFactor: _curve,
-        axisAlignment: -1,
+        alignment: Alignment.topLeft,
         child: SlideTransition(
           position: _slide,
           child: FadeTransition(

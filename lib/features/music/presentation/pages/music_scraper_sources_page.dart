@@ -168,7 +168,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
           child: ReorderableListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: sources.length,
-            onReorder: (oldIndex, newIndex) =>
+            onReorderItem: (oldIndex, newIndex) =>
                 _handleReorder(sources, oldIndex, newIndex),
             proxyDecorator: (child, index, animation) => AnimatedBuilder(
               animation: animation,
@@ -217,23 +217,18 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
   ///
   /// [reorderable] 直接来自 provider 的 `state.sources`，索引一致。
   /// 仍按 id 回查 provider 当前 sources（防止 ref.watch 与 ReorderableListView
-  /// 的 onReorder 之间发生过状态更新导致索引漂移）。
+  /// 的 onReorderItem 之间发生过状态更新导致索引漂移）。
   void _handleReorder(
     List<MusicScraperSourceEntity> reorderable,
     int oldIndex,
     int newIndex,
   ) {
-    // ReorderableListView 约定：oldIndex < newIndex 时 newIndex 比实际大 1
-    var adjustedNewIndex = newIndex;
-    if (oldIndex < adjustedNewIndex) {
-      adjustedNewIndex -= 1;
-    }
-    if (oldIndex == adjustedNewIndex) return;
+    if (oldIndex == newIndex) return;
 
     final sources = ref.read(musicScraperSourcesProvider).sources;
     final fromIndex = sources.indexWhere((s) => s.id == reorderable[oldIndex].id);
     final toIndex =
-        sources.indexWhere((s) => s.id == reorderable[adjustedNewIndex].id);
+        sources.indexWhere((s) => s.id == reorderable[newIndex].id);
     if (fromIndex == -1 || toIndex == -1) return;
 
     ref.read(musicScraperSourcesProvider.notifier).reorder(fromIndex, toIndex);

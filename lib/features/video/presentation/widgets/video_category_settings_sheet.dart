@@ -296,12 +296,12 @@ class _VideoCategorySettingsSheetState
         buildDefaultDragHandles: false,
         padding: EdgeInsets.zero,
         itemCount: sections.length,
-        onReorder: (oldIndex, newIndex) {
+        onReorderItem: (oldIndex, newIndex) {
           // 需要将索引转换回完整列表的索引
           final settings = ref.read(videoCategorySettingsProvider);
           final allSorted = settings.sortedSections;
           final oldSection = sections[oldIndex];
-          final newSection = sections[newIndex > oldIndex ? newIndex - 1 : newIndex];
+          final newSection = sections[newIndex];
 
           final realOldIndex = allSorted.indexWhere(
             (s) => s.uniqueKey == oldSection.uniqueKey,
@@ -311,10 +311,9 @@ class _VideoCategorySettingsSheetState
           );
 
           if (realOldIndex != -1 && realNewIndex != -1) {
-            ref.read(videoCategorySettingsProvider.notifier).reorder(
-                  realOldIndex,
-                  newIndex > oldIndex ? realNewIndex + 1 : realNewIndex,
-                );
+            ref
+                .read(videoCategorySettingsProvider.notifier)
+                .reorder(realOldIndex, realNewIndex);
           }
         },
         itemBuilder: (context, index) {
