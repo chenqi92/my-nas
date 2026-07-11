@@ -19,7 +19,8 @@ import 'package:my_nas/shared/widgets/loading_widget.dart';
 /// 笔记编辑器状态
 final noteEditorProvider =
     StateNotifierProvider.family<NoteEditorNotifier, NoteEditorState, NoteItem>(
-        (ref, note) => NoteEditorNotifier(note));
+      (ref, note) => NoteEditorNotifier(note),
+    );
 
 sealed class NoteEditorState {}
 
@@ -44,11 +45,11 @@ class NoteEditorLoaded extends NoteEditorState {
     bool? isEditing,
     bool? hasChanges,
   }) => NoteEditorLoaded(
-      content: content ?? this.content,
-      tasks: tasks ?? this.tasks,
-      isEditing: isEditing ?? this.isEditing,
-      hasChanges: hasChanges ?? this.hasChanges,
-    );
+    content: content ?? this.content,
+    tasks: tasks ?? this.tasks,
+    isEditing: isEditing ?? this.isEditing,
+    hasChanges: hasChanges ?? this.hasChanges,
+  );
 }
 
 class NoteEditorError extends NoteEditorState {
@@ -127,12 +128,19 @@ class NoteEditorNotifier extends StateNotifier<NoteEditorState> {
     final current = state;
     if (current is NoteEditorLoaded && index < current.tasks.length) {
       final task = current.tasks[index];
-      final newStatus = task.isCompleted ? TaskStatus.pending : TaskStatus.completed;
+      final newStatus = task.isCompleted
+          ? TaskStatus.pending
+          : TaskStatus.completed;
       final newTasks = [...current.tasks];
       newTasks[index] = task.copyWith(status: newStatus);
 
       // 更新 Markdown 内容中对应的任务状态
-      final newContent = _updateTaskInContent(current.content, index, newStatus);
+      final newContent = _updateTaskInContent(
+        current.content,
+        index,
+        newStatus,
+        sourceLine: task.sourceLine,
+      );
 
       state = current.copyWith(
         tasks: newTasks,
@@ -142,21 +150,38 @@ class NoteEditorNotifier extends StateNotifier<NoteEditorState> {
     }
   }
 
-  String _updateTaskInContent(String content, int taskIndex, TaskStatus newStatus) {
+  String _updateTaskInContent(
+    String content,
+    int taskIndex,
+    TaskStatus newStatus, {
+    int? sourceLine,
+  }) {
     final lines = content.split('\n');
+    final taskLineRegex = RegExp(r'^[-*+]\s*\[([ xX/\-])\]\s*(.+)$');
     var currentTaskIndex = 0;
+    final statusChar = switch (newStatus) {
+      TaskStatus.completed => 'x',
+      TaskStatus.inProgress => '/',
+      TaskStatus.cancelled => '-',
+      TaskStatus.pending => ' ',
+    };
+
+    if (sourceLine != null &&
+        sourceLine >= 0 &&
+        sourceLine < lines.length &&
+        taskLineRegex.hasMatch(lines[sourceLine].trim())) {
+      lines[sourceLine] = lines[sourceLine].replaceFirstMapped(
+        RegExp(r'\[([ xX/\-])\]'),
+        (m) => '[$statusChar]',
+      );
+      return lines.join('\n');
+    }
 
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i];
-      if (RegExp(r'^[-*+]\s*\[([ xX/\-])\]').hasMatch(line.trim())) {
+      if (taskLineRegex.hasMatch(line.trim())) {
         if (currentTaskIndex == taskIndex) {
           // 替换状态字符
-          final statusChar = switch (newStatus) {
-            TaskStatus.completed => 'x',
-            TaskStatus.inProgress => '/',
-            TaskStatus.cancelled => '-',
-            TaskStatus.pending => ' ',
-          };
           lines[i] = line.replaceFirstMapped(
             RegExp(r'\[([ xX/\-])\]'),
             (m) => '[$statusChar]',
@@ -237,9 +262,18 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: context.l10n.noteEditorTabPreview, icon: Icon(Icons.visibility_rounded, size: 20)),
-            Tab(text: context.l10n.noteEditorTabTasks, icon: Icon(Icons.checklist_rounded, size: 20)),
-            Tab(text: context.l10n.noteEditorTabEdit, icon: Icon(Icons.edit_rounded, size: 20)),
+            Tab(
+              text: context.l10n.noteEditorTabPreview,
+              icon: Icon(Icons.visibility_rounded, size: 20),
+            ),
+            Tab(
+              text: context.l10n.noteEditorTabTasks,
+              icon: Icon(Icons.checklist_rounded, size: 20),
+            ),
+            Tab(
+              text: context.l10n.noteEditorTabEdit,
+              icon: Icon(Icons.edit_rounded, size: 20),
+            ),
           ],
           labelColor: AppColors.primary,
           unselectedLabelColor: isDark ? AppColors.darkOnSurfaceVariant : null,
@@ -247,34 +281,41 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
         ),
       ),
       body: switch (state) {
-        NoteEditorLoading() => LoadingWidget(message: context.l10n.noteEditorLoading),
+        NoteEditorLoading() => LoadingWidget(
+          message: context.l10n.noteEditorLoading,
+        ),
         NoteEditorError(:final message) => AppErrorWidget(
-            message: message,
-            onRetry: () =>
-                ref.read(noteEditorProvider(widget.note).notifier).loadNote(),
-          ),
+          message: message,
+          onRetry: () =>
+              ref.read(noteEditorProvider(widget.note).notifier).loadNote(),
+        ),
         NoteEditorLoaded() => TabBarView(
-            controller: _tabController,
-            children: [
-              _buildPreviewTab(context, state, isDark),
-              _buildTasksTab(context, state, isDark),
-              _buildEditTab(context, state, isDark),
-            ],
-          ),
+          controller: _tabController,
+          children: [
+            _buildPreviewTab(context, state, isDark),
+            _buildTasksTab(context, state, isDark),
+            _buildEditTab(context, state, isDark),
+          ],
+        ),
       },
     );
   }
 
-  Widget _buildPreviewTab(BuildContext context, NoteEditorLoaded state, bool isDark) => SingleChildScrollView(
-      controller: _previewScrollController,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: _MarkdownPreview(
-        content: state.content,
-        isDark: isDark,
-      ),
-    );
+  Widget _buildPreviewTab(
+    BuildContext context,
+    NoteEditorLoaded state,
+    bool isDark,
+  ) => SingleChildScrollView(
+    controller: _previewScrollController,
+    padding: const EdgeInsets.all(AppSpacing.lg),
+    child: _MarkdownPreview(content: state.content, isDark: isDark),
+  );
 
-  Widget _buildTasksTab(BuildContext context, NoteEditorLoaded state, bool isDark) {
+  Widget _buildTasksTab(
+    BuildContext context,
+    NoteEditorLoaded state,
+    bool isDark,
+  ) {
     if (state.tasks.isEmpty) {
       return Center(
         child: Column(
@@ -316,7 +357,11 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
     );
   }
 
-  Widget _buildEditTab(BuildContext context, NoteEditorLoaded state, bool isDark) {
+  Widget _buildEditTab(
+    BuildContext context,
+    NoteEditorLoaded state,
+    bool isDark,
+  ) {
     // 初始化编辑器内容
     if (_editController.text != state.content && !state.hasChanges) {
       _editController.text = state.content;
@@ -328,7 +373,9 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurfaceVariant : context.colorScheme.surfaceContainerHighest,
+            color: isDark
+                ? AppColors.darkSurfaceVariant
+                : context.colorScheme.surfaceContainerHighest,
             border: Border(
               bottom: BorderSide(
                 color: isDark
@@ -421,11 +468,11 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
     required String tooltip,
     required VoidCallback onTap,
   }) => IconButton(
-      onPressed: onTap,
-      icon: Icon(icon, size: 20),
-      tooltip: tooltip,
-      splashRadius: 20,
-    );
+    onPressed: onTap,
+    icon: Icon(icon, size: 20),
+    tooltip: tooltip,
+    splashRadius: 20,
+  );
 
   void _insertMarkdown(String prefix, String suffix) {
     final text = _editController.text;
@@ -443,7 +490,11 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
     } else {
       final offset = _editController.selection.baseOffset;
       _editController.value = TextEditingValue(
-        text: text.substring(0, offset) + prefix + suffix + text.substring(offset),
+        text:
+            text.substring(0, offset) +
+            prefix +
+            suffix +
+            text.substring(offset),
         selection: TextSelection.collapsed(offset: offset + prefix.length),
       );
     }
@@ -456,10 +507,7 @@ class _NoteEditorPageState extends ConsumerState<NoteEditorPage>
 
 /// 简单的 Markdown 预览组件
 class _MarkdownPreview extends StatelessWidget {
-  const _MarkdownPreview({
-    required this.content,
-    required this.isDark,
-  });
+  const _MarkdownPreview({required this.content, required this.isDark});
 
   final String content;
   final bool isDark;
@@ -526,7 +574,9 @@ class _MarkdownPreview extends StatelessWidget {
     }
 
     // 任务项
-    final taskMatch = RegExp(r'^[-*+]\s*\[([ xX/\-])\]\s*(.+)$').firstMatch(trimmed);
+    final taskMatch = RegExp(
+      r'^[-*+]\s*\[([ xX/\-])\]\s*(.+)$',
+    ).firstMatch(trimmed);
     if (taskMatch != null) {
       final isCompleted = taskMatch.group(1)!.toLowerCase() == 'x';
       final taskContent = taskMatch.group(2)!;
@@ -536,9 +586,13 @@ class _MarkdownPreview extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(
-              isCompleted ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+              isCompleted
+                  ? Icons.check_box_rounded
+                  : Icons.check_box_outline_blank_rounded,
               size: 20,
-              color: isCompleted ? AppColors.success : (isDark ? AppColors.darkOnSurfaceVariant : null),
+              color: isCompleted
+                  ? AppColors.success
+                  : (isDark ? AppColors.darkOnSurfaceVariant : null),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -558,7 +612,9 @@ class _MarkdownPreview extends StatelessWidget {
     }
 
     // 列表项
-    if (trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('+ ')) {
+    if (trimmed.startsWith('- ') ||
+        trimmed.startsWith('* ') ||
+        trimmed.startsWith('+ ')) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
@@ -571,9 +627,7 @@ class _MarkdownPreview extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Expanded(
-              child: _buildRichText(context, trimmed.substring(2)),
-            ),
+            Expanded(child: _buildRichText(context, trimmed.substring(2))),
           ],
         ),
       );
@@ -605,12 +659,7 @@ class _MarkdownPreview extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border(
-            left: BorderSide(
-              color: AppColors.primary,
-              width: 4,
-            ),
-          ),
+          border: Border(left: BorderSide(color: AppColors.primary, width: 4)),
           color: isDark
               ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
               : Colors.grey.shade50,
@@ -633,17 +682,17 @@ class _MarkdownPreview extends StatelessWidget {
   }
 
   Widget _buildRichText(BuildContext context, String text) => Text(
-      _stripMarkdown(text),
-      style: context.textTheme.bodyMedium?.copyWith(
-        color: isDark ? AppColors.darkOnSurface : null,
-        height: 1.6,
-      ),
-    );
+    _stripMarkdown(text),
+    style: context.textTheme.bodyMedium?.copyWith(
+      color: isDark ? AppColors.darkOnSurface : null,
+      height: 1.6,
+    ),
+  );
 
   String _stripMarkdown(String text) => text
-        .replaceAllMapped(RegExp(r'\*\*(.+?)\*\*'), (m) => m.group(1)!)
-        .replaceAllMapped(RegExp(r'\*(.+?)\*'), (m) => m.group(1)!)
-        .replaceAllMapped(RegExp('~~(.+?)~~'), (m) => m.group(1)!)
-        .replaceAllMapped(RegExp('`(.+?)`'), (m) => m.group(1)!)
-        .replaceAllMapped(RegExp(r'\[(.+?)\]\(.+?\)'), (m) => m.group(1)!);
+      .replaceAllMapped(RegExp(r'\*\*(.+?)\*\*'), (m) => m.group(1)!)
+      .replaceAllMapped(RegExp(r'\*(.+?)\*'), (m) => m.group(1)!)
+      .replaceAllMapped(RegExp('~~(.+?)~~'), (m) => m.group(1)!)
+      .replaceAllMapped(RegExp('`(.+?)`'), (m) => m.group(1)!)
+      .replaceAllMapped(RegExp(r'\[(.+?)\]\(.+?\)'), (m) => m.group(1)!);
 }

@@ -128,17 +128,25 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
         }
       })
       // 监听媒体库配置变化（启用/停用/移除路径）
-      ..listen<AsyncValue<MediaLibraryConfig>>(mediaLibraryConfigProvider, (previous, next) {
+      ..listen<AsyncValue<MediaLibraryConfig>>(mediaLibraryConfigProvider, (
+        previous,
+        next,
+      ) {
         final prevPaths =
             previous?.valueOrNull?.getEnabledPathsForType(MediaType.note) ?? [];
         final nextPaths =
             next.valueOrNull?.getEnabledPathsForType(MediaType.note) ?? [];
 
         // 比较路径是否变化（包括 sourceId 和 path）
-        final prevKeys = prevPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
-        final nextKeys = nextPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
+        final prevKeys = prevPaths
+            .map((p) => '${p.sourceId}|${p.path}')
+            .toSet();
+        final nextKeys = nextPaths
+            .map((p) => '${p.sourceId}|${p.path}')
+            .toSet();
 
-        if (prevKeys.length != nextKeys.length || !prevKeys.containsAll(nextKeys)) {
+        if (prevKeys.length != nextKeys.length ||
+            !prevKeys.containsAll(nextKeys)) {
           _scheduleRefresh();
         }
       });
@@ -273,7 +281,8 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
   /// - 名称匹配的节点本身
   /// - 含有匹配后代的父级（自动展开）
   NoteTreeNode? _filterNode(NoteTreeNode node, String lowerQuery) {
-    final selfMatch = node.name.toLowerCase().contains(lowerQuery) ||
+    final selfMatch =
+        node.name.toLowerCase().contains(lowerQuery) ||
         node.displayName.toLowerCase().contains(lowerQuery);
 
     final filteredChildren = node.children
@@ -478,7 +487,9 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
 
     final response = await InsecureHttpClient.get(uri);
     if (response.statusCode != 200) {
-      throw Exception(appL10n.noteListLoadContentHttpError(response.statusCode));
+      throw Exception(
+        appL10n.noteListLoadContentHttpError(response.statusCode),
+      );
     }
     try {
       return utf8.decode(response.bodyBytes);
@@ -536,6 +547,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
       current.content ?? '',
       index,
       newStatus,
+      sourceLine: task.sourceLine,
     );
 
     state = current.copyWith(
@@ -548,21 +560,34 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
   String _updateTaskInContent(
     String content,
     int taskIndex,
-    TaskStatus newStatus,
-  ) {
+    TaskStatus newStatus, {
+    int? sourceLine,
+  }) {
     final lines = content.split('\n');
+    final taskLineRegex = RegExp(r'^[-*+]\s*\[([ xX/\-])\]\s*(.+)$');
     var currentTaskIndex = 0;
+    final statusChar = switch (newStatus) {
+      TaskStatus.completed => 'x',
+      TaskStatus.inProgress => '/',
+      TaskStatus.cancelled => '-',
+      TaskStatus.pending => ' ',
+    };
+
+    if (sourceLine != null &&
+        sourceLine >= 0 &&
+        sourceLine < lines.length &&
+        taskLineRegex.hasMatch(lines[sourceLine].trim())) {
+      lines[sourceLine] = lines[sourceLine].replaceFirstMapped(
+        RegExp(r'\[([ xX/\-])\]'),
+        (m) => '[$statusChar]',
+      );
+      return lines.join('\n');
+    }
 
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i];
-      if (RegExp(r'^[-*+]\s*\[([ xX/\-])\]').hasMatch(line.trim())) {
+      if (taskLineRegex.hasMatch(line.trim())) {
         if (currentTaskIndex == taskIndex) {
-          final statusChar = switch (newStatus) {
-            TaskStatus.completed => 'x',
-            TaskStatus.inProgress => '/',
-            TaskStatus.cancelled => '-',
-            TaskStatus.pending => ' ',
-          };
           lines[i] = line.replaceFirstMapped(
             RegExp(r'\[([ xX/\-])\]'),
             (m) => '[$statusChar]',
@@ -680,17 +705,17 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
           content: context.l10n.noteListDeleteConfirmContent(node.displayName),
         );
         if (confirmed && context.mounted) {
-          await ref.read(notePageProvider.notifier).deleteFromSource(
-                node.sourceId,
-                node.path,
-                node.displayName,
-              );
+          await ref
+              .read(notePageProvider.notifier)
+              .deleteFromSource(node.sourceId, node.path, node.displayName);
         }
       case MediaFileAction.share:
         await _shareNote(node);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
-        await ref.read(mediaFavoritesActionsProvider).toggle(
+        await ref
+            .read(mediaFavoritesActionsProvider)
+            .toggle(
               type: MediaType.note,
               sourceId: node.sourceId,
               path: node.path,
@@ -709,7 +734,10 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
       title: node.displayName,
       subtitle: context.l10n.noteInfoSubtitleNote,
       entries: [
-        MediaInfoEntry(label: context.l10n.noteListInfoLabelFileName, value: node.name),
+        MediaInfoEntry(
+          label: context.l10n.noteListInfoLabelFileName,
+          value: node.name,
+        ),
         MediaInfoEntry(
           label: context.l10n.noteListInfoLabelModifiedTime,
           value: node.fileItem?.modifiedTime?.toLocal().toString() ?? '',
@@ -718,8 +746,16 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
           label: context.l10n.noteListInfoLabelFileSize,
           value: node.fileItem?.displaySize ?? '',
         ),
-        MediaInfoEntry(label: context.l10n.noteListInfoLabelSourceId, value: node.sourceId, copyable: true),
-        MediaInfoEntry(label: context.l10n.noteListInfoLabelPath, value: node.path, copyable: true),
+        MediaInfoEntry(
+          label: context.l10n.noteListInfoLabelSourceId,
+          value: node.sourceId,
+          copyable: true,
+        ),
+        MediaInfoEntry(
+          label: context.l10n.noteListInfoLabelPath,
+          value: node.path,
+          copyable: true,
+        ),
       ],
     );
   }
@@ -734,19 +770,25 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
       return;
     }
     try {
-      final url = node.url ??
-          await connection.adapter.fileSystem.getFileUrl(node.path);
+      final url =
+          node.url ?? await connection.adapter.fileSystem.getFileUrl(node.path);
       final service = ref.read(downloadServiceProvider);
       final task = await service.addTask(url: url, fileName: node.name);
       AppError.fireAndForget(service.startDownload(task.id));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAdded(node.name))),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).noteDownloadAdded(node.name),
+          ),
+        ),
       );
     } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAddFailed(e))),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).noteDownloadAddFailed(e)),
+        ),
       );
     }
   }
@@ -1058,10 +1100,11 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
         Icon(
           Icons.article_outlined,
           size: 56,
-          color: (isDark
-                  ? AppColors.darkOnSurfaceVariant
-                  : Theme.of(context).colorScheme.onSurfaceVariant)
-              .withValues(alpha: 0.5),
+          color:
+              (isDark
+                      ? AppColors.darkOnSurfaceVariant
+                      : Theme.of(context).colorScheme.onSurfaceVariant)
+                  .withValues(alpha: 0.5),
         ),
         const SizedBox(height: 12),
         Text(
@@ -1199,14 +1242,16 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
             _buildMobileModeButton(
               icon: Icons.visibility_rounded,
               isSelected: !state.isEditing,
-              onTap: () =>
-                  ref.read(notePageProvider.notifier).setEditing(editing: false),
+              onTap: () => ref
+                  .read(notePageProvider.notifier)
+                  .setEditing(editing: false),
               isDark: isDark,
             ),
             _buildMobileModeButton(
               icon: Icons.edit_rounded,
               isSelected: state.isEditing,
-              onTap: () => ref.read(notePageProvider.notifier).setEditing(editing: true),
+              onTap: () =>
+                  ref.read(notePageProvider.notifier).setEditing(editing: true),
               isDark: isDark,
             ),
           ],
@@ -1360,7 +1405,6 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
     );
   }
 
-
   Widget _buildTaskProgress(NotePageLoaded state, bool isDark) {
     final completed = state.tasks.where((t) => t.isCompleted).length;
     final total = state.tasks.length;
@@ -1419,15 +1463,17 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
               icon: Icons.visibility_rounded,
               label: context.l10n.noteListPreviewLabel,
               isSelected: !state.isEditing,
-              onTap: () =>
-                  ref.read(notePageProvider.notifier).setEditing(editing: false),
+              onTap: () => ref
+                  .read(notePageProvider.notifier)
+                  .setEditing(editing: false),
               isDark: isDark,
             ),
             _buildModeButton(
               icon: Icons.edit_rounded,
               label: context.l10n.noteListEditLabel,
               isSelected: state.isEditing,
-              onTap: () => ref.read(notePageProvider.notifier).setEditing(editing: true),
+              onTap: () =>
+                  ref.read(notePageProvider.notifier).setEditing(editing: true),
               isDark: isDark,
             ),
           ],
@@ -2022,17 +2068,17 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
           content: context.l10n.noteListDeleteConfirmContent(node.displayName),
         );
         if (confirmed && context.mounted) {
-          await ref.read(notePageProvider.notifier).deleteFromSource(
-                node.sourceId,
-                node.path,
-                node.displayName,
-              );
+          await ref
+              .read(notePageProvider.notifier)
+              .deleteFromSource(node.sourceId, node.path, node.displayName);
         }
       case MediaFileAction.share:
         await _shareNote(node);
       case MediaFileAction.addToFavorites:
       case MediaFileAction.removeFromFavorites:
-        await ref.read(mediaFavoritesActionsProvider).toggle(
+        await ref
+            .read(mediaFavoritesActionsProvider)
+            .toggle(
               type: MediaType.note,
               sourceId: node.sourceId,
               path: node.path,
@@ -2051,7 +2097,10 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
       title: node.displayName,
       subtitle: context.l10n.noteInfoSubtitleNote,
       entries: [
-        MediaInfoEntry(label: context.l10n.noteListInfoLabelFileName, value: node.name),
+        MediaInfoEntry(
+          label: context.l10n.noteListInfoLabelFileName,
+          value: node.name,
+        ),
         MediaInfoEntry(
           label: context.l10n.noteListInfoLabelModifiedTime,
           value: node.fileItem?.modifiedTime?.toLocal().toString() ?? '',
@@ -2060,8 +2109,16 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
           label: context.l10n.noteListInfoLabelFileSize,
           value: node.fileItem?.displaySize ?? '',
         ),
-        MediaInfoEntry(label: context.l10n.noteListInfoLabelSourceId, value: node.sourceId, copyable: true),
-        MediaInfoEntry(label: context.l10n.noteListInfoLabelPath, value: node.path, copyable: true),
+        MediaInfoEntry(
+          label: context.l10n.noteListInfoLabelSourceId,
+          value: node.sourceId,
+          copyable: true,
+        ),
+        MediaInfoEntry(
+          label: context.l10n.noteListInfoLabelPath,
+          value: node.path,
+          copyable: true,
+        ),
       ],
     );
   }
@@ -2076,19 +2133,25 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
       return;
     }
     try {
-      final url = node.url ??
-          await connection.adapter.fileSystem.getFileUrl(node.path);
+      final url =
+          node.url ?? await connection.adapter.fileSystem.getFileUrl(node.path);
       final service = ref.read(downloadServiceProvider);
       final task = await service.addTask(url: url, fileName: node.name);
       AppError.fireAndForget(service.startDownload(task.id));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAdded(node.name))),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).noteDownloadAdded(node.name),
+          ),
+        ),
       );
     } on Exception catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).noteDownloadAddFailed(e))),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).noteDownloadAddFailed(e)),
+        ),
       );
     }
   }
@@ -2137,12 +2200,11 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
         message: message,
         onRetry: () => ref.read(notePageProvider.notifier).loadTree(),
       ),
-      NotePageLoaded(:final treeNodes) when treeNodes.isEmpty =>
-        EmptyWidget(
-          icon: Icons.note_outlined,
-          title: context.l10n.noteListEmptyNoteLibrary,
-          message: context.l10n.noteListEmptyNoteMessage,
-        ),
+      NotePageLoaded(:final treeNodes) when treeNodes.isEmpty => EmptyWidget(
+        icon: Icons.note_outlined,
+        title: context.l10n.noteListEmptyNoteLibrary,
+        message: context.l10n.noteListEmptyNoteMessage,
+      ),
       NotePageLoaded() => _buildMainLayout(context, state, isDark),
     };
   }
@@ -2186,12 +2248,13 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
                         Icon(
                           Icons.article_outlined,
                           size: 56,
-                          color: (isDark
-                                  ? AppColors.darkOnSurfaceVariant
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant)
-                              .withValues(alpha: 0.5),
+                          color:
+                              (isDark
+                                      ? AppColors.darkOnSurfaceVariant
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant)
+                                  .withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -2199,9 +2262,9 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
                           style: context.textTheme.bodyMedium?.copyWith(
                             color: isDark
                                 ? AppColors.darkOnSurfaceVariant
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -2290,9 +2353,7 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
           const SizedBox(width: 4),
           // 文件图标
           Icon(
-            node.isTaskFile
-                ? Icons.checklist_rounded
-                : Icons.article_outlined,
+            node.isTaskFile ? Icons.checklist_rounded : Icons.article_outlined,
             size: 18,
             color: node.isTaskFile ? AppColors.warning : AppColors.primary,
           ),
@@ -2328,14 +2389,14 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
     NotePageLoaded state,
     bool isDark,
   ) => Align(
-      alignment: Alignment.topLeft,
-      child: SingleChildScrollView(
-        controller: _previewScrollController,
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: SizedBox(
-          width: double.infinity,
-          child: _MarkdownPreview(content: state.content ?? '', isDark: isDark),
-        ),
+    alignment: Alignment.topLeft,
+    child: SingleChildScrollView(
+      controller: _previewScrollController,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: SizedBox(
+        width: double.infinity,
+        child: _MarkdownPreview(content: state.content ?? '', isDark: isDark),
       ),
-    );
+    ),
+  );
 }

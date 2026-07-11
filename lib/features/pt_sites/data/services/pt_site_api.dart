@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
-import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -17,7 +16,7 @@ final _logger = logger;
 bool _allowInvalidCertificatesForSource(SourceEntity source) {
   final verifySSL = source.extraConfig?['verifySSL'];
   if (verifySSL is bool) return !verifySSL;
-  return InsecureHttpClient.trustSelfSigned;
+  return false;
 }
 
 String _headerNames(Map<String, String> headers) => headers.keys.join(', ');

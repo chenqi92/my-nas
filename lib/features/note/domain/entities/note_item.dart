@@ -16,12 +16,7 @@ enum NoteType {
 }
 
 /// 任务状态
-enum TaskStatus {
-  pending,
-  inProgress,
-  completed,
-  cancelled,
-}
+enum TaskStatus { pending, inProgress, completed, cancelled }
 
 /// 任务项
 class TaskItem {
@@ -31,6 +26,7 @@ class TaskItem {
     this.dueDate,
     this.priority = 0,
     this.tags = const [],
+    this.sourceLine,
   });
 
   final String content;
@@ -38,6 +34,7 @@ class TaskItem {
   final DateTime? dueDate;
   final int priority; // 0: 普通, 1: 重要, 2: 紧急
   final List<String> tags;
+  final int? sourceLine;
 
   bool get isCompleted => status == TaskStatus.completed;
   bool get isPending => status == TaskStatus.pending;
@@ -50,13 +47,15 @@ class TaskItem {
     DateTime? dueDate,
     int? priority,
     List<String>? tags,
+    int? sourceLine,
   }) => TaskItem(
-      content: content ?? this.content,
-      status: status ?? this.status,
-      dueDate: dueDate ?? this.dueDate,
-      priority: priority ?? this.priority,
-      tags: tags ?? this.tags,
-    );
+    content: content ?? this.content,
+    status: status ?? this.status,
+    dueDate: dueDate ?? this.dueDate,
+    priority: priority ?? this.priority,
+    tags: tags ?? this.tags,
+    sourceLine: sourceLine ?? this.sourceLine,
+  );
 }
 
 /// 笔记实体
@@ -77,13 +76,13 @@ class NoteItem {
 
   /// 从 FileItem 创建
   factory NoteItem.fromFileItem(FileItem file, String url) => NoteItem(
-      id: file.path,
-      name: file.name,
-      path: file.path,
-      url: url,
-      size: file.size,
-      modifiedAt: file.modifiedTime,
-    );
+    id: file.path,
+    name: file.name,
+    path: file.path,
+    url: url,
+    size: file.size,
+    modifiedAt: file.modifiedTime,
+  );
 
   final String id;
   final String name;
@@ -110,8 +109,7 @@ class NoteItem {
   int get overdueTasks => tasks.where((t) => t.isOverdue).length;
 
   /// 任务完成进度
-  double get taskProgress =>
-      totalTasks > 0 ? completedTasks / totalTasks : 0;
+  double get taskProgress => totalTasks > 0 ? completedTasks / totalTasks : 0;
 
   /// 是否有待办任务
   bool get hasTasks => tasks.isNotEmpty;
@@ -129,16 +127,16 @@ class NoteItem {
     DateTime? modifiedAt,
     DateTime? createdAt,
   }) => NoteItem(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      path: path ?? this.path,
-      url: url ?? this.url,
-      content: content ?? this.content,
-      type: type ?? this.type,
-      tasks: tasks ?? this.tasks,
-      tags: tags ?? this.tags,
-      size: size ?? this.size,
-      modifiedAt: modifiedAt ?? this.modifiedAt,
-      createdAt: createdAt ?? this.createdAt,
-    );
+    id: id ?? this.id,
+    name: name ?? this.name,
+    path: path ?? this.path,
+    url: url ?? this.url,
+    content: content ?? this.content,
+    type: type ?? this.type,
+    tasks: tasks ?? this.tasks,
+    tags: tags ?? this.tags,
+    size: size ?? this.size,
+    modifiedAt: modifiedAt ?? this.modifiedAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
 }

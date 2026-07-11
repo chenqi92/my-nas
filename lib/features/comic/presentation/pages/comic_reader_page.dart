@@ -1324,6 +1324,10 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
     bool isDark,
   ) {
     final isRtl = settings.readingDirection == ComicReadingDirection.rtl;
+    final pageCount = state.pages.length;
+    final currentPage = pageCount == 0
+        ? 0
+        : state.currentPage.clamp(0, pageCount - 1);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -1344,27 +1348,30 @@ class _ComicReaderPageState extends ConsumerState<ComicReaderPage> {
               Row(
                 children: [
                   Text(
-                    '${state.currentPage + 1}',
+                    pageCount == 0 ? '0' : '${currentPage + 1}',
                     style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                   Expanded(
                     child: Slider(
-                      value: state.currentPage.toDouble(),
-                      max: (state.pages.length - 1).toDouble(),
-                      onChanged: (value) {
-                        notifier.goToPage(value.round());
-                        _pageController?.jumpToPage(
-                          settings.readingMode == ComicReadingMode.doublePage
-                              ? value.round() ~/ 2
-                              : value.round(),
-                        );
-                      },
+                      value: currentPage.toDouble(),
+                      max: pageCount > 1 ? (pageCount - 1).toDouble() : 1,
+                      onChanged: pageCount > 1
+                          ? (value) {
+                              notifier.goToPage(value.round());
+                              _pageController?.jumpToPage(
+                                settings.readingMode ==
+                                        ComicReadingMode.doublePage
+                                    ? value.round() ~/ 2
+                                    : value.round(),
+                              );
+                            }
+                          : null,
                       activeColor: AppColors.primary,
                       inactiveColor: Colors.white24,
                     ),
                   ),
                   Text(
-                    '${state.pages.length}',
+                    '$pageCount',
                     style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],

@@ -1,4 +1,5 @@
-import 'dart:ui' as ui;
+import 'dart:isolate';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
@@ -27,16 +28,16 @@ class EbookPage {
 
   /// 纯文本内容 (用于 TTS 朗读)
   String get textContent => htmlContent
-        .replaceAll(RegExp(r'<br\s*/?>'), '\n')
-        .replaceAll(RegExp('</p>|</div>|</h[1-6]>'), '\n\n')
-        .replaceAll(RegExp('<[^>]+>'), '')
-        .replaceAll(RegExp('&nbsp;'), ' ')
-        .replaceAll(RegExp('&lt;'), '<')
-        .replaceAll(RegExp('&gt;'), '>')
-        .replaceAll(RegExp('&amp;'), '&')
-        .replaceAll(RegExp('&quot;'), '"')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
+      .replaceAll(RegExp(r'<br\s*/?>'), '\n')
+      .replaceAll(RegExp('</p>|</div>|</h[1-6]>'), '\n\n')
+      .replaceAll(RegExp('<[^>]+>'), '')
+      .replaceAll(RegExp('&nbsp;'), ' ')
+      .replaceAll(RegExp('&lt;'), '<')
+      .replaceAll(RegExp('&gt;'), '>')
+      .replaceAll(RegExp('&amp;'), '&')
+      .replaceAll(RegExp('&quot;'), '"')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
 }
 
 /// 分页信息
@@ -65,6 +66,8 @@ class NativeEpubPaginator {
   NativeEpubPaginator._();
   static final NativeEpubPaginator instance = NativeEpubPaginator._();
 
+  static const _maxPaginationChars = 5 * 1024 * 1024;
+
   /// 对章节内容进行分页
   ///
   /// [htmlContents] - 每个章节的 HTML 内容列表
@@ -79,18 +82,45 @@ class NativeEpubPaginator {
     double horizontalPadding = 24,
     double verticalPadding = 16,
   }) async {
-    final stopwatch = Stopwatch()..start();
-
-    final pages = <EbookPage>[];
-    final chapterPageRanges = <(int, int)>[];
-
     // 计算可用内容区域
     final contentWidth = viewportSize.width - horizontalPadding * 2;
     final contentHeight = viewportSize.height - verticalPadding * 2;
+    final totalChars = htmlContents.fold<int>(
+      0,
+      (sum, content) => sum + content.length,
+    );
+    if (totalChars > _maxPaginationChars) {
+      throw Exception('EPUB 内容过大，已拒绝同步分页: $totalChars chars');
+    }
 
+    return Isolate.run<PaginationResult>(
+      () => _paginateInIsolate(
+        htmlContents: htmlContents,
+        contentWidth: contentWidth,
+        contentHeight: contentHeight,
+        fontSize: baseStyle.fontSize ?? 18,
+        lineHeight: lineHeight,
+      ),
+    );
+  }
+
+  static PaginationResult _paginateInIsolate({
+    required List<String> htmlContents,
+    required double contentWidth,
+    required double contentHeight,
+    required double fontSize,
+    required double lineHeight,
+  }) {
+    final stopwatch = Stopwatch()..start();
+    final pages = <EbookPage>[];
+    final chapterPageRanges = <(int, int)>[];
     var globalPageIndex = 0;
 
-    for (var chapterIndex = 0; chapterIndex < htmlContents.length; chapterIndex++) {
+    for (
+      var chapterIndex = 0;
+      chapterIndex < htmlContents.length;
+      chapterIndex++
+    ) {
       final htmlContent = htmlContents[chapterIndex];
       final chapterStartPage = globalPageIndex;
 
@@ -99,17 +129,21 @@ class NativeEpubPaginator {
         htmlContent: htmlContent,
         contentWidth: contentWidth,
         contentHeight: contentHeight,
-        baseStyle: baseStyle,
+        fontSize: fontSize,
         lineHeight: lineHeight,
       );
 
       for (var i = 0; i < chapterPages.length; i++) {
-        pages.add(EbookPage(
-          pageIndex: globalPageIndex,
-          chapterIndex: chapterIndex,
-          htmlContent: chapterPages[i],
-          progress: (globalPageIndex + 1) / (chapterPages.length * htmlContents.length),
-        ));
+        pages.add(
+          EbookPage(
+            pageIndex: globalPageIndex,
+            chapterIndex: chapterIndex,
+            htmlContent: chapterPages[i],
+            progress:
+                (globalPageIndex + 1) /
+                (chapterPages.length * htmlContents.length),
+          ),
+        );
         globalPageIndex++;
       }
 
@@ -141,11 +175,11 @@ class NativeEpubPaginator {
   }
 
   /// 对单个章节的 HTML 进行分页
-  List<String> _paginateHtml({
+  static List<String> _paginateHtml({
     required String htmlContent,
     required double contentWidth,
     required double contentHeight,
-    required TextStyle baseStyle,
+    required double fontSize,
     required double lineHeight,
   }) {
     // 提取段落
@@ -160,19 +194,20 @@ class NativeEpubPaginator {
     var currentHeight = 0.0;
 
     // 估算每行高度
-    final lineHeightPx = baseStyle.fontSize! * lineHeight;
+    final lineHeightPx = fontSize * lineHeight;
 
     for (final paragraph in paragraphs) {
       // 估算段落高度
       final paragraphHeight = _estimateParagraphHeight(
         paragraph: paragraph,
         contentWidth: contentWidth,
-        baseStyle: baseStyle,
+        fontSize: fontSize,
         lineHeightPx: lineHeightPx,
       );
 
       // 如果加入这个段落会超出页面高度
-      if (currentHeight + paragraphHeight > contentHeight && currentPageParagraphs.isNotEmpty) {
+      if (currentHeight + paragraphHeight > contentHeight &&
+          currentPageParagraphs.isNotEmpty) {
         // 保存当前页
         pages.add(currentPageParagraphs.join('\n'));
         currentPageParagraphs = [];
@@ -192,7 +227,7 @@ class NativeEpubPaginator {
   }
 
   /// 从 HTML 中提取段落
-  List<String> _extractParagraphs(String html) {
+  static List<String> _extractParagraphs(String html) {
     final paragraphs = <String>[];
 
     // 匹配 <p>, <div>, <h1>-<h6> 等块级元素
@@ -222,10 +257,10 @@ class NativeEpubPaginator {
   }
 
   /// 估算段落高度
-  double _estimateParagraphHeight({
+  static double _estimateParagraphHeight({
     required String paragraph,
     required double contentWidth,
-    required TextStyle baseStyle,
+    required double fontSize,
     required double lineHeightPx,
   }) {
     // 移除 HTML 标签，获取纯文本
@@ -238,21 +273,35 @@ class NativeEpubPaginator {
       return lineHeightPx; // 空段落占一行
     }
 
-    // 使用 TextPainter 测量文本
-    final textPainter = TextPainter(
-      text: TextSpan(text: plainText, style: baseStyle),
-      textDirection: ui.TextDirection.ltr,
-      maxLines: null,
-    )..layout(maxWidth: contentWidth);
-
-    // 计算行数
-    final lineMetrics = textPainter.computeLineMetrics();
-    final lineCount = lineMetrics.length;
+    final lineCount = _estimateLineCount(
+      text: plainText,
+      contentWidth: contentWidth,
+      fontSize: fontSize,
+    );
 
     // 段落后加一些间距
     const paragraphSpacing = 8.0;
 
     return lineCount * lineHeightPx + paragraphSpacing;
+  }
+
+  static int _estimateLineCount({
+    required String text,
+    required double contentWidth,
+    required double fontSize,
+  }) {
+    final unitsPerLine = math.max(1.0, contentWidth / fontSize);
+    var units = 0.0;
+    for (final rune in text.runes) {
+      if (rune == 10 || rune == 13) {
+        units += unitsPerLine;
+      } else if (rune >= 0x2E80) {
+        units += 1.0;
+      } else {
+        units += 0.56;
+      }
+    }
+    return math.max(1, (units / unitsPerLine).ceil());
   }
 
   /// 根据进度获取页面索引
@@ -293,16 +342,16 @@ class HtmlContentWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => HtmlWidget(
-      html,
-      textStyle: textStyle,
-      onTapUrl: onTapUrl != null
-          ? (url) {
-              onTapUrl!(url);
-              return true;
-            }
-          : null,
-      factoryBuilder: () => _CustomWidgetFactory(imageProvider: imageProvider),
-    );
+    html,
+    textStyle: textStyle,
+    onTapUrl: onTapUrl != null
+        ? (url) {
+            onTapUrl!(url);
+            return true;
+          }
+        : null,
+    factoryBuilder: () => _CustomWidgetFactory(imageProvider: imageProvider),
+  );
 }
 
 /// 自定义 Widget 工厂，用于处理图片等资源

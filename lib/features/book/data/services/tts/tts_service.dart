@@ -11,12 +11,7 @@ import 'package:my_nas/features/book/data/services/tts/tts_settings.dart';
 import 'package:my_nas/features/book/data/services/tts/tts_voice.dart';
 
 /// TTS 播放状态
-enum TTSPlayState {
-  idle,
-  playing,
-  paused,
-  completed,
-}
+enum TTSPlayState { idle, playing, paused, completed }
 
 /// TTS 进度信息
 class TTSProgress {
@@ -61,6 +56,8 @@ class TTSService {
   TTSSettings get settings => _settings;
 
   bool _isInitialized = false;
+  int _stopGeneration = 0;
+  int? _activeSystemGeneration;
 
   // 回调
   final _stateController = StreamController<TTSPlayState>.broadcast();
@@ -90,44 +87,48 @@ class TTSService {
       // 设置回调
       _tts
         ..setStartHandler(() {
+          if (_activeSystemGeneration != _stopGeneration) return;
           _state = TTSPlayState.playing;
           _stateController.add(_state);
           logger.d('TTS: 开始朗读');
         })
         ..setCompletionHandler(() {
+          if (_activeSystemGeneration != _stopGeneration) return;
           _state = TTSPlayState.completed;
           _stateController.add(_state);
           _completionController.add(null);
           logger.d('TTS: 朗读完成');
         })
         ..setPauseHandler(() {
+          if (_activeSystemGeneration != _stopGeneration) return;
           _state = TTSPlayState.paused;
           _stateController.add(_state);
           logger.d('TTS: 已暂停');
         })
         ..setContinueHandler(() {
+          if (_activeSystemGeneration != _stopGeneration) return;
           _state = TTSPlayState.playing;
           _stateController.add(_state);
           logger.d('TTS: 继续朗读');
         })
         ..setCancelHandler(() {
+          if (_activeSystemGeneration != _stopGeneration) return;
           _state = TTSPlayState.idle;
           _stateController.add(_state);
           logger.d('TTS: 已取消');
         })
         ..setErrorHandler((msg) {
+          if (_activeSystemGeneration != _stopGeneration) return;
           logger.e('TTS 错误: $msg');
           _state = TTSPlayState.idle;
           _stateController.add(_state);
         })
         // 进度回调 - 关键，用于高亮同步
         ..setProgressHandler((text, start, end, word) {
-          _progressController.add(TTSProgress(
-            text: text,
-            start: start,
-            end: end,
-            word: word,
-          ));
+          if (_activeSystemGeneration != _stopGeneration) return;
+          _progressController.add(
+            TTSProgress(text: text, start: start, end: end, word: word),
+          );
         });
 
       // 获取可用音色
@@ -188,7 +189,7 @@ class TTSService {
 
       // 按性别排序
       _availableVoices.sort((a, b) => a.gender.index.compareTo(b.gender.index));
-      
+
       logger.d('TTS: 加载 ${_availableVoices.length} 个中文音色');
     } on Exception catch (e) {
       logger.w('TTS: 加载音色失败', e);
@@ -230,32 +231,40 @@ class TTSService {
 
   /// 开始朗读
   Future<void> speak(String text) async {
+    final stopGeneration = _stopGeneration;
     if (!_isInitialized) await init();
+    if (stopGeneration != _stopGeneration) return;
 
     if (text.trim().isEmpty) {
       logger.w('TTS: 文本为空，跳过朗读');
       return;
     }
 
-    logger.d('TTS.speak: engine=${_settings.engine.name}, edgeVoiceId=${_settings.selectedEdgeVoiceId}');
+    logger.d(
+      'TTS.speak: engine=${_settings.engine.name}, edgeVoiceId=${_settings.selectedEdgeVoiceId}',
+    );
 
     // 根据引擎设置选择 TTS 方式
     if (_settings.engine == TTSEngine.edge) {
+      _activeSystemGeneration = null;
       logger.d('TTS: 使用 Edge TTS 朗读');
-      await _speakWithEdgeTTS(text);
+      await _speakWithEdgeTTS(text, stopGeneration);
     } else {
       logger.d('TTS: 使用系统 TTS 朗读');
+      _activeSystemGeneration = stopGeneration;
       await _tts.speak(text);
     }
   }
 
   /// 使用 Edge TTS 朗读
-  Future<void> _speakWithEdgeTTS(String text) async {
+  Future<void> _speakWithEdgeTTS(String text, int stopGeneration) async {
     logger.d('_speakWithEdgeTTS: 开始, voiceId=${_settings.selectedEdgeVoiceId}');
     try {
       // 设置 Edge TTS 音色
       if (_settings.selectedEdgeVoiceId != null) {
-        final voice = EdgeTTSVoices.getVoiceById(_settings.selectedEdgeVoiceId!);
+        final voice = EdgeTTSVoices.getVoiceById(
+          _settings.selectedEdgeVoiceId!,
+        );
         if (voice != null) {
           _edgeTts.setVoice(voice);
           logger.d('_speakWithEdgeTTS: 设置音色 ${voice.name}');
@@ -272,11 +281,13 @@ class TTSService {
         ..setVolume(_settings.volume)
         // 设置回调
         ..onStart = () {
+          if (stopGeneration != _stopGeneration) return;
           _state = TTSPlayState.playing;
           _stateController.add(_state);
           logger.d('EdgeTTS: onStart 回调');
         }
         ..onComplete = () {
+          if (stopGeneration != _stopGeneration) return;
           _state = TTSPlayState.completed;
           _stateController.add(_state);
           _completionController.add(null);
@@ -284,8 +295,7 @@ class TTSService {
         }
         ..onError = (error) {
           logger.w('EdgeTTS: onError 回调 - $error');
-          // 降级到系统 TTS
-          _tts.speak(text);
+          // speak() 的 Future 会携带同一错误，由下方 catch 统一执行一次降级。
         };
 
       logger.d('_speakWithEdgeTTS: 调用 _edgeTts.speak()');
@@ -294,6 +304,11 @@ class TTSService {
     } catch (e, st) {
       // 捕获所有错误（含 Error）：Edge TTS 失败属预期降级，记 debug 日志后转系统 TTS。
       AppError.ignore(e, st, 'Edge TTS 朗读失败，降级到系统 TTS');
+      if (stopGeneration != _stopGeneration) {
+        logger.d('TTS: Edge 失败发生在 stop 之后，取消系统 TTS 降级');
+        return;
+      }
+      _activeSystemGeneration = stopGeneration;
       await _tts.speak(text);
     }
   }
@@ -316,9 +331,11 @@ class TTSService {
 
   /// 停止
   Future<void> stop() async {
-    // 停止两种引擎
-    await _tts.stop();
+    // 同步作废所有在途 Edge 降级路径，再停止两种引擎。
+    _stopGeneration++;
+    _activeSystemGeneration = null;
     await _edgeTts.stop();
+    await _tts.stop();
     _state = TTSPlayState.idle;
     _stateController.add(_state);
   }
@@ -378,7 +395,9 @@ class TTSService {
 
   /// 更新设置
   Future<void> updateSettings(TTSSettings settings) async {
-    logger.d('TTSService.updateSettings: engine=${settings.engine.name}, edgeVoiceId=${settings.selectedEdgeVoiceId}');
+    logger.d(
+      'TTSService.updateSettings: engine=${settings.engine.name}, edgeVoiceId=${settings.selectedEdgeVoiceId}',
+    );
     _settings = settings;
     await _applySetting();
     await _settingsService.saveSettings(settings);

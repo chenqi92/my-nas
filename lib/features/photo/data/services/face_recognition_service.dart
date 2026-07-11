@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -37,6 +36,7 @@ class FaceRecognitionService {
   static const int _detectorInputSize = 128; // BlazeFace 输入尺寸
   static const int _embedderInputSize = 112; // MobileFaceNet 输入尺寸
   static const int _embeddingSize = 128; // 特征向量维度
+  static const int _maxImageBytes = 30 * 1024 * 1024;
 
   // 进度流
   final _progressController = StreamController<FaceProcessProgress>.broadcast();
@@ -133,12 +133,14 @@ class FaceRecognitionService {
       var processed = 0;
       var facesFound = 0;
 
-      _progressController.add(FaceProcessProgress(
-        processed: 0,
-        total: total,
-        facesFound: 0,
-        status: FaceProcessStatus.processing,
-      ));
+      _progressController.add(
+        FaceProcessProgress(
+          processed: 0,
+          total: total,
+          facesFound: 0,
+          status: FaceProcessStatus.processing,
+        ),
+      );
 
       for (final photo in photos) {
         if (_shouldCancel) break;
@@ -153,8 +155,20 @@ class FaceRecognitionService {
           // 读取照片
           final stream = await fileSystem.getFileStream(photo.filePath);
           final chunks = <List<int>>[];
+          var totalBytes = 0;
+          var tooLarge = false;
           await for (final chunk in stream) {
+            totalBytes += chunk.length;
+            if (totalBytes > _maxImageBytes) {
+              tooLarge = true;
+              break;
+            }
             chunks.add(chunk);
+          }
+          if (tooLarge) {
+            logger.w('FaceRecognitionService: 图片过大，跳过 ${photo.filePath}');
+            processed++;
+            continue;
           }
           final bytes = Uint8List.fromList(chunks.expand((c) => c).toList());
 
@@ -179,34 +193,40 @@ class FaceRecognitionService {
         }
 
         processed++;
-        _progressController.add(FaceProcessProgress(
+        _progressController.add(
+          FaceProcessProgress(
+            processed: processed,
+            total: total,
+            facesFound: facesFound,
+            currentFile: photo.fileName,
+            status: FaceProcessStatus.processing,
+          ),
+        );
+      }
+
+      _progressController.add(
+        FaceProcessProgress(
           processed: processed,
           total: total,
           facesFound: facesFound,
-          currentFile: photo.fileName,
-          status: FaceProcessStatus.processing,
-        ));
-      }
-
-      _progressController.add(FaceProcessProgress(
-        processed: processed,
-        total: total,
-        facesFound: facesFound,
-        status: _shouldCancel
-            ? FaceProcessStatus.cancelled
-            : FaceProcessStatus.completed,
-      ));
+          status: _shouldCancel
+              ? FaceProcessStatus.cancelled
+              : FaceProcessStatus.completed,
+        ),
+      );
 
       logger.i('FaceRecognitionService: 处理完成，共发现 $facesFound 张人脸');
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'FaceRecognitionService.processAllPhotos');
-      _progressController.add(FaceProcessProgress(
-        processed: 0,
-        total: 0,
-        facesFound: 0,
-        status: FaceProcessStatus.error,
-        error: e.toString(),
-      ));
+      _progressController.add(
+        FaceProcessProgress(
+          processed: 0,
+          total: 0,
+          facesFound: 0,
+          status: FaceProcessStatus.error,
+          error: e.toString(),
+        ),
+      );
     } finally {
       _isProcessing = false;
       _shouldCancel = false;
@@ -219,8 +239,10 @@ class FaceRecognitionService {
     String sourceId,
     String photoPath,
   ) async {
-    // 解码图片
-    final image = img.decodeImage(imageBytes);
+    if (imageBytes.length > _maxImageBytes) return [];
+
+    // 解码图片。大图解码在 isolate 中完成，避免卡住 UI isolate。
+    final image = await compute(_decodeFaceImage, imageBytes);
     if (image == null) return [];
 
     // 检测人脸
@@ -238,14 +260,16 @@ class FaceRecognitionService {
       final embedding = await _extractEmbedding(faceImage);
       if (embedding == null) continue;
 
-      faces.add(FaceEntity(
-        id: 0,
-        photoSourceId: sourceId,
-        photoPath: photoPath,
-        faceBox: box,
-        embedding: embedding,
-        confidence: box.score,
-      ));
+      faces.add(
+        FaceEntity(
+          id: 0,
+          photoSourceId: sourceId,
+          photoPath: photoPath,
+          faceBox: box,
+          embedding: embedding,
+          confidence: box.score,
+        ),
+      );
     }
 
     return faces;
@@ -272,8 +296,14 @@ class FaceRecognitionService {
       final inputTensor = input.reshape<double>(inputShape);
 
       // 准备输出
-      final outputBoxes = List.filled(1 * 896 * 16, 0.0).reshape<double>([1, 896, 16]);
-      final outputScores = List.filled(1 * 896 * 1, 0.0).reshape<double>([1, 896, 1]);
+      final outputBoxes = List.filled(
+        1 * 896 * 16,
+        0.0,
+      ).reshape<double>([1, 896, 16]);
+      final outputScores = List.filled(
+        1 * 896 * 1,
+        0.0,
+      ).reshape<double>([1, 896, 1]);
 
       // 运行推理
       _faceDetector!.runForMultipleInputs(
@@ -323,13 +353,15 @@ class FaceRecognitionService {
         final yMax = box[2] * imageHeight;
         final xMax = box[3] * imageWidth;
 
-        faceBoxes.add(FaceBox(
-          x: xMin,
-          y: yMin,
-          width: xMax - xMin,
-          height: yMax - yMin,
-          score: score,
-        ));
+        faceBoxes.add(
+          FaceBox(
+            x: xMin,
+            y: yMin,
+            width: xMax - xMin,
+            height: yMax - yMin,
+            score: score,
+          ),
+        );
       }
     }
 
@@ -341,8 +373,7 @@ class FaceRecognitionService {
     if (boxes.isEmpty) return [];
 
     // 按面积排序
-    boxes.sort((a, b) =>
-        (b.width * b.height).compareTo(a.width * a.height));
+    boxes.sort((a, b) => (b.width * b.height).compareTo(a.width * a.height));
 
     final selected = <FaceBox>[];
     final active = List.filled(boxes.length, true);
@@ -416,8 +447,10 @@ class FaceRecognitionService {
       final inputTensor = input.reshape<double>(inputShape);
 
       // 准备输出
-      final output = List.filled(1 * _embeddingSize, 0.0)
-          .reshape<double>([1, _embeddingSize]);
+      final output = List.filled(
+        1 * _embeddingSize,
+        0.0,
+      ).reshape<double>([1, _embeddingSize]);
 
       // 运行推理
       _faceEmbedder!.run(inputTensor, output);
@@ -457,14 +490,16 @@ class FaceRecognitionService {
         final pixel = image.getPixel(x, y);
         if (normalize) {
           // 归一化到 [-1, 1]
-          result..add((pixel.r / 127.5) - 1.0)
-          ..add((pixel.g / 127.5) - 1.0)
-          ..add((pixel.b / 127.5) - 1.0);
+          result
+            ..add((pixel.r / 127.5) - 1.0)
+            ..add((pixel.g / 127.5) - 1.0)
+            ..add((pixel.b / 127.5) - 1.0);
         } else {
           // 归一化到 [0, 1]
-          result..add(pixel.r / 255.0)
-          ..add(pixel.g / 255.0)
-          ..add(pixel.b / 255.0);
+          result
+            ..add(pixel.r / 255.0)
+            ..add(pixel.g / 255.0)
+            ..add(pixel.b / 255.0);
         }
       }
     }
@@ -482,12 +517,15 @@ class FaceRecognitionService {
 
     // 使用贪心聚类算法
     final assignments = <int, int>{}; // faceId -> personId
-    final personEmbeddings = <int, List<Float32List>>{}; // personId -> embeddings
+    final personEmbeddings =
+        <int, List<Float32List>>{}; // personId -> embeddings
 
     for (final face in faces) {
       if (face.personId != null) {
         // 已分配的人脸，添加到对应人物的特征列表
-        personEmbeddings.putIfAbsent(face.personId!, () => []).add(face.embedding);
+        personEmbeddings
+            .putIfAbsent(face.personId!, () => [])
+            .add(face.embedding);
         continue;
       }
 
@@ -599,10 +637,7 @@ class FaceProcessProgress {
 }
 
 /// 处理状态
-enum FaceProcessStatus {
-  idle,
-  processing,
-  completed,
-  cancelled,
-  error,
-}
+enum FaceProcessStatus { idle, processing, completed, cancelled, error }
+
+img.Image? _decodeFaceImage(Uint8List imageBytes) =>
+    img.decodeImage(imageBytes);

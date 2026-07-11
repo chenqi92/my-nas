@@ -9,8 +9,8 @@ class MarkdownParser {
     final tasks = <TaskItem>[];
     final lines = content.split('\n');
 
-    for (final line in lines) {
-      final task = _parseTaskLine(line);
+    for (var lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      final task = _parseTaskLine(lines[lineIndex], sourceLine: lineIndex);
       if (task != null) {
         tasks.add(task);
       }
@@ -29,7 +29,7 @@ class MarkdownParser {
   /// - [ ] !!紧急 任务内容
   /// - [ ] @2024-12-31 带截止日期的任务
   /// - [ ] #标签 任务内容
-  static TaskItem? _parseTaskLine(String line) {
+  static TaskItem? _parseTaskLine(String line, {int? sourceLine}) {
     final trimmed = line.trim();
 
     // 匹配任务格式: - [ ] 或 * [ ] 或 + [ ]
@@ -86,6 +86,7 @@ class MarkdownParser {
       dueDate: dueDate,
       priority: priority,
       tags: tags,
+      sourceLine: sourceLine,
     );
   }
 
@@ -103,16 +104,14 @@ class MarkdownParser {
   /// 将单个任务转换为 Markdown 行
   static String _taskToMarkdownLine(TaskItem task) {
     final buffer = StringBuffer('- [')
-
-    // 状态
-    ..write(switch (task.status) {
-      TaskStatus.completed => 'x',
-      TaskStatus.inProgress => '/',
-      TaskStatus.cancelled => '-',
-      TaskStatus.pending => ' ',
-    })
-
-    ..write('] ');
+      // 状态
+      ..write(switch (task.status) {
+        TaskStatus.completed => 'x',
+        TaskStatus.inProgress => '/',
+        TaskStatus.cancelled => '-',
+        TaskStatus.pending => ' ',
+      })
+      ..write('] ');
 
     // 优先级
     if (task.priority == 2) {

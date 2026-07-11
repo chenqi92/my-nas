@@ -39,7 +39,8 @@ class OnlineBookReaderPage extends ConsumerStatefulWidget {
   final OnlineChapter initialChapter;
 
   @override
-  ConsumerState<OnlineBookReaderPage> createState() => _OnlineBookReaderPageState();
+  ConsumerState<OnlineBookReaderPage> createState() =>
+      _OnlineBookReaderPageState();
 }
 
 class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
@@ -54,6 +55,8 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
   final _paginator = NativeOnlinePaginator.instance;
   List<OnlineBookPage> _pages = [];
   int _currentPageIndex = 0;
+  int _contentLoadGeneration = 0;
+  int _paginationGeneration = 0;
   final PageController _pageController = PageController();
 
   // UI 状态
@@ -92,21 +95,34 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
   }
 
   Future<void> _loadContent() async {
-    if (_currentChapterIndex < 0 || _currentChapterIndex >= widget.chapters.length) return;
+    final chapterIndex = _currentChapterIndex;
+    if (chapterIndex < 0 || chapterIndex >= widget.chapters.length) {
+      return;
+    }
+    final loadGeneration = ++_contentLoadGeneration;
+    // 章节一旦切换，立即作废旧章节仍在运行的分页任务。
+    _paginationGeneration++;
 
     setState(() {
       _isLoading = true;
       _error = null;
+      _chapterContent = null;
+      _pages = [];
+      _currentPageIndex = 0;
     });
 
     try {
       final contentService = ref.read(bookContentServiceProvider);
       final content = await contentService.getChapterContent(
         widget.book.source,
-        widget.chapters[_currentChapterIndex],
+        widget.chapters[chapterIndex],
       );
 
-      if (!mounted) return;
+      if (!mounted ||
+          loadGeneration != _contentLoadGeneration ||
+          chapterIndex != _currentChapterIndex) {
+        return;
+      }
 
       if (content == null || content.isEmpty) {
         setState(() {
@@ -118,16 +134,25 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
 
       setState(() {
         _chapterContent = content;
-        _isLoading = false;
       });
 
       // 延迟分页，等待布局完成
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _paginateContent();
+        if (mounted &&
+            loadGeneration == _contentLoadGeneration &&
+            chapterIndex == _currentChapterIndex) {
+          _paginateContent(
+            content: content,
+            chapterIndex: chapterIndex,
+            contentLoadGeneration: loadGeneration,
+          );
+        }
       });
     } catch (e, st) {
       debugLog('[阅读器] 加载异常: $e\n$st');
-      if (mounted) {
+      if (mounted &&
+          loadGeneration == _contentLoadGeneration &&
+          chapterIndex == _currentChapterIndex) {
         setState(() {
           _error = e.toString();
           _isLoading = false;
@@ -136,8 +161,17 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
     }
   }
 
-  void _paginateContent() {
-    if (_chapterContent == null || _chapterContent!.isEmpty) return;
+  Future<void> _paginateContent({
+    String? content,
+    int? chapterIndex,
+    int? contentLoadGeneration,
+  }) async {
+    final targetContent = content ?? _chapterContent;
+    if (targetContent == null || targetContent.isEmpty) return;
+    final targetChapterIndex = chapterIndex ?? _currentChapterIndex;
+    final expectedContentGeneration =
+        contentLoadGeneration ?? _contentLoadGeneration;
+    final generation = ++_paginationGeneration;
 
     final settings = ref.read(bookReaderSettingsProvider);
     final size = MediaQuery.of(context).size;
@@ -146,24 +180,53 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
     final headerHeight = 40.0;
     final footerHeight = settings.showProgress ? 32.0 : 0.0;
     final safeArea = MediaQuery.of(context).padding;
-    final availableHeight = size.height - headerHeight - footerHeight - safeArea.top - safeArea.bottom;
+    final availableHeight =
+        size.height -
+        headerHeight -
+        footerHeight -
+        safeArea.top -
+        safeArea.bottom;
 
-    final result = _paginator.paginateChapter(
-      content: _chapterContent!,
-      chapterIndex: _currentChapterIndex,
-      viewportSize: Size(size.width, availableHeight),
-      baseStyle: TextStyle(
-        fontSize: settings.fontSize,
-        height: settings.lineHeight,
-      ),
-      horizontalPadding: settings.horizontalPadding,
-      verticalPadding: settings.verticalPadding,
-    );
+    try {
+      final result = await _paginator.paginateChapter(
+        content: targetContent,
+        chapterIndex: targetChapterIndex,
+        viewportSize: Size(size.width, availableHeight),
+        baseStyle: TextStyle(
+          fontSize: settings.fontSize,
+          height: settings.lineHeight,
+        ),
+        horizontalPadding: settings.horizontalPadding,
+        verticalPadding: settings.verticalPadding,
+      );
 
-    setState(() {
-      _pages = result.pages;
-      _currentPageIndex = 0;
-    });
+      if (!mounted ||
+          generation != _paginationGeneration ||
+          expectedContentGeneration != _contentLoadGeneration ||
+          targetChapterIndex != _currentChapterIndex) {
+        return;
+      }
+
+      setState(() {
+        _pages = result.pages;
+        _currentPageIndex = 0;
+        _isLoading = false;
+        _error = null;
+      });
+    } catch (e) {
+      if (!mounted ||
+          generation != _paginationGeneration ||
+          expectedContentGeneration != _contentLoadGeneration ||
+          targetChapterIndex != _currentChapterIndex) {
+        return;
+      }
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+        _pages = [];
+      });
+      return;
+    }
 
     // 重置 PageController
     if (_pageController.hasClients) {
@@ -347,7 +410,10 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
           children: [
             Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
             const SizedBox(height: 16),
-            Text(context.l10n.bookReaderLoadFailedState, style: TextStyle(color: settings.theme.textColor)),
+            Text(
+              context.l10n.bookReaderLoadFailedState,
+              style: TextStyle(color: settings.theme.textColor),
+            ),
             const SizedBox(height: 8),
             Row(
               mainAxisSize: MainAxisSize.min,
@@ -373,13 +439,16 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
       return Center(
         child: Text(
           context.l10n.bookReaderEmptyContent,
-          style: TextStyle(color: settings.theme.textColor.withValues(alpha: 0.7)),
+          style: TextStyle(
+            color: settings.theme.textColor.withValues(alpha: 0.7),
+          ),
         ),
       );
     }
 
     // 判断是否使用翻页效果
-    final useFlipEffect = settings.pageTurnMode == BookPageTurnMode.simulation ||
+    final useFlipEffect =
+        settings.pageTurnMode == BookPageTurnMode.simulation ||
         settings.pageTurnMode == BookPageTurnMode.cover;
 
     Widget pageView = PageView.builder(
@@ -389,10 +458,8 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
       onPageChanged: (page) {
         setState(() => _currentPageIndex = page);
       },
-      itemBuilder: (context, index) => SimplePageContent(
-        content: _pages[index].content,
-        settings: settings,
-      ),
+      itemBuilder: (context, index) =>
+          SimplePageContent(content: _pages[index].content, settings: settings),
     );
 
     // 包装翻页效果
@@ -470,60 +537,59 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(context.l10n.bookReaderPageDisplay(_currentPageIndex + 1), style: TextStyle(color: textColor, fontSize: 11)),
+          Text(
+            context.l10n.bookReaderPageDisplay(_currentPageIndex + 1),
+            style: TextStyle(color: textColor, fontSize: 11),
+          ),
           Text('$progress%', style: TextStyle(color: textColor, fontSize: 11)),
         ],
       ),
     );
   }
 
-  Widget _buildTopBar(BookReaderSettings settings, OnlineChapter chapter) => Container(
-      padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.transparent,
+  Widget _buildTopBar(BookReaderSettings settings, OnlineChapter chapter) =>
+      Container(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
+          ),
+        ),
+        child: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text(
+            chapter.name,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.list_rounded, color: Colors.white),
+              onPressed: _showChapterList,
+              tooltip: context.l10n.bookReaderTableOfContentsTooltip,
+            ),
           ],
         ),
-      ),
-      child: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          chapter.name,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.list_rounded, color: Colors.white),
-            onPressed: _showChapterList,
-            tooltip: context.l10n.bookReaderTableOfContentsTooltip,
-          ),
-        ],
-      ),
-    );
+      );
 
   Widget _buildBottomBar(BookReaderSettings settings) {
-    final isDark = settings.theme == BookReaderTheme.dark ||
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.transparent,
-          ],
+          colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
         ),
       ),
       child: SafeArea(
@@ -542,12 +608,17 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
                     thumbColor: Colors.white,
                     overlayColor: Colors.white24,
                     trackHeight: 3,
-                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 6,
+                    ),
                   ),
                   child: Slider(
                     value: _currentPageIndex.toDouble(),
                     min: 0,
-                    max: (_pages.length - 1).toDouble().clamp(0, double.infinity),
+                    max: (_pages.length - 1).toDouble().clamp(
+                      0,
+                      double.infinity,
+                    ),
                     onChanged: (value) => _goToPage(value.round()),
                   ),
                 ),
@@ -575,11 +646,17 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
                   ),
                   _BottomBarButton(
                     icon: isDark ? Icons.light_mode : Icons.dark_mode,
-                    label: isDark ? context.l10n.bookReaderDayModeButton : context.l10n.bookReaderNightModeButton,
+                    label: isDark
+                        ? context.l10n.bookReaderDayModeButton
+                        : context.l10n.bookReaderNightModeButton,
                     isDark: isDark,
                     onPressed: () {
-                      final notifier = ref.read(bookReaderSettingsProvider.notifier);
-                      final newTheme = isDark ? BookReaderTheme.light : BookReaderTheme.dark;
+                      final notifier = ref.read(
+                        bookReaderSettingsProvider.notifier,
+                      );
+                      final newTheme = isDark
+                          ? BookReaderTheme.light
+                          : BookReaderTheme.dark;
                       notifier.setTheme(newTheme);
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (mounted) _paginateContent();
@@ -684,21 +761,45 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
         const SizedBox(height: 24),
 
         // 翻页模式
-        SettingSectionTitle(title: context.l10n.bookReaderPageTurnModeSectionTitle),
+        SettingSectionTitle(
+          title: context.l10n.bookReaderPageTurnModeSectionTitle,
+        ),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
-            _buildPageModeChip(context.l10n.bookReaderPageTurnModeSlide, BookPageTurnMode.slide, settings, settingsNotifier),
-            _buildPageModeChip(context.l10n.bookReaderPageTurnModeCover, BookPageTurnMode.cover, settings, settingsNotifier),
-            _buildPageModeChip(context.l10n.bookReaderPageTurnModeSimulation, BookPageTurnMode.simulation, settings, settingsNotifier),
-            _buildPageModeChip(context.l10n.bookReaderPageTurnModeNone, BookPageTurnMode.none, settings, settingsNotifier),
+            _buildPageModeChip(
+              context.l10n.bookReaderPageTurnModeSlide,
+              BookPageTurnMode.slide,
+              settings,
+              settingsNotifier,
+            ),
+            _buildPageModeChip(
+              context.l10n.bookReaderPageTurnModeCover,
+              BookPageTurnMode.cover,
+              settings,
+              settingsNotifier,
+            ),
+            _buildPageModeChip(
+              context.l10n.bookReaderPageTurnModeSimulation,
+              BookPageTurnMode.simulation,
+              settings,
+              settingsNotifier,
+            ),
+            _buildPageModeChip(
+              context.l10n.bookReaderPageTurnModeNone,
+              BookPageTurnMode.none,
+              settings,
+              settingsNotifier,
+            ),
           ],
         ),
         const SizedBox(height: 24),
 
         // 其他设置
-        SettingSectionTitle(title: context.l10n.bookReaderOtherSettingsSectionTitle),
+        SettingSectionTitle(
+          title: context.l10n.bookReaderOtherSettingsSectionTitle,
+        ),
         SettingSwitchRow(
           title: context.l10n.bookReaderKeepScreenOnToggle,
           value: settings.keepScreenOn,
@@ -730,30 +831,32 @@ class _OnlineBookReaderPageState extends ConsumerState<OnlineBookReaderPage>
     required bool isSelected,
     required VoidCallback onTap,
   }) => GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: theme.backgroundColor,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.3),
-            width: isSelected ? 2 : 1,
-          ),
+    onTap: onTap,
+    child: Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: theme.backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSelected
+              ? AppColors.primary
+              : Colors.grey.withValues(alpha: 0.3),
+          width: isSelected ? 2 : 1,
         ),
-        child: Center(
-          child: Text(
-            localizeFormText(context, theme.label),
-            style: TextStyle(
-              color: theme.textColor,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
+      ),
+      child: Center(
+        child: Text(
+          localizeFormText(context, theme.label),
+          style: TextStyle(
+            color: theme.textColor,
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
-    );
+    ),
+  );
 
   Widget _buildPageModeChip(
     String label,
@@ -797,10 +900,7 @@ class _BottomBarButton extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(color: color, fontSize: 11),
-            ),
+            Text(label, style: TextStyle(color: color, fontSize: 11)),
           ],
         ),
       ),
@@ -842,7 +942,9 @@ class _ChapterListSheet extends StatelessWidget {
               context.l10n.bookReaderChapterListTitle,
               style: context.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface,
+                color: isDark
+                    ? AppColors.darkOnSurface
+                    : AppColors.lightOnSurface,
               ),
             ),
           ),
@@ -861,8 +963,12 @@ class _ChapterListSheet extends StatelessWidget {
                     style: TextStyle(
                       color: isSelected
                           ? AppColors.primary
-                          : (isDark ? AppColors.darkOnSurface : AppColors.lightOnSurface),
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          : (isDark
+                                ? AppColors.darkOnSurface
+                                : AppColors.lightOnSurface),
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

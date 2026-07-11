@@ -1,4 +1,5 @@
-import 'dart:ui' as ui;
+import 'dart:isolate';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
@@ -47,6 +48,8 @@ class NativeOnlinePaginator {
   NativeOnlinePaginator._();
   static final NativeOnlinePaginator instance = NativeOnlinePaginator._();
 
+  static const _maxChapterChars = 2 * 1024 * 1024;
+
   /// 对章节内容进行分页
   ///
   /// [content] - 章节纯文本内容
@@ -55,14 +58,14 @@ class NativeOnlinePaginator {
   /// [baseStyle] - 基础文本样式
   /// [horizontalPadding] - 水平内边距
   /// [verticalPadding] - 垂直内边距
-  ChapterPaginationResult paginateChapter({
+  Future<ChapterPaginationResult> paginateChapter({
     required String content,
     required int chapterIndex,
     required Size viewportSize,
     required TextStyle baseStyle,
     double horizontalPadding = 24,
     double verticalPadding = 16,
-  }) {
+  }) async {
     if (content.isEmpty) {
       return ChapterPaginationResult(
         pages: [
@@ -77,30 +80,52 @@ class NativeOnlinePaginator {
         chapterIndex: chapterIndex,
       );
     }
-
-    final stopwatch = Stopwatch()..start();
+    if (content.length > _maxChapterChars) {
+      throw Exception('章节内容过大，已拒绝同步分页: ${content.length} chars');
+    }
 
     // 计算可用内容区域
     final contentWidth = viewportSize.width - horizontalPadding * 2;
     final contentHeight = viewportSize.height - verticalPadding * 2;
 
-    // 分页
+    return Isolate.run<ChapterPaginationResult>(
+      () => _paginateChapterInIsolate(
+        content: content,
+        chapterIndex: chapterIndex,
+        contentWidth: contentWidth,
+        contentHeight: contentHeight,
+        fontSize: baseStyle.fontSize ?? 18,
+        lineHeight: baseStyle.height ?? 1.5,
+      ),
+    );
+  }
+
+  static ChapterPaginationResult _paginateChapterInIsolate({
+    required String content,
+    required int chapterIndex,
+    required double contentWidth,
+    required double contentHeight,
+    required double fontSize,
+    required double lineHeight,
+  }) {
+    final stopwatch = Stopwatch()..start();
     final pageContents = _paginateText(
       content: content,
       contentWidth: contentWidth,
       contentHeight: contentHeight,
-      baseStyle: baseStyle,
+      fontSize: fontSize,
+      lineHeight: lineHeight,
     );
-
-    // 创建页面对象
     final pages = <OnlineBookPage>[];
     for (var i = 0; i < pageContents.length; i++) {
-      pages.add(OnlineBookPage(
-        pageIndex: i,
-        chapterIndex: chapterIndex,
-        content: pageContents[i],
-        progress: (i + 1) / pageContents.length,
-      ));
+      pages.add(
+        OnlineBookPage(
+          pageIndex: i,
+          chapterIndex: chapterIndex,
+          content: pageContents[i],
+          progress: (i + 1) / pageContents.length,
+        ),
+      );
     }
 
     stopwatch.stop();
@@ -109,7 +134,6 @@ class NativeOnlinePaginator {
       '章节 $chapterIndex, ${pages.length} 页, '
       '耗时 ${stopwatch.elapsedMilliseconds}ms',
     );
-
     return ChapterPaginationResult(
       pages: pages,
       totalPages: pages.length,
@@ -118,11 +142,12 @@ class NativeOnlinePaginator {
   }
 
   /// 对文本进行分页
-  List<String> _paginateText({
+  static List<String> _paginateText({
     required String content,
     required double contentWidth,
     required double contentHeight,
-    required TextStyle baseStyle,
+    required double fontSize,
+    required double lineHeight,
   }) {
     // 按段落分割（两个换行符或更多）
     final paragraphs = content
@@ -145,7 +170,8 @@ class NativeOnlinePaginator {
         paragraphs: lines,
         contentWidth: contentWidth,
         contentHeight: contentHeight,
-        baseStyle: baseStyle,
+        fontSize: fontSize,
+        lineHeight: lineHeight,
       );
     }
 
@@ -153,30 +179,31 @@ class NativeOnlinePaginator {
       paragraphs: paragraphs,
       contentWidth: contentWidth,
       contentHeight: contentHeight,
-      baseStyle: baseStyle,
+      fontSize: fontSize,
+      lineHeight: lineHeight,
     );
   }
 
   /// 对段落列表进行分页
-  List<String> _paginateParagraphs({
+  static List<String> _paginateParagraphs({
     required List<String> paragraphs,
     required double contentWidth,
     required double contentHeight,
-    required TextStyle baseStyle,
+    required double fontSize,
+    required double lineHeight,
   }) {
     final pages = <String>[];
     var currentPageParagraphs = <String>[];
     var currentHeight = 0.0;
 
-    final lineHeight = baseStyle.height ?? 1.5;
-    final lineHeightPx = baseStyle.fontSize! * lineHeight;
+    final lineHeightPx = fontSize * lineHeight;
 
     for (final paragraph in paragraphs) {
       // 估算段落高度
       final paragraphHeight = _estimateParagraphHeight(
         paragraph: paragraph,
         contentWidth: contentWidth,
-        baseStyle: baseStyle,
+        fontSize: fontSize,
         lineHeightPx: lineHeightPx,
       );
 
@@ -202,31 +229,45 @@ class NativeOnlinePaginator {
   }
 
   /// 估算段落高度
-  double _estimateParagraphHeight({
+  static double _estimateParagraphHeight({
     required String paragraph,
     required double contentWidth,
-    required TextStyle baseStyle,
+    required double fontSize,
     required double lineHeightPx,
   }) {
     if (paragraph.isEmpty) {
       return lineHeightPx;
     }
 
-    // 使用 TextPainter 测量文本
-    final textPainter = TextPainter(
-      text: TextSpan(text: paragraph, style: baseStyle),
-      textDirection: ui.TextDirection.ltr,
-      maxLines: null,
-    )..layout(maxWidth: contentWidth);
-
-    // 计算行数
-    final lineMetrics = textPainter.computeLineMetrics();
-    final lineCount = lineMetrics.length;
+    final lineCount = _estimateLineCount(
+      text: paragraph,
+      contentWidth: contentWidth,
+      fontSize: fontSize,
+    );
 
     // 段落后加一些间距（对应 paragraphSpacing）
     const paragraphSpacing = 16.0;
 
     return lineCount * lineHeightPx + paragraphSpacing;
+  }
+
+  static int _estimateLineCount({
+    required String text,
+    required double contentWidth,
+    required double fontSize,
+  }) {
+    final unitsPerLine = math.max(1.0, contentWidth / fontSize);
+    var units = 0.0;
+    for (final rune in text.runes) {
+      if (rune == 10 || rune == 13) {
+        units += unitsPerLine;
+      } else if (rune >= 0x2E80) {
+        units += 1.0;
+      } else {
+        units += 0.56;
+      }
+    }
+    return math.max(1, (units / unitsPerLine).ceil());
   }
 
   /// 根据进度获取页面索引
