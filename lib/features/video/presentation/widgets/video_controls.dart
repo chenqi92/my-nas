@@ -229,15 +229,10 @@ class VideoControls extends ConsumerWidget {
                       thumbColor: Colors.white,
                       overlayColor: Colors.white24,
                     ),
-                    child: Slider(
-                      value: state.progress.clamp(0.0, 1.0),
-                      onChanged: (value) {
-                        final position = Duration(
-                          milliseconds:
-                              (value * state.duration.inMilliseconds).toInt(),
-                        );
-                        onSeek(position);
-                      },
+                    child: VideoSeekSlider(
+                      progress: state.progress,
+                      duration: state.duration,
+                      onSeek: onSeek,
                     ),
                   ),
                 ),
@@ -318,6 +313,53 @@ class VideoControls extends ConsumerWidget {
           ],
         ),
       );
+}
+
+/// 拖动时仅更新本地预览，松手后只发出一次 seek。
+///
+/// media_kit 的每次 seek 都可能重新发起 HTTP Range 请求；直接在 Slider 的
+/// onChanged 中调用会在一次拖动内制造几十个并发请求，最终耗尽 SMB 流连接。
+class VideoSeekSlider extends StatefulWidget {
+  const VideoSeekSlider({
+    required this.progress,
+    required this.duration,
+    required this.onSeek,
+    super.key,
+  });
+
+  final double progress;
+  final Duration duration;
+  final ValueChanged<Duration> onSeek;
+
+  @override
+  State<VideoSeekSlider> createState() => _VideoSeekSliderState();
+}
+
+class _VideoSeekSliderState extends State<VideoSeekSlider> {
+  double? _dragProgress;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = (_dragProgress ?? widget.progress).clamp(0.0, 1.0);
+    return Slider(
+      value: value,
+      onChangeStart: widget.duration > Duration.zero
+          ? (value) => setState(() => _dragProgress = value)
+          : null,
+      onChanged: widget.duration > Duration.zero
+          ? (value) => setState(() => _dragProgress = value)
+          : null,
+      onChangeEnd: widget.duration > Duration.zero
+          ? (value) {
+              final target = Duration(
+                milliseconds: (value * widget.duration.inMilliseconds).round(),
+              );
+              setState(() => _dragProgress = null);
+              widget.onSeek(target);
+            }
+          : null,
+    );
+  }
 }
 
 class _VolumeButton extends StatefulWidget {

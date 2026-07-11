@@ -43,8 +43,9 @@ class SmbRandomAccessFile implements RandomAccessFile {
 
   int _position;
 
-  SmbRandomAccessFile(this.file, this.controller, [this._position = 0])
-      : _fileSize = file.size;
+  SmbRandomAccessFile(this.file, this.controller, [int position = 0])
+      : _position = RangeError.checkNotNegative(position, 'position'),
+        _fileSize = file.size;
 
   Future _init() async {
     if (_inited) {
@@ -104,11 +105,17 @@ class SmbRandomAccessFile implements RandomAccessFile {
     await _init();
     int remainSize = _fileSize - offset;
     int length = min(remainSize, _buffer.length);
-    if (length == 0) {
-      throw "Empty read to buffer";
-      // return 0;
+    if (length <= 0) {
+      return 0;
     }
     int res = await controller.read(_buffer, offset, length);
+    if (res < 0) {
+      throw FileSystemException('SMB read failed at offset $offset', file.path);
+    }
+    if (res > length) {
+      throw FileSystemException(
+          'SMB read returned $res bytes for a $length byte request', file.path);
+    }
     _bufferFilePosition = offset;
     _bufferReadPosition = 0;
     _bufferLength = res;
@@ -117,7 +124,9 @@ class SmbRandomAccessFile implements RandomAccessFile {
 
   int readFromBuffer(List<int> dst, int start, int length) {
     int res = 0;
-    while (start < dst.length && _bufferReadPosition < _bufferLength) {
+    while (res < length &&
+        start < dst.length &&
+        _bufferReadPosition < _bufferLength) {
       dst[start] = _buffer[_bufferReadPosition];
       _bufferReadPosition++;
       start++;
@@ -127,15 +136,18 @@ class SmbRandomAccessFile implements RandomAccessFile {
   }
 
   bool _positionInBuffer(int offset) {
-    return _bufferFilePosition + _bufferReadPosition <= offset &&
+    return _bufferLength > 0 &&
+        _bufferFilePosition <= offset &&
         offset < _bufferFilePosition + _bufferLength;
   }
 
   @override
   Future<Uint8List> read(int count) async {
+    RangeError.checkNotNegative(count, 'count');
     Uint8List buff = Uint8List(count);
-    await readInto(buff);
-    return buff;
+    final bytesRead = await readInto(buff);
+    if (bytesRead == count) return buff;
+    return Uint8List.sublistView(buff, 0, bytesRead);
   }
 
   @override
@@ -150,7 +162,8 @@ class SmbRandomAccessFile implements RandomAccessFile {
   @override
   Future<int> readByte() async {
     await _init();
-    await readInto(_byteBuff);
+    final read = await readInto(_byteBuff);
+    if (read == 0) return -1;
     return _byteBuff[0];
   }
 
@@ -162,15 +175,18 @@ class SmbRandomAccessFile implements RandomAccessFile {
 
   @override
   Future<int> readInto(List<int> buff, [int start = 0, int? end]) async {
-    end ??= buff.length;
+    end = RangeError.checkValidRange(start, end, buff.length);
     int length = end - start;
     int res = 0;
 
     while (length > 0) {
       if (!_positionInBuffer(_position)) {
-        await _readToBuff(_position);
+        final read = await _readToBuff(_position);
+        if (read == 0) break;
       }
+      _bufferReadPosition = _position - _bufferFilePosition;
       var n = readFromBuffer(buff, start, length);
+      if (n == 0) break;
       length -= n;
       start += n;
       res += n;
@@ -186,12 +202,14 @@ class SmbRandomAccessFile implements RandomAccessFile {
 
   @override
   Future<RandomAccessFile> setPosition(int position) async {
+    RangeError.checkNotNegative(position, 'position');
     _position = position;
     return this;
   }
 
   @override
   void setPositionSync(int position) {
+    RangeError.checkNotNegative(position, 'position');
     _position = position;
   }
 

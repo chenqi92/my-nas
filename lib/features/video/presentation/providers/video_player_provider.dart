@@ -187,6 +187,11 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   Timer? _progressSaveTimer;
   VideoItem? _currentVideo;
+  String? _currentProxyId;
+
+  /// seek 只允许串行执行；执行期间的新请求覆盖旧的待执行目标。
+  Duration? _pendingSeek;
+  bool _isSeekInFlight = false;
 
   /// 进度保存计数器（用于控制截图频率）
   int _progressSaveCount = 0;
@@ -603,6 +608,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     // 保存当前视频进度
     await _saveCurrentProgress();
 
+    // 取消上一个视频仍在读取的本地代理流，释放 SMB 专用连接。
+    _releaseCurrentProxy();
+
     // 清理之前的原生后端
     await _cleanupNativeBackend();
 
@@ -715,6 +723,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
             filePath: resolvedVideo.path,
             fileSize: resolvedVideo.size,
           );
+          _currentProxyId = Uri.parse(playUrl).pathSegments.last;
           logger.i('VideoPlayer: 使用代理 URL => $playUrl');
         } on Exception catch (e, st) {
           AppError.handle(e, st, 'VideoPlayer.startProxyServer');
@@ -1234,6 +1243,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       _player..pause()
       ..stop();
     }
+    _releaseCurrentProxy();
     _currentVideo = null;
 
     // 延迟修改 provider 状态，避免在 dispose 期间修改
@@ -1270,11 +1280,43 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   /// 跳转到指定位置
   Future<void> seek(Duration position) async {
-    if (isUsingNativePlayer && _nativeBackend != null) {
-      await _nativeBackend!.seek(position);
-    } else {
-      await _player.seek(position);
+    final duration = state.duration;
+    _pendingSeek = duration > Duration.zero
+        ? Duration(
+            milliseconds: position.inMilliseconds
+                .clamp(0, duration.inMilliseconds),
+          )
+        : position < Duration.zero
+            ? Duration.zero
+            : position;
+
+    if (_isSeekInFlight) return;
+    _isSeekInFlight = true;
+
+    try {
+      while (_pendingSeek != null && !_isDisposed) {
+        final target = _pendingSeek!;
+        _pendingSeek = null;
+        if (isUsingNativePlayer && _nativeBackend != null) {
+          await _nativeBackend!.seek(target);
+        } else {
+          await _player.seek(target);
+        }
+      }
+    } finally {
+      _isSeekInFlight = false;
+      // finally 期间又到达的请求不能丢失。
+      if (_pendingSeek != null && !_isDisposed) {
+        unawaited(seek(_pendingSeek!));
+      }
     }
+  }
+
+  void _releaseCurrentProxy() {
+    final id = _currentProxyId;
+    if (id == null) return;
+    _currentProxyId = null;
+    MediaProxyServer().unregisterFile(id);
   }
 
   /// 快进
@@ -1585,6 +1627,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   @override
   void dispose() {
     _isDisposed = true;
+    _pendingSeek = null;
     // 取消所有 stream subscriptions
     for (final subscription in _subscriptions) {
       subscription.cancel();
@@ -1618,6 +1661,7 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       _nativeBackend = null;
     }
 
+    _releaseCurrentProxy();
     _player.dispose();
     super.dispose();
   }

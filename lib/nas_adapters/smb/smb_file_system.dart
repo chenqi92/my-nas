@@ -427,9 +427,25 @@ class SmbFileSystem implements NasFileSystem {
         if (releasePoolConnection != null) {
           // 包装流，在完成时关闭专用连接
           final controller = StreamController<List<int>>();
-          rawStream.listen(
+          late final StreamSubscription<List<int>> rawSubscription;
+          controller
+            ..onPause = () {
+              rawSubscription.pause();
+            }
+            ..onResume = () {
+              rawSubscription.resume();
+            }
+            ..onCancel = () async {
+              await rawSubscription.cancel();
+              await cleanup();
+            };
+          rawSubscription = rawStream.listen(
             controller.add,
-            onError: controller.addError,
+            onError: (Object error, StackTrace stackTrace) async {
+              controller.addError(error, stackTrace);
+              await controller.close();
+              await cleanup();
+            },
             onDone: () async {
               await controller.close();
               await cleanup();

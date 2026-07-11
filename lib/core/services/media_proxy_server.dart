@@ -7,15 +7,25 @@ import 'package:my_nas/features/sources/data/services/source_manager_service.dar
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 
+typedef MediaProxyFileSystemResolver =
+    Future<NasFileSystem?> Function(String sourceId);
+
 /// 媒体代理服务器
 ///
 /// 为不支持直接 URL 访问的协议（如 SMB）提供 HTTP 代理
 /// 将 SMB 等协议的文件流转换为 HTTP 流供播放器使用
 class MediaProxyServer {
   factory MediaProxyServer() => _instance ??= MediaProxyServer._();
-  MediaProxyServer._();
+  MediaProxyServer._() : _fileSystemResolver = _resolveDefaultFileSystem;
+
+  /// 独立实例，仅用于回归测试，不会替换应用级单例。
+  MediaProxyServer.forTesting({
+    required MediaProxyFileSystemResolver fileSystemResolver,
+  }) : _fileSystemResolver = fileSystemResolver;
 
   static MediaProxyServer? _instance;
+
+  final MediaProxyFileSystemResolver _fileSystemResolver;
 
   HttpServer? _server;
   int _port = 0;
@@ -25,6 +35,9 @@ class MediaProxyServer {
 
   /// 当前代理的文件信息
   final Map<String, _ProxyFileInfo> _proxyFiles = {};
+
+  /// 正在传输的后端流。播放器 seek/退出时必须及时取消，否则 SMB 专用连接会残留。
+  final Map<String, Set<_ProxyTransfer>> _activeTransfers = {};
 
   /// 服务器是否正在运行
   bool get isRunning => _server != null;
@@ -46,9 +59,12 @@ class MediaProxyServer {
       logger.i('MediaProxyServer: 启动成功，端口 $_port');
 
       // 处理请求
-      _server!.listen(_handleRequest, onError: (Object error, StackTrace st) {
-        AppError.handle(error, st, 'MediaProxyServer.listen');
-      });
+      _server!.listen(
+        _handleRequest,
+        onError: (Object error, StackTrace st) {
+          AppError.handle(error, st, 'MediaProxyServer.listen');
+        },
+      );
     } catch (e, st) {
       AppError.handle(e, st, 'MediaProxyServer.start');
       rethrow;
@@ -60,6 +76,7 @@ class MediaProxyServer {
     if (_server == null) return;
 
     try {
+      await _cancelAllTransfers();
       await _server!.close(force: true);
       _server = null;
       _port = 0;
@@ -101,6 +118,7 @@ class MediaProxyServer {
   /// 取消注册文件
   void unregisterFile(String id) {
     _proxyFiles.remove(id);
+    unawaited(_cancelTransfers(id));
     logger.d('MediaProxyServer: 取消注册文件 $id');
   }
 
@@ -126,8 +144,16 @@ class MediaProxyServer {
       return;
     }
 
+    if (request.method != 'GET' && request.method != 'HEAD') {
+      request.response
+        ..statusCode = HttpStatus.methodNotAllowed
+        ..headers.set(HttpHeaders.allowHeader, 'GET, HEAD');
+      await request.response.close();
+      return;
+    }
+
     try {
-      await _streamFile(request, fileInfo);
+      await _streamFile(request, id, fileInfo);
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'MediaProxyServer._handleRequest', {
         'path': fileInfo.filePath,
@@ -136,13 +162,13 @@ class MediaProxyServer {
       try {
         // 只有在还没发送响应头时才能设置状态码
         request.response.statusCode = HttpStatus.internalServerError;
-      // ignore: avoid_catches_without_on_clauses
+        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         // 响应头可能已经发送
       }
       try {
         await request.response.close();
-      // ignore: avoid_catches_without_on_clauses
+        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         // 响应可能已经关闭
       }
@@ -150,41 +176,28 @@ class MediaProxyServer {
   }
 
   /// 流式传输文件
-  Future<void> _streamFile(HttpRequest request, _ProxyFileInfo fileInfo) async {
-    // 获取文件系统，如果连接不健康则尝试重连
-    var conn = SourceManagerService().getConnection(fileInfo.sourceId);
-
-    if (conn == null || conn.status != SourceStatus.connected) {
-      logger.w('MediaProxyServer: 源未连接，尝试重连 ${fileInfo.sourceId}');
-      // 尝试重连
-      final reconnected = await SourceManagerService().ensureConnectionHealthy(fileInfo.sourceId);
-      if (reconnected) {
-        conn = SourceManagerService().getConnection(fileInfo.sourceId);
-        logger.i('MediaProxyServer: 重连成功 ${fileInfo.sourceId}');
-      }
-    } else {
-      // 检查连接健康状态
-      final isHealthy = await conn.adapter.checkConnectionHealth();
-      if (!isHealthy) {
-        logger.w('MediaProxyServer: 连接不健康，尝试重连 ${fileInfo.sourceId}');
-        final reconnected = await SourceManagerService().ensureConnectionHealthy(fileInfo.sourceId);
-        if (reconnected) {
-          conn = SourceManagerService().getConnection(fileInfo.sourceId);
-          logger.i('MediaProxyServer: 重连成功 ${fileInfo.sourceId}');
-        }
-      }
-    }
-
-    // 再次检查连接状态
-    if (conn == null || conn.status != SourceStatus.connected) {
+  Future<void> _streamFile(
+    HttpRequest request,
+    String id,
+    _ProxyFileInfo fileInfo,
+  ) async {
+    // Range 请求不能在每次 seek 前做额外健康探测，否则探测本身就可能阻塞
+    // 本地 HTTP 响应。仅在连接状态明确不可用时由默认 resolver 尝试重连。
+    final fileSystem = await _fileSystemResolver(fileInfo.sourceId);
+    if (fileSystem == null) {
       logger.e('MediaProxyServer: 源连接失败 ${fileInfo.sourceId}');
       request.response.statusCode = HttpStatus.serviceUnavailable;
       await request.response.close();
       return;
     }
 
-    final fileSystem = conn.adapter.fileSystem;
-    final fileSize = fileInfo.fileSize;
+    final fileSize = await fileInfo.resolveFileSize(fileSystem);
+    if (fileSize < 0) {
+      throw FileSystemException(
+        'Invalid media size: $fileSize',
+        fileInfo.filePath,
+      );
+    }
 
     // 解析 Range 头
     FileRange? range;
@@ -194,24 +207,35 @@ class MediaProxyServer {
     final rangeHeader = request.headers.value(HttpHeaders.rangeHeader);
     if (rangeHeader != null) {
       range = _parseRangeHeader(rangeHeader, fileSize);
-      if (range != null) {
-        contentLength = (range.end ?? fileSize) - range.start;
-        statusCode = HttpStatus.partialContent;
-        logger.d('MediaProxyServer: Range 请求 ${range.start}-${range.end ?? fileSize}');
+      if (range == null) {
+        request.response
+          ..statusCode = HttpStatus.requestedRangeNotSatisfiable
+          ..headers.set(HttpHeaders.acceptRangesHeader, 'bytes')
+          ..headers.set(HttpHeaders.contentRangeHeader, 'bytes */$fileSize');
+        await request.response.close();
+        return;
       }
+      contentLength = range.end! - range.start;
+      statusCode = HttpStatus.partialContent;
+      logger.d('MediaProxyServer: Range 请求 ${range.start}-${range.end}');
     }
 
     // 设置响应头
     request.response.statusCode = statusCode;
-    request.response.headers.set(HttpHeaders.contentTypeHeader, _getMimeType(fileInfo.filePath));
-    request.response.headers.set(HttpHeaders.contentLengthHeader, contentLength);
+    request.response.headers.set(
+      HttpHeaders.contentTypeHeader,
+      _getMimeType(fileInfo.filePath),
+    );
+    request.response.headers.set(
+      HttpHeaders.contentLengthHeader,
+      contentLength,
+    );
     request.response.headers.set(HttpHeaders.acceptRangesHeader, 'bytes');
 
     if (range != null) {
-      final end = range.end ?? fileSize;
       request.response.headers.set(
         HttpHeaders.contentRangeHeader,
-        'bytes ${range.start}-${end - 1}/$fileSize',
+        'bytes ${range.start}-${range.end! - 1}/$fileSize',
       );
     }
 
@@ -221,69 +245,65 @@ class MediaProxyServer {
       return;
     }
 
-    // 获取文件流并传输
-    // 使用 StreamSubscription 以便更好地控制错误处理
-    // 当 SMB 连接断开时，可以立即停止写入而不会触发 HttpException
+    // 单个本地播放 URL 同一时间只保留一个 GET 数据流。播放器 seek 会立即发来
+    // 新 Range；主动取消旧流比等待 socket 断开更可靠，也能处理后端正阻塞读取、
+    // 暂时无法通过 response.done 感知断开的情况。
+    await _cancelTransfers(id);
+
+    // 使用 StreamIterator 持有可显式取消的订阅。客户端在 seek 时会关闭旧的
+    // HTTP 请求；response.done 随即取消 iterator，触发 SMB stream.onCancel，
+    // 从而立即关闭 RandomAccessFile 与专用连接。
+    _ProxyTransfer? transfer;
     try {
-      final stream = await fileSystem.getFileStream(fileInfo.filePath, range: range);
+      final stream = await fileSystem.getFileStream(
+        fileInfo.filePath,
+        range: range,
+      );
+      final iterator = StreamIterator<List<int>>(stream);
+      transfer = _ProxyTransfer(iterator, request.response);
+      _activeTransfers.putIfAbsent(id, () => <_ProxyTransfer>{}).add(transfer);
 
-      final completer = Completer<void>();
-      var hasError = false;
-
-      final subscription = stream.listen(
-        (data) {
-          if (hasError) return; // 已经发生错误，忽略后续数据
-          try {
-            request.response.add(data);
-          } catch (e, st) {
-            hasError = true;
-            AppError.ignore(e, st, 'MediaProxyServer: 写入响应失败，可能客户端已断开');
-            if (!completer.isCompleted) {
-              completer.complete(); // 正常完成，不触发错误处理
-            }
-          }
-        },
-        onError: (Object e, StackTrace st) {
-          hasError = true;
-          // 上报流传输错误（可能是 SMB 连接断开、读取失败等）
-          AppError.handle(e, st, 'MediaProxyServer.streamTransfer', {
-            'path': fileInfo.filePath,
-            'sourceId': fileInfo.sourceId,
-            'rangeStart': range?.start,
-            'rangeEnd': range?.end,
-          });
-          if (!completer.isCompleted) {
-            completer.complete(); // 正常完成，避免再次抛出异常
-          }
-        },
-        onDone: () {
-          if (!completer.isCompleted) {
-            completer.complete();
-          }
-        },
-        cancelOnError: true,
+      unawaited(
+        request.response.done.then<void>(
+          (_) => transfer?.cancel(),
+          onError: (Object error, StackTrace st) async {
+            AppError.ignore(error, st, 'MediaProxyServer: 客户端已断开，取消后端流');
+            await transfer?.cancel();
+          },
+        ),
       );
 
-      await completer.future;
-      await subscription.cancel(); // 确保取消订阅
-      
-      try {
-        await request.response.close();
-      // ignore: avoid_catches_without_on_clauses
-      } catch (_) {
-        // 响应可能已经关闭或客户端断开
+      while (!transfer.isCancelled && await iterator.moveNext()) {
+        request.response.add(iterator.current);
+        // flush 提供背压并让客户端断开尽快反馈到本地代理。
+        await request.response.flush();
       }
+
+      if (!transfer.isCancelled) {
+        await request.response.close();
+      }
+    } on HttpException catch (e, st) {
+      AppError.ignore(e, st, 'MediaProxyServer: HTTP 客户端中断传输');
+    } on SocketException catch (e, st) {
+      AppError.ignore(e, st, 'MediaProxyServer: HTTP 客户端断开连接');
     } on Exception catch (e, st) {
-      // 获取流失败（连接不可用等）
-      AppError.handle(e, st, 'MediaProxyServer.getFileStream', {
+      AppError.handle(e, st, 'MediaProxyServer.streamTransfer', {
         'path': fileInfo.filePath,
         'sourceId': fileInfo.sourceId,
         'rangeStart': range?.start,
         'rangeEnd': range?.end,
       });
+    } finally {
+      if (transfer != null) {
+        _activeTransfers[id]?.remove(transfer);
+        if (_activeTransfers[id]?.isEmpty ?? false) {
+          _activeTransfers.remove(id);
+        }
+        await transfer.cancel();
+      }
       try {
         await request.response.close();
-      // ignore: avoid_catches_without_on_clauses
+        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         // 响应可能已经关闭
       }
@@ -292,15 +312,60 @@ class MediaProxyServer {
 
   /// 解析 Range 头
   FileRange? _parseRangeHeader(String rangeHeader, int fileSize) {
-    // 格式: bytes=start-end 或 bytes=start-
-    final match = RegExp(r'bytes=(\d+)-(\d*)').firstMatch(rangeHeader);
+    if (fileSize <= 0 || rangeHeader.contains(',')) return null;
+
+    // 支持 bytes=start-end、bytes=start- 以及 suffix range bytes=-length。
+    final match = RegExp(r'^bytes=(\d*)-(\d*)$').firstMatch(rangeHeader.trim());
     if (match == null) return null;
 
-    final start = int.parse(match.group(1)!);
-    final endStr = match.group(2);
-    final end = endStr != null && endStr.isNotEmpty ? int.parse(endStr) + 1 : null;
+    final startText = match.group(1)!;
+    final endText = match.group(2)!;
+    if (startText.isEmpty && endText.isEmpty) return null;
+
+    if (startText.isEmpty) {
+      final suffixLength = int.tryParse(endText);
+      if (suffixLength == null || suffixLength <= 0) return null;
+      final start = suffixLength >= fileSize ? 0 : fileSize - suffixLength;
+      return FileRange(start: start, end: fileSize);
+    }
+
+    final start = int.tryParse(startText);
+    if (start == null || start < 0 || start >= fileSize) return null;
+
+    var end = fileSize;
+    if (endText.isNotEmpty) {
+      final inclusiveEnd = int.tryParse(endText);
+      if (inclusiveEnd == null || inclusiveEnd < start) return null;
+      end = inclusiveEnd >= fileSize - 1 ? fileSize : inclusiveEnd + 1;
+    }
 
     return FileRange(start: start, end: end);
+  }
+
+  static Future<NasFileSystem?> _resolveDefaultFileSystem(
+    String sourceId,
+  ) async {
+    final manager = SourceManagerService();
+    var conn = manager.getConnection(sourceId);
+    if (conn == null || conn.status != SourceStatus.connected) {
+      logger.w('MediaProxyServer: 源未连接，尝试重连 $sourceId');
+      if (!await manager.ensureConnectionHealthy(sourceId)) return null;
+      conn = manager.getConnection(sourceId);
+    }
+    return conn?.status == SourceStatus.connected
+        ? conn!.adapter.fileSystem
+        : null;
+  }
+
+  Future<void> _cancelTransfers(String id) async {
+    final transfers = _activeTransfers.remove(id);
+    if (transfers == null) return;
+    await Future.wait(transfers.map((transfer) => transfer.cancel()));
+  }
+
+  Future<void> _cancelAllTransfers() async {
+    final ids = _activeTransfers.keys.toList(growable: false);
+    await Future.wait(ids.map(_cancelTransfers));
   }
 
   /// 根据文件扩展名获取 MIME 类型
@@ -330,7 +395,7 @@ class MediaProxyServer {
 
 /// 代理文件信息
 class _ProxyFileInfo {
-  const _ProxyFileInfo({
+  _ProxyFileInfo({
     required this.sourceId,
     required this.filePath,
     required this.fileSize,
@@ -339,4 +404,47 @@ class _ProxyFileInfo {
   final String sourceId;
   final String filePath;
   final int fileSize;
+
+  Future<int>? _resolvedFileSize;
+
+  Future<int> resolveFileSize(NasFileSystem fileSystem) =>
+      _resolvedFileSize ??= _loadFileSize(fileSystem);
+
+  Future<int> _loadFileSize(NasFileSystem fileSystem) async {
+    try {
+      final actual = await fileSystem.getFileInfo(filePath);
+      if (!actual.isDirectory && actual.size >= 0) return actual.size;
+    } on Exception catch (e, st) {
+      if (fileSize < 0) rethrow;
+      AppError.ignore(e, st, 'MediaProxyServer: 获取真实文件大小失败，回退媒体库元数据');
+    }
+    return fileSize;
+  }
+}
+
+class _ProxyTransfer {
+  _ProxyTransfer(this._iterator, this._response);
+
+  final StreamIterator<List<int>> _iterator;
+  final HttpResponse _response;
+  bool _isCancelled = false;
+
+  bool get isCancelled => _isCancelled;
+
+  Future<void> cancel() async {
+    if (_isCancelled) return;
+    _isCancelled = true;
+    try {
+      await _iterator.cancel();
+      // ignore: avoid_catches_without_on_clauses
+    } catch (_) {
+      // 底层连接可能已经被播放器关闭。
+    }
+    try {
+      await _response.close();
+      // ignore: avoid_catches_without_on_clauses
+    } catch (_) {
+      // HTTP 客户端可能已经断开。
+    }
+  }
 }
