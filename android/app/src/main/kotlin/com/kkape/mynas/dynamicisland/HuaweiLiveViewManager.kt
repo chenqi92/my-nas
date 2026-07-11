@@ -85,15 +85,25 @@ class HuaweiLiveViewManager(context: Context) : DynamicIslandManager(context) {
         }
 
         // 检查是否是 HarmonyOS 或 EMUI 14+
-        if (isHarmonyOS()) {
-            Log.d(TAG, "HarmonyOS detected, Live View Kit supported")
-            return true
+        val platformSupported = if (isHarmonyOS()) {
+            Log.d(TAG, "HarmonyOS detected")
+            true
+        } else {
+            val emuiVersion = getEmuiVersion()
+            val supported = emuiVersion >= MIN_EMUI_VERSION
+            Log.d(TAG, "EMUI version: $emuiVersion, platform supported: $supported")
+            supported
         }
 
-        val emuiVersion = getEmuiVersion()
-        val supported = emuiVersion >= MIN_EMUI_VERSION
-        Log.d(TAG, "EMUI version: $emuiVersion, supported: $supported")
-        return supported
+        if (!platformSupported) return false
+
+        // OS support alone is insufficient. Returning true before the SDK is
+        // present selects this manager even though every operation is a no-op,
+        // preventing DynamicIslandFactory from using the floating-window
+        // implementation.
+        val sdkAvailable = isLiveViewKitAvailable()
+        Log.d(TAG, "Live View Kit SDK available: $sdkAvailable")
+        return sdkAvailable
     }
 
     override fun hasPermission(): Boolean {
@@ -235,12 +245,12 @@ class HuaweiLiveViewManager(context: Context) : DynamicIslandManager(context) {
     private fun isLiveViewKitAvailable(): Boolean {
         return try {
             // 检查 Live View Kit 类是否存在
-            // Class.forName("com.huawei.hms.liveview.LiveViewKit")
-            // true
-
-            // 目前 SDK 未集成，返回 false
-            false
+            Class.forName("com.huawei.hms.liveview.LiveViewKit")
+            true
         } catch (e: ClassNotFoundException) {
+            false
+        } catch (e: LinkageError) {
+            Log.w(TAG, "Live View Kit is present but cannot be linked", e)
             false
         }
     }

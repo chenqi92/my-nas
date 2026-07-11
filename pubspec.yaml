@@ -244,7 +244,8 @@ msix_config:
   display_name: MyNAS
   publisher_display_name: kkape
   identity_name: com.kkape.mynas
-  msix_version: 1.0.1.0
+  # 未单独指定 msix_version：msix 会从顶层 version 自动生成 1.2.0.0，
+  # 后续发布也不会再与文件名/应用版本脱节。
   capabilities: internetClient, privateNetworkClientServer
   languages: zh-cn, en-us
 

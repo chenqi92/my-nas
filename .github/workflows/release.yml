@@ -193,12 +193,9 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      # 首选：配置以下仓库 secret，产出正式签名、可覆盖升级的 APK：
+      # 发布构建必须配置正式签名，确保产物可持续升级和正常分发：
       # - ANDROID_KEYSTORE_BASE64: base64-encoded release keystore
       # - ANDROID_KEY_PROPERTIES_BASE64: base64-encoded key.properties
-      # 若两者均缺失，则降级用 debug key 签名 release APK，让 Android 仍能出产物。
-      # 注意：debug 签名的包无法覆盖安装到正式签名的包之上，且 debug key 每台 runner
-      # 不固定，仅适合全新安装测试，不适合长期分发。
       - name: Restore Android release signing
         id: signing
         shell: bash
@@ -208,13 +205,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          # secret 缺失 -> 降级到 debug 签名兜底。
-          # （secret 存在但内容损坏仍会在下面硬失败。）
           if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ] || [ -z "${ANDROID_KEY_PROPERTIES_BASE64:-}" ]; then
-            echo "signing=unavailable" >> "$GITHUB_OUTPUT"
-            echo "ALLOW_DEBUG_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
-            echo "::warning::Android 签名 secret 缺失 —— 将用 debug key 签名 release APK，该包无法覆盖升级到正式签名的版本。"
-            exit 0
+            echo "::error::Android release signing secrets are required for distributable builds"
+            exit 1
           fi
 
           umask 077
@@ -353,6 +346,67 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Install iOS distribution signing material
+        shell: bash
+        env:
+          APPLE_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+          APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+          IOS_APP_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_APP_PROVISIONING_PROFILE_BASE64 }}
+          IOS_WIDGETS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_WIDGETS_PROVISIONING_PROFILE_BASE64 }}
+          IOS_LIVE_ACTIVITY_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_LIVE_ACTIVITY_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+          APPLE_API_PRIVATE_KEY_BASE64: ${{ secrets.APPLE_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          for name in \
+            APPLE_DISTRIBUTION_CERTIFICATE_BASE64 \
+            APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD \
+            APPLE_KEYCHAIN_PASSWORD \
+            IOS_APP_PROVISIONING_PROFILE_BASE64 \
+            IOS_WIDGETS_PROVISIONING_PROFILE_BASE64 \
+            IOS_LIVE_ACTIVITY_PROVISIONING_PROFILE_BASE64 \
+            APPLE_API_KEY_ID \
+            APPLE_API_ISSUER_ID \
+            APPLE_API_PRIVATE_KEY_BASE64; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Required iOS distribution secret is missing: $name"
+              exit 1
+            fi
+          done
+
+          CERTIFICATE_PATH="$RUNNER_TEMP/apple-distribution.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/ios-signing.keychain-db"
+          PROFILES_PATH="$HOME/Library/MobileDevice/Provisioning Profiles"
+          API_KEYS_PATH="$HOME/.appstoreconnect/private_keys"
+
+          printf '%s' "$APPLE_DISTRIBUTION_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" \
+            -P "$APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -q "Apple Distribution"
+
+          mkdir -p "$PROFILES_PATH" "$API_KEYS_PATH"
+          printf '%s' "$IOS_APP_PROVISIONING_PROFILE_BASE64" | base64 --decode \
+            > "$PROFILES_PATH/mynas-app.mobileprovision"
+          printf '%s' "$IOS_WIDGETS_PROVISIONING_PROFILE_BASE64" | base64 --decode \
+            > "$PROFILES_PATH/mynas-widgets.mobileprovision"
+          printf '%s' "$IOS_LIVE_ACTIVITY_PROVISIONING_PROFILE_BASE64" | base64 --decode \
+            > "$PROFILES_PATH/mynas-live-activity.mobileprovision"
+          printf '%s' "$APPLE_API_PRIVATE_KEY_BASE64" | base64 --decode \
+            > "$API_KEYS_PATH/AuthKey_${APPLE_API_KEY_ID}.p8"
+          chmod 600 "$CERTIFICATE_PATH" "$API_KEYS_PATH/AuthKey_${APPLE_API_KEY_ID}.p8"
+
+          echo "APPLE_CI_KEYCHAIN=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          echo "APPLE_API_KEY_PATH=$API_KEYS_PATH/AuthKey_${APPLE_API_KEY_ID}.p8" >> "$GITHUB_ENV"
+
       - name: Get dependencies
         run: flutter pub get
 
@@ -367,22 +421,49 @@ jobs:
           pod repo update || true
           pod install --repo-update
 
-      - name: Build iOS (no codesign)
-        run: flutter build ios --release --no-codesign
+      - name: Build signed App Store IPA
+        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
-      - name: Create unsigned IPA
+      - name: Verify IPA signatures
+        shell: bash
         run: |
-          cd build/ios/iphoneos
-          mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -r MyNAS-${{ needs.extract-version.outputs.version }}-ios-arm64.ipa Payload
+          set -euo pipefail
+          IPA_PATH=$(find build/ios/ipa -name '*.ipa' -type f -print -quit)
+          if [ -z "$IPA_PATH" ]; then
+            echo "::error::Signed IPA was not generated"
+            exit 1
+          fi
+          rm -rf "$RUNNER_TEMP/ipa-verify"
+          unzip -q "$IPA_PATH" -d "$RUNNER_TEMP/ipa-verify"
+          codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/ipa-verify/Payload/Runner.app"
 
-      - name: Upload iOS artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ipa
-          path: build/ios/iphoneos/MyNAS-*.ipa
-          retention-days: 3
+      # App Store-signed IPAs are not directly installable from GitHub. Submit
+      # the build to App Store Connect instead of publishing a misleading IPA.
+      - name: Upload iOS build to App Store Connect
+        shell: bash
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          IPA_PATH=$(find build/ios/ipa -name '*.ipa' -type f -print -quit)
+          xcrun altool --upload-app --type ios --file "$IPA_PATH" \
+            --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER_ID"
+
+      - name: Remove iOS signing material
+        if: always()
+        shell: bash
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+        run: |
+          if [ -n "${APPLE_CI_KEYCHAIN:-}" ]; then
+            security delete-keychain "$APPLE_CI_KEYCHAIN" 2>/dev/null || true
+          fi
+          rm -f "$RUNNER_TEMP/apple-distribution.p12"
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/mynas-app.mobileprovision"
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/mynas-widgets.mobileprovision"
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/mynas-live-activity.mobileprovision"
+          rm -f "$HOME/.appstoreconnect/private_keys/AuthKey_${APPLE_API_KEY_ID}.p8"
 
   # 构建 macOS Universal Binary
   # 之前用过 matrix 同时构建 Intel(x86_64) 和 Apple Silicon(arm64)，但 GitHub
@@ -406,6 +487,62 @@ jobs:
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
+
+      - name: Install macOS Developer ID signing material
+        shell: bash
+        env:
+          MACOS_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+          MACOS_APP_PROVISIONING_PROFILE_BASE64: ${{ secrets.MACOS_APP_PROVISIONING_PROFILE_BASE64 }}
+          MACOS_WIDGET_PROVISIONING_PROFILE_BASE64: ${{ secrets.MACOS_WIDGET_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+          APPLE_API_PRIVATE_KEY_BASE64: ${{ secrets.APPLE_API_PRIVATE_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          for name in \
+            MACOS_DEVELOPER_ID_CERTIFICATE_BASE64 \
+            MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD \
+            APPLE_KEYCHAIN_PASSWORD \
+            MACOS_APP_PROVISIONING_PROFILE_BASE64 \
+            MACOS_WIDGET_PROVISIONING_PROFILE_BASE64 \
+            APPLE_API_KEY_ID \
+            APPLE_API_ISSUER_ID \
+            APPLE_API_PRIVATE_KEY_BASE64; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::Required macOS distribution secret is missing: $name"
+              exit 1
+            fi
+          done
+
+          CERTIFICATE_PATH="$RUNNER_TEMP/developer-id-application.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/macos-signing.keychain-db"
+          PROFILES_PATH="$HOME/Library/MobileDevice/Provisioning Profiles"
+          API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+
+          printf '%s' "$MACOS_DEVELOPER_ID_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" \
+            -P "$MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -q "Developer ID Application"
+
+          mkdir -p "$PROFILES_PATH"
+          printf '%s' "$MACOS_APP_PROVISIONING_PROFILE_BASE64" | base64 --decode \
+            > "$PROFILES_PATH/mynas-macos-app.provisionprofile"
+          printf '%s' "$MACOS_WIDGET_PROVISIONING_PROFILE_BASE64" | base64 --decode \
+            > "$PROFILES_PATH/mynas-macos-widgets.provisionprofile"
+          printf '%s' "$APPLE_API_PRIVATE_KEY_BASE64" | base64 --decode > "$API_KEY_PATH"
+          chmod 600 "$CERTIFICATE_PATH" "$API_KEY_PATH"
+
+          echo "APPLE_CI_KEYCHAIN=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          echo "APPLE_API_KEY_PATH=$API_KEY_PATH" >> "$GITHUB_ENV"
 
       # 验证 checkout 完整性
       - name: Verify checkout
@@ -485,20 +622,27 @@ jobs:
           echo "=== Flutter doctor ==="
           flutter doctor -v
 
-      # 禁用代码签名以在 CI 环境中构建
-      - name: Disable code signing
+      - name: Configure Developer ID signing
         run: |
-          # 修改 Xcode 项目配置，禁用代码签名
-          sed -i '' 's/CODE_SIGN_IDENTITY = ".*";/CODE_SIGN_IDENTITY = "-";/g' macos/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/DEVELOPMENT_TEAM = .*;/DEVELOPMENT_TEAM = "";/g' macos/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' macos/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = ".*";/PROVISIONING_PROFILE_SPECIFIER = "";/g' macos/Runner.xcodeproj/project.pbxproj
-
-          # 对于 Release 配置，确保禁用签名
-          echo "Code signing disabled for CI build"
+          sed -i '' \
+            's/CODE_SIGN_IDENTITY = "-";/CODE_SIGN_IDENTITY = "Developer ID Application";/g' \
+            macos/Runner.xcodeproj/project.pbxproj
+          sed -i '' \
+            's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "Developer ID Application";/g' \
+            macos/Runner.xcodeproj/project.pbxproj
+          sed -i '' \
+            's/"CODE_SIGN_IDENTITY\[sdk=macosx\*\]" = "Apple Development";/"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";/g' \
+            macos/Runner.xcodeproj/project.pbxproj
 
       - name: Build macOS
         run: flutter build macos --release
+
+      - name: Verify macOS code signature
+        run: |
+          codesign --verify --deep --strict --verbose=2 \
+            build/macos/Build/Products/Release/my_nas.app
+          codesign --display --verbose=4 \
+            build/macos/Build/Products/Release/my_nas.app
 
       # 验证产物为 universal binary（应同时包含 x86_64 和 arm64 切片）
       - name: Verify universal binary
@@ -510,7 +654,10 @@ jobs:
           fi
 
       - name: Create DMG
+        shell: bash
         run: |
+          set -euo pipefail
+          DMG="MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg"
           brew install create-dmg
           create-dmg \
             --volname "MyNAS" \
@@ -520,14 +667,28 @@ jobs:
             --icon "my_nas.app" 150 185 \
             --hide-extension "my_nas.app" \
             --app-drop-link 450 185 \
-            "MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg" \
-            "build/macos/Build/Products/Release/my_nas.app" || true
+            "$DMG" \
+            "build/macos/Build/Products/Release/my_nas.app" || test -f "$DMG"
 
-          # 如果 create-dmg 失败，创建简单的 zip
-          if [ ! -f "MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg" ]; then
-            cd build/macos/Build/Products/Release
-            zip -r ../../../../../MyNAS-${{ needs.extract-version.outputs.version }}-macos.zip my_nas.app
-          fi
+          codesign --force --timestamp --sign "Developer ID Application" "$DMG"
+          codesign --verify --strict --verbose=2 "$DMG"
+
+      - name: Notarize and staple macOS DMG
+        shell: bash
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          DMG="MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg"
+          xcrun notarytool submit "$DMG" \
+            --key "$APPLE_API_KEY_PATH" \
+            --key-id "$APPLE_API_KEY_ID" \
+            --issuer "$APPLE_API_ISSUER_ID" \
+            --wait
+          xcrun stapler staple "$DMG"
+          xcrun stapler validate "$DMG"
+          spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG"
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
@@ -536,7 +697,20 @@ jobs:
           retention-days: 3
           path: |
             MyNAS-*.dmg
-            MyNAS-*.zip
+
+      - name: Remove macOS signing material
+        if: always()
+        shell: bash
+        run: |
+          if [ -n "${APPLE_CI_KEYCHAIN:-}" ]; then
+            security delete-keychain "$APPLE_CI_KEYCHAIN" 2>/dev/null || true
+          fi
+          rm -f "$RUNNER_TEMP/developer-id-application.p12"
+          if [ -n "${APPLE_API_KEY_PATH:-}" ]; then
+            rm -f "$APPLE_API_KEY_PATH"
+          fi
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/mynas-macos-app.provisionprofile"
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/mynas-macos-widgets.provisionprofile"
 
   # 构建 Windows x64
   build-windows:
@@ -549,6 +723,41 @@ jobs:
       CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
     steps:
       - uses: actions/checkout@v4
+
+      - name: Restore Windows code-signing certificate
+        shell: pwsh
+        env:
+          WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 }}
+          WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64)) {
+            throw "Required Windows distribution secret is missing: WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64"
+          }
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD)) {
+            throw "Required Windows distribution secret is missing: WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD"
+          }
+
+          $certificatePath = Join-Path $env:RUNNER_TEMP "windows-code-signing.pfx"
+          [IO.File]::WriteAllBytes(
+            $certificatePath,
+            [Convert]::FromBase64String($env:WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64)
+          )
+          $certificate = [Security.Cryptography.X509Certificates.X509Certificate2]::new(
+            $certificatePath,
+            $env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD
+          )
+          if (-not $certificate.HasPrivateKey) {
+            throw "The Windows signing certificate does not contain a private key"
+          }
+
+          $signTool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName -Descending | Select-Object -First 1
+          if ($null -eq $signTool) {
+            throw "signtool.exe was not found"
+          }
+
+          "WINDOWS_CERTIFICATE_PATH=$certificatePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "WINDOWS_CERTIFICATE_SUBJECT=$($certificate.Subject)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "WINDOWS_SIGNTOOL=$($signTool.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -590,16 +799,36 @@ jobs:
       # 重试构建（如果失败，清理后重试一次）
       - name: Build Windows x64 (with retry)
         if: steps.check_windows.outputs.supported == 'true'
+        shell: pwsh
         run: |
-          try {
-            flutter build windows --release
-          } catch {
+          flutter build windows --release
+          if ($LASTEXITCODE -ne 0) {
             Write-Host "First build attempt failed, cleaning and retrying..."
             if (Test-Path build\windows) { Remove-Item -Recurse -Force build\windows }
             flutter clean
+            if ($LASTEXITCODE -ne 0) { throw "Flutter clean failed before Windows retry" }
             flutter pub get
+            if ($LASTEXITCODE -ne 0) { throw "Dependency restore failed before Windows retry" }
             flutter build windows --release
+            if ($LASTEXITCODE -ne 0) { throw "Windows release build failed after retry" }
           }
+
+      - name: Sign Windows application binaries
+        if: steps.check_windows.outputs.supported == 'true'
+        shell: pwsh
+        env:
+          WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD }}
+        run: |
+          $binaries = Get-ChildItem "build\windows\x64\runner\Release" -Recurse -File -Include *.exe,*.dll
+          if ($binaries.Count -eq 0) {
+            throw "No Windows application binaries were found to sign"
+          }
+          foreach ($binary in $binaries) {
+            & $env:WINDOWS_SIGNTOOL sign /fd SHA256 /f $env:WINDOWS_CERTIFICATE_PATH /p $env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD /tr http://timestamp.digicert.com /td SHA256 $binary.FullName
+            if ($LASTEXITCODE -ne 0) { throw "Failed to sign $($binary.FullName)" }
+          }
+          & $env:WINDOWS_SIGNTOOL verify /pa /v "build\windows\x64\runner\Release\my_nas.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Windows executable signature verification failed" }
 
       - name: Create ZIP (Portable)
         if: steps.check_windows.outputs.supported == 'true'
@@ -609,10 +838,31 @@ jobs:
       # 创建 MSIX 安装包
       - name: Create MSIX installer
         if: steps.check_windows.outputs.supported == 'true'
+        shell: pwsh
         run: |
           dart pub global activate msix
-          dart pub global run msix:create --build-windows false --output-path . --output-name MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64
-        continue-on-error: true
+          dart pub global run msix:create --build-windows false --output-path . --output-name MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64 --sign-msix false --publisher $env:WINDOWS_CERTIFICATE_SUBJECT
+          if ($LASTEXITCODE -ne 0) { throw "MSIX creation failed" }
+
+          $msix = "MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64.msix"
+          $manifestDirectory = Join-Path $env:RUNNER_TEMP "mynas-msix-manifest"
+          if (Test-Path $manifestDirectory) { Remove-Item -Recurse -Force $manifestDirectory }
+          [IO.Compression.ZipFile]::ExtractToDirectory($msix, $manifestDirectory)
+          [xml]$manifest = Get-Content (Join-Path $manifestDirectory "AppxManifest.xml")
+          $baseVersion = "${{ needs.extract-version.outputs.version }}".Split("-")[0]
+          $expectedMsixVersion = "$baseVersion.0"
+          $actualMsixVersion = $manifest.Package.Identity.Version
+          if ($actualMsixVersion -ne $expectedMsixVersion) {
+            throw "MSIX manifest version $actualMsixVersion does not match release version $expectedMsixVersion"
+          }
+          Remove-Item -Recurse -Force $manifestDirectory
+
+          & $env:WINDOWS_SIGNTOOL sign /fd SHA256 /f $env:WINDOWS_CERTIFICATE_PATH /p $env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD /tr http://timestamp.digicert.com /td SHA256 $msix
+          if ($LASTEXITCODE -ne 0) { throw "MSIX signing failed" }
+          & $env:WINDOWS_SIGNTOOL verify /pa /v $msix
+          if ($LASTEXITCODE -ne 0) { throw "MSIX signature verification failed" }
+        env:
+          WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD }}
 
       # 创建 EXE 安装包 (使用 Inno Setup)
       - name: Install Inno Setup
@@ -656,9 +906,18 @@ jobs:
 
       - name: Build EXE installer
         if: steps.check_windows.outputs.supported == 'true'
+        shell: pwsh
+        env:
+          WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD }}
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
-        continue-on-error: true
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup build failed" }
+
+          $installer = "MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe"
+          & $env:WINDOWS_SIGNTOOL sign /fd SHA256 /f $env:WINDOWS_CERTIFICATE_PATH /p $env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD /tr http://timestamp.digicert.com /td SHA256 $installer
+          if ($LASTEXITCODE -ne 0) { throw "Windows installer signing failed" }
+          & $env:WINDOWS_SIGNTOOL verify /pa /v $installer
+          if ($LASTEXITCODE -ne 0) { throw "Windows installer signature verification failed" }
 
       - name: Upload Windows artifact
         if: steps.check_windows.outputs.supported == 'true'
@@ -670,6 +929,14 @@ jobs:
             MyNAS-*-windows-*.zip
             MyNAS-*-windows-*.msix
             MyNAS-*-windows-*-setup.exe
+
+      - name: Remove Windows signing material
+        if: always()
+        shell: pwsh
+        run: |
+          if (-not [string]::IsNullOrWhiteSpace($env:WINDOWS_CERTIFICATE_PATH)) {
+            Remove-Item -Force $env:WINDOWS_CERTIFICATE_PATH -ErrorAction SilentlyContinue
+          }
 
   # 构建 Linux x64
   build-linux:
@@ -1068,19 +1335,19 @@ jobs:
           STATUS=""
 
           if [ "${{ needs.build-android.result }}" == "success" ]; then
-            STATUS="${STATUS}✅ Android\n"
+            STATUS="${STATUS}✅ Android（正式签名）\n"
           else
             STATUS="${STATUS}❌ Android (构建失败)\n"
           fi
 
           if [ "${{ needs.build-ios.result }}" == "success" ]; then
-            STATUS="${STATUS}✅ iOS\n"
+            STATUS="${STATUS}✅ iOS（已签名并提交 App Store Connect）\n"
           else
             STATUS="${STATUS}❌ iOS (构建失败)\n"
           fi
 
           if [ "${{ needs.build-macos.result }}" == "success" ]; then
-            STATUS="${STATUS}✅ macOS\n"
+            STATUS="${STATUS}✅ macOS（Developer ID 签名并已公证）\n"
           elif [ "${{ needs.build-macos.result }}" == "skipped" ]; then
             STATUS="${STATUS}⏭️ macOS (跳过 - 平台未配置)\n"
           else
@@ -1088,7 +1355,7 @@ jobs:
           fi
 
           if [ "${{ needs.build-windows.result }}" == "success" ]; then
-            STATUS="${STATUS}✅ Windows\n"
+            STATUS="${STATUS}✅ Windows（Authenticode 签名）\n"
           elif [ "${{ needs.build-windows.result }}" == "skipped" ]; then
             STATUS="${STATUS}⏭️ Windows (跳过 - 平台未配置)\n"
           else
@@ -1141,7 +1408,7 @@ jobs:
             | 平台 | 推荐版本 | 下载链接 |
             |------|----------|----------|
             | **Android** | arm64-v8a | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-android-arm64-v8a.apk](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-android-arm64-v8a.apk) |
-            | **iOS** | arm64 | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-ios-arm64.ipa](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-ios-arm64.ipa) |
+            | **iOS** | App Store | 已提交 App Store Connect（审核/上架状态以后台为准） |
             | **macOS** | universal (Intel + Apple Silicon) | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg) |
             | **Windows** | x64 安装包 | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe) |
             | **Linux** | x64 | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-linux-x64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-linux-x64.tar.gz) |
@@ -1166,9 +1433,9 @@ jobs:
             <details>
             <summary>iOS (点击展开)</summary>
 
-            | 架构 | 说明 | 下载 |
-            |------|------|------|
-            | arm64 | iPhone/iPad (未签名) | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-ios-arm64.ipa) |
+            iOS 构建使用 Apple Distribution 证书签名，并由发布工作流提交到
+            App Store Connect。App Store 签名 IPA 不能作为 GitHub 附件直接安装，
+            TestFlight 与正式上架状态请以 App Store Connect 为准。
 
             </details>
 
@@ -1188,7 +1455,7 @@ jobs:
             |------|------|------|
             | 安装包 | EXE 安装程序 (推荐) | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe) |
             | 便携版 | 解压即用，无需安装 | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-portable.zip) |
-            | MSIX | Windows 应用商店格式 | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64.msix) |
+            | MSIX | Authenticode 签名安装包 | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64.msix) |
 
             </details>
 
@@ -1203,9 +1470,9 @@ jobs:
             </details>
 
             ### ⚠️ 注意事项
-            - **iOS**: IPA 未签名，需要自行签名后安装（AltStore/Sideloadly）
-            - **macOS**: 应用未签名，首次打开需要在「系统设置 → 隐私与安全性」中允许
-            - **Windows**: MSIX 安装包需要信任开发者证书或开启开发者模式
+            - **iOS**: 工作流只负责签名并提交 App Store Connect；TestFlight/正式上架仍取决于 Apple 处理与审核状态
+            - **macOS**: DMG 已使用 Developer ID 签名、Apple 公证并 stapling
+            - **Windows**: EXE、DLL、MSIX 与 Inno 安装程序均使用时间戳 Authenticode 签名
             - **Linux**: 需要安装依赖：`sudo apt install libmpv1 libsecret-1-0`
 
         env:

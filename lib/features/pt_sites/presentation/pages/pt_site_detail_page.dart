@@ -200,7 +200,8 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
                     ],
                   ),
                 ),
-              if (connection.status == PTSiteConnectionStatus.connected)
+              if (connection.status == PTSiteConnectionStatus.connected &&
+                  (connection.api?.supportsTransferStats ?? false))
                 PopupMenuItem(
                   value: 'stats',
                   child: Row(

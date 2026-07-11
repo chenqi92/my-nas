@@ -29,6 +29,12 @@ abstract class PTSiteApi {
   final SourceEntity source;
   final http.Client _client;
 
+  /// Whether this implementation can provide transfer history/statistics.
+  ///
+  /// Generic tracker pages do not expose a stable, portable endpoint for this
+  /// data. Implementations must opt in when they have a real parser/API.
+  bool get supportsTransferStats => false;
+
   /// 获取基础 URL
   String get baseUrl {
     // 如果 host 已经包含协议，解析并使用其 scheme 和 host
@@ -118,6 +124,9 @@ class MTeamApi extends PTSiteApi {
   }
 
   final http.Client _ioClient;
+
+  @override
+  bool get supportsTransferStats => true;
 
   @override
   Map<String, String> get headers {

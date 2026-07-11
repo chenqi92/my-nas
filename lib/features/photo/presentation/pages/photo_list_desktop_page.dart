@@ -87,7 +87,6 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                 label: l.photoPageTabTimeline,
               ),
               AppSegmentedOption(value: 'albums', label: l.photoPageTabAlbums),
-              AppSegmentedOption(value: 'map', label: l.photoPageTabMap),
             ],
           ),
         ],
@@ -185,12 +184,7 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
             ),
             const SizedBox(height: 8),
           ],
-          if (_view == 'map')
-            DesktopComingSoon(
-              icon: Icons.map_outlined,
-              message: l.photoPageMapComingSoon,
-            )
-          else if (_view == 'albums')
+          if (_view == 'albums')
             if (_albumFolder != null)
               _AlbumDetail(
                 state: state,

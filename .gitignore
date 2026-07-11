@@ -194,6 +194,9 @@ key.properties
 # Claude Code
 .claude
 
+# Codex 自动生成的线程环境覆盖；保留已跟踪的 environment.toml
+.codex/environments/environment-*.toml
+
 # Development docs (not for public)
 # /docs/
 
