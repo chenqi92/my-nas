@@ -23,13 +23,22 @@ enum DownloadStatus {
 /// 由 [DownloadService.openFile] 和 [DownloadService.openDownloadDirectory] 返回，
 /// 让调用方决定是否给用户弹 toast。
 class DownloadOpenResult {
-  const DownloadOpenResult({
-    required this.success,
-    this.message,
-  });
+  const DownloadOpenResult({required this.success, this.message});
 
   final bool success;
   final String? message;
+}
+
+class _ContentRange {
+  const _ContentRange({
+    required this.start,
+    required this.end,
+    required this.total,
+  });
+
+  final int start;
+  final int end;
+  final int? total;
 }
 
 /// 下载任务
@@ -54,8 +63,7 @@ class DownloadTask {
   DownloadStatus status;
   String? errorMessage;
 
-  double get progress =>
-      totalBytes > 0 ? downloadedBytes / totalBytes : 0;
+  double get progress => totalBytes > 0 ? downloadedBytes / totalBytes : 0;
 
   String get progressText {
     if (totalBytes == 0) return '0%';
@@ -81,17 +89,16 @@ class DownloadTask {
     int? downloadedBytes,
     DownloadStatus? status,
     String? errorMessage,
-  }) =>
-      DownloadTask(
-        id: id,
-        url: url,
-        fileName: fileName,
-        savePath: savePath,
-        totalBytes: totalBytes ?? this.totalBytes,
-        downloadedBytes: downloadedBytes ?? this.downloadedBytes,
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
+  }) => DownloadTask(
+    id: id,
+    url: url,
+    fileName: fileName,
+    savePath: savePath,
+    totalBytes: totalBytes ?? this.totalBytes,
+    downloadedBytes: downloadedBytes ?? this.downloadedBytes,
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+  );
 }
 
 /// 下载服务
@@ -107,6 +114,8 @@ class DownloadService {
   final Dio _dio = Dio();
   final Map<String, DownloadTask> _tasks = {};
   final Map<String, CancelToken> _cancelTokens = {};
+  final Map<String, Completer<void>> _downloadCompletions = {};
+  final Map<String, int> _taskEpochs = {};
 
   final _tasksController = StreamController<List<DownloadTask>>.broadcast();
 
@@ -160,10 +169,18 @@ class DownloadService {
   /// 开始下载
   Future<void> startDownload(String taskId) async {
     final task = _tasks[taskId];
-    if (task == null) return;
+    if (task == null ||
+        task.status == DownloadStatus.downloading ||
+        _cancelTokens.containsKey(taskId)) {
+      return;
+    }
 
     final cancelToken = CancelToken();
+    final completion = Completer<void>();
+    final epoch = (_taskEpochs[taskId] ?? 0) + 1;
+    _taskEpochs[taskId] = epoch;
     _cancelTokens[taskId] = cancelToken;
+    _downloadCompletions[taskId] = completion;
 
     _updateTask(taskId, status: DownloadStatus.downloading);
 
@@ -171,66 +188,204 @@ class DownloadService {
       // 检查是否支持断点续传
       var startBytes = 0;
       final file = File(task.savePath);
+      await file.parent.create(recursive: true);
       if (await file.exists()) {
         startBytes = await file.length();
       }
 
-      final response = await _dio.download(
+      final response = await _dio.get<ResponseBody>(
         task.url,
-        task.savePath,
         cancelToken: cancelToken,
-        deleteOnError: false,
         options: Options(
+          responseType: ResponseType.stream,
           headers: startBytes > 0 ? {'Range': 'bytes=$startBytes-'} : null,
         ),
-        onReceiveProgress: (received, total) {
-          if (total != -1) {
-            _updateTask(
-              taskId,
-              downloadedBytes: startBytes + received,
-              totalBytes: startBytes + total,
-            );
-          }
-        },
       );
 
-      if (response.statusCode == 200 || response.statusCode == 206) {
-        _updateTask(taskId, status: DownloadStatus.completed);
-      } else {
+      final responseBody = response.data;
+      if (!_isActiveDownload(taskId, cancelToken, epoch)) {
+        if (responseBody != null) await _cancelResponseStream(responseBody);
+        return;
+      }
+      final statusCode = response.statusCode ?? 0;
+      if (statusCode != 200 && statusCode != 206) {
+        if (responseBody != null) await _cancelResponseStream(responseBody);
         _updateTask(
           taskId,
           status: DownloadStatus.failed,
-          errorMessage: appL10n.downloadServiceDownloadFailed(response.statusCode ?? 0),
+          errorMessage: appL10n.downloadServiceDownloadFailed(statusCode),
+        );
+        return;
+      }
+
+      if (responseBody == null) {
+        throw Exception('Empty download response');
+      }
+
+      final contentRangeValue = response.headers.value('content-range');
+      final contentRange = _parseContentRange(contentRangeValue);
+      if (statusCode == 206) {
+        if (contentRange == null ||
+            contentRange.total == null ||
+            contentRange.start != startBytes) {
+          await _cancelResponseStream(responseBody);
+          throw FormatException(
+            'Invalid Content-Range for offset $startBytes: $contentRangeValue',
+          );
+        }
+        final expectedResponseLength =
+            contentRange.end - contentRange.start + 1;
+        if (responseBody.contentLength > 0 &&
+            responseBody.contentLength != expectedResponseLength) {
+          await _cancelResponseStream(responseBody);
+          throw FormatException(
+            'Content-Length does not match Content-Range: '
+            '${responseBody.contentLength}/$expectedResponseLength',
+          );
+        }
+      } else if (startBytes > 0) {
+        // 服务器忽略 Range 时必须从头覆盖，不能把完整响应追加到旧文件。
+        startBytes = 0;
+      }
+
+      final isAppending = startBytes > 0 && statusCode == 206;
+      final contentLength = responseBody.contentLength;
+      final totalBytes = _resolveDownloadTotalBytes(
+        contentRange,
+        contentLength,
+        isAppending ? startBytes : 0,
+      );
+      if (totalBytes > 0) {
+        _updateTask(
+          taskId,
+          downloadedBytes: startBytes,
+          totalBytes: totalBytes,
         );
       }
+
+      if (!_isActiveDownload(taskId, cancelToken, epoch)) {
+        await _cancelResponseStream(responseBody);
+        return;
+      }
+      final sink = file.openWrite(
+        mode: isAppending ? FileMode.append : FileMode.write,
+      );
+      var received = 0;
+      try {
+        await for (final chunk in responseBody.stream) {
+          if (!_isActiveDownload(taskId, cancelToken, epoch)) return;
+          sink.add(chunk);
+          received += chunk.length;
+          _updateTask(
+            taskId,
+            downloadedBytes: startBytes + received,
+            totalBytes: totalBytes,
+          );
+        }
+      } finally {
+        await sink.close();
+      }
+
+      if (!_isActiveDownload(taskId, cancelToken, epoch)) return;
+      final finalLength = await file.length();
+      if (!_isActiveDownload(taskId, cancelToken, epoch)) return;
+      if (totalBytes > 0 && finalLength != totalBytes) {
+        throw Exception(
+          'Download length mismatch: $finalLength/$totalBytes bytes',
+        );
+      }
+
+      _updateTask(
+        taskId,
+        status: DownloadStatus.completed,
+        downloadedBytes: finalLength,
+        totalBytes: totalBytes > 0 ? totalBytes : finalLength,
+      );
     } on DioException catch (e, st) {
-      if (e.type == DioExceptionType.cancel) {
+      if (e.type == DioExceptionType.cancel ||
+          !_isActiveDownload(taskId, cancelToken, epoch)) {
         // 用户取消操作，不需要上报
         AppError.ignore(e, st, 'User cancelled download');
         return;
       }
-      AppError.handle(e, st, 'startDownload', {'taskId': taskId, 'url': task.url});
+      AppError.handle(e, st, 'startDownload', {
+        'taskId': taskId,
+        'url': task.url,
+      });
       _updateTask(
         taskId,
         status: DownloadStatus.failed,
         errorMessage: appL10n.downloadServiceDownloadFailedGeneric,
       );
     } on Exception catch (e, st) {
-      AppError.handle(e, st, 'startDownload', {'taskId': taskId, 'url': task.url});
+      if (!_isActiveDownload(taskId, cancelToken, epoch)) return;
+      AppError.handle(e, st, 'startDownload', {
+        'taskId': taskId,
+        'url': task.url,
+      });
       _updateTask(
         taskId,
         status: DownloadStatus.failed,
         errorMessage: e.toString(),
       );
     } finally {
-      _cancelTokens.remove(taskId);
+      if (identical(_cancelTokens[taskId], cancelToken)) {
+        _cancelTokens.remove(taskId);
+      }
+      if (identical(_downloadCompletions[taskId], completion)) {
+        _downloadCompletions.remove(taskId);
+      }
+      if (!completion.isCompleted) completion.complete();
     }
+  }
+
+  bool _isActiveDownload(String taskId, CancelToken token, int epoch) =>
+      !token.isCancelled &&
+      identical(_cancelTokens[taskId], token) &&
+      _taskEpochs[taskId] == epoch &&
+      _tasks[taskId]?.status == DownloadStatus.downloading;
+
+  Future<void> _cancelResponseStream(ResponseBody responseBody) async {
+    try {
+      final subscription = responseBody.stream.listen((_) {});
+      await subscription.cancel();
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, 'Failed to cancel rejected download response');
+    }
+  }
+
+  int _resolveDownloadTotalBytes(
+    _ContentRange? contentRange,
+    int contentLength,
+    int alreadyDownloaded,
+  ) {
+    if (contentRange?.total != null) return contentRange!.total!;
+    if (contentLength > 0) return alreadyDownloaded + contentLength;
+    return 0;
+  }
+
+  _ContentRange? _parseContentRange(String? value) {
+    if (value == null) return null;
+    final match = RegExp(
+      r'^bytes\s+(\d+)-(\d+)/(\d+|\*)$',
+      caseSensitive: false,
+    ).firstMatch(value.trim());
+    if (match == null) return null;
+
+    final start = int.tryParse(match.group(1)!);
+    final end = int.tryParse(match.group(2)!);
+    final totalText = match.group(3)!;
+    final total = totalText == '*' ? null : int.tryParse(totalText);
+    if (start == null || end == null || end < start) return null;
+    if (total != null && (total <= end || start >= total)) return null;
+    return _ContentRange(start: start, end: end, total: total);
   }
 
   /// 暂停下载
   void pauseDownload(String taskId) {
     final cancelToken = _cancelTokens[taskId];
     if (cancelToken != null && !cancelToken.isCancelled) {
+      _taskEpochs[taskId] = (_taskEpochs[taskId] ?? 0) + 1;
       cancelToken.cancel('paused');
       _updateTask(taskId, status: DownloadStatus.paused);
     }
@@ -241,28 +396,59 @@ class DownloadService {
     final task = _tasks[taskId];
     if (task == null || task.status != DownloadStatus.paused) return;
 
+    await _downloadCompletions[taskId]?.future;
+    if (_tasks[taskId]?.status != DownloadStatus.paused) return;
     await startDownload(taskId);
   }
 
   /// 取消下载
   void cancelDownload(String taskId) {
+    final task = _tasks[taskId];
+    if (task == null) return;
+
     final cancelToken = _cancelTokens[taskId];
+    final completion = _downloadCompletions[taskId]?.future;
+    final cancelEpoch = (_taskEpochs[taskId] ?? 0) + 1;
+    _taskEpochs[taskId] = cancelEpoch;
     if (cancelToken != null && !cancelToken.isCancelled) {
       cancelToken.cancel('cancelled');
     }
     _updateTask(taskId, status: DownloadStatus.cancelled);
 
-    // 删除未完成的文件
-    final task = _tasks[taskId];
-    if (task != null) {
-      final file = File(task.savePath);
-      try {
-        if (file.existsSync()) {
-          file.deleteSync();
-        }
-      } on Exception catch (e, st) {
-        AppError.ignore(e, st, 'Failed to delete cancelled download file');
-      }
+    // 等待正在写入的 sink 关闭后再删除，避免取消状态被写协程覆盖或 Windows 删除失败。
+    AppError.fireAndForget(
+      _deleteCancelledFile(
+        taskId: taskId,
+        savePath: task.savePath,
+        cancelEpoch: cancelEpoch,
+        activeDownload: completion,
+      ),
+      action: 'downloadService.deleteCancelledFile',
+    );
+  }
+
+  Future<void> _deleteCancelledFile({
+    required String taskId,
+    required String savePath,
+    required int cancelEpoch,
+    Future<void>? activeDownload,
+  }) async {
+    if (activeDownload != null) await activeDownload;
+    if (_taskEpochs[taskId] != cancelEpoch) return;
+    if (_tasks.entries.any(
+      (entry) =>
+          entry.key != taskId &&
+          entry.value.savePath == savePath &&
+          entry.value.status == DownloadStatus.downloading,
+    )) {
+      return;
+    }
+
+    final file = File(savePath);
+    try {
+      if (await file.exists()) await file.delete();
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, 'Failed to delete cancelled download file');
     }
   }
 
@@ -276,7 +462,9 @@ class DownloadService {
   /// 重试下载
   Future<void> retryDownload(String taskId) async {
     final task = _tasks[taskId];
-    if (task == null) return;
+    if (task == null || task.status == DownloadStatus.downloading) return;
+
+    await _downloadCompletions[taskId]?.future;
 
     // 删除失败的文件
     final file = File(task.savePath);
@@ -299,15 +487,24 @@ class DownloadService {
   Future<DownloadOpenResult> openFile(String taskId) async {
     final task = _tasks[taskId];
     if (task == null) {
-      return DownloadOpenResult(success: false, message: appL10n.downloadServiceTaskNotFound);
+      return DownloadOpenResult(
+        success: false,
+        message: appL10n.downloadServiceTaskNotFound,
+      );
     }
     if (task.status != DownloadStatus.completed) {
-      return DownloadOpenResult(success: false, message: appL10n.downloadServiceFileNotCompleted);
+      return DownloadOpenResult(
+        success: false,
+        message: appL10n.downloadServiceFileNotCompleted,
+      );
     }
 
     final file = File(task.savePath);
     if (!file.existsSync()) {
-      return DownloadOpenResult(success: false, message: appL10n.downloadServiceFileNotFound);
+      return DownloadOpenResult(
+        success: false,
+        message: appL10n.downloadServiceFileNotFound,
+      );
     }
 
     try {
@@ -331,7 +528,10 @@ class DownloadService {
       final dir = await downloadDirectory;
       final directory = Directory(dir);
       if (!directory.existsSync()) {
-        return DownloadOpenResult(success: false, message: appL10n.downloadServiceDirectoryNotFound);
+        return DownloadOpenResult(
+          success: false,
+          message: appL10n.downloadServiceDirectoryNotFound,
+        );
       }
 
       if (Platform.isMacOS) {
