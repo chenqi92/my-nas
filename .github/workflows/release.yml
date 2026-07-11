@@ -193,10 +193,14 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      # Required repository secrets:
+      # 首选：配置以下仓库 secret，产出正式签名、可覆盖升级的 APK：
       # - ANDROID_KEYSTORE_BASE64: base64-encoded release keystore
       # - ANDROID_KEY_PROPERTIES_BASE64: base64-encoded key.properties
+      # 若两者均缺失，则降级用 debug key 签名 release APK，让 Android 仍能出产物。
+      # 注意：debug 签名的包无法覆盖安装到正式签名的包之上，且 debug key 每台 runner
+      # 不固定，仅适合全新安装测试，不适合长期分发。
       - name: Restore Android release signing
+        id: signing
         shell: bash
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -204,13 +208,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ]; then
-            echo "::error::Missing required secret ANDROID_KEYSTORE_BASE64"
-            exit 1
-          fi
-          if [ -z "${ANDROID_KEY_PROPERTIES_BASE64:-}" ]; then
-            echo "::error::Missing required secret ANDROID_KEY_PROPERTIES_BASE64"
-            exit 1
+          # secret 缺失 -> 降级到 debug 签名兜底。
+          # （secret 存在但内容损坏仍会在下面硬失败。）
+          if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ] || [ -z "${ANDROID_KEY_PROPERTIES_BASE64:-}" ]; then
+            echo "signing=unavailable" >> "$GITHUB_OUTPUT"
+            echo "ALLOW_DEBUG_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
+            echo "::warning::Android 签名 secret 缺失 —— 将用 debug key 签名 release APK，该包无法覆盖升级到正式签名的版本。"
+            exit 0
           fi
 
           umask 077
@@ -242,6 +246,7 @@ jobs:
             's|^[[:space:]]*storeFile[[:space:]]*[=:].*$|storeFile=release-keystore.jks|' \
             android/key.properties
           chmod 600 android/app/release-keystore.jks android/key.properties
+          echo "signing=available" >> "$GITHUB_OUTPUT"
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -539,6 +544,9 @@ jobs:
     if: needs.extract-version.result == 'success'
     runs-on: windows-latest
     timeout-minutes: 60
+    env:
+      # 兜底：让 cl.exe 对每个编译单元都注入静默宏，覆盖 CMake 定义可能漏到的 target。
+      CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
     steps:
       - uses: actions/checkout@v4
 
@@ -675,7 +683,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libmpv-dev libsecret-1-dev libkeybinder-3.0-dev
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libmpv-dev libsecret-1-dev libkeybinder-3.0-dev libayatana-appindicator3-dev
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -733,7 +741,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libmpv-dev libsecret-1-dev libkeybinder-3.0-dev curl git unzip xz-utils
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libmpv-dev libsecret-1-dev libkeybinder-3.0-dev libayatana-appindicator3-dev curl git unzip xz-utils
 
       # 手动安装 Flutter (flutter-action 不支持 ARM64 Linux)
       - name: Install Flutter manually

@@ -32,6 +32,12 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# Silence MSVC 14.51+ (VS 2026) hard error STL1011: 多个第三方插件
+# (flutter_inappwebview_windows / gal / just_audio_windows 等) 仍在包含已废弃的
+# <experimental/coroutine>，新 STL 会把它变成不可关闭的 static_assert 编译错误。
+# 必须放在所有 add_subdirectory()/插件 include 之前，让插件 target 继承此定义。
+add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by

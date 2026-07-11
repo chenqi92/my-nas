@@ -39,27 +39,35 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
 # Download the binary from GitHub.
+# 解压到 build（binary）目录，而不是 source 目录：Flutter 通过 ephemeral
+# .plugin_symlinks/audiotags 软链引用 source 目录，新版 CMake 的 `cmake -E tar`
+# (libarchive SECURE_SYMLINKS) 会拒绝穿过软链解压。CMAKE_CURRENT_BINARY_DIR
+# 是 build/ 下的真实路径。
 set(Version "1.4.5")
-set(LibPath "${CMAKE_CURRENT_SOURCE_DIR}/linux.tar.gz")
-if(NOT EXISTS ${LibPath})
+set(LibPath "${CMAKE_CURRENT_BINARY_DIR}/linux.tar.gz")
+if(NOT EXISTS "${LibPath}")
   file(DOWNLOAD
     "https://github.com/erikas-taroza/audiotags/releases/download/v${Version}/linux.tar.gz"
-    ${LibPath}
+    "${LibPath}"
     TLS_VERIFY ON
   )
 endif()
 
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/libaudiotags.so")
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/libaudiotags.so")
   execute_process(
-    COMMAND ${CMAKE_COMMAND} -E tar -xzf linux.tar.gz
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMAND ${CMAKE_COMMAND} -E tar -xzf "${LibPath}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    RESULT_VARIABLE audiotags_extract_result
   )
+  if(NOT audiotags_extract_result EQUAL 0)
+    message(FATAL_ERROR "audiotags: failed to extract ${LibPath} (result ${audiotags_extract_result})")
+  endif()
 endif()
 
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
 set(audiotags_bundled_libraries
-  "${CMAKE_CURRENT_SOURCE_DIR}/libaudiotags.so"
+  "${CMAKE_CURRENT_BINARY_DIR}/libaudiotags.so"
   PARENT_SCOPE
 )
