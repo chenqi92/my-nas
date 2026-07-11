@@ -4,51 +4,48 @@ on:
   push:
     branches: [main, develop]
     paths:
+      - '.github/workflows/ci.yml'
+      - '.metadata'
+      - 'analysis_options.yaml'
+      - 'build.yaml'
+      - 'l10n.yaml'
+      - 'assets/**'
+      - 'lib/**'
+      - 'test/**'
+      - 'integration_test/**'
+      - 'packages/**'
+      - 'native/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'macos/**'
+      - 'windows/**'
+      - 'linux/**'
       - 'pubspec.yaml'
+      - 'pubspec.lock'
   pull_request:
     branches: [main, develop]
     paths:
+      - '.github/workflows/ci.yml'
+      - '.metadata'
+      - 'analysis_options.yaml'
+      - 'build.yaml'
+      - 'l10n.yaml'
+      - 'assets/**'
+      - 'lib/**'
+      - 'test/**'
+      - 'integration_test/**'
+      - 'packages/**'
+      - 'native/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'macos/**'
+      - 'windows/**'
+      - 'linux/**'
       - 'pubspec.yaml'
+      - 'pubspec.lock'
 
 jobs:
-  # 检查是否需要运行 CI
-  check-version:
-    runs-on: ubuntu-latest
-    outputs:
-      should_run: ${{ steps.check.outputs.should_run }}
-      version: ${{ steps.check.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Check if version changed
-        id: check
-        run: |
-          # 获取当前版本
-          CURRENT_VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //')
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $CURRENT_VERSION"
-
-          # PR 情况下总是运行
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "Pull request - will run CI"
-            exit 0
-          fi
-
-          # 检查版本是否改变
-          if git diff HEAD~1 HEAD -- pubspec.yaml | grep -q "^+version:"; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "Version changed - will run CI"
-          else
-            echo "should_run=false" >> $GITHUB_OUTPUT
-            echo "Version unchanged - skipping CI"
-          fi
-
   analyze:
-    needs: check-version
-    if: needs.check-version.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,8 +66,6 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
   test:
-    needs: check-version
-    if: needs.check-version.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -91,8 +86,7 @@ jobs:
         run: flutter test
 
   build-check:
-    needs: [check-version, analyze]
-    if: needs.check-version.outputs.should_run == 'true'
+    needs: analyze
     runs-on: ubuntu-latest
     steps:
       - name: Free disk space
@@ -133,18 +127,3 @@ jobs:
 
       - name: Build Android (debug)
         run: flutter build apk --debug
-
-  # 当跳过 CI 时输出提示
-  ci-skipped:
-    needs: check-version
-    if: needs.check-version.outputs.should_run == 'false'
-    runs-on: ubuntu-latest
-    steps:
-      - name: CI skipped
-        run: |
-          echo "CI skipped because version has not changed"
-          echo "Current version: ${{ needs.check-version.outputs.version }}"
-          echo ""
-          echo "CI only runs when:"
-          echo "- pubspec.yaml version is updated"
-          echo "- A pull request is opened"

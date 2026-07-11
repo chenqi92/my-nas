@@ -193,6 +193,56 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      # Required repository secrets:
+      # - ANDROID_KEYSTORE_BASE64: base64-encoded release keystore
+      # - ANDROID_KEY_PROPERTIES_BASE64: base64-encoded key.properties
+      - name: Restore Android release signing
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEY_PROPERTIES_BASE64 }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ]; then
+            echo "::error::Missing required secret ANDROID_KEYSTORE_BASE64"
+            exit 1
+          fi
+          if [ -z "${ANDROID_KEY_PROPERTIES_BASE64:-}" ]; then
+            echo "::error::Missing required secret ANDROID_KEY_PROPERTIES_BASE64"
+            exit 1
+          fi
+
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" \
+            | base64 --decode > android/app/release-keystore.jks
+          printf '%s' "$ANDROID_KEY_PROPERTIES_BASE64" \
+            | base64 --decode > android/key.properties
+
+          if [ ! -s android/app/release-keystore.jks ]; then
+            echo "::error::Decoded Android release keystore is empty"
+            exit 1
+          fi
+          if [ ! -s android/key.properties ]; then
+            echo "::error::Decoded android/key.properties is empty"
+            exit 1
+          fi
+
+          for key in storeFile storePassword keyAlias keyPassword; do
+            if ! grep -Eq "^[[:space:]]*${key}[[:space:]]*[=:][[:space:]]*[^[:space:]].*$" android/key.properties; then
+              echo "::error::android/key.properties is missing a non-empty ${key}"
+              exit 1
+            fi
+          done
+
+          # The encoded properties may come from a developer machine. Pin the
+          # path to the keystore restored in this runner instead of trusting a
+          # local or absolute storeFile path.
+          sed -i -E \
+            's|^[[:space:]]*storeFile[[:space:]]*[=:].*$|storeFile=release-keystore.jks|' \
+            android/key.properties
+          chmod 600 android/app/release-keystore.jks android/key.properties
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -269,6 +319,11 @@ jobs:
           name: android-apks
           path: build/app/outputs/flutter-apk/MyNAS-*.apk
           retention-days: 3
+
+      - name: Remove Android signing material
+        if: always()
+        shell: bash
+        run: rm -f android/app/release-keystore.jks android/key.properties
 
   # 构建 iOS IPA
   build-ios:
@@ -968,6 +1023,35 @@ jobs:
             echo "has_artifacts=false" >> $GITHUB_OUTPUT
             echo "::warning::No build artifacts found across all platforms — skipping release"
           fi
+
+      - name: Generate SHA256SUMS
+        if: steps.check_artifacts.outputs.has_artifacts == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/checksums
+          checksum_file="artifacts/checksums/SHA256SUMS"
+          temporary_file="${checksum_file}.tmp"
+          : > "$temporary_file"
+
+          while IFS= read -r -d '' artifact; do
+            hash=$(sha256sum "$artifact" | cut -d ' ' -f 1)
+            printf '%s  %s\n' "$hash" "$(basename "$artifact")" \
+              >> "$temporary_file"
+          done < <(
+            find artifacts -type f \
+              ! -path 'artifacts/checksums/*' \
+              -print0 | LC_ALL=C sort -z
+          )
+
+          if [ ! -s "$temporary_file" ]; then
+            echo "::error::No release artifacts were available for SHA-256 generation"
+            exit 1
+          fi
+
+          mv "$temporary_file" "$checksum_file"
+          echo "Generated SHA256SUMS for $(wc -l < "$checksum_file" | tr -d ' ') files"
+          cat "$checksum_file"
 
       # 生成构建状态报告
       - name: Generate build status
