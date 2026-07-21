@@ -126,8 +126,11 @@ class JellyfinVirtualFileSystem implements NasFileSystem {
       throw Exception(appL10n.jellyfinVfsPathNotFound(path));
     }
 
-    // 返回直接播放 URL
-    return _api.getDirectStreamUrl(itemId);
+    final item = await _getItem(itemId);
+    return _api.getDirectStreamUrl(
+      itemId,
+      isAudio: item?.type?.toLowerCase() == 'audio',
+    );
   }
 
   @override

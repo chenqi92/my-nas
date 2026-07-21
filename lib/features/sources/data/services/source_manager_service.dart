@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
+import 'package:my_nas/core/network/tls_trust_store.dart';
 import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
@@ -57,18 +58,68 @@ class SourceConnection {
 
 /// 凭证信息
 class SourceCredential {
-  const SourceCredential({required this.password, this.deviceId});
+  const SourceCredential({
+    required this.password,
+    this.deviceId,
+    this.accessToken,
+    this.refreshToken,
+    this.apiKey,
+    this.extraSecrets = const {},
+  });
 
   factory SourceCredential.fromJson(Map<String, dynamic> json) =>
       SourceCredential(
-        password: json['password'] as String,
+        password: json['password'] as String? ?? '',
         deviceId: json['deviceId'] as String?,
+        accessToken: json['accessToken'] as String?,
+        refreshToken: json['refreshToken'] as String?,
+        apiKey: json['apiKey'] as String?,
+        extraSecrets: json['extraSecrets'] == null
+            ? const {}
+            : Map<String, dynamic>.from(json['extraSecrets'] as Map),
       );
 
   final String password;
   final String? deviceId;
+  final String? accessToken;
+  final String? refreshToken;
+  final String? apiKey;
+  final Map<String, dynamic> extraSecrets;
 
-  Map<String, dynamic> toJson() => {'password': password, 'deviceId': deviceId};
+  bool get hasSecrets =>
+      password.isNotEmpty ||
+      accessToken != null ||
+      refreshToken != null ||
+      apiKey != null ||
+      extraSecrets.isNotEmpty;
+
+  SourceCredential merge(SourceCredential newer) => SourceCredential(
+    password: newer.password.isNotEmpty ? newer.password : password,
+    deviceId: newer.deviceId ?? deviceId,
+    accessToken: newer.accessToken ?? accessToken,
+    refreshToken: newer.refreshToken ?? refreshToken,
+    apiKey: newer.apiKey ?? apiKey,
+    extraSecrets: {...extraSecrets, ...newer.extraSecrets},
+  );
+
+  SourceCredential copyWith({String? deviceId, bool clearDeviceId = false}) =>
+      SourceCredential(
+        password: password,
+        deviceId: clearDeviceId ? null : (deviceId ?? this.deviceId),
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        apiKey: apiKey,
+        extraSecrets: extraSecrets,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'password': password,
+    if (deviceId != null) 'deviceId': deviceId,
+    if (accessToken != null) 'accessToken': accessToken,
+    if (refreshToken != null) 'refreshToken': refreshToken,
+    if (apiKey != null) 'apiKey': apiKey,
+    if (extraSecrets.isNotEmpty) 'extraSecrets': extraSecrets,
+  };
 }
 
 /// 媒体服务器连接信息
@@ -121,8 +172,14 @@ class SourceManagerService {
   /// 活跃的 NAS 连接
   final Map<String, SourceConnection> _connections = {};
 
+  /// 同一来源只允许一个登录流程，避免并发登录使旧会话立即失效。
+  final Map<String, Future<SourceConnection>> _connectionAttempts = {};
+
   /// 活跃的媒体服务器连接
   final Map<String, MediaServerConnection> _mediaServerConnections = {};
+
+  final Map<String, Future<MediaServerConnection>>
+  _mediaServerConnectionAttempts = {};
 
   /// 安全存储是否可用
   bool _secureStorageAvailable = true;
@@ -175,6 +232,7 @@ class SourceManagerService {
     // Hive.initFlutter() 已在 main.dart 中调用，这里直接打开 box
     _sourcesBox = await Hive.openBox('sources');
     _libraryBox = await Hive.openBox('media_library');
+    await TlsTrustStore.load();
     _initialized = true;
 
     logger.i('SourceManagerService: 初始化完成');
@@ -190,13 +248,56 @@ class SourceManagerService {
     if (data == null) return [];
 
     try {
-      return data
-          .map(
-            (e) => SourceEntity.fromJson(Map<String, dynamic>.from(e as Map)),
-          )
-          .toList();
-    } on Exception catch (e, st) {
-      // 捕获所有错误，包括 TypeError（类型转换失败）
+      final persistedSources = <SourceEntity>[];
+      for (var index = 0; index < data.length; index++) {
+        try {
+          final raw = data[index];
+          if (raw is! Map) throw const FormatException('连接源记录不是对象');
+          persistedSources.add(
+            SourceEntity.fromJson(Map<String, dynamic>.from(raw)),
+          );
+        } on Exception catch (e, st) {
+          // 单条旧版/损坏配置不应让其他连接源全部消失。
+          // 该原始记录会在下次保存时由 _persistSanitizedSources 保留。
+          logger.e('SourceManagerService: 跳过无法解析的源记录 #$index', e, st);
+        }
+      }
+      final hydratedSources = <SourceEntity>[];
+      var hasLegacySecrets = false;
+      var migratedAllLegacySecrets = true;
+
+      for (final source in persistedSources) {
+        try {
+          final legacyCredential = _credentialFromSource(source);
+          if (legacyCredential.hasSecrets) {
+            hasLegacySecrets = true;
+            if (!await saveCredential(source.id, legacyCredential)) {
+              migratedAllLegacySecrets = false;
+            }
+          }
+          final credential = await getCredential(source.id);
+          hydratedSources.add(_hydrateSource(source, credential));
+        } on Exception catch (e, st) {
+          // 安全存储的单条读写故障不能隐藏整个连接源列表。
+          if (_credentialFromSource(source).hasSecrets) {
+            hasLegacySecrets = true;
+            migratedAllLegacySecrets = false;
+          }
+          logger.e('SourceManagerService: 凭证迁移/读取失败 ${source.id}', e, st);
+          hydratedSources.add(source);
+        }
+      }
+
+      if (hasLegacySecrets && migratedAllLegacySecrets) {
+        try {
+          await _persistSanitizedSources(persistedSources);
+          logger.i('SourceManagerService: 已将旧版源密钥迁移到安全存储');
+        } on Exception catch (e, st) {
+          logger.e('SourceManagerService: 保存密钥迁移结果失败', e, st);
+        }
+      }
+      return hydratedSources;
+    } catch (e, st) {
       logger.e('SourceManagerService: 解析源列表失败', e, st);
       return [];
     }
@@ -270,13 +371,108 @@ class SourceManagerService {
   }
 
   Future<void> _saveSources(List<SourceEntity> sources) async {
-    await _sourcesBox.put('list', sources.map((s) => s.toJson()).toList());
+    for (final source in sources) {
+      final credential = _credentialFromSource(source);
+      final stored = await _replaceSourceSecrets(source.id, credential);
+      if (credential.hasSecrets && !stored) {
+        throw StateError('安全存储不可用，无法安全保存 ${source.displayName} 的凭证');
+      }
+    }
+    await _persistSanitizedSources(sources);
+  }
+
+  Future<void> _persistSanitizedSources(List<SourceEntity> sources) async {
+    final unparsedRecords = _unparsedPersistedSourceRecords();
+    await _sourcesBox.put('list', [
+      ...sources.map((source) => source.toJson(includeSecrets: false)),
+      ...unparsedRecords,
+    ]);
     // 确保数据已写入磁盘
     await _sourcesBox.flush();
     logger.d('SourceManagerService: 源列表已保存到磁盘');
   }
 
+  List<dynamic> _unparsedPersistedSourceRecords() {
+    final rawRecords = _sourcesBox.get('list');
+    if (rawRecords is! List) return const [];
+    final unparsed = <dynamic>[];
+    for (final raw in rawRecords) {
+      try {
+        if (raw is! Map) throw const FormatException('连接源记录不是对象');
+        SourceEntity.fromJson(Map<String, dynamic>.from(raw));
+      } on Exception {
+        unparsed.add(raw);
+      }
+    }
+    return unparsed;
+  }
+
+  SourceCredential _credentialFromSource(SourceEntity source) {
+    final extraSecrets = <String, dynamic>{};
+    final config = source.extraConfig;
+    if (config != null) {
+      for (final key in SourceEntity.sensitiveExtraConfigKeys) {
+        final value = config[key];
+        if (value != null) extraSecrets[key] = value;
+      }
+    }
+    return SourceCredential(
+      password: '',
+      accessToken: source.accessToken,
+      refreshToken: source.refreshToken,
+      apiKey: source.apiKey,
+      extraSecrets: extraSecrets,
+    );
+  }
+
+  SourceEntity _hydrateSource(
+    SourceEntity source,
+    SourceCredential? credential,
+  ) {
+    if (credential == null) return source;
+    final extraConfig = <String, dynamic>{
+      ...?source.extraConfig,
+      ...credential.extraSecrets,
+    };
+    return source.copyWith(
+      accessToken: credential.accessToken,
+      refreshToken: credential.refreshToken,
+      apiKey: credential.apiKey,
+      extraConfig: extraConfig.isEmpty ? null : extraConfig,
+    );
+  }
+
   // ============ 凭证管理（使用安全存储）============
+
+  /// Replaces secrets represented by [SourceEntity] while preserving the
+  /// password and remembered device stored alongside them.
+  Future<bool> _replaceSourceSecrets(
+    String sourceId,
+    SourceCredential sourceSecrets,
+  ) async {
+    if (!_secureStorageAvailable) return false;
+    try {
+      final existing = await getCredential(sourceId);
+      if (existing == null && !sourceSecrets.hasSecrets) return true;
+      final replacement = SourceCredential(
+        password: existing?.password ?? '',
+        deviceId: existing?.deviceId,
+        accessToken: sourceSecrets.accessToken,
+        refreshToken: sourceSecrets.refreshToken,
+        apiKey: sourceSecrets.apiKey,
+        extraSecrets: sourceSecrets.extraSecrets,
+      );
+      final key = '$_credentialPrefix$sourceId';
+      await _secureStorage.write(
+        key: key,
+        value: jsonEncode(replacement.toJson()),
+      );
+      return true;
+    } on Exception catch (e) {
+      if (_handleSecureStorageError(e, 'replaceSourceSecrets')) return false;
+      rethrow;
+    }
+  }
 
   /// 保存凭证到安全存储
   ///
@@ -292,10 +488,12 @@ class SourceManagerService {
 
     try {
       final key = '$_credentialPrefix$sourceId';
-      final value = jsonEncode(credential.toJson());
+      final existing = await getCredential(sourceId);
+      final merged = existing?.merge(credential) ?? credential;
+      final value = jsonEncode(merged.toJson());
       await _secureStorage.write(key: key, value: value);
       logger.i(
-        'SourceManagerService: 保存凭证到安全存储 $sourceId (deviceId: ${credential.deviceId != null ? "有" : "无"})',
+        'SourceManagerService: 保存凭证到安全存储 $sourceId (deviceId: ${merged.deviceId != null ? "有" : "无"})',
       );
       return true;
     } on Exception catch (e) {
@@ -356,13 +554,26 @@ class SourceManagerService {
   Future<void> updateDeviceId(String sourceId, String deviceId) async {
     final credential = await getCredential(sourceId);
     if (credential != null) {
-      await saveCredential(
-        sourceId,
-        SourceCredential(password: credential.password, deviceId: deviceId),
-      );
+      await saveCredential(sourceId, credential.copyWith(deviceId: deviceId));
       logger.i('SourceManagerService: 更新设备ID $sourceId');
     } else {
       logger.w('SourceManagerService: 无法更新设备ID，未找到凭证 $sourceId');
+    }
+  }
+
+  /// 清除已记住的设备 ID，同时保留其他凭证。
+  Future<void> clearDeviceId(String sourceId) async {
+    final credential = await getCredential(sourceId);
+    if (credential == null || credential.deviceId == null) return;
+    try {
+      final key = '$_credentialPrefix$sourceId';
+      final value = jsonEncode(
+        credential.copyWith(clearDeviceId: true).toJson(),
+      );
+      await _secureStorage.write(key: key, value: value);
+      logger.i('SourceManagerService: 清除设备ID $sourceId');
+    } on Exception catch (e) {
+      if (!_handleSecureStorageError(e, 'clearDeviceId')) rethrow;
     }
   }
 
@@ -385,7 +596,34 @@ class SourceManagerService {
     required String password,
     bool saveCredential = true,
   }) async {
+    final pending = _connectionAttempts[source.id];
+    if (pending != null) return pending;
+    final future = _connect(
+      source,
+      password: password,
+      saveCredential: saveCredential,
+    );
+    _connectionAttempts[source.id] = future;
+    try {
+      return await future;
+    } finally {
+      if (identical(_connectionAttempts[source.id], future)) {
+        _connectionAttempts.remove(source.id);
+      }
+    }
+  }
+
+  Future<SourceConnection> _connect(
+    SourceEntity source, {
+    required String password,
+    required bool saveCredential,
+  }) async {
     logger.i('SourceManagerService: 连接到 ${source.name}');
+
+    final previous = _connections.remove(source.id);
+    if (previous != null) {
+      await _disposeNasAdapter(previous.adapter);
+    }
 
     // 创建适配器
     final adapter = _createAdapter(source.type);
@@ -397,9 +635,11 @@ class SourceManagerService {
       status: SourceStatus.connecting,
     );
 
-    // 总是尝试获取已保存的设备ID（用于跳过2FA）
     final savedCredential = await getCredential(source.id);
-    final deviceId = savedCredential?.deviceId;
+    final deviceId = source.rememberDevice ? savedCredential?.deviceId : null;
+    if (!source.rememberDevice && savedCredential?.deviceId != null) {
+      await clearDeviceId(source.id);
+    }
 
     logger.d(
       'SourceManagerService: 连接配置 - rememberDevice: ${source.rememberDevice}, deviceId: ${deviceId != null ? "有" : "无"}',
@@ -416,6 +656,7 @@ class SourceManagerService {
       deviceId: deviceId,
       enableDeviceToken: source.rememberDevice,
       basePath: source.extraConfig?['basePath'] as String?,
+      extraConfig: source.extraConfig,
     );
 
     try {
@@ -427,7 +668,9 @@ class SourceManagerService {
           // 总是保存凭证（包括新的 deviceId）
           if (saveCredential) {
             // 如果连接返回了新的 deviceId，使用新的；否则保留旧的
-            final newDeviceId = deviceId ?? savedCredential?.deviceId;
+            final newDeviceId = source.rememberDevice
+                ? deviceId ?? savedCredential?.deviceId
+                : null;
             await this.saveCredential(
               source.id,
               SourceCredential(password: password, deviceId: newDeviceId),
@@ -443,6 +686,7 @@ class SourceManagerService {
             status: SourceStatus.connected,
           );
         case ConnectionFailure(:final error):
+          await _disposeNasAdapter(adapter);
           connection = SourceConnection(
             source: source,
             adapter: adapter,
@@ -460,6 +704,7 @@ class SourceManagerService {
       _connections[source.id] = connection;
       return connection;
     } on Exception catch (e) {
+      await _disposeNasAdapter(adapter);
       final connection = SourceConnection(
         source: source,
         adapter: adapter,
@@ -468,6 +713,19 @@ class SourceManagerService {
       );
       _connections[source.id] = connection;
       return connection;
+    }
+  }
+
+  Future<void> _disposeNasAdapter(NasAdapter adapter) async {
+    try {
+      await adapter.disconnect();
+    } on Exception catch (e, st) {
+      logger.w('SourceManagerService: 断开 NAS 适配器失败', e, st);
+    }
+    try {
+      await adapter.dispose();
+    } on Exception catch (e, st) {
+      logger.w('SourceManagerService: 释放 NAS 适配器失败', e, st);
     }
   }
 
@@ -494,6 +752,8 @@ class SourceManagerService {
       result = await adapter.verify2FA(otpCode, rememberDevice: rememberDevice);
     } else if (adapter is QnapAdapter) {
       result = await adapter.verify2FA(otpCode, rememberDevice: rememberDevice);
+    } else if (adapter is FnOSAdapter) {
+      result = await adapter.verify2FA(otpCode);
     }
 
     if (result != null) {
@@ -502,7 +762,7 @@ class SourceManagerService {
       switch (result) {
         case ConnectionSuccess(:final deviceId):
           // 2FA 成功后，保存/更新凭证（包括设备ID）
-          if (deviceId != null) {
+          if (rememberDevice && deviceId != null) {
             logger.i('SourceManagerService: 2FA 成功，保存设备ID');
             // 获取现有凭证中的密码，必须等待完成
             final credential = await getCredential(sourceId);
@@ -520,6 +780,8 @@ class SourceManagerService {
                 SourceCredential(password: password, deviceId: deviceId),
               );
             }
+          } else if (!rememberDevice) {
+            await clearDeviceId(sourceId);
           }
 
           // 更新最后连接时间
@@ -598,12 +860,41 @@ class SourceManagerService {
     String? apiKey,
     bool saveCredential = true,
   }) async {
+    final pending = _mediaServerConnectionAttempts[source.id];
+    if (pending != null) return pending;
+    final future = _connectMediaServer(
+      source,
+      password: password,
+      apiKey: apiKey,
+      saveCredential: saveCredential,
+    );
+    _mediaServerConnectionAttempts[source.id] = future;
+    try {
+      return await future;
+    } finally {
+      if (identical(_mediaServerConnectionAttempts[source.id], future)) {
+        _mediaServerConnectionAttempts.remove(source.id);
+      }
+    }
+  }
+
+  Future<MediaServerConnection> _connectMediaServer(
+    SourceEntity source, {
+    String? password,
+    String? apiKey,
+    required bool saveCredential,
+  }) async {
     logger.i('SourceManagerService: 连接到媒体服务器 ${source.name}');
 
     if (!isMediaServerType(source.type)) {
       throw UnsupportedError(
         appL10n.sourceManagerErrorNotMediaServerType(source.type.displayName),
       );
+    }
+
+    final previous = _mediaServerConnections.remove(source.id);
+    if (previous != null) {
+      await _disposeMediaServerAdapter(previous.adapter);
     }
 
     // 创建适配器
@@ -653,11 +944,14 @@ class SourceManagerService {
         }
         // 更新最后连接时间
         await updateSource(source.copyWith(lastConnected: DateTime.now()));
+      } else {
+        await _disposeMediaServerAdapter(adapter);
       }
 
       _mediaServerConnections[source.id] = connection;
       return connection;
     } on Exception catch (e) {
+      await _disposeMediaServerAdapter(adapter);
       final connection = MediaServerConnection(
         source: source,
         adapter: adapter,
@@ -666,6 +960,19 @@ class SourceManagerService {
       );
       _mediaServerConnections[source.id] = connection;
       return connection;
+    }
+  }
+
+  Future<void> _disposeMediaServerAdapter(MediaServerAdapter adapter) async {
+    try {
+      await adapter.disconnect();
+    } on Exception catch (e, st) {
+      logger.w('SourceManagerService: 断开媒体服务器适配器失败', e, st);
+    }
+    try {
+      await adapter.dispose();
+    } on Exception catch (e, st) {
+      logger.w('SourceManagerService: 释放媒体服务器适配器失败', e, st);
     }
   }
 

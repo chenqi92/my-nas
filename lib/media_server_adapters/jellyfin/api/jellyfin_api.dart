@@ -569,12 +569,17 @@ class JellyfinApi {
   };
 
   /// 获取直接播放 URL
-  String getDirectStreamUrl(String itemId, {String? mediaSourceId}) {
+  String getDirectStreamUrl(
+    String itemId, {
+    String? mediaSourceId,
+    bool isAudio = false,
+  }) {
     final params = <String>['static=true', 'api_key=$_accessToken'];
     if (mediaSourceId != null) {
       params.add('MediaSourceId=$mediaSourceId');
     }
-    return '$_baseUrl/Videos/$itemId/stream?${params.join('&')}';
+    final mediaPath = isAudio ? 'Audio' : 'Videos';
+    return '$_baseUrl/$mediaPath/$itemId/stream?${params.join('&')}';
   }
 
   /// 获取 HLS 转码 URL

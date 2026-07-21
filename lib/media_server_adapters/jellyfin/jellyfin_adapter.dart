@@ -235,17 +235,27 @@ class JellyfinAdapter extends MediaServerAdapter {
     }
 
     final source = playbackInfo.mediaSources.first;
+    final item = await _api.getItem(itemId);
+    final isAudio = item.type?.toLowerCase() == 'audio';
 
     // 根据偏好和支持情况选择播放方式
     if (preferDirectPlay && source.supportsDirectPlay) {
       return MediaStreamInfo(
-        url: _api.getDirectStreamUrl(itemId, mediaSourceId: source.id),
+        url: _api.getDirectStreamUrl(
+          itemId,
+          mediaSourceId: source.id,
+          isAudio: isAudio,
+        ),
         playMethod: MediaPlayMethod.directPlay,
         container: source.container,
       );
     } else if (source.supportsDirectStream) {
       return MediaStreamInfo(
-        url: _api.getDirectStreamUrl(itemId, mediaSourceId: source.id),
+        url: _api.getDirectStreamUrl(
+          itemId,
+          mediaSourceId: source.id,
+          isAudio: isAudio,
+        ),
         playMethod: MediaPlayMethod.directStream,
         container: source.container,
       );

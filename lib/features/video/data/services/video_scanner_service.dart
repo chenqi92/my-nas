@@ -66,9 +66,16 @@ class VideoScanProgress {
         return appL10n.videoScanProgressSavingToDb(scannedCount, totalCount);
       case VideoScanPhase.scraping:
         if (currentFile != null) {
-          return appL10n.videoScanProgressScrapingFile(currentFile ?? '', scannedCount, totalCount);
+          return appL10n.videoScanProgressScrapingFile(
+            currentFile ?? '',
+            scannedCount,
+            totalCount,
+          );
         }
-        return appL10n.videoScanProgressScrapingMetadata(scannedCount, totalCount);
+        return appL10n.videoScanProgressScrapingMetadata(
+          scannedCount,
+          totalCount,
+        );
       case VideoScanPhase.completed:
         return appL10n.videoScanCompletedCount(scannedCount);
       case VideoScanPhase.error:
@@ -168,9 +175,11 @@ class VideoScannerService {
   ///
   /// 每扫描一批文件就推送一次，UI 可以逐步显示内容
   /// 用户不需要等待扫描完成就能看到视频列表
-  final _partialResultsController = StreamController<List<VideoMetadata>>.broadcast();
+  final _partialResultsController =
+      StreamController<List<VideoMetadata>>.broadcast();
 
-  Stream<List<VideoMetadata>> get partialResultsStream => _partialResultsController.stream;
+  Stream<List<VideoMetadata>> get partialResultsStream =>
+      _partialResultsController.stream;
 
   /// 单视频更新流（Infuse 风格）
   ///
@@ -178,7 +187,8 @@ class VideoScannerService {
   /// 替代整体 scrapeStatsStream 刷新，实现精准更新
   final _videoUpdatedController = StreamController<VideoMetadata>.broadcast();
 
-  Stream<VideoMetadata> get videoUpdatedStream => _videoUpdatedController.stream;
+  Stream<VideoMetadata> get videoUpdatedStream =>
+      _videoUpdatedController.stream;
 
   /// 检查并恢复未完成的刮削任务
   ///
@@ -237,7 +247,9 @@ class VideoScannerService {
       await _dbService.init();
       final stats = await _dbService.getScrapeStats();
       _scrapeStatsController.add(stats);
-      logger.d('VideoScannerService: 已广播当前统计 - completed: ${stats.completed}, pending: ${stats.pending}');
+      logger.d(
+        'VideoScannerService: 已广播当前统计 - completed: ${stats.completed}, pending: ${stats.pending}',
+      );
     } on Exception catch (e, st) {
       AppError.ignore(e, st, '广播统计失败，非关键操作');
     }
@@ -277,7 +289,17 @@ class VideoScannerService {
 
       // 阶段1：扫描文件系统
       // 记录每个目录的扫描结果，用于后续发送各目录的进度
-      final pathVideoCounts = <(String sourceId, String pathPrefix, int count)>[];
+      final pathVideoCounts =
+          <(String sourceId, String pathPrefix, int count)>[];
+      final completedSnapshots =
+          <
+            ({
+              String sourceId,
+              String pathPrefix,
+              Set<String> encounteredPaths,
+              bool canPrune,
+            })
+          >[];
 
       for (final path in paths) {
         if (!path.isEnabled) continue;
@@ -291,28 +313,26 @@ class VideoScannerService {
         sourceIds.add(path.sourceId);
         final fileSystem = conn.adapter.fileSystem;
 
-        // 检查是否有未完成的扫描
-        // 关键修复：只有在全新扫描时才删除旧数据
-        // 如果是断点续扫，必须保留已扫描目录的数据，否则会丢失视频
-        final hasUnfinished = await _dbService.hasUnfinishedScan(path.sourceId, path.path);
-
-        if (!hasUnfinished) {
-          // 全新扫描：清理该路径的旧数据
-          final deletedDbCount = await _dbService.deleteByPath(path.sourceId, path.path);
-          final deletedCacheCount = await _cacheService.deleteByPath(path.sourceId, path.path);
-          if (deletedDbCount > 0 || deletedCacheCount > 0) {
-            logger.i('VideoScannerService: 全新扫描，已清理 ${path.sourceId}:${path.path} 的旧数据 (db: $deletedDbCount, cache: $deletedCacheCount)');
-          }
-        } else {
-          logger.i('VideoScannerService: 发现未完成扫描，保留已有数据继续扫描 ${path.sourceId}:${path.path}');
+        // 断点续扫只会返回本次剩余目录中的文件，因此不能据此清理旧快照。
+        // 全新扫描也不预删数据，等完整成功并写入新快照后再做差集清理。
+        final hasUnfinished = await _dbService.hasUnfinishedScan(
+          path.sourceId,
+          path.path,
+        );
+        if (hasUnfinished) {
+          logger.i(
+            'VideoScannerService: 发现未完成扫描，保留已有数据继续扫描 ${path.sourceId}:${path.path}',
+          );
         }
 
         // 为每个目录单独发送扫描开始事件（包含目录标识）
-        _emitProgress(VideoScanProgress(
-          phase: VideoScanPhase.scanning,
-          sourceId: path.sourceId,
-          pathPrefix: path.path,
-        ));
+        _emitProgress(
+          VideoScanProgress(
+            phase: VideoScanPhase.scanning,
+            sourceId: path.sourceId,
+            pathPrefix: path.path,
+          ),
+        );
 
         // 创建当前目录的视频和字幕列表（用于计算单目录进度）
         final pathVideos = <_ScannedVideo>[];
@@ -325,6 +345,7 @@ class VideoScannerService {
           rootPath: path.path,
           videos: pathVideos,
           subtitles: pathSubtitles,
+          resumeExisting: hasUnfinished,
         );
 
         allVideos.addAll(pathVideos);
@@ -332,30 +353,15 @@ class VideoScannerService {
 
         // 记录该目录的扫描数量
         pathVideoCounts.add((path.sourceId, path.path, pathVideos.length));
+        completedSnapshots.add((
+          sourceId: path.sourceId,
+          pathPrefix: path.path,
+          encounteredPaths: pathVideos.map((video) => video.file.path).toSet(),
+          canPrune: !hasUnfinished,
+        ));
       }
 
       logger.i('VideoScannerService: 文件扫描完成，共 ${allVideos.length} 个视频');
-
-      // 保存视频列表到 Hive 缓存（用于快速启动）
-      final cacheEntries = allVideos
-          .map(
-            (v) => VideoLibraryCacheEntry(
-              sourceId: v.sourceId,
-              filePath: v.file.path,
-              fileName: v.file.name,
-              thumbnailUrl: v.file.thumbnailUrl,
-              size: v.file.size,
-              modifiedTime: v.file.modifiedTime,
-            ),
-          )
-          .toList();
-
-      final cache = VideoLibraryCache(
-        videos: cacheEntries,
-        lastUpdated: DateTime.now(),
-        sourceIds: sourceIds.toList(),
-      );
-      await _cacheService.saveCache(cache);
 
       // 阶段2：保存基础记录到 SQLite
       // 为每个目录发送 savingToDb 阶段进度
@@ -377,6 +383,55 @@ class VideoScannerService {
         await _saveSubtitlesToDb(allSubtitles);
         logger.i('VideoScannerService: 字幕索引完成，共 ${allSubtitles.length} 条');
       }
+
+      // 只有全新扫描的整个目录树成功后，才删除本次未再次出现的旧记录。
+      // 断点续扫保留旧记录，下一次完整扫描再进行精确清理。
+      for (final snapshot in completedSnapshots.where((s) => s.canPrune)) {
+        final existing = await _dbService.getVideoFilesMap(
+          snapshot.sourceId,
+          pathPrefix: snapshot.pathPrefix,
+        );
+        final missing = existing.keys
+            .where((filePath) => !snapshot.encounteredPaths.contains(filePath))
+            .toList();
+        if (missing.isNotEmpty) {
+          final deleted = await _dbService.deleteVideosBatch(
+            snapshot.sourceId,
+            missing,
+          );
+          logger.i(
+            'VideoScannerService: 完整扫描后清理 $deleted 个已删除视频 '
+            '(${snapshot.sourceId}:${snapshot.pathPrefix})',
+          );
+        }
+      }
+
+      // 从最终数据库快照重建启动缓存，避免断点续扫只把“剩余目录”写进缓存。
+      final enabledPaths = paths
+          .where((path) => path.isEnabled)
+          .map((path) => (sourceId: path.sourceId, path: path.path))
+          .toList();
+      final cachedVideos = await _dbService.getAllVideosQuick(
+        enabledPaths: enabledPaths,
+      );
+      await _cacheService.saveCache(
+        VideoLibraryCache(
+          videos: cachedVideos
+              .map(
+                (video) => VideoLibraryCacheEntry(
+                  sourceId: video.sourceId,
+                  filePath: video.filePath,
+                  fileName: video.fileName,
+                  thumbnailUrl: video.thumbnailUrl,
+                  size: video.fileSize ?? 0,
+                  modifiedTime: video.fileModifiedTime,
+                ),
+              )
+              .toList(),
+          lastUpdated: DateTime.now(),
+          sourceIds: sourceIds.toList(),
+        ),
+      );
 
       // 完成文件扫描 - 为每个目录发送 completed 阶段进度
       for (final (sourceId, pathPrefix, count) in pathVideoCounts) {
@@ -400,7 +455,9 @@ class VideoScannerService {
       try {
         final stats = await _dbService.getScrapeStats();
         _scrapeStatsController.add(stats);
-        logger.i('VideoScannerService: 扫描完成，广播统计 - total: ${stats.total}, pending: ${stats.pending}');
+        logger.i(
+          'VideoScannerService: 扫描完成，广播统计 - total: ${stats.total}, pending: ${stats.pending}',
+        );
       } on Exception catch (e, st) {
         AppError.ignore(e, st, '广播扫描完成统计失败，非关键操作');
       }
@@ -423,11 +480,13 @@ class VideoScannerService {
       // 为所有正在扫描的路径发送错误进度
       for (final path in paths) {
         if (!path.isEnabled) continue;
-        _emitProgress(VideoScanProgress(
-          phase: VideoScanPhase.error,
-          sourceId: path.sourceId,
-          pathPrefix: path.path,
-        ));
+        _emitProgress(
+          VideoScanProgress(
+            phase: VideoScanPhase.error,
+            sourceId: path.sourceId,
+            pathPrefix: path.path,
+          ),
+        );
       }
 
       // 更新后台服务为错误状态
@@ -479,7 +538,9 @@ class VideoScannerService {
         final fileInfo = VideoFileNameParser.parse(video.file.name);
 
         // 先分析目录结构（用于辅助分类判断）
-        final showDirectory = VideoDatabaseService.extractShowDirectory(video.file.path);
+        final showDirectory = VideoDatabaseService.extractShowDirectory(
+          video.file.path,
+        );
         final isInSeasonDir = _isInSeasonDirectory(video.file.path);
 
         // 蓝光原盘强制识别为电影，其他使用推断分类
@@ -505,7 +566,9 @@ class VideoScannerService {
             // BDMV: 使用 MovieName 目录（BDMV 的父目录）
             movieDirectory = _extractBdmvMovieDirectory(video.file.path);
           } else {
-            movieDirectory = VideoDatabaseService.extractMovieDirectory(video.file.path);
+            movieDirectory = VideoDatabaseService.extractMovieDirectory(
+              video.file.path,
+            );
           }
         }
 
@@ -709,12 +772,16 @@ class VideoScannerService {
         _scrapeStatsController.add(batchStats);
 
         // 发送批次开始进度
-        _emitProgress(VideoScanProgress(
-          phase: VideoScanPhase.scraping,
-          scannedCount: batchStats.processed,
-          totalCount: batchStats.total,
-          currentFile: appL10n.videoScanProgressProcessingVideos(pendingVideos.length),
-        ));
+        _emitProgress(
+          VideoScanProgress(
+            phase: VideoScanPhase.scraping,
+            scannedCount: batchStats.processed,
+            totalCount: batchStats.total,
+            currentFile: appL10n.videoScanProgressProcessingVideos(
+              pendingVideos.length,
+            ),
+          ),
+        );
 
         // 更新后台服务进度（批次级别）
         await _backgroundTaskService.updateProgress(
@@ -733,21 +800,20 @@ class VideoScannerService {
         for (final video in pendingVideos) {
           if (_shouldStopScraping) break;
 
-          final future = BackgroundTaskPool.scrape.add(
-            () async {
-              await _scrapeOneVideo(video, connections);
-              batchCompletedCount++;
+          final future = BackgroundTaskPool.scrape.add(() async {
+            await _scrapeOneVideo(video, connections);
+            batchCompletedCount++;
 
-              // 实时发送进度（UI 端做节流处理）
-              _emitProgress(VideoScanProgress(
+            // 实时发送进度（UI 端做节流处理）
+            _emitProgress(
+              VideoScanProgress(
                 phase: VideoScanPhase.scraping,
                 scannedCount: batchStats.processed + batchCompletedCount,
                 totalCount: batchStats.total,
                 currentFile: video.fileName,
-              ));
-            },
-            taskName: 'scrape:${video.fileName}',
-          );
+              ),
+            );
+          }, taskName: 'scrape:${video.fileName}');
           futures.add(future);
         }
 
@@ -928,9 +994,7 @@ class VideoScannerService {
     logger.w('''
       VideoScannerService: 刮削最终失败 ${video.fileName}，
       重试 $retryCount 次后放弃,
-      ''',
-      lastError,
-    );
+      ''', lastError);
 
     // 标记为失败
     await _dbService.updateScrapeStatus(
@@ -974,7 +1038,10 @@ class VideoScannerService {
     String? pathPrefix,
   }) async {
     await _dbService.init();
-    return _dbService.getScrapeStats(sourceId: sourceId, pathPrefix: pathPrefix);
+    return _dbService.getScrapeStats(
+      sourceId: sourceId,
+      pathPrefix: pathPrefix,
+    );
   }
 
   /// 获取需要重试的视频数量
@@ -982,12 +1049,12 @@ class VideoScannerService {
   /// 包括刮削失败的和刮削完成但没有 TMDB 数据的
   /// [sourceId] 可选，按源ID筛选
   /// [pathPrefix] 可选，按路径前缀筛选（需要同时提供 sourceId）
-  Future<int> getRetryableCount({
-    String? sourceId,
-    String? pathPrefix,
-  }) async {
+  Future<int> getRetryableCount({String? sourceId, String? pathPrefix}) async {
     await _dbService.init();
-    return _dbService.getRetryableCount(sourceId: sourceId, pathPrefix: pathPrefix);
+    return _dbService.getRetryableCount(
+      sourceId: sourceId,
+      pathPrefix: pathPrefix,
+    );
   }
 
   /// 重试刮削失败和无 TMDB 数据的视频
@@ -1217,29 +1284,29 @@ VideoScannerService: 增量同步完成
       checkedCount++;
 
       // 获取数据库中该目录的记录
-      final dbRecord = await _dbService.getScanProgressItem(sourceId, currentDir);
+      final dbRecord = await _dbService.getScanProgressItem(
+        sourceId,
+        currentDir,
+      );
 
       // 获取当前目录修改时间
       DateTime? currentMtime;
       try {
         final dirInfo = await fileSystem.getFileInfo(currentDir);
         currentMtime = dirInfo.modifiedTime;
-      } on Exception {
-        // 目录可能已被删除
-        if (dbRecord != null) {
-          deletedDirectories++;
-          // 删除该目录下的视频记录
-          final deleted = await _dbService.deleteByPath(sourceId, currentDir);
-          deletedFiles += deleted;
-          await _dbService.deleteScanProgressItem(sourceId, currentDir);
-        }
+      } on Exception catch (e) {
+        // getFileInfo 失败无法证明目录已删除；超时、权限和会话过期都会走到这里。
+        // 保留数据库快照，等待下一次同步或一次成功的父目录列表来确认删除。
+        logger.w('VideoScannerService: 获取目录信息失败，保留旧数据 $currentDir', e);
         continue;
       }
 
       // 检查目录是否有变化
-      final hasChanged = dbRecord == null || // 新目录
+      final hasChanged =
+          dbRecord == null || // 新目录
           dbRecord.dirModifiedTime == null || // 没有记录修改时间
-          (currentMtime != null && currentMtime.isAfter(dbRecord.dirModifiedTime!));
+          (currentMtime != null &&
+              currentMtime.isAfter(dbRecord.dirModifiedTime!));
 
       if (!hasChanged) {
         unchangedDirectories++;
@@ -1259,7 +1326,10 @@ VideoScannerService: 增量同步完成
       try {
         final items = await fileSystem.listDirectory(currentDir);
         final subDirs = items
-            .where((f) => f.isDirectory && !f.isHidden && !_shouldSkipDirectory(f.name))
+            .where(
+              (f) =>
+                  f.isDirectory && !f.isHidden && !_shouldSkipDirectory(f.name),
+            )
             .map((f) => f.path)
             .toList();
         dirsToCheck.addAll(subDirs);
@@ -1319,7 +1389,8 @@ VideoScannerService: 增量同步完成
   }
 
   /// 扫描单个目录的文件变化
-  Future<({int addedFiles, int deletedFiles, int changedFiles})> _scanDirectoryForChanges({
+  Future<({int addedFiles, int deletedFiles, int changedFiles})>
+  _scanDirectoryForChanges({
     required NasFileSystem fileSystem,
     required String sourceId,
     required String dirPath,
@@ -1331,11 +1402,16 @@ VideoScannerService: 增量同步完成
 
     try {
       // 获取数据库中该目录的文件
-      final dbFiles = await _dbService.getVideoFilesInDirectory(sourceId, dirPath);
+      final dbFiles = await _dbService.getVideoFilesInDirectory(
+        sourceId,
+        dirPath,
+      );
 
       // 扫描当前目录
       final items = await fileSystem.listDirectory(dirPath);
-      final videoItems = items.where((f) => !f.isDirectory && f.type == FileType.video).toList();
+      final videoItems = items
+          .where((f) => !f.isDirectory && f.type == FileType.video)
+          .toList();
 
       // 获取目录修改时间用于保存
       DateTime? dirMtime;
@@ -1357,15 +1433,17 @@ VideoScannerService: 增量同步完成
           final video = _ScannedVideo(
             sourceId: sourceId,
             file: videoItem,
-            hasNfoInDirectory: items.any((f) =>
-                !f.isDirectory && f.name.toLowerCase().endsWith('.nfo')),
+            hasNfoInDirectory: items.any(
+              (f) => !f.isDirectory && f.name.toLowerCase().endsWith('.nfo'),
+            ),
           );
           await _saveBasicMetadataToDb([video]);
           addedFiles++;
         } else {
           // 检查文件是否变化
           final sizeChanged = dbFile.fileSize != videoItem.size;
-          final timeChanged = dbFile.fileModifiedTime != null &&
+          final timeChanged =
+              dbFile.fileModifiedTime != null &&
               videoItem.modifiedTime != null &&
               videoItem.modifiedTime!.isAfter(dbFile.fileModifiedTime!);
 
@@ -1374,8 +1452,9 @@ VideoScannerService: 增量同步完成
             final video = _ScannedVideo(
               sourceId: sourceId,
               file: videoItem,
-              hasNfoInDirectory: items.any((f) =>
-                  !f.isDirectory && f.name.toLowerCase().endsWith('.nfo')),
+              hasNfoInDirectory: items.any(
+                (f) => !f.isDirectory && f.name.toLowerCase().endsWith('.nfo'),
+              ),
             );
             await _saveBasicMetadataToDb([video]);
             changedFiles++;
@@ -1403,7 +1482,11 @@ VideoScannerService: 增量同步完成
       logger.w('VideoScannerService: 扫描目录变化失败 $dirPath', e);
     }
 
-    return (addedFiles: addedFiles, deletedFiles: deletedFiles, changedFiles: changedFiles);
+    return (
+      addedFiles: addedFiles,
+      deletedFiles: deletedFiles,
+      changedFiles: changedFiles,
+    );
   }
 
   /// 检查是否是字幕文件
@@ -1498,11 +1581,9 @@ VideoScannerService: 增量同步完成
     required String rootPath,
     required List<_ScannedVideo> videos,
     required List<_ScannedSubtitle> subtitles,
+    required bool resumeExisting,
   }) async {
-    // 检查是否有未完成的扫描
-    final hasUnfinished = await _dbService.hasUnfinishedScan(sourceId, rootPath);
-
-    if (hasUnfinished) {
+    if (resumeExisting) {
       logger.i('VideoScannerService: 发现未完成的扫描，继续上次进度');
       // 重置中断的扫描状态
       await _dbService.resetInterruptedScans(sourceId, rootPath);
@@ -1511,12 +1592,14 @@ VideoScannerService: 增量同步完成
       await _dbService.clearScanProgress(sourceId, rootPath);
 
       // 阶段1：发现所有目录
-      _emitProgress(VideoScanProgress(
-        phase: VideoScanPhase.scanning,
-        sourceId: sourceId,
-        pathPrefix: rootPath,
-        currentPath: appL10n.videoScanProgressDiscoveringDirectories,
-      ));
+      _emitProgress(
+        VideoScanProgress(
+          phase: VideoScanPhase.scanning,
+          sourceId: sourceId,
+          pathPrefix: rootPath,
+          currentPath: appL10n.videoScanProgressDiscoveringDirectories,
+        ),
+      );
 
       final directories = await _discoverDirectories(
         fileSystem: fileSystem,
@@ -1551,12 +1634,14 @@ VideoScannerService: 增量同步完成
       return fileSystem.discoverAllDirectories(
         rootPath,
         onProgress: (count) {
-          _emitProgress(VideoScanProgress(
-            phase: VideoScanPhase.scanning,
-            sourceId: sourceId,
-            pathPrefix: rootPath,
-            currentPath: appL10n.videoScanProgressDiscoveringCount(count),
-          ));
+          _emitProgress(
+            VideoScanProgress(
+              phase: VideoScanPhase.scanning,
+              sourceId: sourceId,
+              pathPrefix: rootPath,
+              currentPath: appL10n.videoScanProgressDiscoveringCount(count),
+            ),
+          );
         },
       );
     }
@@ -1571,7 +1656,10 @@ VideoScannerService: 增量同步完成
       try {
         final items = await fileSystem.listDirectory(current);
         final subDirs = items
-            .where((f) => f.isDirectory && !f.isHidden && !_shouldSkipDirectory(f.name))
+            .where(
+              (f) =>
+                  f.isDirectory && !f.isHidden && !_shouldSkipDirectory(f.name),
+            )
             .map((f) => f.path)
             .toList();
 
@@ -1579,15 +1667,20 @@ VideoScannerService: 增量同步完成
         pending.addAll(subDirs);
 
         if (directories.length % 50 == 0) {
-          _emitProgress(VideoScanProgress(
-            phase: VideoScanPhase.scanning,
-            sourceId: sourceId,
-            pathPrefix: rootPath,
-            currentPath: appL10n.videoScanProgressDiscoveringCount(directories.length),
-          ));
+          _emitProgress(
+            VideoScanProgress(
+              phase: VideoScanPhase.scanning,
+              sourceId: sourceId,
+              pathPrefix: rootPath,
+              currentPath: appL10n.videoScanProgressDiscoveringCount(
+                directories.length,
+              ),
+            ),
+          );
         }
-      } on Exception catch (e) {
+      } on Exception catch (e, st) {
         logger.w('VideoScannerService: 发现目录失败 $current', e);
+        Error.throwWithStackTrace(e, st);
       }
     }
 
@@ -1669,20 +1762,23 @@ VideoScannerService: 增量同步完成
     final dirMtimes = await fileSystem.getDirectoriesModifiedTime(paths);
 
     // 处理每个目录的结果
-    final completedDirs = <({String sourceId, String path, int videoCount, DateTime? dirModifiedTime})>[];
+    final completedDirs =
+        <
+          ({
+            String sourceId,
+            String path,
+            int videoCount,
+            DateTime? dirModifiedTime,
+          })
+        >[];
     final batchVideos = <_ScannedVideo>[];
     final batchSubtitles = <_ScannedSubtitle>[];
+    final failedDirectories = <String>[];
 
     for (final dir in directories) {
       final items = results[dir.path];
       if (items == null) {
-        // 列目录失败，标记完成但视频数为 0
-        completedDirs.add((
-          sourceId: sourceId,
-          path: dir.path,
-          videoCount: 0,
-          dirModifiedTime: dirMtimes[dir.path],
-        ));
+        failedDirectories.add(dir.path);
         continue;
       }
 
@@ -1725,15 +1821,30 @@ VideoScannerService: 增量同步完成
     // 批量标记完成（在数据保存之后）
     await _dbService.markDirectoriesCompletedBatch(completedDirs);
 
+    if (failedDirectories.isNotEmpty) {
+      throw StateError(
+        'Failed to list ${failedDirectories.length} directories: '
+        '${failedDirectories.take(3).join(', ')}',
+      );
+    }
+
     // 更新进度
-    final currentStats = await _dbService.getScanProgressStats(sourceId, rootPath);
-    _emitProgress(VideoScanProgress(
-      phase: VideoScanPhase.scanning,
-      sourceId: sourceId,
-      pathPrefix: rootPath,
-      currentPath: appL10n.videoScanProgressDirectoriesScanned(currentStats.completedDirectories, totalDirectories),
-      scannedCount: videos.length,
-    ));
+    final currentStats = await _dbService.getScanProgressStats(
+      sourceId,
+      rootPath,
+    );
+    _emitProgress(
+      VideoScanProgress(
+        phase: VideoScanPhase.scanning,
+        sourceId: sourceId,
+        pathPrefix: rootPath,
+        currentPath: appL10n.videoScanProgressDirectoriesScanned(
+          currentStats.completedDirectories,
+          totalDirectories,
+        ),
+        scannedCount: videos.length,
+      ),
+    );
   }
 
   /// 扫描单个目录
@@ -1795,18 +1906,26 @@ VideoScannerService: 增量同步完成
       );
 
       // 更新进度
-      final currentStats = await _dbService.getScanProgressStats(sourceId, rootPath);
-      _emitProgress(VideoScanProgress(
-        phase: VideoScanPhase.scanning,
-        sourceId: sourceId,
-        pathPrefix: rootPath,
-        currentPath: appL10n.videoScanProgressDirectoriesProgress(currentStats.completedDirectories, totalDirectories),
-        scannedCount: videos.length,
-      ));
-    } on Exception catch (e) {
+      final currentStats = await _dbService.getScanProgressStats(
+        sourceId,
+        rootPath,
+      );
+      _emitProgress(
+        VideoScanProgress(
+          phase: VideoScanPhase.scanning,
+          sourceId: sourceId,
+          pathPrefix: rootPath,
+          currentPath: appL10n.videoScanProgressDirectoriesProgress(
+            currentStats.completedDirectories,
+            totalDirectories,
+          ),
+          scannedCount: videos.length,
+        ),
+      );
+    } on Exception catch (e, st) {
       logger.w('VideoScannerService: 扫描目录失败 $dirPath', e);
-      // 失败也标记完成，避免无限重试
-      await _dbService.markDirectoryCompleted(sourceId, dirPath, videoCount: 0);
+      // 保持 scanning 状态；下次断点续扫会重置为 pending。
+      Error.throwWithStackTrace(e, st);
     }
   }
 
@@ -1821,36 +1940,45 @@ VideoScannerService: 增量同步完成
     required List<_ScannedSubtitle> subtitles,
   }) async {
     // 检测当前目录是否包含 NFO 文件
-    final hasNfo = items.any((item) =>
-        !item.isDirectory &&
-        (item.name.toLowerCase().endsWith('.nfo') ||
-         item.name.toLowerCase() == 'movie.nfo' ||
-         item.name.toLowerCase() == 'tvshow.nfo'));
+    final hasNfo = items.any(
+      (item) =>
+          !item.isDirectory &&
+          (item.name.toLowerCase().endsWith('.nfo') ||
+              item.name.toLowerCase() == 'movie.nfo' ||
+              item.name.toLowerCase() == 'tvshow.nfo'),
+    );
 
     // 收集视频和字幕
-    final videoItems = items.where((f) => !f.isDirectory && f.type == FileType.video).toList();
-    final subtitleItems = items.where((f) => !f.isDirectory && _isSubtitleFile(f.name)).toList();
+    final videoItems = items
+        .where((f) => !f.isDirectory && f.type == FileType.video)
+        .toList();
+    final subtitleItems = items
+        .where((f) => !f.isDirectory && _isSubtitleFile(f.name))
+        .toList();
 
     // 检测是否是蓝光原盘 STREAM 目录
     final isBdmvStream = _isBdmvStreamDirectory(dirPath);
 
     if (isBdmvStream) {
       // 蓝光原盘目录：只选择最大的 m2ts 文件作为主视频
-      final m2tsFiles = videoItems.where((f) =>
-          f.name.toLowerCase().endsWith('.m2ts')).toList();
+      final m2tsFiles = videoItems
+          .where((f) => f.name.toLowerCase().endsWith('.m2ts'))
+          .toList();
 
       final mainFile = _selectMainBdmvFile(m2tsFiles);
       if (mainFile != null) {
         final bdmvTitle = _extractBdmvMovieTitle(dirPath);
 
-        videos.add(_ScannedVideo(
-          sourceId: sourceId,
-          file: mainFile,
-          hasNfoInDirectory: hasNfo,
-          nfoBasicInfo: null,
-          isBdmv: true,
-          bdmvTitle: bdmvTitle,
-        ));
+        videos.add(
+          _ScannedVideo(
+            sourceId: sourceId,
+            file: mainFile,
+            hasNfoInDirectory: hasNfo,
+            nfoBasicInfo: null,
+            isBdmv: true,
+            bdmvTitle: bdmvTitle,
+          ),
+        );
 
         logger.i(
           'VideoScannerService: BDMV 检测 - 选择主文件 ${mainFile.name} (${mainFile.displaySize})，跳过 ${m2tsFiles.length - 1} 个其他文件，电影名: $bdmvTitle',
@@ -1860,16 +1988,24 @@ VideoScannerService: 增量同步完成
         final videoBaseName = _getBaseName(mainFile.name).toLowerCase();
         final titleBaseName = bdmvTitle?.toLowerCase() ?? '';
         for (final subtitleItem in subtitleItems) {
-          final subtitleBaseName = _getBaseName(subtitleItem.name).toLowerCase();
+          final subtitleBaseName = _getBaseName(
+            subtitleItem.name,
+          ).toLowerCase();
           if (subtitleBaseName == videoBaseName ||
               subtitleBaseName.startsWith(videoBaseName) ||
-              (titleBaseName.isNotEmpty && subtitleBaseName.contains(titleBaseName))) {
-            subtitles.add(_ScannedSubtitle(
-              sourceId: sourceId,
-              videoPath: mainFile.path,
-              subtitleFile: subtitleItem,
-              language: _parseSubtitleLanguage(subtitleItem.name, videoBaseName),
-            ));
+              (titleBaseName.isNotEmpty &&
+                  subtitleBaseName.contains(titleBaseName))) {
+            subtitles.add(
+              _ScannedSubtitle(
+                sourceId: sourceId,
+                videoPath: mainFile.path,
+                subtitleFile: subtitleItem,
+                language: _parseSubtitleLanguage(
+                  subtitleItem.name,
+                  videoBaseName,
+                ),
+              ),
+            );
           }
         }
 
@@ -1881,13 +2017,15 @@ VideoScannerService: 增量同步完成
 
     // 普通目录：处理所有视频文件
     for (final videoItem in videoItems) {
-      videos.add(_ScannedVideo(
-        sourceId: sourceId,
-        file: videoItem,
-        hasNfoInDirectory: hasNfo,
-        // 不在扫描阶段解析 NFO，加快扫描速度
-        nfoBasicInfo: null,
-      ));
+      videos.add(
+        _ScannedVideo(
+          sourceId: sourceId,
+          file: videoItem,
+          hasNfoInDirectory: hasNfo,
+          // 不在扫描阶段解析 NFO，加快扫描速度
+          nfoBasicInfo: null,
+        ),
+      );
 
       // 关联字幕
       final videoBaseName = _getBaseName(videoItem.name).toLowerCase();
@@ -1895,12 +2033,17 @@ VideoScannerService: 增量同步完成
         final subtitleBaseName = _getBaseName(subtitleItem.name).toLowerCase();
         if (subtitleBaseName == videoBaseName ||
             subtitleBaseName.startsWith(videoBaseName)) {
-          subtitles.add(_ScannedSubtitle(
-            sourceId: sourceId,
-            videoPath: videoItem.path,
-            subtitleFile: subtitleItem,
-            language: _parseSubtitleLanguage(subtitleItem.name, videoBaseName),
-          ));
+          subtitles.add(
+            _ScannedSubtitle(
+              sourceId: sourceId,
+              videoPath: videoItem.path,
+              subtitleFile: subtitleItem,
+              language: _parseSubtitleLanguage(
+                subtitleItem.name,
+                videoBaseName,
+              ),
+            ),
+          );
         }
       }
     }

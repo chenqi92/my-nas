@@ -30,4 +30,14 @@
 
     <!-- Media Widget -->
     <string name="media_not_playing">未在播放</string>
+
+    <!-- 启动器快捷方式 -->
+    <string name="shortcut_music_short">音乐</string>
+    <string name="shortcut_music_long">打开音乐库</string>
+    <string name="shortcut_video_short">视频</string>
+    <string name="shortcut_video_long">打开视频库</string>
+    <string name="shortcut_reading_short">阅读</string>
+    <string name="shortcut_reading_long">打开图书和笔记</string>
+    <string name="shortcut_downloads_short">下载</string>
+    <string name="shortcut_downloads_long">打开下载任务</string>
 </resources>

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/tls_trust_store.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -36,22 +37,7 @@ abstract class PTSiteApi {
   bool get supportsTransferStats => false;
 
   /// 获取基础 URL
-  String get baseUrl {
-    // 如果 host 已经包含协议，解析并使用其 scheme 和 host
-    if (source.host.startsWith('http://') ||
-        source.host.startsWith('https://')) {
-      final uri = Uri.parse(source.host);
-      final port = source.port == 443 || source.port == 80
-          ? ''
-          : ':${source.port}';
-      return '${uri.scheme}://${uri.host}$port';
-    }
-    final protocol = source.useSsl ? 'https' : 'http';
-    final port = source.port == 443 || source.port == 80
-        ? ''
-        : ':${source.port}';
-    return '$protocol://${source.host}$port';
-  }
+  String get baseUrl => source.baseUrl;
 
   /// 获取请求头
   Map<String, String> get headers;
@@ -113,7 +99,13 @@ class MTeamApi extends PTSiteApi {
     final httpClient = HttpClient();
     if (allowInvalidCertificates) {
       // ignore: cascade_invocations
-      httpClient.badCertificateCallback = (cert, host, port) => true;
+      httpClient.badCertificateCallback = (cert, host, port) =>
+          TlsTrustStore.allowsInvalidCertificate(
+            cert,
+            host,
+            port,
+            allowSelfSigned: true,
+          );
     }
     // ignore: cascade_invocations
     httpClient.connectionTimeout = const Duration(seconds: 30);
@@ -844,7 +836,13 @@ class GenericPTSiteApi extends PTSiteApi {
     final httpClient = HttpClient()
       ..connectionTimeout = const Duration(seconds: 30);
     if (_allowInvalidCertificatesForSource(source)) {
-      httpClient.badCertificateCallback = (cert, host, port) => true;
+      httpClient.badCertificateCallback = (cert, host, port) =>
+          TlsTrustStore.allowsInvalidCertificate(
+            cert,
+            host,
+            port,
+            allowSelfSigned: true,
+          );
     }
     return httpClient;
   }

@@ -32,10 +32,10 @@ class SmbAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-        type: NasAdapterType.smb,
-        name: 'SMB/CIFS',
-        version: AppConstants.appVersion,
-      );
+    type: NasAdapterType.smb,
+    name: 'SMB/CIFS',
+    version: AppConstants.appVersion,
+  );
 
   @override
   bool get isConnected => _connected;
@@ -92,8 +92,14 @@ class SmbAdapter implements NasAdapter {
     if (host.contains('/')) {
       host = host.split('/').first;
     }
-    if (host.contains(':')) {
-      host = host.split(':').first;
+    if (host.startsWith('[')) {
+      final closingBracket = host.indexOf(']');
+      if (closingBracket > 0) {
+        host = host.substring(1, closingBracket);
+      }
+    } else if (':'.allMatches(host).length == 1) {
+      // 只有单个冒号才是 host:port；多个冒号表示未加方括号的 IPv6。
+      host = host.substring(0, host.indexOf(':'));
     }
 
     // 移除末尾的点（FQDN 格式可能导致 mDNS 解析问题）
@@ -194,18 +200,17 @@ class SmbAdapter implements NasAdapter {
         );
 
         // 通过连接池获取连接并测试
-        final shares = await _connectionPool!.withConnection(
-          (client) async {
-            logger.d('SmbAdapter: SMB 连接已建立，正在获取共享列表...');
-            return client.listShares();
-          },
-          type: SmbConnectionType.general,
-        ).timeout(
-          const Duration(seconds: 30),
-          onTimeout: () {
-            throw Exception(appL10n.smbAdapterConnectionTimeoutLabel);
-          },
-        );
+        final shares = await _connectionPool!
+            .withConnection((client) async {
+              logger.d('SmbAdapter: SMB 连接已建立，正在获取共享列表...');
+              return client.listShares();
+            }, type: SmbConnectionType.general)
+            .timeout(
+              const Duration(seconds: 30),
+              onTimeout: () {
+                throw Exception(appL10n.smbAdapterConnectionTimeoutLabel);
+              },
+            );
 
         logger.i('SmbAdapter: 连接成功，发现 ${shares.length} 个共享');
 
@@ -213,9 +218,7 @@ class SmbAdapter implements NasAdapter {
           logger.d('SmbAdapter: 共享 => ${share.name} (${share.path})');
         }
 
-        _fileSystem = SmbFileSystem(
-          connectionPool: _connectionPool!,
-        );
+        _fileSystem = SmbFileSystem(connectionPool: _connectionPool!);
         _connected = true;
 
         return ConnectionSuccess(
@@ -346,7 +349,7 @@ class SmbAdapter implements NasAdapter {
     try {
       // 关闭连接池（会关闭所有连接）
       await _connectionPool?.dispose();
-    // ignore: avoid_catches_without_on_clauses
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       logger.w('SmbAdapter: 断开连接时出错', e);
     }
@@ -367,13 +370,12 @@ class SmbAdapter implements NasAdapter {
 
     try {
       // 使用 echo 命令检查连接健康状态（比 listShares 更轻量）
-      final isHealthy = await _connectionPool!.withConnection(
-        (client) => client.echo(),
-        type: SmbConnectionType.general,
-      ).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => false,
-      );
+      final isHealthy = await _connectionPool!
+          .withConnection(
+            (client) => client.echo(),
+            type: SmbConnectionType.general,
+          )
+          .timeout(const Duration(seconds: 5), onTimeout: () => false);
 
       if (isHealthy) {
         logger.d('SmbAdapter: 连接健康检查 - 正常');
@@ -383,7 +385,7 @@ class SmbAdapter implements NasAdapter {
         _connected = false;
         return false;
       }
-    // ignore: avoid_catches_without_on_clauses
+      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       logger.w('SmbAdapter: 连接健康检查 - 失败', e);
       // 标记连接已断开

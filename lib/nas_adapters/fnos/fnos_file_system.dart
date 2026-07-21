@@ -115,7 +115,7 @@ class FnOSFileSystem implements NasFileSystem {
   Future<Stream<List<int>>> getFileStream(
     String path, {
     FileRange? range,
-  }) async => api.getUrlStream(await api.getFileUrl(path));
+  }) async => api.getUrlStream(await api.getFileUrl(path), range: range);
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) => api.getUrlStream(url);

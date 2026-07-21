@@ -72,6 +72,7 @@ class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
       () async {
         // 加载保存的设置
         final settings = await _loadSettings();
+        if (!mounted) return;
 
         // 获取平台服务
         // Windows: 使用多窗口实现（更稳定）
@@ -84,6 +85,11 @@ class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
 
         if (_service != null) {
           await _service!.init(settings);
+          if (!mounted) {
+            await _service!.dispose();
+            _service = null;
+            return;
+          }
 
           // 设置回调
           if (_service is DesktopLyricServiceMacOSImpl) {
@@ -105,12 +111,14 @@ class DesktopLyricNotifier extends StateNotifier<DesktopLyricState>
             final playerState = _ref.read(musicPlayerControllerProvider);
             if (playerState.isPlaying) {
               await _service!.show();
+              if (!mounted) return;
               state = state.copyWith(isVisible: true);
             }
           }
 
           // 注册全局快捷键
           await _registerHotKey();
+          if (!mounted) return;
 
           // 注册主窗口状态监听（用于最小化时显示桌面歌词）
           windowManager.addListener(this);
@@ -585,9 +593,15 @@ class MenuBarNotifier extends StateNotifier<MenuBarState> {
     await AppError.guard(
       () async {
         final settings = await _loadSettings();
+        if (!mounted) return;
 
         _service = MenuBarServiceMacOS.instance;
         await _service!.init(settings);
+        if (!mounted) {
+          await _service!.dispose();
+          _service = null;
+          return;
+        }
 
         // 设置控制回调
         _service!.onControlAction = _handleControlAction;

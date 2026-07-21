@@ -1,5 +1,6 @@
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -32,10 +33,10 @@ class EmbyAdapter extends MediaServerAdapter {
 
   @override
   ServiceAdapterInfo get info => ServiceAdapterInfo(
-        name: 'Emby',
-        type: SourceType.emby,
-        description: appL10n.embyAdapterDescription,
-      );
+    name: 'Emby',
+    type: SourceType.emby,
+    description: appL10n.embyAdapterDescription,
+  );
 
   @override
   bool get isConnected => _isConnected;
@@ -71,7 +72,9 @@ class EmbyAdapter extends MediaServerAdapter {
   }
 
   @override
-  Future<ServiceConnectionResult> connect(ServiceConnectionConfig config) async {
+  Future<ServiceConnectionResult> connect(
+    ServiceConnectionConfig config,
+  ) async {
     try {
       // 加载或生成持久化的 deviceId
       await _loadOrGenerateDeviceId();
@@ -80,6 +83,9 @@ class EmbyAdapter extends MediaServerAdapter {
         serverUrl: config.baseUrl,
         deviceId: _deviceId,
         deviceName: 'MyNas App',
+        client: InsecureHttpClient.createClient(
+          allowSelfSigned: !config.verifySSL,
+        ),
       );
 
       // 获取服务器信息
@@ -177,8 +183,7 @@ class EmbyAdapter extends MediaServerAdapter {
       limit: limit,
       sortBy: sortBy,
       sortOrder: sortOrder,
-      includeItemTypes:
-          includeItemTypes?.map(_toEmbyType).join(','),
+      includeItemTypes: includeItemTypes?.map(_toEmbyType).join(','),
     );
     return result.toMediaItemsResult();
   }
@@ -197,12 +202,12 @@ class EmbyAdapter extends MediaServerAdapter {
     int? maxHeight,
     String? tag,
   }) => _api.getImageUrl(
-      itemId,
-      imageType.toJellyfinType(),
-      maxWidth: maxWidth,
-      maxHeight: maxHeight,
-      tag: tag,
-    );
+    itemId,
+    imageType.toJellyfinType(),
+    maxWidth: maxWidth,
+    maxHeight: maxHeight,
+    tag: tag,
+  );
 
   @override
   Future<MediaStreamInfo> getStreamInfo(
@@ -217,6 +222,8 @@ class EmbyAdapter extends MediaServerAdapter {
     }
 
     final source = playbackInfo.mediaSources.first;
+    final item = await _api.getItem(itemId);
+    final isAudio = item.type?.toLowerCase() == 'audio';
 
     // 确定播放方式
     MediaPlayMethod playMethod;
@@ -224,24 +231,35 @@ class EmbyAdapter extends MediaServerAdapter {
 
     if (preferDirectPlay && source.supportsDirectPlay) {
       playMethod = MediaPlayMethod.directPlay;
-      url = _api.getDirectStreamUrl(itemId, mediaSourceId: source.id);
+      url = _api.getDirectStreamUrl(
+        itemId,
+        mediaSourceId: source.id,
+        isAudio: isAudio,
+      );
     } else if (source.supportsDirectStream) {
       playMethod = MediaPlayMethod.directStream;
-      url = source.directStreamUrl ?? _api.getDirectStreamUrl(itemId);
+      url =
+          source.directStreamUrl ??
+          _api.getDirectStreamUrl(itemId, isAudio: isAudio);
     } else if (source.supportsTranscoding && source.transcodingUrl != null) {
       playMethod = MediaPlayMethod.transcode;
       url = '${_api.serverUrl}${source.transcodingUrl}';
     } else {
       playMethod = MediaPlayMethod.directPlay;
-      url = _api.getDirectStreamUrl(itemId, mediaSourceId: source.id);
+      url = _api.getDirectStreamUrl(
+        itemId,
+        mediaSourceId: source.id,
+        isAudio: isAudio,
+      );
     }
 
     return MediaStreamInfo(
       url: url,
       playMethod: playMethod,
       container: source.container,
-      transcodingUrl:
-          source.transcodingUrl != null ? '${_api.serverUrl}${source.transcodingUrl}' : null,
+      transcodingUrl: source.transcodingUrl != null
+          ? '${_api.serverUrl}${source.transcodingUrl}'
+          : null,
       transcodingContainer: source.transcodingContainer,
     );
   }
@@ -338,7 +356,8 @@ class EmbyAdapter extends MediaServerAdapter {
   }
 
   @override
-  Future<bool> toggleFavorite(String itemId) async => _api.toggleFavorite(itemId);
+  Future<bool> toggleFavorite(String itemId) async =>
+      _api.toggleFavorite(itemId);
 
   @override
   Future<MediaItemsResult> getRecentlyAdded({int limit = 100}) async {
@@ -349,17 +368,17 @@ class EmbyAdapter extends MediaServerAdapter {
   // === 辅助方法 ===
 
   String _toEmbyType(MediaItemType type) => switch (type) {
-        MediaItemType.movie => 'Movie',
-        MediaItemType.series => 'Series',
-        MediaItemType.season => 'Season',
-        MediaItemType.episode => 'Episode',
-        MediaItemType.musicAlbum => 'MusicAlbum',
-        MediaItemType.audio => 'Audio',
-        MediaItemType.photo => 'Photo',
-        MediaItemType.folder => 'Folder',
-        MediaItemType.person => 'Person',
-        MediaItemType.unknown => 'Unknown',
-      };
+    MediaItemType.movie => 'Movie',
+    MediaItemType.series => 'Series',
+    MediaItemType.season => 'Season',
+    MediaItemType.episode => 'Episode',
+    MediaItemType.musicAlbum => 'MusicAlbum',
+    MediaItemType.audio => 'Audio',
+    MediaItemType.photo => 'Photo',
+    MediaItemType.folder => 'Folder',
+    MediaItemType.person => 'Person',
+    MediaItemType.unknown => 'Unknown',
+  };
 
   String _parseError(Object e) {
     final message = e.toString();

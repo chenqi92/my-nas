@@ -5,7 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
-import 'package:my_nas/nas_adapters/base/nas_file_system.dart' show ThumbnailSize;
+import 'package:my_nas/nas_adapters/base/dio_file_stream.dart';
+import 'package:my_nas/nas_adapters/base/nas_file_system.dart'
+    show FileRange, ThumbnailSize;
 import 'package:pointycastle/api.dart';
 import 'package:pointycastle/asn1.dart';
 import 'package:pointycastle/asymmetric/api.dart';
@@ -16,11 +18,7 @@ import 'package:pointycastle/asymmetric/rsa.dart';
 sealed class UGreenAuthResult {}
 
 class UGreenAuthSuccess extends UGreenAuthResult {
-  UGreenAuthSuccess({
-    required this.token,
-    this.refreshToken,
-    this.userId,
-  });
+  UGreenAuthSuccess({required this.token, this.refreshToken, this.userId});
 
   final String token;
   final String? refreshToken;
@@ -88,8 +86,15 @@ class UGreenApi {
 
   final Dio dio;
   String? _token;
+  String? _staticToken;
+  String? _tokenId;
+  String? _loginPublicKey;
+  String? _sessionCookie;
   String? _username;
   String? _password;
+  bool _v2ListDisabled = false;
+  bool _v2DownloadDisabled = false;
+  final Map<String, ({String url, DateTime createdAt})> _v2DownloadCache = {};
 
   /// 是否已认证
   bool get isAuthenticated => _token != null;
@@ -107,40 +112,40 @@ class UGreenApi {
     required String password,
     String? otpCode,
   }) async {
-    logger..i('UGreenApi: 开始登录认证 (UGOS API)')
-    ..i('UGreenApi: 用户名 => $username');
+    logger
+      ..i('UGreenApi: 开始登录认证 (UGOS API)')
+      ..i('UGreenApi: 用户名 => $username');
 
     _username = username;
     _password = password;
+    _invalidateSession();
 
     try {
-      // Step 1: 获取 RSA 公钥
-      logger.i('UGreenApi: Step 1 - 获取 RSA 公钥');
-      final checkResponse = await dio.post<dynamic>(
-        '/ugreen/v1/verify/check',
-        queryParameters: {'token': ''},
-        data: {'username': username},
-        options: Options(
-          validateStatus: (status) => status != null && status < 500,
-        ),
-      );
-
-      logger..d('UGreenApi: check 响应状态码 => ${checkResponse.statusCode}')
-      ..d('UGreenApi: check 响应头 => ${checkResponse.headers.map}');
-
-      // 从响应头获取 RSA 公钥
-      final rsaTokenHeader = checkResponse.headers.value('x-rsa-token');
-      if (rsaTokenHeader == null) {
-        logger.e('UGreenApi: 未获取到 RSA 公钥');
-        return UGreenAuthFailure(error: appL10n.ugreenAuthServerNoEncryptionKey);
+      // 新固件先从 verify/check 获取 RSA 公钥；早期固件没有
+      // 该端点，仍接受旧的登录 payload。只在 RSA 初始化不可用时
+      // 回退，不会在新固件上重复发送密码。
+      var passwordPayload = password;
+      try {
+        logger.i('UGreenApi: Step 1 - 获取 RSA 公钥');
+        final checkResponse = await dio.post<dynamic>(
+          '/ugreen/v1/verify/check',
+          queryParameters: {'token': ''},
+          data: {'username': username},
+          options: Options(
+            validateStatus: (status) => status != null && status < 500,
+          ),
+        );
+        logger.d('UGreenApi: check 响应状态码 => ${checkResponse.statusCode}');
+        final rsaTokenHeader = checkResponse.headers.value('x-rsa-token');
+        if (rsaTokenHeader == null || rsaTokenHeader.isEmpty) {
+          logger.w('UGreenApi: 固件未提供 RSA 公钥，尝试早期登录流程');
+        } else {
+          passwordPayload = _encryptPassword(password, rsaTokenHeader);
+          logger.i('UGreenApi: RSA 密码加密完成');
+        }
+      } on Exception catch (e, st) {
+        AppError.ignore(e, st, 'UGREEN RSA 登录初始化失败，尝试早期固件流程');
       }
-
-      logger..i('UGreenApi: 获取到 RSA 公钥')
-
-      // Step 2: 使用 RSA 加密密码并登录
-      ..i('UGreenApi: Step 2 - 加密密码并登录');
-      final encryptedPassword = _encryptPassword(password, rsaTokenHeader);
-      logger.d('UGreenApi: 密码加密完成');
 
       final loginResponse = await dio.post<dynamic>(
         '/ugreen/v1/verify/login',
@@ -149,7 +154,7 @@ class UGreenApi {
           'keepalive': true,
           'otp': otpCode != null,
           'username': username,
-          'password': encryptedPassword,
+          'password': passwordPayload,
           'otp_code': ?otpCode,
         },
         options: Options(
@@ -157,38 +162,52 @@ class UGreenApi {
         ),
       );
 
-      logger..i('UGreenApi: login 响应状态码 => ${loginResponse.statusCode}')
-      ..d('UGreenApi: login 响应 => ${loginResponse.data}');
+      // 登录响应包含 token，不写入日志。
+      logger.i('UGreenApi: login 响应状态码 => ${loginResponse.statusCode}');
+      _sessionCookie = _cookiesFrom(loginResponse.headers);
 
       final data = loginResponse.data;
       if (data is Map<String, dynamic>) {
-        final code = data['code'];
+        final code = _intCode(data['code']);
 
         // 成功
         if (code == 200) {
           final tokenData = data['data'];
-          if (tokenData is Map<String, dynamic> && tokenData['token'] != null) {
-            _token = tokenData['token'] as String;
+          if (tokenData is Map<String, dynamic>) {
+            final sessionToken = tokenData['token']?.toString();
+            final staticToken = tokenData['static_token']?.toString();
+            _token = sessionToken ?? staticToken;
+            _staticToken = staticToken;
+            _tokenId = tokenData['token_id']?.toString();
+            _loginPublicKey = tokenData['public_key']?.toString();
+          }
+          if (_token != null && _token!.isNotEmpty) {
             logger.i('UGreenApi: 登录成功');
             return UGreenAuthSuccess(
               token: _token!,
-              userId: tokenData['user_id']?.toString(),
+              userId: tokenData is Map
+                  ? tokenData['user_id']?.toString() ??
+                        tokenData['uid']?.toString()
+                  : null,
             );
           }
         }
 
         // 需要 2FA
-        if (code == 1001 || data['need_otp'] == true || data['require_2fa'] == true) {
+        if (code == 1001 ||
+            data['need_otp'] == true ||
+            data['require_2fa'] == true) {
           logger.i('UGreenApi: 需要二次验证');
           return UGreenAuthRequires2FA();
         }
 
         // 其他错误
-        final message = data['message']?.toString() ??
-                       data['msg']?.toString() ??
-                       appL10n.ugreenAuthLoginFailed('$code');
+        final message =
+            data['message']?.toString() ??
+            data['msg']?.toString() ??
+            appL10n.ugreenAuthLoginFailed('$code');
         logger.e('UGreenApi: 登录失败 => $message');
-        return UGreenAuthFailure(error: message, code: code as int?);
+        return UGreenAuthFailure(error: message, code: code);
       }
 
       return UGreenAuthFailure(error: appL10n.ugreenAuthServerResponseInvalid);
@@ -201,7 +220,9 @@ class UGreenApi {
       if (e.type == DioExceptionType.connectionError) {
         return UGreenAuthFailure(error: appL10n.ugreenAuthConnectionFailed);
       }
-      return UGreenAuthFailure(error: e.message ?? appL10n.ugreenAuthNetworkError);
+      return UGreenAuthFailure(
+        error: e.message ?? appL10n.ugreenAuthNetworkError,
+      );
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'UGreenApi.login');
       return UGreenAuthFailure(error: e.toString());
@@ -211,14 +232,20 @@ class UGreenApi {
   /// RSA 加密密码
   String _encryptPassword(String password, String rsaPublicKeyBase64) {
     try {
-      // 解码 Base64 公钥
-      final publicKeyBytes = base64Decode(rsaPublicKeyBase64);
-      final publicKeyPem = utf8.decode(publicKeyBytes);
-
-      logger.d('UGreenApi: 公钥 PEM:\n$publicKeyPem');
-
-      // 解析 PEM 格式的公钥
-      final publicKey = _parsePublicKeyFromPem(publicKeyPem);
+      final normalizedKey = rsaPublicKeyBase64.trim();
+      late RSAPublicKey publicKey;
+      if (normalizedKey.contains('-----BEGIN')) {
+        publicKey = _parsePublicKeyFromPem(normalizedKey);
+      } else {
+        // UGOS 固件会返回“Base64(PEM)”或直接的 Base64 DER。
+        final decoded = Uint8List.fromList(
+          base64Decode(base64.normalize(normalizedKey)),
+        );
+        final maybePem = utf8.decode(decoded, allowMalformed: true);
+        publicKey = maybePem.contains('-----BEGIN')
+            ? _parsePublicKeyFromPem(maybePem)
+            : _parsePublicKeyFromDer(decoded);
+      }
 
       // 使用 PKCS1 v1.5 加密
       final encryptor = PKCS1Encoding(RSAEngine())
@@ -240,16 +267,22 @@ class UGreenApi {
     // 移除 PEM 头尾
     final lines = pem.split('\n');
     final base64String = lines
-        .where((line) =>
-            !line.startsWith('-----BEGIN') &&
-            !line.startsWith('-----END') &&
-            line.trim().isNotEmpty)
+        .where(
+          (line) =>
+              !line.startsWith('-----BEGIN') &&
+              !line.startsWith('-----END') &&
+              line.trim().isNotEmpty,
+        )
         .join();
 
-    final keyBytes = base64Decode(base64String);
+    return _parsePublicKeyFromDer(
+      Uint8List.fromList(base64Decode(base64String)),
+    );
+  }
 
+  RSAPublicKey _parsePublicKeyFromDer(Uint8List keyBytes) {
     // 解析 ASN.1 结构
-    final asn1Parser = ASN1Parser(Uint8List.fromList(keyBytes));
+    final asn1Parser = ASN1Parser(keyBytes);
     final topLevelSeq = asn1Parser.nextObject() as ASN1Sequence;
 
     // PKCS#1 格式: 直接包含 n 和 e
@@ -284,11 +317,14 @@ class UGreenApi {
       await dio.post<dynamic>(
         '/ugreen/v1/verify/logout',
         queryParameters: {'token': _token},
+        options: Options(
+          headers: _sessionCookie == null ? null : {'cookie': _sessionCookie},
+        ),
       );
     } on Exception catch (e, st) {
       AppError.ignore(e, st, '登出失败不影响操作');
     } finally {
-      _token = null;
+      _invalidateSession();
       _username = null;
       _password = null;
     }
@@ -299,15 +335,16 @@ class UGreenApi {
     final response = await _request('/ugreen/v1/system/info');
 
     final data = response.data;
-    if (data is Map<String, dynamic> && data['code'] == 200) {
+    if (data is Map<String, dynamic> && _intCode(data['code']) == 200) {
       final info = data['data'] as Map<String, dynamic>? ?? <String, dynamic>{};
       return UGreenDeviceInfo(
-        hostname: info['hostname']?.toString() ??
-                  info['device_name']?.toString() ??
-                  'UGREEN NAS',
+        hostname:
+            info['hostname']?.toString() ??
+            info['device_name']?.toString() ??
+            'UGREEN NAS',
         model: info['model']?.toString(),
-        version: info['version']?.toString() ??
-                 info['firmware_version']?.toString(),
+        version:
+            info['version']?.toString() ?? info['firmware_version']?.toString(),
         serial: info['serial']?.toString(),
         mac: info['mac']?.toString(),
       );
@@ -327,6 +364,25 @@ class UGreenApi {
 
     // 尝试不同的 API 端点和参数组合
     final attempts = [
+      // UGOS Pro / new firmware (header-authenticated v2 API).
+      {
+        'endpoint': '/ugreen/v2/filemgr/getDirFileListV2',
+        'data': {
+          'path': path,
+          'page': 1,
+          'limit': 2000,
+          'is_shield_recycle': false,
+          'data_type': 0,
+          'left_no_page_show': false,
+          'left_count': 5000,
+          'sort_type': 1,
+          'reverse': false,
+          'permission': 4,
+          'root_type': 3,
+        },
+        'method': 'POST',
+        'v2': true,
+      },
       // 尝试 1: filemgr/list 带 path 参数 (POST)
       {
         'endpoint': '/ugreen/v1/filemgr/list',
@@ -392,60 +448,105 @@ class UGreenApi {
     for (final attempt in attempts) {
       try {
         final endpoint = attempt['endpoint']! as String;
-        final data = attempt['data']! as Map<String, dynamic>;
+        final baseData = attempt['data']! as Map<String, dynamic>;
         final method = attempt['method'] as String? ?? 'POST';
-        logger.d('UGreenApi: 尝试端点 => $endpoint ($method), 参数 => $data');
+        final isV2 = attempt['v2'] == true;
+        final v2Headers = isV2 ? _v2AuthHeaders() : null;
+        if (isV2 && (_v2ListDisabled || v2Headers == null)) continue;
+        logger.d('UGreenApi: 尝试端点 => $endpoint ($method), 参数 => $baseData');
 
-        final response = await _request(endpoint, data: data, method: method);
+        Future<Response<dynamic>> requestPage(int page) {
+          final data = Map<String, dynamic>.from(baseData);
+          if (data.containsKey('page')) data['page'] = page;
+          if (data.containsKey('offset')) {
+            data['offset'] = (page - 1) * (data['limit'] as int? ?? 1000);
+          }
+          return _request(
+            endpoint,
+            data: data,
+            method: method,
+            headers: {
+              ...?v2Headers,
+              if (isV2)
+                'referer': '${dio.options.baseUrl}/filemgr/?_filemgr=my_nas',
+            },
+          );
+        }
+
+        var response = await requestPage(1);
 
         final respData = response.data;
         logger.d('UGreenApi: listDirectory 响应 => $respData');
+        var files = _extractSuccessfulList(respData, const [
+          'list',
+          'files',
+          'items',
+          'children',
+        ]);
+        if (files == null) continue;
 
-        if (respData is Map<String, dynamic>) {
-          final code = respData['code'];
-          if (code == 200) {
-            final items = <UGreenFileInfo>[];
-            // 尝试不同的响应结构
-            final data = respData['data'];
-            final dataMap = data is Map<String, dynamic> ? data : null;
-            final files = dataMap?['list'] ??
-                          dataMap?['files'] ??
-                          dataMap?['items'] ??
-                          dataMap?['children'] ??
-                          data ??
-                          <dynamic>[];
-
-            if (files is List) {
-              for (final file in files) {
-                if (file is Map<String, dynamic>) {
-                  items.add(_parseFileInfo(file, path));
-                }
-              }
+        final allFiles = <dynamic>[...files];
+        var pageFiles = files;
+        final seenPages = <String>{_pageMarker(files)};
+        final pageSize =
+            baseData['page_size'] as int? ?? baseData['limit'] as int?;
+        final isPaged =
+            baseData.containsKey('page') || baseData.containsKey('offset');
+        if (pageSize != null && isPaged) {
+          var page = 2;
+          final total = _extractTotal(respData);
+          while (pageFiles.length >= pageSize) {
+            if (total != null && allFiles.length >= total) break;
+            if (page > 10000) {
+              throw StateError('$endpoint 分页超过安全上限');
             }
-
-            if (items.isNotEmpty) {
-              logger.i('UGreenApi: 找到 ${items.length} 个文件/目录 (使用 $endpoint)');
-              return items;
+            response = await requestPage(page++);
+            final nextFiles = _extractSuccessfulList(response.data, const [
+              'list',
+              'files',
+              'items',
+              'children',
+            ]);
+            if (nextFiles == null) {
+              throw StateError('$endpoint 分页响应格式发生变化');
             }
-            logger.d('UGreenApi: $endpoint 返回空列表');
-          } else {
-            final msg = respData['message'] ?? respData['msg'] ?? 'code=$code';
-            logger.w('UGreenApi: $endpoint 返回错误: $msg');
+            if (!seenPages.add(_pageMarker(nextFiles))) {
+              throw StateError('$endpoint 忽略分页参数，返回了重复页');
+            }
+            pageFiles = nextFiles;
+            allFiles.addAll(pageFiles);
           }
         }
+
+        final items = allFiles
+            .whereType<Map<dynamic, dynamic>>()
+            .map((file) => _parseFileInfo(file, path))
+            .toList();
+        if (isV2 && !_itemsBelongToPath(items, path)) {
+          _v2ListDisabled = true;
+          logger.w('UGreenApi: v2 列表忽略目录路径，本会话回退 v1');
+          continue;
+        }
+        logger.i('UGreenApi: 找到 ${items.length} 个文件/目录 (使用 $endpoint)');
+        return items;
       } on Exception catch (e, st) {
+        if (attempt['v2'] == true) _v2ListDisabled = true;
         AppError.ignore(e, st, '尝试不同的 API 端点，失败是预期的');
       }
     }
 
     logger.e('UGreenApi: 所有端点都失败了，路径: $path');
-    return [];
+    throw StateError('UGREEN 无法获取目录列表：$path');
   }
 
   /// 获取文件下载链接
   Future<String> getFileUrl(String path) async {
+    final v2Url = await _getV2DownloadUrl(path);
+    if (v2Url != null) return v2Url;
     final baseUrl = dio.options.baseUrl;
-    return '$baseUrl/ugreen/v1/file/download?path=${Uri.encodeComponent(path)}&token=$_token';
+    return Uri.parse('$baseUrl/ugreen/v1/file/download')
+        .replace(queryParameters: {'path': path, 'token': _token ?? ''})
+        .toString();
   }
 
   /// 获取缩略图 URL
@@ -460,42 +561,42 @@ class UGreenApi {
       ThumbnailSize.xlarge => 'xlarge',
       null => 'medium',
     };
-    return '$baseUrl/ugreen/v1/file/thumbnail?path=${Uri.encodeComponent(path)}&size=$sizeParam&token=$_token';
+    return Uri.parse('$baseUrl/ugreen/v1/file/thumbnail')
+        .replace(
+          queryParameters: {
+            'path': path,
+            'size': sizeParam,
+            'token': _token ?? '',
+          },
+        )
+        .toString();
   }
 
   /// 通过 URL 获取数据流
   ///
   /// 用于在需要绕过证书验证等场景下，通过已知 URL 获取数据
-  Future<Stream<List<int>>> getUrlStream(String url) async {
+  Future<Stream<List<int>>> getUrlStream(String url, {FileRange? range}) async {
     logger.d('UGreenApi: getUrlStream => $url');
-
-    final response = await dio.get<ResponseBody>(
+    return openDioFileStream(
+      dio,
       url,
-      options: Options(
-        responseType: ResponseType.stream,
-      ),
+      range: range,
+      onSessionInvalid: _invalidateSession,
     );
-
-    if (response.data == null) {
-      throw Exception(appL10n.ugreenFileUrlStreamFailed);
-    }
-
-    return response.data!.stream;
   }
 
   /// 创建目录
   Future<void> createDirectory(String path) async {
-    await _request(
-      '/ugreen/v1/file/mkdir',
-      data: {'path': path},
-    );
+    await _request('/ugreen/v1/file/mkdir', data: {'path': path});
   }
 
   /// 删除文件或目录
   Future<void> delete(String path) async {
     await _request(
       '/ugreen/v1/file/delete',
-      data: {'paths': [path]},
+      data: {
+        'paths': [path],
+      },
     );
   }
 
@@ -503,10 +604,7 @@ class UGreenApi {
   Future<void> rename(String oldPath, String newPath) async {
     await _request(
       '/ugreen/v1/file/rename',
-      data: {
-        'old_path': oldPath,
-        'new_path': newPath,
-      },
+      data: {'old_path': oldPath, 'new_path': newPath},
     );
   }
 
@@ -517,7 +615,9 @@ class UGreenApi {
   Future<void> copy(String sourcePath, String destPath) async {
     final lastSlash = destPath.lastIndexOf('/');
     final destParent = lastSlash > 0 ? destPath.substring(0, lastSlash) : '/';
-    final destName = lastSlash >= 0 ? destPath.substring(lastSlash + 1) : destPath;
+    final destName = lastSlash >= 0
+        ? destPath.substring(lastSlash + 1)
+        : destPath;
     await _request(
       '/ugreen/v1/file/copy',
       data: {
@@ -555,9 +655,7 @@ class UGreenApi {
       queryParameters: {'token': _token ?? ''},
       data: form,
       onSendProgress: onProgress,
-      options: Options(
-        contentType: 'multipart/form-data',
-      ),
+      options: Options(contentType: 'multipart/form-data'),
     );
   }
 
@@ -578,9 +676,7 @@ class UGreenApi {
       queryParameters: {'token': _token ?? ''},
       data: form,
       onSendProgress: onProgress,
-      options: Options(
-        contentType: 'multipart/form-data',
-      ),
+      options: Options(contentType: 'multipart/form-data'),
     );
   }
 
@@ -591,18 +687,17 @@ class UGreenApi {
   Future<List<UGreenFileInfo>> search(String query, {String? path}) async {
     final response = await _request(
       '/ugreen/v1/file/search',
-      data: {
-        'keyword': query,
-        'path': ?path,
-      },
+      data: {'keyword': query, 'path': ?path},
     );
 
-    final body = response.data;
-    if (body is! Map<String, dynamic>) return [];
-    final dataField = body['data'];
-    final list = dataField is Map<String, dynamic>
-        ? (dataField['files'] as List? ?? dataField['list'] as List? ?? const <dynamic>[])
-        : (dataField is List ? dataField : const <dynamic>[]);
+    final list = _extractSuccessfulList(response.data, const [
+      'files',
+      'list',
+      'items',
+    ]);
+    if (list == null) {
+      throw StateError('UGREEN 搜索响应格式无效');
+    }
 
     return list
         .whereType<Map<dynamic, dynamic>>()
@@ -631,20 +726,63 @@ class UGreenApi {
     // 尝试不同的共享端点和参数组合
     final attempts = [
       // 存储管理相关端点
-      {'endpoint': '/ugreen/v1/storage/share/list', 'data': <String, dynamic>{}, 'method': 'GET'},
-      {'endpoint': '/ugreen/v1/storage/share/list', 'data': <String, dynamic>{}},
-      {'endpoint': '/ugreen/v1/storage/shares', 'data': <String, dynamic>{}, 'method': 'GET'},
-      {'endpoint': '/ugreen/v1/storage/volume/list', 'data': <String, dynamic>{}, 'method': 'GET'},
+      {
+        'endpoint': '/ugreen/v1/storage/share/list',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
+      {
+        'endpoint': '/ugreen/v1/storage/share/list',
+        'data': <String, dynamic>{},
+      },
+      {
+        'endpoint': '/ugreen/v1/storage/shares',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
+      {
+        'endpoint': '/ugreen/v1/storage/volume/list',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
       // 文件管理相关端点
-      {'endpoint': '/ugreen/v1/filemgr/share/list', 'data': <String, dynamic>{}, 'method': 'GET'},
-      {'endpoint': '/ugreen/v1/filemgr/shares', 'data': <String, dynamic>{}, 'method': 'GET'},
-      {'endpoint': '/ugreen/v1/filemgr/root', 'data': <String, dynamic>{}, 'method': 'GET'},
+      {
+        'endpoint': '/ugreen/v1/filemgr/share/list',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
+      {
+        'endpoint': '/ugreen/v1/filemgr/shares',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
+      {
+        'endpoint': '/ugreen/v1/filemgr/root',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
       // 通用共享端点
-      {'endpoint': '/ugreen/v1/share/list', 'data': <String, dynamic>{}, 'method': 'GET'},
-      {'endpoint': '/ugreen/v1/shares', 'data': <String, dynamic>{}, 'method': 'GET'},
+      {
+        'endpoint': '/ugreen/v1/share/list',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
+      {
+        'endpoint': '/ugreen/v1/shares',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
       // 用户目录相关
-      {'endpoint': '/ugreen/v1/user/home', 'data': <String, dynamic>{}, 'method': 'GET'},
-      {'endpoint': '/ugreen/v1/user/shares', 'data': <String, dynamic>{}, 'method': 'GET'},
+      {
+        'endpoint': '/ugreen/v1/user/home',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
+      {
+        'endpoint': '/ugreen/v1/user/shares',
+        'data': <String, dynamic>{},
+        'method': 'GET',
+      },
     ];
 
     for (final attempt in attempts) {
@@ -654,53 +792,41 @@ class UGreenApi {
         final method = attempt['method'] as String? ?? 'POST';
         logger.d('UGreenApi: 尝试共享端点 => $endpoint ($method)');
 
-        final response = await _request(endpoint, data: data.isEmpty ? null : data, method: method);
+        final response = await _request(
+          endpoint,
+          data: data.isEmpty ? null : data,
+          method: method,
+        );
 
         final respData = response.data;
         logger.d('UGreenApi: listShares 响应 ($endpoint) => $respData');
 
-        if (respData is Map<String, dynamic> && respData['code'] == 200) {
-          final items = <UGreenFileInfo>[];
-
-          // 尝试不同的响应结构
-          final data = respData['data'];
-          final dataMap = data is Map<String, dynamic> ? data : null;
-          final shares = dataMap?['list'] ??
-                         dataMap?['shares'] ??
-                         dataMap?['volumes'] ??
-                         dataMap?['items'] ??
-                         dataMap?['folders'] ??
-                         (data is List ? data : null) ??
-                         <dynamic>[];
-
-          if (shares is List) {
-            for (final share in shares) {
-              if (share is Map<String, dynamic>) {
-                final name = share['name']?.toString() ??
-                             share['share_name']?.toString() ??
-                             share['volume_name']?.toString() ??
-                             share['folder_name']?.toString() ??
-                             '';
-                if (name.isEmpty) continue;
-
-                final path = share['path']?.toString() ??
-                             share['mount_point']?.toString() ??
-                             share['share_path']?.toString() ??
-                             '/$name';
-                items.add(UGreenFileInfo(
-                  name: name,
-                  path: path,
-                  isDir: true,
-                ));
-              }
-            }
-          }
-
-          if (items.isNotEmpty) {
-            logger.i('UGreenApi: 找到 ${items.length} 个共享文件夹 (使用 $endpoint)');
-            return items;
-          }
+        final shares = _extractSuccessfulList(respData, const [
+          'list',
+          'shares',
+          'volumes',
+          'items',
+          'folders',
+        ]);
+        if (shares == null) continue;
+        final items = <UGreenFileInfo>[];
+        for (final share in shares.whereType<Map<dynamic, dynamic>>()) {
+          final name =
+              share['name']?.toString() ??
+              share['share_name']?.toString() ??
+              share['volume_name']?.toString() ??
+              share['folder_name']?.toString() ??
+              '';
+          if (name.isEmpty) continue;
+          final path =
+              share['path']?.toString() ??
+              share['mount_point']?.toString() ??
+              share['share_path']?.toString() ??
+              '/$name';
+          items.add(UGreenFileInfo(name: name, path: path, isDir: true));
         }
+        logger.i('UGreenApi: 找到 ${items.length} 个共享文件夹 (使用 $endpoint)');
+        return items;
       } on Exception catch (e, st) {
         AppError.ignore(e, st, '尝试不同的共享 API 端点，失败是预期的');
       }
@@ -709,37 +835,40 @@ class UGreenApi {
     // 所有共享端点都失败，尝试直接列出根目录 (使用不同的路径格式)
     logger.i('UGreenApi: 共享端点都失败，尝试直接列出根目录');
 
-    // 尝试不同的根路径
-    for (final rootPath in ['/', '/Volume1', '/volume1', '/mnt', '/data']) {
-      try {
-        final rootFiles = await listDirectory(rootPath);
-        if (rootFiles.isNotEmpty) {
-          logger.i('UGreenApi: 从 $rootPath 获取到 ${rootFiles.length} 个文件夹');
-          // 如果是子目录，调整路径
-          if (rootPath != '/') {
-            return rootFiles.map((f) => UGreenFileInfo(
-              name: f.name,
-              path: f.path,
-              isDir: f.isDir,
-              size: f.size,
-              modified: f.modified,
-              created: f.created,
-              mimeType: f.mimeType,
-            )).toList();
-          }
-          return rootFiles;
-        }
-      } on Exception catch (e, st) {
-        AppError.ignore(e, st, '尝试不同的根路径，失败是预期的');
+    return listDirectory('/');
+  }
+
+  List<dynamic>? _extractSuccessfulList(dynamic body, List<String> keys) {
+    if (body is! Map<String, dynamic> || _intCode(body['code']) != 200) {
+      return null;
+    }
+    final payload = body['data'];
+    if (payload is List) return payload;
+    if (payload is Map) {
+      for (final key in keys) {
+        final value = payload[key];
+        if (value is List) return value;
       }
     }
-
-    // 如果所有尝试都失败，返回空列表而不是硬编码的默认值
-    // 这样用户可以知道实际上没有获取到共享文件夹
-    logger..e('UGreenApi: 无法获取共享列表！请检查 API 连接和权限')
-    ..e('UGreenApi: 你可能需要在 NAS 上创建共享文件夹或检查用户权限');
-    return [];
+    return null;
   }
+
+  int? _extractTotal(dynamic body) {
+    if (body is! Map) return null;
+    final payload = body['data'];
+    if (payload is! Map || payload['total'] == null) return null;
+    final total = _intCode(payload['total']);
+    return total > 0 ? total : null;
+  }
+
+  String _pageMarker(List<dynamic> page) => page
+      .map((item) {
+        if (item is Map) {
+          return '${item['path']}\u0000${item['id']}\u0000${item['name']}';
+        }
+        return item.toString();
+      })
+      .join('\u0001');
 
   /// 从存储池 API 获取共享文件夹
   ///
@@ -748,11 +877,15 @@ class UGreenApi {
   Future<List<UGreenFileInfo>> _getSharesFromStoragePool() async {
     logger.d('UGreenApi: 尝试从存储池获取共享文件夹');
 
-    final response = await _request('/ugreen/v1/storage/pool/list', method: 'GET');
+    final response = await _request(
+      '/ugreen/v1/storage/pool/list',
+      method: 'GET',
+    );
     final respData = response.data;
-    logger.i('UGreenApi: storage/pool/list 完整响应 => $respData');
+    logger.d('UGreenApi: storage/pool/list 响应状态已接收');
 
-    if (respData is! Map<String, dynamic> || respData['code'] != 200) {
+    if (respData is! Map<String, dynamic> ||
+        _intCode(respData['code']) != 200) {
       return [];
     }
 
@@ -762,7 +895,11 @@ class UGreenApi {
 
     // 尝试多种可能的响应结构
     // 结构 1: { pools: [ { volumes: [...] } ] }
-    final pools = dataMap?['pools'] ?? dataMap?['list'] ?? (data is List ? data : null) ?? <dynamic>[];
+    final pools =
+        dataMap?['pools'] ??
+        dataMap?['list'] ??
+        (data is List ? data : null) ??
+        <dynamic>[];
     if (pools is List) {
       for (final pool in pools) {
         if (pool is! Map) continue;
@@ -770,21 +907,24 @@ class UGreenApi {
         logger.d('UGreenApi: 处理存储池: ${pool['name']} (${pool['id']})');
 
         // 从池中提取卷/共享
-        final volumes = pool['volumes'] ?? pool['shares'] ?? pool['folders'] ?? <dynamic>[];
+        final volumes =
+            pool['volumes'] ?? pool['shares'] ?? pool['folders'] ?? <dynamic>[];
         if (volumes is List) {
           for (final vol in volumes) {
             if (vol is! Map) continue;
 
-            final name = vol['name']?.toString() ??
-                         vol['volume_name']?.toString() ??
-                         vol['share_name']?.toString() ??
-                         '';
+            final name =
+                vol['name']?.toString() ??
+                vol['volume_name']?.toString() ??
+                vol['share_name']?.toString() ??
+                '';
             if (name.isEmpty) continue;
 
             // 尝试获取路径
-            var path = vol['path']?.toString() ??
-                       vol['mount_point']?.toString() ??
-                       vol['share_path']?.toString();
+            var path =
+                vol['path']?.toString() ??
+                vol['mount_point']?.toString() ??
+                vol['share_path']?.toString();
 
             // 如果没有路径，根据名称构造
             if (path == null || path.isEmpty) {
@@ -792,16 +932,13 @@ class UGreenApi {
             }
 
             logger.d('UGreenApi: 发现共享: $name => $path');
-            items.add(UGreenFileInfo(
-              name: name,
-              path: path,
-              isDir: true,
-            ));
+            items.add(UGreenFileInfo(name: name, path: path, isDir: true));
           }
         }
 
         // 有些 UGOS 版本可能将共享文件夹放在 pool 级别
-        final shareFolders = pool['share_folders'] ?? pool['shared_folders'] ?? <dynamic>[];
+        final shareFolders =
+            pool['share_folders'] ?? pool['shared_folders'] ?? <dynamic>[];
         if (shareFolders is List) {
           for (final folder in shareFolders) {
             if (folder is! Map) continue;
@@ -812,18 +949,15 @@ class UGreenApi {
             final path = folder['path']?.toString() ?? '/$name';
 
             logger.d('UGreenApi: 发现共享文件夹: $name => $path');
-            items.add(UGreenFileInfo(
-              name: name,
-              path: path,
-              isDir: true,
-            ));
+            items.add(UGreenFileInfo(name: name, path: path, isDir: true));
           }
         }
       }
     }
 
     // 结构 2: 直接的共享列表
-    final directShares = dataMap?['shares'] ?? dataMap?['volumes'] ?? <dynamic>[];
+    final directShares =
+        dataMap?['shares'] ?? dataMap?['volumes'] ?? <dynamic>[];
     if (directShares is List) {
       for (final share in directShares) {
         if (share is! Map) continue;
@@ -831,18 +965,15 @@ class UGreenApi {
         final name = share['name']?.toString() ?? '';
         if (name.isEmpty) continue;
 
-        final path = share['path']?.toString() ??
-                     share['mount_point']?.toString() ??
-                     '/$name';
+        final path =
+            share['path']?.toString() ??
+            share['mount_point']?.toString() ??
+            '/$name';
 
         // 避免重复
         if (!items.any((item) => item.path == path)) {
           logger.d('UGreenApi: 发现直接共享: $name => $path');
-          items.add(UGreenFileInfo(
-            name: name,
-            path: path,
-            isDir: true,
-          ));
+          items.add(UGreenFileInfo(name: name, path: path, isDir: true));
         }
       }
     }
@@ -850,35 +981,173 @@ class UGreenApi {
     return items;
   }
 
+  Map<String, dynamic>? _v2AuthHeaders() {
+    final token = _token;
+    final tokenId = _tokenId;
+    final publicKey = _loginPublicKey;
+    if (token == null || tokenId == null || publicKey == null) return null;
+    try {
+      return {
+        'x-ugreen-security-key': tokenId,
+        'x-ugreen-token': _encryptPassword(token, publicKey),
+        if (_sessionCookie != null) 'cookie': _sessionCookie,
+      };
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, 'UGREEN v2 token 加密失败，回退 v1');
+      return null;
+    }
+  }
+
+  bool _itemsBelongToPath(List<UGreenFileInfo> items, String path) {
+    final normalized = path == '/' || path.isEmpty
+        ? ''
+        : path.endsWith('/')
+        ? path.substring(0, path.length - 1)
+        : path;
+    if (normalized.isEmpty) return true;
+    final pathedItems = items.where((item) => item.path.isNotEmpty).toList();
+    if (pathedItems.isEmpty) return true;
+    return pathedItems.any(
+      (item) => item.path == normalized || item.path.startsWith('$normalized/'),
+    );
+  }
+
+  Future<String?> _getV2DownloadUrl(String path) async {
+    if (_v2DownloadDisabled) return null;
+    final cached = _v2DownloadCache[path];
+    if (cached != null &&
+        DateTime.now().difference(cached.createdAt) <
+            const Duration(seconds: 60)) {
+      return cached.url;
+    }
+    final headers = _v2AuthHeaders();
+    if (headers == null) return null;
+
+    try {
+      final permission = await _request(
+        '/ugreen/v1/filemgr/detectionPermissions',
+        data: {
+          'paths': [path],
+          'type': 4,
+          'intranet_share_id': 0,
+        },
+        headers: headers,
+      );
+      if (_intCode((permission.data as Map?)?['code']) != 200) return null;
+
+      final tokenResponse = await _request(
+        '/ugreen/v2/filemgr/getDownloadToken',
+        method: 'GET',
+        data: {'paths': path, 'intranet_share_id': 0, 'coding': true},
+        headers: headers,
+      );
+      final responseBody = tokenResponse.data;
+      if (responseBody is! Map || _intCode(responseBody['code']) != 200) {
+        return null;
+      }
+      final responseData = responseBody['data'];
+      if (responseData is! Map) return null;
+      final downloadPath = responseData['dl_url']?.toString();
+      if (downloadPath == null || downloadPath.isEmpty) return null;
+      final downloadUri = Uri.tryParse(downloadPath);
+      final resolved = downloadUri?.hasScheme == true
+          ? downloadUri!.toString()
+          : Uri.parse(dio.options.baseUrl).resolve(downloadPath).toString();
+      _v2DownloadCache[path] = (url: resolved, createdAt: DateTime.now());
+      return resolved;
+    } on Exception catch (e, st) {
+      _v2DownloadDisabled = true;
+      AppError.ignore(e, st, 'UGREEN v2 下载令牌失败，本会话回退 v1');
+      return null;
+    }
+  }
+
+  void _invalidateSession() {
+    _token = null;
+    _staticToken = null;
+    _tokenId = null;
+    _loginPublicKey = null;
+    _sessionCookie = null;
+    _v2DownloadCache.clear();
+    _v2ListDisabled = false;
+    _v2DownloadDisabled = false;
+  }
+
+  int _intCode(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String? _cookiesFrom(Headers headers) {
+    final cookies = headers.map.entries
+        .where((entry) => entry.key.toLowerCase() == 'set-cookie')
+        .expand((entry) => entry.value)
+        .map((value) => value.split(';').first.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+    return cookies.isEmpty ? null : cookies.join('; ');
+  }
+
+  bool _isAuthFailureCode(int code) =>
+      code == 401 ||
+      code == 403 ||
+      code == 1001 ||
+      code == 1002 ||
+      code == 1024;
+
   /// 发送 API 请求（自动处理 token）
   Future<Response<dynamic>> _request(
     String path, {
     Map<String, dynamic>? data,
     String method = 'POST',
+    Map<String, dynamic>? headers,
   }) async {
-    final response = await dio.request<dynamic>(
-      path,
-      queryParameters: {'token': _token ?? ''},
-      data: data,
-      options: Options(method: method),
-    );
+    final isGet = method.toUpperCase() == 'GET';
+    final query = <String, dynamic>{'token': _token ?? '', if (isGet) ...?data};
+    late Response<dynamic> response;
+    try {
+      response = await dio.request<dynamic>(
+        path,
+        queryParameters: query,
+        data: isGet ? null : data,
+        options: Options(method: method, headers: headers),
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+        _invalidateSession();
+      }
+      rethrow;
+    }
 
     // 检查 token 是否过期 (code 1024)
     final responseData = response.data;
-    if (responseData is Map<String, dynamic> && responseData['code'] == 1024) {
+    final responseCode = responseData is Map
+        ? _intCode(responseData['code'])
+        : 0;
+    if (responseCode == 1024) {
       logger.i('UGreenApi: Token 过期，重新登录');
+      _invalidateSession();
       if (_username != null && _password != null) {
         final result = await login(username: _username!, password: _password!);
         if (result is UGreenAuthSuccess) {
+          final retryHeaders = headers?.containsKey('x-ugreen-token') == true
+              ? {
+                  ...?_v2AuthHeaders(),
+                  if (headers?['referer'] != null)
+                    'referer': headers!['referer'],
+                }
+              : headers;
           // 重试请求
           return dio.request<dynamic>(
             path,
-            queryParameters: {'token': _token ?? ''},
-            data: data,
-            options: Options(method: method),
+            queryParameters: {'token': _token ?? '', if (isGet) ...?data},
+            data: isGet ? null : data,
+            options: Options(method: method, headers: retryHeaders),
           );
         }
       }
+    } else if (_isAuthFailureCode(responseCode)) {
+      _invalidateSession();
     }
 
     return response;
@@ -886,35 +1155,38 @@ class UGreenApi {
 
   UGreenFileInfo _parseFileInfo(Map<dynamic, dynamic> file, String parentPath) {
     final name = file['name']?.toString() ?? file['filename']?.toString() ?? '';
-    final isDir = file['is_dir'] == true ||
-                  file['isdir'] == true ||
-                  file['type'] == 'dir' ||
-                  file['type'] == 'folder' ||
-                  file['type'] == 'directory';
+    final isDir =
+        file['is_dir'] == true ||
+        file['isdir'] == true ||
+        file['type'] == 'dir' ||
+        file['type'] == 'folder' ||
+        file['type'] == 'directory';
 
     DateTime? modified;
     // 尝试多种可能的时间字段名
-    final modifiedValue = file['modified'] ??
-                          file['mtime'] ??
-                          file['modify_time'] ??
-                          file['modifyTime'] ??
-                          file['last_modified'] ??
-                          file['lastModified'] ??
-                          file['update_time'] ??
-                          file['updateTime'] ??
-                          file['time'] ??
-                          file['date'];
+    final modifiedValue =
+        file['modified'] ??
+        file['mtime'] ??
+        file['modify_time'] ??
+        file['modifyTime'] ??
+        file['last_modified'] ??
+        file['lastModified'] ??
+        file['update_time'] ??
+        file['updateTime'] ??
+        file['time'] ??
+        file['date'];
     if (modifiedValue != null) {
       modified = _parseDateTime(modifiedValue);
     }
 
     DateTime? created;
-    final createdValue = file['created'] ??
-                         file['ctime'] ??
-                         file['create_time'] ??
-                         file['createTime'] ??
-                         file['creation_time'] ??
-                         file['creationTime'];
+    final createdValue =
+        file['created'] ??
+        file['ctime'] ??
+        file['create_time'] ??
+        file['createTime'] ??
+        file['creation_time'] ??
+        file['creationTime'];
     if (createdValue != null) {
       created = _parseDateTime(createdValue);
     }
@@ -923,7 +1195,7 @@ class UGreenApi {
       name: name,
       path: file['path']?.toString() ?? '$parentPath/$name',
       isDir: isDir,
-      size: file['size'] as int?,
+      size: file['size'] == null ? null : _intCode(file['size']),
       modified: modified,
       created: created,
       mimeType: file['mime_type']?.toString() ?? file['mimetype']?.toString(),

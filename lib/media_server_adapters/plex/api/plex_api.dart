@@ -14,7 +14,9 @@ class PlexApi {
     this.clientVersion = '1.0.0',
     this.platform = 'iOS',
     this.device = 'iPhone',
+    http.Client? client,
   }) {
+    _client = client ?? http.Client();
     // 确保 URL 不以斜杠结尾
     if (serverUrl.endsWith('/')) {
       serverUrl = serverUrl.substring(0, serverUrl.length - 1);
@@ -30,7 +32,7 @@ class PlexApi {
   String device;
 
   /// HTTP 客户端
-  final _client = http.Client();
+  late final http.Client _client;
 
   /// 获取请求头
   Map<String, String> get _headers {
@@ -58,9 +60,7 @@ class PlexApi {
   /// 发起 PIN 认证
   /// 返回 PlexPinInfo，包含 PIN 码和授权 URL
   Future<PlexPinInfo> initiatePin() async {
-    final response = await _postPlexTv('/api/v2/pins', {
-      'strong': 'true',
-    });
+    final response = await _postPlexTv('/api/v2/pins', {'strong': 'true'});
     return PlexPinInfo.fromJson(response as Map<String, dynamic>);
   }
 
@@ -127,17 +127,15 @@ class PlexApi {
   /// 使用 PIN 登录（便捷方法）
   /// 返回 (authUrl, `Future<authToken?>`)
   /// 调用方需要在浏览器中打开 authUrl，然后等待 Future 完成
-  Future<({String authUrl, Future<String?> authTokenFuture})> loginWithPin() async {
+  Future<({String authUrl, Future<String?> authTokenFuture})>
+  loginWithPin() async {
     final pin = await initiatePin();
     final authUrl = pin.getAuthUrl(
       clientId: clientIdentifier ?? 'mynas-client',
       clientName: clientName,
     );
 
-    return (
-      authUrl: authUrl,
-      authTokenFuture: waitForPinAuth(pin.id),
-    );
+    return (authUrl: authUrl, authTokenFuture: waitForPinAuth(pin.id));
   }
 
   // === 服务器信息 ===
@@ -164,7 +162,8 @@ class PlexApi {
   Future<List<PlexLibrary>> getLibraries() async {
     final response = await _get('/library/sections');
     final mediaContainer =
-        (response as Map<String, dynamic>)['MediaContainer'] as Map<String, dynamic>;
+        (response as Map<String, dynamic>)['MediaContainer']
+            as Map<String, dynamic>;
     final directories = mediaContainer['Directory'] as List? ?? [];
 
     return directories
@@ -270,7 +269,10 @@ class PlexApi {
     if (authToken != null) params['X-Plex-Token'] = authToken!;
 
     final query = params.entries
-        .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+        .map(
+          (e) =>
+              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
+        )
         .join('&');
 
     return '$serverUrl/video/:/transcode/universal/start.m3u8?$query';
@@ -352,11 +354,7 @@ class PlexApi {
   // === 图片 ===
 
   /// 获取图片 URL
-  String getImageUrl(
-    String thumbPath, {
-    int? width,
-    int? height,
-  }) {
+  String getImageUrl(String thumbPath, {int? width, int? height}) {
     if (thumbPath.isEmpty) return '';
 
     final params = <String, String>{};
@@ -381,15 +379,13 @@ class PlexApi {
   Future<dynamic> _get(String path, [Map<String, String>? params]) async {
     var url = '$serverUrl$path';
     if (params != null && params.isNotEmpty) {
-      url += '?${params.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
+      url +=
+          '?${params.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
     }
 
     logger.d('PlexApi GET: $url');
 
-    final response = await _client.get(
-      Uri.parse(url),
-      headers: _headers,
-    );
+    final response = await _client.get(Uri.parse(url), headers: _headers);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
@@ -402,15 +398,13 @@ class PlexApi {
   Future<void> _put(String path, Map<String, String> params) async {
     var url = '$serverUrl$path';
     if (params.isNotEmpty) {
-      url += '?${params.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
+      url +=
+          '?${params.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
     }
 
     logger.d('PlexApi PUT: $url');
 
-    final response = await _client.put(
-      Uri.parse(url),
-      headers: _headers,
-    );
+    final response = await _client.put(Uri.parse(url), headers: _headers);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('HTTP ${response.statusCode}: ${response.body}');
@@ -423,15 +417,13 @@ class PlexApi {
   Future<dynamic> _getPlexTv(String path, [Map<String, String>? params]) async {
     var url = '$_plexTvUrl$path';
     if (params != null && params.isNotEmpty) {
-      url += '?${params.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
+      url +=
+          '?${params.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
     }
 
     logger.d('PlexApi GET (plex.tv): $url');
 
-    final response = await _client.get(
-      Uri.parse(url),
-      headers: _headers,
-    );
+    final response = await _client.get(Uri.parse(url), headers: _headers);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;

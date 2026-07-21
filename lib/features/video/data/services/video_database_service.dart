@@ -16,18 +16,25 @@ import 'package:sqflite/sqflite.dart';
 enum VideoSortOption {
   /// 评分从高到低
   ratingDesc,
+
   /// 评分从低到高
   ratingAsc,
+
   /// 年份从新到旧
   yearDesc,
+
   /// 年份从旧到新
   yearAsc,
+
   /// 名称 A-Z
   titleAsc,
+
   /// 名称 Z-A
   titleDesc,
+
   /// 添加时间从新到旧
   addedDesc,
+
   /// 添加时间从旧到新
   addedAsc,
 }
@@ -122,36 +129,46 @@ class VideoDatabaseService {
   static const String _colFileModifiedTime = 'file_modified_time';
   static const String _colCollectionId = 'collection_id';
   static const String _colCollectionName = 'collection_name';
-  static const String _colCollectionPosterUrl = 'collection_poster_url'; // 系列海报 URL
-  static const String _colCollectionBackdropUrl = 'collection_backdrop_url'; // 系列背景图 URL
+  static const String _colCollectionPosterUrl =
+      'collection_poster_url'; // 系列海报 URL
+  static const String _colCollectionBackdropUrl =
+      'collection_backdrop_url'; // 系列背景图 URL
   static const String _colHasNfo = 'has_nfo'; // 是否检测到 NFO 文件
   static const String _colScrapePriority = 'scrape_priority'; // 刮削优先级
   static const String _colShowDirectory = 'show_directory'; // TV 剧集所属剧目录
   static const String _colMovieDirectory = 'movie_directory'; // 电影所在目录
-  static const String _colResolution = 'resolution'; // 视频分辨率 (4K, 1080p, 720p 等)
+  static const String _colResolution =
+      'resolution'; // 视频分辨率 (4K, 1080p, 720p 等)
   static const String _colLocalizedTitles = 'localized_titles'; // 多语言标题 JSON
-  static const String _colLocalizedOverviews = 'localized_overviews'; // 多语言简介 JSON
+  static const String _colLocalizedOverviews =
+      'localized_overviews'; // 多语言简介 JSON
   // 扩展视频信息
   static const String _colVideoSource = 'video_source'; // 视频来源（BluRay, WEB-DL）
   static const String _colVideoCodec = 'video_codec'; // 视频编码（HEVC, x265）
-  static const String _colHdrFormat = 'hdr_format'; // HDR 格式（HDR10, Dolby Vision）
-  static const String _colAudioFormat = 'audio_format'; // 音频格式（Atmos, DTS-HD MA）
+  static const String _colHdrFormat =
+      'hdr_format'; // HDR 格式（HDR10, Dolby Vision）
+  static const String _colAudioFormat =
+      'audio_format'; // 音频格式（Atmos, DTS-HD MA）
   static const String _colIs3D = 'is_3d'; // 是否 3D 内容
   static const String _colIsRemux = 'is_remux'; // 是否 Remux 版本
   // 扩展评分
   static const String _colImdbId = 'imdb_id'; // IMDb ID
   static const String _colImdbRating = 'imdb_rating'; // IMDb 评分
-  static const String _colMetacriticRating = 'metacritic_rating'; // Metacritic 评分
+  static const String _colMetacriticRating =
+      'metacritic_rating'; // Metacritic 评分
   static const String _colTraktRating = 'trakt_rating'; // Trakt 评分
   // 内容分级
   static const String _colCertification = 'certification'; // 内容分级（PG, R 等）
 
   // 媒体服务器相关字段
-  static const String _colServerType = 'server_type'; // 服务器类型 (jellyfin, emby, plex)
+  static const String _colServerType =
+      'server_type'; // 服务器类型 (jellyfin, emby, plex)
   static const String _colServerItemId = 'server_item_id'; // 服务器中的项目 ID
-  static const String _colScrapeSource = 'scrape_source'; // 元数据来源 (tmdb, server, nfo, filename)
+  static const String _colScrapeSource =
+      'scrape_source'; // 元数据来源 (tmdb, server, nfo, filename)
   static const String _colIsWatched = 'is_watched'; // 是否已观看
-  static const String _colPlaybackPositionTicks = 'playback_position_ticks'; // 播放位置（时间刻度）
+  static const String _colPlaybackPositionTicks =
+      'playback_position_ticks'; // 播放位置（时间刻度）
   static const String _colLastPlayedAt = 'last_played_at'; // 最后播放时间
 
   // 字幕表
@@ -182,7 +199,8 @@ class VideoDatabaseService {
   static const String _tvgColEpisodeCount = 'episode_count';
   static const String _tvgColRepresentativeRowid = 'representative_rowid';
   static const String _tvgColLastSynced = 'last_synced';
-  static const String _tvgColLocalPosterUrl = 'local_poster_url'; // 本地海报路径（NAS 路径或 file:// 路径）
+  static const String _tvgColLocalPosterUrl =
+      'local_poster_url'; // 本地海报路径（NAS 路径或 file:// 路径）
 
   // 电影系列分组表
   static const String _tableMovieCollectionGroups = 'movie_collection_groups';
@@ -202,10 +220,12 @@ class VideoDatabaseService {
   static const String _scanColSourceId = 'source_id';
   static const String _scanColPath = 'path'; // 目录路径
   static const String _scanColRootPath = 'root_path'; // 根目录路径（媒体库配置的路径）
-  static const String _scanColStatus = 'status'; // 0=pending, 1=scanning, 2=completed
+  static const String _scanColStatus =
+      'status'; // 0=pending, 1=scanning, 2=completed
   static const String _scanColVideoCount = 'video_count'; // 该目录发现的视频数
   static const String _scanColLastScanned = 'last_scanned'; // 最后扫描时间
-  static const String _scanColDirModifiedTime = 'dir_modified_time'; // 目录的修改时间（用于增量同步）
+  static const String _scanColDirModifiedTime =
+      'dir_modified_time'; // 目录的修改时间（用于增量同步）
 
   /// 扫描状态常量
   static const int scanStatusPending = 0;
@@ -324,34 +344,44 @@ class VideoDatabaseService {
 
     // 创建索引 - 用于快速查询
     await db.execute(
-        'CREATE INDEX idx_tmdb_id ON $_tableMetadata($_colTmdbId)');
+      'CREATE INDEX idx_tmdb_id ON $_tableMetadata($_colTmdbId)',
+    );
     await db.execute(
-        'CREATE INDEX idx_category ON $_tableMetadata($_colCategory)');
+      'CREATE INDEX idx_category ON $_tableMetadata($_colCategory)',
+    );
     await db.execute(
-        'CREATE INDEX idx_scrape_status ON $_tableMetadata($_colScrapeStatus)');
+      'CREATE INDEX idx_scrape_status ON $_tableMetadata($_colScrapeStatus)',
+    );
+    await db.execute('CREATE INDEX idx_year ON $_tableMetadata($_colYear)');
     await db.execute(
-        'CREATE INDEX idx_year ON $_tableMetadata($_colYear)');
+      'CREATE INDEX idx_rating ON $_tableMetadata($_colRating DESC)',
+    );
     await db.execute(
-        'CREATE INDEX idx_rating ON $_tableMetadata($_colRating DESC)');
+      'CREATE INDEX idx_source_id ON $_tableMetadata($_colSourceId)',
+    );
     await db.execute(
-        'CREATE INDEX idx_source_id ON $_tableMetadata($_colSourceId)');
-    await db.execute(
-        'CREATE INDEX idx_last_updated ON $_tableMetadata($_colLastUpdated DESC)');
+      'CREATE INDEX idx_last_updated ON $_tableMetadata($_colLastUpdated DESC)',
+    );
     // 复合索引 - 用于剧集查询
     await db.execute(
-        'CREATE INDEX idx_tmdb_season_episode ON $_tableMetadata($_colTmdbId, $_colSeasonNumber, $_colEpisodeNumber)');
+      'CREATE INDEX idx_tmdb_season_episode ON $_tableMetadata($_colTmdbId, $_colSeasonNumber, $_colEpisodeNumber)',
+    );
     // 电影系列索引
     await db.execute(
-        'CREATE INDEX idx_collection_id ON $_tableMetadata($_colCollectionId)');
+      'CREATE INDEX idx_collection_id ON $_tableMetadata($_colCollectionId)',
+    );
     // 刮削优先级索引（用于智能排序）
     await db.execute(
-        'CREATE INDEX idx_scrape_priority ON $_tableMetadata($_colScrapePriority, $_colScrapeStatus)');
+      'CREATE INDEX idx_scrape_priority ON $_tableMetadata($_colScrapePriority, $_colScrapeStatus)',
+    );
     // 媒体服务器索引（用于快速查找服务器项目）
     await db.execute(
-        'CREATE INDEX idx_server_item ON $_tableMetadata($_colSourceId, $_colServerItemId)');
+      'CREATE INDEX idx_server_item ON $_tableMetadata($_colSourceId, $_colServerItemId)',
+    );
     // 观看状态索引
     await db.execute(
-        'CREATE INDEX idx_watched ON $_tableMetadata($_colIsWatched)');
+      'CREATE INDEX idx_watched ON $_tableMetadata($_colIsWatched)',
+    );
 
     // 创建字幕索引表
     await _createSubtitleTable(db);
@@ -442,7 +472,8 @@ class VideoDatabaseService {
 
     // 创建索引 - 用于快速查询视频对应的字幕
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_subtitle_video ON $_tableSubtitles($_subColSourceId, $_subColVideoPath)');
+      'CREATE INDEX IF NOT EXISTS idx_subtitle_video ON $_tableSubtitles($_subColSourceId, $_subColVideoPath)',
+    );
 
     logger.i('VideoDatabaseService: 字幕索引表创建完成');
   }
@@ -467,9 +498,11 @@ class VideoDatabaseService {
 
     // 创建索引 - 用于快速查询待扫描目录
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_scan_source_status ON $_tableScanProgress($_scanColSourceId, $_scanColStatus)');
+      'CREATE INDEX IF NOT EXISTS idx_scan_source_status ON $_tableScanProgress($_scanColSourceId, $_scanColStatus)',
+    );
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_scan_root ON $_tableScanProgress($_scanColSourceId, $_scanColRootPath)');
+      'CREATE INDEX IF NOT EXISTS idx_scan_root ON $_tableScanProgress($_scanColSourceId, $_scanColRootPath)',
+    );
 
     logger.i('VideoDatabaseService: 扫描进度表创建完成');
   }
@@ -502,11 +535,14 @@ class VideoDatabaseService {
 
     // 创建索引
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_tvg_tmdb_id ON $_tableTvShowGroups($_tvgColTmdbId)');
+      'CREATE INDEX IF NOT EXISTS idx_tvg_tmdb_id ON $_tableTvShowGroups($_tvgColTmdbId)',
+    );
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_tvg_rating ON $_tableTvShowGroups($_tvgColRating DESC)');
+      'CREATE INDEX IF NOT EXISTS idx_tvg_rating ON $_tableTvShowGroups($_tvgColRating DESC)',
+    );
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_tvg_normalized_title ON $_tableTvShowGroups($_tvgColNormalizedTitle)');
+      'CREATE INDEX IF NOT EXISTS idx_tvg_normalized_title ON $_tableTvShowGroups($_tvgColNormalizedTitle)',
+    );
 
     logger.i('VideoDatabaseService: TV剧集分组表创建完成');
   }
@@ -529,7 +565,8 @@ class VideoDatabaseService {
 
     // 创建索引
     await db.execute(
-        'CREATE INDEX IF NOT EXISTS idx_mcg_tmdb_id ON $_tableMovieCollectionGroups($_mcgColTmdbCollectionId)');
+      'CREATE INDEX IF NOT EXISTS idx_mcg_tmdb_id ON $_tableMovieCollectionGroups($_mcgColTmdbCollectionId)',
+    );
 
     logger.i('VideoDatabaseService: 电影系列分组表创建完成');
   }
@@ -552,7 +589,9 @@ class VideoDatabaseService {
       return;
     }
 
-    logger.i('VideoDatabaseService: 开始迁移 ${tvShows.length} 条 TV 剧集的 show_directory');
+    logger.i(
+      'VideoDatabaseService: 开始迁移 ${tvShows.length} 条 TV 剧集的 show_directory',
+    );
 
     // 批量更新
     final batch = db.batch();
@@ -673,7 +712,9 @@ class VideoDatabaseService {
       return;
     }
 
-    logger.i('VideoDatabaseService: 开始迁移 ${movies.length} 条电影的 movie_directory');
+    logger.i(
+      'VideoDatabaseService: 开始迁移 ${movies.length} 条电影的 movie_directory',
+    );
 
     // 批量更新
     final batch = db.batch();
@@ -786,8 +827,10 @@ class VideoDatabaseService {
       final updates = <String, dynamic>{};
       if (fileInfo.source != null) updates[_colVideoSource] = fileInfo.source;
       if (fileInfo.codec != null) updates[_colVideoCodec] = fileInfo.codec;
-      if (fileInfo.hdrFormat != null) updates[_colHdrFormat] = fileInfo.hdrFormat;
-      if (fileInfo.audioFormat != null) updates[_colAudioFormat] = fileInfo.audioFormat;
+      if (fileInfo.hdrFormat != null)
+        updates[_colHdrFormat] = fileInfo.hdrFormat;
+      if (fileInfo.audioFormat != null)
+        updates[_colAudioFormat] = fileInfo.audioFormat;
       if (fileInfo.is3D) updates[_colIs3D] = 1;
       if (fileInfo.isRemux) updates[_colIsRemux] = 1;
 
@@ -813,16 +856,20 @@ class VideoDatabaseService {
     if (oldVersion < 2) {
       // 添加刮削状态字段
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colScrapeStatus INTEGER DEFAULT 0');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colScrapeStatus INTEGER DEFAULT 0',
+      );
       // 添加文件大小字段
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colFileSize INTEGER');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colFileSize INTEGER',
+      );
       // 添加文件修改时间字段
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colFileModifiedTime INTEGER');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colFileModifiedTime INTEGER',
+      );
       // 创建刮削状态索引
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_scrape_status ON $_tableMetadata($_colScrapeStatus)');
+        'CREATE INDEX IF NOT EXISTS idx_scrape_status ON $_tableMetadata($_colScrapeStatus)',
+      );
 
       // 将现有已有TMDB数据的记录标记为已刮削完成
       await db.execute('''
@@ -838,12 +885,15 @@ class VideoDatabaseService {
     if (oldVersion < 3) {
       // 添加电影系列字段
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colCollectionId INTEGER');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colCollectionId INTEGER',
+      );
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colCollectionName TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colCollectionName TEXT',
+      );
       // 创建电影系列索引
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_collection_id ON $_tableMetadata($_colCollectionId)');
+        'CREATE INDEX IF NOT EXISTS idx_collection_id ON $_tableMetadata($_colCollectionId)',
+      );
 
       logger.i('VideoDatabaseService: 版本2->3 升级完成');
     }
@@ -852,13 +902,16 @@ class VideoDatabaseService {
     if (oldVersion < 4) {
       // 添加 NFO 检测标志
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colHasNfo INTEGER DEFAULT 0');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colHasNfo INTEGER DEFAULT 0',
+      );
       // 添加刮削优先级字段
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colScrapePriority INTEGER DEFAULT 2');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colScrapePriority INTEGER DEFAULT 2',
+      );
       // 创建刮削优先级索引
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_scrape_priority ON $_tableMetadata($_colScrapePriority, $_colScrapeStatus)');
+        'CREATE INDEX IF NOT EXISTS idx_scrape_priority ON $_tableMetadata($_colScrapePriority, $_colScrapeStatus)',
+      );
 
       logger.i('VideoDatabaseService: 版本3->4 升级完成');
     }
@@ -867,7 +920,8 @@ class VideoDatabaseService {
     if (oldVersion < 5) {
       // 添加本地海报缓存路径字段
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colLocalPosterUrl TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colLocalPosterUrl TEXT',
+      );
 
       logger.i('VideoDatabaseService: 版本4->5 升级完成');
     }
@@ -902,10 +956,12 @@ class VideoDatabaseService {
     if (oldVersion < 9) {
       // 添加 show_directory 字段（TV 剧集所属剧目录，用于分组）
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colShowDirectory TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colShowDirectory TEXT',
+      );
       // 创建索引
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_show_directory ON $_tableMetadata($_colShowDirectory)');
+        'CREATE INDEX IF NOT EXISTS idx_show_directory ON $_tableMetadata($_colShowDirectory)',
+      );
 
       // 迁移现有 TV 剧集数据：从 file_path 解析 show_directory
       // 使用 _extractShowDirectory 逻辑在 Dart 层处理
@@ -918,10 +974,12 @@ class VideoDatabaseService {
     if (oldVersion < 10) {
       // 添加 movie_directory 字段（电影所在目录，用于目录系列识别）
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colMovieDirectory TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colMovieDirectory TEXT',
+      );
       // 创建索引
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_movie_directory ON $_tableMetadata($_colMovieDirectory)');
+        'CREATE INDEX IF NOT EXISTS idx_movie_directory ON $_tableMetadata($_colMovieDirectory)',
+      );
 
       // 迁移现有电影数据：从 file_path 解析 movie_directory
       await _migrateMovieDirectories(db);
@@ -933,7 +991,8 @@ class VideoDatabaseService {
     if (oldVersion < 11) {
       // 添加 resolution 字段（视频分辨率，用于质量分组）
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colResolution TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colResolution TEXT',
+      );
 
       // 迁移现有数据：从文件名解析 resolution
       await _migrateResolutions(db);
@@ -945,9 +1004,17 @@ class VideoDatabaseService {
     if (oldVersion < 12) {
       // 添加 local_poster_url 列到聚合表（使用 _safeAddColumn 避免重复添加）
       await _safeAddColumn(
-          db, _tableTvShowGroups, _tvgColLocalPosterUrl, 'TEXT');
+        db,
+        _tableTvShowGroups,
+        _tvgColLocalPosterUrl,
+        'TEXT',
+      );
       await _safeAddColumn(
-          db, _tableMovieCollectionGroups, _mcgColLocalPosterUrl, 'TEXT');
+        db,
+        _tableMovieCollectionGroups,
+        _mcgColLocalPosterUrl,
+        'TEXT',
+      );
 
       // 从 video_metadata 同步 local_poster_url 到 tv_show_groups
       await db.execute('''
@@ -959,16 +1026,20 @@ class VideoDatabaseService {
         )
       ''');
 
-      logger.i('VideoDatabaseService: 版本11->12 升级完成（添加聚合表 local_poster_url 字段）');
+      logger.i(
+        'VideoDatabaseService: 版本11->12 升级完成（添加聚合表 local_poster_url 字段）',
+      );
     }
 
     // 从版本12升级到版本13
     if (oldVersion < 13) {
       // 添加多语言元数据字段
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colLocalizedTitles TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colLocalizedTitles TEXT',
+      );
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colLocalizedOverviews TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colLocalizedOverviews TEXT',
+      );
 
       logger.i('VideoDatabaseService: 版本12->13 升级完成（添加多语言元数据字段）');
     }
@@ -977,7 +1048,8 @@ class VideoDatabaseService {
     if (oldVersion < 14) {
       // 添加国家/地区字段
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colCountries TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colCountries TEXT',
+      );
 
       logger.i('VideoDatabaseService: 版本13->14 升级完成（添加国家/地区字段）');
     }
@@ -986,9 +1058,11 @@ class VideoDatabaseService {
     if (oldVersion < 15) {
       // 添加电影系列海报字段（存储 TMDB 系列专属海报）
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colCollectionPosterUrl TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colCollectionPosterUrl TEXT',
+      );
       await db.execute(
-          'ALTER TABLE $_tableMetadata ADD COLUMN $_colCollectionBackdropUrl TEXT');
+        'ALTER TABLE $_tableMetadata ADD COLUMN $_colCollectionBackdropUrl TEXT',
+      );
 
       logger.i('VideoDatabaseService: 版本14->15 升级完成（添加系列海报字段）');
     }
@@ -997,10 +1071,13 @@ class VideoDatabaseService {
     // 修复：版本15的迁移可能在某些情况下没有成功执行，导致列缺失
     if (oldVersion < 16) {
       // 安全地检查并添加缺失的列
+      await _safeAddColumn(db, _tableMetadata, _colCollectionPosterUrl, 'TEXT');
       await _safeAddColumn(
-          db, _tableMetadata, _colCollectionPosterUrl, 'TEXT');
-      await _safeAddColumn(
-          db, _tableMetadata, _colCollectionBackdropUrl, 'TEXT');
+        db,
+        _tableMetadata,
+        _colCollectionBackdropUrl,
+        'TEXT',
+      );
 
       logger.i('VideoDatabaseService: 版本15->16 升级完成（修复系列海报字段）');
     }
@@ -1013,7 +1090,12 @@ class VideoDatabaseService {
       await _safeAddColumn(db, _tableMetadata, _colHdrFormat, 'TEXT');
       await _safeAddColumn(db, _tableMetadata, _colAudioFormat, 'TEXT');
       await _safeAddColumn(db, _tableMetadata, _colIs3D, 'INTEGER DEFAULT 0');
-      await _safeAddColumn(db, _tableMetadata, _colIsRemux, 'INTEGER DEFAULT 0');
+      await _safeAddColumn(
+        db,
+        _tableMetadata,
+        _colIsRemux,
+        'INTEGER DEFAULT 0',
+      );
       // 添加扩展评分字段
       await _safeAddColumn(db, _tableMetadata, _colImdbId, 'TEXT');
       await _safeAddColumn(db, _tableMetadata, _colImdbRating, 'REAL');
@@ -1031,7 +1113,12 @@ class VideoDatabaseService {
     // 从版本17升级到版本18
     if (oldVersion < 18) {
       // 添加目录修改时间字段（用于增量同步）
-      await _safeAddColumn(db, _tableScanProgress, _scanColDirModifiedTime, 'INTEGER');
+      await _safeAddColumn(
+        db,
+        _tableScanProgress,
+        _scanColDirModifiedTime,
+        'INTEGER',
+      );
 
       logger.i('VideoDatabaseService: 版本17->18 升级完成（添加增量同步支持）');
     }
@@ -1042,15 +1129,27 @@ class VideoDatabaseService {
       await _safeAddColumn(db, _tableMetadata, _colServerType, 'TEXT');
       await _safeAddColumn(db, _tableMetadata, _colServerItemId, 'TEXT');
       await _safeAddColumn(db, _tableMetadata, _colScrapeSource, 'TEXT');
-      await _safeAddColumn(db, _tableMetadata, _colIsWatched, 'INTEGER DEFAULT 0');
-      await _safeAddColumn(db, _tableMetadata, _colPlaybackPositionTicks, 'INTEGER');
+      await _safeAddColumn(
+        db,
+        _tableMetadata,
+        _colIsWatched,
+        'INTEGER DEFAULT 0',
+      );
+      await _safeAddColumn(
+        db,
+        _tableMetadata,
+        _colPlaybackPositionTicks,
+        'INTEGER',
+      );
       await _safeAddColumn(db, _tableMetadata, _colLastPlayedAt, 'INTEGER');
 
       // 创建索引
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_server_item ON $_tableMetadata($_colSourceId, $_colServerItemId)');
+        'CREATE INDEX IF NOT EXISTS idx_server_item ON $_tableMetadata($_colSourceId, $_colServerItemId)',
+      );
       await db.execute(
-          'CREATE INDEX IF NOT EXISTS idx_watched ON $_tableMetadata($_colIsWatched)');
+        'CREATE INDEX IF NOT EXISTS idx_watched ON $_tableMetadata($_colIsWatched)',
+      );
 
       // 回填 scrape_source：有 tmdb_id 的记录设为 'tmdb'
       await db.execute('''
@@ -1188,7 +1287,8 @@ class VideoDatabaseService {
 
   /// 批量获取元数据
   Future<Map<String, VideoMetadata>> getBatch(
-      List<({String sourceId, String filePath})> keys) async {
+    List<({String sourceId, String filePath})> keys,
+  ) async {
     if (!_initialized) await init();
     if (keys.isEmpty) return {};
 
@@ -1244,7 +1344,8 @@ class VideoDatabaseService {
     if (!_initialized) await init();
 
     // 分辨率优先级排序
-    const resolutionOrder = '''
+    const resolutionOrder =
+        '''
       CASE
         WHEN $_colResolution IN ('4K', '2160p', 'UHD') THEN 4
         WHEN $_colResolution = '1080p' THEN 3
@@ -1258,15 +1359,19 @@ class VideoDatabaseService {
 
     if (metadata.tmdbId != null) {
       // 如果有 TMDB ID，按 TMDB ID 匹配
-      results = await _db!.rawQuery('''
+      results = await _db!.rawQuery(
+        '''
         SELECT * FROM $_tableMetadata
         WHERE $_colCategory = 0 AND $_colTmdbId = ?
         ORDER BY $resolutionOrder DESC,
                  COALESCE($_colFileSize, 0) DESC
-      ''', [metadata.tmdbId]);
+      ''',
+        [metadata.tmdbId],
+      );
     } else if (metadata.title != null) {
       // 如果没有 TMDB ID，按标题+年份匹配
-      results = await _db!.rawQuery('''
+      results = await _db!.rawQuery(
+        '''
         SELECT * FROM $_tableMetadata
         WHERE $_colCategory = 0
           AND $_colTmdbId IS NULL
@@ -1274,7 +1379,9 @@ class VideoDatabaseService {
           AND COALESCE($_colYear, 0) = ?
         ORDER BY $resolutionOrder DESC,
                  COALESCE($_colFileSize, 0) DESC
-      ''', [metadata.title, metadata.year ?? 0]);
+      ''',
+        [metadata.title, metadata.year ?? 0],
+      );
     } else {
       // 没有匹配条件，返回单个元素
       return [metadata];
@@ -1296,18 +1403,28 @@ class VideoDatabaseService {
     int? count;
 
     if (metadata.tmdbId != null) {
-      count = Sqflite.firstIntValue(await _db!.rawQuery('''
+      count = Sqflite.firstIntValue(
+        await _db!.rawQuery(
+          '''
         SELECT COUNT(*) FROM $_tableMetadata
         WHERE $_colCategory = 0 AND $_colTmdbId = ?
-      ''', [metadata.tmdbId]));
+      ''',
+          [metadata.tmdbId],
+        ),
+      );
     } else if (metadata.title != null) {
-      count = Sqflite.firstIntValue(await _db!.rawQuery('''
+      count = Sqflite.firstIntValue(
+        await _db!.rawQuery(
+          '''
         SELECT COUNT(*) FROM $_tableMetadata
         WHERE $_colCategory = 0
           AND $_colTmdbId IS NULL
           AND LOWER(COALESCE($_colTitle, '')) = LOWER(?)
           AND COALESCE($_colYear, 0) = ?
-      ''', [metadata.title, metadata.year ?? 0]));
+      ''',
+          [metadata.title, metadata.year ?? 0],
+        ),
+      );
     }
 
     return count ?? 1;
@@ -1315,10 +1432,13 @@ class VideoDatabaseService {
 
   /// 根据 TMDB ID 获取剧集映射（使用索引）
   Future<Map<int, Map<int, VideoMetadata>>> getEpisodesByTmdbId(
-      int tmdbId) async {
+    int tmdbId,
+  ) async {
     if (!_initialized) await init();
 
-    logger.d('VideoDatabaseService: getEpisodesByTmdbId called, tmdbId=$tmdbId');
+    logger.d(
+      'VideoDatabaseService: getEpisodesByTmdbId called, tmdbId=$tmdbId',
+    );
 
     final results = await _db!.query(
       _tableMetadata,
@@ -1328,18 +1448,24 @@ class VideoDatabaseService {
       orderBy: '$_colSeasonNumber, $_colEpisodeNumber',
     );
 
-    logger.d('VideoDatabaseService: query returned ${results.length} rows for tmdbId=$tmdbId');
+    logger.d(
+      'VideoDatabaseService: query returned ${results.length} rows for tmdbId=$tmdbId',
+    );
 
     final episodeMap = <int, Map<int, VideoMetadata>>{};
     for (final row in results) {
       final metadata = _fromRow(row);
       if (metadata.seasonNumber != null && metadata.episodeNumber != null) {
-        episodeMap
-            .putIfAbsent(metadata.seasonNumber!, () => {})[metadata.episodeNumber!] = metadata;
+        episodeMap.putIfAbsent(
+          metadata.seasonNumber!,
+          () => {},
+        )[metadata.episodeNumber!] = metadata;
       }
     }
 
-    logger.d('VideoDatabaseService: returning episodeMap with ${episodeMap.length} seasons for tmdbId=$tmdbId');
+    logger.d(
+      'VideoDatabaseService: returning episodeMap with ${episodeMap.length} seasons for tmdbId=$tmdbId',
+    );
     return episodeMap;
   }
 
@@ -1349,10 +1475,13 @@ class VideoDatabaseService {
   /// - 对于有 seasonNumber/episodeNumber 的剧集，使用原有值
   /// - 对于没有 seasonNumber/episodeNumber 的剧集，默认分配到第 1 季，按文件名排序生成集号
   Future<Map<int, Map<int, VideoMetadata>>> getEpisodesByShowDirectory(
-      String showDirectory) async {
+    String showDirectory,
+  ) async {
     if (!_initialized) await init();
 
-    logger.d('VideoDatabaseService: getEpisodesByShowDirectory called, showDirectory=$showDirectory');
+    logger.d(
+      'VideoDatabaseService: getEpisodesByShowDirectory called, showDirectory=$showDirectory',
+    );
 
     // 获取该目录下所有视频（包括有和没有季集号的）
     final results = await _db!.query(
@@ -1379,12 +1508,16 @@ class VideoDatabaseService {
       }
     }
 
-    logger.d('VideoDatabaseService: withSeasonEpisode=${withSeasonEpisode.length}, withoutSeasonEpisode=${withoutSeasonEpisode.length}');
+    logger.d(
+      'VideoDatabaseService: withSeasonEpisode=${withSeasonEpisode.length}, withoutSeasonEpisode=${withoutSeasonEpisode.length}',
+    );
 
     // 添加有季集号的剧集
     for (final metadata in withSeasonEpisode) {
-      episodeMap
-          .putIfAbsent(metadata.seasonNumber!, () => {})[metadata.episodeNumber!] = metadata;
+      episodeMap.putIfAbsent(
+        metadata.seasonNumber!,
+        () => {},
+      )[metadata.episodeNumber!] = metadata;
     }
 
     // 如果有无季集号的剧集，将它们添加到第 1 季（或找一个不冲突的季号）
@@ -1408,13 +1541,15 @@ class VideoDatabaseService {
           seasonNumber: targetSeason,
           episodeNumber: nextEpisodeNumber,
         );
-        episodeMap
-            .putIfAbsent(targetSeason, () => {})[nextEpisodeNumber] = updatedMetadata;
+        episodeMap.putIfAbsent(targetSeason, () => {})[nextEpisodeNumber] =
+            updatedMetadata;
         nextEpisodeNumber++;
       }
     }
 
-    logger.d('VideoDatabaseService: returning episodeMap with ${episodeMap.length} seasons');
+    logger.d(
+      'VideoDatabaseService: returning episodeMap with ${episodeMap.length} seasons',
+    );
     return episodeMap;
   }
 
@@ -1691,7 +1826,8 @@ class VideoDatabaseService {
     final searchPattern = '%$query%';
     final results = await _db!.query(
       _tableMetadata,
-      where: '$_colTitle LIKE ? OR $_colOriginalTitle LIKE ? OR $_colFileName LIKE ?',
+      where:
+          '$_colTitle LIKE ? OR $_colOriginalTitle LIKE ? OR $_colFileName LIKE ?',
       whereArgs: [searchPattern, searchPattern, searchPattern],
       orderBy: '$_colRating DESC',
       limit: limit,
@@ -1729,7 +1865,8 @@ class VideoDatabaseService {
       sql = 'SELECT * FROM $_tableMetadata ORDER BY $_colFileModifiedTime DESC';
       args = [];
     } else {
-      sql = 'SELECT * FROM $_tableMetadata${pathFilter.where} ORDER BY $_colFileModifiedTime DESC';
+      sql =
+          'SELECT * FROM $_tableMetadata${pathFilter.where} ORDER BY $_colFileModifiedTime DESC';
       args = pathFilter.args;
     }
 
@@ -1759,7 +1896,8 @@ class VideoDatabaseService {
       final placeholders = List.filled(batch.length, '?').join(', ');
 
       // uniqueKey = sourceId || '_' || filePath（与 VideoMetadata.uniqueKey 一致）
-      final sql = '''
+      final sql =
+          '''
         SELECT * FROM $_tableMetadata
         WHERE ($_colSourceId || '_' || $_colFilePath) IN ($placeholders)
       ''';
@@ -1784,29 +1922,45 @@ class VideoDatabaseService {
 
     final pathFilter = _buildPathFilter(enabledPaths);
 
-    final totalCount = Sqflite.firstIntValue(await _db!.rawQuery(
+    final totalCount = Sqflite.firstIntValue(
+      await _db!.rawQuery(
         'SELECT COUNT(*) FROM $_tableMetadata${pathFilter.where}',
-        pathFilter.args));
+        pathFilter.args,
+      ),
+    );
 
     // 电影使用去重计数（同一电影不同清晰度只计数一次）
     final movieBaseWhere = '$_colCategory = 0${pathFilter.andWhere}';
-    final movieCountSql = _buildMovieDeduplicationCountQuery(baseWhere: movieBaseWhere);
+    final movieCountSql = _buildMovieDeduplicationCountQuery(
+      baseWhere: movieBaseWhere,
+    );
     // 参数需要出现两次（外层和子查询各一次）
     final movieCountArgs = [...pathFilter.args, ...pathFilter.args];
-    final movieCount = Sqflite.firstIntValue(await _db!.rawQuery(movieCountSql, movieCountArgs));
+    final movieCount = Sqflite.firstIntValue(
+      await _db!.rawQuery(movieCountSql, movieCountArgs),
+    );
 
-    final tvShowCount = Sqflite.firstIntValue(await _db!.rawQuery(
+    final tvShowCount = Sqflite.firstIntValue(
+      await _db!.rawQuery(
         'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colCategory = 1${pathFilter.andWhere}',
-        pathFilter.args));
+        pathFilter.args,
+      ),
+    );
 
     // 其他视频（未识别为电影或剧集，category = 2 即 MediaCategory.unknown）
-    final othersCount = Sqflite.firstIntValue(await _db!.rawQuery(
+    final othersCount = Sqflite.firstIntValue(
+      await _db!.rawQuery(
         'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colCategory = 2${pathFilter.andWhere}',
-        pathFilter.args));
+        pathFilter.args,
+      ),
+    );
 
-    final withMetadataCount = Sqflite.firstIntValue(await _db!.rawQuery(
+    final withMetadataCount = Sqflite.firstIntValue(
+      await _db!.rawQuery(
         'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colTmdbId IS NOT NULL${pathFilter.andWhere}',
-        pathFilter.args));
+        pathFilter.args,
+      ),
+    );
 
     return {
       'total': totalCount ?? 0,
@@ -1858,7 +2012,8 @@ class VideoDatabaseService {
   }) {
     // 分辨率优先级排序：数字越大优先级越高
     // 4K/2160p = 4, 1080p = 3, 720p = 2, 480p = 1, 其他 = 0
-    const resolutionOrder = '''
+    const resolutionOrder =
+        '''
       CASE
         WHEN $_colResolution IN ('4K', '2160p', 'UHD') THEN 4
         WHEN $_colResolution = '1080p' THEN 3
@@ -1901,7 +2056,8 @@ class VideoDatabaseService {
   }) {
     // 分辨率优先级排序：数字越大优先级越高
     // 4K/2160p = 4, 1080p = 3, 720p = 2, 480p = 1, 其他 = 0
-    const resolutionOrder = '''
+    const resolutionOrder =
+        '''
       CASE
         WHEN $_colResolution IN ('4K', '2160p', 'UHD') THEN 4
         WHEN $_colResolution = '1080p' THEN 3
@@ -1934,11 +2090,10 @@ class VideoDatabaseService {
   }
 
   /// 构建电影去重计数查询
-  String _buildMovieDeduplicationCountQuery({
-    required String baseWhere,
-  }) {
+  String _buildMovieDeduplicationCountQuery({required String baseWhere}) {
     // 分辨率优先级排序
-    const resolutionOrder = '''
+    const resolutionOrder =
+        '''
       CASE
         WHEN $_colResolution IN ('4K', '2160p', 'UHD') THEN 4
         WHEN $_colResolution = '1080p' THEN 3
@@ -1974,8 +2129,11 @@ class VideoDatabaseService {
   Future<String> getStatsInfo() async {
     if (!_initialized) await init();
 
-    final totalCount = Sqflite.firstIntValue(await _db!.rawQuery(
-        'SELECT COUNT(*) FROM $_tableMetadata')) ?? 0;
+    final totalCount =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery('SELECT COUNT(*) FROM $_tableMetadata'),
+        ) ??
+        0;
 
     if (totalCount == 0) {
       return appL10n.videoCacheEmpty;
@@ -2082,12 +2240,14 @@ class VideoDatabaseService {
 
     // 未指定路径过滤时，直接查询聚合表的数量，确保与列表一致
     if (enabledPaths == null || enabledPaths.isEmpty) {
-      final count = Sqflite.firstIntValue(await _db!.rawQuery(
-        '''
+      final count =
+          Sqflite.firstIntValue(
+            await _db!.rawQuery('''
         SELECT COUNT(*) FROM $_tableTvShowGroups
         WHERE $_tvgColRepresentativeRowid IS NOT NULL
-        ''',
-      )) ?? 0;
+        '''),
+          ) ??
+          0;
 
       return count;
     }
@@ -2096,14 +2256,15 @@ class VideoDatabaseService {
     // 仅统计其 (source_id, file_path) 命中启用路径的分组。
     // INNER JOIN 天然排除了 representative_rowid 为 NULL 的分组。
     final pathFilter = _buildPathFilter(enabledPaths);
-    final count = Sqflite.firstIntValue(await _db!.rawQuery(
-      '''
+    final count =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery('''
       SELECT COUNT(*) FROM $_tableTvShowGroups g
       INNER JOIN $_tableMetadata vm
         ON g.$_tvgColRepresentativeRowid = vm.rowid${pathFilter.andWhere}
-      ''',
-      pathFilter.args,
-    )) ?? 0;
+      ''', pathFilter.args),
+        ) ??
+        0;
 
     return count;
   }
@@ -2112,7 +2273,8 @@ class VideoDatabaseService {
   ///
   /// 返回每个分组的季数和集数，无需加载完整剧集列表
   /// 键为分组键（tmdb_XXX 或 title_xxx），值为 (seasonCount, episodeCount)
-  Future<Map<String, ({int seasonCount, int episodeCount})>> getTvShowGroupStats({
+  Future<Map<String, ({int seasonCount, int episodeCount})>>
+  getTvShowGroupStats({
     List<int>? tmdbIds,
     List<String>? showDirectories,
     List<String>? titles,
@@ -2139,7 +2301,10 @@ class VideoDatabaseService {
         if (tmdbId != null) {
           final seasonCount = (row['season_count'] as int?) ?? 1;
           final episodeCount = (row['episode_count'] as int?) ?? 1;
-          result['tmdb_$tmdbId'] = (seasonCount: seasonCount, episodeCount: episodeCount);
+          result['tmdb_$tmdbId'] = (
+            seasonCount: seasonCount,
+            episodeCount: episodeCount,
+          );
         }
       }
     }
@@ -2162,7 +2327,10 @@ class VideoDatabaseService {
         if (showDirectory != null) {
           final seasonCount = (row['season_count'] as int?) ?? 1;
           final episodeCount = (row['episode_count'] as int?) ?? 1;
-          result['dir_$showDirectory'] = (seasonCount: seasonCount, episodeCount: episodeCount);
+          result['dir_$showDirectory'] = (
+            seasonCount: seasonCount,
+            episodeCount: episodeCount,
+          );
         }
       }
     }
@@ -2185,7 +2353,10 @@ class VideoDatabaseService {
         if (lowerTitle != null) {
           final seasonCount = (row['season_count'] as int?) ?? 1;
           final episodeCount = (row['episode_count'] as int?) ?? 1;
-          result['title_$lowerTitle'] = (seasonCount: seasonCount, episodeCount: episodeCount);
+          result['title_$lowerTitle'] = (
+            seasonCount: seasonCount,
+            episodeCount: episodeCount,
+          );
         }
       }
     }
@@ -2226,7 +2397,8 @@ class VideoDatabaseService {
     // 更高效的方法：使用简单分组，每个 tmdb_id 取 MAX(rating) 对应的记录
     // SQLite 的 `GROUP BY` 会返回任意一行，我们用子查询确保取评分最高的
     // 注意：使用 AS rid 显式别名，因为 SQLite 返回的列名可能是 't1.rowid' 而不是 'rowid'
-    final withTmdbSqlOptimized = '''
+    final withTmdbSqlOptimized =
+        '''
       SELECT t1.rowid AS rid
       FROM $_tableMetadata t1
       INNER JOIN (
@@ -2239,17 +2411,19 @@ class VideoDatabaseService {
       GROUP BY t1.$_colTmdbId
     ''';
 
-    final withTmdbResult = await _db!.rawQuery(withTmdbSqlOptimized, [...pathFilter.args, ...pathFilter.args]);
+    final withTmdbResult = await _db!.rawQuery(withTmdbSqlOptimized, [
+      ...pathFilter.args,
+      ...pathFilter.args,
+    ]);
     representativeRowIds.addAll(
-      withTmdbResult
-        .map((r) => r['rid'] as int?)
-        .whereType<int>(),
+      withTmdbResult.map((r) => r['rid'] as int?).whereType<int>(),
     );
 
     // 1b: 无 tmdb_id 的剧集 - 优先按 show_directory 分组，其次按 LOWER(title) 分组
     // 使用 COALESCE 确保有 show_directory 的优先使用目录分组，没有的回退到标题分组
     // 同样使用 AS rid 显式别名
-    final withoutTmdbSql = '''
+    final withoutTmdbSql =
+        '''
       SELECT t1.rowid AS rid
       FROM $_tableMetadata t1
       INNER JOIN (
@@ -2262,11 +2436,12 @@ class VideoDatabaseService {
       GROUP BY COALESCE(t1.$_colShowDirectory, LOWER(t1.$_colTitle))
     ''';
 
-    final withoutTmdbResult = await _db!.rawQuery(withoutTmdbSql, [...pathFilter.args, ...pathFilter.args]);
+    final withoutTmdbResult = await _db!.rawQuery(withoutTmdbSql, [
+      ...pathFilter.args,
+      ...pathFilter.args,
+    ]);
     representativeRowIds.addAll(
-      withoutTmdbResult
-        .map((r) => r['rid'] as int?)
-        .whereType<int>(),
+      withoutTmdbResult.map((r) => r['rid'] as int?).whereType<int>(),
     );
 
     if (representativeRowIds.isEmpty) {
@@ -2276,18 +2451,23 @@ class VideoDatabaseService {
     // 阶段2：根据 rowid 列表获取完整记录，应用排序和分页
     // 注意：需要在获取完整数据后再排序
     // 按上映年份降序排序（最近上映的排在前面）
-    final placeholders = List.filled(representativeRowIds.length, '?').join(', ');
-    final fullDataSql = '''
+    final placeholders = List.filled(
+      representativeRowIds.length,
+      '?',
+    ).join(', ');
+    final fullDataSql =
+        '''
       SELECT * FROM $_tableMetadata
       WHERE rowid IN ($placeholders)
       ORDER BY $_colYear DESC NULLS LAST, $_colTitle
       LIMIT ? OFFSET ?
     ''';
 
-    final results = await _db!.rawQuery(
-      fullDataSql,
-      [...representativeRowIds, limit, offset],
-    );
+    final results = await _db!.rawQuery(fullDataSql, [
+      ...representativeRowIds,
+      limit,
+      offset,
+    ]);
     return results.map(_fromRow).toList();
   }
 
@@ -2307,7 +2487,8 @@ class VideoDatabaseService {
     final pathFilter = _buildPathFilter(enabledPaths);
 
     // 分辨率优先级排序（用于电影去重）
-    const resolutionOrder = '''
+    const resolutionOrder =
+        '''
       CASE
         WHEN $_colResolution IN ('4K', '2160p', 'UHD') THEN 4
         WHEN $_colResolution = '1080p' THEN 3
@@ -2318,7 +2499,8 @@ class VideoDatabaseService {
     ''';
 
     // 查询去重后的电影
-    final movieSql = '''
+    final movieSql =
+        '''
       SELECT * FROM $_tableMetadata m1
       WHERE $_colCategory = 0${pathFilter.andWhere}
         AND m1.rowid = (
@@ -2339,7 +2521,8 @@ class VideoDatabaseService {
     ''';
 
     // 查询去重后的剧集（每部剧只返回一条记录）
-    final tvShowSql = '''
+    final tvShowSql =
+        '''
       SELECT * FROM $_tableMetadata m1
       WHERE $_colCategory = 1${pathFilter.andWhere}
         AND m1.rowid = (
@@ -2396,13 +2579,21 @@ class VideoDatabaseService {
       if (video.category == MediaCategory.tvShow) {
         // 对于剧集，检查是否整部剧都没看过
         // 需要检查所有同剧的集数是否都没被观看
-        final isWatched = await _isTvShowWatched(video, watchedPaths, pathFilter);
+        final isWatched = await _isTvShowWatched(
+          video,
+          watchedPaths,
+          pathFilter,
+        );
         if (!isWatched) {
           unwatched.add(video);
         }
       } else {
         // 对于电影，检查所有版本是否都没被观看
-        final isWatched = await _isMovieWatched(video, watchedPaths, pathFilter);
+        final isWatched = await _isMovieWatched(
+          video,
+          watchedPaths,
+          pathFilter,
+        );
         if (!isWatched) {
           unwatched.add(video);
         }
@@ -2426,18 +2617,24 @@ class VideoDatabaseService {
     // 获取同一电影的所有版本路径
     List<Map<String, Object?>> results;
     if (movie.tmdbId != null) {
-      results = await _db!.rawQuery('''
+      results = await _db!.rawQuery(
+        '''
         SELECT $_colFilePath FROM $_tableMetadata
         WHERE $_colCategory = 0 AND $_colTmdbId = ?${pathFilter.andWhere}
-      ''', [movie.tmdbId, ...pathFilter.args]);
+      ''',
+        [movie.tmdbId, ...pathFilter.args],
+      );
     } else if (movie.title != null) {
-      results = await _db!.rawQuery('''
+      results = await _db!.rawQuery(
+        '''
         SELECT $_colFilePath FROM $_tableMetadata
         WHERE $_colCategory = 0
           AND $_colTmdbId IS NULL
           AND LOWER(COALESCE($_colTitle, '')) = LOWER(?)
           AND COALESCE($_colYear, 0) = ?${pathFilter.andWhere}
-      ''', [movie.title, movie.year ?? 0, ...pathFilter.args]);
+      ''',
+        [movie.title, movie.year ?? 0, ...pathFilter.args],
+      );
     } else {
       return watchedPaths.contains(movie.filePath);
     }
@@ -2467,25 +2664,34 @@ class VideoDatabaseService {
     // 获取同一剧集的所有集数路径
     List<Map<String, Object?>> results;
     if (tvShow.tmdbId != null) {
-      results = await _db!.rawQuery('''
+      results = await _db!.rawQuery(
+        '''
         SELECT $_colFilePath FROM $_tableMetadata
         WHERE $_colCategory = 1 AND $_colTmdbId = ?${pathFilter.andWhere}
-      ''', [tvShow.tmdbId, ...pathFilter.args]);
+      ''',
+        [tvShow.tmdbId, ...pathFilter.args],
+      );
     } else if (tvShow.showDirectory != null) {
-      results = await _db!.rawQuery('''
+      results = await _db!.rawQuery(
+        '''
         SELECT $_colFilePath FROM $_tableMetadata
         WHERE $_colCategory = 1
           AND $_colTmdbId IS NULL
           AND $_colShowDirectory = ?${pathFilter.andWhere}
-      ''', [tvShow.showDirectory, ...pathFilter.args]);
+      ''',
+        [tvShow.showDirectory, ...pathFilter.args],
+      );
     } else if (tvShow.title != null) {
-      results = await _db!.rawQuery('''
+      results = await _db!.rawQuery(
+        '''
         SELECT $_colFilePath FROM $_tableMetadata
         WHERE $_colCategory = 1
           AND $_colTmdbId IS NULL
           AND $_colShowDirectory IS NULL
           AND LOWER(COALESCE($_colTitle, '')) = LOWER(?)${pathFilter.andWhere}
-      ''', [tvShow.title, ...pathFilter.args]);
+      ''',
+        [tvShow.title, ...pathFilter.args],
+      );
     } else {
       return watchedPaths.contains(tvShow.filePath);
     }
@@ -2521,7 +2727,9 @@ class VideoDatabaseService {
     for (final row in results) {
       final genresStr = row[_colGenres] as String?;
       if (genresStr != null && genresStr.isNotEmpty) {
-        final genres = genresStr.split(RegExp(r'\s*[/,]\s*')).map((g) => g.trim());
+        final genres = genresStr
+            .split(RegExp(r'\s*[/,]\s*'))
+            .map((g) => g.trim());
         genreSet.addAll(genres.where((g) => g.isNotEmpty));
       }
     }
@@ -2571,7 +2779,8 @@ class VideoDatabaseService {
   }) async {
     if (!_initialized) await init();
 
-    var sql = '''
+    var sql =
+        '''
       SELECT DISTINCT $_colCountries FROM $_tableMetadata
       WHERE $_colCountries IS NOT NULL AND $_colCountries != ''
     ''';
@@ -2614,7 +2823,8 @@ class VideoDatabaseService {
     final orderBy = _buildOrderBy(sortOption);
 
     // 分辨率优先级排序
-    const resolutionOrder = '''
+    const resolutionOrder =
+        '''
       CASE
         WHEN $_colResolution IN ('4K', '2160p', 'UHD') THEN 4
         WHEN $_colResolution = '1080p' THEN 3
@@ -2625,7 +2835,8 @@ class VideoDatabaseService {
     ''';
 
     // 使用子查询去重：同一电影不同清晰度只返回最高清版本
-    final sql = '''
+    final sql =
+        '''
       SELECT * FROM $_tableMetadata m1
       WHERE $_colCategory = 0 AND $_colCountries LIKE ?${pathFilter.andWhere}
         AND m1.rowid = (
@@ -2671,7 +2882,8 @@ class VideoDatabaseService {
     final orderBy = _buildOrderBy(sortOption);
 
     // 使用子查询获取每个剧集的代表性记录
-    final sql = '''
+    final sql =
+        '''
       SELECT * FROM $_tableMetadata m1
       WHERE $_colCategory = 1 AND $_colCountries LIKE ?${pathFilter.andWhere}
         AND m1.rowid = (
@@ -2688,7 +2900,12 @@ class VideoDatabaseService {
       LIMIT $limit OFFSET $offset
     ''';
 
-    final args = ['%$country%', ...pathFilter.args, '%$country%', ...pathFilter.args];
+    final args = [
+      '%$country%',
+      ...pathFilter.args,
+      '%$country%',
+      ...pathFilter.args,
+    ];
     final results = await _db!.rawQuery(sql, args);
 
     return results.map(_fromRow).toList();
@@ -2701,8 +2918,16 @@ class VideoDatabaseService {
     List<({String sourceId, String path})>? enabledPaths,
   }) async {
     final futures = await Future.wait([
-      getMoviesByCountry(country, limit: limit ~/ 2 + 5, enabledPaths: enabledPaths),
-      getTvShowsByCountry(country, limit: limit ~/ 2 + 5, enabledPaths: enabledPaths),
+      getMoviesByCountry(
+        country,
+        limit: limit ~/ 2 + 5,
+        enabledPaths: enabledPaths,
+      ),
+      getTvShowsByCountry(
+        country,
+        limit: limit ~/ 2 + 5,
+        enabledPaths: enabledPaths,
+      ),
     ]);
 
     final movies = futures[0];
@@ -2732,7 +2957,8 @@ class VideoDatabaseService {
     final orderBy = _buildOrderBy(sortOption);
 
     // 分辨率优先级排序
-    const resolutionOrder = '''
+    const resolutionOrder =
+        '''
       CASE
         WHEN $_colResolution IN ('4K', '2160p', 'UHD') THEN 4
         WHEN $_colResolution = '1080p' THEN 3
@@ -2743,7 +2969,8 @@ class VideoDatabaseService {
     ''';
 
     // 使用子查询去重：同一电影不同清晰度只返回最高清版本
-    final sql = '''
+    final sql =
+        '''
       SELECT * FROM $_tableMetadata m1
       WHERE $_colCategory = 0 AND $_colGenres LIKE ?${pathFilter.andWhere}
         AND m1.rowid = (
@@ -2793,7 +3020,8 @@ class VideoDatabaseService {
 
     // 使用子查询获取每个剧集的代表性记录
     // 注意：子查询也需要应用路径过滤，否则可能返回其他源的记录导致 rowid 不匹配
-    final sql = '''
+    final sql =
+        '''
       SELECT * FROM $_tableMetadata m1
       WHERE $_colCategory = 1 AND $_colGenres LIKE ?${pathFilter.andWhere}
         AND m1.rowid = (
@@ -2810,10 +3038,14 @@ class VideoDatabaseService {
       LIMIT ? OFFSET ?
     ''';
 
-    final results = await _db!.rawQuery(
-      sql,
-      ['%$genre%', ...pathFilter.args, '%$genre%', ...pathFilter.args, limit, offset],
-    );
+    final results = await _db!.rawQuery(sql, [
+      '%$genre%',
+      ...pathFilter.args,
+      '%$genre%',
+      ...pathFilter.args,
+      limit,
+      offset,
+    ]);
     return results.map(_fromRow).toList();
   }
 
@@ -2879,7 +3111,9 @@ class VideoDatabaseService {
       whereArgs: [sourceId, '$pathPrefix%'],
     );
 
-    logger.i('VideoDatabaseService: 已删除 $count 个视频 (sourceId: $sourceId, path: $pathPrefix)');
+    logger.i(
+      'VideoDatabaseService: 已删除 $count 个视频 (sourceId: $sourceId, path: $pathPrefix)',
+    );
     return count;
   }
 
@@ -2918,75 +3152,76 @@ class VideoDatabaseService {
 
   /// 转换为数据库行
   Map<String, dynamic> _toRow(VideoMetadata m) => {
-        _colSourceId: m.sourceId,
-        _colFilePath: m.filePath,
-        _colFileName: m.fileName,
-        _colCategory: m.category.index,
-        _colScrapeStatus: m.scrapeStatus.index,
-        _colTmdbId: m.tmdbId,
-        _colTitle: m.title,
-        _colOriginalTitle: m.originalTitle,
-        _colYear: m.year,
-        _colOverview: m.overview,
-        _colPosterUrl: m.posterUrl,
-        _colBackdropUrl: m.backdropUrl,
-        _colRating: m.rating,
-        _colRuntime: m.runtime,
-        _colGenres: m.genres,
-        _colCountries: m.countries,
-        _colDirector: m.director,
-        _colCast: m.cast,
-        _colSeasonNumber: m.seasonNumber,
-        _colEpisodeNumber: m.episodeNumber,
-        _colEpisodeTitle: m.episodeTitle,
-        _colLastUpdated: m.lastUpdated?.millisecondsSinceEpoch,
-        _colThumbnailUrl: m.thumbnailUrl,
-        _colGeneratedThumbnailUrl: m.generatedThumbnailUrl,
-        _colLocalPosterUrl: m.localPosterUrl,
-        _colLocalBackdropUrl: m.localBackdropUrl,
-        _colFileSize: m.fileSize,
-        _colFileModifiedTime: m.fileModifiedTime?.millisecondsSinceEpoch,
-        _colCollectionId: m.collectionId,
-        _colCollectionName: m.collectionName,
-        _colCollectionPosterUrl: m.collectionPosterUrl,
-        _colCollectionBackdropUrl: m.collectionBackdropUrl,
-        _colShowDirectory: m.showDirectory,
-        _colMovieDirectory: m.movieDirectory,
-        _colResolution: m.resolution,
-        _colLocalizedTitles: m.localizedTitles != null
-            ? _encodeLocalizedMap(m.localizedTitles!)
-            : null,
-        _colLocalizedOverviews: m.localizedOverviews != null
-            ? _encodeLocalizedMap(m.localizedOverviews!)
-            : null,
-        // 扩展视频信息
-        _colVideoSource: m.videoSource,
-        _colVideoCodec: m.videoCodec,
-        _colHdrFormat: m.hdrFormat,
-        _colAudioFormat: m.audioFormat,
-        _colIs3D: m.is3D ? 1 : 0,
-        _colIsRemux: m.isRemux ? 1 : 0,
-        // 扩展评分
-        _colImdbId: m.imdbId,
-        _colImdbRating: m.imdbRating,
-        _colMetacriticRating: m.metacriticRating,
-        _colTraktRating: m.traktRating,
-        // 内容分级
-        _colCertification: m.certification,
-        // 媒体服务器相关
-        _colServerType: m.serverType,
-        _colServerItemId: m.serverItemId,
-        _colScrapeSource: m.scrapeSource,
-        _colIsWatched: m.isWatched ? 1 : 0,
-        _colPlaybackPositionTicks: m.playbackPositionTicks,
-        _colLastPlayedAt: m.lastPlayedAt?.millisecondsSinceEpoch,
-      };
+    _colSourceId: m.sourceId,
+    _colFilePath: m.filePath,
+    _colFileName: m.fileName,
+    _colCategory: m.category.index,
+    _colScrapeStatus: m.scrapeStatus.index,
+    _colTmdbId: m.tmdbId,
+    _colTitle: m.title,
+    _colOriginalTitle: m.originalTitle,
+    _colYear: m.year,
+    _colOverview: m.overview,
+    _colPosterUrl: m.posterUrl,
+    _colBackdropUrl: m.backdropUrl,
+    _colRating: m.rating,
+    _colRuntime: m.runtime,
+    _colGenres: m.genres,
+    _colCountries: m.countries,
+    _colDirector: m.director,
+    _colCast: m.cast,
+    _colSeasonNumber: m.seasonNumber,
+    _colEpisodeNumber: m.episodeNumber,
+    _colEpisodeTitle: m.episodeTitle,
+    _colLastUpdated: m.lastUpdated?.millisecondsSinceEpoch,
+    _colThumbnailUrl: m.thumbnailUrl,
+    _colGeneratedThumbnailUrl: m.generatedThumbnailUrl,
+    _colLocalPosterUrl: m.localPosterUrl,
+    _colLocalBackdropUrl: m.localBackdropUrl,
+    _colFileSize: m.fileSize,
+    _colFileModifiedTime: m.fileModifiedTime?.millisecondsSinceEpoch,
+    _colCollectionId: m.collectionId,
+    _colCollectionName: m.collectionName,
+    _colCollectionPosterUrl: m.collectionPosterUrl,
+    _colCollectionBackdropUrl: m.collectionBackdropUrl,
+    _colShowDirectory: m.showDirectory,
+    _colMovieDirectory: m.movieDirectory,
+    _colResolution: m.resolution,
+    _colLocalizedTitles: m.localizedTitles != null
+        ? _encodeLocalizedMap(m.localizedTitles!)
+        : null,
+    _colLocalizedOverviews: m.localizedOverviews != null
+        ? _encodeLocalizedMap(m.localizedOverviews!)
+        : null,
+    // 扩展视频信息
+    _colVideoSource: m.videoSource,
+    _colVideoCodec: m.videoCodec,
+    _colHdrFormat: m.hdrFormat,
+    _colAudioFormat: m.audioFormat,
+    _colIs3D: m.is3D ? 1 : 0,
+    _colIsRemux: m.isRemux ? 1 : 0,
+    // 扩展评分
+    _colImdbId: m.imdbId,
+    _colImdbRating: m.imdbRating,
+    _colMetacriticRating: m.metacriticRating,
+    _colTraktRating: m.traktRating,
+    // 内容分级
+    _colCertification: m.certification,
+    // 媒体服务器相关
+    _colServerType: m.serverType,
+    _colServerItemId: m.serverItemId,
+    _colScrapeSource: m.scrapeSource,
+    _colIsWatched: m.isWatched ? 1 : 0,
+    _colPlaybackPositionTicks: m.playbackPositionTicks,
+    _colLastPlayedAt: m.lastPlayedAt?.millisecondsSinceEpoch,
+  };
 
   /// 编码多语言 Map 为 JSON 字符串
   String _encodeLocalizedMap(Map<String, String> map) {
     // 简单的 JSON 编码（不依赖 dart:convert）
-    final pairs = map.entries.map((e) =>
-        '"${_escapeJson(e.key)}":"${_escapeJson(e.value)}"');
+    final pairs = map.entries.map(
+      (e) => '"${_escapeJson(e.key)}":"${_escapeJson(e.value)}"',
+    );
     return '{${pairs.join(',')}}';
   }
 
@@ -3000,76 +3235,77 @@ class VideoDatabaseService {
 
   /// 从数据库行转换
   VideoMetadata _fromRow(Map<String, dynamic> row) => VideoMetadata(
-        sourceId: row[_colSourceId] as String,
-        filePath: row[_colFilePath] as String,
-        fileName: row[_colFileName] as String,
-        category: row[_colCategory] != null
-            ? MediaCategory.values[row[_colCategory] as int]
-            : MediaCategory.unknown,
-        scrapeStatus: row[_colScrapeStatus] != null
-            ? ScrapeStatus.values[row[_colScrapeStatus] as int]
-            : ScrapeStatus.pending,
-        tmdbId: row[_colTmdbId] as int?,
-        title: row[_colTitle] as String?,
-        originalTitle: row[_colOriginalTitle] as String?,
-        year: row[_colYear] as int?,
-        overview: row[_colOverview] as String?,
-        posterUrl: row[_colPosterUrl] as String?,
-        backdropUrl: row[_colBackdropUrl] as String?,
-        rating: row[_colRating] as double?,
-        runtime: row[_colRuntime] as int?,
-        genres: row[_colGenres] as String?,
-        countries: row[_colCountries] as String?,
-        director: row[_colDirector] as String?,
-        cast: row[_colCast] as String?,
-        seasonNumber: row[_colSeasonNumber] as int?,
-        episodeNumber: row[_colEpisodeNumber] as int?,
-        episodeTitle: row[_colEpisodeTitle] as String?,
-        lastUpdated: row[_colLastUpdated] != null
-            ? DateTime.fromMillisecondsSinceEpoch(row[_colLastUpdated] as int)
-            : null,
-        thumbnailUrl: row[_colThumbnailUrl] as String?,
-        generatedThumbnailUrl: row[_colGeneratedThumbnailUrl] as String?,
-        localPosterUrl: row[_colLocalPosterUrl] as String?,
-        localBackdropUrl: row[_colLocalBackdropUrl] as String?,
-        fileSize: row[_colFileSize] as int?,
-        fileModifiedTime: row[_colFileModifiedTime] != null
-            ? DateTime.fromMillisecondsSinceEpoch(
-                row[_colFileModifiedTime] as int)
-            : null,
-        collectionId: row[_colCollectionId] as int?,
-        collectionName: row[_colCollectionName] as String?,
-        collectionPosterUrl: row[_colCollectionPosterUrl] as String?,
-        collectionBackdropUrl: row[_colCollectionBackdropUrl] as String?,
-        showDirectory: row[_colShowDirectory] as String?,
-        movieDirectory: row[_colMovieDirectory] as String?,
-        resolution: row[_colResolution] as String?,
-        localizedTitles: _parseLocalizedJson(row[_colLocalizedTitles] as String?),
-        localizedOverviews: _parseLocalizedJson(row[_colLocalizedOverviews] as String?),
-        // 扩展视频信息
-        videoSource: row[_colVideoSource] as String?,
-        videoCodec: row[_colVideoCodec] as String?,
-        hdrFormat: row[_colHdrFormat] as String?,
-        audioFormat: row[_colAudioFormat] as String?,
-        is3D: row[_colIs3D] == 1,
-        isRemux: row[_colIsRemux] == 1,
-        // 扩展评分
-        imdbId: row[_colImdbId] as String?,
-        imdbRating: (row[_colImdbRating] as num?)?.toDouble(),
-        metacriticRating: row[_colMetacriticRating] as int?,
-        traktRating: (row[_colTraktRating] as num?)?.toDouble(),
-        // 内容分级
-        certification: row[_colCertification] as String?,
-        // 媒体服务器相关
-        serverType: row[_colServerType] as String?,
-        serverItemId: row[_colServerItemId] as String?,
-        scrapeSource: row[_colScrapeSource] as String?,
-        isWatched: row[_colIsWatched] == 1,
-        playbackPositionTicks: row[_colPlaybackPositionTicks] as int?,
-        lastPlayedAt: row[_colLastPlayedAt] != null
-            ? DateTime.fromMillisecondsSinceEpoch(row[_colLastPlayedAt] as int)
-            : null,
-      );
+    sourceId: row[_colSourceId] as String,
+    filePath: row[_colFilePath] as String,
+    fileName: row[_colFileName] as String,
+    category: row[_colCategory] != null
+        ? MediaCategory.values[row[_colCategory] as int]
+        : MediaCategory.unknown,
+    scrapeStatus: row[_colScrapeStatus] != null
+        ? ScrapeStatus.values[row[_colScrapeStatus] as int]
+        : ScrapeStatus.pending,
+    tmdbId: row[_colTmdbId] as int?,
+    title: row[_colTitle] as String?,
+    originalTitle: row[_colOriginalTitle] as String?,
+    year: row[_colYear] as int?,
+    overview: row[_colOverview] as String?,
+    posterUrl: row[_colPosterUrl] as String?,
+    backdropUrl: row[_colBackdropUrl] as String?,
+    rating: row[_colRating] as double?,
+    runtime: row[_colRuntime] as int?,
+    genres: row[_colGenres] as String?,
+    countries: row[_colCountries] as String?,
+    director: row[_colDirector] as String?,
+    cast: row[_colCast] as String?,
+    seasonNumber: row[_colSeasonNumber] as int?,
+    episodeNumber: row[_colEpisodeNumber] as int?,
+    episodeTitle: row[_colEpisodeTitle] as String?,
+    lastUpdated: row[_colLastUpdated] != null
+        ? DateTime.fromMillisecondsSinceEpoch(row[_colLastUpdated] as int)
+        : null,
+    thumbnailUrl: row[_colThumbnailUrl] as String?,
+    generatedThumbnailUrl: row[_colGeneratedThumbnailUrl] as String?,
+    localPosterUrl: row[_colLocalPosterUrl] as String?,
+    localBackdropUrl: row[_colLocalBackdropUrl] as String?,
+    fileSize: row[_colFileSize] as int?,
+    fileModifiedTime: row[_colFileModifiedTime] != null
+        ? DateTime.fromMillisecondsSinceEpoch(row[_colFileModifiedTime] as int)
+        : null,
+    collectionId: row[_colCollectionId] as int?,
+    collectionName: row[_colCollectionName] as String?,
+    collectionPosterUrl: row[_colCollectionPosterUrl] as String?,
+    collectionBackdropUrl: row[_colCollectionBackdropUrl] as String?,
+    showDirectory: row[_colShowDirectory] as String?,
+    movieDirectory: row[_colMovieDirectory] as String?,
+    resolution: row[_colResolution] as String?,
+    localizedTitles: _parseLocalizedJson(row[_colLocalizedTitles] as String?),
+    localizedOverviews: _parseLocalizedJson(
+      row[_colLocalizedOverviews] as String?,
+    ),
+    // 扩展视频信息
+    videoSource: row[_colVideoSource] as String?,
+    videoCodec: row[_colVideoCodec] as String?,
+    hdrFormat: row[_colHdrFormat] as String?,
+    audioFormat: row[_colAudioFormat] as String?,
+    is3D: row[_colIs3D] == 1,
+    isRemux: row[_colIsRemux] == 1,
+    // 扩展评分
+    imdbId: row[_colImdbId] as String?,
+    imdbRating: (row[_colImdbRating] as num?)?.toDouble(),
+    metacriticRating: row[_colMetacriticRating] as int?,
+    traktRating: (row[_colTraktRating] as num?)?.toDouble(),
+    // 内容分级
+    certification: row[_colCertification] as String?,
+    // 媒体服务器相关
+    serverType: row[_colServerType] as String?,
+    serverItemId: row[_colServerItemId] as String?,
+    scrapeSource: row[_colScrapeSource] as String?,
+    isWatched: row[_colIsWatched] == 1,
+    playbackPositionTicks: row[_colPlaybackPositionTicks] as int?,
+    lastPlayedAt: row[_colLastPlayedAt] != null
+        ? DateTime.fromMillisecondsSinceEpoch(row[_colLastPlayedAt] as int)
+        : null,
+  );
 
   /// 解析 JSON 字符串为多语言 Map
   Map<String, String>? _parseLocalizedJson(String? json) {
@@ -3085,7 +3321,9 @@ class VideoDatabaseService {
       final result = <String, String>{};
 
       // 匹配 "key":"value" 对
-      final regex = RegExp(r'"([^"\\]*(?:\\.[^"\\]*)*)"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"');
+      final regex = RegExp(
+        r'"([^"\\]*(?:\\.[^"\\]*)*)"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"',
+      );
       for (final match in regex.allMatches(inner)) {
         final key = _unescapeJson(match.group(1)!);
         final value = _unescapeJson(match.group(2)!);
@@ -3131,43 +3369,76 @@ class VideoDatabaseService {
       args.add(sourceId);
     }
 
-    final total = Sqflite.firstIntValue(await _db!.rawQuery(
-            'SELECT COUNT(*) FROM $_tableMetadata$whereClause', args)) ??
+    final total =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
+            'SELECT COUNT(*) FROM $_tableMetadata$whereClause',
+            args,
+          ),
+        ) ??
         0;
 
-    final pending = Sqflite.firstIntValue(await _db!.rawQuery(
+    final pending =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
             'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colScrapeStatus = 0$andWhereClause',
-            args)) ??
+            args,
+          ),
+        ) ??
         0;
 
-    final scraping = Sqflite.firstIntValue(await _db!.rawQuery(
+    final scraping =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
             'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colScrapeStatus = 1$andWhereClause',
-            args)) ??
+            args,
+          ),
+        ) ??
         0;
 
-    final completed = Sqflite.firstIntValue(await _db!.rawQuery(
+    final completed =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
             'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colScrapeStatus = 2$andWhereClause',
-            args)) ??
+            args,
+          ),
+        ) ??
         0;
 
-    final failed = Sqflite.firstIntValue(await _db!.rawQuery(
+    final failed =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
             'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colScrapeStatus = 3$andWhereClause',
-            args)) ??
+            args,
+          ),
+        ) ??
         0;
 
-    final skipped = Sqflite.firstIntValue(await _db!.rawQuery(
+    final skipped =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
             'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colScrapeStatus = 4$andWhereClause',
-            args)) ??
+            args,
+          ),
+        ) ??
         0;
 
-    final movies = Sqflite.firstIntValue(await _db!.rawQuery(
+    final movies =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
             'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colCategory = 0$andWhereClause',
-            args)) ??
+            args,
+          ),
+        ) ??
         0;
 
-    final tvShows = Sqflite.firstIntValue(await _db!.rawQuery(
+    final tvShows =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
             'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colCategory = 1$andWhereClause',
-            args)) ??
+            args,
+          ),
+        ) ??
         0;
 
     return ScrapeStats(
@@ -3197,7 +3468,8 @@ class VideoDatabaseService {
     // 优先使用预设的 scrape_priority 字段（在扫描时设置）
     // 如果没有预设，使用 SQL CASE 表达式动态计算
     // 分数越小优先级越高
-    final sql = '''
+    final sql =
+        '''
       SELECT *,
         CASE
           -- 优先级 0：已检测到 NFO 文件（扫描时标记）
@@ -3223,12 +3495,19 @@ class VideoDatabaseService {
       LIMIT ?
     ''';
 
-    final results = await _db!.rawQuery(sql, [ScrapeStatus.pending.index, limit]);
+    final results = await _db!.rawQuery(sql, [
+      ScrapeStatus.pending.index,
+      limit,
+    ]);
     return results.map(_fromRow).toList();
   }
 
   /// 更新视频的 NFO 检测标志和刮削优先级
-  Future<void> updateNfoFlag(String sourceId, String filePath, {required bool hasNfo}) async {
+  Future<void> updateNfoFlag(
+    String sourceId,
+    String filePath, {
+    required bool hasNfo,
+  }) async {
     if (!_initialized) await init();
 
     await _db!.update(
@@ -3243,7 +3522,9 @@ class VideoDatabaseService {
   }
 
   /// 批量更新 NFO 检测标志
-  Future<void> updateNfoFlagBatch(List<({String sourceId, String filePath, bool hasNfo})> items) async {
+  Future<void> updateNfoFlagBatch(
+    List<({String sourceId, String filePath, bool hasNfo})> items,
+  ) async {
     if (!_initialized) await init();
     if (items.isEmpty) return;
 
@@ -3276,14 +3557,12 @@ class VideoDatabaseService {
     // 获取失败的和完成但无 TMDB ID 的视频
     final results = await _db!.query(
       _tableMetadata,
-      where: '''
+      where:
+          '''
         $_colScrapeStatus = ?
         OR ($_colScrapeStatus = ? AND $_colTmdbId IS NULL)
       ''',
-      whereArgs: [
-        ScrapeStatus.failed.index,
-        ScrapeStatus.completed.index,
-      ],
+      whereArgs: [ScrapeStatus.failed.index, ScrapeStatus.completed.index],
       orderBy: _colId,
       limit: limit,
     );
@@ -3295,15 +3574,15 @@ class VideoDatabaseService {
   ///
   /// [sourceId] 可选，按源ID筛选
   /// [pathPrefix] 可选，按路径前缀筛选（需要同时提供 sourceId）
-  Future<int> getRetryableCount({
-    String? sourceId,
-    String? pathPrefix,
-  }) async {
+  Future<int> getRetryableCount({String? sourceId, String? pathPrefix}) async {
     if (!_initialized) await init();
 
     // 构建路径过滤条件
     var pathFilter = '';
-    final args = <Object>[ScrapeStatus.failed.index, ScrapeStatus.completed.index];
+    final args = <Object>[
+      ScrapeStatus.failed.index,
+      ScrapeStatus.completed.index,
+    ];
 
     if (sourceId != null && pathPrefix != null) {
       pathFilter = ' AND $_colSourceId = ? AND $_colFilePath LIKE ?';
@@ -3313,11 +3592,13 @@ class VideoDatabaseService {
       args.add(sourceId);
     }
 
-    final count = Sqflite.firstIntValue(await _db!.rawQuery('''
+    final count = Sqflite.firstIntValue(
+      await _db!.rawQuery('''
       SELECT COUNT(*) FROM $_tableMetadata
       WHERE ($_colScrapeStatus = ?
         OR ($_colScrapeStatus = ? AND $_colTmdbId IS NULL))$pathFilter
-    ''', args));
+    ''', args),
+    );
 
     return count ?? 0;
   }
@@ -3326,16 +3607,19 @@ class VideoDatabaseService {
   Future<int> resetRetryableVideos() async {
     if (!_initialized) await init();
 
-    final count = await _db!.rawUpdate('''
+    final count = await _db!.rawUpdate(
+      '''
       UPDATE $_tableMetadata
       SET $_colScrapeStatus = ?
       WHERE $_colScrapeStatus = ?
         OR ($_colScrapeStatus = ? AND $_colTmdbId IS NULL)
-    ''', [
-      ScrapeStatus.pending.index,
-      ScrapeStatus.failed.index,
-      ScrapeStatus.completed.index,
-    ]);
+    ''',
+      [
+        ScrapeStatus.pending.index,
+        ScrapeStatus.failed.index,
+        ScrapeStatus.completed.index,
+      ],
+    );
 
     logger.i('VideoDatabaseService: 重置 $count 个视频为待刮削状态');
     return count;
@@ -3404,7 +3688,8 @@ class VideoDatabaseService {
     final stopwatch = Stopwatch()..start();
 
     // 步骤1：获取所有符合条件的系列 ID 和名称
-    final results = await _db!.rawQuery('''
+    final results = await _db!.rawQuery(
+      '''
       SELECT $_colCollectionId, $_colCollectionName, COUNT(*) as count
       FROM $_tableMetadata
       WHERE $_colCollectionId IS NOT NULL
@@ -3412,11 +3697,15 @@ class VideoDatabaseService {
       GROUP BY $_colCollectionId
       HAVING COUNT(*) >= ?
       ORDER BY count DESC
-    ''', [minCount]);
+    ''',
+      [minCount],
+    );
 
     if (results.isEmpty) {
       stopwatch.stop();
-      logger.d('VideoDB: getMovieCollections - 无电影系列，耗时 ${stopwatch.elapsedMilliseconds}ms');
+      logger.d(
+        'VideoDB: getMovieCollections - 无电影系列，耗时 ${stopwatch.elapsedMilliseconds}ms',
+      );
       return [];
     }
 
@@ -3426,7 +3715,9 @@ class VideoDatabaseService {
     for (final row in results) {
       final id = row[_colCollectionId]! as int;
       collectionIds.add(id);
-      collectionNames[id] = row[_colCollectionName] as String? ?? appL10n.videoCollectionNameUnknown;
+      collectionNames[id] =
+          row[_colCollectionName] as String? ??
+          appL10n.videoCollectionNameUnknown;
     }
 
     // 步骤3：单次批量查询获取所有系列的电影
@@ -3503,17 +3794,21 @@ class VideoDatabaseService {
       final movies = deduplicatedCollections[id] ?? [];
       // 只有系列中有多部不同电影时才包含
       if (movies.length >= minCount) {
-        collections.add(MovieCollection(
-          id: id,
-          name: collectionNames[id] ?? appL10n.videoCollectionNameUnknown,
-          movies: movies,
-        ));
+        collections.add(
+          MovieCollection(
+            id: id,
+            name: collectionNames[id] ?? appL10n.videoCollectionNameUnknown,
+            movies: movies,
+          ),
+        );
       }
     }
 
     stopwatch.stop();
-    logger.d('VideoDB: getMovieCollections - 系列=${collections.length}, '
-        '总电影=${allMoviesResult.length}, 耗时 ${stopwatch.elapsedMilliseconds}ms');
+    logger.d(
+      'VideoDB: getMovieCollections - 系列=${collections.length}, '
+      '总电影=${allMoviesResult.length}, 耗时 ${stopwatch.elapsedMilliseconds}ms',
+    );
 
     return collections;
   }
@@ -3540,7 +3835,8 @@ class VideoDatabaseService {
 
     final results = await _db!.query(
       _tableMetadata,
-      where: '$_colCategory = ? AND $_colTmdbId IS NOT NULL AND $_colCollectionId IS NULL',
+      where:
+          '$_colCategory = ? AND $_colTmdbId IS NOT NULL AND $_colCollectionId IS NULL',
       whereArgs: [MediaCategory.movie.index],
     );
 
@@ -3556,7 +3852,8 @@ class VideoDatabaseService {
     // 查找有 TMDB ID 但缺少地区或类型信息的电影
     final results = await _db!.query(
       _tableMetadata,
-      where: '''
+      where:
+          '''
         $_colCategory = ?
         AND $_colTmdbId IS NOT NULL
         AND (
@@ -3578,7 +3875,8 @@ class VideoDatabaseService {
 
     // 使用子查询获取每个剧集组的代表记录（按 showDirectory 或 title 分组）
     // 只返回缺少地区或类型信息的剧集
-    final results = await _db!.rawQuery('''
+    final results = await _db!.rawQuery(
+      '''
       SELECT * FROM $_tableMetadata m
       WHERE m.$_colCategory = ?
         AND m.$_colTmdbId IS NOT NULL
@@ -3591,7 +3889,9 @@ class VideoDatabaseService {
           WHERE m2.$_colCategory = ?
             AND COALESCE(m2.$_colShowDirectory, m2.$_colTitle) = COALESCE(m.$_colShowDirectory, m.$_colTitle)
         )
-    ''', [MediaCategory.tvShow.index, MediaCategory.tvShow.index]);
+    ''',
+      [MediaCategory.tvShow.index, MediaCategory.tvShow.index],
+    );
 
     return results.map(_fromRow).toList();
   }
@@ -3637,7 +3937,8 @@ class VideoDatabaseService {
   Future<List<int>> getAvailableYears({MediaCategory? category}) async {
     if (!_initialized) await init();
 
-    var sql = '''
+    var sql =
+        '''
       SELECT DISTINCT $_colYear FROM $_tableMetadata
       WHERE $_colYear IS NOT NULL
     ''';
@@ -3665,7 +3966,8 @@ class VideoDatabaseService {
   }) async {
     if (!_initialized) await init();
 
-    var sql = '''
+    var sql =
+        '''
       SELECT DISTINCT $_colGenres FROM $_tableMetadata
       WHERE $_colGenres IS NOT NULL AND $_colGenres != ''
     ''';
@@ -3686,7 +3988,10 @@ class VideoDatabaseService {
       if (genres != null && genres.isNotEmpty) {
         // 支持 ' / '、'/'、', '、',' 四种分隔符格式
         rawGenres.addAll(
-          genres.split(RegExp(r'\s*[/,]\s*')).map((g) => g.trim()).where((g) => g.isNotEmpty),
+          genres
+              .split(RegExp(r'\s*[/,]\s*'))
+              .map((g) => g.trim())
+              .where((g) => g.isNotEmpty),
         );
       }
     }
@@ -3853,7 +4158,8 @@ class VideoDatabaseService {
 
     // 优化查询：使用聚合表的 representative_rowid 进行 JOIN
     // 复杂度从 O(n²) 降为 O(n)
-    final sql = '''
+    final sql =
+        '''
       SELECT m.* FROM $_tableTvShowGroups g
       INNER JOIN $_tableMetadata m ON g.$_tvgColRepresentativeRowid = m.rowid
       WHERE g.$_tvgColRepresentativeRowid IS NOT NULL$filterWhere
@@ -3890,10 +4196,7 @@ class VideoDatabaseService {
   /// 获取筛选后的剧集分组数量
   ///
   /// 直接查询聚合表 tv_show_groups，确保与列表显示数量一致
-  Future<int> getTvShowGroupCountFiltered({
-    String? genre,
-    int? year,
-  }) async {
+  Future<int> getTvShowGroupCountFiltered({String? genre, int? year}) async {
     if (!_initialized) await init();
 
     var filterWhere = '';
@@ -3910,13 +4213,14 @@ class VideoDatabaseService {
     }
 
     // 直接查询聚合表的数量，确保与列表一致
-    final count = Sqflite.firstIntValue(await _db!.rawQuery(
-      '''
+    final count =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery('''
       SELECT COUNT(*) FROM $_tableTvShowGroups
       WHERE $_tvgColRepresentativeRowid IS NOT NULL$filterWhere
-      ''',
-      filterArgs,
-    )) ?? 0;
+      ''', filterArgs),
+        ) ??
+        0;
 
     return count;
   }
@@ -4021,18 +4325,14 @@ class VideoDatabaseService {
     await _db!.transaction((txn) async {
       final batch = txn.batch();
       for (final subtitle in subtitles) {
-        batch.insert(
-          _tableSubtitles,
-          {
-            _subColSourceId: subtitle.sourceId,
-            _subColVideoPath: subtitle.videoPath,
-            _subColSubtitlePath: subtitle.subtitlePath,
-            _subColFileName: subtitle.fileName,
-            _subColFormat: subtitle.format,
-            _subColLanguage: subtitle.language,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        batch.insert(_tableSubtitles, {
+          _subColSourceId: subtitle.sourceId,
+          _subColVideoPath: subtitle.videoPath,
+          _subColSubtitlePath: subtitle.subtitlePath,
+          _subColFileName: subtitle.fileName,
+          _subColFormat: subtitle.format,
+          _subColLanguage: subtitle.language,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
       await batch.commit(noResult: true);
     });
@@ -4059,7 +4359,10 @@ class VideoDatabaseService {
   }
 
   /// 删除视频对应的所有字幕索引
-  Future<void> deleteSubtitlesForVideo(String sourceId, String videoPath) async {
+  Future<void> deleteSubtitlesForVideo(
+    String sourceId,
+    String videoPath,
+  ) async {
     if (!_initialized) await init();
 
     await _db!.delete(
@@ -4093,13 +4396,13 @@ class VideoDatabaseService {
 
   /// 从数据库行转换为 SubtitleIndex
   SubtitleIndex _subtitleFromRow(Map<String, dynamic> row) => SubtitleIndex(
-        sourceId: row[_subColSourceId] as String,
-        videoPath: row[_subColVideoPath] as String,
-        subtitlePath: row[_subColSubtitlePath] as String,
-        fileName: row[_subColFileName] as String,
-        format: row[_subColFormat] as String,
-        language: row[_subColLanguage] as String?,
-      );
+    sourceId: row[_subColSourceId] as String,
+    videoPath: row[_subColVideoPath] as String,
+    subtitlePath: row[_subColSubtitlePath] as String,
+    fileName: row[_subColFileName] as String,
+    format: row[_subColFormat] as String,
+    language: row[_subColLanguage] as String?,
+  );
 
   // ============ 扫描进度方法 ============
 
@@ -4147,7 +4450,8 @@ class VideoDatabaseService {
 
     final results = await _db!.query(
       _tableScanProgress,
-      where: '$_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus < ?',
+      where:
+          '$_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus < ?',
       whereArgs: [sourceId, rootPath, scanStatusCompleted],
       orderBy: _scanColId,
       limit: limit,
@@ -4196,7 +4500,15 @@ class VideoDatabaseService {
 
   /// 批量标记目录扫描完成
   Future<void> markDirectoriesCompletedBatch(
-    List<({String sourceId, String path, int videoCount, DateTime? dirModifiedTime})> items,
+    List<
+      ({
+        String sourceId,
+        String path,
+        int videoCount,
+        DateTime? dirModifiedTime,
+      })
+    >
+    items,
   ) async {
     if (!_initialized) await init();
     if (items.isEmpty) return;
@@ -4213,7 +4525,8 @@ class VideoDatabaseService {
             _scanColVideoCount: item.videoCount,
             _scanColLastScanned: now,
             if (item.dirModifiedTime != null)
-              _scanColDirModifiedTime: item.dirModifiedTime!.millisecondsSinceEpoch,
+              _scanColDirModifiedTime:
+                  item.dirModifiedTime!.millisecondsSinceEpoch,
           },
           where: '$_scanColSourceId = ? AND $_scanColPath = ?',
           whereArgs: [item.sourceId, item.path],
@@ -4230,25 +4543,41 @@ class VideoDatabaseService {
   ) async {
     if (!_initialized) await init();
 
-    final total = Sqflite.firstIntValue(await _db!.rawQuery(
-      'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ?',
-      [sourceId, rootPath],
-    )) ?? 0;
+    final total =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
+            'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ?',
+            [sourceId, rootPath],
+          ),
+        ) ??
+        0;
 
-    final completed = Sqflite.firstIntValue(await _db!.rawQuery(
-      'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
-      [sourceId, rootPath, scanStatusCompleted],
-    )) ?? 0;
+    final completed =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
+            'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
+            [sourceId, rootPath, scanStatusCompleted],
+          ),
+        ) ??
+        0;
 
-    final scanning = Sqflite.firstIntValue(await _db!.rawQuery(
-      'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
-      [sourceId, rootPath, scanStatusScanning],
-    )) ?? 0;
+    final scanning =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
+            'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
+            [sourceId, rootPath, scanStatusScanning],
+          ),
+        ) ??
+        0;
 
-    final totalVideos = Sqflite.firstIntValue(await _db!.rawQuery(
-      'SELECT SUM($_scanColVideoCount) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ?',
-      [sourceId, rootPath],
-    )) ?? 0;
+    final totalVideos =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
+            'SELECT SUM($_scanColVideoCount) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ?',
+            [sourceId, rootPath],
+          ),
+        ) ??
+        0;
 
     return ScanProgressStats(
       totalDirectories: total,
@@ -4268,7 +4597,9 @@ class VideoDatabaseService {
       whereArgs: [sourceId, rootPath],
     );
 
-    logger.i('VideoDatabaseService: 已清除扫描进度 (sourceId: $sourceId, rootPath: $rootPath)');
+    logger.i(
+      'VideoDatabaseService: 已清除扫描进度 (sourceId: $sourceId, rootPath: $rootPath)',
+    );
   }
 
   /// 清除源的所有扫描进度
@@ -4289,7 +4620,8 @@ class VideoDatabaseService {
     return _db!.update(
       _tableScanProgress,
       {_scanColStatus: scanStatusPending},
-      where: '$_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
+      where:
+          '$_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
       whereArgs: [sourceId, rootPath, scanStatusScanning],
     );
   }
@@ -4298,10 +4630,12 @@ class VideoDatabaseService {
   Future<bool> hasUnfinishedScan(String sourceId, String rootPath) async {
     if (!_initialized) await init();
 
-    final count = Sqflite.firstIntValue(await _db!.rawQuery(
-      'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus < ?',
-      [sourceId, rootPath, scanStatusCompleted],
-    ));
+    final count = Sqflite.firstIntValue(
+      await _db!.rawQuery(
+        'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus < ?',
+        [sourceId, rootPath, scanStatusCompleted],
+      ),
+    );
 
     return (count ?? 0) > 0;
   }
@@ -4316,7 +4650,8 @@ class VideoDatabaseService {
     final results = await _db!.query(
       _tableScanProgress,
       columns: [_scanColPath],
-      where: '$_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
+      where:
+          '$_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
       whereArgs: [sourceId, rootPath, scanStatusCompleted],
     );
 
@@ -4332,10 +4667,14 @@ class VideoDatabaseService {
         status: row[_scanColStatus] as int,
         videoCount: row[_scanColVideoCount] as int? ?? 0,
         lastScanned: row[_scanColLastScanned] != null
-            ? DateTime.fromMillisecondsSinceEpoch(row[_scanColLastScanned] as int)
+            ? DateTime.fromMillisecondsSinceEpoch(
+                row[_scanColLastScanned] as int,
+              )
             : null,
         dirModifiedTime: row[_scanColDirModifiedTime] != null
-            ? DateTime.fromMillisecondsSinceEpoch(row[_scanColDirModifiedTime] as int)
+            ? DateTime.fromMillisecondsSinceEpoch(
+                row[_scanColDirModifiedTime] as int,
+              )
             : null,
       );
 
@@ -4382,29 +4721,23 @@ class VideoDatabaseService {
   }) async {
     if (!_initialized) await init();
 
-    await _db!.insert(
-      _tableScanProgress,
-      {
-        _scanColSourceId: sourceId,
-        _scanColPath: path,
-        _scanColRootPath: rootPath,
-        _scanColStatus: scanStatusCompleted,
-        _scanColVideoCount: videoCount,
-        _scanColLastScanned: DateTime.now().millisecondsSinceEpoch,
-        if (dirModifiedTime != null)
-          _scanColDirModifiedTime: dirModifiedTime.millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await _db!.insert(_tableScanProgress, {
+      _scanColSourceId: sourceId,
+      _scanColPath: path,
+      _scanColRootPath: rootPath,
+      _scanColStatus: scanStatusCompleted,
+      _scanColVideoCount: videoCount,
+      _scanColLastScanned: DateTime.now().millisecondsSinceEpoch,
+      if (dirModifiedTime != null)
+        _scanColDirModifiedTime: dirModifiedTime.millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// 获取指定目录下的视频文件（用于增量同步）
   ///
   /// 只返回直接位于该目录下的文件（不递归）
-  Future<Map<String, ({int fileSize, DateTime? fileModifiedTime})>> getVideoFilesInDirectory(
-    String sourceId,
-    String dirPath,
-  ) async {
+  Future<Map<String, ({int fileSize, DateTime? fileModifiedTime})>>
+  getVideoFilesInDirectory(String sourceId, String dirPath) async {
     if (!_initialized) await init();
 
     // 使用 LIKE 匹配直接子文件（不包含更深层目录）
@@ -4427,9 +4760,11 @@ class VideoDatabaseService {
         row[_colFilePath]! as String: (
           fileSize: row[_colFileSize] as int? ?? 0,
           fileModifiedTime: row[_colFileModifiedTime] != null
-              ? DateTime.fromMillisecondsSinceEpoch(row[_colFileModifiedTime]! as int)
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  row[_colFileModifiedTime]! as int,
+                )
               : null,
-        )
+        ),
     };
   }
 
@@ -4444,30 +4779,39 @@ class VideoDatabaseService {
 
     final results = await _db!.query(
       _tableScanProgress,
-      where: '$_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
+      where:
+          '$_scanColSourceId = ? AND $_scanColRootPath = ? AND $_scanColStatus = ?',
       whereArgs: [sourceId, rootPath, scanStatusCompleted],
     );
 
     return {
       for (final row in results)
-        row[_scanColPath]! as String: _scanProgressFromRow(row)
+        row[_scanColPath]! as String: _scanProgressFromRow(row),
     };
   }
 
   /// 获取指定源下所有视频文件路径（用于检测已删除文件）
   ///
   /// 返回 `Map<filePath, (fileSize, fileModifiedTime)>`
-  Future<Map<String, ({int fileSize, DateTime? fileModifiedTime})>> getVideoFilesMap(
-    String sourceId, {
-    String? pathPrefix,
-  }) async {
+  Future<Map<String, ({int fileSize, DateTime? fileModifiedTime})>>
+  getVideoFilesMap(String sourceId, {String? pathPrefix}) async {
     if (!_initialized) await init();
 
+    final directoryPrefix = pathPrefix == null
+        ? null
+        : pathPrefix.endsWith('/')
+        ? pathPrefix
+        : '$pathPrefix/';
+    final escapedPrefix = directoryPrefix
+        ?.replaceAll(r'\', r'\\')
+        .replaceAll('%', r'\%')
+        .replaceAll('_', r'\_');
     final where = pathPrefix != null
-        ? '$_colSourceId = ? AND $_colFilePath LIKE ?'
+        ? '$_colSourceId = ? AND '
+              '($_colFilePath = ? OR $_colFilePath LIKE ? ESCAPE \'\\\')'
         : '$_colSourceId = ?';
     final whereArgs = pathPrefix != null
-        ? [sourceId, '$pathPrefix%']
+        ? [sourceId, pathPrefix, '$escapedPrefix%']
         : [sourceId];
 
     final results = await _db!.query(
@@ -4482,9 +4826,11 @@ class VideoDatabaseService {
         row[_colFilePath]! as String: (
           fileSize: row[_colFileSize] as int? ?? 0,
           fileModifiedTime: row[_colFileModifiedTime] != null
-              ? DateTime.fromMillisecondsSinceEpoch(row[_colFileModifiedTime]! as int)
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  row[_colFileModifiedTime]! as int,
+                )
               : null,
-        )
+        ),
     };
   }
 
@@ -4549,26 +4895,38 @@ class VideoDatabaseService {
     if (!_initialized) await init();
 
     // 获取有修改时间记录的目录数
-    final withMtime = Sqflite.firstIntValue(await _db!.rawQuery(
-      '''
+    final withMtime =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
+            '''
       SELECT COUNT(*) FROM $_tableScanProgress
       WHERE $_scanColSourceId = ? AND $_scanColRootPath = ?
         AND $_scanColDirModifiedTime IS NOT NULL
       ''',
-      [sourceId, rootPath],
-    )) ?? 0;
+            [sourceId, rootPath],
+          ),
+        ) ??
+        0;
 
     // 获取总目录数
-    final total = Sqflite.firstIntValue(await _db!.rawQuery(
-      'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ?',
-      [sourceId, rootPath],
-    )) ?? 0;
+    final total =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
+            'SELECT COUNT(*) FROM $_tableScanProgress WHERE $_scanColSourceId = ? AND $_scanColRootPath = ?',
+            [sourceId, rootPath],
+          ),
+        ) ??
+        0;
 
     // 获取视频总数（按源和路径前缀过滤）
-    final videos = Sqflite.firstIntValue(await _db!.rawQuery(
-      'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colSourceId = ? AND $_colFilePath LIKE ?',
-      [sourceId, '$rootPath%'],
-    )) ?? 0;
+    final videos =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery(
+            'SELECT COUNT(*) FROM $_tableMetadata WHERE $_colSourceId = ? AND $_colFilePath LIKE ?',
+            [sourceId, '$rootPath%'],
+          ),
+        ) ??
+        0;
 
     return IncrementalSyncStats(
       totalDirectories: total,
@@ -4678,7 +5036,8 @@ class VideoDatabaseService {
 
       final groupKey = 'tmdb_$tmdbId';
 
-      await _db!.rawInsert('''
+      await _db!.rawInsert(
+        '''
         INSERT OR REPLACE INTO $_tableTvShowGroups (
           $_tvgColGroupKey,
           $_tvgColTmdbId,
@@ -4697,31 +5056,34 @@ class VideoDatabaseService {
           $_tvgColLastSynced,
           $_tvgColLocalPosterUrl
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ''', [
-        groupKey,
-        tmdbId,
-        title,
-        row['normalized_title'] as String? ?? title.toLowerCase(),
-        row['original_title'] as String?,
-        row['year'] as int?,
-        row['overview'] as String?,
-        row['poster_url'] as String?,
-        row['backdrop_url'] as String?,
-        row['rating'] as double?,
-        row['genres'] as String?,
-        row['season_count'] as int? ?? 1,
-        row['episode_count'] as int? ?? 1,
-        row['representative_rowid'] as int?,
-        now,
-        row['local_poster_url'] as String?,
-      ]);
+      ''',
+        [
+          groupKey,
+          tmdbId,
+          title,
+          row['normalized_title'] as String? ?? title.toLowerCase(),
+          row['original_title'] as String?,
+          row['year'] as int?,
+          row['overview'] as String?,
+          row['poster_url'] as String?,
+          row['backdrop_url'] as String?,
+          row['rating'] as double?,
+          row['genres'] as String?,
+          row['season_count'] as int? ?? 1,
+          row['episode_count'] as int? ?? 1,
+          row['representative_rowid'] as int?,
+          now,
+          row['local_poster_url'] as String?,
+        ],
+      );
 
       insertedCount++;
     }
 
     // 步骤 5: 为没有 tmdbId 的目录单独创建分组
     for (final directory in orphanDirectories) {
-      final aggregated = await _db!.rawQuery('''
+      final aggregated = await _db!.rawQuery(
+        '''
         SELECT 
           MAX($_colTitle) as title,
           LOWER(MAX($_colTitle)) as normalized_title,
@@ -4738,7 +5100,9 @@ class VideoDatabaseService {
           MAX($_colLocalPosterUrl) as local_poster_url
         FROM $_tableMetadata
         WHERE $_colCategory = 1 AND $_colShowDirectory = ?
-      ''', [directory]);
+      ''',
+        [directory],
+      );
 
       if (aggregated.isEmpty) continue;
 
@@ -4749,7 +5113,8 @@ class VideoDatabaseService {
       // 使用目录路径的哈希作为 group_key
       final groupKey = 'dir_${directory.hashCode.abs()}';
 
-      await _db!.rawInsert('''
+      await _db!.rawInsert(
+        '''
         INSERT OR REPLACE INTO $_tableTvShowGroups (
           $_tvgColGroupKey,
           $_tvgColTmdbId,
@@ -4768,34 +5133,40 @@ class VideoDatabaseService {
           $_tvgColLastSynced,
           $_tvgColLocalPosterUrl
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ''', [
-        groupKey,
-        null, // no tmdbId
-        title,
-        row['normalized_title'] as String? ?? title.toLowerCase(),
-        row['original_title'] as String?,
-        row['year'] as int?,
-        row['overview'] as String?,
-        row['poster_url'] as String?,
-        row['backdrop_url'] as String?,
-        row['rating'] as double?,
-        row['genres'] as String?,
-        row['season_count'] as int? ?? 1,
-        row['episode_count'] as int? ?? 1,
-        row['representative_rowid'] as int?,
-        now,
-        row['local_poster_url'] as String?,
-      ]);
+      ''',
+        [
+          groupKey,
+          null, // no tmdbId
+          title,
+          row['normalized_title'] as String? ?? title.toLowerCase(),
+          row['original_title'] as String?,
+          row['year'] as int?,
+          row['overview'] as String?,
+          row['poster_url'] as String?,
+          row['backdrop_url'] as String?,
+          row['rating'] as double?,
+          row['genres'] as String?,
+          row['season_count'] as int? ?? 1,
+          row['episode_count'] as int? ?? 1,
+          row['representative_rowid'] as int?,
+          now,
+          row['local_poster_url'] as String?,
+        ],
+      );
 
       insertedCount++;
     }
 
     // 步骤 6: 处理没有 show_directory 的剧集（兼容旧数据）
-    final noDirectoryCount = Sqflite.firstIntValue(await _db!.rawQuery('''
+    final noDirectoryCount =
+        Sqflite.firstIntValue(
+          await _db!.rawQuery('''
       SELECT COUNT(DISTINCT COALESCE($_colTmdbId, $_colTitle))
       FROM $_tableMetadata
       WHERE $_colCategory = 1 AND $_colShowDirectory IS NULL
-    ''')) ?? 0;
+    '''),
+        ) ??
+        0;
 
     if (noDirectoryCount > 0) {
       // 按 tmdbId 或 title 分组（旧逻辑兜底）
@@ -4828,7 +5199,8 @@ class VideoDatabaseService {
             ? 'tmdb_$tmdbId'
             : 'title_${(row['normalized_title'] as String? ?? title.toLowerCase()).hashCode.abs()}';
 
-        await _db!.rawInsert('''
+        await _db!.rawInsert(
+          '''
           INSERT OR IGNORE INTO $_tableTvShowGroups (
             $_tvgColGroupKey,
             $_tvgColTmdbId,
@@ -4846,31 +5218,35 @@ class VideoDatabaseService {
             $_tvgColRepresentativeRowid,
             $_tvgColLastSynced
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', [
-          groupKey,
-          tmdbId,
-          title,
-          row['normalized_title'] as String? ?? title.toLowerCase(),
-          row['original_title'] as String?,
-          row['year'] as int?,
-          row['overview'] as String?,
-          row['poster_url'] as String?,
-          row['backdrop_url'] as String?,
-          row['rating'] as double?,
-          row['genres'] as String?,
-          row['season_count'] as int? ?? 1,
-          row['episode_count'] as int? ?? 1,
-          row['representative_rowid'] as int?,
-          now,
-        ]);
+        ''',
+          [
+            groupKey,
+            tmdbId,
+            title,
+            row['normalized_title'] as String? ?? title.toLowerCase(),
+            row['original_title'] as String?,
+            row['year'] as int?,
+            row['overview'] as String?,
+            row['poster_url'] as String?,
+            row['backdrop_url'] as String?,
+            row['rating'] as double?,
+            row['genres'] as String?,
+            row['season_count'] as int? ?? 1,
+            row['episode_count'] as int? ?? 1,
+            row['representative_rowid'] as int?,
+            now,
+          ],
+        );
 
         insertedCount++;
       }
     }
 
     stopwatch.stop();
-    logger.i('VideoDatabaseService: TV剧集分组同步完成, '
-        '插入/更新 $insertedCount 条, 耗时 ${stopwatch.elapsedMilliseconds}ms');
+    logger.i(
+      'VideoDatabaseService: TV剧集分组同步完成, '
+      '插入/更新 $insertedCount 条, 耗时 ${stopwatch.elapsedMilliseconds}ms',
+    );
 
     return insertedCount;
   }
@@ -4909,7 +5285,8 @@ class VideoDatabaseService {
       final collectionId = row[_colCollectionId] as int?;
       if (collectionId == null) continue;
 
-      await _db!.rawInsert('''
+      await _db!.rawInsert(
+        '''
         INSERT OR REPLACE INTO $_tableMovieCollectionGroups (
           $_mcgColTmdbCollectionId,
           $_mcgColName,
@@ -4919,23 +5296,27 @@ class VideoDatabaseService {
           $_mcgColMovieCount,
           $_mcgColLastSynced
         ) VALUES (?, ?, ?, ?, ?, ?, ?)
-      ''', [
-        collectionId,
-        row['name'] as String? ?? appL10n.videoCollectionNameFallback,
-        row['poster_url'] as String?,
-        row['backdrop_url'] as String?,
-        row['overview'] as String?,
-        row['movie_count'] as int? ?? 1,
-        now,
-      ]);
+      ''',
+        [
+          collectionId,
+          row['name'] as String? ?? appL10n.videoCollectionNameFallback,
+          row['poster_url'] as String?,
+          row['backdrop_url'] as String?,
+          row['overview'] as String?,
+          row['movie_count'] as int? ?? 1,
+          now,
+        ],
+      );
 
       insertedCount++;
     }
 
     stopwatch.stop();
-    logger.i('VideoDatabaseService: 电影系列分组同步完成, '
-        'TMDB: ${tmdbCollections.length}, '
-        '总计 $insertedCount 条, 耗时 ${stopwatch.elapsedMilliseconds}ms');
+    logger.i(
+      'VideoDatabaseService: 电影系列分组同步完成, '
+      'TMDB: ${tmdbCollections.length}, '
+      '总计 $insertedCount 条, 耗时 ${stopwatch.elapsedMilliseconds}ms',
+    );
 
     return insertedCount;
   }
@@ -4957,24 +5338,28 @@ class VideoDatabaseService {
       offset: offset,
     );
 
-    return results.map((row) => TvShowGroupRow(
-      id: row[_tvgColId]! as int,
-      groupKey: row[_tvgColGroupKey]! as String,
-      tmdbId: row[_tvgColTmdbId] as int?,
-      title: row[_tvgColTitle]! as String,
-      normalizedTitle: row[_tvgColNormalizedTitle]! as String,
-      originalTitle: row[_tvgColOriginalTitle] as String?,
-      year: row[_tvgColYear] as int?,
-      overview: row[_tvgColOverview] as String?,
-      posterUrl: row[_tvgColPosterUrl] as String?,
-      backdropUrl: row[_tvgColBackdropUrl] as String?,
-      rating: row[_tvgColRating] as double?,
-      genres: row[_tvgColGenres] as String?,
-      seasonCount: row[_tvgColSeasonCount] as int? ?? 0,
-      episodeCount: row[_tvgColEpisodeCount] as int? ?? 0,
-      representativeRowid: row[_tvgColRepresentativeRowid] as int?,
-      localPosterUrl: row[_tvgColLocalPosterUrl] as String?,
-    )).toList();
+    return results
+        .map(
+          (row) => TvShowGroupRow(
+            id: row[_tvgColId]! as int,
+            groupKey: row[_tvgColGroupKey]! as String,
+            tmdbId: row[_tvgColTmdbId] as int?,
+            title: row[_tvgColTitle]! as String,
+            normalizedTitle: row[_tvgColNormalizedTitle]! as String,
+            originalTitle: row[_tvgColOriginalTitle] as String?,
+            year: row[_tvgColYear] as int?,
+            overview: row[_tvgColOverview] as String?,
+            posterUrl: row[_tvgColPosterUrl] as String?,
+            backdropUrl: row[_tvgColBackdropUrl] as String?,
+            rating: row[_tvgColRating] as double?,
+            genres: row[_tvgColGenres] as String?,
+            seasonCount: row[_tvgColSeasonCount] as int? ?? 0,
+            episodeCount: row[_tvgColEpisodeCount] as int? ?? 0,
+            representativeRowid: row[_tvgColRepresentativeRowid] as int?,
+            localPosterUrl: row[_tvgColLocalPosterUrl] as String?,
+          ),
+        )
+        .toList();
   }
 
   /// 获取 TV 剧集分组总数（从聚合表读取）
@@ -4982,8 +5367,9 @@ class VideoDatabaseService {
     if (!_initialized) await init();
 
     return Sqflite.firstIntValue(
-      await _db!.rawQuery('SELECT COUNT(*) FROM $_tableTvShowGroups'),
-    ) ?? 0;
+          await _db!.rawQuery('SELECT COUNT(*) FROM $_tableTvShowGroups'),
+        ) ??
+        0;
   }
 
   /// 获取电影系列分组列表（从聚合表读取）
@@ -5000,15 +5386,19 @@ class VideoDatabaseService {
       offset: offset,
     );
 
-    return results.map((row) => MovieCollectionGroupRow(
-      id: row[_mcgColId]! as int,
-      tmdbCollectionId: row[_mcgColTmdbCollectionId] as int?,
-      name: row[_mcgColName]! as String,
-      posterUrl: row[_mcgColPosterUrl] as String?,
-      backdropUrl: row[_mcgColBackdropUrl] as String?,
-      overview: row[_mcgColOverview] as String?,
-      movieCount: row[_mcgColMovieCount] as int? ?? 0,
-    )).toList();
+    return results
+        .map(
+          (row) => MovieCollectionGroupRow(
+            id: row[_mcgColId]! as int,
+            tmdbCollectionId: row[_mcgColTmdbCollectionId] as int?,
+            name: row[_mcgColName]! as String,
+            posterUrl: row[_mcgColPosterUrl] as String?,
+            backdropUrl: row[_mcgColBackdropUrl] as String?,
+            overview: row[_mcgColOverview] as String?,
+            movieCount: row[_mcgColMovieCount] as int? ?? 0,
+          ),
+        )
+        .toList();
   }
 
   /// 获取电影系列分组总数（从聚合表读取）
@@ -5016,8 +5406,11 @@ class VideoDatabaseService {
     if (!_initialized) await init();
 
     return Sqflite.firstIntValue(
-      await _db!.rawQuery('SELECT COUNT(*) FROM $_tableMovieCollectionGroups'),
-    ) ?? 0;
+          await _db!.rawQuery(
+            'SELECT COUNT(*) FROM $_tableMovieCollectionGroups',
+          ),
+        ) ??
+        0;
   }
 
   // ============================================================
@@ -5253,7 +5646,8 @@ class MovieCollection {
   String? get posterUrl {
     // 优先使用系列专属海报
     for (final movie in movies) {
-      if (movie.collectionPosterUrl != null && movie.collectionPosterUrl!.isNotEmpty) {
+      if (movie.collectionPosterUrl != null &&
+          movie.collectionPosterUrl!.isNotEmpty) {
         return movie.collectionPosterUrl;
       }
     }
@@ -5266,7 +5660,8 @@ class MovieCollection {
     if (movies.isEmpty) return null;
     // 优先使用系列专属背景图
     for (final movie in movies) {
-      if (movie.collectionBackdropUrl != null && movie.collectionBackdropUrl!.isNotEmpty) {
+      if (movie.collectionBackdropUrl != null &&
+          movie.collectionBackdropUrl!.isNotEmpty) {
         return movie.collectionBackdropUrl;
       }
     }

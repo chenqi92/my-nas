@@ -78,26 +78,27 @@ class MusicFileWithSource {
   });
 
   /// 从缓存条目创建
-  factory MusicFileWithSource.fromCacheEntry(MusicLibraryCacheEntry entry) => MusicFileWithSource(
-      file: FileItem(
-        name: entry.fileName,
-        path: entry.filePath,
-        size: entry.size,
-        isDirectory: false,
-        modifiedTime: entry.modifiedTime,
-        thumbnailUrl: entry.thumbnailUrl,
-      ),
-      sourceId: entry.sourceId,
-      title: entry.title,
-      artist: entry.artist,
-      album: entry.album,
-      duration: entry.duration,
-      trackNumber: entry.trackNumber,
-      year: entry.year,
-      genre: entry.genre,
-      coverBase64: entry.coverBase64,
-      metadataExtracted: entry.metadataExtracted,
-    );
+  factory MusicFileWithSource.fromCacheEntry(MusicLibraryCacheEntry entry) =>
+      MusicFileWithSource(
+        file: FileItem(
+          name: entry.fileName,
+          path: entry.filePath,
+          size: entry.size,
+          isDirectory: false,
+          modifiedTime: entry.modifiedTime,
+          thumbnailUrl: entry.thumbnailUrl,
+        ),
+        sourceId: entry.sourceId,
+        title: entry.title,
+        artist: entry.artist,
+        album: entry.album,
+        duration: entry.duration,
+        trackNumber: entry.trackNumber,
+        year: entry.year,
+        genre: entry.genre,
+        coverBase64: entry.coverBase64,
+        metadataExtracted: entry.metadataExtracted,
+      );
 
   final FileItem file;
   final String sourceId;
@@ -248,27 +249,29 @@ class MusicFileWithSource {
     String? coverPath,
     String? coverUrl,
     bool? metadataExtracted,
-  }) => MusicFileWithSource(
-      file: file,
-      sourceId: sourceId,
-      title: title ?? this.title,
-      artist: artist ?? this.artist,
-      album: album ?? this.album,
-      duration: duration ?? this.duration,
-      trackNumber: trackNumber ?? this.trackNumber,
-      year: year ?? this.year,
-      genre: genre ?? this.genre,
-      coverBase64: coverBase64 ?? this.coverBase64,
-      coverPath: coverPath ?? this.coverPath,
-      coverUrl: coverUrl ?? this.coverUrl,
-      metadataExtracted: metadataExtracted ?? this.metadataExtracted,
-    );
+  }) =>
+      MusicFileWithSource(
+        file: file,
+        sourceId: sourceId,
+        title: title ?? this.title,
+        artist: artist ?? this.artist,
+        album: album ?? this.album,
+        duration: duration ?? this.duration,
+        trackNumber: trackNumber ?? this.trackNumber,
+        year: year ?? this.year,
+        genre: genre ?? this.genre,
+        coverBase64: coverBase64 ?? this.coverBase64,
+        coverPath: coverPath ?? this.coverPath,
+        coverUrl: coverUrl ?? this.coverUrl,
+        metadataExtracted: metadataExtracted ?? this.metadataExtracted,
+      );
 }
 
 /// 音乐列表状态
 final musicListProvider =
     StateNotifierProvider<MusicListNotifier, MusicListState>(
-        MusicListNotifier.new);
+  MusicListNotifier.new,
+);
 
 /// 音乐来源筛选
 enum MusicSourceFilter {
@@ -320,10 +323,7 @@ class MusicListLoading extends MusicListState {
 }
 
 /// 扫描阶段
-enum MusicScanPhase {
-  scanning,
-  metadata,
-}
+enum MusicScanPhase { scanning, metadata }
 
 /// 音乐排序选项
 enum MusicSortOption {
@@ -353,10 +353,11 @@ class MusicSortState {
   MusicSortState copyWith({
     MusicSortOption? option,
     SortDirection? direction,
-  }) => MusicSortState(
-      option: option ?? this.option,
-      direction: direction ?? this.direction,
-    );
+  }) =>
+      MusicSortState(
+        option: option ?? this.option,
+        direction: direction ?? this.direction,
+      );
 }
 
 /// 音乐排序 Provider
@@ -446,24 +447,26 @@ class MusicListLoaded extends MusicListState {
 
   /// 兼容旧代码：返回当前展示的曲目列表
   List<MusicFileWithSource> get tracks => allTracks
-      .map((m) => MusicFileWithSource(
-            file: FileItem(
-              name: m.fileName,
-              path: m.filePath,
-              size: m.size ?? 0,
-              isDirectory: false,
-              modifiedTime: m.modifiedTime,
-            ),
-            sourceId: m.sourceId,
-            title: m.title,
-            artist: m.artist,
-            album: m.album,
-            duration: m.duration,
-            year: m.year,
-            genre: m.genre,
-            coverPath: m.coverPath,
-            metadataExtracted: true,
-          ))
+      .map(
+        (m) => MusicFileWithSource(
+          file: FileItem(
+            name: m.fileName,
+            path: m.filePath,
+            size: m.size ?? 0,
+            isDirectory: false,
+            modifiedTime: m.modifiedTime,
+          ),
+          sourceId: m.sourceId,
+          title: m.title,
+          artist: m.artist,
+          album: m.album,
+          duration: m.duration,
+          year: m.year,
+          genre: m.genre,
+          coverPath: m.coverPath,
+          metadataExtracted: true,
+        ),
+      )
       .toList();
 
   /// 过滤后的曲目（应用来源筛选和搜索）
@@ -498,28 +501,31 @@ class MusicListLoaded extends MusicListState {
   int get selectedLocalCount => selectedTracks.where(isLocalTrack).length;
 
   /// 获取选中曲目中远程曲目的数量
-  int get selectedRemoteCount => selectedTracks.where((t) => !isLocalTrack(t)).length;
+  int get selectedRemoteCount =>
+      selectedTracks.where((t) => !isLocalTrack(t)).length;
 
   /// 兼容旧代码
   List<MusicFileWithSource> get filteredTracks => filteredMetadata
-      .map((m) => MusicFileWithSource(
-            file: FileItem(
-              name: m.fileName,
-              path: m.filePath,
-              size: m.size ?? 0,
-              isDirectory: false,
-              modifiedTime: m.modifiedTime,
-            ),
-            sourceId: m.sourceId,
-            title: m.title,
-            artist: m.artist,
-            album: m.album,
-            duration: m.duration,
-            year: m.year,
-            genre: m.genre,
-            coverPath: m.coverPath,
-            metadataExtracted: true,
-          ))
+      .map(
+        (m) => MusicFileWithSource(
+          file: FileItem(
+            name: m.fileName,
+            path: m.filePath,
+            size: m.size ?? 0,
+            isDirectory: false,
+            modifiedTime: m.modifiedTime,
+          ),
+          sourceId: m.sourceId,
+          title: m.title,
+          artist: m.artist,
+          album: m.album,
+          duration: m.duration,
+          year: m.year,
+          genre: m.genre,
+          coverPath: m.coverPath,
+          metadataExtracted: true,
+        ),
+      )
       .toList();
 
   /// 通过路径获取曲目 - O(1) 查找
@@ -632,7 +638,10 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
   /// 防抖刷新，避免频繁刷新
   void _scheduleRefresh() {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 300), _loadCategorizedData);
+    _debounceTimer = Timer(
+      const Duration(milliseconds: 300),
+      _loadCategorizedData,
+    );
   }
 
   void _init() {
@@ -642,7 +651,10 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
     state = MusicListLoaded(totalCount: 0);
 
     // 在后台初始化服务并加载数据，不阻塞UI
-    AppError.fireAndForget(_initAndLoadInBackground(), action: 'musicList.initAndLoadInBackground');
+    AppError.fireAndForget(
+      _initAndLoadInBackground(),
+      action: 'musicList.initAndLoadInBackground',
+    );
   }
 
   /// 后台初始化服务并加载数据
@@ -668,28 +680,45 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
 
       // 监听连接状态变化
       _ref
-        ..listen<Map<String, SourceConnection>>(activeConnectionsProvider, (previous, next) {
-          final prevConnected = previous?.values.where((c) => c.status == SourceStatus.connected).length ?? 0;
-          final nextConnected = next.values.where((c) => c.status == SourceStatus.connected).length;
+        ..listen<Map<String, SourceConnection>>(activeConnectionsProvider, (
+          previous,
+          next,
+        ) {
+          final prevConnected = previous?.values
+                  .where((c) => c.status == SourceStatus.connected)
+                  .length ??
+              0;
+          final nextConnected = next.values
+              .where((c) => c.status == SourceStatus.connected)
+              .length;
 
           if (nextConnected > prevConnected && state is MusicListNotConnected) {
             loadMusic();
           }
         })
         // 监听媒体库配置变化（启用/停用/移除路径）
-        ..listen<AsyncValue<MediaLibraryConfig>>(mediaLibraryConfigProvider, (previous, next) {
-        final prevPaths = previous?.valueOrNull?.getEnabledPathsForType(MediaType.music) ?? [];
-        final nextPaths = next.valueOrNull?.getEnabledPathsForType(MediaType.music) ?? [];
+        ..listen<AsyncValue<MediaLibraryConfig>>(mediaLibraryConfigProvider, (
+          previous,
+          next,
+        ) {
+          final prevPaths =
+              previous?.valueOrNull?.getEnabledPathsForType(MediaType.music) ??
+                  [];
+          final nextPaths =
+              next.valueOrNull?.getEnabledPathsForType(MediaType.music) ?? [];
 
-        // 比较路径是否变化
-        final prevKeys = prevPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
-        final nextKeys = nextPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
+          // 比较路径是否变化
+          final prevKeys =
+              prevPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
+          final nextKeys =
+              nextPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
 
-        if (prevKeys.length != nextKeys.length || !prevKeys.containsAll(nextKeys)) {
-          logger.i('MusicListNotifier: 媒体库配置变化，刷新音乐列表');
-          _scheduleRefresh();
-        }
-      });
+          if (prevKeys.length != nextKeys.length ||
+              !prevKeys.containsAll(nextKeys)) {
+            logger.i('MusicListNotifier: 媒体库配置变化，刷新音乐列表');
+            _scheduleRefresh();
+          }
+        });
     } on Exception catch (e) {
       logger.e('MusicListNotifier: 初始化失败', e);
       // 保持空列表状态，让用户可以正常使用界面
@@ -701,7 +730,10 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
 
   /// 从 SQLite 加载分类数据（高性能）
   Future<void> _loadCategorizedData() async {
-    state = MusicListLoading(fromCache: true, currentFolder: appL10n.musicLoadingData);
+    state = MusicListLoading(
+      fromCache: true,
+      currentFolder: appL10n.musicLoadingData,
+    );
 
     // 获取启用的路径
     final enabledPaths = _getEnabledPaths();
@@ -750,7 +782,9 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
 
     // 保留之前的筛选状态
     final current = state;
-    final previousFilter = current is MusicListLoaded ? current.sourceFilter : MusicSourceFilter.all;
+    final previousFilter = current is MusicListLoaded
+        ? current.sourceFilter
+        : MusicSourceFilter.all;
 
     state = MusicListLoaded(
       totalCount: total,
@@ -770,7 +804,9 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       hasMoreTracks: validatedAllTracks.length < total,
     );
 
-    logger.i('MusicListNotifier: 数据加载完成，已加载 ${validatedAllTracks.length}/$total 首音乐');
+    logger.i(
+      'MusicListNotifier: 数据加载完成，已加载 ${validatedAllTracks.length}/$total 首音乐',
+    );
   }
 
   /// 加载更多歌曲（无限滚动）
@@ -792,10 +828,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       );
 
       if (moreTracks.isEmpty) {
-        state = current.copyWith(
-          hasMoreTracks: false,
-          isLoadingMore: false,
-        );
+        state = current.copyWith(hasMoreTracks: false, isLoadingMore: false);
         return;
       }
 
@@ -806,7 +839,9 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       final newAllTracks = [...current.allTracks, ...validatedMore];
 
       // 更新快速查找 Map
-      final newTrackByPath = Map<String, MusicTrackEntity>.from(current.trackByPath);
+      final newTrackByPath = Map<String, MusicTrackEntity>.from(
+        current.trackByPath,
+      );
       for (final m in validatedMore) {
         newTrackByPath[m.uniqueKey] = m;
       }
@@ -818,7 +853,9 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
         isLoadingMore: false,
       );
 
-      logger.d('MusicListNotifier: 加载更多完成，已加载 ${newAllTracks.length}/${current.totalCount}');
+      logger.d(
+        'MusicListNotifier: 加载更多完成，已加载 ${newAllTracks.length}/${current.totalCount}',
+      );
     } on Exception catch (e) {
       logger.e('MusicListNotifier: 加载更多失败', e);
       state = current.copyWith(isLoadingMore: false);
@@ -828,7 +865,9 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
   /// 验证封面文件路径是否有效
   /// 如果封面文件不存在，清除 coverPath 引用并更新数据库
   /// 同时启动后台任务重新提取丢失的封面
-  Future<List<MusicTrackEntity>> _validateCoverPaths(List<MusicTrackEntity> tracks) async {
+  Future<List<MusicTrackEntity>> _validateCoverPaths(
+    List<MusicTrackEntity> tracks,
+  ) async {
     final validatedTracks = <MusicTrackEntity>[];
     final tracksWithMissingCovers = <MusicTrackEntity>[];
 
@@ -928,7 +967,10 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
     }
 
     logger.i('MusicListNotifier: 开始从 Hive 缓存迁移 ${cache.tracks.length} 首音乐');
-    state = MusicListLoading(currentFolder: appL10n.musicMigratingData, fromCache: true);
+    state = MusicListLoading(
+      currentFolder: appL10n.musicMigratingData,
+      fromCache: true,
+    );
 
     final metadataList = <MusicTrackEntity>[];
     for (final entry in cache.tracks) {
@@ -936,25 +978,30 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       String? coverPath;
       if (entry.coverBase64 != null && entry.coverBase64!.isNotEmpty) {
         final uniqueKey = '${entry.sourceId}_${entry.filePath}';
-        coverPath = await _coverCache.saveCoverFromBase64(uniqueKey, entry.coverBase64!);
+        coverPath = await _coverCache.saveCoverFromBase64(
+          uniqueKey,
+          entry.coverBase64!,
+        );
       }
 
-      metadataList.add(MusicTrackEntity(
-        sourceId: entry.sourceId,
-        filePath: entry.filePath,
-        fileName: entry.fileName,
-        title: entry.title,
-        artist: entry.artist,
-        album: entry.album,
-        duration: entry.duration,
-        trackNumber: entry.trackNumber,
-        year: entry.year,
-        genre: entry.genre,
-        coverPath: coverPath,
-        size: entry.size,
-        modifiedTime: entry.modifiedTime,
-        lastUpdated: DateTime.now(),
-      ));
+      metadataList.add(
+        MusicTrackEntity(
+          sourceId: entry.sourceId,
+          filePath: entry.filePath,
+          fileName: entry.fileName,
+          title: entry.title,
+          artist: entry.artist,
+          album: entry.album,
+          duration: entry.duration,
+          trackNumber: entry.trackNumber,
+          year: entry.year,
+          genre: entry.genre,
+          coverPath: coverPath,
+          size: entry.size,
+          modifiedTime: entry.modifiedTime,
+          lastUpdated: DateTime.now(),
+        ),
+      );
     }
 
     // 批量保存到 SQLite
@@ -1029,6 +1076,12 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
     var scannedFolders = 0;
     final totalFolders = connectedPaths.length;
     var lastSaveCount = 0;
+    final pendingSaves = <Future<void>>[];
+    final completedSnapshots = <({
+      String sourceId,
+      String pathPrefix,
+      Set<String> encounteredPaths
+    })>[];
 
     for (final mediaPath in connectedPaths) {
       final connection = connections[mediaPath.sourceId];
@@ -1040,6 +1093,7 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
         scannedCount: allTracks.length,
       );
 
+      final pathStartIndex = allTracks.length;
       try {
         await _scanForMusic(
           connection.adapter.fileSystem,
@@ -1049,16 +1103,23 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
           onBatchFound: () {
             // 每发现 20 个文件保存一次并更新 UI
             if (allTracks.length - lastSaveCount >= 20) {
-              // 异步保存，不阻塞扫描
-              _saveTracksAndUpdateUI(
-                allTracks.sublist(lastSaveCount),
-                connections,
+              pendingSaves.add(
+                _saveTracksAndUpdateUI(allTracks.sublist(lastSaveCount)),
               );
               lastSaveCount = allTracks.length;
             }
           },
         );
-      } on Exception catch (e) {
+        completedSnapshots.add((
+          sourceId: mediaPath.sourceId,
+          pathPrefix: mediaPath.path,
+          encounteredPaths: allTracks
+              .sublist(pathStartIndex)
+              .map((track) => track.path)
+              .toSet(),
+        ));
+        // ignore: avoid_catches_without_on_clauses
+      } catch (e) {
         logger.w('扫描音乐文件夹失败: ${mediaPath.path} - $e');
       }
 
@@ -1068,6 +1129,15 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
     // 保存剩余的音乐
     if (allTracks.length > lastSaveCount) {
       await _saveTracksToDb(allTracks.sublist(lastSaveCount));
+    }
+    await Future.wait(pendingSaves);
+
+    for (final snapshot in completedSnapshots) {
+      await _db.deleteMissingByPath(
+        snapshot.sourceId,
+        snapshot.pathPrefix,
+        snapshot.encounteredPaths,
+      );
     }
 
     logger.i('音乐扫描完成，共找到 ${allTracks.length} 首音乐');
@@ -1084,40 +1154,37 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
   }
 
   /// 保存音乐并更新 UI（异步，不阻塞扫描）
-  void _saveTracksAndUpdateUI(
-    List<MusicFileWithSource> tracks,
-    Map<String, SourceConnection> connections,
-  ) {
-    AppError.fireAndForget(
-      _saveTracksToDb(tracks).then((_) async {
-        // 保存后刷新 UI
-        if (state is MusicListLoading) {
-          // 扫描中：更新进度
-          final loading = state as MusicListLoading;
-          state = MusicListLoading(
-            progress: loading.progress,
-            currentFolder: loading.currentFolder,
-            scannedCount: loading.scannedCount,
-          );
-        } else if (state is MusicListLoaded) {
-          // 已加载：增量更新
-          await _loadCategorizedData();
-        }
-      }),
-      action: 'musicList.saveTracksAndUpdateUI',
-    );
+  Future<void> _saveTracksAndUpdateUI(List<MusicFileWithSource> tracks) async {
+    await _saveTracksToDb(tracks);
+    // 保存后刷新 UI
+    if (state is MusicListLoading) {
+      // 扫描中：更新进度
+      final loading = state as MusicListLoading;
+      state = MusicListLoading(
+        progress: loading.progress,
+        currentFolder: loading.currentFolder,
+        scannedCount: loading.scannedCount,
+      );
+    } else if (state is MusicListLoaded) {
+      // 已加载：增量更新
+      await _loadCategorizedData();
+    }
   }
 
   /// 保存音乐到数据库（仅基本信息，无元数据）
   Future<void> _saveTracksToDb(List<MusicFileWithSource> tracks) async {
-    final entities = tracks.map((t) => MusicTrackEntity(
-      sourceId: t.sourceId,
-      filePath: t.path,
-      fileName: t.name,
-      size: t.size,
-      modifiedTime: t.modifiedTime,
-      lastUpdated: DateTime.now(),
-    )).toList();
+    final entities = tracks
+        .map(
+          (t) => MusicTrackEntity(
+            sourceId: t.sourceId,
+            filePath: t.path,
+            fileName: t.name,
+            size: t.size,
+            modifiedTime: t.modifiedTime,
+            lastUpdated: DateTime.now(),
+          ),
+        )
+        .toList();
 
     await _db.upsertBatch(entities);
   }
@@ -1171,73 +1238,70 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       }
 
       // 添加到任务池并行执行
-      final future = BackgroundTaskPool.scrape.add(
-        () async {
-          MusicTrackEntity? entity;
+      final future = BackgroundTaskPool.scrape.add(() async {
+        MusicTrackEntity? entity;
 
-          try {
-            final metadata = await _metadataService.extractFromNasFile(
-              connection.adapter.fileSystem,
-              track.path,
-              skipLyrics: true,
+        try {
+          final metadata = await _metadataService.extractFromNasFile(
+            connection.adapter.fileSystem,
+            track.path,
+            skipLyrics: true,
+          );
+
+          String? coverPath;
+          if (metadata?.coverData != null && metadata!.coverData!.isNotEmpty) {
+            final uniqueKey = '${track.sourceId}_${track.path}';
+            coverPath = await _coverCache.saveCover(
+              uniqueKey,
+              Uint8List.fromList(metadata.coverData!),
             );
-
-            String? coverPath;
-            if (metadata?.coverData != null && metadata!.coverData!.isNotEmpty) {
-              final uniqueKey = '${track.sourceId}_${track.path}';
-              coverPath = await _coverCache.saveCover(
-                uniqueKey,
-                Uint8List.fromList(metadata.coverData!),
-              );
-            }
-
-            entity = MusicTrackEntity(
-              sourceId: track.sourceId,
-              filePath: track.path,
-              fileName: track.name,
-              title: metadata?.title,
-              artist: metadata?.artist,
-              album: metadata?.album,
-              duration: metadata?.duration?.inMilliseconds,
-              trackNumber: metadata?.trackNumber,
-              year: metadata?.year,
-              genre: metadata?.genre,
-              coverPath: coverPath,
-              size: track.size,
-              modifiedTime: track.modifiedTime,
-              lastUpdated: DateTime.now(),
-            );
-          } on Exception catch (e) {
-            logger.w('提取元数据失败 ${track.path}: $e');
           }
 
-          // 同步更新共享状态
-          // ignore: unused_local_variable
-          final _ = lock; // 使用 lock 标记同步区域
-          processedCount++;
+          entity = MusicTrackEntity(
+            sourceId: track.sourceId,
+            filePath: track.path,
+            fileName: track.name,
+            title: metadata?.title,
+            artist: metadata?.artist,
+            album: metadata?.album,
+            duration: metadata?.duration?.inMilliseconds,
+            trackNumber: metadata?.trackNumber,
+            year: metadata?.year,
+            genre: metadata?.genre,
+            coverPath: coverPath,
+            size: track.size,
+            modifiedTime: track.modifiedTime,
+            lastUpdated: DateTime.now(),
+          );
+        } on Exception catch (e) {
+          logger.w('提取元数据失败 ${track.path}: $e');
+        }
 
-          if (entity != null) {
-            pendingEntities.add(entity);
-          }
+        // 同步更新共享状态
+        // ignore: unused_local_variable
+        final _ = lock; // 使用 lock 标记同步区域
+        processedCount++;
 
-          // 实时更新进度（每完成一首就更新）
-          _updateMetadataProgress(processedCount, totalTracks);
+        if (entity != null) {
+          pendingEntities.add(entity);
+        }
 
-          // 每处理 10 首保存一次到数据库
-          if (pendingEntities.length >= 10) {
-            final toSave = List<MusicTrackEntity>.from(pendingEntities);
-            pendingEntities.clear();
-            await _db.upsertBatch(toSave);
-          }
+        // 实时更新进度（每完成一首就更新）
+        _updateMetadataProgress(processedCount, totalTracks);
 
-          // 每处理 20 首刷新一次 UI 数据
-          if (processedCount - lastUiRefreshCount >= 20) {
-            lastUiRefreshCount = processedCount;
-            await _loadCategorizedData();
-          }
-        },
-        taskName: 'music_metadata:${track.name}',
-      );
+        // 每处理 10 首保存一次到数据库
+        if (pendingEntities.length >= 10) {
+          final toSave = List<MusicTrackEntity>.from(pendingEntities);
+          pendingEntities.clear();
+          await _db.upsertBatch(toSave);
+        }
+
+        // 每处理 20 首刷新一次 UI 数据
+        if (processedCount - lastUiRefreshCount >= 20) {
+          lastUiRefreshCount = processedCount;
+          await _loadCategorizedData();
+        }
+      }, taskName: 'music_metadata:${track.name}');
 
       futures.add(future);
     }
@@ -1305,12 +1369,6 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       await _metadataService.init();
       await _coverCache.init();
 
-      // 清理该路径的旧数据（避免旧路径格式的数据残留）
-      final deletedCount = await _db.deleteByPath(sourceId, pathPrefix);
-      if (deletedCount > 0) {
-        logger.i('MusicListNotifier: 已清理 $sourceId:$pathPrefix 的 $deletedCount 条旧数据');
-      }
-
       // 阶段1：扫描文件系统
       final tracks = <MusicFileWithSource>[];
       var lastUpdateCount = 0;
@@ -1325,19 +1383,23 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
         onBatchFound: () {
           if (tracks.length - lastUpdateCount >= 5) {
             lastUpdateCount = tracks.length;
-            progressService.emitProgress(MediaScanProgress(
-              mediaType: MediaType.music,
-              phase: MediaScanPhase.scanning,
-              sourceId: sourceId,
-              pathPrefix: pathPrefix,
-              scannedCount: tracks.length,
-              currentPath: '$pathPrefix (${tracks.length})',
-            ));
+            progressService.emitProgress(
+              MediaScanProgress(
+                mediaType: MediaType.music,
+                phase: MediaScanPhase.scanning,
+                sourceId: sourceId,
+                pathPrefix: pathPrefix,
+                scannedCount: tracks.length,
+                currentPath: '$pathPrefix (${tracks.length})',
+              ),
+            );
           }
         },
       );
 
-      logger.i('MusicListNotifier: 目录 $pathPrefix 扫描完成，找到 ${tracks.length} 首音乐');
+      logger.i(
+        'MusicListNotifier: 目录 $pathPrefix 扫描完成，找到 ${tracks.length} 首音乐',
+      );
 
       // 阶段2：提取元数据并保存
       if (tracks.isNotEmpty) {
@@ -1350,19 +1412,39 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
         );
       }
 
+      // 只有整个目录树成功遍历并且新快照已经写入后，才能清理真正消失的条目。
+      // 任意 listDirectory 异常都会向上抛出，因此网络/鉴权瞬时失败不会清空媒体库。
+      await _db.deleteMissingByPath(
+        sourceId,
+        pathPrefix,
+        tracks.map((track) => track.path).toSet(),
+      );
+
       // 完成扫描
-      progressService.endScan(MediaType.music, sourceId, pathPrefix, success: true);
+      progressService.endScan(
+        MediaType.music,
+        sourceId,
+        pathPrefix,
+        success: true,
+      );
 
       // 重新加载数据（更新全局状态）
       await _loadCategorizedData();
 
       return tracks.length;
-    // ignore: avoid_catches_without_on_clauses
+      // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       // 使用通用 catch 捕获所有类型（SMB 库可能抛出 String 类型异常）
-      AppError.handle(e, st, 'MusicListNotifier.scanSinglePath', {'path': pathPrefix});
+      AppError.handle(e, st, 'MusicListNotifier.scanSinglePath', {
+        'path': pathPrefix,
+      });
       logger.e('MusicListNotifier: 扫描目录 $pathPrefix 失败', e);
-      progressService.endScan(MediaType.music, sourceId, pathPrefix, success: false);
+      progressService.endScan(
+        MediaType.music,
+        sourceId,
+        pathPrefix,
+        success: false,
+      );
       rethrow;
     }
   }
@@ -1399,10 +1481,10 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
           onBatchFound?.call();
         }
       }
-    // ignore: avoid_catches_without_on_clauses
-    } catch (e) {
-      // 使用通用 catch 捕获所有类型（SMB 库可能抛出 String 类型异常）
+      // ignore: avoid_catches_without_on_clauses
+    } catch (e, st) {
       logger.w('扫描子文件夹失败: $path - $e');
+      Error.throwWithStackTrace(e, st);
     }
   }
 
@@ -1418,15 +1500,17 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
     var processedCount = 0;
     final metadataList = <MusicTrackEntity>[];
 
-    progressService.emitProgress(MediaScanProgress(
-      mediaType: MediaType.music,
-      phase: MediaScanPhase.processing,
-      sourceId: sourceId,
-      pathPrefix: pathPrefix,
-      scannedCount: 0,
-      totalCount: totalTracks,
-      currentFile: appL10n.musicPreparingMetadata,
-    ));
+    progressService.emitProgress(
+      MediaScanProgress(
+        mediaType: MediaType.music,
+        phase: MediaScanPhase.processing,
+        sourceId: sourceId,
+        pathPrefix: pathPrefix,
+        scannedCount: 0,
+        totalCount: totalTracks,
+        currentFile: appL10n.musicPreparingMetadata,
+      ),
+    );
 
     for (var i = 0; i < tracks.length; i++) {
       final track = tracks[i];
@@ -1453,46 +1537,52 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
           );
         }
 
-        metadataList.add(MusicTrackEntity(
-          sourceId: track.sourceId,
-          filePath: track.path,
-          fileName: track.name,
-          title: metadata?.title,
-          artist: metadata?.artist,
-          album: metadata?.album,
-          duration: metadata?.duration?.inMilliseconds,
-          trackNumber: metadata?.trackNumber,
-          year: metadata?.year,
-          genre: metadata?.genre,
-          coverPath: coverPath,
-          size: track.size,
-          modifiedTime: track.modifiedTime,
-          lastUpdated: DateTime.now(),
-        ));
+        metadataList.add(
+          MusicTrackEntity(
+            sourceId: track.sourceId,
+            filePath: track.path,
+            fileName: track.name,
+            title: metadata?.title,
+            artist: metadata?.artist,
+            album: metadata?.album,
+            duration: metadata?.duration?.inMilliseconds,
+            trackNumber: metadata?.trackNumber,
+            year: metadata?.year,
+            genre: metadata?.genre,
+            coverPath: coverPath,
+            size: track.size,
+            modifiedTime: track.modifiedTime,
+            lastUpdated: DateTime.now(),
+          ),
+        );
       } on Exception catch (e) {
         logger.w('提取元数据失败 ${track.path}: $e');
-        metadataList.add(MusicTrackEntity(
-          sourceId: track.sourceId,
-          filePath: track.path,
-          fileName: track.name,
-          size: track.size,
-          modifiedTime: track.modifiedTime,
-          lastUpdated: DateTime.now(),
-        ));
+        metadataList.add(
+          MusicTrackEntity(
+            sourceId: track.sourceId,
+            filePath: track.path,
+            fileName: track.name,
+            size: track.size,
+            modifiedTime: track.modifiedTime,
+            lastUpdated: DateTime.now(),
+          ),
+        );
       }
 
       processedCount++;
 
       // 实时发送进度（UI 端做节流处理）
-      progressService.emitProgress(MediaScanProgress(
-        mediaType: MediaType.music,
-        phase: MediaScanPhase.processing,
-        sourceId: sourceId,
-        pathPrefix: pathPrefix,
-        scannedCount: processedCount,
-        totalCount: totalTracks,
-        currentFile: appL10n.musicExtractingMetadata,
-      ));
+      progressService.emitProgress(
+        MediaScanProgress(
+          mediaType: MediaType.music,
+          phase: MediaScanPhase.processing,
+          sourceId: sourceId,
+          pathPrefix: pathPrefix,
+          scannedCount: processedCount,
+          totalCount: totalTracks,
+          currentFile: appL10n.musicExtractingMetadata,
+        ),
+      );
 
       // 批量保存数据库（保持 10 条一批以优化 I/O）
       if (processedCount % 10 == 0 || processedCount == totalTracks) {
@@ -1543,15 +1633,18 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
           onBatchFound?.call();
         }
       }
-    } on Exception catch (e) {
+      // ignore: avoid_catches_without_on_clauses
+    } catch (e, st) {
       logger.w('扫描子文件夹失败: $path - $e');
+      Error.throwWithStackTrace(e, st);
     }
   }
 
   /// 判断是否应该跳过该目录
-  bool _shouldSkipDirectory(String name) => name.startsWith('.') ||
-        name.startsWith('@') ||
-        name.startsWith('#recycle');
+  bool _shouldSkipDirectory(String name) =>
+      name.startsWith('.') ||
+      name.startsWith('@') ||
+      name.startsWith('#recycle');
 
   void setSearchQuery(String query) {
     final current = state;
@@ -1589,7 +1682,11 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
   }
 
   /// 从媒体库移除音乐（只删除数据库记录，不删除源文件）
-  Future<bool> removeFromLibrary(String sourceId, String filePath, String displayTitle) async {
+  Future<bool> removeFromLibrary(
+    String sourceId,
+    String filePath,
+    String displayTitle,
+  ) async {
     try {
       await _db.delete(sourceId, filePath);
       await _loadCategorizedData();
@@ -1602,7 +1699,11 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
   }
 
   /// 删除音乐源文件（同时删除数据库记录和源文件）
-  Future<bool> deleteFromSource(String sourceId, String filePath, String displayTitle) async {
+  Future<bool> deleteFromSource(
+    String sourceId,
+    String filePath,
+    String displayTitle,
+  ) async {
     try {
       final connections = _ref.read(activeConnectionsProvider);
       final connection = connections[sourceId];
@@ -1655,7 +1756,9 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       }).toList();
 
       // 同时更新 trackByFilePath 映射
-      final updatedTrackByFilePath = Map<String, MusicTrackEntity>.from(current.trackByFilePath);
+      final updatedTrackByFilePath = Map<String, MusicTrackEntity>.from(
+        current.trackByFilePath,
+      );
       if (updatedTrack != null) {
         updatedTrackByFilePath[filePath] = updatedTrack!;
       }
@@ -1812,7 +1915,6 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     super.dispose();
   }
 
-
   /// 获取问候语
   String _getGreeting(BuildContext context) {
     final hour = DateTime.now().hour;
@@ -1866,16 +1968,27 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                       ),
                     MusicListError(:final message) => AppErrorWidget(
                         message: message,
-                        onRetry: () => ref.read(musicListProvider.notifier).loadMusic(),
+                        onRetry: () =>
+                            ref.read(musicListProvider.notifier).loadMusic(),
                       ),
-                    MusicListLoaded(:final filteredTracks) when filteredTracks.isEmpty =>
+                    MusicListLoaded(:final filteredTracks)
+                        when filteredTracks.isEmpty =>
                       _buildEmptyState(context, ref, isDark),
                     final MusicListLoaded loaded =>
-                      _buildMusicContentWithLargeTitle(context, ref, loaded, isDark, safeTop),
+                      _buildMusicContentWithLargeTitle(
+                        context,
+                        ref,
+                        loaded,
+                        isDark,
+                        safeTop,
+                      ),
                   },
                 ),
                 // MiniPlayer 在 glass 模式下也需要显示（搜索模式或非 loaded 状态）
-                if (state case MusicListLoaded(:final searchQuery) when searchQuery.isNotEmpty)
+                if (state
+                    case MusicListLoaded(
+                      :final searchQuery,
+                    ) when searchQuery.isNotEmpty)
                   const MiniPlayer()
                 else if (state is! MusicListLoaded)
                   const MiniPlayer(),
@@ -1894,7 +2007,11 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
               curve: Curves.easeOutCubic,
               top: _showSearch ? null : safeTop + 8,
               right: 16,
-              bottom: _showSearch ? (keyboardInset > 0 ? keyboardInset + 16 : bottomPadding + 16) : null,
+              bottom: _showSearch
+                  ? (keyboardInset > 0
+                      ? keyboardInset + 16
+                      : bottomPadding + 16)
+                  : null,
               child: _showSearch
                   ? _buildFloatingSearchBar(context, ref, isDark)
                   : _buildFloatingButtons(context, ref, isDark, state),
@@ -1934,16 +2051,26 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                 ),
               MusicListError(:final message) => AppErrorWidget(
                   message: message,
-                  onRetry: () => ref.read(musicListProvider.notifier).loadMusic(),
+                  onRetry: () =>
+                      ref.read(musicListProvider.notifier).loadMusic(),
                 ),
-              MusicListLoaded(:final filteredTracks) when filteredTracks.isEmpty =>
+              MusicListLoaded(:final filteredTracks)
+                  when filteredTracks.isEmpty =>
                 _buildEmptyState(context, ref, isDark),
-              final MusicListLoaded loaded => _buildHomeContent(context, ref, loaded, isDark),
+              final MusicListLoaded loaded => _buildHomeContent(
+                  context,
+                  ref,
+                  loaded,
+                  isDark,
+                ),
             },
           ),
           // 首页有 HeroPlayerCard，不显示底部迷你播放器
           // 只在非首页状态（加载中、未连接、错误、空状态）或搜索模式下显示迷你播放器
-          if (state case MusicListLoaded(:final searchQuery) when searchQuery.isNotEmpty)
+          if (state
+              case MusicListLoaded(
+                :final searchQuery,
+              ) when searchQuery.isNotEmpty)
             const MiniPlayer()
           else if (state is! MusicListLoaded)
             const MiniPlayer(),
@@ -1953,7 +2080,12 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
   }
 
   /// 构建首页头部
-  Widget _buildHeader(BuildContext context, WidgetRef ref, bool isDark, MusicListState state) {
+  Widget _buildHeader(
+    BuildContext context,
+    WidgetRef ref,
+    bool isDark,
+    MusicListState state,
+  ) {
     final uiStyle = ref.watch(uiStyleProvider);
 
     // 玻璃模式下的染色
@@ -1988,10 +2120,17 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
   }
 
   /// 问候语头部
-  Widget _buildGreetingHeader(BuildContext context, WidgetRef ref, bool isDark, MusicListState state) {
+  Widget _buildGreetingHeader(
+    BuildContext context,
+    WidgetRef ref,
+    bool isDark,
+    MusicListState state,
+  ) {
     final trackCount = state is MusicListLoaded ? state.totalCount : 0;
-    final isLoadingMetadata = state is MusicListLoaded && state.isLoadingMetadata;
-    final metadataProcessed = state is MusicListLoaded ? state.metadataProcessed : 0;
+    final isLoadingMetadata =
+        state is MusicListLoaded && state.isLoadingMetadata;
+    final metadataProcessed =
+        state is MusicListLoaded ? state.metadataProcessed : 0;
     final metadataTotal = state is MusicListLoaded ? state.metadataTotal : 0;
     final isDesktop = context.isDesktopLayout;
 
@@ -2022,7 +2161,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                       context.l10n.musicTrackCountLabel(trackCount),
                       style: TextStyle(
                         fontSize: 13,
-                        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                        color: isDark
+                            ? AppColors.darkOnSurfaceVariant
+                            : AppColors.lightOnSurfaceVariant,
                       ),
                     ),
                     if (isLoadingMetadata) ...[
@@ -2032,14 +2173,19 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                         height: 12,
                         child: CircularProgressIndicator(
                           strokeWidth: 1.5,
-                          color: isDark ? Colors.deepOrange[300] : Colors.deepOrange,
+                          color: isDark
+                              ? Colors.deepOrange[300]
+                              : Colors.deepOrange,
                         ),
                       ),
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
                           metadataTotal > 0
-                              ? context.l10n.musicMetadataExtracting(metadataProcessed, metadataTotal)
+                              ? context.l10n.musicMetadataExtracting(
+                                  metadataProcessed,
+                                  metadataTotal,
+                                )
                               : context.l10n.musicMetadataLoading,
                           style: TextStyle(
                             fontSize: 12,
@@ -2111,44 +2257,55 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
   }
 
   /// 搜索栏
-  Widget _buildSearchBar(BuildContext context, WidgetRef ref, bool isDark) => Row(
-      children: [
-        IconButton(
-          onPressed: () {
-            setState(() => _showSearch = false);
-            _searchController.clear();
-            ref.read(musicListProvider.notifier).setSearchQuery('');
-          },
-          icon: Icon(Icons.arrow_back_rounded, color: isDark ? Colors.white : Colors.black87),
-        ),
-        Expanded(
-          child: TextField(
-            controller: _searchController,
-            autofocus: true,
-            style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-            decoration: InputDecoration(
-              hintText: context.l10n.musicSearchHintLong,
-              hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
-            onChanged: (value) {
-              ref.read(musicListProvider.notifier).setSearchQuery(value);
-            },
-          ),
-        ),
-        if (_searchController.text.isNotEmpty)
+  Widget _buildSearchBar(BuildContext context, WidgetRef ref, bool isDark) =>
+      Row(
+        children: [
           IconButton(
             onPressed: () {
+              setState(() => _showSearch = false);
               _searchController.clear();
               ref.read(musicListProvider.notifier).setSearchQuery('');
-              // 同时关闭搜索界面
-              setState(() => _showSearch = false);
             },
-            icon: Icon(Icons.close_rounded, color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
+            icon: Icon(
+              Icons.arrow_back_rounded,
+              color: isDark ? Colors.white : Colors.black87,
+            ),
           ),
-      ],
-    );
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+              decoration: InputDecoration(
+                hintText: context.l10n.musicSearchHintLong,
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.grey[500] : Colors.grey[400],
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+              ),
+              onChanged: (value) {
+                ref.read(musicListProvider.notifier).setSearchQuery(value);
+              },
+            ),
+          ),
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              onPressed: () {
+                _searchController.clear();
+                ref.read(musicListProvider.notifier).setSearchQuery('');
+                // 同时关闭搜索界面
+                setState(() => _showSearch = false);
+              },
+              icon: Icon(
+                Icons.close_rounded,
+                color: isDark
+                    ? AppColors.darkOnSurfaceVariant
+                    : AppColors.lightOnSurfaceVariant,
+              ),
+            ),
+        ],
+      );
 
   /// iOS 26 悬浮按钮组
   Widget _buildFloatingButtons(
@@ -2156,61 +2313,64 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     WidgetRef ref,
     bool isDark,
     MusicListState state,
-  ) => GlassButtonGroup(
-      children: [
-        GlassGroupIconButton(
-          icon: Icons.search_rounded,
-          onPressed: () => setState(() => _showSearch = true),
-          tooltip: context.l10n.musicSearchActionTooltip,
-        ),
-        GlassGroupIconButton(
-          icon: Icons.queue_music_rounded,
-          onPressed: () => showMusicQueueSheet(context),
-          tooltip: context.l10n.musicQueueActionTooltip,
-        ),
-        GlassGroupPopupMenuButton<String>(
-          icon: Icons.more_vert_rounded,
-          tooltip: context.l10n.musicMoreActionTooltip,
-          itemBuilder: (context) => [
-            PopupMenuItem(
-              value: 'layout',
-              child: Row(
-                children: [
-                  Icon(Icons.dashboard_customize_rounded, size: 20),
-                  SizedBox(width: 12),
-                  Text(context.l10n.musicMenuItemHomeLayout),
-                ],
+  ) =>
+      GlassButtonGroup(
+        children: [
+          GlassGroupIconButton(
+            icon: Icons.search_rounded,
+            onPressed: () => setState(() => _showSearch = true),
+            tooltip: context.l10n.musicSearchActionTooltip,
+          ),
+          GlassGroupIconButton(
+            icon: Icons.queue_music_rounded,
+            onPressed: () => showMusicQueueSheet(context),
+            tooltip: context.l10n.musicQueueActionTooltip,
+          ),
+          GlassGroupPopupMenuButton<String>(
+            icon: Icons.more_vert_rounded,
+            tooltip: context.l10n.musicMoreActionTooltip,
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'layout',
+                child: Row(
+                  children: [
+                    Icon(Icons.dashboard_customize_rounded, size: 20),
+                    SizedBox(width: 12),
+                    Text(context.l10n.musicMenuItemHomeLayout),
+                  ],
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'library',
-              child: Row(
-                children: [
-                  Icon(Icons.settings_rounded, size: 20),
-                  SizedBox(width: 12),
-                  Text(context.l10n.musicMenuItemMediaLibrarySettings),
-                ],
+              PopupMenuItem(
+                value: 'library',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings_rounded, size: 20),
+                    SizedBox(width: 12),
+                    Text(context.l10n.musicMenuItemMediaLibrarySettings),
+                  ],
+                ),
               ),
-            ),
-            PopupMenuItem(
-              value: 'sources',
-              child: Row(
-                children: [
-                  Icon(Icons.cloud_rounded, size: 20),
-                  SizedBox(width: 12),
-                  Text(context.l10n.musicMenuItemConnectionManager),
-                ],
+              PopupMenuItem(
+                value: 'sources',
+                child: Row(
+                  children: [
+                    Icon(Icons.cloud_rounded, size: 20),
+                    SizedBox(width: 12),
+                    Text(context.l10n.musicMenuItemConnectionManager),
+                  ],
+                ),
               ),
-            ),
-          ],
-          onSelected: _handleMusicMenuSelection,
-        ),
-      ],
-    );
+            ],
+            onSelected: _handleMusicMenuSelection,
+          ),
+        ],
+      );
 
   /// 音乐菜单选择处理
   void _handleMusicMenuSelection(String value) {
-    debugLog('_handleMusicMenuSelection: called with value: $value, mounted: $mounted');
+    debugLog(
+      '_handleMusicMenuSelection: called with value: $value, mounted: $mounted',
+    );
     if (!mounted) return;
     switch (value) {
       case 'layout':
@@ -2226,9 +2386,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
       case 'sources':
         debugLog('_handleMusicMenuSelection: navigating to sources');
         Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (context) => const SourcesPage(),
-          ),
+          MaterialPageRoute<void>(builder: (context) => const SourcesPage()),
         );
     }
   }
@@ -2277,68 +2435,66 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     final favoriteTracks = favoritesState.favorites
         .where((fav) => state.trackByFilePath.containsKey(fav.musicPath))
         .map((fav) {
-          final m = state.trackByFilePath[fav.musicPath]!;
-          return MusicFileWithSource(
-            file: FileItem(
-              name: m.fileName,
-              path: m.filePath,
-              size: m.size ?? 0,
-              isDirectory: false,
-              modifiedTime: m.modifiedTime,
-            ),
-            sourceId: m.sourceId,
-            title: m.title,
-            artist: m.artist,
-            album: m.album,
-            duration: m.duration,
-            year: m.year,
-            genre: m.genre,
-            coverPath: m.coverPath,
-            metadataExtracted: true,
-          );
-        })
-        .toList();
+      final m = state.trackByFilePath[fav.musicPath]!;
+      return MusicFileWithSource(
+        file: FileItem(
+          name: m.fileName,
+          path: m.filePath,
+          size: m.size ?? 0,
+          isDirectory: false,
+          modifiedTime: m.modifiedTime,
+        ),
+        sourceId: m.sourceId,
+        title: m.title,
+        artist: m.artist,
+        album: m.album,
+        duration: m.duration,
+        year: m.year,
+        genre: m.genre,
+        coverPath: m.coverPath,
+        metadataExtracted: true,
+      );
+    }).toList();
 
     // 转换历史为 MusicFileWithSource
     final recentTracks = historyState.history
         .take(20)
         .where((h) => state.trackByFilePath.containsKey(h.musicPath))
         .map((h) {
-          final m = state.trackByFilePath[h.musicPath]!;
-          var effectiveCoverPath = m.coverPath;
-          String? effectiveCoverUrl;
+      final m = state.trackByFilePath[h.musicPath]!;
+      var effectiveCoverPath = m.coverPath;
+      String? effectiveCoverUrl;
 
-          if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
-            if (h.coverUrl != null && h.coverUrl!.isNotEmpty) {
-              if (h.coverUrl!.startsWith('file://')) {
-                effectiveCoverPath = h.coverUrl!.replaceFirst('file://', '');
-              } else {
-                effectiveCoverUrl = h.coverUrl;
-              }
-            }
+      if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
+        if (h.coverUrl != null && h.coverUrl!.isNotEmpty) {
+          if (h.coverUrl!.startsWith('file://')) {
+            effectiveCoverPath = h.coverUrl!.replaceFirst('file://', '');
+          } else {
+            effectiveCoverUrl = h.coverUrl;
           }
+        }
+      }
 
-          return MusicFileWithSource(
-            file: FileItem(
-              name: m.fileName,
-              path: m.filePath,
-              size: m.size ?? 0,
-              isDirectory: false,
-              modifiedTime: m.modifiedTime,
-            ),
-            sourceId: m.sourceId,
-            title: m.title,
-            artist: m.artist,
-            album: m.album,
-            duration: m.duration,
-            year: m.year,
-            genre: m.genre,
-            coverPath: effectiveCoverPath,
-            coverUrl: effectiveCoverUrl,
-            metadataExtracted: true,
-          );
-        })
-        .toList();
+      return MusicFileWithSource(
+        file: FileItem(
+          name: m.fileName,
+          path: m.filePath,
+          size: m.size ?? 0,
+          isDirectory: false,
+          modifiedTime: m.modifiedTime,
+        ),
+        sourceId: m.sourceId,
+        title: m.title,
+        artist: m.artist,
+        album: m.album,
+        duration: m.duration,
+        year: m.year,
+        genre: m.genre,
+        coverPath: effectiveCoverPath,
+        coverUrl: effectiveCoverUrl,
+        metadataExtracted: true,
+      );
+    }).toList();
 
     // 获取歌单数量
     final playlistState = ref.watch(playlistProvider);
@@ -2349,7 +2505,12 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
         // 顶部安全区域留白
         SliverPadding(padding: EdgeInsets.only(top: safeTop + 8)),
         // 大标题区域（iOS 26 风格）- 右侧留出浮动按钮空间
-        _buildLargeTitleSliver(context, state, isDark, hasFloatingButtons: true),
+        _buildLargeTitleSliver(
+          context,
+          state,
+          isDark,
+          hasFloatingButtons: true,
+        ),
         // 内容区域（使用 returnSlivers 模式避免嵌套滚动）
         SliverToBoxAdapter(
           child: MusicHomeContent(
@@ -2365,8 +2526,10 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             playlistCount: playlistCount,
             favoritesCount: favoritesState.favorites.length,
             recentCount: historyState.history.length,
-            onTrackTap: (track, allTracks) => _playTrack(context, ref, track, allTracks),
-            onCategoryTap: (category) => _navigateToCategory(context, category, state),
+            onTrackTap: (track, allTracks) =>
+                _playTrack(context, ref, track, allTracks),
+            onCategoryTap: (category) =>
+                _navigateToCategory(context, category, state),
             onShuffleTap: () => _shufflePlay(context, ref, state.tracks),
             returnSlivers: true,
           ),
@@ -2463,46 +2626,49 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     required String label,
     required bool isDark,
     bool isLoading = false,
-  }) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isLoading)
-            SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(
-                strokeWidth: 1.5,
-                color: isDark ? Colors.deepOrange[300] : Colors.deepOrange,
+  }) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.black.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoading)
+              SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  color: isDark ? Colors.deepOrange[300] : Colors.deepOrange,
+                ),
+              )
+            else
+              Icon(icon,
+                  size: 14, color: isDark ? Colors.white60 : Colors.black54),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white70 : Colors.black54,
               ),
-            )
-          else
-            Icon(
-              icon,
-              size: 14,
-              color: isDark ? Colors.white60 : Colors.black54,
             ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white70 : Colors.black54,
-            ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
 
   /// 构建首页内容（现代化设计）
-  Widget _buildHomeContent(BuildContext context, WidgetRef ref, MusicListLoaded state, bool isDark) {
+  Widget _buildHomeContent(
+    BuildContext context,
+    WidgetRef ref,
+    MusicListLoaded state,
+    bool isDark,
+  ) {
     // 如果正在搜索，显示搜索结果
     if (state.searchQuery.isNotEmpty) {
       return _buildSearchResults(context, ref, state, isDark);
@@ -2517,27 +2683,26 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     final favoriteTracks = favoritesState.favorites
         .where((fav) => state.trackByFilePath.containsKey(fav.musicPath))
         .map((fav) {
-          final m = state.trackByFilePath[fav.musicPath]!;
-          return MusicFileWithSource(
-            file: FileItem(
-              name: m.fileName,
-              path: m.filePath,
-              size: m.size ?? 0,
-              isDirectory: false,
-              modifiedTime: m.modifiedTime,
-            ),
-            sourceId: m.sourceId,
-            title: m.title,
-            artist: m.artist,
-            album: m.album,
-            duration: m.duration,
-            year: m.year,
-            genre: m.genre,
-            coverPath: m.coverPath,
-            metadataExtracted: true,
-          );
-        })
-        .toList();
+      final m = state.trackByFilePath[fav.musicPath]!;
+      return MusicFileWithSource(
+        file: FileItem(
+          name: m.fileName,
+          path: m.filePath,
+          size: m.size ?? 0,
+          isDirectory: false,
+          modifiedTime: m.modifiedTime,
+        ),
+        sourceId: m.sourceId,
+        title: m.title,
+        artist: m.artist,
+        album: m.album,
+        duration: m.duration,
+        year: m.year,
+        genre: m.genre,
+        coverPath: m.coverPath,
+        metadataExtracted: true,
+      );
+    }).toList();
 
     // 转换历史为 MusicFileWithSource
     // 注意：历史存储的是 musicPath (filePath)，需要使用 trackByFilePath 查找
@@ -2545,45 +2710,44 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
         .take(20)
         .where((h) => state.trackByFilePath.containsKey(h.musicPath))
         .map((h) {
-          final m = state.trackByFilePath[h.musicPath]!;
+      final m = state.trackByFilePath[h.musicPath]!;
 
-          // 优先使用数据库中的 coverPath，如果没有则尝试从历史的 coverUrl 获取
-          var effectiveCoverPath = m.coverPath;
-          String? effectiveCoverUrl;
+      // 优先使用数据库中的 coverPath，如果没有则尝试从历史的 coverUrl 获取
+      var effectiveCoverPath = m.coverPath;
+      String? effectiveCoverUrl;
 
-          if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
-            if (h.coverUrl != null && h.coverUrl!.isNotEmpty) {
-              // 如果历史记录有 file:// 格式的封面 URL，提取路径
-              if (h.coverUrl!.startsWith('file://')) {
-                effectiveCoverPath = h.coverUrl!.replaceFirst('file://', '');
-              } else {
-                // 远程 URL
-                effectiveCoverUrl = h.coverUrl;
-              }
-            }
+      if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
+        if (h.coverUrl != null && h.coverUrl!.isNotEmpty) {
+          // 如果历史记录有 file:// 格式的封面 URL，提取路径
+          if (h.coverUrl!.startsWith('file://')) {
+            effectiveCoverPath = h.coverUrl!.replaceFirst('file://', '');
+          } else {
+            // 远程 URL
+            effectiveCoverUrl = h.coverUrl;
           }
+        }
+      }
 
-          return MusicFileWithSource(
-            file: FileItem(
-              name: m.fileName,
-              path: m.filePath,
-              size: m.size ?? 0,
-              isDirectory: false,
-              modifiedTime: m.modifiedTime,
-            ),
-            sourceId: m.sourceId,
-            title: m.title,
-            artist: m.artist,
-            album: m.album,
-            duration: m.duration,
-            year: m.year,
-            genre: m.genre,
-            coverPath: effectiveCoverPath,
-            coverUrl: effectiveCoverUrl,
-            metadataExtracted: true,
-          );
-        })
-        .toList();
+      return MusicFileWithSource(
+        file: FileItem(
+          name: m.fileName,
+          path: m.filePath,
+          size: m.size ?? 0,
+          isDirectory: false,
+          modifiedTime: m.modifiedTime,
+        ),
+        sourceId: m.sourceId,
+        title: m.title,
+        artist: m.artist,
+        album: m.album,
+        duration: m.duration,
+        year: m.year,
+        genre: m.genre,
+        coverPath: effectiveCoverPath,
+        coverUrl: effectiveCoverUrl,
+        metadataExtracted: true,
+      );
+    }).toList();
 
     // 获取歌单数量
     final playlistState = ref.watch(playlistProvider);
@@ -2602,14 +2766,21 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
       playlistCount: playlistCount,
       favoritesCount: favoritesState.favorites.length, // 直接使用收藏列表长度
       recentCount: historyState.history.length, // 直接使用历史列表长度
-      onTrackTap: (track, allTracks) => _playTrack(context, ref, track, allTracks),
-      onCategoryTap: (category) => _navigateToCategory(context, category, state),
+      onTrackTap: (track, allTracks) =>
+          _playTrack(context, ref, track, allTracks),
+      onCategoryTap: (category) =>
+          _navigateToCategory(context, category, state),
       onShuffleTap: () => _shufflePlay(context, ref, state.tracks),
     );
   }
 
   /// 搜索结果
-  Widget _buildSearchResults(BuildContext context, WidgetRef ref, MusicListLoaded state, bool isDark) {
+  Widget _buildSearchResults(
+    BuildContext context,
+    WidgetRef ref,
+    MusicListLoaded state,
+    bool isDark,
+  ) {
     final results = state.filteredTracks;
     if (results.isEmpty) {
       return Center(
@@ -2631,7 +2802,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     return CustomScrollView(
       slivers: [
         // 顶部安全区域留白（避免与状态栏重叠）
-        SliverPadding(padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top)),
+        SliverPadding(
+          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        ),
         // 音乐列表
         SliverPadding(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -2650,24 +2823,33 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
           ),
         ),
         // 底部留白 - 使用动态值适配不同模式的导航栏高度
-        SliverToBoxAdapter(child: SizedBox(height: context.scrollBottomPadding + 20)),
+        SliverToBoxAdapter(
+          child: SizedBox(height: context.scrollBottomPadding + 20),
+        ),
       ],
     );
   }
 
-  void _navigateToCategory(BuildContext context, MusicCategory category, MusicListLoaded state) {
+  void _navigateToCategory(
+    BuildContext context,
+    MusicCategory category,
+    MusicListLoaded state,
+  ) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => category == MusicCategory.all
             ? AllSongsPage(tracks: state.tracks)
-            : _MusicCategoryPage(
-                category: category,
-              ),
+            : _MusicCategoryPage(category: category),
       ),
     );
   }
 
-  Future<void> _playTrack(BuildContext context, WidgetRef ref, MusicFileWithSource track, List<MusicFileWithSource> allTracks) async {
+  Future<void> _playTrack(
+    BuildContext context,
+    WidgetRef ref,
+    MusicFileWithSource track,
+    List<MusicFileWithSource> allTracks,
+  ) async {
     logger.i('_playTrack: 开始播放 ${track.name}');
 
     // 提前获取所有需要的 provider（避免异步后使用 ref）
@@ -2720,7 +2902,14 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
 
       // 在后台构建完整播放队列（使用提前获取的 notifier）
       AppError.fireAndForget(
-        _buildPlayQueue(playQueueNotifier, playerNotifier, connections, track, allTracks, trackIndex),
+        _buildPlayQueue(
+          playQueueNotifier,
+          playerNotifier,
+          connections,
+          track,
+          allTracks,
+          trackIndex,
+        ),
         action: 'musicList.buildPlayQueue',
       );
     } on Exception catch (e) {
@@ -2751,7 +2940,10 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
       } else {
         // 以当前曲目为中心
         final halfSize = queueSize ~/ 2;
-        startIndex = (trackIndex - halfSize).clamp(0, allTracks.length - queueSize);
+        startIndex = (trackIndex - halfSize).clamp(
+          0,
+          allTracks.length - queueSize,
+        );
         endIndex = (startIndex + queueSize).clamp(0, allTracks.length);
       }
 
@@ -2794,7 +2986,11 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
   }
 
   /// 随机播放
-  Future<void> _shufflePlay(BuildContext context, WidgetRef ref, List<MusicFileWithSource> tracks) async {
+  Future<void> _shufflePlay(
+    BuildContext context,
+    WidgetRef ref,
+    List<MusicFileWithSource> tracks,
+  ) async {
     logger.i('MusicListPage._shufflePlay: 开始随机播放 (${tracks.length} 首)');
 
     if (tracks.isEmpty) {
@@ -2808,7 +3004,8 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
 
     try {
       final firstConnection = connections[first.sourceId];
-      if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
+      if (firstConnection == null ||
+          firstConnection.status != SourceStatus.connected) {
         logger.e('MusicListPage._shufflePlay: 第一首歌曲的源未连接');
         if (context.mounted) {
           context.showWarningToast(context.l10n.musicSourceNotConnected);
@@ -2817,7 +3014,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
       }
 
       logger.d('MusicListPage._shufflePlay: 获取第一首歌曲 URL: ${first.path}');
-      final url = await firstConnection.adapter.fileSystem.getFileUrl(first.path);
+      final url = await firstConnection.adapter.fileSystem.getFileUrl(
+        first.path,
+      );
       final musicItem = MusicItem.fromFileItem(
         first.file,
         url,
@@ -2835,17 +3034,19 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
         final conn = connections[track.sourceId];
         if (conn == null || conn.status != SourceStatus.connected) continue;
         final trackUrl = await conn.adapter.fileSystem.getFileUrl(track.path);
-        queue.add(MusicItem.fromFileItem(
-          track.file,
-          trackUrl,
-          sourceId: track.sourceId,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-          durationMs: track.duration,
-          coverData: track.coverData,
-          coverUrl: track.coverFileUrl,
-        ));
+        queue.add(
+          MusicItem.fromFileItem(
+            track.file,
+            trackUrl,
+            sourceId: track.sourceId,
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            durationMs: track.duration,
+            coverData: track.coverData,
+            coverUrl: track.coverFileUrl,
+          ),
+        );
       }
       logger.d('MusicListPage._shufflePlay: 创建队列完成 (${queue.length} 首)');
 
@@ -2884,7 +3085,8 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
               color: isDark ? AppColors.darkBackground : AppColors.lightSurface,
               border: Border(
                 bottom: BorderSide(
-                  color: isDark ? AppColors.darkOutline : AppColors.lightOutline,
+                  color:
+                      isDark ? AppColors.darkOutline : AppColors.lightOutline,
                 ),
               ),
             ),
@@ -2948,7 +3150,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+                      color: isDark
+                          ? AppColors.darkSurfaceVariant
+                          : AppColors.lightSurfaceVariant,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Stack(
@@ -2956,7 +3160,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                       children: [
                         Icon(
                           Icons.music_note_rounded,
-                          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                          color: isDark
+                              ? AppColors.darkOnSurfaceVariant
+                              : AppColors.lightOnSurfaceVariant,
                         ),
                         Positioned(
                           bottom: 2,
@@ -2977,9 +3183,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                     track.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : null,
-                    ),
+                    style: TextStyle(color: isDark ? Colors.white : null),
                   ),
                   subtitle: Text(
                     context.l10n.musicScanningInProgress,
@@ -3012,7 +3216,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            fromCache ? context.l10n.musicListLoadingCache : context.l10n.musicListScanning,
+            fromCache
+                ? context.l10n.musicListLoadingCache
+                : context.l10n.musicListScanning,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -3034,11 +3240,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     );
   }
 
-  Widget _buildEmptyState(
-    BuildContext context,
-    WidgetRef ref,
-    bool isDark,
-  ) {
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref, bool isDark) {
     // 获取缓存信息
     final cacheService = MusicLibraryCacheService();
     final cacheInfo = cacheService.getCacheInfo();
@@ -3083,7 +3285,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+                color: isDark
+                    ? AppColors.darkSurfaceVariant
+                    : AppColors.lightSurfaceVariant,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -3092,14 +3296,18 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                   Icon(
                     Icons.storage_rounded,
                     size: 14,
-                    color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                    color: isDark
+                        ? AppColors.darkOnSurfaceVariant
+                        : AppColors.lightOnSurfaceVariant,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     cacheInfo,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                      color: isDark
+                          ? AppColors.darkOnSurfaceVariant
+                          : AppColors.lightOnSurfaceVariant,
                     ),
                   ),
                 ],
@@ -3109,14 +3317,19 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             ElevatedButton.icon(
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
+                MaterialPageRoute<void>(
+                  builder: (_) => const MediaLibraryPage(),
+                ),
               ),
               icon: const Icon(Icons.folder_open_rounded),
               label: Text(context.l10n.musicMediaLibrarySettingsButton),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 14,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -3127,9 +3340,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
               ),
               icon: const Icon(Icons.cloud_rounded),
               label: Text(context.l10n.musicConnectionManagementButton),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-              ),
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
             ),
           ],
         ),
@@ -3142,9 +3353,7 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
 
 /// 音乐分类页面
 class _MusicCategoryPage extends ConsumerWidget {
-  const _MusicCategoryPage({
-    required this.category,
-  });
+  const _MusicCategoryPage({required this.category});
 
   final MusicCategory category;
 
@@ -3170,27 +3379,28 @@ class _MusicCategoryPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref, bool isDark) => switch (category) {
-      // 这些分类视图现在直接从数据库获取全量数据
-      MusicCategory.all => _AllSongsContent(tracks: const [], isDark: isDark), // 使用 provider 数据
-      MusicCategory.artists => _ArtistsView(isDark: isDark),
-      MusicCategory.albums => _AlbumsView(isDark: isDark),
-      MusicCategory.folders => _FoldersView(isDark: isDark),
-      MusicCategory.favorites => _FavoritesView(isDark: isDark),
-      MusicCategory.recent => _RecentView(isDark: isDark),
-      MusicCategory.genres => _GenresView(isDark: isDark),
-      MusicCategory.years => _YearsView(isDark: isDark),
-      MusicCategory.playlists => _PlaylistsView(isDark: isDark),
-    };
+  Widget _buildContent(BuildContext context, WidgetRef ref, bool isDark) =>
+      switch (category) {
+        // 这些分类视图现在直接从数据库获取全量数据
+        MusicCategory.all => _AllSongsContent(
+            tracks: const [],
+            isDark: isDark,
+          ), // 使用 provider 数据
+        MusicCategory.artists => _ArtistsView(isDark: isDark),
+        MusicCategory.albums => _AlbumsView(isDark: isDark),
+        MusicCategory.folders => _FoldersView(isDark: isDark),
+        MusicCategory.favorites => _FavoritesView(isDark: isDark),
+        MusicCategory.recent => _RecentView(isDark: isDark),
+        MusicCategory.genres => _GenresView(isDark: isDark),
+        MusicCategory.years => _YearsView(isDark: isDark),
+        MusicCategory.playlists => _PlaylistsView(isDark: isDark),
+      };
 }
 
 /// 全部歌曲页面 - 独立的页面，支持更丰富的 AppBar
 /// 从 provider 获取数据，支持无限滚动分页
 class AllSongsPage extends ConsumerStatefulWidget {
-  const AllSongsPage({
-    this.tracks,
-    super.key,
-  });
+  const AllSongsPage({this.tracks, super.key});
 
   /// 可选的 tracks 参数（向后兼容），优先从 provider 获取
   final List<MusicFileWithSource>? tracks;
@@ -3215,8 +3425,9 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
 
   @override
   void dispose() {
-    _scrollController..removeListener(_onScroll)
-    ..dispose();
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
   }
 
@@ -3234,10 +3445,14 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
     final musicState = ref.watch(musicListProvider);
 
     // 从 provider 获取数据
-    final tracks = musicState is MusicListLoaded ? musicState.tracks : (widget.tracks ?? []);
-    final totalCount = musicState is MusicListLoaded ? musicState.totalCount : tracks.length;
+    final tracks = musicState is MusicListLoaded
+        ? musicState.tracks
+        : (widget.tracks ?? []);
+    final totalCount =
+        musicState is MusicListLoaded ? musicState.totalCount : tracks.length;
     final hasMore = musicState is MusicListLoaded && musicState.hasMoreTracks;
-    final isLoadingMore = musicState is MusicListLoaded && musicState.isLoadingMore;
+    final isLoadingMore =
+        musicState is MusicListLoaded && musicState.isLoadingMore;
 
     final sortedTracks = _applySorting(tracks, sortState);
 
@@ -3254,14 +3469,21 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
             child: tracks.isEmpty
                 ? _buildEmptyState(isDark)
                 : _isTableView && PlatformCapabilities.isDesktop
-                    ? _buildTableView(context, sortedTracks, isDark, hasMore, isLoadingMore)
+                    ? _buildTableView(
+                        context,
+                        sortedTracks,
+                        isDark,
+                        hasMore,
+                        isLoadingMore,
+                      )
                     : ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.only(bottom: 16),
                         itemCount: sortedTracks.length + (hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
                           if (index >= sortedTracks.length) {
-                            return _buildLoadMoreIndicator(isDark, isLoadingMore);
+                            return _buildLoadMoreIndicator(
+                                isDark, isLoadingMore);
                           }
                           return _ModernMusicTile(
                             track: sortedTracks[index],
@@ -3279,24 +3501,29 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
   }
 
   Widget _buildLoadMoreIndicator(bool isDark, bool isLoading) => Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      alignment: Alignment.center,
-      child: isLoading
-          ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Text(
-              context.l10n.musicLoadMoreAction,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.grey[500] : Colors.grey[600],
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        alignment: Alignment.center,
+        child: isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text(
+                context.l10n.musicLoadMoreAction,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? Colors.grey[500] : Colors.grey[600],
+                ),
               ),
-            ),
-    );
+      );
 
-  Widget _buildAppBar(BuildContext context, bool isDark, MusicSortState sortState, int trackCount) {
+  Widget _buildAppBar(
+    BuildContext context,
+    bool isDark,
+    MusicSortState sortState,
+    int trackCount,
+  ) {
     final uiStyle = ref.watch(uiStyleProvider);
 
     return AdaptiveGlassHeader(
@@ -3352,7 +3579,9 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
                         context.l10n.musicAllSongsCount(trackCount),
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                          color: isDark
+                              ? AppColors.darkOnSurfaceVariant
+                              : AppColors.lightOnSurfaceVariant,
                           height: 1.1,
                         ),
                         maxLines: 1,
@@ -3368,11 +3597,15 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
               IconButton(
                 onPressed: () => setState(() => _isTableView = !_isTableView),
                 icon: Icon(
-                  _isTableView ? Icons.grid_view_rounded : Icons.table_rows_rounded,
+                  _isTableView
+                      ? Icons.grid_view_rounded
+                      : Icons.table_rows_rounded,
                   color: isDark ? Colors.white70 : Colors.black54,
                   size: 20,
                 ),
-                tooltip: _isTableView ? context.l10n.musicGridViewTooltip : context.l10n.musicTableViewTooltip,
+                tooltip: _isTableView
+                    ? context.l10n.musicGridViewTooltip
+                    : context.l10n.musicTableViewTooltip,
               ),
             ],
             // 排序按钮
@@ -3387,7 +3620,11 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
     );
   }
 
-  Widget _buildPlayControls(BuildContext context, bool isDark, List<MusicFileWithSource> sortedTracks) {
+  Widget _buildPlayControls(
+    BuildContext context,
+    bool isDark,
+    List<MusicFileWithSource> sortedTracks,
+  ) {
     if (sortedTracks.isEmpty) return const SizedBox.shrink();
 
     return Padding(
@@ -3419,43 +3656,49 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
   }
 
   Widget _buildEmptyState(bool isDark) => Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.2),
-                  AppColors.secondary.withValues(alpha: 0.2),
-                ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.2),
+                    AppColors.secondary.withValues(alpha: 0.2),
+                  ],
+                ),
+                shape: BoxShape.circle,
               ),
-              shape: BoxShape.circle,
+              child: Icon(
+                Icons.music_off_rounded,
+                size: 40,
+                color: AppColors.primary,
+              ),
             ),
-            child: Icon(Icons.music_off_rounded, size: 40, color: AppColors.primary),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            context.l10n.musicNoSongsEmpty,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+            const SizedBox(height: 16),
+            Text(
+              context.l10n.musicNoSongsEmpty,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: isDark
+                    ? AppColors.darkOnSurfaceVariant
+                    : AppColors.lightOnSurfaceVariant,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            context.l10n.musicEmptyScanHint,
-            style: TextStyle(
-              fontSize: 13,
-              color: isDark ? Colors.grey[600] : Colors.grey[500],
+            const SizedBox(height: 8),
+            Text(
+              context.l10n.musicEmptyScanHint,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.grey[600] : Colors.grey[500],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
 
   /// 桌面端表格视图
   Widget _buildTableView(
@@ -3473,7 +3716,9 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.03),
             border: Border(
               bottom: BorderSide(
                 color: isDark ? Colors.white12 : Colors.black12,
@@ -3483,10 +3728,25 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
           child: Row(
             children: [
               const SizedBox(width: 40), // 序号列
-              Expanded(flex: 4, child: _TableHeader(title: context.l10n.musicTableHeaderTitle)),
-              Expanded(flex: 2, child: _TableHeader(title: context.l10n.musicTableHeaderArtist)),
-              Expanded(flex: 2, child: _TableHeader(title: context.l10n.musicTableHeaderAlbum)),
-              SizedBox(width: 60, child: _TableHeader(title: context.l10n.musicTableHeaderDuration, align: TextAlign.right)),
+              Expanded(
+                flex: 4,
+                child: _TableHeader(title: context.l10n.musicTableHeaderTitle),
+              ),
+              Expanded(
+                flex: 2,
+                child: _TableHeader(title: context.l10n.musicTableHeaderArtist),
+              ),
+              Expanded(
+                flex: 2,
+                child: _TableHeader(title: context.l10n.musicTableHeaderAlbum),
+              ),
+              SizedBox(
+                width: 60,
+                child: _TableHeader(
+                  title: context.l10n.musicTableHeaderDuration,
+                  align: TextAlign.right,
+                ),
+              ),
               const SizedBox(width: 48), // 操作列
             ],
           ),
@@ -3528,11 +3788,17 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
         int result;
         switch (sortState.option) {
           case MusicSortOption.name:
-            result = a.displayTitle.toLowerCase().compareTo(b.displayTitle.toLowerCase());
+            result = a.displayTitle.toLowerCase().compareTo(
+                  b.displayTitle.toLowerCase(),
+                );
           case MusicSortOption.artist:
-            result = a.displayArtist.toLowerCase().compareTo(b.displayArtist.toLowerCase());
+            result = a.displayArtist.toLowerCase().compareTo(
+                  b.displayArtist.toLowerCase(),
+                );
           case MusicSortOption.album:
-            result = a.displayAlbum.toLowerCase().compareTo(b.displayAlbum.toLowerCase());
+            result = a.displayAlbum.toLowerCase().compareTo(
+                  b.displayAlbum.toLowerCase(),
+                );
           case MusicSortOption.dateAdded:
             final aTime = a.modifiedTime ?? DateTime(1970);
             final bTime = b.modifiedTime ?? DateTime(1970);
@@ -3540,13 +3806,19 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
           case MusicSortOption.duration:
             result = (a.duration ?? 0).compareTo(b.duration ?? 0);
         }
-        return sortState.direction == SortDirection.ascending ? result : -result;
+        return sortState.direction == SortDirection.ascending
+            ? result
+            : -result;
       });
 
     return sorted;
   }
 
-  void _showSortOptions(BuildContext context, MusicSortState currentSort, bool isDark) {
+  void _showSortOptions(
+    BuildContext context,
+    MusicSortState currentSort,
+    bool isDark,
+  ) {
     showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
@@ -3583,12 +3855,12 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
                     direction: currentSort.direction,
                     isDark: isDark,
                     onTap: () {
-                      final newDirection = currentSort.direction == SortDirection.ascending
-                          ? SortDirection.descending
-                          : SortDirection.ascending;
-                      ref.read(musicSortProvider.notifier).state = currentSort.copyWith(
-                        direction: newDirection,
-                      );
+                      final newDirection =
+                          currentSort.direction == SortDirection.ascending
+                              ? SortDirection.descending
+                              : SortDirection.ascending;
+                      ref.read(musicSortProvider.notifier).state =
+                          currentSort.copyWith(direction: newDirection);
                       Navigator.pop(context);
                     },
                   ),
@@ -3597,17 +3869,18 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
             ),
             const Divider(height: 1),
             // 排序选项列表
-            ...MusicSortOption.values.map((option) => _SortOptionTile(
-              option: option,
-              isSelected: currentSort.option == option,
-              isDark: isDark,
-              onTap: () {
-                ref.read(musicSortProvider.notifier).state = currentSort.copyWith(
-                  option: option,
-                );
-                Navigator.pop(context);
-              },
-            )),
+            ...MusicSortOption.values.map(
+              (option) => _SortOptionTile(
+                option: option,
+                isSelected: currentSort.option == option,
+                isDark: isDark,
+                onTap: () {
+                  ref.read(musicSortProvider.notifier).state =
+                      currentSort.copyWith(option: option);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -3615,7 +3888,10 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
     );
   }
 
-  Future<void> _playAll(BuildContext context, List<MusicFileWithSource> sortedTracks) async {
+  Future<void> _playAll(
+    BuildContext context,
+    List<MusicFileWithSource> sortedTracks,
+  ) async {
     logger.i('AllSongsPage._playAll: 开始播放全部 (${sortedTracks.length} 首)');
 
     if (sortedTracks.isEmpty) {
@@ -3628,7 +3904,8 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
     try {
       final first = sortedTracks.first;
       final firstConnection = connections[first.sourceId];
-      if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
+      if (firstConnection == null ||
+          firstConnection.status != SourceStatus.connected) {
         logger.e('AllSongsPage._playAll: 第一首歌曲的源未连接');
         if (context.mounted) {
           context.showWarningToast(context.l10n.musicSourceNotConnected);
@@ -3637,7 +3914,9 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
       }
 
       logger.d('AllSongsPage._playAll: 获取第一首歌曲 URL: ${first.path}');
-      final url = await firstConnection.adapter.fileSystem.getFileUrl(first.path);
+      final url = await firstConnection.adapter.fileSystem.getFileUrl(
+        first.path,
+      );
       final musicItem = MusicItem.fromFileItem(
         first.file,
         url,
@@ -3655,17 +3934,19 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
         final conn = connections[track.sourceId];
         if (conn == null || conn.status != SourceStatus.connected) continue;
         final trackUrl = await conn.adapter.fileSystem.getFileUrl(track.path);
-        queue.add(MusicItem.fromFileItem(
-          track.file,
-          trackUrl,
-          sourceId: track.sourceId,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-          durationMs: track.duration,
-          coverData: track.coverData,
-          coverUrl: track.coverFileUrl,
-        ));
+        queue.add(
+          MusicItem.fromFileItem(
+            track.file,
+            trackUrl,
+            sourceId: track.sourceId,
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            durationMs: track.duration,
+            coverData: track.coverData,
+            coverUrl: track.coverFileUrl,
+          ),
+        );
       }
       logger.d('AllSongsPage._playAll: 创建队列完成 (${queue.length} 首)');
 
@@ -3684,7 +3965,10 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
     }
   }
 
-  Future<void> _shufflePlay(BuildContext context, List<MusicFileWithSource> sortedTracks) async {
+  Future<void> _shufflePlay(
+    BuildContext context,
+    List<MusicFileWithSource> sortedTracks,
+  ) async {
     logger.i('AllSongsPage._shufflePlay: 开始随机播放 (${sortedTracks.length} 首)');
 
     if (sortedTracks.isEmpty) {
@@ -3698,7 +3982,8 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
 
     try {
       final firstConnection = connections[first.sourceId];
-      if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
+      if (firstConnection == null ||
+          firstConnection.status != SourceStatus.connected) {
         logger.e('AllSongsPage._shufflePlay: 第一首歌曲的源未连接');
         if (context.mounted) {
           context.showWarningToast(context.l10n.musicSourceNotConnected);
@@ -3707,7 +3992,9 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
       }
 
       logger.d('AllSongsPage._shufflePlay: 获取第一首歌曲 URL: ${first.path}');
-      final url = await firstConnection.adapter.fileSystem.getFileUrl(first.path);
+      final url = await firstConnection.adapter.fileSystem.getFileUrl(
+        first.path,
+      );
       final musicItem = MusicItem.fromFileItem(
         first.file,
         url,
@@ -3725,17 +4012,19 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
         final conn = connections[track.sourceId];
         if (conn == null || conn.status != SourceStatus.connected) continue;
         final trackUrl = await conn.adapter.fileSystem.getFileUrl(track.path);
-        queue.add(MusicItem.fromFileItem(
-          track.file,
-          trackUrl,
-          sourceId: track.sourceId,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-          durationMs: track.duration,
-          coverData: track.coverData,
-          coverUrl: track.coverFileUrl,
-        ));
+        queue.add(
+          MusicItem.fromFileItem(
+            track.file,
+            trackUrl,
+            sourceId: track.sourceId,
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            durationMs: track.duration,
+            coverData: track.coverData,
+            coverUrl: track.coverFileUrl,
+          ),
+        );
       }
       logger.d('AllSongsPage._shufflePlay: 创建队列完成 (${queue.length} 首)');
 
@@ -3769,56 +4058,55 @@ class _SortButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.1)
-                : Colors.black.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                sortState.direction == SortDirection.ascending
-                    ? Icons.arrow_upward_rounded
-                    : Icons.arrow_downward_rounded,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                sortState.option.label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.white : Colors.black87,
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  sortState.direction == SortDirection.ascending
+                      ? Icons.arrow_upward_rounded
+                      : Icons.arrow_downward_rounded,
+                  size: 16,
+                  color: AppColors.primary,
                 ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.expand_more_rounded,
-                size: 18,
-                color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  sortState.option.label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.expand_more_rounded,
+                  size: 18,
+                  color: isDark
+                      ? AppColors.darkOnSurfaceVariant
+                      : AppColors.lightOnSurfaceVariant,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
 }
 
 /// 全部歌曲内容（用于嵌入到通用分类页面中）
 class _AllSongsContent extends ConsumerStatefulWidget {
-  const _AllSongsContent({
-    required this.tracks,
-    required this.isDark,
-  });
+  const _AllSongsContent({required this.tracks, required this.isDark});
 
   final List<MusicFileWithSource> tracks;
   final bool isDark;
@@ -3838,8 +4126,9 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
 
   @override
   void dispose() {
-    _scrollController..removeListener(_onScroll)
-    ..dispose();
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
   }
 
@@ -3854,9 +4143,11 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
   @override
   Widget build(BuildContext context) {
     final musicState = ref.watch(musicListProvider);
-    final totalCount = musicState is MusicListLoaded ? musicState.totalCount : 0;
+    final totalCount =
+        musicState is MusicListLoaded ? musicState.totalCount : 0;
     final hasMore = musicState is MusicListLoaded && musicState.hasMoreTracks;
-    final isLoadingMore = musicState is MusicListLoaded && musicState.isLoadingMore;
+    final isLoadingMore =
+        musicState is MusicListLoaded && musicState.isLoadingMore;
 
     if (widget.tracks.isEmpty) {
       return Center(
@@ -3875,7 +4166,11 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
                 ),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.music_off_rounded, size: 40, color: AppColors.primary),
+              child: Icon(
+                Icons.music_off_rounded,
+                size: 40,
+                color: AppColors.primary,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -3883,7 +4178,9 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                color: widget.isDark
+                    ? AppColors.darkOnSurfaceVariant
+                    : AppColors.lightOnSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
@@ -3934,22 +4231,22 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
   }
 
   Widget _buildLoadMoreIndicator(bool isLoading) => Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      alignment: Alignment.center,
-      child: isLoading
-          ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Text(
-              context.l10n.musicLoadMoreAction,
-              style: TextStyle(
-                fontSize: 13,
-                color: widget.isDark ? Colors.grey[500] : Colors.grey[600],
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        alignment: Alignment.center,
+        child: isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text(
+                context.l10n.musicLoadMoreAction,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: widget.isDark ? Colors.grey[500] : Colors.grey[600],
+                ),
               ),
-            ),
-    );
+      );
 
   List<MusicFileWithSource> _applySorting(
     List<MusicFileWithSource> tracks,
@@ -3960,11 +4257,17 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
         int result;
         switch (sortState.option) {
           case MusicSortOption.name:
-            result = a.displayTitle.toLowerCase().compareTo(b.displayTitle.toLowerCase());
+            result = a.displayTitle.toLowerCase().compareTo(
+                  b.displayTitle.toLowerCase(),
+                );
           case MusicSortOption.artist:
-            result = a.displayArtist.toLowerCase().compareTo(b.displayArtist.toLowerCase());
+            result = a.displayArtist.toLowerCase().compareTo(
+                  b.displayArtist.toLowerCase(),
+                );
           case MusicSortOption.album:
-            result = a.displayAlbum.toLowerCase().compareTo(b.displayAlbum.toLowerCase());
+            result = a.displayAlbum.toLowerCase().compareTo(
+                  b.displayAlbum.toLowerCase(),
+                );
           case MusicSortOption.dateAdded:
             final aTime = a.modifiedTime ?? DateTime(1970);
             final bTime = b.modifiedTime ?? DateTime(1970);
@@ -3972,68 +4275,80 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
           case MusicSortOption.duration:
             result = (a.duration ?? 0).compareTo(b.duration ?? 0);
         }
-        return sortState.direction == SortDirection.ascending ? result : -result;
+        return sortState.direction == SortDirection.ascending
+            ? result
+            : -result;
       });
 
     return sorted;
   }
 
-  Widget _buildControlBar(BuildContext context, WidgetRef ref, MusicSortState sortState, int totalCount) => Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 顶部信息行：歌曲数量 + 排序按钮
-          Row(
-            children: [
-              // 歌曲数量 - 使用数据库总数而不是当前加载的数量
-              Text(
-                context.l10n.musicTotalSongCountLabel(totalCount),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: widget.isDark ? Colors.white60 : Colors.black54,
+  Widget _buildControlBar(
+    BuildContext context,
+    WidgetRef ref,
+    MusicSortState sortState,
+    int totalCount,
+  ) =>
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 顶部信息行：歌曲数量 + 排序按钮
+            Row(
+              children: [
+                // 歌曲数量 - 使用数据库总数而不是当前加载的数量
+                Text(
+                  context.l10n.musicTotalSongCountLabel(totalCount),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: widget.isDark ? Colors.white60 : Colors.black54,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              // 排序按钮
-              _SpotifyIconButton(
-                icon: Icons.swap_vert_rounded,
-                label: sortState.option.label,
-                isDark: widget.isDark,
-                onTap: () => _showSortOptions(context, ref, sortState),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // 播放按钮行
-          Row(
-            children: [
-              // 播放全部按钮
-              Expanded(
-                child: _SpotifyPlayButton(
-                  onPressed: () => _playAll(context, ref),
-                  icon: Icons.play_arrow_rounded,
-                  label: context.l10n.musicPlayAll,
-                ),
-              ),
-              const SizedBox(width: 12),
-              // 随机播放按钮
-              Expanded(
-                child: _SpotifyPlayButton(
-                  onPressed: () => _shufflePlay(context, ref),
-                  icon: Icons.shuffle_rounded,
-                  label: context.l10n.musicShufflePlay,
-                  isPrimary: false,
+                const Spacer(),
+                // 排序按钮
+                _SpotifyIconButton(
+                  icon: Icons.swap_vert_rounded,
+                  label: sortState.option.label,
                   isDark: widget.isDark,
+                  onTap: () => _showSortOptions(context, ref, sortState),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 播放按钮行
+            Row(
+              children: [
+                // 播放全部按钮
+                Expanded(
+                  child: _SpotifyPlayButton(
+                    onPressed: () => _playAll(context, ref),
+                    icon: Icons.play_arrow_rounded,
+                    label: context.l10n.musicPlayAll,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // 随机播放按钮
+                Expanded(
+                  child: _SpotifyPlayButton(
+                    onPressed: () => _shufflePlay(context, ref),
+                    icon: Icons.shuffle_rounded,
+                    label: context.l10n.musicShufflePlay,
+                    isPrimary: false,
+                    isDark: widget.isDark,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
 
-  void _showSortOptions(BuildContext context, WidgetRef ref, MusicSortState currentSort) {
+  void _showSortOptions(
+    BuildContext context,
+    WidgetRef ref,
+    MusicSortState currentSort,
+  ) {
     showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: widget.isDark ? AppColors.darkSurface : Colors.white,
@@ -4070,12 +4385,12 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
                     direction: currentSort.direction,
                     isDark: widget.isDark,
                     onTap: () {
-                      final newDirection = currentSort.direction == SortDirection.ascending
-                          ? SortDirection.descending
-                          : SortDirection.ascending;
-                      ref.read(musicSortProvider.notifier).state = currentSort.copyWith(
-                        direction: newDirection,
-                      );
+                      final newDirection =
+                          currentSort.direction == SortDirection.ascending
+                              ? SortDirection.descending
+                              : SortDirection.ascending;
+                      ref.read(musicSortProvider.notifier).state =
+                          currentSort.copyWith(direction: newDirection);
                       Navigator.pop(context);
                     },
                   ),
@@ -4084,17 +4399,18 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
             ),
             const Divider(height: 1),
             // 排序选项列表
-            ...MusicSortOption.values.map((option) => _SortOptionTile(
-              option: option,
-              isSelected: currentSort.option == option,
-              isDark: widget.isDark,
-              onTap: () {
-                ref.read(musicSortProvider.notifier).state = currentSort.copyWith(
-                  option: option,
-                );
-                Navigator.pop(context);
-              },
-            )),
+            ...MusicSortOption.values.map(
+              (option) => _SortOptionTile(
+                option: option,
+                isSelected: currentSort.option == option,
+                isDark: widget.isDark,
+                onTap: () {
+                  ref.read(musicSortProvider.notifier).state =
+                      currentSort.copyWith(option: option);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
             const SizedBox(height: 8),
           ],
         ),
@@ -4115,7 +4431,8 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
     try {
       final first = widget.tracks.first;
       final firstConnection = connections[first.sourceId];
-      if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
+      if (firstConnection == null ||
+          firstConnection.status != SourceStatus.connected) {
         logger.e('_AllSongsView._playAll: 第一首歌曲的源未连接');
         if (context.mounted) {
           context.showWarningToast(context.l10n.musicSourceNotConnected);
@@ -4124,7 +4441,9 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
       }
 
       logger.d('_AllSongsView._playAll: 获取第一首歌曲 URL: ${first.path}');
-      final url = await firstConnection.adapter.fileSystem.getFileUrl(first.path);
+      final url = await firstConnection.adapter.fileSystem.getFileUrl(
+        first.path,
+      );
       final musicItem = MusicItem.fromFileItem(
         first.file,
         url,
@@ -4142,17 +4461,19 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
         final conn = connections[track.sourceId];
         if (conn == null || conn.status != SourceStatus.connected) continue;
         final trackUrl = await conn.adapter.fileSystem.getFileUrl(track.path);
-        queue.add(MusicItem.fromFileItem(
-          track.file,
-          trackUrl,
-          sourceId: track.sourceId,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-          durationMs: track.duration,
-          coverData: track.coverData,
-          coverUrl: track.coverFileUrl,
-        ));
+        queue.add(
+          MusicItem.fromFileItem(
+            track.file,
+            trackUrl,
+            sourceId: track.sourceId,
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            durationMs: track.duration,
+            coverData: track.coverData,
+            coverUrl: track.coverFileUrl,
+          ),
+        );
       }
       logger.d('_AllSongsView._playAll: 创建队列完成 (${queue.length} 首)');
 
@@ -4185,7 +4506,8 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
 
     try {
       final firstConnection = connections[first.sourceId];
-      if (firstConnection == null || firstConnection.status != SourceStatus.connected) {
+      if (firstConnection == null ||
+          firstConnection.status != SourceStatus.connected) {
         logger.e('_AllSongsView._shufflePlay: 第一首歌曲的源未连接');
         if (context.mounted) {
           context.showWarningToast(context.l10n.musicSourceNotConnected);
@@ -4194,7 +4516,9 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
       }
 
       logger.d('_AllSongsView._shufflePlay: 获取第一首歌曲 URL: ${first.path}');
-      final url = await firstConnection.adapter.fileSystem.getFileUrl(first.path);
+      final url = await firstConnection.adapter.fileSystem.getFileUrl(
+        first.path,
+      );
       final musicItem = MusicItem.fromFileItem(
         first.file,
         url,
@@ -4212,17 +4536,19 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
         final conn = connections[track.sourceId];
         if (conn == null || conn.status != SourceStatus.connected) continue;
         final trackUrl = await conn.adapter.fileSystem.getFileUrl(track.path);
-        queue.add(MusicItem.fromFileItem(
-          track.file,
-          trackUrl,
-          sourceId: track.sourceId,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-          durationMs: track.duration,
-          coverData: track.coverData,
-          coverUrl: track.coverFileUrl,
-        ));
+        queue.add(
+          MusicItem.fromFileItem(
+            track.file,
+            trackUrl,
+            sourceId: track.sourceId,
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            durationMs: track.duration,
+            coverData: track.coverData,
+            coverUrl: track.coverFileUrl,
+          ),
+        );
       }
       logger.d('_AllSongsView._shufflePlay: 创建队列完成 (${queue.length} 首)');
 
@@ -4282,7 +4608,9 @@ class _MusicListTile extends ConsumerWidget {
               ? AppColors.fileAudio.withValues(alpha: 0.3)
               : (isDark
                   ? AppColors.darkOutline.withValues(alpha: 0.15)
-                  : context.colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                  : context.colorScheme.outlineVariant.withValues(
+                      alpha: 0.3,
+                    )),
         ),
       ),
       child: Material(
@@ -4337,7 +4665,8 @@ class _MusicListTile extends ConsumerWidget {
                           color: isPlaying
                               ? AppColors.fileAudio
                               : (isDark ? AppColors.darkOnSurface : null),
-                          fontWeight: isPlaying ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight:
+                              isPlaying ? FontWeight.w600 : FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -4382,7 +4711,10 @@ class _MusicListTile extends ConsumerWidget {
                 if (track.metadataExtracted)
                   Container(
                     margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: (isDark
                               ? AppColors.darkSurfaceElevated
@@ -4532,9 +4864,7 @@ class _MusicListTile extends ConsumerWidget {
                           const SizedBox(width: 12),
                           Text(
                             context.l10n.musicMenuDeleteSourceFile,
-                            style: TextStyle(
-                              color: AppColors.error,
-                            ),
+                            style: TextStyle(color: AppColors.error),
                           ),
                         ],
                       ),
@@ -4590,29 +4920,31 @@ class _MusicListTile extends ConsumerWidget {
               coverFile,
               fit: BoxFit.cover,
               gaplessPlayback: true,
-              errorBuilder: (context, error, stackTrace) => _buildFallbackCover(title),
+              errorBuilder: (context, error, stackTrace) =>
+                  _buildFallbackCover(title),
             )
           : coverData != null
               ? Image.memory(
                   Uint8List.fromList(coverData),
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
-                  errorBuilder: (context, error, stackTrace) => _buildFallbackCover(title),
+                  errorBuilder: (context, error, stackTrace) =>
+                      _buildFallbackCover(title),
                 )
               : _buildFallbackCover(title),
     );
   }
 
   Widget _buildFallbackCover(String title) => Center(
-      child: Text(
-        title.isNotEmpty ? title[0].toUpperCase() : '♪',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
+        child: Text(
+          title.isNotEmpty ? title[0].toUpperCase() : '♪',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-    );
+      );
 
   Future<void> _playTrack(BuildContext context, WidgetRef ref) async {
     final connections = ref.read(activeConnectionsProvider);
@@ -4648,7 +4980,11 @@ class _MusicListTile extends ConsumerWidget {
     await MusicPlayerPage.open(context);
   }
 
-  Future<void> _handleMenuAction(BuildContext context, WidgetRef ref, String action) async {
+  Future<void> _handleMenuAction(
+    BuildContext context,
+    WidgetRef ref,
+    String action,
+  ) async {
     final connections = ref.read(activeConnectionsProvider);
     final connection = connections[track.sourceId];
     if (connection == null || connection.status != SourceStatus.connected) {
@@ -4680,7 +5016,9 @@ class _MusicListTile extends ConsumerWidget {
         final playerState = ref.read(musicPlayerControllerProvider);
 
         if (queue.isEmpty) {
-          await ref.read(musicPlayerControllerProvider.notifier).play(musicItem);
+          await ref
+              .read(musicPlayerControllerProvider.notifier)
+              .play(musicItem);
         } else {
           final insertIndex = playerState.currentIndex + 1;
           final newQueue = [...queue];
@@ -4699,9 +5037,15 @@ class _MusicListTile extends ConsumerWidget {
         }
 
       case 'add_to_favorites':
-        final isFav = await ref.read(musicFavoritesProvider.notifier).toggleFavorite(musicItem);
+        final isFav = await ref
+            .read(musicFavoritesProvider.notifier)
+            .toggleFavorite(musicItem);
         if (context.mounted) {
-          context.showSuccessToast(isFav ? context.l10n.musicToastFavoriteAdded : context.l10n.musicToastFavoriteRemoved);
+          context.showSuccessToast(
+            isFav
+                ? context.l10n.musicToastFavoriteAdded
+                : context.l10n.musicToastFavoriteRemoved,
+          );
         }
 
       case 'add_to_playlist':
@@ -4716,18 +5060,25 @@ class _MusicListTile extends ConsumerWidget {
           final confirmed = await showDeleteConfirmDialog(
             context: context,
             title: context.l10n.musicRemoveFromLibraryTitle,
-            content: context.l10n.musicRemoveFromLibraryContent(track.displayTitle),
+            content: context.l10n.musicRemoveFromLibraryContent(
+              track.displayTitle,
+            ),
             confirmText: context.l10n.musicRemoveFromLibraryConfirm,
             isDestructive: false,
           );
           if (confirmed && context.mounted) {
-            final success = await ref.read(musicListProvider.notifier).removeFromLibrary(
-              track.sourceId,
-              track.path,
-              track.displayTitle,
-            );
+            final success =
+                await ref.read(musicListProvider.notifier).removeFromLibrary(
+                      track.sourceId,
+                      track.path,
+                      track.displayTitle,
+                    );
             if (context.mounted) {
-              context.showSuccessToast(success ? context.l10n.musicRemoveFromLibrarySuccess : context.l10n.musicRemoveFromLibraryFailed);
+              context.showSuccessToast(
+                success
+                    ? context.l10n.musicRemoveFromLibrarySuccess
+                    : context.l10n.musicRemoveFromLibraryFailed,
+              );
             }
           }
         }
@@ -4737,16 +5088,23 @@ class _MusicListTile extends ConsumerWidget {
           final confirmed = await showDeleteConfirmDialog(
             context: context,
             title: context.l10n.musicDeleteSourceFileTitle,
-            content: context.l10n.musicDeleteSourceFileContent(track.displayTitle),
+            content: context.l10n.musicDeleteSourceFileContent(
+              track.displayTitle,
+            ),
           );
           if (confirmed && context.mounted) {
-            final success = await ref.read(musicListProvider.notifier).deleteFromSource(
-              track.sourceId,
-              track.path,
-              track.displayTitle,
-            );
+            final success =
+                await ref.read(musicListProvider.notifier).deleteFromSource(
+                      track.sourceId,
+                      track.path,
+                      track.displayTitle,
+                    );
             if (context.mounted) {
-              context.showSuccessToast(success ? context.l10n.musicDeleteSourceFileSuccess : context.l10n.musicDeleteSourceFileFailed);
+              context.showSuccessToast(
+                success
+                    ? context.l10n.musicDeleteSourceFileSuccess
+                    : context.l10n.musicDeleteSourceFileFailed,
+              );
             }
           }
         }
@@ -4765,7 +5123,11 @@ class _MusicListTile extends ConsumerWidget {
     }
   }
 
-  void _showAddToPlaylistDialog(BuildContext context, WidgetRef ref, String trackPath) {
+  void _showAddToPlaylistDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String trackPath,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final playlistState = ref.read(playlistProvider);
 
@@ -4812,42 +5174,60 @@ class _MusicListTile extends ConsumerWidget {
             // 已有歌单列表
             if (playlistState.playlists.isNotEmpty) ...[
               const Divider(),
-              ...playlistState.playlists.take(5).map((playlist) => ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary.withValues(alpha: 0.7),
-                          AppColors.secondary.withValues(alpha: 0.7),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+              ...playlistState.playlists.take(5).map(
+                    (playlist) => ListTile(
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary.withValues(alpha: 0.7),
+                              AppColors.secondary.withValues(alpha: 0.7),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.queue_music_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(8),
+                      title: Text(
+                        playlist.name,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      subtitle: Text(
+                        context.l10n.musicPlaylistSongCountFormat(
+                          playlist.trackCount,
+                        ),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? AppColors.darkOnSurfaceVariant
+                              : AppColors.lightOnSurfaceVariant,
+                        ),
+                      ),
+                      onTap: () async {
+                        await ref
+                            .read(playlistProvider.notifier)
+                            .addToPlaylist(playlist.id, trackPath);
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          context.showSuccessToast(
+                            context.l10n.musicAddToPlaylistSuccess(
+                              playlist.name,
+                            ),
+                          );
+                        }
+                      },
                     ),
-                    child: const Icon(Icons.queue_music_rounded, color: Colors.white, size: 20),
                   ),
-                  title: Text(
-                    playlist.name,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                  ),
-                  subtitle: Text(
-                    context.l10n.musicPlaylistSongCountFormat(playlist.trackCount),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                    ),
-                  ),
-                  onTap: () async {
-                    await ref.read(playlistProvider.notifier).addToPlaylist(playlist.id, trackPath);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      context.showSuccessToast(context.l10n.musicAddToPlaylistSuccess(playlist.name));
-                    }
-                  },
-                )),
             ],
             const SizedBox(height: 16),
           ],
@@ -4856,7 +5236,11 @@ class _MusicListTile extends ConsumerWidget {
     );
   }
 
-  void _showCreateAndAddDialog(BuildContext context, WidgetRef ref, String trackPath) {
+  void _showCreateAndAddDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String trackPath,
+  ) {
     final controller = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -4876,9 +5260,7 @@ class _MusicListTile extends ConsumerWidget {
             hintStyle: TextStyle(
               color: isDark ? Colors.grey[500] : Colors.grey[400],
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           ),
           style: TextStyle(color: isDark ? Colors.white : Colors.black87),
         ),
@@ -4887,7 +5269,11 @@ class _MusicListTile extends ConsumerWidget {
             onPressed: () => Navigator.pop(context),
             child: Text(
               context.l10n.musicListCancel,
-              style: TextStyle(color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
+              style: TextStyle(
+                color: isDark
+                    ? AppColors.darkOnSurfaceVariant
+                    : AppColors.lightOnSurfaceVariant,
+              ),
             ),
           ),
           ElevatedButton(
@@ -4986,7 +5372,9 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
                       ? _buildEmptyState(isDark)
                       : ListView.builder(
                           controller: _scrollController,
-                          padding: EdgeInsets.only(bottom: context.scrollBottomPadding),
+                          padding: EdgeInsets.only(
+                            bottom: context.scrollBottomPadding,
+                          ),
                           itemCount: widget.tracks.length,
                           itemBuilder: (context, index) => _ModernMusicTile(
                             track: widget.tracks[index],
@@ -5026,7 +5414,9 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
                 : ListView.builder(
                     controller: _scrollController,
                     // 使用动态 padding 支持悬浮导航栏
-                    padding: EdgeInsets.only(bottom: context.scrollBottomPadding),
+                    padding: EdgeInsets.only(
+                      bottom: context.scrollBottomPadding,
+                    ),
                     itemCount: widget.tracks.length,
                     itemBuilder: (context, index) => _ModernMusicTile(
                       track: widget.tracks[index],
@@ -5043,172 +5433,71 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
   }
 
   /// 玻璃模式下的头部（无返回按钮，返回按钮悬浮在外层）
-  Widget _buildGlassHeader(BuildContext context, bool isDark, double safeTop) => DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            widget.color.withValues(alpha: isDark ? 0.3 : 0.15),
-            if (isDark) AppColors.darkBackground else Colors.grey[50]!,
-          ],
+  Widget _buildGlassHeader(BuildContext context, bool isDark, double safeTop) =>
+      DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              widget.color.withValues(alpha: isDark ? 0.3 : 0.15),
+              if (isDark) AppColors.darkBackground else Colors.grey[50]!,
+            ],
+          ),
         ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(16, safeTop + 56, 16, 16),
-        child: Row(
-          children: [
-            // 图标/封面
-            widget.coverWidget ??
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        widget.color,
-                        widget.color.withValues(alpha: 0.6),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.color.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    widget.icon,
-                    color: Colors.white,
-                    size: 36,
-                  ),
-                ),
-            const SizedBox(width: 16),
-            // 标题信息
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.subtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-  Widget _buildHeader(BuildContext context, bool isDark) => DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            widget.color.withValues(alpha: isDark ? 0.3 : 0.15),
-            if (isDark) AppColors.darkBackground else Colors.grey[50]!,
-          ],
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 16, 16),
-          child: Column(
+          padding: EdgeInsets.fromLTRB(16, safeTop + 56, 16, 16),
+          child: Row(
             children: [
-              // 返回按钮行
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(
-                      Icons.arrow_back_rounded,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const Spacer(),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // 信息卡片
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    // 图标/封面
-                    widget.coverWidget ??
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                widget.color,
-                                widget.color.withValues(alpha: 0.6),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: widget.color.withValues(alpha: 0.3),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            widget.icon,
-                            color: Colors.white,
-                            size: 36,
-                          ),
-                        ),
-                    const SizedBox(width: 16),
-                    // 标题信息
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.title,
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.subtitle,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                            ),
-                          ),
+              // 图标/封面
+              widget.coverWidget ??
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          widget.color,
+                          widget.color.withValues(alpha: 0.6),
                         ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.color.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(widget.icon, color: Colors.white, size: 36),
+                  ),
+              const SizedBox(width: 16),
+              // 标题信息
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark
+                            ? AppColors.darkOnSurfaceVariant
+                            : AppColors.lightOnSurfaceVariant,
                       ),
                     ),
                   ],
@@ -5217,8 +5506,107 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
             ],
           ),
         ),
-      ),
-    );
+      );
+
+  Widget _buildHeader(BuildContext context, bool isDark) => DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              widget.color.withValues(alpha: isDark ? 0.3 : 0.15),
+              if (isDark) AppColors.darkBackground else Colors.grey[50]!,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 16, 16),
+            child: Column(
+              children: [
+                // 返回按钮行
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(
+                        Icons.arrow_back_rounded,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // 信息卡片
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Row(
+                    children: [
+                      // 图标/封面
+                      widget.coverWidget ??
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  widget.color,
+                                  widget.color.withValues(alpha: 0.6),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: widget.color.withValues(alpha: 0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Icon(widget.icon,
+                                color: Colors.white, size: 36),
+                          ),
+                      const SizedBox(width: 16),
+                      // 标题信息
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.subtitle,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDark
+                                    ? AppColors.darkOnSurfaceVariant
+                                    : AppColors.lightOnSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 
   Widget _buildPlayControls(BuildContext context, bool isDark) {
     if (widget.tracks.isEmpty) return const SizedBox.shrink();
@@ -5250,25 +5638,25 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
   }
 
   Widget _buildEmptyState(bool isDark) => Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            widget.icon,
-            size: 64,
-            color: isDark ? Colors.grey[700] : Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            context.l10n.musicNoSongsEmpty,
-            style: TextStyle(
-              fontSize: 16,
-              color: isDark ? Colors.grey[500] : Colors.grey[600],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              widget.icon,
+              size: 64,
+              color: isDark ? Colors.grey[700] : Colors.grey[400],
             ),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(height: 16),
+            Text(
+              context.l10n.musicNoSongsEmpty,
+              style: TextStyle(
+                fontSize: 16,
+                color: isDark ? Colors.grey[500] : Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      );
 
   Future<void> _playAll(BuildContext context) async {
     if (widget.tracks.isEmpty) return;
@@ -5304,17 +5692,19 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
         final conn = connections[track.sourceId];
         if (conn == null || conn.status != SourceStatus.connected) continue;
         final trackUrl = await conn.adapter.fileSystem.getFileUrl(track.path);
-        queue.add(MusicItem.fromFileItem(
-          track.file,
-          trackUrl,
-          sourceId: track.sourceId,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-          durationMs: track.duration,
-          coverData: track.coverData,
-          coverUrl: track.coverFileUrl,
-        ));
+        queue.add(
+          MusicItem.fromFileItem(
+            track.file,
+            trackUrl,
+            sourceId: track.sourceId,
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            durationMs: track.duration,
+            coverData: track.coverData,
+            coverUrl: track.coverFileUrl,
+          ),
+        );
       }
 
       ref.read(playQueueProvider.notifier).setQueue(queue);
@@ -5364,21 +5754,25 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
         final conn = connections[track.sourceId];
         if (conn == null || conn.status != SourceStatus.connected) continue;
         final trackUrl = await conn.adapter.fileSystem.getFileUrl(track.path);
-        queue.add(MusicItem.fromFileItem(
-          track.file,
-          trackUrl,
-          sourceId: track.sourceId,
-          title: track.title,
-          artist: track.artist,
-          album: track.album,
-          durationMs: track.duration,
-          coverData: track.coverData,
-          coverUrl: track.coverFileUrl,
-        ));
+        queue.add(
+          MusicItem.fromFileItem(
+            track.file,
+            trackUrl,
+            sourceId: track.sourceId,
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            durationMs: track.duration,
+            coverData: track.coverData,
+            coverUrl: track.coverFileUrl,
+          ),
+        );
       }
 
       ref.read(playQueueProvider.notifier).setQueue(queue);
-      ref.read(musicPlayerControllerProvider.notifier).setPlayMode(PlayMode.shuffle);
+      ref
+          .read(musicPlayerControllerProvider.notifier)
+          .setPlayMode(PlayMode.shuffle);
       await ref.read(musicPlayerControllerProvider.notifier).play(musicItem);
 
       if (context.mounted) {
@@ -5396,9 +5790,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
 /// 艺术家视图 - 网格布局
 /// 直接从数据库获取全量艺术家数据，确保统计准确
 class _ArtistsView extends ConsumerWidget {
-  const _ArtistsView({
-    required this.isDark,
-  });
+  const _ArtistsView({required this.isDark});
 
   final bool isDark;
 
@@ -5420,12 +5812,20 @@ class _ArtistsView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(
+            context.l10n.musicLoadFailed,
+            Icons.error_outline_rounded,
+            isDark,
+          );
         }
 
         final artists = snapshot.data ?? [];
         if (artists.isEmpty) {
-          return _buildEmptyView(context.l10n.musicArtistEmpty, Icons.person_off_rounded, isDark);
+          return _buildEmptyView(
+            context.l10n.musicArtistEmpty,
+            Icons.person_off_rounded,
+            isDark,
+          );
         }
 
         final gridConfig = GridHelper.getMusicArtistGridConfig(context);
@@ -5559,7 +5959,9 @@ class _ArtistCard extends StatelessWidget {
                         context.l10n.musicArtistSongs(tracks.length),
                         style: TextStyle(
                           fontSize: 12,
-                          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                          color: isDark
+                              ? AppColors.darkOnSurfaceVariant
+                              : AppColors.lightOnSurfaceVariant,
                         ),
                       ),
                     ),
@@ -5592,8 +5994,8 @@ class _ArtistCard extends StatelessWidget {
   }
 
   Widget _buildDefaultCover() => const Center(
-      child: Icon(Icons.person_rounded, size: 40, color: Colors.white),
-    );
+        child: Icon(Icons.person_rounded, size: 40, color: Colors.white),
+      );
 }
 
 /// 艺术家卡片（数据库版）- 点击时从数据库加载该艺术家的歌曲
@@ -5610,140 +6012,148 @@ class _ArtistCardFromDb extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
-      onTap: () => _navigateToArtist(context),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 封面区域 - 圆形头像
-            Expanded(
-              flex: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary.withValues(alpha: 0.8),
-                        AppColors.secondary.withValues(alpha: 0.8),
+        onTap: () => _navigateToArtist(context),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 封面区域 - 圆形头像
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.8),
+                          AppColors.secondary.withValues(alpha: 0.8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.2),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                    clipBehavior: Clip.antiAlias,
+                    child: const Center(
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // 信息区域
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          artistName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          context.l10n.musicSongCountLabel(count),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.darkOnSurfaceVariant
+                                : AppColors.lightOnSurfaceVariant,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: const Center(
-                    child: Icon(Icons.person_rounded, size: 40, color: Colors.white),
-                  ),
                 ),
               ),
-            ),
-            // 信息区域
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        artistName,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        context.l10n.musicSongCountLabel(count),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
 
   Future<void> _navigateToArtist(BuildContext context) async {
     final db = MusicDatabaseService();
     final tracks = await db.getByArtist(artistName, limit: 10000);
     final musicTracks = tracks
-        .map((m) => MusicFileWithSource(
-              file: FileItem(
-                name: m.fileName,
-                path: m.filePath,
-                size: m.size ?? 0,
-                isDirectory: false,
-                modifiedTime: m.modifiedTime,
-              ),
-              sourceId: m.sourceId,
-              title: m.title,
-              artist: m.artist,
-              album: m.album,
-              duration: m.duration,
-              year: m.year,
-              genre: m.genre,
-              coverPath: m.coverPath,
-              metadataExtracted: true,
-            ))
+        .map(
+          (m) => MusicFileWithSource(
+            file: FileItem(
+              name: m.fileName,
+              path: m.filePath,
+              size: m.size ?? 0,
+              isDirectory: false,
+              modifiedTime: m.modifiedTime,
+            ),
+            sourceId: m.sourceId,
+            title: m.title,
+            artist: m.artist,
+            album: m.album,
+            duration: m.duration,
+            year: m.year,
+            genre: m.genre,
+            coverPath: m.coverPath,
+            metadataExtracted: true,
+          ),
+        )
         .toList();
 
     if (!context.mounted) return;
-    AppError.fireAndForget(Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => CategoryDetailPage(
-          title: artistName,
-          subtitle: context.l10n.musicListSongCount(count),
-          tracks: musicTracks,
-          icon: Icons.person_rounded,
-          color: AppColors.primary,
+    AppError.fireAndForget(
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => CategoryDetailPage(
+            title: artistName,
+            subtitle: context.l10n.musicListSongCount(count),
+            tracks: musicTracks,
+            icon: Icons.person_rounded,
+            color: AppColors.primary,
+          ),
         ),
       ),
-    ));
+    );
   }
 }
 
 /// 专辑视图
 /// 直接从数据库获取全量专辑数据，确保统计准确
 class _AlbumsView extends ConsumerWidget {
-  const _AlbumsView({
-    required this.isDark,
-  });
+  const _AlbumsView({required this.isDark});
 
   final bool isDark;
 
@@ -5757,7 +6167,8 @@ class _AlbumsView extends ConsumerWidget {
             .toList() ??
         [];
 
-    return FutureBuilder<List<({String album, String? artist, int count, String? coverPath})>>(
+    return FutureBuilder<
+        List<({String album, String? artist, int count, String? coverPath})>>(
       future: db.getAlbums(enabledPaths: enabledPaths),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -5765,12 +6176,20 @@ class _AlbumsView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(
+            context.l10n.musicLoadFailed,
+            Icons.error_outline_rounded,
+            isDark,
+          );
         }
 
         final albums = snapshot.data ?? [];
         if (albums.isEmpty) {
-          return _buildEmptyView(context.l10n.musicAlbumEmpty, Icons.album_outlined, isDark);
+          return _buildEmptyView(
+            context.l10n.musicAlbumEmpty,
+            Icons.album_outlined,
+            isDark,
+          );
         }
 
         final gridConfig = GridHelper.getMusicAlbumGridConfig(context);
@@ -5810,76 +6229,81 @@ class _AlbumCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
-      onTap: () => _showAlbumTracks(context, ref),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 3,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.fileAudio.withValues(alpha: 0.7),
-                      AppColors.secondary.withValues(alpha: 0.7),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+        onTap: () => _showAlbumTracks(context, ref),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 3,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.fileAudio.withValues(alpha: 0.7),
+                        AppColors.secondary.withValues(alpha: 0.7),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
                   ),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: const Center(
-                  child: Icon(Icons.album_rounded, size: 48, color: Colors.white),
+                  child: const Center(
+                    child: Icon(Icons.album_rounded,
+                        size: 48, color: Colors.white),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        albumName,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: isDark ? Colors.white : Colors.black87,
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          albumName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                         ),
                       ),
-                    ),
-                    Text(
-                      context.l10n.musicSongCountLabel(tracks.length),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                      Text(
+                        context.l10n.musicSongCountLabel(tracks.length),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark
+                              ? AppColors.darkOnSurfaceVariant
+                              : AppColors.lightOnSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
 
   void _showAlbumTracks(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -5915,7 +6339,11 @@ class _AlbumCard extends ConsumerWidget {
                           ),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.album_rounded, color: Colors.white, size: 28),
+                        child: const Icon(
+                          Icons.album_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -5934,7 +6362,9 @@ class _AlbumCard extends ConsumerWidget {
                               context.l10n.musicArtistSongs(tracks.length),
                               style: TextStyle(
                                 fontSize: 13,
-                                color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                                color: isDark
+                                    ? AppColors.darkOnSurfaceVariant
+                                    : AppColors.lightOnSurfaceVariant,
                               ),
                             ),
                           ],
@@ -5951,11 +6381,11 @@ class _AlbumCard extends ConsumerWidget {
                 controller: scrollController,
                 itemCount: tracks.length,
                 itemBuilder: (context, index) => _CompactMusicTile(
-                    track: tracks[index],
-                    isDark: isDark,
-                    allTracks: tracks,
-                    trackIndex: index,
-                  ),
+                  track: tracks[index],
+                  isDark: isDark,
+                  allTracks: tracks,
+                  trackIndex: index,
+                ),
               ),
             ),
           ],
@@ -5979,190 +6409,206 @@ class _AlbumCardFromDb extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
-      onTap: () => _showAlbumTracks(context),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 3,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.fileAudio.withValues(alpha: 0.7),
-                      AppColors.secondary.withValues(alpha: 0.7),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+        onTap: () => _showAlbumTracks(context),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 3,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.fileAudio.withValues(alpha: 0.7),
+                        AppColors.secondary.withValues(alpha: 0.7),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
                   ),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: const Center(
-                  child: Icon(Icons.album_rounded, size: 48, color: Colors.white),
+                  child: const Center(
+                    child: Icon(Icons.album_rounded,
+                        size: 48, color: Colors.white),
+                  ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        albumName,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: isDark ? Colors.white : Colors.black87,
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          albumName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                         ),
                       ),
-                    ),
-                    Text(
-                      context.l10n.musicSongCountLabel(count),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                      Text(
+                        context.l10n.musicSongCountLabel(count),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark
+                              ? AppColors.darkOnSurfaceVariant
+                              : AppColors.lightOnSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
 
   Future<void> _showAlbumTracks(BuildContext context) async {
     final db = MusicDatabaseService();
     final rawTracks = await db.getByAlbum(albumName, limit: 10000);
     final tracks = rawTracks
-        .map((m) => MusicFileWithSource(
-              file: FileItem(
-                name: m.fileName,
-                path: m.filePath,
-                size: m.size ?? 0,
-                isDirectory: false,
-                modifiedTime: m.modifiedTime,
-              ),
-              sourceId: m.sourceId,
-              title: m.title,
-              artist: m.artist,
-              album: m.album,
-              duration: m.duration,
-              year: m.year,
-              genre: m.genre,
-              coverPath: m.coverPath,
-              metadataExtracted: true,
-            ))
+        .map(
+          (m) => MusicFileWithSource(
+            file: FileItem(
+              name: m.fileName,
+              path: m.filePath,
+              size: m.size ?? 0,
+              isDirectory: false,
+              modifiedTime: m.modifiedTime,
+            ),
+            sourceId: m.sourceId,
+            title: m.title,
+            artist: m.artist,
+            album: m.album,
+            duration: m.duration,
+            year: m.year,
+            genre: m.genre,
+            coverPath: m.coverPath,
+            metadataExtracted: true,
+          ),
+        )
         .toList();
 
     if (!context.mounted) return;
-    AppError.fireAndForget(showAdaptiveModalSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const SheetDragHandle(topPadding: 0, bottomPadding: 16),
-                  Row(
-                    children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [AppColors.fileAudio, AppColors.secondary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+    AppError.fireAndForget(
+      showAdaptiveModalSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) => Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const SheetDragHandle(topPadding: 0, bottomPadding: 16),
+                    Row(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.fileAudio,
+                                AppColors.secondary,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          borderRadius: BorderRadius.circular(12),
+                          child: const Icon(
+                            Icons.album_rounded,
+                            color: Colors.white,
+                            size: 28,
+                          ),
                         ),
-                        child: const Icon(Icons.album_rounded, color: Colors.white, size: 28),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              albumName,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black87,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                albumName,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
                               ),
-                            ),
-                            Text(
-                              context.l10n.musicSongCountLabel(count),
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                              Text(
+                                context.l10n.musicSongCountLabel(count),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isDark
+                                      ? AppColors.darkOnSurfaceVariant
+                                      : AppColors.lightOnSurfaceVariant,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      _PlayAllButton(tracks: tracks, isDark: isDark),
-                    ],
-                  ),
-                ],
+                        _PlayAllButton(tracks: tracks, isDark: isDark),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                itemCount: tracks.length,
-                itemBuilder: (context, index) => _CompactMusicTile(
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  itemCount: tracks.length,
+                  itemBuilder: (context, index) => _CompactMusicTile(
                     track: tracks[index],
                     isDark: isDark,
                     allTracks: tracks,
                     trackIndex: index,
                   ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 }
 
 /// 文件夹视图 - 列表布局
 /// 直接从数据库获取全量文件夹数据，确保统计准确
 class _FoldersView extends ConsumerWidget {
-  const _FoldersView({
-    required this.isDark,
-  });
+  const _FoldersView({required this.isDark});
 
   final bool isDark;
 
@@ -6185,12 +6631,20 @@ class _FoldersView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(
+            context.l10n.musicLoadFailed,
+            Icons.error_outline_rounded,
+            isDark,
+          );
         }
 
         final folders = snapshot.data ?? [];
         if (folders.isEmpty) {
-          return _buildEmptyView(context.l10n.musicFolderEmpty, Icons.folder_off_rounded, isDark);
+          return _buildEmptyView(
+            context.l10n.musicFolderEmpty,
+            Icons.folder_off_rounded,
+            isDark,
+          );
         }
 
         return ListView.builder(
@@ -6228,80 +6682,84 @@ class _FolderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => CategoryDetailPage(
-                title: folderName,
-                subtitle: context.l10n.musicListSongCount(tracks.length),
-                tracks: tracks,
-                icon: Icons.folder_rounded,
-                color: AppColors.fileAudio,
+        margin: const EdgeInsets.only(bottom: 8),
+        child: Material(
+          color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => CategoryDetailPage(
+                  title: folderName,
+                  subtitle: context.l10n.musicListSongCount(tracks.length),
+                  tracks: tracks,
+                  icon: Icons.folder_rounded,
+                  color: AppColors.fileAudio,
+                ),
+              ),
+            ),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  // 文件夹图标
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: AppColors.fileAudio.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.folder_rounded,
+                      color: AppColors.fileAudio,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // 文件夹信息
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          folderName,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          context.l10n.musicArtistSongs(tracks.length),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark
+                                ? AppColors.darkOnSurfaceVariant
+                                : AppColors.lightOnSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 箭头
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: isDark
+                        ? AppColors.darkOnSurfaceVariant
+                        : AppColors.lightOnSurfaceVariant,
+                  ),
+                ],
               ),
             ),
           ),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // 文件夹图标
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.fileAudio.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.folder_rounded,
-                    color: AppColors.fileAudio,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // 文件夹信息
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        folderName,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.l10n.musicArtistSongs(tracks.length),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // 箭头
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
         ),
-      ),
-    );
+      );
 }
 
 /// 文件夹卡片（数据库版）- 点击时从数据库加载歌曲
@@ -6320,117 +6778,123 @@ class _FolderCardFromDb extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: () => _navigateToFolder(context),
+        margin: const EdgeInsets.only(bottom: 8),
+        child: Material(
+          color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // 文件夹图标
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.fileAudio.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            onTap: () => _navigateToFolder(context),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  // 文件夹图标
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: AppColors.fileAudio.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.folder_rounded,
+                      color: AppColors.fileAudio,
+                      size: 28,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.folder_rounded,
-                    color: AppColors.fileAudio,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // 文件夹信息
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        folderName,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : Colors.black87,
+                  const SizedBox(width: 16),
+                  // 文件夹信息
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          folderName,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.l10n.musicSongCountLabel(count),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                        const SizedBox(height: 4),
+                        Text(
+                          context.l10n.musicSongCountLabel(count),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isDark
+                                ? AppColors.darkOnSurfaceVariant
+                                : AppColors.lightOnSurfaceVariant,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                // 箭头
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                ),
-              ],
+                  // 箭头
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: isDark
+                        ? AppColors.darkOnSurfaceVariant
+                        : AppColors.lightOnSurfaceVariant,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 
   Future<void> _navigateToFolder(BuildContext context) async {
     final db = MusicDatabaseService();
     // 加载该文件夹下的所有歌曲（不分页）
     final tracks = await db.getByFolder(folderPath, limit: 10000);
     final musicTracks = tracks
-        .map((m) => MusicFileWithSource(
-              file: FileItem(
-                name: m.fileName,
-                path: m.filePath,
-                size: m.size ?? 0,
-                isDirectory: false,
-                modifiedTime: m.modifiedTime,
-              ),
-              sourceId: m.sourceId,
-              title: m.title,
-              artist: m.artist,
-              album: m.album,
-              duration: m.duration,
-              year: m.year,
-              genre: m.genre,
-              coverPath: m.coverPath,
-              metadataExtracted: true,
-            ))
+        .map(
+          (m) => MusicFileWithSource(
+            file: FileItem(
+              name: m.fileName,
+              path: m.filePath,
+              size: m.size ?? 0,
+              isDirectory: false,
+              modifiedTime: m.modifiedTime,
+            ),
+            sourceId: m.sourceId,
+            title: m.title,
+            artist: m.artist,
+            album: m.album,
+            duration: m.duration,
+            year: m.year,
+            genre: m.genre,
+            coverPath: m.coverPath,
+            metadataExtracted: true,
+          ),
+        )
         .toList();
 
     if (!context.mounted) return;
-    AppError.fireAndForget(Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => CategoryDetailPage(
-          title: folderName,
-          subtitle: context.l10n.musicListSongCount(count),
-          tracks: musicTracks,
-          icon: Icons.folder_rounded,
-          color: AppColors.fileAudio,
+    AppError.fireAndForget(
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => CategoryDetailPage(
+            title: folderName,
+            subtitle: context.l10n.musicListSongCount(count),
+            tracks: musicTracks,
+            icon: Icons.folder_rounded,
+            color: AppColors.fileAudio,
+          ),
         ),
       ),
-    ));
+    );
   }
 }
 
 /// 流派视图 - 网格布局
 /// 直接从数据库获取全量流派数据，确保统计准确
 class _GenresView extends ConsumerWidget {
-  const _GenresView({
-    required this.isDark,
-  });
+  const _GenresView({required this.isDark});
 
   final bool isDark;
 
@@ -6452,12 +6916,20 @@ class _GenresView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(
+            context.l10n.musicLoadFailed,
+            Icons.error_outline_rounded,
+            isDark,
+          );
         }
 
         final genres = snapshot.data ?? [];
         if (genres.isEmpty) {
-          return _buildEmptyView(context.l10n.musicGenreEmpty, Icons.category_outlined, isDark);
+          return _buildEmptyView(
+            context.l10n.musicGenreEmpty,
+            Icons.category_outlined,
+            isDark,
+          );
         }
 
         final gridConfig = GridHelper.getMusicCategoryGridConfig(context);
@@ -6517,78 +6989,81 @@ class _GenreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-          builder: (_) => CategoryDetailPage(
-            title: genreName,
-            subtitle: context.l10n.musicListSongCount(tracks.length),
-            tracks: tracks,
-            icon: Icons.category_rounded,
-            color: color,
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => CategoryDetailPage(
+              title: genreName,
+              subtitle: context.l10n.musicListSongCount(tracks.length),
+              tracks: tracks,
+              icon: Icons.category_rounded,
+              color: color,
+            ),
           ),
         ),
-      ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: 0.9),
+                color.withValues(alpha: 0.6)
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // 装饰性图标
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: Icon(
-                Icons.category_rounded,
-                size: 60,
-                color: Colors.white.withValues(alpha: 0.15),
+          child: Stack(
+            children: [
+              // 装饰性图标
+              Positioned(
+                right: -10,
+                bottom: -10,
+                child: Icon(
+                  Icons.category_rounded,
+                  size: 60,
+                  color: Colors.white.withValues(alpha: 0.15),
+                ),
               ),
-            ),
-            // 内容
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    genreName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              // 内容
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      genreName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    context.l10n.musicSongCountLabel(tracks.length),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.8),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.l10n.musicSongCountLabel(tracks.length),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
 }
 
 /// 流派卡片（数据库版）- 点击时从数据库加载歌曲
@@ -6607,114 +7082,119 @@ class _GenreCardFromDb extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
-      onTap: () => _navigateToGenre(context),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+        onTap: () => _navigateToGenre(context),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                color.withValues(alpha: 0.9),
+                color.withValues(alpha: 0.6)
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // 装饰性图标
-            Positioned(
-              right: -10,
-              bottom: -10,
-              child: Icon(
-                Icons.category_rounded,
-                size: 60,
-                color: Colors.white.withValues(alpha: 0.15),
+          child: Stack(
+            children: [
+              // 装饰性图标
+              Positioned(
+                right: -10,
+                bottom: -10,
+                child: Icon(
+                  Icons.category_rounded,
+                  size: 60,
+                  color: Colors.white.withValues(alpha: 0.15),
+                ),
               ),
-            ),
-            // 内容
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    genreName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              // 内容
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      genreName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    context.l10n.musicSongCountLabel(count),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.8),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.l10n.musicSongCountLabel(count),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
 
   Future<void> _navigateToGenre(BuildContext context) async {
     final db = MusicDatabaseService();
     final tracks = await db.getByGenre(genreName, limit: 10000);
     final musicTracks = tracks
-        .map((m) => MusicFileWithSource(
-              file: FileItem(
-                name: m.fileName,
-                path: m.filePath,
-                size: m.size ?? 0,
-                isDirectory: false,
-                modifiedTime: m.modifiedTime,
-              ),
-              sourceId: m.sourceId,
-              title: m.title,
-              artist: m.artist,
-              album: m.album,
-              duration: m.duration,
-              year: m.year,
-              genre: m.genre,
-              coverPath: m.coverPath,
-              metadataExtracted: true,
-            ))
+        .map(
+          (m) => MusicFileWithSource(
+            file: FileItem(
+              name: m.fileName,
+              path: m.filePath,
+              size: m.size ?? 0,
+              isDirectory: false,
+              modifiedTime: m.modifiedTime,
+            ),
+            sourceId: m.sourceId,
+            title: m.title,
+            artist: m.artist,
+            album: m.album,
+            duration: m.duration,
+            year: m.year,
+            genre: m.genre,
+            coverPath: m.coverPath,
+            metadataExtracted: true,
+          ),
+        )
         .toList();
 
     if (!context.mounted) return;
-    AppError.fireAndForget(Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => CategoryDetailPage(
-          title: genreName,
-          subtitle: context.l10n.musicListSongCount(count),
-          tracks: musicTracks,
-          icon: Icons.category_rounded,
-          color: color,
+    AppError.fireAndForget(
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => CategoryDetailPage(
+            title: genreName,
+            subtitle: context.l10n.musicListSongCount(count),
+            tracks: musicTracks,
+            icon: Icons.category_rounded,
+            color: color,
+          ),
         ),
       ),
-    ));
+    );
   }
 }
 
 /// 年代视图 - 网格布局
 /// 直接从数据库获取全量年代数据，确保统计准确
 class _YearsView extends ConsumerWidget {
-  const _YearsView({
-    required this.isDark,
-  });
+  const _YearsView({required this.isDark});
 
   final bool isDark;
 
@@ -6736,12 +7216,20 @@ class _YearsView extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return _buildEmptyView(context.l10n.musicLoadFailed, Icons.error_outline_rounded, isDark);
+          return _buildEmptyView(
+            context.l10n.musicLoadFailed,
+            Icons.error_outline_rounded,
+            isDark,
+          );
         }
 
         final yearData = snapshot.data ?? [];
         if (yearData.isEmpty) {
-          return _buildEmptyView(context.l10n.musicYearEmpty, Icons.date_range_rounded, isDark);
+          return _buildEmptyView(
+            context.l10n.musicYearEmpty,
+            Icons.date_range_rounded,
+            isDark,
+          );
         }
 
         // 按年代（每10年）重新分组
@@ -6751,7 +7239,7 @@ class _YearsView extends ConsumerWidget {
           final decadeLabel = '${decade}s';
           decadeMap[decadeLabel] = (decadeMap[decadeLabel] ?? 0) + item.count;
         }
-        
+
         final decades = decadeMap.entries.toList()
           ..sort((a, b) => b.key.compareTo(a.key));
 
@@ -6818,8 +7306,11 @@ class _YearCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final unknownYear = context.l10n.musicYearUnknown;
-    final displayTitle = yearLabel == unknownYear ? yearLabel : context.l10n.musicYearLabel(yearLabel);
-    final displayYear = yearLabel == '未知年代' ? '?' : yearLabel.replaceAll('s', '');
+    final displayTitle = yearLabel == unknownYear
+        ? yearLabel
+        : context.l10n.musicYearLabel(yearLabel);
+    final displayYear =
+        yearLabel == '未知年代' ? '?' : yearLabel.replaceAll('s', '');
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -6837,7 +7328,10 @@ class _YearCard extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+            colors: [
+              color.withValues(alpha: 0.9),
+              color.withValues(alpha: 0.6),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -6873,7 +7367,10 @@ class _YearCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
@@ -6928,7 +7425,10 @@ class _YearCardFromDb extends ConsumerWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+            colors: [
+              color.withValues(alpha: 0.9),
+              color.withValues(alpha: 0.6),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -6964,7 +7464,10 @@ class _YearCardFromDb extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
@@ -7000,48 +7503,52 @@ class _YearCardFromDb extends ConsumerWidget {
     // 获取该年代范围内的所有年份
     final decadeStart = int.tryParse(decadeLabel.replaceAll('s', '')) ?? 2000;
     final decadeEnd = decadeStart + 9;
-    
+
     // 从数据库获取该年代所有歌曲
     final allTracks = <MusicTrackEntity>[];
     for (var year = decadeStart; year <= decadeEnd; year++) {
       final tracks = await db.getByYear(year, limit: 10000);
       allTracks.addAll(tracks);
     }
-    
+
     final musicTracks = allTracks
-        .map((m) => MusicFileWithSource(
-              file: FileItem(
-                name: m.fileName,
-                path: m.filePath,
-                size: m.size ?? 0,
-                isDirectory: false,
-                modifiedTime: m.modifiedTime,
-              ),
-              sourceId: m.sourceId,
-              title: m.title,
-              artist: m.artist,
-              album: m.album,
-              duration: m.duration,
-              year: m.year,
-              genre: m.genre,
-              coverPath: m.coverPath,
-              metadataExtracted: true,
-            ))
+        .map(
+          (m) => MusicFileWithSource(
+            file: FileItem(
+              name: m.fileName,
+              path: m.filePath,
+              size: m.size ?? 0,
+              isDirectory: false,
+              modifiedTime: m.modifiedTime,
+            ),
+            sourceId: m.sourceId,
+            title: m.title,
+            artist: m.artist,
+            album: m.album,
+            duration: m.duration,
+            year: m.year,
+            genre: m.genre,
+            coverPath: m.coverPath,
+            metadataExtracted: true,
+          ),
+        )
         .toList();
 
     if (!context.mounted) return;
-    AppError.fireAndForget(Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => CategoryDetailPage(
-          title: context.l10n.musicDecadeCategoryTitle(decadeLabel),
-          subtitle: context.l10n.musicListSongCount(count),
-          tracks: musicTracks,
-          icon: Icons.date_range_rounded,
-          color: color,
+    AppError.fireAndForget(
+      Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => CategoryDetailPage(
+            title: context.l10n.musicDecadeCategoryTitle(decadeLabel),
+            subtitle: context.l10n.musicListSongCount(count),
+            tracks: musicTracks,
+            icon: Icons.date_range_rounded,
+            color: color,
+          ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -7057,7 +7564,11 @@ class _FavoritesView extends ConsumerWidget {
     final favorites = favoritesState.favorites;
 
     if (favorites.isEmpty) {
-      return _buildEmptyView(context.l10n.musicFavoritesEmpty, Icons.favorite_outline_rounded, isDark);
+      return _buildEmptyView(
+        context.l10n.musicFavoritesEmpty,
+        Icons.favorite_outline_rounded,
+        isDark,
+      );
     }
 
     return ListView.builder(
@@ -7072,10 +7583,7 @@ class _FavoritesView extends ConsumerWidget {
 }
 
 class _FavoriteTrackTile extends ConsumerWidget {
-  const _FavoriteTrackTile({
-    required this.item,
-    required this.isDark,
-  });
+  const _FavoriteTrackTile({required this.item, required this.isDark});
 
   final MusicItem item;
   final bool isDark;
@@ -7136,20 +7644,26 @@ class _FavoriteTrackTile extends ConsumerWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontWeight: isPlaying ? FontWeight.w600 : FontWeight.w500,
-            color: isPlaying ? AppColors.fileAudio : (isDark ? Colors.white : Colors.black87),
+            color: isPlaying
+                ? AppColors.fileAudio
+                : (isDark ? Colors.white : Colors.black87),
           ),
         ),
         subtitle: Text(
           item.displayArtist,
           style: TextStyle(
             fontSize: 12,
-            color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+            color: isDark
+                ? AppColors.darkOnSurfaceVariant
+                : AppColors.lightOnSurfaceVariant,
           ),
         ),
         trailing: IconButton(
           icon: Icon(Icons.favorite_rounded, color: AppColors.error),
           onPressed: () async {
-            await ref.read(musicFavoritesProvider.notifier).toggleFavorite(item);
+            await ref
+                .read(musicFavoritesProvider.notifier)
+                .toggleFavorite(item);
           },
         ),
       ),
@@ -7213,7 +7727,11 @@ class _RecentView extends ConsumerWidget {
     final recentTracks = ref.watch(recentTracksProvider);
 
     if (recentTracks.isEmpty) {
-      return _buildEmptyView(context.l10n.musicRecentEmpty, Icons.history_rounded, isDark);
+      return _buildEmptyView(
+        context.l10n.musicRecentEmpty,
+        Icons.history_rounded,
+        isDark,
+      );
     }
 
     return ListView.builder(
@@ -7228,10 +7746,7 @@ class _RecentView extends ConsumerWidget {
 }
 
 class _RecentTrackTile extends ConsumerWidget {
-  const _RecentTrackTile({
-    required this.item,
-    required this.isDark,
-  });
+  const _RecentTrackTile({required this.item, required this.isDark});
 
   final MusicItem item;
   final bool isDark;
@@ -7292,19 +7807,25 @@ class _RecentTrackTile extends ConsumerWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontWeight: isPlaying ? FontWeight.w600 : FontWeight.w500,
-            color: isPlaying ? AppColors.fileAudio : (isDark ? Colors.white : Colors.black87),
+            color: isPlaying
+                ? AppColors.fileAudio
+                : (isDark ? Colors.white : Colors.black87),
           ),
         ),
         subtitle: Text(
           item.displayArtist,
           style: TextStyle(
             fontSize: 12,
-            color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+            color: isDark
+                ? AppColors.darkOnSurfaceVariant
+                : AppColors.lightOnSurfaceVariant,
           ),
         ),
         trailing: Icon(
           Icons.play_arrow_rounded,
-          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+          color: isDark
+              ? AppColors.darkOnSurfaceVariant
+              : AppColors.lightOnSurfaceVariant,
         ),
       ),
     );
@@ -7352,10 +7873,7 @@ class _RecentTrackTile extends ConsumerWidget {
 
       return Stack(
         fit: StackFit.expand,
-        children: [
-          coverImage,
-          if (isPlaying) _buildPlayingOverlay(),
-        ],
+        children: [coverImage, if (isPlaying) _buildPlayingOverlay()],
       );
     }
 
@@ -7374,11 +7892,7 @@ class _RecentTrackTile extends ConsumerWidget {
   Widget _buildPlayingOverlay() => ColoredBox(
         color: Colors.black.withValues(alpha: 0.3),
         child: const Center(
-          child: Icon(
-            Icons.equalizer_rounded,
-            color: Colors.white,
-            size: 24,
-          ),
+          child: Icon(Icons.equalizer_rounded, color: Colors.white, size: 24),
         ),
       );
 }
@@ -7414,7 +7928,11 @@ class _PlaylistsView extends ConsumerWidget {
         // 歌单列表
         Expanded(
           child: playlists.isEmpty
-              ? _buildEmptyView(context.l10n.musicPlaylistEmpty, Icons.playlist_play_rounded, isDark)
+              ? _buildEmptyView(
+                  context.l10n.musicPlaylistEmpty,
+                  Icons.playlist_play_rounded,
+                  isDark,
+                )
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: playlists.length,
@@ -7492,7 +8010,10 @@ class _ImportPlaylistButton extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              context.l10n.musicPlaylistImportSuccess(imported.name, imported.trackCount),
+              context.l10n.musicPlaylistImportSuccess(
+                imported.name,
+                imported.trackCount,
+              ),
             ),
           ),
         );
@@ -7522,18 +8043,13 @@ class _CreatePlaylistButton extends ConsumerWidget {
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.3),
-              ),
+              border:
+                  Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.add_rounded,
-                  color: AppColors.primary,
-                  size: 22,
-                ),
+                Icon(Icons.add_rounded, color: AppColors.primary, size: 22),
                 const SizedBox(width: 8),
                 Text(
                   context.l10n.musicPlaylistCreateNewButton,
@@ -7573,7 +8089,9 @@ class _CreatePlaylistButton extends ConsumerWidget {
             onPressed: () async {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                await ref.read(playlistProvider.notifier).createPlaylist(name: name);
+                await ref
+                    .read(playlistProvider.notifier)
+                    .createPlaylist(name: name);
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
@@ -7589,10 +8107,7 @@ class _CreatePlaylistButton extends ConsumerWidget {
 
 /// 歌单列表项
 class _PlaylistTile extends ConsumerWidget {
-  const _PlaylistTile({
-    required this.playlist,
-    required this.isDark,
-  });
+  const _PlaylistTile({required this.playlist, required this.isDark});
 
   final PlaylistEntry playlist;
   final bool isDark;
@@ -7646,13 +8161,17 @@ class _PlaylistTile extends ConsumerWidget {
             context.l10n.musicSongCountLabel(playlist.trackCount),
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant,
             ),
           ),
           trailing: PopupMenuButton<String>(
             icon: Icon(
               Icons.more_vert_rounded,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant,
             ),
             onSelected: (value) => _handleMenuAction(context, ref, value),
             itemBuilder: (context) => [
@@ -7670,9 +8189,13 @@ class _PlaylistTile extends ConsumerWidget {
                 value: 'delete',
                 child: Row(
                   children: [
-                    Icon(Icons.delete_rounded, size: 20, color: AppColors.error),
+                    Icon(Icons.delete_rounded,
+                        size: 20, color: AppColors.error),
                     SizedBox(width: 12),
-                    Text(context.l10n.musicPlaylistContextMenuDelete, style: TextStyle(color: AppColors.error)),
+                    Text(
+                      context.l10n.musicPlaylistContextMenuDelete,
+                      style: TextStyle(color: AppColors.error),
+                    ),
                   ],
                 ),
               ),
@@ -7718,7 +8241,9 @@ class _PlaylistTile extends ConsumerWidget {
             onPressed: () async {
               final name = controller.text.trim();
               if (name.isNotEmpty && name != playlist.name) {
-                await ref.read(playlistProvider.notifier).renamePlaylist(playlist.id, name);
+                await ref
+                    .read(playlistProvider.notifier)
+                    .renamePlaylist(playlist.id, name);
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
@@ -7743,11 +8268,11 @@ class _PlaylistTile extends ConsumerWidget {
             child: Text(context.l10n.musicPlaylistCreateCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () async {
-              await ref.read(playlistProvider.notifier).deletePlaylist(playlist.id);
+              await ref
+                  .read(playlistProvider.notifier)
+                  .deletePlaylist(playlist.id);
               if (context.mounted) {
                 Navigator.pop(context);
               }
@@ -7774,41 +8299,43 @@ class _SortDirectionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
-                : Colors.grey[100],
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                direction == SortDirection.ascending
-                    ? Icons.arrow_upward_rounded
-                    : Icons.arrow_downward_rounded,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                direction == SortDirection.ascending ? context.l10n.musicSortDirectionAscending : context.l10n.musicSortDirectionDescending,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.white70 : Colors.black87,
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
+                  : Colors.grey[100],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  direction == SortDirection.ascending
+                      ? Icons.arrow_upward_rounded
+                      : Icons.arrow_downward_rounded,
+                  size: 16,
+                  color: AppColors.primary,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  direction == SortDirection.ascending
+                      ? context.l10n.musicSortDirectionAscending
+                      : context.l10n.musicSortDirectionDescending,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
 }
 
 /// 排序选项列表项
@@ -7827,38 +8354,38 @@ class _SortOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withValues(alpha: 0.15)
-              : (isDark ? Colors.grey[800] : Colors.grey[100]),
-          borderRadius: BorderRadius.circular(10),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.15)
+                : (isDark ? Colors.grey[800] : Colors.grey[100]),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            option.icon,
+            color: isSelected
+                ? AppColors.primary
+                : (isDark ? Colors.white70 : Colors.black54),
+            size: 20,
+          ),
         ),
-        child: Icon(
-          option.icon,
-          color: isSelected
-              ? AppColors.primary
-              : (isDark ? Colors.white70 : Colors.black54),
-          size: 20,
+        title: Text(
+          option.label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected
+                ? AppColors.primary
+                : (isDark ? Colors.white : Colors.black87),
+          ),
         ),
-      ),
-      title: Text(
-        option.label,
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          color: isSelected
-              ? AppColors.primary
-              : (isDark ? Colors.white : Colors.black87),
-        ),
-      ),
-      trailing: isSelected
-          ? Icon(Icons.check_rounded, color: AppColors.primary, size: 22)
-          : null,
-      onTap: onTap,
-    );
+        trailing: isSelected
+            ? Icon(Icons.check_rounded, color: AppColors.primary, size: 22)
+            : null,
+        onTap: onTap,
+      );
 }
 
 /// Spotify 风格播放按钮
@@ -7879,55 +8406,55 @@ class _SpotifyPlayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(24),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: isPrimary
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primary, AppColors.secondary],
-                  )
-                : null,
-            color: isPrimary
-                ? null
-                : (isDark
-                    ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.grey[200]),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  color: isPrimary
-                      ? Colors.white
-                      : (isDark ? Colors.white : Colors.black87),
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: TextStyle(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(24),
+          child: Ink(
+            decoration: BoxDecoration(
+              gradient: isPrimary
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.primary, AppColors.secondary],
+                    )
+                  : null,
+              color: isPrimary
+                  ? null
+                  : (isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.grey[200]),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
                     color: isPrimary
                         ? Colors.white
                         : (isDark ? Colors.white : Colors.black87),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    size: 20,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: isPrimary
+                          ? Colors.white
+                          : (isDark ? Colors.white : Colors.black87),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
 }
 
 /// Spotify 风格图标按钮（带文字）
@@ -7946,47 +8473,44 @@ class _SpotifyIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isDark ? Colors.white60 : Colors.black54,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
                   color: isDark ? Colors.white60 : Colors.black54,
                 ),
-              ),
-              const SizedBox(width: 2),
-              Icon(
-                Icons.arrow_drop_down_rounded,
-                size: 18,
-                color: isDark ? Colors.white60 : Colors.black54,
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(
+                  Icons.arrow_drop_down_rounded,
+                  size: 18,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
 }
 
 /// 表格头部
 class _TableHeader extends StatelessWidget {
-  const _TableHeader({
-    required this.title,
-    this.align = TextAlign.left,
-  });
+  const _TableHeader({required this.title, this.align = TextAlign.left});
 
   final String title;
   final TextAlign align;
@@ -8045,7 +8569,9 @@ class _MusicTableRow extends ConsumerWidget {
             color: isPlaying
                 ? colorScheme.primary.withValues(alpha: 0.1)
                 : isEven
-                    ? (isDark ? Colors.white.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.02))
+                    ? (isDark
+                        ? Colors.white.withValues(alpha: 0.02)
+                        : Colors.black.withValues(alpha: 0.02))
                     : Colors.transparent,
           ),
           child: Row(
@@ -8054,7 +8580,11 @@ class _MusicTableRow extends ConsumerWidget {
               SizedBox(
                 width: 40,
                 child: isPlaying
-                    ? Icon(Icons.volume_up_rounded, size: 16, color: colorScheme.primary)
+                    ? Icon(
+                        Icons.volume_up_rounded,
+                        size: 16,
+                        color: colorScheme.primary,
+                      )
                     : Text(
                         '${index + 1}',
                         style: TextStyle(
@@ -8128,7 +8658,10 @@ class _MusicTableRow extends ConsumerWidget {
                     color: isDark ? Colors.white38 : Colors.black38,
                   ),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                 ),
               ),
             ],
@@ -8167,24 +8700,45 @@ class _MusicTableRow extends ConsumerWidget {
         position.dy + size.height,
       ),
       items: [
-        PopupMenuItem(value: 'play', child: Text(context.l10n.musicTableHeaderPlay)),
-        PopupMenuItem(value: 'queue', child: Text(context.l10n.musicTableMenuAddQueue)),
-        PopupMenuItem(value: 'playlist', child: Text(context.l10n.musicTableMenuAddPlaylist)),
+        PopupMenuItem(
+          value: 'play',
+          child: Text(context.l10n.musicTableHeaderPlay),
+        ),
+        PopupMenuItem(
+          value: 'queue',
+          child: Text(context.l10n.musicTableMenuAddQueue),
+        ),
+        PopupMenuItem(
+          value: 'playlist',
+          child: Text(context.l10n.musicTableMenuAddPlaylist),
+        ),
         const PopupMenuDivider(),
-        PopupMenuItem(value: 'artist', child: Text(context.l10n.musicTableMenuViewArtist)),
-        PopupMenuItem(value: 'album', child: Text(context.l10n.musicTableMenuViewAlbum)),
+        PopupMenuItem(
+          value: 'artist',
+          child: Text(context.l10n.musicTableMenuViewArtist),
+        ),
+        PopupMenuItem(
+          value: 'album',
+          child: Text(context.l10n.musicTableMenuViewAlbum),
+        ),
       ],
     ).then((value) {
       if (value == null) return;
       switch (value) {
         case 'play':
-          AppError.fireAndForget(_playTrack(context, ref), action: 'musicList.playTrack');
+          AppError.fireAndForget(
+            _playTrack(context, ref),
+            action: 'musicList.playTrack',
+          );
         case 'queue':
           ref.read(playQueueProvider.notifier).addToQueue(track.toMusicItem());
           if (context.mounted) {
             final l = AppLocalizations.of(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l.musicQueueAddedToast), duration: const Duration(seconds: 1)),
+              SnackBar(
+                content: Text(l.musicQueueAddedToast),
+                duration: const Duration(seconds: 1),
+              ),
             );
           }
         // 其他操作...
@@ -8220,7 +8774,8 @@ class _ModernMusicTile extends ConsumerWidget {
     // 检查源是否已连接
     final connections = ref.watch(activeConnectionsProvider);
     final connection = connections[track.sourceId];
-    final isConnected = connection != null && connection.status == SourceStatus.connected;
+    final isConnected =
+        connection != null && connection.status == SourceStatus.connected;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -8250,15 +8805,19 @@ class _ModernMusicTile extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: isDark
-                                ? Colors.grey[500]
-                                : Colors.grey[600],
+                            color: isDark ? Colors.grey[500] : Colors.grey[600],
                           ),
                         ),
                 ),
                 const SizedBox(width: 12),
                 // 封面
-                _buildCover(effectiveCoverPath, coverData, title, isPlaying, isConnected),
+                _buildCover(
+                  effectiveCoverPath,
+                  coverData,
+                  title,
+                  isPlaying,
+                  isConnected,
+                ),
                 const SizedBox(width: 14),
                 // 标题和艺术家
                 Expanded(
@@ -8272,12 +8831,15 @@ class _ModernMusicTile extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 15,
-                          fontWeight: isPlaying ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight:
+                              isPlaying ? FontWeight.w600 : FontWeight.w500,
                           color: isPlaying
                               ? AppColors.primary
                               : isConnected
                                   ? (isDark ? Colors.white : Colors.black87)
-                                  : (isDark ? Colors.grey[600] : Colors.grey[500]),
+                                  : (isDark
+                                      ? Colors.grey[600]
+                                      : Colors.grey[500]),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -8285,9 +8847,14 @@ class _ModernMusicTile extends ConsumerWidget {
                         children: [
                           if (!isConnected) ...[
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: AppColors.warning.withValues(alpha: 0.15),
+                                color: AppColors.warning.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -8308,7 +8875,9 @@ class _ModernMusicTile extends ConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: isDark ? Colors.grey[500] : Colors.grey[600],
+                                color: isDark
+                                    ? Colors.grey[500]
+                                    : Colors.grey[600],
                               ),
                             ),
                           ),
@@ -8317,14 +8886,18 @@ class _ModernMusicTile extends ConsumerWidget {
                               ' · ',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: isDark ? Colors.grey[600] : Colors.grey[500],
+                                color: isDark
+                                    ? Colors.grey[600]
+                                    : Colors.grey[500],
                               ),
                             ),
                             Text(
                               track.durationText,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: isDark ? Colors.grey[600] : Colors.grey[500],
+                                color: isDark
+                                    ? Colors.grey[600]
+                                    : Colors.grey[500],
                               ),
                             ),
                           ],
@@ -8351,7 +8924,13 @@ class _ModernMusicTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildCover(String? coverPath, List<int>? coverData, String title, bool isPlaying, bool isConnected) {
+  Widget _buildCover(
+    String? coverPath,
+    List<int>? coverData,
+    String title,
+    bool isPlaying,
+    bool isConnected,
+  ) {
     final size = 52.0;
 
     return Container(
@@ -8359,7 +8938,9 @@ class _ModernMusicTile extends ConsumerWidget {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+        color: isDark
+            ? AppColors.darkSurfaceVariant
+            : AppColors.lightSurfaceVariant,
         boxShadow: isPlaying
             ? [
                 BoxShadow(
@@ -8376,16 +8957,18 @@ class _ModernMusicTile extends ConsumerWidget {
               File(coverPath),
               fit: BoxFit.cover,
               gaplessPlayback: true,
-              errorBuilder: (_, _, _) => _buildFallbackCover(title, isConnected),
+              errorBuilder: (_, _, _) =>
+                  _buildFallbackCover(title, isConnected),
             )
           : coverData != null
               ? Image.memory(
                   Uint8List.fromList(coverData),
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
-                  errorBuilder: (_, _, _) => _buildFallbackCover(title, isConnected),
-            )
-          : _buildFallbackCover(title, isConnected),
+                  errorBuilder: (_, _, _) =>
+                      _buildFallbackCover(title, isConnected),
+                )
+              : _buildFallbackCover(title, isConnected),
     );
   }
 
@@ -8407,10 +8990,7 @@ class _ModernMusicTile extends ConsumerWidget {
             fontSize: 22,
             fontWeight: FontWeight.bold,
             shadows: [
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 4,
-              ),
+              Shadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4),
             ],
           ),
         ),
@@ -8456,21 +9036,25 @@ class _ModernMusicTile extends ConsumerWidget {
         final conn = connections[t.sourceId];
         if (conn == null || conn.status != SourceStatus.connected) continue;
         final trackUrl = await conn.adapter.fileSystem.getFileUrl(t.path);
-        queue.add(MusicItem.fromFileItem(
-          t.file,
-          trackUrl,
-          sourceId: t.sourceId,
-          title: t.title,
-          artist: t.artist,
-          album: t.album,
-          durationMs: t.duration,
-          coverData: t.coverData,
-          coverUrl: t.coverFileUrl,
-        ));
+        queue.add(
+          MusicItem.fromFileItem(
+            t.file,
+            trackUrl,
+            sourceId: t.sourceId,
+            title: t.title,
+            artist: t.artist,
+            album: t.album,
+            durationMs: t.duration,
+            coverData: t.coverData,
+            coverUrl: t.coverFileUrl,
+          ),
+        );
       }
 
       ref.read(playQueueProvider.notifier).setQueue(queue);
-      ref.read(musicPlayerControllerProvider.notifier).updateCurrentIndex(index);
+      ref
+          .read(musicPlayerControllerProvider.notifier)
+          .updateCurrentIndex(index);
       await ref.read(musicPlayerControllerProvider.notifier).play(musicItem);
 
       if (context.mounted) {
@@ -8506,7 +9090,9 @@ class _ModernMusicTile extends ConsumerWidget {
                     height: 48,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
-                      color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+                      color: isDark
+                          ? AppColors.darkSurfaceVariant
+                          : AppColors.lightSurfaceVariant,
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: track.coverFile != null
@@ -8515,7 +9101,9 @@ class _ModernMusicTile extends ConsumerWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (_, _, _) => Icon(
                               Icons.music_note_rounded,
-                              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                              color: isDark
+                                  ? AppColors.darkOnSurfaceVariant
+                                  : AppColors.lightOnSurfaceVariant,
                             ),
                           )
                         : track.coverData != null
@@ -8524,12 +9112,16 @@ class _ModernMusicTile extends ConsumerWidget {
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, _, _) => Icon(
                                   Icons.music_note_rounded,
-                                  color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                                  color: isDark
+                                      ? AppColors.darkOnSurfaceVariant
+                                      : AppColors.lightOnSurfaceVariant,
                                 ),
                               )
                             : Icon(
                                 Icons.music_note_rounded,
-                                color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                                color: isDark
+                                    ? AppColors.darkOnSurfaceVariant
+                                    : AppColors.lightOnSurfaceVariant,
                               ),
                   ),
                   const SizedBox(width: 12),
@@ -8552,7 +9144,9 @@ class _ModernMusicTile extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13,
-                            color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                            color: isDark
+                                ? AppColors.darkOnSurfaceVariant
+                                : AppColors.lightOnSurfaceVariant,
                           ),
                         ),
                       ],
@@ -8611,7 +9205,9 @@ class _ModernMusicTile extends ConsumerWidget {
     final currentIndex = ref.read(musicPlayerControllerProvider).currentIndex;
     ref.read(playQueueProvider.notifier).addNext(musicItem, currentIndex);
     if (context.mounted) {
-      context.showSuccessToast(context.l10n.musicAddToPlayNextToast(track.displayTitle));
+      context.showSuccessToast(
+        context.l10n.musicAddToPlayNextToast(track.displayTitle),
+      );
     }
   }
 
@@ -8620,18 +9216,26 @@ class _ModernMusicTile extends ConsumerWidget {
     final musicItem = track.toMusicItem();
     ref.read(playQueueProvider.notifier).addToQueue(musicItem);
     if (context.mounted) {
-      context.showSuccessToast(context.l10n.musicAddToQueueToast(track.displayTitle));
+      context.showSuccessToast(
+        context.l10n.musicAddToQueueToast(track.displayTitle),
+      );
     }
   }
 
   /// 添加到收藏
   Future<void> _addToFavorites(BuildContext context, WidgetRef ref) async {
     final musicItem = track.toMusicItem();
-    final isFavorite = await ref.read(musicFavoritesProvider.notifier).toggleFavorite(musicItem);
+    final isFavorite = await ref
+        .read(musicFavoritesProvider.notifier)
+        .toggleFavorite(musicItem);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isFavorite ? context.l10n.musicAddToFavoritesSuccess : context.l10n.musicRemoveFromFavoritesSuccess),
+          content: Text(
+            isFavorite
+                ? context.l10n.musicAddToFavoritesSuccess
+                : context.l10n.musicRemoveFromFavoritesSuccess,
+          ),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
         ),
@@ -8702,13 +9306,17 @@ class _ModernMusicTile extends ConsumerWidget {
                       Icon(
                         Icons.queue_music_rounded,
                         size: 48,
-                        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                        color: isDark
+                            ? AppColors.darkOnSurfaceVariant
+                            : AppColors.lightOnSurfaceVariant,
                       ),
                       const SizedBox(height: 12),
                       Text(
                         context.l10n.musicBottomSheetEmptyNoPlaylist,
                         style: TextStyle(
-                          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+                          color: isDark
+                              ? AppColors.darkOnSurfaceVariant
+                              : AppColors.lightOnSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -8753,7 +9361,9 @@ class _ModernMusicTile extends ConsumerWidget {
                         ),
                       ),
                       subtitle: Text(
-                        context.l10n.musicPlaylistSongCountFormat(playlist.trackCount),
+                        context.l10n.musicPlaylistSongCountFormat(
+                          playlist.trackCount,
+                        ),
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.grey[500] : Colors.grey[600],
@@ -8761,14 +9371,17 @@ class _ModernMusicTile extends ConsumerWidget {
                       ),
                       onTap: () async {
                         Navigator.pop(dialogContext);
-                        await ref.read(playlistProvider.notifier).addToPlaylist(
-                          playlist.id,
-                          track.path,
-                        );
+                        await ref
+                            .read(playlistProvider.notifier)
+                            .addToPlaylist(playlist.id, track.path);
                         if (rootContext.mounted) {
                           ScaffoldMessenger.of(rootContext).showSnackBar(
                             SnackBar(
-                              content: Text(context.l10n.musicAddToPlaylistSuccess(playlist.name)),
+                              content: Text(
+                                context.l10n.musicAddToPlaylistSuccess(
+                                  playlist.name,
+                                ),
+                              ),
                               behavior: SnackBarBehavior.floating,
                               duration: const Duration(seconds: 2),
                             ),
@@ -8811,12 +9424,13 @@ class _ModernMusicTile extends ConsumerWidget {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
                 Navigator.pop(dialogContext);
-                final playlist = await ref.read(playlistProvider.notifier).createPlaylist(
-                  name: name,
-                  initialTracks: [track.path],
-                );
+                final playlist = await ref
+                    .read(playlistProvider.notifier)
+                    .createPlaylist(name: name, initialTracks: [track.path]);
                 if (context.mounted && playlist != null) {
-                  context.showSuccessToast(context.l10n.musicPlaylistCreatedToast(name));
+                  context.showSuccessToast(
+                    context.l10n.musicPlaylistCreatedToast(name),
+                  );
                 }
               }
             },
@@ -8858,8 +9472,8 @@ class _PlayingIndicatorState extends State<_PlayingIndicator>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) => Row(
+        animation: _controller,
+        builder: (context, child) => Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(3, (index) {
             final delay = index * 0.2;
@@ -8875,7 +9489,7 @@ class _PlayingIndicatorState extends State<_PlayingIndicator>
             );
           }),
         ),
-    );
+      );
 }
 
 /// 底部弹窗选项
@@ -8894,13 +9508,13 @@ class _BottomSheetOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-      leading: Icon(icon, color: isDark ? Colors.white70 : Colors.black87),
-      title: Text(
-        label,
-        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-      ),
-      onTap: onTap,
-    );
+        leading: Icon(icon, color: isDark ? Colors.white70 : Colors.black87),
+        title: Text(
+          label,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+        ),
+        onTap: onTap,
+      );
 }
 
 /// 紧凑型音乐列表项
@@ -8929,13 +9543,16 @@ class _CompactMusicTile extends ConsumerWidget {
     // 检查源是否已连接
     final connections = ref.watch(activeConnectionsProvider);
     final connection = connections[track.sourceId];
-    final isConnected = connection != null && connection.status == SourceStatus.connected;
+    final isConnected =
+        connection != null && connection.status == SourceStatus.connected;
 
     Widget buildFallbackIcon() => Icon(
           Icons.music_note_rounded,
           size: 20,
           color: isConnected
-              ? (isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant)
+              ? (isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant)
               : (isDark ? Colors.grey[700] : Colors.grey[350]),
         );
 
@@ -8948,7 +9565,9 @@ class _CompactMusicTile extends ConsumerWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+              color: isDark
+                  ? AppColors.darkSurfaceVariant
+                  : AppColors.lightSurfaceVariant,
               borderRadius: BorderRadius.circular(8),
             ),
             clipBehavior: Clip.antiAlias,
@@ -8958,7 +9577,8 @@ class _CompactMusicTile extends ConsumerWidget {
                     fit: BoxFit.cover,
                     width: 40,
                     height: 40,
-                    errorBuilder: (context, error, stackTrace) => buildFallbackIcon(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        buildFallbackIcon(),
                   )
                 : coverData != null
                     ? Image.memory(
@@ -8966,7 +9586,8 @@ class _CompactMusicTile extends ConsumerWidget {
                         fit: BoxFit.cover,
                         width: 40,
                         height: 40,
-                        errorBuilder: (context, error, stackTrace) => buildFallbackIcon(),
+                        errorBuilder: (context, error, stackTrace) =>
+                            buildFallbackIcon(),
                       )
                     : buildFallbackIcon(),
           ),
@@ -8985,11 +9606,7 @@ class _CompactMusicTile extends ConsumerWidget {
                     width: 2,
                   ),
                 ),
-                child: const Icon(
-                  Icons.link_off,
-                  size: 8,
-                  color: Colors.white,
-                ),
+                child: const Icon(Icons.link_off, size: 8, color: Colors.white),
               ),
             ),
         ],
@@ -9021,15 +9638,32 @@ class _CompactMusicTile extends ConsumerWidget {
         icon: Icon(
           Icons.more_vert_rounded,
           size: 20,
-          color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+          color: isDark
+              ? AppColors.darkOnSurfaceVariant
+              : AppColors.lightOnSurfaceVariant,
         ),
         itemBuilder: (context) => [
-          PopupMenuItem(value: 'play_next', child: Text(context.l10n.musicMenuPlayNext)),
-          PopupMenuItem(value: 'add_to_queue', child: Text(context.l10n.musicTableMenuAddQueue)),
-          PopupMenuItem(value: 'add_to_favorites', child: Text(context.l10n.musicMenuFavorite)),
-          PopupMenuItem(value: 'add_to_playlist', child: Text(context.l10n.musicMenuAddToPlaylist)),
+          PopupMenuItem(
+            value: 'play_next',
+            child: Text(context.l10n.musicMenuPlayNext),
+          ),
+          PopupMenuItem(
+            value: 'add_to_queue',
+            child: Text(context.l10n.musicTableMenuAddQueue),
+          ),
+          PopupMenuItem(
+            value: 'add_to_favorites',
+            child: Text(context.l10n.musicMenuFavorite),
+          ),
+          PopupMenuItem(
+            value: 'add_to_playlist',
+            child: Text(context.l10n.musicMenuAddToPlaylist),
+          ),
           const PopupMenuDivider(),
-          PopupMenuItem(value: 'manual_scrape', child: Text(context.l10n.musicMenuManualScrape)),
+          PopupMenuItem(
+            value: 'manual_scrape',
+            child: Text(context.l10n.musicMenuManualScrape),
+          ),
         ],
       ),
     );
@@ -9085,7 +9719,10 @@ class _CompactMusicTile extends ConsumerWidget {
 
       // 导航到播放器页面
       if (!context.mounted) return;
-      AppError.fireAndForget(MusicPlayerPage.open(context), action: 'musicList.openMusicPlayerPage');
+      AppError.fireAndForget(
+        MusicPlayerPage.open(context),
+        action: 'musicList.openMusicPlayerPage',
+      );
 
       // 在后台构建完整播放队列
       if (allTracks != null && allTracks!.isNotEmpty) {
@@ -9119,7 +9756,10 @@ class _CompactMusicTile extends ConsumerWidget {
       } else {
         // 以当前曲目为中心
         final halfSize = queueSize ~/ 2;
-        startIndex = (currentIndex - halfSize).clamp(0, allTracks!.length - queueSize);
+        startIndex = (currentIndex - halfSize).clamp(
+          0,
+          allTracks!.length - queueSize,
+        );
         endIndex = (startIndex + queueSize).clamp(0, allTracks!.length);
       }
 
@@ -9151,21 +9791,31 @@ class _CompactMusicTile extends ConsumerWidget {
 
       // 更新播放队列
       ref.read(playQueueProvider.notifier).setQueue(queue);
-      ref.read(musicPlayerControllerProvider.notifier).updateCurrentIndex(newCurrentIndex);
+      ref
+          .read(musicPlayerControllerProvider.notifier)
+          .updateCurrentIndex(newCurrentIndex);
       logger.d('_CompactMusicTile._buildPlayQueue: 队列构建完成，共 ${queue.length} 首');
     } on Exception catch (e) {
       logger.w('_CompactMusicTile._buildPlayQueue: 构建播放队列失败: $e');
     }
   }
 
-  Future<void> _handleAction(BuildContext context, WidgetRef ref, String action) async {
-    logger.i('_CompactMusicTile._handleAction: action=$action, track=${track.name}');
+  Future<void> _handleAction(
+    BuildContext context,
+    WidgetRef ref,
+    String action,
+  ) async {
+    logger.i(
+      '_CompactMusicTile._handleAction: action=$action, track=${track.name}',
+    );
 
     // 通过 sourceId 从已连接的源中获取适配器
     final connections = ref.read(activeConnectionsProvider);
     final connection = connections[track.sourceId];
     if (connection == null || connection.status != SourceStatus.connected) {
-      logger.e('_CompactMusicTile._handleAction: 源未连接 sourceId=${track.sourceId}');
+      logger.e(
+        '_CompactMusicTile._handleAction: 源未连接 sourceId=${track.sourceId}',
+      );
       if (context.mounted) {
         context.showWarningToast(context.l10n.musicSourceNotConnected);
       }
@@ -9188,47 +9838,55 @@ class _CompactMusicTile extends ConsumerWidget {
       );
 
       switch (action) {
-      case 'play_next':
-        final queue = ref.read(playQueueProvider);
-        final playerState = ref.read(musicPlayerControllerProvider);
-        if (queue.isEmpty) {
-          await ref.read(musicPlayerControllerProvider.notifier).play(musicItem);
-        } else {
-          final insertIndex = playerState.currentIndex + 1;
-          final newQueue = [...queue];
-          newQueue.insert(insertIndex.clamp(0, newQueue.length), musicItem);
-          ref.read(playQueueProvider.notifier).setQueue(newQueue);
-          if (context.mounted) {
-            context.showSuccessToast(context.l10n.musicToastPlayNextSuccess);
+        case 'play_next':
+          final queue = ref.read(playQueueProvider);
+          final playerState = ref.read(musicPlayerControllerProvider);
+          if (queue.isEmpty) {
+            await ref
+                .read(musicPlayerControllerProvider.notifier)
+                .play(musicItem);
+          } else {
+            final insertIndex = playerState.currentIndex + 1;
+            final newQueue = [...queue];
+            newQueue.insert(insertIndex.clamp(0, newQueue.length), musicItem);
+            ref.read(playQueueProvider.notifier).setQueue(newQueue);
+            if (context.mounted) {
+              context.showSuccessToast(context.l10n.musicToastPlayNextSuccess);
+            }
           }
-        }
-      case 'add_to_queue':
-        ref.read(playQueueProvider.notifier).addToQueue(musicItem);
-        if (context.mounted) {
-          context.showSuccessToast(context.l10n.musicToastQueueSuccess);
-        }
-      case 'add_to_favorites':
-        final isFav = await ref.read(musicFavoritesProvider.notifier).toggleFavorite(musicItem);
-        if (context.mounted) {
-          context.showSuccessToast(isFav ? context.l10n.musicToastFavoriteAdded : context.l10n.musicToastFavoriteRemoved);
-        }
-      case 'add_to_playlist':
-        if (context.mounted) {
-          // 使用 sourceId_path 格式唯一标识歌曲
-          final trackId = '${track.sourceId}_${track.path}';
-          _showAddToPlaylistSheet(context, ref, trackId);
-        }
-      case 'manual_scrape':
-        if (context.mounted) {
-          await Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => ManualMusicScraperPage(
-                music: musicItem,
-                fileSystem: adapter.fileSystem,
+        case 'add_to_queue':
+          ref.read(playQueueProvider.notifier).addToQueue(musicItem);
+          if (context.mounted) {
+            context.showSuccessToast(context.l10n.musicToastQueueSuccess);
+          }
+        case 'add_to_favorites':
+          final isFav = await ref
+              .read(musicFavoritesProvider.notifier)
+              .toggleFavorite(musicItem);
+          if (context.mounted) {
+            context.showSuccessToast(
+              isFav
+                  ? context.l10n.musicToastFavoriteAdded
+                  : context.l10n.musicToastFavoriteRemoved,
+            );
+          }
+        case 'add_to_playlist':
+          if (context.mounted) {
+            // 使用 sourceId_path 格式唯一标识歌曲
+            final trackId = '${track.sourceId}_${track.path}';
+            _showAddToPlaylistSheet(context, ref, trackId);
+          }
+        case 'manual_scrape':
+          if (context.mounted) {
+            await Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ManualMusicScraperPage(
+                  music: musicItem,
+                  fileSystem: adapter.fileSystem,
+                ),
               ),
-            ),
-          );
-        }
+            );
+          }
       }
     } on Exception catch (e, stackTrace) {
       logger.e('_CompactMusicTile._handleAction: 操作失败', e, stackTrace);
@@ -9238,7 +9896,11 @@ class _CompactMusicTile extends ConsumerWidget {
     }
   }
 
-  void _showAddToPlaylistSheet(BuildContext context, WidgetRef ref, String trackPath) {
+  void _showAddToPlaylistSheet(
+    BuildContext context,
+    WidgetRef ref,
+    String trackPath,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final playlistState = ref.read(playlistProvider);
 
@@ -9283,34 +9945,50 @@ class _CompactMusicTile extends ConsumerWidget {
             ),
             if (playlistState.playlists.isNotEmpty) ...[
               const Divider(),
-              ...playlistState.playlists.take(5).map((playlist) => ListTile(
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary.withValues(alpha: 0.7),
-                          AppColors.secondary.withValues(alpha: 0.7),
-                        ],
+              ...playlistState.playlists.take(5).map(
+                    (playlist) => ListTile(
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary.withValues(alpha: 0.7),
+                              AppColors.secondary.withValues(alpha: 0.7),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.queue_music_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(8),
+                      title: Text(
+                        playlist.name,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                      subtitle: Text(
+                        context.l10n.musicListSongCount(playlist.trackCount),
+                      ),
+                      onTap: () async {
+                        await ref
+                            .read(playlistProvider.notifier)
+                            .addToPlaylist(playlist.id, trackPath);
+                        if (sheetContext.mounted) {
+                          Navigator.pop(sheetContext);
+                          context.showSuccessToast(
+                            context.l10n.musicAddToPlaylistSuccess(
+                              playlist.name,
+                            ),
+                          );
+                        }
+                      },
                     ),
-                    child: const Icon(Icons.queue_music_rounded, color: Colors.white, size: 20),
                   ),
-                  title: Text(
-                    playlist.name,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                  ),
-                  subtitle: Text(context.l10n.musicListSongCount(playlist.trackCount)),
-                  onTap: () async {
-                    await ref.read(playlistProvider.notifier).addToPlaylist(playlist.id, trackPath);
-                    if (sheetContext.mounted) {
-                      Navigator.pop(sheetContext);
-                      context.showSuccessToast(context.l10n.musicAddToPlaylistSuccess(playlist.name));
-                    }
-                  },
-                )),
             ],
             const SizedBox(height: 16),
           ],
@@ -9319,7 +9997,11 @@ class _CompactMusicTile extends ConsumerWidget {
     );
   }
 
-  void _showCreatePlaylistSheet(BuildContext context, WidgetRef ref, String trackPath) {
+  void _showCreatePlaylistSheet(
+    BuildContext context,
+    WidgetRef ref,
+    String trackPath,
+  ) {
     final controller = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -9349,10 +10031,9 @@ class _CompactMusicTile extends ConsumerWidget {
             onPressed: () async {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                await ref.read(playlistProvider.notifier).createPlaylist(
-                      name: name,
-                      initialTracks: [trackPath],
-                    );
+                await ref
+                    .read(playlistProvider.notifier)
+                    .createPlaylist(name: name, initialTracks: [trackPath]);
                 if (dialogContext.mounted) {
                   Navigator.pop(dialogContext);
                   final l = AppLocalizations.of(context);
@@ -9379,28 +10060,24 @@ class _CompactMusicTile extends ConsumerWidget {
 
 /// 全部播放按钮
 class _PlayAllButton extends ConsumerWidget {
-  const _PlayAllButton({
-    required this.tracks,
-    required this.isDark,
-  });
+  const _PlayAllButton({required this.tracks, required this.isDark});
 
   final List<MusicFileWithSource> tracks;
   final bool isDark;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => ElevatedButton.icon(
-      onPressed: () => _playAll(context, ref),
-      icon: const Icon(Icons.play_arrow_rounded, size: 20),
-      label: Text(context.l10n.musicPlayAllButtonLabel),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+        onPressed: () => _playAll(context, ref),
+        icon: const Icon(Icons.play_arrow_rounded, size: 20),
+        label: Text(context.l10n.musicPlayAllButtonLabel),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-      ),
-    );
+      );
 
   Future<void> _playAll(BuildContext context, WidgetRef ref) async {
     if (tracks.isEmpty) return;
@@ -9415,24 +10092,28 @@ class _PlayAllButton extends ConsumerWidget {
         continue; // 跳过未连接源的歌曲
       }
       final url = await connection.adapter.fileSystem.getFileUrl(track.path);
-      musicItems.add(MusicItem.fromFileItem(
-        track.file,
-        url,
-        sourceId: track.sourceId,
-        title: track.title,
-        artist: track.artist,
-        album: track.album,
-        durationMs: track.duration,
-        coverData: track.coverData,
-        coverUrl: track.coverFileUrl,
-      ));
+      musicItems.add(
+        MusicItem.fromFileItem(
+          track.file,
+          url,
+          sourceId: track.sourceId,
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+          durationMs: track.duration,
+          coverData: track.coverData,
+          coverUrl: track.coverFileUrl,
+        ),
+      );
     }
 
     if (musicItems.isEmpty) return;
 
     // 设置播放队列并播放第一首
     ref.read(playQueueProvider.notifier).setQueue(musicItems);
-    await ref.read(musicPlayerControllerProvider.notifier).play(musicItems.first);
+    await ref
+        .read(musicPlayerControllerProvider.notifier)
+        .play(musicItems.first);
 
     if (context.mounted) {
       Navigator.of(context).pop();
@@ -9443,29 +10124,31 @@ class _PlayAllButton extends ConsumerWidget {
 
 /// 空状态视图
 Widget _buildEmptyView(String message, IconData icon, bool isDark) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 40, color: AppColors.primary),
           ),
-          child: Icon(icon, size: 40, color: AppColors.primary),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          message,
-          style: TextStyle(
-            fontSize: 16,
-            color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 16,
+              color: isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant,
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
 
 /// 音乐封面占位渐变色板（多处复用，色值固定）
 const List<List<Color>> _kMusicCoverGradients = [

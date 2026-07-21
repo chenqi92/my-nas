@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/nas_adapters/base/dio_file_stream.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/upnp/upnp_content_directory_client.dart';
 
@@ -146,25 +147,7 @@ class UpnpFileSystem implements NasFileSystem {
     FileRange? range,
   }) async {
     try {
-      final headers = <String, dynamic>{};
-      if (range != null) {
-        // FileRange.end 为排他边界，HTTP Range 为闭区间，需 -1
-        final end = range.end != null ? '${range.end! - 1}' : '';
-        headers['Range'] = 'bytes=${range.start}-$end';
-      }
-      final response = await _streamDio.get<ResponseBody>(
-        url,
-        options: Options(
-          responseType: ResponseType.stream,
-          headers: headers,
-          validateStatus: (status) => status != null && status < 400,
-        ),
-      );
-      final stream = response.data?.stream;
-      if (stream == null) {
-        throw Exception(appL10n.upnpFileSystemCannotGetStream);
-      }
-      return stream;
+      return openDioFileStream(_streamDio, url, range: range);
     } on DioException catch (e, st) {
       AppError.handle(e, st, 'UpnpFileSystem._streamRequest');
       rethrow;

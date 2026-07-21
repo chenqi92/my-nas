@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
+import 'package:my_nas/core/network/tls_trust_store.dart';
 
 /// 支持自签名证书的 HTTP 客户端
 class InsecureHttpClient {
@@ -26,6 +27,7 @@ class InsecureHttpClient {
   static Future<void> loadTrustSetting() async {
     try {
       final box = await HiveUtils.getSettingsBox();
+      await TlsTrustStore.load();
       final v = box.get(_trustKey) as bool?;
       if (v != null) trustSelfSigned = v;
     } on Exception catch (e, st) {
@@ -38,10 +40,29 @@ class InsecureHttpClient {
     if (_client != null) return _client!;
 
     final httpClient = HttpClient()
-      ..badCertificateCallback = (cert, host, port) => trustSelfSigned;
+      ..badCertificateCallback = (cert, host, port) =>
+          TlsTrustStore.allowsInvalidCertificate(
+            cert,
+            host,
+            port,
+            allowSelfSigned: trustSelfSigned,
+          );
 
     _client = IOClient(httpClient);
     return _client!;
+  }
+
+  /// Creates an isolated client for an adapter with an explicit TLS policy.
+  static http.Client createClient({required bool allowSelfSigned}) {
+    final httpClient = HttpClient()
+      ..badCertificateCallback = (cert, host, port) =>
+          TlsTrustStore.allowsInvalidCertificate(
+            cert,
+            host,
+            port,
+            allowSelfSigned: allowSelfSigned,
+          );
+    return IOClient(httpClient);
   }
 
   /// GET 请求

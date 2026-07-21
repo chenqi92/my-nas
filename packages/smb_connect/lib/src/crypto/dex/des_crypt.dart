@@ -2595,6 +2595,8 @@ class DESCrypt implements BlockCipher {
 
   @override
   void reset() {
-    // TODO: implement reset
+    // DES block processing is stateless between blocks. Keep the expanded key
+    // so the cipher remains ready for reuse, matching Pointy Castle's block
+    // cipher reset contract.
   }
 }

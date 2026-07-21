@@ -13,10 +13,7 @@ import 'package:my_nas/shared/providers/source_defaults_provider.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 
 class AddSourceSheet extends ConsumerStatefulWidget {
-  const AddSourceSheet({
-    this.source,
-    super.key,
-  });
+  const AddSourceSheet({this.source, super.key});
 
   final SourceEntity? source;
 
@@ -45,6 +42,16 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
   bool get _isMobile => Platform.isAndroid || Platform.isIOS;
 
   bool get _isEditing => widget.source != null;
+
+  bool get _allowsEmptyCredentials => switch (_sourceType) {
+    SourceType.ftp ||
+    SourceType.smb ||
+    SourceType.webdav ||
+    SourceType.upnp ||
+    SourceType.jellyfin ||
+    SourceType.emby => true,
+    _ => false,
+  };
 
   @override
   void initState() {
@@ -98,7 +105,9 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
             child: Row(
               children: [
                 Text(
-                  _isEditing ? context.l10n.sourcesAddEditTitleEdit : context.l10n.sourcesAddEditTitleAdd,
+                  _isEditing
+                      ? context.l10n.sourcesAddEditTitleEdit
+                      : context.l10n.sourcesAddEditTitleAdd,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const Spacer(),
@@ -159,7 +168,9 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                               child: Text(
                                 _isMobile
                                     ? context.l10n.sourcesLocalStorageInfoMobile
-                                    : context.l10n.sourcesLocalStorageInfoDesktop,
+                                    : context
+                                          .l10n
+                                          .sourcesLocalStorageInfoDesktop,
                                 style: const TextStyle(color: Colors.blue),
                               ),
                             ),
@@ -211,11 +222,17 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                                 validator: (value) {
                                   if (_sourceType != SourceType.local) {
                                     if (value == null || value.isEmpty) {
-                                      return context.l10n.sourcesPortFieldValidationEmpty;
+                                      return context
+                                          .l10n
+                                          .sourcesPortFieldValidationEmpty;
                                     }
                                     final port = int.tryParse(value);
-                                    if (port == null || port < 1 || port > 65535) {
-                                      return context.l10n.sourcesPortFieldValidationInvalid;
+                                    if (port == null ||
+                                        port < 1 ||
+                                        port > 65535) {
+                                      return context
+                                          .l10n
+                                          .sourcesPortFieldValidationInvalid;
                                     }
                                   }
                                   return null;
@@ -228,7 +245,22 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                                 Text(context.l10n.sourcesSslLabel),
                                 Switch(
                                   value: _useSsl,
-                                  onChanged: (v) => setState(() => _useSsl = v),
+                                  onChanged: (v) => setState(() {
+                                    final oldDefault = _defaultPortForSsl(
+                                      _sourceType,
+                                      _useSsl,
+                                    );
+                                    final current = int.tryParse(
+                                      _portController.text,
+                                    );
+                                    _useSsl = v;
+                                    if (current == oldDefault) {
+                                      _portController.text = _defaultPortForSsl(
+                                        _sourceType,
+                                        v,
+                                      ).toString();
+                                    }
+                                  }),
                                 ),
                               ],
                             ),
@@ -246,8 +278,11 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                         ),
                         validator: (value) {
                           if (_sourceType != SourceType.local &&
+                              !_allowsEmptyCredentials &&
                               (value == null || value.isEmpty)) {
-                            return context.l10n.sourcesUsernameFieldValidationEmpty;
+                            return context
+                                .l10n
+                                .sourcesUsernameFieldValidationEmpty;
                           }
                           return null;
                         },
@@ -259,7 +294,9 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          labelText: _isEditing ? context.l10n.sourcesPasswordFieldLabelEdit : context.l10n.sourcesPasswordFieldLabel,
+                          labelText: _isEditing
+                              ? context.l10n.sourcesPasswordFieldLabelEdit
+                              : context.l10n.sourcesPasswordFieldLabel,
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -268,15 +305,20 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                                   : Icons.visibility_off_outlined,
                             ),
                             onPressed: () {
-                              setState(() => _obscurePassword = !_obscurePassword);
+                              setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              );
                             },
                           ),
                         ),
                         validator: (value) {
                           if (_sourceType != SourceType.local &&
+                              !_allowsEmptyCredentials &&
                               !_isEditing &&
                               (value == null || value.isEmpty)) {
-                            return context.l10n.sourcesPasswordFieldValidationEmpty;
+                            return context
+                                .l10n
+                                .sourcesPasswordFieldValidationEmpty;
                           }
                           return null;
                         },
@@ -296,7 +338,9 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                     if (_sourceType != SourceType.local)
                       SwitchListTile(
                         title: Text(context.l10n.sourcesRememberDeviceTitle),
-                        subtitle: Text(context.l10n.sourcesRememberDeviceSubtitle),
+                        subtitle: Text(
+                          context.l10n.sourcesRememberDeviceSubtitle,
+                        ),
                         value: _rememberDevice,
                         onChanged: (v) => setState(() => _rememberDevice = v),
                         contentPadding: EdgeInsets.zero,
@@ -313,7 +357,10 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline_rounded, color: AppColors.error),
+                            Icon(
+                              Icons.error_outline_rounded,
+                              color: AppColors.error,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -342,7 +389,11 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text(_isEditing ? context.l10n.sourcesSubmitButtonSave : context.l10n.sourcesSubmitButtonAdd),
+                            : Text(
+                                _isEditing
+                                    ? context.l10n.sourcesSubmitButtonSave
+                                    : context.l10n.sourcesSubmitButtonAdd,
+                              ),
                       ),
                     ),
                   ],
@@ -380,21 +431,26 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                 _usernameController.clear();
                 _passwordController.clear();
                 _portController.text = type.defaultPort.toString();
-                _useSsl = type.defaultPort == 5001 || type.defaultPort == 443;
+                _useSsl = type.defaultUseSsl;
                 _errorMessage = null;
               });
             }
           },
-          avatar: Icon(
-            _getSourceTypeIcon(type),
-            size: 18,
-          ),
+          avatar: Icon(_getSourceTypeIcon(type), size: 18),
         );
       }).toList(),
     );
   }
 
   IconData _getSourceTypeIcon(SourceType type) => type.icon;
+
+  int _defaultPortForSsl(SourceType type, bool useSsl) => switch (type) {
+    SourceType.synology => useSsl ? 5001 : 5000,
+    SourceType.qnap => useSsl ? 443 : 8080,
+    SourceType.webdav => useSsl ? 443 : 80,
+    SourceType.jellyfin || SourceType.emby => useSsl ? 8920 : 8096,
+    _ => type.defaultPort,
+  };
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -420,6 +476,9 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
         useSsl: !isLocal && _useSsl,
         autoConnect: _autoConnect,
         rememberDevice: _rememberDevice,
+        extraConfig: _sourceType == SourceType.ftp
+            ? {'encryption': _useSsl ? '显式 TLS (FTPES)' : '无加密'}
+            : widget.source?.extraConfig,
       );
 
       final password = isLocal ? '' : _passwordController.text;
@@ -460,7 +519,9 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
           }
           if (mounted) {
             Navigator.pop(context);
-            context.showSuccessToast(context.l10n.sourcesSuccessConnected(source.displayName));
+            context.showSuccessToast(
+              context.l10n.sourcesSuccessConnected(source.displayName),
+            );
           }
         } else if (connection.status == SourceStatus.requires2FA) {
           // 需要二次验证（本地存储不会触发此分支）
@@ -483,7 +544,9 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                 if (!isLocal) {
                   final manager = ref.read(sourceManagerProvider);
                   // 先读取已保存的凭证（可能包含 deviceId）
-                  final existingCredential = await manager.getCredential(source.id);
+                  final existingCredential = await manager.getCredential(
+                    source.id,
+                  );
                   await manager.saveCredential(
                     source.id,
                     SourceCredential(
@@ -494,25 +557,36 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
                 }
                 if (mounted) {
                   Navigator.pop(context);
-                  context.showSuccessToast(context.l10n.sourcesSuccessConnected(source.displayName));
+                  context.showSuccessToast(
+                    context.l10n.sourcesSuccessConnected(source.displayName),
+                  );
                 }
               } else {
                 // 2FA失败，断开临时连接
-                await ref.read(activeConnectionsProvider.notifier).disconnect(source.id);
+                await ref
+                    .read(activeConnectionsProvider.notifier)
+                    .disconnect(source.id);
                 setState(() {
-                  _errorMessage = verified.errorMessage ?? context.l10n.sourcesTwoFaVerificationFailed;
+                  _errorMessage =
+                      verified.errorMessage ??
+                      context.l10n.sourcesTwoFaVerificationFailed;
                 });
               }
             } else {
               // 用户取消2FA，断开临时连接
-              await ref.read(activeConnectionsProvider.notifier).disconnect(source.id);
+              await ref
+                  .read(activeConnectionsProvider.notifier)
+                  .disconnect(source.id);
             }
           }
         } else {
           // 连接失败，断开临时连接
-          await ref.read(activeConnectionsProvider.notifier).disconnect(source.id);
+          await ref
+              .read(activeConnectionsProvider.notifier)
+              .disconnect(source.id);
           setState(() {
-            _errorMessage = connection.errorMessage ?? context.l10n.sourcesConnectionFailed;
+            _errorMessage =
+                connection.errorMessage ?? context.l10n.sourcesConnectionFailed;
           });
         }
       }
@@ -527,10 +601,8 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
     }
   }
 
-  Future<TwoFAResult?> _show2FADialog() async => showTwoFASheet(
-      context,
-      initialRememberDevice: _rememberDevice,
-    );
+  Future<TwoFAResult?> _show2FADialog() async =>
+      showTwoFASheet(context, initialRememberDevice: _rememberDevice);
 
   /// 将错误转换为友好的错误消息
   String _getErrorMessage(Object e) {

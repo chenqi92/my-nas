@@ -30,4 +30,14 @@
 
     <!-- Media Widget -->
     <string name="media_not_playing">Not playing</string>
+
+    <!-- Launcher shortcuts -->
+    <string name="shortcut_music_short">Music</string>
+    <string name="shortcut_music_long">Open music library</string>
+    <string name="shortcut_video_short">Video</string>
+    <string name="shortcut_video_long">Open video library</string>
+    <string name="shortcut_reading_short">Reading</string>
+    <string name="shortcut_reading_long">Open books and notes</string>
+    <string name="shortcut_downloads_short">Downloads</string>
+    <string name="shortcut_downloads_long">Open download tasks</string>
 </resources>

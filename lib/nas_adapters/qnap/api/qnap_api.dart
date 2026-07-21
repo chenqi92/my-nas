@@ -3,6 +3,8 @@ import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/errors/exceptions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/nas_adapters/base/dio_file_stream.dart';
+import 'package:my_nas/nas_adapters/base/nas_file_system.dart' show FileRange;
 
 /// QNAP QTS API 客户端
 class QnapApi {
@@ -29,25 +31,25 @@ class QnapApi {
     String? otpCode,
     bool rememberMe = false,
   }) async {
-    logger..i('QnapApi: 开始登录认证')
-    ..d('QnapApi: 账号 => $account, OTP => ${otpCode != null ? "有" : "无"}');
+    logger
+      ..i('QnapApi: 开始登录认证')
+      ..d('QnapApi: 账号 => $account, OTP => ${otpCode != null ? "有" : "无"}');
 
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         '/cgi-bin/authLogin.cgi',
-        data: FormData.fromMap({
+        data: {
           'user': account,
-          'pwd': _encodePassword(password),
+          'pwd': password,
           'otp_code': ?otpCode,
           'remme': rememberMe ? '1' : '0',
-        }),
-        options: Options(
-          contentType: 'application/x-www-form-urlencoded',
-        ),
+        },
+        options: Options(contentType: 'application/x-www-form-urlencoded'),
       );
 
       final data = response.data;
-      logger.d('QnapApi: 登录响应 => $data');
+      // 登录响应包含 sid，不写入日志。
+      logger.d('QnapApi: 登录响应状态码 => ${response.statusCode}');
 
       if (data == null) {
         return QnapAuthFailure(error: appL10n.qnapApiServerEmptyResponse);
@@ -62,7 +64,7 @@ class QnapApi {
           return QnapAuthFailure(error: appL10n.qnapApiNoSessionId);
         }
 
-        logger.i('QnapApi: 登录成功, sid => ${_sid!.substring(0, 8)}...');
+        logger.i('QnapApi: 登录成功');
         return QnapAuthSuccess(sid: _sid!);
       }
 
@@ -104,10 +106,7 @@ class QnapApi {
   Future<QnapSystemInfo> getSystemInfo() async {
     final response = await _request(
       '/cgi-bin/management/manaRequest.cgi',
-      params: {
-        'subfunc': 'sysinfo',
-        'sysInfo': '1',
-      },
+      params: {'subfunc': 'sysinfo', 'sysInfo': '1'},
     );
 
     final data = response is Map<String, dynamic>
@@ -125,14 +124,13 @@ class QnapApi {
   Future<List<QnapShareFolder>> listShareFolders() async {
     final response = await _request(
       '/cgi-bin/filemanager/utilRequest.cgi',
-      params: {
-        'func': 'get_tree',
-        'is_iso': '0',
-        'node': 'share_root',
-      },
+      params: {'func': 'get_tree', 'is_iso': '0', 'node': 'share_root'},
     );
 
-    final items = response as List<dynamic>? ?? [];
+    if (response is! List<dynamic>) {
+      throw ServerException(message: 'QNAP 共享列表响应格式无效');
+    }
+    final items = response;
     return items.map((item) {
       final map = item as Map<String, dynamic>;
       return QnapShareFolder(
@@ -165,29 +163,35 @@ class QnapApi {
       },
     );
 
-    final data = response as Map<String, dynamic>? ?? {};
-    final datas = data['datas'] as List<dynamic>? ?? [];
+    if (response is! Map<String, dynamic> || response['datas'] is! List) {
+      throw ServerException(message: 'QNAP 目录列表响应格式无效');
+    }
+    final datas = response['datas'] as List<dynamic>;
 
     // 调试：打印原始数据中的文件大小字段
     if (datas.isNotEmpty) {
       final sample = datas.first as Map<String, dynamic>;
-      logger.d('QnapApi listFiles 原始数据样本: filesize=${sample['filesize']}, size=${sample['size']}');
+      logger.d(
+        'QnapApi listFiles 原始数据样本: filesize=${sample['filesize']}, size=${sample['size']}',
+      );
     }
 
-    return datas.map((item) => QnapFile.fromJson(item as Map<String, dynamic>)).toList();
+    return datas
+        .map((item) => QnapFile.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   /// 获取文件信息
   Future<QnapFile> getFileInfo(String path) async {
     final response = await _request(
       '/cgi-bin/filemanager/utilRequest.cgi',
-      params: {
-        'func': 'stat',
-        'path': path,
-      },
+      params: {'func': 'stat', 'path': path},
     );
 
-    return QnapFile.fromJson(response as Map<String, dynamic>);
+    if (response is! Map<String, dynamic>) {
+      throw ServerException(message: 'QNAP 文件信息响应格式无效');
+    }
+    return QnapFile.fromJson(response);
   }
 
   /// 创建文件夹
@@ -210,25 +214,15 @@ class QnapApi {
     final pathList = paths.join(',');
     await _request(
       '/cgi-bin/filemanager/utilRequest.cgi',
-      params: {
-        'func': 'delete',
-        'path': pathList,
-      },
+      params: {'func': 'delete', 'path': pathList},
     );
   }
 
   /// 重命名
-  Future<void> rename({
-    required String path,
-    required String newName,
-  }) async {
+  Future<void> rename({required String path, required String newName}) async {
     await _request(
       '/cgi-bin/filemanager/utilRequest.cgi',
-      params: {
-        'func': 'rename',
-        'path': path,
-        'new_name': newName,
-      },
+      params: {'func': 'rename', 'path': path, 'new_name': newName},
     );
   }
 
@@ -268,14 +262,11 @@ class QnapApi {
 
   /// 获取文件下载链接
   String getDownloadUrl(String path) {
-    final params = {
-      'func': 'download',
-      'source_path': path,
-      'sid': _sid ?? '',
-    };
+    final params = {'func': 'download', 'source_path': path, 'sid': _sid ?? ''};
 
-    final queryString =
-        params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+    final queryString = params.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
 
     return '${_dio.options.baseUrl}/cgi-bin/filemanager/utilRequest.cgi?$queryString';
   }
@@ -309,8 +300,10 @@ class QnapApi {
       },
     );
 
-    final data = response as Map<String, dynamic>? ?? {};
-    final datas = data['datas'] as List<dynamic>? ?? [];
+    if (response is! Map<String, dynamic> || response['datas'] is! List) {
+      throw ServerException(message: 'QNAP 媒体列表响应格式无效');
+    }
+    final datas = response['datas'] as List<dynamic>;
 
     return datas
         .map((item) => QnapFile.fromJson(item as Map<String, dynamic>))
@@ -323,10 +316,7 @@ class QnapApi {
   /// 使用 File Station 文档中的 `get_viewer` 接口。`format` 为空时返回原始
   /// 文件流（直接 download），否则请求转码格式（mp4_360 / mp4_720 / flv_720）。
   /// URL 中携带当前 sid，可直接交给播放器加载。
-  String getMediaStreamUrl(
-    String path, {
-    String? format,
-  }) {
+  String getMediaStreamUrl(String path, {String? format}) {
     final lastSlash = path.lastIndexOf('/');
     final sourcePath = lastSlash > 0 ? path.substring(0, lastSlash) : '/';
     final sourceFile = lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
@@ -364,8 +354,9 @@ class QnapApi {
       'sid': _sid ?? '',
     };
 
-    final queryString =
-        params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+    final queryString = params.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
 
     return '${_dio.options.baseUrl}/cgi-bin/filemanager/utilRequest.cgi?$queryString';
   }
@@ -373,21 +364,14 @@ class QnapApi {
   /// 通过 URL 获取数据流
   ///
   /// 用于在需要绕过证书验证等场景下，通过已知 URL 获取数据
-  Future<Stream<List<int>>> getUrlStream(String url) async {
+  Future<Stream<List<int>>> getUrlStream(String url, {FileRange? range}) async {
     logger.d('QnapApi: getUrlStream => $url');
-
-    final response = await _dio.get<ResponseBody>(
+    return openDioFileStream(
+      _dio,
       url,
-      options: Options(
-        responseType: ResponseType.stream,
-      ),
+      range: range,
+      onSessionInvalid: clearSession,
     );
-
-    if (response.data == null) {
-      throw Exception(appL10n.qnapApiGetUrlStreamFailed);
-    }
-
-    return response.data!.stream;
   }
 
   /// 搜索文件
@@ -406,10 +390,14 @@ class QnapApi {
       },
     );
 
-    final data = response as Map<String, dynamic>? ?? {};
-    final datas = data['datas'] as List<dynamic>? ?? [];
+    if (response is! Map<String, dynamic> || response['datas'] is! List) {
+      throw ServerException(message: 'QNAP 搜索响应格式无效');
+    }
+    final datas = response['datas'] as List<dynamic>;
 
-    return datas.map((item) => QnapFile.fromJson(item as Map<String, dynamic>)).toList();
+    return datas
+        .map((item) => QnapFile.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   /// 上传文件
@@ -419,10 +407,7 @@ class QnapApi {
     String? fileName,
     void Function(int sent, int total)? onProgress,
   }) async {
-    final file = MultipartFile.fromFileSync(
-      localPath,
-      filename: fileName,
-    );
+    final file = MultipartFile.fromFileSync(localPath, filename: fileName);
 
     final formData = FormData.fromMap({
       'func': 'upload',
@@ -458,8 +443,12 @@ class QnapApi {
   Future<void> writeFileData(String remotePath, List<int> data) async {
     // 获取目录和文件名
     final lastSlash = remotePath.lastIndexOf('/');
-    final destFolderPath = lastSlash > 0 ? remotePath.substring(0, lastSlash) : '/';
-    final fileName = lastSlash >= 0 ? remotePath.substring(lastSlash + 1) : remotePath;
+    final destFolderPath = lastSlash > 0
+        ? remotePath.substring(0, lastSlash)
+        : '/';
+    final fileName = lastSlash >= 0
+        ? remotePath.substring(lastSlash + 1)
+        : remotePath;
 
     // 使用 MultipartFile.fromBytes
     final file = MultipartFile.fromBytes(data, filename: fileName);
@@ -490,14 +479,8 @@ class QnapApi {
   }
 
   /// 通用请求方法
-  Future<dynamic> _request(
-    String path, {
-    Map<String, String>? params,
-  }) async {
-    final queryParams = <String, String>{
-      'sid': ?_sid,
-      ...?params,
-    };
+  Future<dynamic> _request(String path, {Map<String, String>? params}) async {
+    final queryParams = <String, String>{'sid': ?_sid, ...?params};
 
     logger.d('QnapApi: 请求 => $path');
 
@@ -515,11 +498,32 @@ class QnapApi {
         throw ServerException(message: appL10n.qnapApiServerEmptyResponse);
       }
 
+      if (data is String &&
+          (data.toLowerCase().contains('<html') ||
+              data.toLowerCase().contains('login'))) {
+        clearSession();
+        throw ServerException(message: 'QNAP 会话已失效');
+      }
+
       // 检查是否为错误响应
       if (data is Map<String, dynamic>) {
-        final status = data['status'] as int?;
+        final authPassed = data['authPassed'];
+        final message = (data['msg'] ?? data['message'] ?? '').toString();
+        if (authPassed == 0 ||
+            message.toLowerCase().contains('session') ||
+            message.toLowerCase().contains('login')) {
+          clearSession();
+          throw ServerException(
+            message: message.isEmpty ? 'QNAP 会话已失效' : message,
+          );
+        }
+        final statusValue = data['status'];
+        final status = statusValue is int
+            ? statusValue
+            : int.tryParse(statusValue?.toString() ?? '');
         if (status != null && status != 1) {
-          final errorMsg = data['msg'] as String? ?? appL10n.qnapApiOperationFailed;
+          final errorMsg =
+              data['msg'] as String? ?? appL10n.qnapApiOperationFailed;
           logger.e('QnapApi: API 错误 => $errorMsg');
           throw ServerException(message: errorMsg);
         }
@@ -527,26 +531,26 @@ class QnapApi {
 
       return data;
     } on DioException catch (e, st) {
+      if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+        clearSession();
+      }
       AppError.handle(e, st, 'QnapApi._request');
       rethrow;
     }
   }
 
-  /// 编码密码 (Base64)
-  String _encodePassword(String password) => Uri.encodeComponent(password);
-
   /// 获取认证错误消息
   String _getAuthErrorMessage(int errorCode) => switch (errorCode) {
-        0 => appL10n.qnapApiAuthFailed,
-        1 => appL10n.qnapApiInvalidCredentials,
-        2 => appL10n.qnapApiAccountDisabled,
-        3 => appL10n.qnapApiInsufficientPermission,
-        4 => appL10n.qnapApiConnectionLimitReached,
-        5 => appL10n.qnapApiRequires2FA,
-        6 => appL10n.qnapApi2FAFailed,
-        7 => appL10n.qnapApiIPBlocked,
-        _ => appL10n.qnapApiAuthFailedWithCode(errorCode),
-      };
+    0 => appL10n.qnapApiAuthFailed,
+    1 => appL10n.qnapApiInvalidCredentials,
+    2 => appL10n.qnapApiAccountDisabled,
+    3 => appL10n.qnapApiInsufficientPermission,
+    4 => appL10n.qnapApiConnectionLimitReached,
+    5 => appL10n.qnapApiRequires2FA,
+    6 => appL10n.qnapApi2FAFailed,
+    7 => appL10n.qnapApiIPBlocked,
+    _ => appL10n.qnapApiAuthFailedWithCode(errorCode),
+  };
 }
 
 /// 认证结果
@@ -598,11 +602,7 @@ class QnapSystemInfo {
 
 /// QNAP 共享文件夹
 class QnapShareFolder {
-  const QnapShareFolder({
-    required this.name,
-    required this.path,
-    this.iconCls,
-  });
+  const QnapShareFolder({required this.name, required this.path, this.iconCls});
 
   final String name;
   final String path;
@@ -624,13 +624,15 @@ class QnapFile {
   });
 
   factory QnapFile.fromJson(Map<String, dynamic> json) {
-    final isDir = json['isfolder'] == 1 ||
+    final isDir =
+        json['isfolder'] == 1 ||
         json['isdir'] == 1 ||
         json['filetype'] == 'folder';
 
     return QnapFile(
       name: json['filename'] as String? ?? json['text'] as String? ?? '',
-      path: json['path'] as String? ??
+      path:
+          json['path'] as String? ??
           json['real_path'] as String? ??
           '/${json['filename'] ?? json['text'] ?? ''}',
       isDir: isDir,

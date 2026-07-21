@@ -1,4 +1,5 @@
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
+import 'package:my_nas/core/network/network_endpoint.dart';
 
 /// 连接配置
 class ConnectionConfig {
@@ -15,23 +16,26 @@ class ConnectionConfig {
     this.deviceName,
     this.enableDeviceToken = false,
     this.basePath,
+    this.extraConfig,
   });
 
   factory ConnectionConfig.fromJson(
     Map<String, dynamic> json, {
     required String password,
-  }) =>
-      ConnectionConfig(
-        type: NasAdapterType.values.byName(json['type'] as String),
-        host: json['host'] as String,
-        port: json['port'] as int,
-        username: json['username'] as String,
-        password: password,
-        useSsl: json['useSsl'] as bool? ?? true,
-        verifySSL: json['verifySSL'] as bool? ?? true,
-        quickConnectId: json['quickConnectId'] as String?,
-        basePath: json['basePath'] as String?,
-      );
+  }) => ConnectionConfig(
+    type: NasAdapterType.values.byName(json['type'] as String),
+    host: json['host'] as String,
+    port: json['port'] as int,
+    username: json['username'] as String,
+    password: password,
+    useSsl: json['useSsl'] as bool? ?? true,
+    verifySSL: json['verifySSL'] as bool? ?? true,
+    quickConnectId: json['quickConnectId'] as String?,
+    basePath: json['basePath'] as String?,
+    extraConfig: json['extraConfig'] == null
+        ? null
+        : Map<String, dynamic>.from(json['extraConfig'] as Map),
+  );
 
   final NasAdapterType type;
   final String host;
@@ -54,49 +58,15 @@ class ConnectionConfig {
   /// 基础路径（如 WebDAV 的 /dav、/webdav），拼接到 baseUrl 末尾
   final String? basePath;
 
-  String get baseUrl {
-    // 容错：如果用户把完整 URL（含协议/端口/路径）填到了 host 字段，自动拆解。
-    var effectiveProtocol = useSsl ? 'https' : 'http';
-    var effectiveHost = host;
-    var effectivePort = port;
-    var pathFromHost = '';
+  /// Protocol-specific, non-secret settings such as FTP encryption mode.
+  final Map<String, dynamic>? extraConfig;
 
-    final lowerHost = host.toLowerCase();
-    if (lowerHost.startsWith('http://') || lowerHost.startsWith('https://')) {
-      final parsed = Uri.tryParse(host);
-      if (parsed != null && parsed.host.isNotEmpty) {
-        effectiveProtocol = parsed.scheme;
-        effectiveHost = parsed.host;
-        if (parsed.hasPort) {
-          effectivePort = parsed.port;
-        }
-        pathFromHost = parsed.path;
-      }
-    } else if (host.contains('/')) {
-      // 不带协议但带路径，如 webdav.123pan.cn/webdav
-      final slashIdx = host.indexOf('/');
-      effectiveHost = host.substring(0, slashIdx);
-      pathFromHost = host.substring(slashIdx);
-    }
-
-    final root = '$effectiveProtocol://$effectiveHost:$effectivePort';
-
-    // 合并 host 中带的路径与显式 basePath，去重、规范化
-    final combined = StringBuffer();
-    void append(String? seg) {
-      if (seg == null || seg.isEmpty) return;
-      var s = seg.startsWith('/') ? seg : '/$seg';
-      if (s.endsWith('/') && s.length > 1) s = s.substring(0, s.length - 1);
-      // 避免重复拼接（如 host 已含 /webdav 且 basePath 也是 /webdav）
-      if (combined.toString().endsWith(s)) return;
-      combined.write(s);
-    }
-
-    append(pathFromHost);
-    append(basePath);
-
-    return '$root$combined';
-  }
+  String get baseUrl => NetworkEndpoint.buildBaseUrl(
+    host: host,
+    port: port,
+    useSsl: useSsl,
+    basePath: basePath,
+  );
 
   ConnectionConfig copyWith({
     NasAdapterType? type,
@@ -111,32 +81,34 @@ class ConnectionConfig {
     String? deviceName,
     bool? enableDeviceToken,
     String? basePath,
-  }) =>
-      ConnectionConfig(
-        type: type ?? this.type,
-        host: host ?? this.host,
-        port: port ?? this.port,
-        username: username ?? this.username,
-        password: password ?? this.password,
-        useSsl: useSsl ?? this.useSsl,
-        verifySSL: verifySSL ?? this.verifySSL,
-        quickConnectId: quickConnectId ?? this.quickConnectId,
-        deviceId: deviceId ?? this.deviceId,
-        deviceName: deviceName ?? this.deviceName,
-        enableDeviceToken: enableDeviceToken ?? this.enableDeviceToken,
-        basePath: basePath ?? this.basePath,
-      );
+    Map<String, dynamic>? extraConfig,
+  }) => ConnectionConfig(
+    type: type ?? this.type,
+    host: host ?? this.host,
+    port: port ?? this.port,
+    username: username ?? this.username,
+    password: password ?? this.password,
+    useSsl: useSsl ?? this.useSsl,
+    verifySSL: verifySSL ?? this.verifySSL,
+    quickConnectId: quickConnectId ?? this.quickConnectId,
+    deviceId: deviceId ?? this.deviceId,
+    deviceName: deviceName ?? this.deviceName,
+    enableDeviceToken: enableDeviceToken ?? this.enableDeviceToken,
+    basePath: basePath ?? this.basePath,
+    extraConfig: extraConfig ?? this.extraConfig,
+  );
 
   Map<String, dynamic> toJson() => {
-        'type': type.name,
-        'host': host,
-        'port': port,
-        'username': username,
-        'useSsl': useSsl,
-        'verifySSL': verifySSL,
-        'quickConnectId': quickConnectId,
-        'basePath': basePath,
-      };
+    'type': type.name,
+    'host': host,
+    'port': port,
+    'username': username,
+    'useSsl': useSsl,
+    'verifySSL': verifySSL,
+    'quickConnectId': quickConnectId,
+    'basePath': basePath,
+    'extraConfig': extraConfig,
+  };
 }
 
 /// 连接结果
@@ -161,10 +133,7 @@ class ConnectionSuccess extends ConnectionResult {
 
 /// 连接失败
 class ConnectionFailure extends ConnectionResult {
-  const ConnectionFailure({
-    required this.error,
-    this.code,
-  });
+  const ConnectionFailure({required this.error, this.code});
 
   final String error;
   final int? code;
@@ -193,8 +162,4 @@ class ServerInfo {
 }
 
 /// 二次验证方式
-enum TwoFactorMethod {
-  totp,
-  email,
-  sms,
-}
+enum TwoFactorMethod { totp, email, sms }

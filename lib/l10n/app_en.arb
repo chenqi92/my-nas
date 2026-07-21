@@ -5060,6 +5060,46 @@
   "noteListToolTaskTooltip": "Task",
   "noteListToolCodeTooltip": "Code",
   "noteListToolLinkTooltip": "Link",
+  "noteListToolAttachmentTooltip": "Upload attachment",
+  "noteListSaveTooltip": "Save note",
+  "noteListSaveSuccess": "Note saved",
+  "noteListSaveFailed": "Failed to save: {error}",
+  "@noteListSaveFailed": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "noteListWriteUnsupported": "The current source does not support writing notes",
+  "noteListConflictTitle": "Remote changes detected",
+  "noteListConflictMessage": "This note was changed on another device after you opened it. Reload the remote version or overwrite it with your current content.",
+  "noteListReloadRemote": "Reload",
+  "noteListOverwriteRemote": "Overwrite remote",
+  "noteListUnsavedTitle": "Unsaved changes",
+  "noteListUnsavedMessage": "This note has unsaved changes. Discard them?",
+  "noteListDiscardChanges": "Discard changes",
+  "noteListAttachmentUploaded": "Attachment {fileName} uploaded",
+  "@noteListAttachmentUploaded": {
+    "placeholders": {
+      "fileName": { "type": "String" }
+    }
+  },
+  "noteListAttachmentFailed": "Failed to upload attachment: {error}",
+  "@noteListAttachmentFailed": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "noteTreeFolderSemantic": "Folder {name}",
+  "@noteTreeFolderSemantic": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "noteTreeFileSemantic": "Note {name}",
+  "@noteTreeFileSemantic": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "noteTreeExpandHint": "Expand folder",
+  "noteTreeCollapseHint": "Collapse folder",
+  "noteTreeOpenHint": "Open note",
   "noteListEmptyNoteLibrary": "No notes yet",
   "noteListEmptyNoteMessage": "Markdown files added to configured directories will appear here",
   "noteEditorTabPreview": "Preview",

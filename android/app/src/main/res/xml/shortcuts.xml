@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="open_music"
+        android:enabled="true"
+        android:icon="@drawable/ic_music_note"
+        android:shortcutShortLabel="@string/shortcut_music_short"
+        android:shortcutLongLabel="@string/shortcut_music_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="mynas://music"
+            android:targetClass="com.kkape.mynas.MainActivity"
+            android:targetPackage="com.kkape.mynas" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="open_video"
+        android:enabled="true"
+        android:icon="@drawable/ic_video"
+        android:shortcutShortLabel="@string/shortcut_video_short"
+        android:shortcutLongLabel="@string/shortcut_video_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="mynas://video"
+            android:targetClass="com.kkape.mynas.MainActivity"
+            android:targetPackage="com.kkape.mynas" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="open_reading"
+        android:enabled="true"
+        android:icon="@drawable/ic_book"
+        android:shortcutShortLabel="@string/shortcut_reading_short"
+        android:shortcutLongLabel="@string/shortcut_reading_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="mynas://reading"
+            android:targetClass="com.kkape.mynas.MainActivity"
+            android:targetPackage="com.kkape.mynas" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="open_downloads"
+        android:enabled="true"
+        android:icon="@drawable/ic_download"
+        android:shortcutShortLabel="@string/shortcut_downloads_short"
+        android:shortcutLongLabel="@string/shortcut_downloads_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="mynas://download"
+            android:targetClass="com.kkape.mynas.MainActivity"
+            android:targetPackage="com.kkape.mynas" />
+    </shortcut>
+</shortcuts>

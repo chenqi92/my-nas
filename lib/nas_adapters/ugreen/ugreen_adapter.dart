@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:dio/io.dart';
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/dio_client.dart';
+import 'package:my_nas/core/network/network_endpoint.dart';
+import 'package:my_nas/core/network/tls_trust_store.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -119,7 +124,8 @@ class UGreenAdapter implements NasAdapter {
     ConnectionConfig config,
     String token,
   ) async {
-    _connected = true;
+    _connected = false;
+    _fileSystem = null;
 
     // 获取服务器信息
     try {
@@ -139,20 +145,8 @@ class UGreenAdapter implements NasAdapter {
     try {
       logger.i('UGreenAdapter: 测试 UGOS 文件 API...');
       final shares = await _api.listShares();
-      if (shares.isNotEmpty) {
-        logger.i('UGreenAdapter: UGOS 文件 API 可用，找到 ${shares.length} 个共享文件夹');
-        _fileSystem = UGreenFileSystem(api: _api);
-      } else {
-        // 可能 API 返回空，尝试列出根目录
-        final rootFiles = await _api.listDirectory('/');
-        if (rootFiles.isNotEmpty) {
-          logger.i('UGreenAdapter: UGOS 文件 API 可用');
-          _fileSystem = UGreenFileSystem(api: _api);
-        } else {
-          logger.w('UGreenAdapter: UGOS 文件 API 返回空，切换到 WebDAV');
-          _useWebDav = true;
-        }
-      }
+      logger.i('UGreenAdapter: UGOS 文件 API 可用，找到 ${shares.length} 个共享文件夹');
+      _fileSystem = UGreenFileSystem(api: _api);
     } on Exception catch (e, st) {
       AppError.ignore(e, st, 'UGOS 文件 API 不可用，切换到 WebDAV');
       _useWebDav = true;
@@ -164,10 +158,18 @@ class UGreenAdapter implements NasAdapter {
         await _initWebDav(config);
       } on Exception catch (e, st) {
         AppError.handle(e, st, 'UGreenAdapter._initWebDav');
-        // 仍然标记为已连接，但文件操作可能失败
+        await _api.logout();
+        return ConnectionFailure(error: e.toString());
       }
     }
 
+    if (_fileSystem == null) {
+      await _api.logout();
+      return ConnectionFailure(
+        error: appL10n.ugreenWebdavConnectionFailedError,
+      );
+    }
+    _connected = true;
     return ConnectionSuccess(sessionId: token, serverInfo: _serverInfo);
   }
 
@@ -176,12 +178,21 @@ class UGreenAdapter implements NasAdapter {
     logger.i('UGreenAdapter: 初始化 WebDAV 连接...');
 
     // 绿联 UGOS WebDAV 路径通常是 /webdav 或 /dav
-    final webdavPaths = ['/webdav', '/dav', '/'];
-    final scheme = config.useSsl ? 'https' : 'http';
+    final webdavPaths = <String>{
+      if (config.basePath != null) config.basePath!,
+      '/webdav',
+      '/dav',
+      '/',
+    };
 
     for (final davPath in webdavPaths) {
       try {
-        final webdavUrl = '$scheme://${config.host}:${config.port}$davPath';
+        final webdavUrl = NetworkEndpoint.buildBaseUrl(
+          host: config.host,
+          port: config.port,
+          useSsl: config.useSsl,
+          basePath: davPath,
+        );
         logger.d('UGreenAdapter: 尝试 WebDAV => $webdavUrl');
 
         _webdavClient = webdav.newClient(
@@ -189,6 +200,19 @@ class UGreenAdapter implements NasAdapter {
           user: config.username,
           password: config.password,
         );
+
+        if (!config.verifySSL) {
+          _webdavClient!.c.httpClientAdapter = IOHttpClientAdapter(
+            createHttpClient: () => HttpClient()
+              ..badCertificateCallback = (cert, host, port) =>
+                  TlsTrustStore.allowsInvalidCertificate(
+                    cert,
+                    host,
+                    port,
+                    allowSelfSigned: true,
+                  ),
+          );
+        }
 
         // 验证 WebDAV 连接
         await _webdavClient!.ping();

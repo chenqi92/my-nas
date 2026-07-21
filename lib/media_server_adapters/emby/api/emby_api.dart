@@ -20,7 +20,9 @@ class EmbyApi {
     this.deviceName,
     this.clientName = 'MyNas',
     this.clientVersion = '1.0.0',
+    http.Client? client,
   }) {
+    _client = client ?? http.Client();
     // 确保 URL 不以斜杠结尾
     if (serverUrl.endsWith('/')) {
       serverUrl = serverUrl.substring(0, serverUrl.length - 1);
@@ -36,7 +38,7 @@ class EmbyApi {
   String clientVersion;
 
   /// HTTP 客户端
-  final _client = http.Client();
+  late final http.Client _client;
 
   /// 获取认证头
   Map<String, String> get _headers {
@@ -73,13 +75,12 @@ class EmbyApi {
   Future<JellyfinAuthResult> login(String username, String password) async {
     final response = await _post(
       '/Users/AuthenticateByName',
-      body: {
-        'Username': username,
-        'Pw': password,
-      },
+      body: {'Username': username, 'Pw': password},
     );
 
-    final result = JellyfinAuthResult.fromJson(response as Map<String, dynamic>);
+    final result = JellyfinAuthResult.fromJson(
+      response as Map<String, dynamic>,
+    );
     accessToken = result.accessToken;
     userId = result.userId;
     return result;
@@ -136,7 +137,8 @@ class EmbyApi {
       'Limit': limit.toString(),
       'Recursive': 'true',
       'Fields':
-          fields ?? 'Overview,Genres,DateCreated,MediaStreams,ProviderIds,MediaSources',
+          fields ??
+          'Overview,Genres,DateCreated,MediaStreams,ProviderIds,MediaSources',
     };
     if (parentId != null) params['ParentId'] = parentId;
     if (includeItemTypes != null) params['IncludeItemTypes'] = includeItemTypes;
@@ -149,10 +151,9 @@ class EmbyApi {
 
   /// 获取单个项目详情
   Future<JellyfinItem> getItem(String itemId) async {
-    final response = await _get(
-      '/Users/$userId/Items/$itemId',
-      {'Fields': 'MediaSources'},
-    );
+    final response = await _get('/Users/$userId/Items/$itemId', {
+      'Fields': 'MediaSources',
+    });
     return JellyfinItem.fromJson(response as Map<String, dynamic>);
   }
 
@@ -228,16 +229,17 @@ class EmbyApi {
   Future<JellyfinPlaybackInfo> getPlaybackInfo(String itemId) async {
     final response = await _post(
       '/Items/$itemId/PlaybackInfo',
-      body: {
-        'UserId': userId,
-        'DeviceProfile': _getDeviceProfile(),
-      },
+      body: {'UserId': userId, 'DeviceProfile': _getDeviceProfile()},
     );
     return JellyfinPlaybackInfo.fromJson(response as Map<String, dynamic>);
   }
 
   /// 获取直接流 URL
-  String getDirectStreamUrl(String itemId, {String? mediaSourceId}) {
+  String getDirectStreamUrl(
+    String itemId, {
+    String? mediaSourceId,
+    bool isAudio = false,
+  }) {
     final params = <String, String>{
       'Static': 'true',
       'api_key': accessToken ?? '',
@@ -245,7 +247,8 @@ class EmbyApi {
     if (mediaSourceId != null) params['MediaSourceId'] = mediaSourceId;
 
     final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
-    return '$serverUrl/Videos/$itemId/stream?$query';
+    final mediaPath = isAudio ? 'Audio' : 'Videos';
+    return '$serverUrl/$mediaPath/$itemId/stream?$query';
   }
 
   /// 报告播放开始
@@ -256,13 +259,16 @@ class EmbyApi {
     int? audioStreamIndex,
     int? subtitleStreamIndex,
   }) async {
-    await _post('/Sessions/Playing', body: {
-      'ItemId': itemId,
-      'PositionTicks': ?positionTicks,
-      'PlaySessionId': ?playSessionId,
-      'AudioStreamIndex': ?audioStreamIndex,
-      'SubtitleStreamIndex': ?subtitleStreamIndex,
-    });
+    await _post(
+      '/Sessions/Playing',
+      body: {
+        'ItemId': itemId,
+        'PositionTicks': ?positionTicks,
+        'PlaySessionId': ?playSessionId,
+        'AudioStreamIndex': ?audioStreamIndex,
+        'SubtitleStreamIndex': ?subtitleStreamIndex,
+      },
+    );
   }
 
   /// 报告播放进度
@@ -272,12 +278,15 @@ class EmbyApi {
     String? playSessionId,
     bool isPaused = false,
   }) async {
-    await _post('/Sessions/Playing/Progress', body: {
-      'ItemId': itemId,
-      'PositionTicks': ?positionTicks,
-      'PlaySessionId': ?playSessionId,
-      'IsPaused': isPaused,
-    });
+    await _post(
+      '/Sessions/Playing/Progress',
+      body: {
+        'ItemId': itemId,
+        'PositionTicks': ?positionTicks,
+        'PlaySessionId': ?playSessionId,
+        'IsPaused': isPaused,
+      },
+    );
   }
 
   /// 报告播放停止
@@ -286,11 +295,14 @@ class EmbyApi {
     int? positionTicks,
     String? playSessionId,
   }) async {
-    await _post('/Sessions/Playing/Stopped', body: {
-      'ItemId': itemId,
-      'PositionTicks': ?positionTicks,
-      'PlaySessionId': ?playSessionId,
-    });
+    await _post(
+      '/Sessions/Playing/Stopped',
+      body: {
+        'ItemId': itemId,
+        'PositionTicks': ?positionTicks,
+        'PlaySessionId': ?playSessionId,
+      },
+    );
   }
 
   // === 用户数据 ===
@@ -336,8 +348,9 @@ class EmbyApi {
     if (tag != null) params['tag'] = tag;
     if (accessToken != null) params['api_key'] = accessToken!;
 
-    final query =
-        params.isNotEmpty ? '?${params.entries.map((e) => '${e.key}=${e.value}').join('&')}' : '';
+    final query = params.isNotEmpty
+        ? '?${params.entries.map((e) => '${e.key}=${e.value}').join('&')}'
+        : '';
 
     return '$serverUrl/Items/$itemId/Images/$imageType$query';
   }
@@ -347,15 +360,13 @@ class EmbyApi {
   Future<dynamic> _get(String path, [Map<String, String>? params]) async {
     var url = '$serverUrl$path';
     if (params != null && params.isNotEmpty) {
-      url += '?${params.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
+      url +=
+          '?${params.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&')}';
     }
 
     logger.d('EmbyApi GET: $url');
 
-    final response = await _client.get(
-      Uri.parse(url),
-      headers: _headers,
-    );
+    final response = await _client.get(Uri.parse(url), headers: _headers);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
@@ -387,10 +398,7 @@ class EmbyApi {
     final url = '$serverUrl$path';
     logger.d('EmbyApi DELETE: $url');
 
-    final response = await _client.delete(
-      Uri.parse(url),
-      headers: _headers,
-    );
+    final response = await _client.delete(Uri.parse(url), headers: _headers);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception('HTTP ${response.statusCode}: ${response.body}');
@@ -399,27 +407,27 @@ class EmbyApi {
 
   /// 获取设备配置（用于转码决策）
   Map<String, dynamic> _getDeviceProfile() => {
-      'MaxStreamingBitrate': 120000000,
-      'MaxStaticBitrate': 100000000,
-      'MusicStreamingTranscodingBitrate': 384000,
-      'DirectPlayProfiles': [
-        {
-          'Container': 'mp4,m4v,mov,mkv,webm',
-          'Type': 'Video',
-          'VideoCodec': 'h264,hevc,vp9',
-          'AudioCodec': 'aac,mp3,ac3,eac3,flac,opus',
-        },
-      ],
-      'TranscodingProfiles': [
-        {
-          'Container': 'mp4',
-          'Type': 'Video',
-          'VideoCodec': 'h264',
-          'AudioCodec': 'aac',
-          'Protocol': 'hls',
-        },
-      ],
-    };
+    'MaxStreamingBitrate': 120000000,
+    'MaxStaticBitrate': 100000000,
+    'MusicStreamingTranscodingBitrate': 384000,
+    'DirectPlayProfiles': [
+      {
+        'Container': 'mp4,m4v,mov,mkv,webm',
+        'Type': 'Video',
+        'VideoCodec': 'h264,hevc,vp9',
+        'AudioCodec': 'aac,mp3,ac3,eac3,flac,opus',
+      },
+    ],
+    'TranscodingProfiles': [
+      {
+        'Container': 'mp4',
+        'Type': 'Video',
+        'VideoCodec': 'h264',
+        'AudioCodec': 'aac',
+        'Protocol': 'hls',
+      },
+    ],
+  };
 
   void dispose() {
     _client.close();

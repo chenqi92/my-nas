@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:dio/io.dart';
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/tls_trust_store.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -20,10 +24,10 @@ class WebDavAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-        type: NasAdapterType.webdav,
-        name: 'WebDAV',
-        version: AppConstants.appVersion,
-      );
+    type: NasAdapterType.webdav,
+    name: 'WebDAV',
+    version: AppConstants.appVersion,
+  );
 
   @override
   bool get isConnected => _connected;
@@ -33,9 +37,10 @@ class WebDavAdapter implements NasAdapter {
 
   @override
   Future<ConnectionResult> connect(ConnectionConfig config) async {
-    logger..i('WebDavAdapter: 开始连接')
-    ..i('WebDavAdapter: 目标地址 => ${config.baseUrl}')
-    ..i('WebDavAdapter: 用户名 => ${config.username}');
+    logger
+      ..i('WebDavAdapter: 开始连接')
+      ..i('WebDavAdapter: 目标地址 => ${config.baseUrl}')
+      ..i('WebDavAdapter: 用户名 => ${config.username}');
 
     _config = config;
 
@@ -45,6 +50,19 @@ class WebDavAdapter implements NasAdapter {
         user: config.username,
         password: config.password,
       );
+
+      if (!config.verifySSL) {
+        _client!.c.httpClientAdapter = IOHttpClientAdapter(
+          createHttpClient: () => HttpClient()
+            ..badCertificateCallback = (cert, host, port) =>
+                TlsTrustStore.allowsInvalidCertificate(
+                  cert,
+                  host,
+                  port,
+                  allowSelfSigned: true,
+                ),
+        );
+      }
 
       // 设置超时和自签名证书支持
       _client!.setConnectTimeout(30000);
@@ -66,10 +84,7 @@ class WebDavAdapter implements NasAdapter {
 
       return ConnectionSuccess(
         sessionId: 'webdav-${DateTime.now().millisecondsSinceEpoch}',
-        serverInfo: ServerInfo(
-          hostname: config.host,
-          model: 'WebDAV Server',
-        ),
+        serverInfo: ServerInfo(hostname: config.host, model: 'WebDAV Server'),
       );
     } on Exception catch (e) {
       logger.e('WebDavAdapter: 连接失败', e);

@@ -30,8 +30,7 @@ class NoteTreeNode {
 
   /// 是否是任务文件（文件名包含 _task）
   bool get isTaskFile =>
-      type == NoteTreeNodeType.file &&
-      name.toLowerCase().contains('_task');
+      type == NoteTreeNodeType.file && name.toLowerCase().contains('_task');
 
   /// 显示名称（去除扩展名）
   String get displayName {
@@ -50,15 +49,15 @@ class NoteTreeNode {
     FileItem? fileItem,
     String? url,
   }) => NoteTreeNode(
-      name: name ?? this.name,
-      path: path ?? this.path,
-      type: type ?? this.type,
-      sourceId: sourceId ?? this.sourceId,
-      children: children ?? this.children,
-      isExpanded: isExpanded ?? this.isExpanded,
-      fileItem: fileItem ?? this.fileItem,
-      url: url ?? this.url,
-    );
+    name: name ?? this.name,
+    path: path ?? this.path,
+    type: type ?? this.type,
+    sourceId: sourceId ?? this.sourceId,
+    children: children ?? this.children,
+    isExpanded: isExpanded ?? this.isExpanded,
+    fileItem: fileItem ?? this.fileItem,
+    url: url ?? this.url,
+  );
 }
 
 /// 笔记目录树组件
@@ -131,7 +130,9 @@ class NoteTreeWidget extends StatelessWidget {
         ),
         // 展开的子节点
         if (isFolder && node.isExpanded)
-          ...node.children.map((child) => _buildNode(context, child, depth + 1)),
+          ...node.children.map(
+            (child) => _buildNode(context, child, depth + 1),
+          ),
       ],
     );
   }
@@ -158,87 +159,106 @@ class _NoteTreeItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final isFolder = node.type == NoteTreeNodeType.folder;
 
-    return Material(
-      color: Colors.transparent,
-      child: GestureDetector(
-        onLongPress: onContextMenu,
-        onSecondaryTap: onContextMenu,
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-          height: 36,
-          padding: EdgeInsets.only(left: 12 + depth * 16.0, right: 8),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark
-                    ? AppColors.primary.withValues(alpha: 0.2)
-                    : AppColors.primary.withValues(alpha: 0.1))
-                : null,
-            border: isSelected
-                ? Border(
-                    left: BorderSide(
-                      color: AppColors.primary,
-                      width: 3,
-                    ),
-                  )
-                : null,
-          ),
-          child: Row(
-            children: [
-              // 展开/收起图标（仅文件夹）
-              if (isFolder)
-                Icon(
-                  node.isExpanded
-                      ? Icons.keyboard_arrow_down_rounded
-                      : Icons.keyboard_arrow_right_rounded,
-                  size: 18,
-                  color: isDark ? AppColors.darkOnSurfaceVariant : Colors.grey,
-                )
-              else
-                const SizedBox(width: 18),
-              const SizedBox(width: 4),
-              // 图标
-              Icon(
-                _getIcon(),
-                size: 18,
-                color: _getIconColor(),
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      expanded: isFolder ? node.isExpanded : null,
+      label: isFolder
+          ? context.l10n.noteTreeFolderSemantic(node.displayName)
+          : context.l10n.noteTreeFileSemantic(node.displayName),
+      hint: isFolder
+          ? (node.isExpanded
+                ? context.l10n.noteTreeCollapseHint
+                : context.l10n.noteTreeExpandHint)
+          : context.l10n.noteTreeOpenHint,
+      child: Material(
+        color: Colors.transparent,
+        child: GestureDetector(
+          onLongPress: onContextMenu,
+          onSecondaryTap: onContextMenu,
+          child: InkWell(
+            excludeFromSemantics: true,
+            onTap: onTap,
+            child: Container(
+              height: 36,
+              padding: EdgeInsetsDirectional.only(
+                start: 12 + depth * 16.0,
+                end: 8,
               ),
-              const SizedBox(width: 8),
-              // 名称
-              Expanded(
-                child: Text(
-                  node.displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    color: isSelected
-                        ? AppColors.primary
-                        : (isDark ? AppColors.darkOnSurface : null),
-                  ),
-                ),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? (isDark
+                          ? AppColors.primary.withValues(alpha: 0.2)
+                          : AppColors.primary.withValues(alpha: 0.1))
+                    : null,
+                border: isSelected
+                    ? BorderDirectional(
+                        start: BorderSide(color: AppColors.primary, width: 3),
+                      )
+                    : null,
               ),
-              // 任务文件标记
-              if (node.isTaskFile)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    context.l10n.noteTreeTaskLabel,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.warning,
+              child: Row(
+                children: [
+                  // 展开/收起图标（仅文件夹）
+                  if (isFolder)
+                    Icon(
+                      node.isExpanded
+                          ? Icons.keyboard_arrow_down_rounded
+                          : Directionality.of(context) == TextDirection.rtl
+                          ? Icons.keyboard_arrow_left_rounded
+                          : Icons.keyboard_arrow_right_rounded,
+                      size: 18,
+                      color: isDark
+                          ? AppColors.darkOnSurfaceVariant
+                          : Colors.grey,
+                    )
+                  else
+                    const SizedBox(width: 18),
+                  const SizedBox(width: 4),
+                  // 图标
+                  Icon(_getIcon(), size: 18, color: _getIconColor()),
+                  const SizedBox(width: 8),
+                  // 名称
+                  Expanded(
+                    child: Text(
+                      node.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: isSelected
+                            ? AppColors.primary
+                            : (isDark ? AppColors.darkOnSurface : null),
+                      ),
                     ),
                   ),
-                ),
-            ],
+                  // 任务文件标记
+                  if (node.isTaskFile)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        context.l10n.noteTreeTaskLabel,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.warning,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
         ),
       ),
     );

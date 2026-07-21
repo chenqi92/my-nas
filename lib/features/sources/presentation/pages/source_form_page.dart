@@ -553,6 +553,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             if (number == null) {
               return context.l10n.sourceFormInvalidNumber;
             }
+            if (field.key == 'port' && (number < 1 || number > 65535)) {
+              return context.l10n.sourcesPortFieldValidationInvalid;
+            }
           }
           return field.validator?.call(value);
         },
@@ -575,6 +578,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       value: value,
       onChanged: (newValue) {
         setState(() {
+          if (field.key == 'useSsl') {
+            _updateDefaultPortForSsl(newValue);
+          }
           _formValues[field.key] = newValue.toString();
         });
       },
@@ -605,6 +611,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         if (value != null) {
           setState(() {
             _formValues[field.key] = value;
+            if (field.key == 'encryption') {
+              _updateDefaultFtpPort(value);
+            }
             // 当认证类型改变时，重置相应的认证状态
             if (field.key == 'authType') {
               if (widget.sourceType == SourceType.jellyfin) {
@@ -617,6 +626,32 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         }
       },
     );
+  }
+
+  void _updateDefaultPortForSsl(bool newUseSsl) {
+    final oldUseSsl = _formValues['useSsl'] == 'true';
+    final current = int.tryParse(_formValues['port']?.toString() ?? '');
+    final oldDefault = _defaultPortForSsl(widget.sourceType, oldUseSsl);
+    if (current != oldDefault) return;
+    final next = _defaultPortForSsl(widget.sourceType, newUseSsl);
+    _formValues['port'] = next.toString();
+    _controllers['port']?.text = next.toString();
+  }
+
+  int _defaultPortForSsl(SourceType type, bool useSsl) => switch (type) {
+    SourceType.synology => useSsl ? 5001 : 5000,
+    SourceType.qnap => useSsl ? 443 : 8080,
+    SourceType.webdav => useSsl ? 443 : 80,
+    SourceType.jellyfin || SourceType.emby => useSsl ? 8920 : 8096,
+    _ => type.defaultPort,
+  };
+
+  void _updateDefaultFtpPort(String encryption) {
+    final current = int.tryParse(_formValues['port']?.toString() ?? '');
+    if (current != 21 && current != 990) return;
+    final next = encryption == '隐式 TLS (FTPS)' ? 990 : 21;
+    _formValues['port'] = next.toString();
+    _controllers['port']?.text = next.toString();
   }
 
   /// 构建键值对列表字段（用于自定义请求头等）
@@ -1778,11 +1813,11 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
   }
 
   SourceEntity _buildSourceEntity() {
-    final name = _formValues['name'] as String? ?? '';
-    final host = _formValues['host'] as String? ?? '';
+    final name = (_formValues['name'] as String? ?? '').trim();
+    final host = (_formValues['host'] as String? ?? '').trim();
     final portStr = _formValues['port'] as String? ?? '';
     final port = int.tryParse(portStr) ?? widget.sourceType.defaultPort;
-    final username = _formValues['username'] as String? ?? '';
+    final username = (_formValues['username'] as String? ?? '').trim();
     final useSsl = _formValues['useSsl'] == 'true';
     final autoConnect = _formValues['autoConnect'] == 'true';
     final rememberDevice = _formValues['rememberDevice'] == 'true';
@@ -1801,9 +1836,20 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       'rememberDevice',
       'apiKey',
     };
+    final visibleKeys = _formConfig.sections
+        .expand((section) => section.fields)
+        .where(
+          (field) =>
+              field.visibilityCondition == null ||
+              field.visibilityCondition!(_formValues),
+        )
+        .map((field) => field.key)
+        .toSet();
 
     for (final entry in _formValues.entries) {
-      if (!standardKeys.contains(entry.key) && entry.value != null) {
+      if (!standardKeys.contains(entry.key) &&
+          visibleKeys.contains(entry.key) &&
+          entry.value != null) {
         extraConfig[entry.key] = entry.value;
       }
     }

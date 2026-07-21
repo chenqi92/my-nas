@@ -6,6 +6,7 @@ import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/errors/exceptions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/network/tls_trust_store.dart';
 
 class DioClient {
   DioClient({String? baseUrl, bool allowSelfSigned = false}) {
@@ -54,8 +55,16 @@ class DioClient {
           createHttpClient: () {
             final client = HttpClient()
               ..badCertificateCallback = (cert, host, port) {
-                logger.w('DioClient: 接受自签名证书 - host: $host, port: $port');
-                return true;
+                final accepted = TlsTrustStore.allowsInvalidCertificate(
+                  cert,
+                  host,
+                  port,
+                  allowSelfSigned: true,
+                );
+                if (accepted) {
+                  logger.w('DioClient: 接受已固定的自签名证书 - host: $host, port: $port');
+                }
+                return accepted;
               };
             return client;
           },

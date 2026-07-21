@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/tls_trust_store.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -28,10 +29,10 @@ class FnOSAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-        type: NasAdapterType.fnos,
-        name: appL10n.fnosAdapterName,
-        version: AppConstants.appVersion,
-      );
+    type: NasAdapterType.fnos,
+    name: appL10n.fnosAdapterName,
+    version: AppConstants.appVersion,
+  );
 
   @override
   bool get isConnected => _connected;
@@ -41,26 +42,35 @@ class FnOSAdapter implements NasAdapter {
 
   @override
   Future<ConnectionResult> connect(ConnectionConfig config) async {
-    logger..i('FnOSAdapter: 开始连接')
-    ..i('FnOSAdapter: 目标地址 => ${config.baseUrl}')
-    ..i('FnOSAdapter: 用户名 => ${config.username}');
+    logger
+      ..i('FnOSAdapter: 开始连接')
+      ..i('FnOSAdapter: 目标地址 => ${config.baseUrl}')
+      ..i('FnOSAdapter: 用户名 => ${config.username}');
 
     _config = config;
 
     try {
       // 初始化 Dio
-      _dio = Dio(BaseOptions(
-        baseUrl: config.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        sendTimeout: const Duration(seconds: 60),
-      ));
+      _dio = Dio(
+        BaseOptions(
+          baseUrl: config.baseUrl,
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 60),
+        ),
+      );
 
       // 自签名证书支持
       if (!config.verifySSL) {
         (_dio!.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
           final client = HttpClient()
-          ..badCertificateCallback = (cert, host, port) => true;
+            ..badCertificateCallback = (cert, host, port) =>
+                TlsTrustStore.allowsInvalidCertificate(
+                  cert,
+                  host,
+                  port,
+                  allowSelfSigned: true,
+                );
           return client;
         };
       }
@@ -76,23 +86,7 @@ class FnOSAdapter implements NasAdapter {
 
       switch (result) {
         case FnOSAuthSuccess():
-          logger.i('FnOSAdapter: 登录成功');
-
-          // 获取设备信息
-          final deviceInfo = await _api!.getDeviceInfo();
-
-          _fileSystem = FnOSFileSystem(api: _api!);
-          _connected = true;
-
-          return ConnectionSuccess(
-            sessionId: result.token,
-            serverInfo: ServerInfo(
-              hostname: deviceInfo.hostname,
-              model: deviceInfo.model ?? 'fnOS NAS',
-              version: deviceInfo.version,
-              serial: deviceInfo.serial,
-            ),
-          );
+          return await _completeConnection(result);
 
         case FnOSAuthFailure():
           logger.e('FnOSAdapter: 登录失败 => ${result.error}');
@@ -105,12 +99,55 @@ class FnOSAdapter implements NasAdapter {
     } on DioException catch (e) {
       logger.e('FnOSAdapter: 网络错误', e);
       _connected = false;
+      await _cleanup();
       return ConnectionFailure(error: _parseError(e));
     } on Exception catch (e) {
       logger.e('FnOSAdapter: 连接失败', e);
       _connected = false;
+      await _cleanup();
       return ConnectionFailure(error: e.toString());
     }
+  }
+
+  Future<ConnectionResult> verify2FA(String otpCode) async {
+    final config = _config;
+    if (config == null || _api == null) {
+      return ConnectionFailure(error: appL10n.fnosNetworkError);
+    }
+    final result = await _api!.login(
+      username: config.username,
+      password: config.password,
+      otpCode: otpCode,
+    );
+    return switch (result) {
+      FnOSAuthSuccess() => await _completeConnection(result),
+      FnOSAuthFailure(:final error, :final code) => ConnectionFailure(
+        error: error,
+        code: code,
+      ),
+      FnOSAuthRequires2FA() => ConnectionFailure(
+        error: appL10n.sourceManager2FAVerificationFailed,
+      ),
+    };
+  }
+
+  Future<ConnectionResult> _completeConnection(FnOSAuthSuccess result) async {
+    logger.i('FnOSAdapter: 登录成功，验证文件 API');
+    // A successful auth endpoint is insufficient: unsupported firmware can
+    // still reject every file API. A valid empty list is accepted.
+    await _api!.listShares();
+    final deviceInfo = await _api!.getDeviceInfo();
+    _fileSystem = FnOSFileSystem(api: _api!);
+    _connected = true;
+    return ConnectionSuccess(
+      sessionId: result.token,
+      serverInfo: ServerInfo(
+        hostname: deviceInfo.hostname,
+        model: deviceInfo.model ?? 'fnOS NAS',
+        version: deviceInfo.version,
+        serial: deviceInfo.serial,
+      ),
+    );
   }
 
   String _parseError(DioException e) {
@@ -126,8 +163,15 @@ class FnOSAdapter implements NasAdapter {
 
   @override
   Future<void> disconnect() async {
-    if (!_connected) return;
+    if (_dio == null && _api == null) return;
 
+    await _cleanup();
+    _connected = false;
+    _config = null;
+    logger.i('FnOSAdapter: 已断开连接');
+  }
+
+  Future<void> _cleanup() async {
     try {
       await _api?.logout();
     } on Exception catch (e) {
@@ -139,9 +183,6 @@ class FnOSAdapter implements NasAdapter {
     _api = null;
     _fileSystem = null;
     _connected = false;
-    _config = null;
-
-    logger.i('FnOSAdapter: 已断开连接');
   }
 
   @override
@@ -152,8 +193,7 @@ class FnOSAdapter implements NasAdapter {
     }
 
     try {
-      // 尝试获取设备信息来验证连接是否有效
-      await _api!.getDeviceInfo().timeout(
+      await _api!.listShares().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
           throw Exception(appL10n.fnosHealthCheckTimeoutError);

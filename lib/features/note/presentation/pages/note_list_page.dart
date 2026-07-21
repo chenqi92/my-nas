@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,7 @@ import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/note/data/services/markdown_parser.dart';
+import 'package:my_nas/features/note/data/services/note_write_guard.dart';
 import 'package:my_nas/features/note/domain/entities/note_item.dart';
 import 'package:my_nas/features/note/presentation/widgets/note_tree_widget.dart';
 import 'package:my_nas/features/note/presentation/widgets/task_list_widget.dart';
@@ -44,6 +46,8 @@ final notePageProvider = StateNotifierProvider<NotePageNotifier, NotePageState>(
 
 sealed class NotePageState {}
 
+enum NoteSaveResult { saved, conflict }
+
 class NotePageLoading extends NotePageState {
   NotePageLoading({this.message});
 
@@ -61,7 +65,9 @@ class NotePageLoaded extends NotePageState {
     this.isEditing = false,
     this.hasChanges = false,
     this.isLoadingContent = false,
+    this.isSaving = false,
     this.livePreview = true,
+    this.sourceModifiedAt,
   });
 
   final List<NoteTreeNode> treeNodes;
@@ -71,7 +77,9 @@ class NotePageLoaded extends NotePageState {
   final bool isEditing;
   final bool hasChanges;
   final bool isLoadingContent;
+  final bool isSaving;
   final bool livePreview; // 实时预览模式
+  final DateTime? sourceModifiedAt;
 
   /// 当前选中的文件是否是任务文件
   bool get isTaskFile => selectedNode?.isTaskFile ?? false;
@@ -84,7 +92,9 @@ class NotePageLoaded extends NotePageState {
     bool? isEditing,
     bool? hasChanges,
     bool? isLoadingContent,
+    bool? isSaving,
     bool? livePreview,
+    DateTime? sourceModifiedAt,
     bool clearSelection = false,
   }) => NotePageLoaded(
     treeNodes: treeNodes ?? this.treeNodes,
@@ -94,7 +104,11 @@ class NotePageLoaded extends NotePageState {
     isEditing: isEditing ?? this.isEditing,
     hasChanges: hasChanges ?? this.hasChanges,
     isLoadingContent: isLoadingContent ?? this.isLoadingContent,
+    isSaving: isSaving ?? this.isSaving,
     livePreview: livePreview ?? this.livePreview,
+    sourceModifiedAt: clearSelection
+        ? null
+        : (sourceModifiedAt ?? this.sourceModifiedAt),
   );
 }
 
@@ -433,6 +447,7 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
     // 加载文件内容
     try {
       final content = await readNodeText(node);
+      final modifiedAt = await _getSourceModifiedAt(node);
 
       // 只有任务文件才解析任务
       final tasks = node.isTaskFile
@@ -443,12 +458,28 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
         content: content,
         tasks: tasks,
         isLoadingContent: false,
+        sourceModifiedAt: modifiedAt ?? node.fileItem?.modifiedTime,
       );
     } on Exception catch (e) {
       state = (state as NotePageLoaded).copyWith(
         content: appL10n.noteListLoadContentFailed(e),
         isLoadingContent: false,
       );
+    }
+  }
+
+  Future<DateTime?> _getSourceModifiedAt(NoteTreeNode node) async {
+    final connection = _ref.read(activeConnectionsProvider)[node.sourceId];
+    if (connection == null || connection.status != SourceStatus.connected) {
+      return null;
+    }
+    try {
+      return (await connection.adapter.fileSystem.getFileInfo(
+        node.path,
+      )).modifiedTime;
+    } on Exception catch (e) {
+      logger.w('读取笔记修改时间失败: ${node.path} - $e');
+      return null;
     }
   }
 
@@ -527,6 +558,84 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
         hasChanges: true,
       );
     }
+  }
+
+  /// 使用乐观并发控制把当前内容写回源文件。
+  ///
+  /// 保存前重新读取远端修改时间；若它晚于打开笔记时记录的时间，则先返回
+  /// [NoteSaveResult.conflict]，由 UI 让用户选择覆盖或重新加载。
+  Future<NoteSaveResult> saveCurrent({bool force = false}) async {
+    final current = state;
+    if (current is! NotePageLoaded || current.selectedNode == null) {
+      throw StateError('No note is selected');
+    }
+    if (!current.hasChanges) return NoteSaveResult.saved;
+
+    final node = current.selectedNode!;
+    final connection = _ref.read(activeConnectionsProvider)[node.sourceId];
+    if (connection == null || connection.status != SourceStatus.connected) {
+      throw Exception(appL10n.noteListConnectionDisconnected);
+    }
+    final fs = connection.adapter.fileSystem;
+    if (!fs.supportsWriteOperations) {
+      throw UnsupportedError(appL10n.noteListWriteUnsupported);
+    }
+
+    final remoteModifiedAt = await _getSourceModifiedAt(node);
+    final baseline = current.sourceModifiedAt;
+    if (!force &&
+        hasNoteWriteConflict(
+          openedRevision: baseline,
+          remoteRevision: remoteModifiedAt,
+        )) {
+      return NoteSaveResult.conflict;
+    }
+
+    state = current.copyWith(isSaving: true);
+    try {
+      await fs.writeFile(node.path, utf8.encode(current.content ?? ''));
+      final savedModifiedAt = await _getSourceModifiedAt(node);
+      final latest = state;
+      if (latest is NotePageLoaded) {
+        state = latest.copyWith(
+          hasChanges: false,
+          isSaving: false,
+          sourceModifiedAt:
+              savedModifiedAt ?? remoteModifiedAt ?? DateTime.now(),
+        );
+      }
+      return NoteSaveResult.saved;
+    } on Object {
+      final latest = state;
+      if (latest is NotePageLoaded) {
+        state = latest.copyWith(isSaving: false);
+      }
+      rethrow;
+    }
+  }
+
+  /// 上传附件到笔记同级目录，并返回可插入 Markdown 的相对文件名。
+  Future<String> uploadAttachment(String localPath) async {
+    final current = state;
+    if (current is! NotePageLoaded || current.selectedNode == null) {
+      throw StateError('No note is selected');
+    }
+    final node = current.selectedNode!;
+    final connection = _ref.read(activeConnectionsProvider)[node.sourceId];
+    if (connection == null || connection.status != SourceStatus.connected) {
+      throw Exception(appL10n.noteListConnectionDisconnected);
+    }
+    final fs = connection.adapter.fileSystem;
+    if (!fs.supportsWriteOperations) {
+      throw UnsupportedError(appL10n.noteListWriteUnsupported);
+    }
+
+    final normalized = localPath.replaceAll(Platform.pathSeparator, '/');
+    final fileName = normalized.split('/').last;
+    final slash = node.path.lastIndexOf('/');
+    final parentPath = slash <= 0 ? '/' : node.path.substring(0, slash);
+    await fs.upload(localPath, parentPath, fileName: fileName);
+    return fileName;
   }
 
   /// 切换任务状态
@@ -663,9 +772,115 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
   final ScrollController _previewScrollController = ScrollController();
 
   /// 返回目录
-  void _backToDirectory() {
+  Future<void> _backToDirectory() async {
+    final current = ref.read(notePageProvider);
+    if (current is NotePageLoaded && current.hasChanges) {
+      final discard = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(context.l10n.noteListUnsavedTitle),
+          content: Text(context.l10n.noteListUnsavedMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.l10n.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.l10n.noteListDiscardChanges),
+            ),
+          ],
+        ),
+      );
+      if (discard != true || !mounted) return;
+    }
     ref.read(notePageProvider.notifier).setEditing(editing: false);
-    ref.read(notePageProvider.notifier).loadTree();
+    await ref.read(notePageProvider.notifier).loadTree();
+  }
+
+  Future<void> _saveNote({bool force = false}) async {
+    try {
+      final result = await ref
+          .read(notePageProvider.notifier)
+          .saveCurrent(force: force);
+      if (!mounted) return;
+      if (result == NoteSaveResult.conflict) {
+        await _showSaveConflictDialog();
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.noteListSaveSuccess)));
+    } on Object catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.noteListSaveFailed(e))),
+      );
+    }
+  }
+
+  Future<void> _showSaveConflictDialog() async {
+    final action = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.noteListConflictTitle),
+        content: Text(context.l10n.noteListConflictMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, 'reload'),
+            child: Text(context.l10n.noteListReloadRemote),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, 'overwrite'),
+            child: Text(context.l10n.noteListOverwriteRemote),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    if (action == 'overwrite') {
+      await _saveNote(force: true);
+    } else if (action == 'reload') {
+      final current = ref.read(notePageProvider);
+      if (current is NotePageLoaded && current.selectedNode != null) {
+        await ref
+            .read(notePageProvider.notifier)
+            .selectFile(current.selectedNode!);
+      }
+    }
+  }
+
+  Future<void> _pickAttachment() async {
+    final result = await FilePicker.platform.pickFiles();
+    final path = result?.files.single.path;
+    if (path == null) return;
+    try {
+      final fileName = await ref
+          .read(notePageProvider.notifier)
+          .uploadAttachment(path);
+      if (!mounted) return;
+      final lower = fileName.toLowerCase();
+      final isImage = const [
+        '.png',
+        '.jpg',
+        '.jpeg',
+        '.gif',
+        '.webp',
+        '.svg',
+      ].any(lower.endsWith);
+      _insertMarkdown(isImage ? '![$fileName](' : '[$fileName](', '$fileName)');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.noteListAttachmentUploaded(fileName)),
+        ),
+      );
+    } on Object catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.noteListAttachmentFailed(e))),
+      );
+    }
   }
 
   /// 显示笔记上下文菜单
@@ -1218,6 +1433,19 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
             if (node.isTaskFile && state.tasks.isNotEmpty) ...[
               _buildTaskProgress(state, isDark),
               const SizedBox(width: 8),
+            ],
+            if (state.hasChanges || state.isSaving) ...[
+              IconButton(
+                onPressed: state.isSaving ? null : _saveNote,
+                icon: state.isSaving
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save_rounded),
+                tooltip: context.l10n.noteListSaveTooltip,
+              ),
+              const SizedBox(width: 4),
             ],
             // 编辑/预览切换
             _buildMobileModeTabs(state, isDark),
@@ -1861,6 +2089,11 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
           tooltip: context.l10n.noteListToolLinkTooltip,
           onTap: () => _insertMarkdown('[', '](url)'),
         ),
+        _buildToolButton(
+          icon: Icons.attach_file_rounded,
+          tooltip: context.l10n.noteListToolAttachmentTooltip,
+          onTap: _pickAttachment,
+        ),
       ],
     ),
   );
@@ -1890,7 +2123,7 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
         ),
       );
     } else {
-      final offset = _editController.selection.baseOffset;
+      final offset = _editController.selection.baseOffset.clamp(0, text.length);
       _editController.value = TextEditingValue(
         text:
             text.substring(0, offset) +

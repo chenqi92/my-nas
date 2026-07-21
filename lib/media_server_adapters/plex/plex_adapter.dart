@@ -1,5 +1,6 @@
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -33,10 +34,10 @@ class PlexAdapter extends MediaServerAdapter {
 
   @override
   ServiceAdapterInfo get info => ServiceAdapterInfo(
-        name: 'Plex',
-        type: SourceType.plex,
-        description: appL10n.plexAdapterDescription,
-      );
+    name: 'Plex',
+    type: SourceType.plex,
+    description: appL10n.plexAdapterDescription,
+  );
 
   @override
   bool get isConnected => _isConnected;
@@ -73,7 +74,9 @@ class PlexAdapter extends MediaServerAdapter {
   }
 
   @override
-  Future<ServiceConnectionResult> connect(ServiceConnectionConfig config) async {
+  Future<ServiceConnectionResult> connect(
+    ServiceConnectionConfig config,
+  ) async {
     try {
       // 加载或生成持久化的 clientId
       await _loadOrGenerateClientId();
@@ -83,6 +86,9 @@ class PlexAdapter extends MediaServerAdapter {
         authToken: config.apiKey,
         clientIdentifier: _clientId,
         clientName: 'MyNas App',
+        client: InsecureHttpClient.createClient(
+          allowSelfSigned: !config.verifySSL,
+        ),
       );
 
       // 验证令牌并获取服务器信息
@@ -143,11 +149,13 @@ class PlexAdapter extends MediaServerAdapter {
     final libraries = await _api.getLibraries();
     return libraries
         .where((lib) => lib.isVideo)
-        .map((lib) => MediaLibrary(
-              id: lib.key,
-              name: lib.title,
-              type: _toMediaLibraryType(lib.type),
-            ))
+        .map(
+          (lib) => MediaLibrary(
+            id: lib.key,
+            name: lib.title,
+            type: _toMediaLibraryType(lib.type),
+          ),
+        )
         .toList();
   }
 
@@ -414,24 +422,24 @@ class PlexAdapter extends MediaServerAdapter {
   // === 转换方法 ===
 
   MediaLibraryType _toMediaLibraryType(String type) => switch (type) {
-        'movie' => MediaLibraryType.movies,
-        'show' => MediaLibraryType.tvShows,
-        'artist' => MediaLibraryType.music,
-        'photo' => MediaLibraryType.photos,
-        _ => MediaLibraryType.unknown,
-      };
+    'movie' => MediaLibraryType.movies,
+    'show' => MediaLibraryType.tvShows,
+    'artist' => MediaLibraryType.music,
+    'photo' => MediaLibraryType.photos,
+    _ => MediaLibraryType.unknown,
+  };
 
   MediaItemType _toMediaItemType(String type) => switch (type) {
-        'movie' => MediaItemType.movie,
-        'show' => MediaItemType.series,
-        'season' => MediaItemType.season,
-        'episode' => MediaItemType.episode,
-        'artist' => MediaItemType.folder,
-        'album' => MediaItemType.musicAlbum,
-        'track' => MediaItemType.audio,
-        'photo' => MediaItemType.photo,
-        _ => MediaItemType.unknown,
-      };
+    'movie' => MediaItemType.movie,
+    'show' => MediaItemType.series,
+    'season' => MediaItemType.season,
+    'episode' => MediaItemType.episode,
+    'artist' => MediaItemType.folder,
+    'album' => MediaItemType.musicAlbum,
+    'track' => MediaItemType.audio,
+    'photo' => MediaItemType.photo,
+    _ => MediaItemType.unknown,
+  };
 
   MediaItem _toMediaItem(PlexMediaItem item) {
     // 获取流信息
@@ -441,24 +449,28 @@ class PlexAdapter extends MediaServerAdapter {
       if (media.parts != null && media.parts!.isNotEmpty) {
         final part = media.parts!.first;
         if (part.streams != null) {
-          streams = part.streams!.map((s) => MediaStream(
-              type: s.isVideo
-                  ? MediaStreamType.video
-                  : s.isAudio
+          streams = part.streams!
+              .map(
+                (s) => MediaStream(
+                  type: s.isVideo
+                      ? MediaStreamType.video
+                      : s.isAudio
                       ? MediaStreamType.audio
                       : MediaStreamType.subtitle,
-              index: s.index ?? 0,
-              codec: s.codec,
-              language: s.language,
-              title: s.title,
-              isDefault: s.isDefault,
-              isForced: s.forced,
-              width: s.width,
-              height: s.height,
-              bitRate: s.bitrate,
-              channels: s.channels,
-              sampleRate: s.samplingRate,
-            )).toList();
+                  index: s.index ?? 0,
+                  codec: s.codec,
+                  language: s.language,
+                  title: s.title,
+                  isDefault: s.isDefault,
+                  isForced: s.forced,
+                  width: s.width,
+                  height: s.height,
+                  bitRate: s.bitrate,
+                  channels: s.channels,
+                  sampleRate: s.samplingRate,
+                ),
+              )
+              .toList();
         }
       }
     }
@@ -490,7 +502,8 @@ class PlexAdapter extends MediaServerAdapter {
           ? DateTime.tryParse(item.originallyAvailableAt!)
           : null,
       runTimeTicks: item.duration != null
-          ? item.duration! * 10000 // 毫秒转 ticks
+          ? item.duration! *
+                10000 // 毫秒转 ticks
           : null,
       genres: item.genres,
       mediaStreams: streams,

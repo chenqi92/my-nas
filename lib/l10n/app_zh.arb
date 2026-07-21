@@ -2762,6 +2762,46 @@
   "noteListToolTaskTooltip": "任务",
   "noteListToolCodeTooltip": "代码",
   "noteListToolLinkTooltip": "链接",
+  "noteListToolAttachmentTooltip": "上传附件",
+  "noteListSaveTooltip": "保存笔记",
+  "noteListSaveSuccess": "笔记已保存",
+  "noteListSaveFailed": "保存失败：{error}",
+  "@noteListSaveFailed": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "noteListWriteUnsupported": "当前数据源不支持写入笔记",
+  "noteListConflictTitle": "检测到远端修改",
+  "noteListConflictMessage": "这篇笔记在你打开后已被其他设备修改。可以重新加载远端版本，或用当前内容覆盖它。",
+  "noteListReloadRemote": "重新加载",
+  "noteListOverwriteRemote": "覆盖远端",
+  "noteListUnsavedTitle": "尚未保存",
+  "noteListUnsavedMessage": "当前笔记有未保存的修改，确定要放弃吗？",
+  "noteListDiscardChanges": "放弃修改",
+  "noteListAttachmentUploaded": "附件 {fileName} 已上传",
+  "@noteListAttachmentUploaded": {
+    "placeholders": {
+      "fileName": { "type": "String" }
+    }
+  },
+  "noteListAttachmentFailed": "附件上传失败：{error}",
+  "@noteListAttachmentFailed": {
+    "placeholders": {
+      "error": { "type": "Object" }
+    }
+  },
+  "noteTreeFolderSemantic": "文件夹 {name}",
+  "@noteTreeFolderSemantic": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "noteTreeFileSemantic": "笔记 {name}",
+  "@noteTreeFileSemantic": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "noteTreeExpandHint": "展开文件夹",
+  "noteTreeCollapseHint": "收起文件夹",
+  "noteTreeOpenHint": "打开笔记",
   "noteListEmptyNoteLibrary": "暂无笔记",
   "noteListEmptyNoteMessage": "在配置的目录中添加 Markdown 文件后将显示在这里",
   "noteEditorTabPreview": "预览",

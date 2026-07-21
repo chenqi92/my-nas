@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/network/network_endpoint.dart';
 import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:uuid/uuid.dart';
 
@@ -340,6 +341,27 @@ enum SourceStatus { disconnected, connecting, requires2FA, connected, error }
 
 /// 连接源实体
 class SourceEntity {
+  static const sensitiveExtraConfigKeys = <String>{
+    'accessToken',
+    'refreshToken',
+    'apiKey',
+    'apiToken',
+    'authToken',
+    'token',
+    'plexToken',
+    'xApiKey',
+    'clientSecret',
+    'rpcSecret',
+    'passkey',
+    'privateKey',
+    'privateKeyPassphrase',
+    'cookie',
+    'customHeaders',
+    'authorization',
+    // Tracker RSS links commonly embed a passkey in their query string.
+    'rssUrl',
+  };
+
   SourceEntity({
     required this.name,
     required this.type,
@@ -367,10 +389,7 @@ class SourceEntity {
   factory SourceEntity.fromJson(Map<String, dynamic> json) => SourceEntity(
     id: json['id'] as String,
     name: json['name'] as String,
-    type: SourceType.values.firstWhere(
-      (t) => t.id == json['type'],
-      orElse: () => SourceType.synology,
-    ),
+    type: _sourceTypeFromId(json['type']),
     host: json['host'] as String? ?? '',
     port: json['port'] as int? ?? 5001,
     username: json['username'] as String? ?? '',
@@ -442,10 +461,12 @@ class SourceEntity {
 
   String get displayName => name.isNotEmpty ? name : host;
 
-  String get baseUrl {
-    final protocol = useSsl ? 'https' : 'http';
-    return '$protocol://$host:$port';
-  }
+  String get baseUrl => NetworkEndpoint.buildBaseUrl(
+    host: host,
+    port: port,
+    useSsl: useSsl,
+    basePath: extraConfig?['basePath']?.toString(),
+  );
 
   /// 获取唯一标识符（用于凭证存储）
   String get credentialKey => '${type.id}_${host}_${port}_$username';
@@ -550,7 +571,7 @@ class SourceEntity {
     sortOrder: sortOrder ?? this.sortOrder,
   );
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson({bool includeSecrets = true}) => {
     'id': id,
     'name': name,
     'type': type.id,
@@ -562,11 +583,32 @@ class SourceEntity {
     'lastConnected': lastConnected?.toIso8601String(),
     'autoConnect': autoConnect,
     'rememberDevice': rememberDevice,
-    'accessToken': accessToken,
-    'refreshToken': refreshToken,
+    if (includeSecrets) 'accessToken': accessToken,
+    if (includeSecrets) 'refreshToken': refreshToken,
     'tokenExpiresAt': tokenExpiresAt?.toIso8601String(),
-    'apiKey': apiKey,
-    'extraConfig': extraConfig,
+    if (includeSecrets) 'apiKey': apiKey,
+    'extraConfig': includeSecrets
+        ? extraConfig
+        : _withoutSensitiveExtraConfig(extraConfig),
     'sortOrder': sortOrder,
   };
+
+  static Map<String, dynamic>? _withoutSensitiveExtraConfig(
+    Map<String, dynamic>? config,
+  ) {
+    if (config == null) return null;
+    final sanitized = Map<String, dynamic>.from(config);
+    for (final key in sensitiveExtraConfigKeys) {
+      sanitized.remove(key);
+    }
+    return sanitized;
+  }
+
+  static SourceType _sourceTypeFromId(dynamic value) {
+    final id = value?.toString();
+    for (final type in SourceType.values) {
+      if (type.id == id) return type;
+    }
+    throw FormatException('未知的连接源类型: $id');
+  }
 }

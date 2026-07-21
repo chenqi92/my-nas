@@ -142,7 +142,7 @@ class SynologyApi {
       final data = response['data'] as Map<String, dynamic>;
       _sid = data['sid'] as String;
 
-      logger.i('SynologyApi: 登录成功, sid => ${_sid!.substring(0, 8)}...');
+      logger.i('SynologyApi: 登录成功');
 
       return AuthSuccess(
         sid: _sid!,
@@ -862,7 +862,7 @@ class SynologyApi {
       final newSid = await _onSessionRefresh!();
       if (newSid != null) {
         _sid = newSid;
-        logger.i('SynologyApi: 会话刷新成功，新 sid => ${_sid!.substring(0, 8)}...');
+        logger.i('SynologyApi: 会话刷新成功');
         return true;
       }
       logger.w('SynologyApi: 会话刷新失败，回调返回 null');

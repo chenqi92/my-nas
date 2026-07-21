@@ -130,7 +130,7 @@ class UGreenFileSystem implements NasFileSystem {
     FileRange? range,
   }) async {
     final url = await api.getFileUrl(path);
-    return api.getUrlStream(url);
+    return api.getUrlStream(url, range: range);
   }
 
   @override

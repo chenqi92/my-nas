@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/errors.dart';
-import 'package:my_nas/core/utils/logger.dart';
 import 'package:xml/xml.dart';
 
 /// UPnP ContentDirectory 服务的 Browse 结果项
@@ -59,11 +58,9 @@ class UpnpContentItem {
 ///
 /// 大多数 MediaServer 是只读的——本类不实现写操作。
 class UpnpContentDirectoryClient {
-  UpnpContentDirectoryClient({
-    required String controlUrl,
-    Dio? dio,
-  })  : _controlUrl = controlUrl,
-        _dio = dio ?? Dio();
+  UpnpContentDirectoryClient({required String controlUrl, Dio? dio})
+    : _controlUrl = controlUrl,
+      _dio = dio ?? Dio();
 
   final String _controlUrl;
   final Dio _dio;
@@ -80,6 +77,51 @@ class UpnpContentDirectoryClient {
     String browseFlag = 'BrowseDirectChildren',
     int startingIndex = 0,
     int requestedCount = 0,
+  }) async {
+    final fetchAll =
+        browseFlag == 'BrowseDirectChildren' && requestedCount == 0;
+    final pageSize = fetchAll ? 200 : requestedCount;
+    final items = <UpnpContentItem>[];
+    final seenItemIds = <String>{};
+    var nextIndex = startingIndex;
+    var pageCount = 0;
+
+    while (true) {
+      if (pageCount++ >= 10000) {
+        throw StateError('UPnP Browse 分页数量异常，已停止请求');
+      }
+      final page = await _browsePage(
+        objectId,
+        browseFlag: browseFlag,
+        startingIndex: nextIndex,
+        requestedCount: pageSize,
+      );
+      final newItems = page.items.where((item) {
+        final identity = item.id.isNotEmpty
+            ? item.id
+            : '${item.title}|${item.contentUrl ?? ''}';
+        return seenItemIds.add(identity);
+      }).toList();
+      if (fetchAll && page.items.isNotEmpty && newItems.isEmpty) {
+        throw StateError('UPnP 服务器忽略了 StartingIndex，已停止重复分页');
+      }
+      items.addAll(newItems);
+      if (!fetchAll) return items;
+
+      final returned = page.numberReturned ?? page.items.length;
+      if (returned <= 0) break;
+      nextIndex += returned;
+      if (page.totalMatches != null && nextIndex >= page.totalMatches!) break;
+      if (page.totalMatches == null && returned < pageSize) break;
+    }
+    return items;
+  }
+
+  Future<_BrowsePage> _browsePage(
+    String objectId, {
+    required String browseFlag,
+    required int startingIndex,
+    required int requestedCount,
   }) async {
     final body = _buildBrowseEnvelope(
       objectId: objectId,
@@ -102,7 +144,7 @@ class UpnpContentDirectoryClient {
       );
       final xml = response.data;
       if (xml == null || xml.isEmpty) {
-        return const [];
+        throw StateError('UPnP Browse 响应为空');
       }
       return _parseBrowseResponse(xml);
     } on DioException catch (e, st) {
@@ -143,54 +185,59 @@ class UpnpContentDirectoryClient {
       .replaceAll("'", '&apos;');
 
   /// 解析 SOAP 响应
-  List<UpnpContentItem> _parseBrowseResponse(String soapXml) {
+  _BrowsePage _parseBrowseResponse(String soapXml) {
     final doc = XmlDocument.parse(soapXml);
     final result = doc.findAllElements('Result').firstOrNull;
     if (result == null) {
-      logger.w('UpnpContentDirectoryClient: SOAP 响应缺少 Result');
-      return const [];
+      throw FormatException('UPnP SOAP 响应缺少 Result');
     }
     final didlLite = result.innerText.trim();
-    if (didlLite.isEmpty) return const [];
-
-    return _parseDidlLite(didlLite);
+    final items = didlLite.isEmpty
+        ? const <UpnpContentItem>[]
+        : _parseDidlLite(didlLite);
+    final numberReturned = int.tryParse(
+      doc.findAllElements('NumberReturned').firstOrNull?.innerText ?? '',
+    );
+    final totalMatches = int.tryParse(
+      doc.findAllElements('TotalMatches').firstOrNull?.innerText ?? '',
+    );
+    return _BrowsePage(
+      items: items,
+      numberReturned: numberReturned,
+      totalMatches: totalMatches,
+    );
   }
 
   /// 解析 DIDL-Lite XML
   List<UpnpContentItem> _parseDidlLite(String didl) {
-    try {
-      final doc = XmlDocument.parse(didl);
-      final items = <UpnpContentItem>[];
-      // container 元素 = 目录
-      for (final c in doc.findAllElements('container')) {
-        items.add(_parseEntry(c, isContainer: true));
-      }
-      // item 元素 = 文件
-      for (final i in doc.findAllElements('item')) {
-        items.add(_parseEntry(i, isContainer: false));
-      }
-      return items;
-    } on Exception catch (e, st) {
-      AppError.ignore(e, st, 'UpnpContentDirectoryClient.parseDidlLite');
-      return const [];
+    final doc = XmlDocument.parse(didl);
+    final items = <UpnpContentItem>[];
+    // container 元素 = 目录
+    for (final c in doc.findAllElements('container')) {
+      items.add(_parseEntry(c, isContainer: true));
     }
+    // item 元素 = 文件
+    for (final i in doc.findAllElements('item')) {
+      items.add(_parseEntry(i, isContainer: false));
+    }
+    return items;
   }
 
   UpnpContentItem _parseEntry(XmlElement el, {required bool isContainer}) {
     final id = el.getAttribute('id') ?? '';
     final parentId = el.getAttribute('parentID') ?? '';
-    final title = el
-            .findElements('dc:title')
-            .firstOrNull
-            ?.innerText ??
+    final title =
+        el.findElements('dc:title').firstOrNull?.innerText ??
         // 部分服务器不带命名空间前缀
         el.findElements('title').firstOrNull?.innerText ??
         '(untitled)';
-    final upnpClass = el.findElements('upnp:class').firstOrNull?.innerText ??
+    final upnpClass =
+        el.findElements('upnp:class').firstOrNull?.innerText ??
         el.findElements('class').firstOrNull?.innerText;
 
     DateTime? modified;
-    final dateText = el.findElements('dc:date').firstOrNull?.innerText ??
+    final dateText =
+        el.findElements('dc:date').firstOrNull?.innerText ??
         el.findElements('date').firstOrNull?.innerText;
     if (dateText != null && dateText.isNotEmpty) {
       modified = DateTime.tryParse(dateText);
@@ -200,7 +247,16 @@ class UpnpContentDirectoryClient {
     String? url;
     String? protocolInfo;
     Duration? duration;
-    final res = el.findElements('res').firstOrNull;
+    final resources = el.findElements('res').toList();
+    final res = resources.isEmpty
+        ? null
+        : resources.reduce(
+            (best, candidate) =>
+                _resourceScore(candidate, upnpClass) >
+                    _resourceScore(best, upnpClass)
+                ? candidate
+                : best,
+          );
     if (res != null) {
       url = res.innerText.trim();
       protocolInfo = res.getAttribute('protocolInfo');
@@ -228,6 +284,31 @@ class UpnpContentDirectoryClient {
     );
   }
 
+  int _resourceScore(XmlElement resource, String? upnpClass) {
+    final value = resource.innerText.trim().toLowerCase();
+    final protocol = resource.getAttribute('protocolInfo')?.toLowerCase() ?? '';
+    var score = 0;
+    if (value.startsWith('https://') || value.startsWith('http://'))
+      score += 100;
+    if (protocol.startsWith('http-get:')) score += 50;
+    final type = upnpClass?.toLowerCase();
+    String? expectedMimePrefix;
+    if (type?.contains('video') ?? false) {
+      expectedMimePrefix = 'video/';
+    } else if (type?.contains('audio') ?? false) {
+      expectedMimePrefix = 'audio/';
+    } else if (type?.contains('image') ?? false) {
+      expectedMimePrefix = 'image/';
+    }
+    if (expectedMimePrefix != null && protocol.contains(expectedMimePrefix)) {
+      score += 40;
+    }
+    final size = int.tryParse(resource.getAttribute('size') ?? '') ?? 0;
+    if (size > 0) score += 10;
+    if (protocol.contains('dlna.org_ci=1')) score -= 5;
+    return score;
+  }
+
   /// 解析 "HH:MM:SS[.ms]" 格式的时长
   Duration? _parseHmsDuration(String s) {
     final parts = s.split(':');
@@ -242,4 +323,16 @@ class UpnpContentDirectoryClient {
       return null;
     }
   }
+}
+
+class _BrowsePage {
+  const _BrowsePage({
+    required this.items,
+    required this.numberReturned,
+    required this.totalMatches,
+  });
+
+  final List<UpnpContentItem> items;
+  final int? numberReturned;
+  final int? totalMatches;
 }

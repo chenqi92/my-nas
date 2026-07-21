@@ -91,7 +91,11 @@ class EmbyVirtualFileSystem implements NasFileSystem {
     if (itemId == null) {
       throw Exception(appL10n.embyVfsFailedResolveePath(path));
     }
-    return _api.getDirectStreamUrl(itemId);
+    final item = await _getItem(itemId);
+    return _api.getDirectStreamUrl(
+      itemId,
+      isAudio: item?.type?.toLowerCase() == 'audio',
+    );
   }
 
   @override

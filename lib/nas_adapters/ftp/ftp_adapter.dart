@@ -31,10 +31,10 @@ class FtpAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-        type: NasAdapterType.ftp,
-        name: 'FTP',
-        version: AppConstants.appVersion,
-      );
+    type: NasAdapterType.ftp,
+    name: 'FTP',
+    version: AppConstants.appVersion,
+  );
 
   @override
   bool get isConnected => _connected;
@@ -44,18 +44,28 @@ class FtpAdapter implements NasAdapter {
 
   @override
   Future<ConnectionResult> connect(ConnectionConfig config) async {
-    logger..i('FtpAdapter: 开始连接')
-    ..i('FtpAdapter: 目标地址 => ${config.host}:${config.port}')
-    ..i('FtpAdapter: 用户名 => ${config.username}');
+    logger
+      ..i('FtpAdapter: 开始连接')
+      ..i('FtpAdapter: 目标地址 => ${config.host}:${config.port}')
+      ..i('FtpAdapter: 用户名 => ${config.username}');
 
     _config = config;
 
     try {
+      final encryption = config.extraConfig?['encryption']?.toString();
+      final securityType = switch (encryption) {
+        '隐式 TLS (FTPS)' || 'ftps' => SecurityType.ftps,
+        '显式 TLS (FTPES)' || 'ftpes' => SecurityType.ftpes,
+        _ => config.useSsl ? SecurityType.ftpes : SecurityType.ftp,
+      };
+      final defaultPort = securityType == SecurityType.ftps ? 990 : 21;
+      final effectivePort = config.port == 0 ? defaultPort : config.port;
       _ftp = FTPConnect(
         config.host,
-        port: config.port == 0 ? 21 : config.port,
+        port: effectivePort,
         user: config.username.isEmpty ? 'anonymous' : config.username,
         pass: config.password,
+        securityType: securityType,
         // 连接超时 30 秒
         timeout: 30,
       );
@@ -69,9 +79,10 @@ class FtpAdapter implements NasAdapter {
       _fileSystem = FtpFileSystem(
         ftp: _ftp!,
         host: config.host,
-        port: config.port == 0 ? 21 : config.port,
+        port: effectivePort,
         user: config.username.isEmpty ? 'anonymous' : config.username,
         pass: config.password,
+        enableRestRange: securityType == SecurityType.ftp,
       );
       _connected = true;
 
@@ -79,10 +90,7 @@ class FtpAdapter implements NasAdapter {
 
       return ConnectionSuccess(
         sessionId: 'ftp-${DateTime.now().millisecondsSinceEpoch}',
-        serverInfo: ServerInfo(
-          hostname: config.host,
-          model: 'FTP Server',
-        ),
+        serverInfo: ServerInfo(hostname: config.host, model: 'FTP Server'),
       );
     } on Exception catch (e) {
       logger.e('FtpAdapter: 连接失败', e);
@@ -93,7 +101,7 @@ class FtpAdapter implements NasAdapter {
 
   @override
   Future<void> disconnect() async {
-    if (!_connected) return;
+    if (_ftp == null && _fileSystem == null) return;
     try {
       await _fileSystem?.dispose();
       await _ftp?.disconnect();

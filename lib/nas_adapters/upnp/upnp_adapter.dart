@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
+import 'package:my_nas/core/network/network_endpoint.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -37,10 +39,10 @@ class UpnpAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-        type: NasAdapterType.upnp,
-        name: 'UPnP / DLNA',
-        version: AppConstants.appVersion,
-      );
+    type: NasAdapterType.upnp,
+    name: 'UPnP / DLNA',
+    version: AppConstants.appVersion,
+  );
 
   @override
   bool get isConnected => _connected;
@@ -60,18 +62,40 @@ class UpnpAdapter implements NasAdapter {
       // 设备描述 URL：
       //   - username 字段非空 → 当作描述文档路径（如 "rootDesc.xml" 或完整 URL）
       //   - 否则用默认 "rootDesc.xml"
-      final descPath = config.username.isNotEmpty ? config.username : 'rootDesc.xml';
-      final descriptionUrl = descPath.startsWith('http')
-          ? descPath
-          : '${config.useSsl ? 'https' : 'http'}://${config.host}:${config.port == 0 ? 8200 : config.port}/${descPath.startsWith('/') ? descPath.substring(1) : descPath}';
+      final descPath = config.username.isNotEmpty
+          ? config.username
+          : 'rootDesc.xml';
+      final descriptionUri = Uri.tryParse(descPath);
+      final baseUri = NetworkEndpoint.resolve(
+        host: config.host,
+        port: config.port == 0 ? 8200 : config.port,
+        useSsl: config.useSsl,
+        basePath: config.basePath,
+      );
+      final descriptionUrl = descriptionUri?.hasScheme == true
+          ? descriptionUri.toString()
+          : baseUri
+                .replace(
+                  path: baseUri.path.endsWith('/')
+                      ? baseUri.path
+                      : '${baseUri.path}/',
+                )
+                .resolve(descPath)
+                .toString();
 
-      _fetcher = UpnpDeviceFetcher();
+      _fetcher = UpnpDeviceFetcher(
+        dio: DioClient(allowSelfSigned: !config.verifySSL).dio,
+      );
       _description = await _fetcher!.fetch(descriptionUrl);
 
       _client = UpnpContentDirectoryClient(
         controlUrl: _description!.contentDirectoryControlUrl,
+        dio: DioClient(allowSelfSigned: !config.verifySSL).dio,
       );
-      _fileSystem = UpnpFileSystem(client: _client!);
+      _fileSystem = UpnpFileSystem(
+        client: _client!,
+        dio: DioClient(allowSelfSigned: !config.verifySSL).dio,
+      );
 
       // 探活：浏览根容器
       await _client!.browse('0', requestedCount: 1);
@@ -120,9 +144,12 @@ class UpnpAdapter implements NasAdapter {
   Future<bool> checkConnectionHealth() async {
     if (!_connected || _client == null) return false;
     try {
-      await _client!.browse('0', requestedCount: 1).timeout(
+      await _client!
+          .browse('0', requestedCount: 1)
+          .timeout(
             const Duration(seconds: 5),
-            onTimeout: () => throw Exception(appL10n.upnpAdapterHealthCheckTimeout),
+            onTimeout: () =>
+                throw Exception(appL10n.upnpAdapterHealthCheckTimeout),
           );
       return true;
     } on Exception catch (e) {

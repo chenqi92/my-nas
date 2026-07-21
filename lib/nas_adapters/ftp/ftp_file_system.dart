@@ -26,11 +26,13 @@ class FtpFileSystem implements NasFileSystem {
     int port = 21,
     String? user,
     String? pass,
+    bool enableRestRange = true,
   }) : _ftp = ftp,
        _host = host,
        _port = port,
        _user = user,
-       _pass = pass;
+       _pass = pass,
+       _enableRestRange = enableRestRange;
 
   final FTPConnect _ftp;
 
@@ -40,6 +42,7 @@ class FtpFileSystem implements NasFileSystem {
   final int _port;
   final String? _user;
   final String? _pass;
+  final bool _enableRestRange;
 
   /// 串行化所有 FTP 调用——FTP 控制连接是单线程
   final _lock = Lock();
@@ -114,7 +117,7 @@ class FtpFileSystem implements NasFileSystem {
   }) async {
     final normalized = _normalize(path);
     // 优先用原生 FTP RETR/REST 流式读取，避免默认整文件下载到临时目录。
-    if (_host != null) {
+    if (_host != null && _enableRestRange) {
       final restStream = await _tryRestRangeStream(
         normalized,
         range?.start ?? 0,

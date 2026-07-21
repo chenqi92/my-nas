@@ -91,7 +91,7 @@ class QnapFileSystem implements NasFileSystem {
 
   @override
   Future<Stream<List<int>>> getFileStream(String path, {FileRange? range}) =>
-      _api.getUrlStream(_api.getDownloadUrl(path));
+      _api.getUrlStream(_api.getDownloadUrl(path), range: range);
 
   @override
   Future<Stream<List<int>>> getUrlStream(String url) => _api.getUrlStream(url);
