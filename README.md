@@ -14,6 +14,7 @@
   <a href="#媒体服务器">媒体服务器</a> •
   <a href="#下载器">下载器</a> •
   <a href="#支持平台">支持平台</a> •
+  <a href="#testflight-测试">TestFlight 测试</a> •
   <a href="#xcode-配置macos--ios新手必读">Xcode 配置</a> •
   <a href="#快速开始">快速开始</a> •
   <a href="#文档">文档</a>
@@ -32,6 +33,12 @@
 MyNAS 是一款跨平台的家用 NAS 媒体管理工具，把你常用的多种数据源（NAS 协议 / 媒体服务器 / 下载器 / PT 站 / 字幕站 / 媒体追踪服务）整合到一个客户端，让你能在 macOS、Windows、iOS、Android、Linux 上以统一、现代化的体验访问家里的所有媒体资源。
 
 不绑定特定 NAS 品牌，**用户自带数据源**——你可以同时连接群晖 + Plex + qBittorrent + 任意 PT 站，并在视频详情页一键串联（找资源 → 下载 → 入库 → 播放）。
+
+## TestFlight 测试
+
+[加入 KKNas TestFlight 公开测试](https://testflight.apple.com/join/6UX78cq9)
+
+> 外部测试构建需要先通过 Apple 的 Beta App 审核。若链接暂时提示没有可用构建，请等待当前构建审核完成后再试。
 
 ## 功能特性
 
