@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
+import 'package:my_nas/features/music/presentation/providers/desktop_lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/music/presentation/widgets/music_cover.dart';
 import 'package:my_nas/shared/widgets/atoms/app_progress_bar.dart';
@@ -27,6 +28,7 @@ class MiniDock extends ConsumerWidget {
     final t = DesignTokens.of(context);
     final state = ref.watch(musicPlayerControllerProvider);
     final notifier = ref.read(musicPlayerControllerProvider.notifier);
+    final desktopLyric = ref.watch(desktopLyricProvider);
 
     final w = MediaQuery.of(context).size.width;
     final maxW = (w - 60) < 720 ? (w - 60) : 720.0;
@@ -126,6 +128,15 @@ class MiniDock extends ConsumerWidget {
                   icon: Icons.lyrics_outlined,
                   tooltip: '歌词',
                   onTap: onOpenNowPlaying,
+                ),
+                _Btn(
+                  icon: desktopLyric.isVisible
+                      ? Icons.desktop_windows_rounded
+                      : Icons.desktop_windows_outlined,
+                  tooltip: desktopLyric.isVisible ? '关闭桌面歌词' : '桌面歌词',
+                  onTap: desktopLyric.isInitialized
+                      ? ref.read(desktopLyricProvider.notifier).toggle
+                      : () {},
                 ),
                 _Btn(
                   icon: Icons.cast_rounded,

@@ -28,10 +28,7 @@ class AppDelegate: FlutterAppDelegate {
 
   override func applicationDidFinishLaunching(_ notification: Notification) {
     // 注册自定义 MethodChannel 插件
-    // 重要：必须在 super.applicationDidFinishLaunching 之前注册，
-    // 否则 Flutter 引擎启动时可能已经在调用这些通道，导致 MissingPluginException
     guard let controller = mainFlutterWindow?.contentViewController as? FlutterViewController else {
-      super.applicationDidFinishLaunching(notification)
       return
     }
 
@@ -82,8 +79,5 @@ class AppDelegate: FlutterAppDelegate {
     StatusBarChannel.register(
       with: controller.engine.registrar(forPlugin: "StatusBarChannel")
     )
-
-    // 调用父类方法启动 Flutter 引擎
-    super.applicationDidFinishLaunching(notification)
   }
 }

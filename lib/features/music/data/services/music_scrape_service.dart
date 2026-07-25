@@ -70,9 +70,16 @@ class MusicScrapeProgress {
         if (currentTrack != null) {
           return appL10n.musicScrapeProgressScraping(currentTrack!);
         }
-        return appL10n.musicScrapeProgressScrapingCount(processedCount, totalCount);
+        return appL10n.musicScrapeProgressScrapingCount(
+          processedCount,
+          totalCount,
+        );
       case MusicScrapePhase.completed:
-        return appL10n.musicScrapeProgressCompleted(successCount, skipCount, failCount);
+        return appL10n.musicScrapeProgressCompleted(
+          successCount,
+          skipCount,
+          failCount,
+        );
       case MusicScrapePhase.cancelled:
         return appL10n.musicScrapeProgressCancelled;
       case MusicScrapePhase.error:
@@ -158,9 +165,10 @@ class MusicScrapeService {
   Stream<MusicScrapeStats> get statsStream => _statsController.stream;
 
   /// 检查指定目录是否正在刮削
-  bool isScrapingPath(String sourceId, String pathPrefix) => _isScraping &&
-        _currentSourceId == sourceId &&
-        _currentPathPrefix == pathPrefix;
+  bool isScrapingPath(String sourceId, String pathPrefix) =>
+      _isScraping &&
+      _currentSourceId == sourceId &&
+      _currentPathPrefix == pathPrefix;
 
   /// 开始批量刮削
   ///
@@ -192,11 +200,13 @@ class MusicScrapeService {
       await _scraperManager!.init();
 
       // 发送准备中进度
-      _emitProgress(MusicScrapeProgress(
-        sourceId: sourceId,
-        pathPrefix: pathPrefix,
-        phase: MusicScrapePhase.preparing,
-      ));
+      _emitProgress(
+        MusicScrapeProgress(
+          sourceId: sourceId,
+          pathPrefix: pathPrefix,
+          phase: MusicScrapePhase.preparing,
+        ),
+      );
 
       // 获取该路径下的所有音乐数量
       final totalCount = await _db.getCount(
@@ -205,12 +215,14 @@ class MusicScrapeService {
       );
 
       if (totalCount == 0) {
-        _emitProgress(MusicScrapeProgress(
-          sourceId: sourceId,
-          pathPrefix: pathPrefix,
-          phase: MusicScrapePhase.completed,
-          totalCount: 0,
-        ));
+        _emitProgress(
+          MusicScrapeProgress(
+            sourceId: sourceId,
+            pathPrefix: pathPrefix,
+            phase: MusicScrapePhase.completed,
+            totalCount: 0,
+          ),
+        );
         return;
       }
 
@@ -221,13 +233,18 @@ class MusicScrapeService {
         totalCount: totalCount,
         fileSystem: fileSystem,
       );
-    } on Exception catch (e, st) {
+    } catch (e, st) {
+      // 部分 NAS SDK（目前 smb_connect 即属此类）会直接 throw String，
+      // 而不是实现 Exception。批量任务是异步入口，必须在这里兜住所有
+      // Object，避免单个远端文件错误逃逸到 PlatformDispatcher 并中断整批。
       AppError.handle(e, st, 'musicBatchScrape');
-      _emitProgress(MusicScrapeProgress(
-        sourceId: sourceId,
-        pathPrefix: pathPrefix,
-        phase: MusicScrapePhase.error,
-      ));
+      _emitProgress(
+        MusicScrapeProgress(
+          sourceId: sourceId,
+          pathPrefix: pathPrefix,
+          phase: MusicScrapePhase.error,
+        ),
+      );
     } finally {
       _isScraping = false;
       _currentSourceId = null;
@@ -248,12 +265,14 @@ class MusicScrapeService {
     var failCount = 0;
 
     // 发送刮削开始进度
-    _emitProgress(MusicScrapeProgress(
-      sourceId: sourceId,
-      pathPrefix: pathPrefix,
-      phase: MusicScrapePhase.scraping,
-      totalCount: totalCount,
-    ));
+    _emitProgress(
+      MusicScrapeProgress(
+        sourceId: sourceId,
+        pathPrefix: pathPrefix,
+        phase: MusicScrapePhase.scraping,
+        totalCount: totalCount,
+      ),
+    );
 
     // 分批获取音乐（避免一次性加载太多）
     const batchSize = 50;
@@ -272,17 +291,19 @@ class MusicScrapeService {
         if (_shouldStop) break;
 
         // 发送当前处理的曲目
-        _emitProgress(MusicScrapeProgress(
-          sourceId: sourceId,
-          pathPrefix: pathPrefix,
-          phase: MusicScrapePhase.scraping,
-          currentTrack: track.displayTitle,
-          processedCount: processedCount,
-          totalCount: totalCount,
-          successCount: successCount,
-          skipCount: skipCount,
-          failCount: failCount,
-        ));
+        _emitProgress(
+          MusicScrapeProgress(
+            sourceId: sourceId,
+            pathPrefix: pathPrefix,
+            phase: MusicScrapePhase.scraping,
+            currentTrack: track.displayTitle,
+            processedCount: processedCount,
+            totalCount: totalCount,
+            successCount: successCount,
+            skipCount: skipCount,
+            failCount: failCount,
+          ),
+        );
 
         // 处理单个曲目
         final result = await _processTrack(track, fileSystem);
@@ -298,25 +319,29 @@ class MusicScrapeService {
         }
 
         // 发送进度更新
-        _emitProgress(MusicScrapeProgress(
-          sourceId: sourceId,
-          pathPrefix: pathPrefix,
-          phase: MusicScrapePhase.scraping,
-          processedCount: processedCount,
-          totalCount: totalCount,
-          successCount: successCount,
-          skipCount: skipCount,
-          failCount: failCount,
-        ));
+        _emitProgress(
+          MusicScrapeProgress(
+            sourceId: sourceId,
+            pathPrefix: pathPrefix,
+            phase: MusicScrapePhase.scraping,
+            processedCount: processedCount,
+            totalCount: totalCount,
+            successCount: successCount,
+            skipCount: skipCount,
+            failCount: failCount,
+          ),
+        );
 
         // 广播统计
-        _statsController.add(MusicScrapeStats(
-          total: totalCount,
-          processed: processedCount,
-          success: successCount,
-          skip: skipCount,
-          fail: failCount,
-        ));
+        _statsController.add(
+          MusicScrapeStats(
+            total: totalCount,
+            processed: processedCount,
+            success: successCount,
+            skip: skipCount,
+            fail: failCount,
+          ),
+        );
 
         // 稍微延迟，避免请求过快
         await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -326,16 +351,20 @@ class MusicScrapeService {
     }
 
     // 发送完成进度
-    _emitProgress(MusicScrapeProgress(
-      sourceId: sourceId,
-      pathPrefix: pathPrefix,
-      phase: _shouldStop ? MusicScrapePhase.cancelled : MusicScrapePhase.completed,
-      processedCount: processedCount,
-      totalCount: totalCount,
-      successCount: successCount,
-      skipCount: skipCount,
-      failCount: failCount,
-    ));
+    _emitProgress(
+      MusicScrapeProgress(
+        sourceId: sourceId,
+        pathPrefix: pathPrefix,
+        phase: _shouldStop
+            ? MusicScrapePhase.cancelled
+            : MusicScrapePhase.completed,
+        processedCount: processedCount,
+        totalCount: totalCount,
+        successCount: successCount,
+        skipCount: skipCount,
+        failCount: failCount,
+      ),
+    );
   }
 
   /// 处理单个曲目
@@ -383,18 +412,25 @@ class MusicScrapeService {
 
       // 搜索元数据（使用现有数据或从文件名解析）
       final searchTitle = hasTitle ? track.title! : track.displayTitle;
-      final searchArtist = hasArtist ? track.artist : null;
+      // 标签缺失时仍可从常见的「歌手 - 标题.ext」文件名推出歌手。
+      // 自动刮削把它作为约束，避免同名歌曲直接采用搜索接口第一项。
+      final inferredArtist = track.displayArtist;
+      final searchArtist = inferredArtist == appL10n.musicUnknownArtist
+          ? null
+          : inferredArtist;
 
       final result = await _scraperManager!.scrape(
         title: searchTitle,
         artist: searchArtist,
         album: hasAlbum ? track.album : null,
+        durationMs: track.duration,
         getCover: needCover,
         getLyrics: needLyrics,
       );
 
       // 检查是否有任何有用的结果
-      final hasUsefulResult = (needAnyMetadata && result.detail != null) ||
+      final hasUsefulResult =
+          (needAnyMetadata && result.detail != null) ||
           (needCover && result.cover != null) ||
           (needLyrics && result.lyrics != null && result.lyrics!.hasLyrics);
 
@@ -417,8 +453,9 @@ class MusicScrapeService {
       );
 
       return _TrackResult.success;
-    } on Exception catch (e) {
+    } catch (e, st) {
       logger.w('MusicScrapeService: 处理失败 ${track.displayTitle}: $e');
+      AppError.ignore(e, st, '音乐单曲刮削失败: ${track.displayTitle}');
       return _TrackResult.fail;
     }
   }
@@ -438,7 +475,8 @@ class MusicScrapeService {
       // 尝试获取文件信息，如果成功则文件存在
       await fileSystem.getFileInfo(lrcPath);
       return true;
-    } on Exception {
+    } catch (_) {
+      // NAS 适配器可能抛出非 Exception 对象（例如 smb_connect 的 String）。
       // 文件不存在或获取失败
       return false;
     }
@@ -458,7 +496,7 @@ class MusicScrapeService {
       final coverPath = p.join(musicDir, '$baseName-cover.$ext');
       try {
         await fileSystem.getFileInfo(coverPath);
-      } on Exception {
+      } catch (_) {
         continue;
       }
       try {
@@ -470,8 +508,9 @@ class MusicScrapeService {
         if (bytes.isEmpty) continue;
         final uniqueKey = '${track.sourceId}_${track.filePath}';
         return _coverCache.saveCover(uniqueKey, Uint8List.fromList(bytes));
-      } on Exception catch (e) {
+      } catch (e, st) {
         logger.w('MusicScrapeService: 读取 sidecar 封面失败 $coverPath: $e');
+        AppError.ignore(e, st, '读取音乐 sidecar 封面失败: $coverPath');
       }
     }
     return null;
@@ -505,7 +544,10 @@ class MusicScrapeService {
 
           // 保存封面到本地缓存
           final uniqueKey = '${track.sourceId}_${track.filePath}';
-          final localCoverPath = await _coverCache.saveCover(uniqueKey, coverData);
+          final localCoverPath = await _coverCache.saveCover(
+            uniqueKey,
+            coverData,
+          );
 
           if (localCoverPath != null) {
             updatedTrack = updatedTrack.copyWith(coverPath: localCoverPath);
@@ -517,16 +559,17 @@ class MusicScrapeService {
             try {
               final musicDir = p.dirname(track.filePath);
               final baseName = p.basenameWithoutExtension(track.filePath);
-              final coverPath =
-                  p.join(musicDir, '$baseName-cover.jpg');
+              final coverPath = p.join(musicDir, '$baseName-cover.jpg');
               await fileSystem.writeFile(coverPath, coverData);
-            } on Exception catch (e) {
+            } catch (e, st) {
               logger.w('MusicScrapeService: 回写 sidecar 封面失败: $e');
+              AppError.ignore(e, st, '回写音乐 sidecar 封面失败');
             }
           }
         }
-      } on Exception catch (e) {
+      } catch (e, st) {
         logger.w('MusicScrapeService: 下载封面失败: $e');
+        AppError.ignore(e, st, '下载音乐封面失败');
       }
     }
 
@@ -545,8 +588,9 @@ class MusicScrapeService {
           final utf8Bytes = const Utf8Encoder().convert(lrcContent);
           await fileSystem.writeFile(lrcPath, Uint8List.fromList(utf8Bytes));
         }
-      } on Exception catch (e) {
+      } catch (e, st) {
         logger.w('MusicScrapeService: 下载歌词失败: $e');
+        AppError.ignore(e, st, '下载并回写音乐歌词失败');
       }
     }
 
@@ -601,8 +645,4 @@ class MusicScrapeService {
 }
 
 /// 曲目处理结果
-enum _TrackResult {
-  success,
-  skip,
-  fail,
-}
+enum _TrackResult { success, skip, fail }

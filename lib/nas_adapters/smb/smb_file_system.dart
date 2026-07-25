@@ -259,6 +259,12 @@ class SmbFileSystem implements NasFileSystem {
   Future<FileItem> getFileInfo(String path) async =>
       _connectionPool.withConnection((client) async {
         final file = await client.file(path);
+        // smb_connect 对不存在的路径返回 SmbFile.notExists，并不会抛异常。
+        // 若继续转为 FileItem，会让调用方误判文件存在，直到真正 openRead
+        // 时才收到该库抛出的 String 错误。
+        if (!file.isExists) {
+          throw FileSystemException('SMB file does not exist', path);
+        }
         return _toFileItem(file);
       }, type: SmbConnectionType.general);
 
@@ -312,6 +318,9 @@ class SmbFileSystem implements NasFileSystem {
 
     try {
       final file = await streamClient.file(path);
+      if (!file.isExists) {
+        throw FileSystemException('SMB file does not exist', path);
+      }
       final fileSize = file.size;
 
       if (range != null) {
@@ -457,7 +466,9 @@ class SmbFileSystem implements NasFileSystem {
 
         return rawStream;
       }
-    } on Exception {
+    } catch (_) {
+      // smb_connect 的部分底层错误是 String；无论错误对象类型为何都必须
+      // 释放专用/池化连接，否则重复探测缺失文件会耗尽连接池。
       await cleanup();
       rethrow;
     }

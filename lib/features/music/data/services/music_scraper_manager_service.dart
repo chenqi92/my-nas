@@ -5,6 +5,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/storage/secure_storage_options.dart';
+import 'package:my_nas/features/music/data/services/music_scrape_matcher.dart';
 import 'package:my_nas/features/music/data/services/music_scraper_factory.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
@@ -722,6 +723,7 @@ class MusicScraperManagerService {
     required String title,
     String? artist,
     String? album,
+    int? durationMs,
     bool getCover = true,
     bool getLyrics = true,
   }) async {
@@ -741,11 +743,18 @@ class MusicScraperManagerService {
           title,
           artist: artist,
           album: album,
-          limit: 1,
+          limit: MusicScrapeMatcher.autoScrapeLimit,
         );
 
-        if (searchResult.isNotEmpty) {
-          detail = await scraper.getDetail(searchResult.items.first.externalId);
+        final match = MusicScrapeMatcher.bestMatch(
+          searchResult.items,
+          title: title,
+          artist: artist,
+          album: album,
+          durationMs: durationMs,
+        );
+        if (match != null) {
+          detail = await scraper.getDetail(match.externalId);
         }
       } on Exception catch (e) {
         errors.add(
@@ -765,11 +774,17 @@ class MusicScraperManagerService {
             title,
             artist: artist,
             album: album,
-            limit: 1,
+            limit: MusicScrapeMatcher.autoScrapeLimit,
           );
 
-          if (searchResult.isNotEmpty) {
-            final item = searchResult.items.first;
+          final item = MusicScrapeMatcher.bestMatch(
+            searchResult.items,
+            title: title,
+            artist: artist,
+            album: album,
+            durationMs: durationMs,
+          );
+          if (item != null) {
             final covers = await scraper.getCoverArt(item.externalId);
             if (covers.isNotEmpty) {
               cover = covers.first;
@@ -798,13 +813,17 @@ class MusicScraperManagerService {
           final searchResult = await scraper.search(
             title,
             artist: artist,
-            limit: 1,
+            limit: MusicScrapeMatcher.autoScrapeLimit,
           );
 
-          if (searchResult.isNotEmpty) {
-            lyrics = await scraper.getLyrics(
-              searchResult.items.first.externalId,
-            );
+          final match = MusicScrapeMatcher.bestMatch(
+            searchResult.items,
+            title: title,
+            artist: artist,
+            durationMs: durationMs,
+          );
+          if (match != null) {
+            lyrics = await scraper.getLyrics(match.externalId);
           }
         } on Exception catch (e) {
           errors.add(

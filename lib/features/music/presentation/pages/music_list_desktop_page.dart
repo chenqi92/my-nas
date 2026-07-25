@@ -4,15 +4,22 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/music/data/services/audio_effects_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
+import 'package:my_nas/features/music/data/services/music_scrape_service.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/presentation/pages/listening_stats_page.dart';
+import 'package:my_nas/features/music/presentation/pages/manual_music_scraper_page.dart';
 import 'package:my_nas/features/music/presentation/pages/music_list_page.dart';
+import 'package:my_nas/features/music/presentation/pages/music_scraper_sources_page.dart';
 import 'package:my_nas/features/music/presentation/pages/playlist_detail_page.dart';
+import 'package:my_nas/features/music/presentation/providers/desktop_lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_favorites_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/playlist_provider.dart';
+import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
@@ -58,6 +65,45 @@ Future<void> _playFromList(
   await controller.play(queue[idx]);
 }
 
+/// 桌面列表也提供移动端已有的单曲手动刮削能力。
+Future<void> _openManualScraper(
+  BuildContext context,
+  WidgetRef ref,
+  MusicTrackEntity track,
+) async {
+  final connection = ref.read(activeConnectionsProvider)[track.sourceId];
+  if (connection == null || connection.status != SourceStatus.connected) {
+    if (context.mounted) {
+      context.showWarningToast(context.l10n.musicSourceNotConnected);
+    }
+    return;
+  }
+
+  try {
+    final url = await connection.adapter.fileSystem.getFileUrl(track.filePath);
+    if (!context.mounted) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ManualMusicScraperPage(
+          music: _entityToMusicItem(track).copyWith(url: url),
+          fileSystem: connection.adapter.fileSystem,
+        ),
+      ),
+    );
+
+    await ref
+        .read(musicListProvider.notifier)
+        .refreshTrackMetadata(track.sourceId, track.filePath);
+  } catch (error) {
+    if (context.mounted) {
+      context.showErrorToast(
+        context.l10n.mediaLibraryScrapeErrorToast('$error'),
+      );
+    }
+  }
+}
+
 /// 桌面端「音乐」——对齐设计稿 media2.jsx `MusicLibrary`。
 ///
 /// 统计条（曲目/总时长/艺术家/专辑）+ 左歌曲表（播放全部/随机 + dense rows）
@@ -86,15 +132,39 @@ class _MusicListDesktopPageState extends ConsumerState<MusicListDesktopPage> {
     return DesktopPageScaffold(
       title: l.musicPageTitle,
       subtitle: subtitle,
-      actions: AppSegmented<String>(
-        value: _view,
-        onChanged: (v) => setState(() => _view = v),
-        dense: true,
-        options: [
-          AppSegmentedOption(value: 'songs', label: l.musicPageTabSongs),
-          AppSegmentedOption(value: 'albums', label: l.musicPageTabAlbums),
-          AppSegmentedOption(value: 'artists', label: l.musicPageTabArtists),
-          AppSegmentedOption(value: 'folders', label: l.musicPageTabFolders),
+      actions: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _DesktopLyricChip(),
+          const SizedBox(width: 8),
+          AppChip(
+            label: l.musicScraperSourcesPageTitle,
+            icon: Icons.tune_rounded,
+            compact: true,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MusicScraperSourcesPage(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          AppSegmented<String>(
+            value: _view,
+            onChanged: (v) => setState(() => _view = v),
+            dense: true,
+            options: [
+              AppSegmentedOption(value: 'songs', label: l.musicPageTabSongs),
+              AppSegmentedOption(value: 'albums', label: l.musicPageTabAlbums),
+              AppSegmentedOption(
+                value: 'artists',
+                label: l.musicPageTabArtists,
+              ),
+              AppSegmentedOption(
+                value: 'folders',
+                label: l.musicPageTabFolders,
+              ),
+            ],
+          ),
         ],
       ),
       body: Column(
@@ -349,6 +419,8 @@ class _TableHeader extends ConsumerWidget {
             ),
           ),
           const Spacer(),
+          _BatchScrapeChip(tracks: tracks),
+          const SizedBox(width: 8),
           AppChip(
             label: l.musicPagePlayAll,
             icon: Icons.play_arrow_rounded,
@@ -364,6 +436,153 @@ class _TableHeader extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DesktopLyricChip extends ConsumerWidget {
+  const _DesktopLyricChip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final state = ref.watch(desktopLyricProvider);
+    return AppChip(
+      label: state.isVisible
+          ? l.nowPlayDesktopLyricOff
+          : l.nowPlayDesktopLyricOn,
+      icon: Icons.desktop_windows_outlined,
+      compact: true,
+      active: state.isVisible,
+      onTap: state.isInitialized
+          ? ref.read(desktopLyricProvider.notifier).toggle
+          : null,
+    );
+  }
+}
+
+class _BatchScrapeChip extends ConsumerStatefulWidget {
+  const _BatchScrapeChip({required this.tracks});
+
+  final List<MusicTrackEntity> tracks;
+
+  @override
+  ConsumerState<_BatchScrapeChip> createState() => _BatchScrapeChipState();
+}
+
+class _BatchScrapeChipState extends ConsumerState<_BatchScrapeChip> {
+  bool _running = false;
+  bool _stopRequested = false;
+  MusicScrapeStats? _stats;
+  StreamSubscription<MusicScrapeStats>? _statsSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _statsSubscription = MusicScrapeService().statsStream.listen((stats) {
+      if (mounted) setState(() => _stats = stats);
+    });
+  }
+
+  @override
+  void dispose() {
+    _statsSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _toggle() async {
+    final scraper = MusicScrapeService();
+    if (_running || scraper.isScraping) {
+      _stopRequested = true;
+      scraper.stopScraping();
+      return;
+    }
+
+    final l = AppLocalizations.of(context);
+    if (widget.tracks.isEmpty) {
+      context.showWarningToast(l.mediaLibraryMusicScrapeNoItemsToast);
+      return;
+    }
+
+    final sourceIds = widget.tracks.map((track) => track.sourceId).toSet();
+    final connections = ref.read(activeConnectionsProvider);
+    final connectedSourceIds = sourceIds.where(
+      (id) => connections[id]?.status == SourceStatus.connected,
+    );
+    if (connectedSourceIds.isEmpty) {
+      context.showWarningToast(l.mediaLibraryMusicScrapeConnectionErrorToast);
+      return;
+    }
+
+    setState(() {
+      _running = true;
+      _stopRequested = false;
+      _stats = null;
+    });
+    context.showSuccessToast(
+      l.mediaLibraryMusicScrapeStartToast(widget.tracks.length),
+    );
+
+    try {
+      for (final sourceId in connectedSourceIds) {
+        if (_stopRequested) break;
+        final connection = connections[sourceId];
+        if (connection == null) continue;
+        await scraper.startScraping(
+          sourceId: sourceId,
+          pathPrefix: '',
+          connection: connection,
+        );
+      }
+      await ref.read(musicListProvider.notifier).loadMusic();
+      if (mounted) {
+        if (_stopRequested) {
+          context.showWarningToast(l.musicScrapeProgressCancelled);
+        } else {
+          final stats = _stats;
+          context.showSuccessToast(
+            stats == null
+                ? l.mediaLibraryScrapeCompleteToast
+                : l.musicScrapeProgressCompleted(
+                    stats.success,
+                    stats.skip,
+                    stats.fail,
+                  ),
+          );
+        }
+      }
+    } on Exception catch (error) {
+      if (mounted) {
+        context.showErrorToast(l.mediaLibraryScrapeErrorToast('$error'));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _running = false;
+          _stopRequested = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final running = _running || MusicScrapeService().isScraping;
+    final stats = _stats;
+    return AppChip(
+      label: running
+          ? stats == null
+                ? l.mediaLibraryScrapingMenuLabel
+                : l.musicScrapeProgressScrapingCount(
+                    stats.processed,
+                    stats.total,
+                  )
+          : l.mediaLibraryMusicBatchScrapeMenuLabel,
+      icon: running ? Icons.stop_circle_outlined : Icons.auto_fix_high_rounded,
+      compact: true,
+      active: running,
+      onTap: _toggle,
     );
   }
 }
@@ -409,6 +628,7 @@ class _SongRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final isFav =
         ref.watch(isMusicFavoriteProvider(track.filePath)).valueOrNull ?? false;
@@ -438,7 +658,11 @@ class _SongRow extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 14),
-              _Cover(path: track.displayCoverPath, size: 38),
+              _Cover(
+                path: track.displayCoverPath,
+                label: track.displayTitle,
+                size: 38,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -486,6 +710,29 @@ class _SongRow extends ConsumerWidget {
                   size: 15,
                   color: isFav ? t.accentBright : t.text3,
                 ),
+              ),
+              PopupMenuButton<String>(
+                tooltip: l.musicMenuManualScrape,
+                iconSize: 17,
+                padding: EdgeInsets.zero,
+                icon: Icon(Icons.more_horiz_rounded, color: t.text2),
+                onSelected: (value) {
+                  if (value == 'manual_scrape') {
+                    _openManualScraper(context, ref, track);
+                  }
+                },
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'manual_scrape',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.auto_fix_high_rounded, size: 18),
+                        const SizedBox(width: 10),
+                        Text(l.musicMenuManualScrape),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               SizedBox(
                 width: 40,
@@ -547,7 +794,11 @@ class _AlbumGrid extends ConsumerWidget {
                 aspectRatio: 1,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: _Cover(path: track.displayCoverPath, size: 999),
+                  child: _Cover(
+                    path: track.displayCoverPath,
+                    label: album,
+                    size: 999,
+                  ),
                 ),
               ),
               const SizedBox(height: 6),
@@ -1112,18 +1363,37 @@ class _EqPanelState extends State<_EqPanel> {
 }
 
 class _Cover extends StatelessWidget {
-  const _Cover({required this.path, required this.size});
+  const _Cover({required this.path, required this.label, required this.size});
   final String? path;
+  final String label;
   final double size;
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
+    final normalizedLabel = label.trim();
+    final initial = normalizedLabel.isEmpty
+        ? '—'
+        : String.fromCharCode(normalizedLabel.runes.first);
     final fallback = Container(
       width: size == 999 ? null : size,
       height: size == 999 ? null : size,
-      color: t.insetBg,
-      child: Icon(Icons.music_note_rounded, size: 16, color: t.text3),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [t.chipBgActive, t.insetBg],
+        ),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: TextStyle(
+          color: t.text2,
+          fontSize: size == 999 ? 32 : 15,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
     // 封面路径在加载时已校验（_validateCoverPaths），此处不再每帧同步
     // existsSync 触发磁盘 IO；缺图由 Image.file 的 errorBuilder 回退。
