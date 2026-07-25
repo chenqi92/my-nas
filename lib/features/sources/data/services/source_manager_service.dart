@@ -163,7 +163,7 @@ class SourceManagerService {
   Future<void>? _initFuture;
 
   /// 安全存储（用于凭证和设备ID，不受应用沙箱影响）
-  static const _secureStorage = defaultSecureStorage;
+  static final _secureStorage = defaultSecureStorage;
 
   /// 凭证存储键前缀
   static const _credentialPrefix = 'source_credential_';
@@ -621,7 +621,7 @@ class SourceManagerService {
       return await future;
     } finally {
       if (identical(_connectionAttempts[source.id], future)) {
-        _connectionAttempts.remove(source.id);
+        unawaited(_connectionAttempts.remove(source.id));
       }
     }
   }
@@ -886,7 +886,7 @@ class SourceManagerService {
       return await future;
     } finally {
       if (identical(_mediaServerConnectionAttempts[source.id], future)) {
-        _mediaServerConnectionAttempts.remove(source.id);
+        unawaited(_mediaServerConnectionAttempts.remove(source.id));
       }
     }
   }

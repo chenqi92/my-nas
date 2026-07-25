@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/storage/secure_storage_options.dart';
@@ -41,7 +40,7 @@ class SecureStorageException implements Exception {
 class AuthStorageService {
   AuthStorageService() : _storage = defaultSecureStorage;
 
-  final FlutterSecureStorage _storage;
+  final ResilientSecureStorage _storage;
 
   /// Keychain/Secure Storage 是否可用
   bool _storageAvailable = true;

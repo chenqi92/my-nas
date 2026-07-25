@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
@@ -32,7 +31,7 @@ class MusicScraperManagerService {
   /// extraConfig 中的密码字段名
   static const String _passwordExtraKey = 'password';
 
-  late final FlutterSecureStorage _secureStorage;
+  late final ResilientSecureStorage _secureStorage;
   Box<dynamic>? _box;
   final Map<String, MusicScraper> _scraperCache = {};
 

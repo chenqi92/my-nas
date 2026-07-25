@@ -62,7 +62,7 @@ class ScraperManagerService {
   Stream<ScraperSourceEvent> get onSourceChanged => _eventController.stream;
 
   /// 安全存储（用于存储 API Key、Cookie 等敏感信息）
-  static const _secureStorage = defaultSecureStorage;
+  static final _secureStorage = defaultSecureStorage;
 
   /// 初始化服务
   Future<void> init() async {

@@ -1,5 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:my_nas/core/utils/logger.dart';
 
 /// Shared secure storage configuration for credentials and other sensitive data.
 ///
@@ -19,11 +26,133 @@ const secureStorageMacOsOptions = MacOsOptions(
   accessibility: KeychainAccessibility.first_unlock_this_device,
 );
 
-const defaultSecureStorage = FlutterSecureStorage(
-  aOptions: secureStorageAndroidOptions,
-  iOptions: secureStorageIOSOptions,
-  mOptions: secureStorageMacOsOptions,
+final defaultSecureStorage = ResilientSecureStorage(
+  const FlutterSecureStorage(
+    aOptions: secureStorageAndroidOptions,
+    iOptions: secureStorageIOSOptions,
+    mOptions: secureStorageMacOsOptions,
+  ),
 );
+
+/// OS-backed secure storage with a macOS Debug-only encrypted fallback.
+///
+/// A locally built macOS app cannot claim the Keychain entitlement without a
+/// valid Apple development identity. Release/Profile builds remain on Keychain;
+/// only unsigned Debug builds fall back to a device-bound encrypted Hive box.
+class ResilientSecureStorage {
+  ResilientSecureStorage(this._storage);
+
+  final FlutterSecureStorage _storage;
+
+  static const _fallbackBoxName = 'secure_storage_debug_fallback_v1';
+  Box<String>? _fallbackBox;
+  Future<Box<String>>? _fallbackInit;
+  bool _fallbackActive = false;
+
+  bool get _canUseFallback => kDebugMode && Platform.isMacOS;
+
+  List<int> _deriveFallbackKey() {
+    final material =
+        '${Platform.localHostname}|mynas-secure-storage-debug-fallback|v1';
+    return sha256.convert(utf8.encode(material)).bytes;
+  }
+
+  Future<Box<String>> _getFallbackBox() async {
+    if (_fallbackBox != null && _fallbackBox!.isOpen) return _fallbackBox!;
+    return _fallbackInit ??= _openFallbackBox();
+  }
+
+  Future<Box<String>> _openFallbackBox() async {
+    try {
+      final box = await Hive.openBox<String>(
+        _fallbackBoxName,
+        encryptionCipher: HiveAesCipher(_deriveFallbackKey()),
+      );
+      _fallbackBox = box;
+      return box;
+    } finally {
+      _fallbackInit = null;
+    }
+  }
+
+  bool _activateFallback(Object error, String operation) {
+    if (!_canUseFallback || !isSecureStorageUnavailableError(error)) {
+      return false;
+    }
+    if (!_fallbackActive) {
+      logger.w(
+        'ResilientSecureStorage: macOS Debug Keychain 不可用 ($operation)， '
+        '已切换到本机 AES 加密存储。正式构建仍使用系统 Keychain。',
+      );
+    }
+    _fallbackActive = true;
+    return true;
+  }
+
+  Future<void> write({required String key, required String value}) async {
+    if (_fallbackActive) {
+      await (await _getFallbackBox()).put(key, value);
+      return;
+    }
+    try {
+      await _storage.write(key: key, value: value);
+    } on Exception catch (error) {
+      if (!_activateFallback(error, 'write')) rethrow;
+      await (await _getFallbackBox()).put(key, value);
+    }
+  }
+
+  Future<String?> read({required String key}) async {
+    if (_fallbackActive) return (await _getFallbackBox()).get(key);
+    try {
+      return await _storage.read(key: key);
+    } on Exception catch (error) {
+      if (!_activateFallback(error, 'read')) rethrow;
+      return (await _getFallbackBox()).get(key);
+    }
+  }
+
+  Future<void> delete({required String key}) async {
+    if (_fallbackActive) {
+      await (await _getFallbackBox()).delete(key);
+      return;
+    }
+    try {
+      await _storage.delete(key: key);
+    } on Exception catch (error) {
+      if (!_activateFallback(error, 'delete')) rethrow;
+      await (await _getFallbackBox()).delete(key);
+    }
+  }
+
+  Future<void> deleteAll() async {
+    if (_fallbackActive) {
+      await (await _getFallbackBox()).clear();
+      return;
+    }
+    try {
+      await _storage.deleteAll();
+    } on Exception catch (error) {
+      if (!_activateFallback(error, 'deleteAll')) rethrow;
+      await (await _getFallbackBox()).clear();
+    }
+  }
+
+  Future<bool> containsKey({required String key}) async =>
+      await read(key: key) != null;
+
+  Future<Map<String, String>> readAll() async {
+    if (_fallbackActive) {
+      return Map<String, String>.from((await _getFallbackBox()).toMap());
+    }
+    try {
+      return await _storage.readAll();
+    } on Exception catch (error) {
+      if (!_activateFallback(error, 'readAll')) rethrow;
+      return Map<String, String>.from((await _getFallbackBox()).toMap());
+    }
+  }
+}
 
 /// Thrown when the platform reports a successful write but the secret cannot
 /// be read back. This is how a missing Apple Keychain entitlement can surface.
@@ -41,15 +170,21 @@ class SecureStoragePersistenceException implements Exception {
 /// Some Keychain configurations return from `write` without throwing while
 /// silently discarding the value. Never log [value] from this helper.
 Future<void> writeSecureValueVerified(
-  FlutterSecureStorage storage, {
+  ResilientSecureStorage storage, {
   required String key,
   required String value,
 }) async {
   await storage.write(key: key, value: value);
   final persistedValue = await storage.read(key: key);
-  if (persistedValue != value) {
-    throw SecureStoragePersistenceException(key);
-  }
+  if (persistedValue == value) return;
+
+  final error = SecureStoragePersistenceException(key);
+  if (!storage._activateFallback(error, 'write verification')) throw error;
+
+  // A Keychain write can report success while silently discarding the value.
+  // Once the Debug fallback is active, retry the write there and verify it too.
+  await storage.write(key: key, value: value);
+  if (await storage.read(key: key) != value) throw error;
 }
 
 /// Whether an error means the OS-backed secret store is unavailable.

@@ -1,4 +1,3 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -50,7 +49,7 @@ class HiveStorageService implements StorageService {
 class SecureStorageService {
   SecureStorageService() : _storage = defaultSecureStorage;
 
-  final FlutterSecureStorage _storage;
+  final ResilientSecureStorage _storage;
 
   Future<void> write({required String key, required String value}) =>
       writeSecureValueVerified(_storage, key: key, value: value);

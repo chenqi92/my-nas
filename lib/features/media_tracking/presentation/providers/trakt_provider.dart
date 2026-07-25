@@ -146,7 +146,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
     _init();
   }
 
-  static const _storage = defaultSecureStorage;
+  static final _storage = defaultSecureStorage;
 
   static const _configKey = 'trakt_config';
   static const _pendingOAuthKey = 'trakt_pending_oauth';
