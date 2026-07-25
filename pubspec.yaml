@@ -1,7 +1,7 @@
 name: my_nas
 description: "跨平台 NAS 客户端 - 统一管理你的 NAS 资源"
 publish_to: "none"
-version: 1.2.0+10
+version: 1.2.0+11
 
 environment:
   sdk: ^3.10.1
@@ -223,6 +223,12 @@ dev_dependencies:
   msix: ^3.16.12
 
 flutter:
+  # The current Flutter SPM generator rewrites the aggregate macOS package to
+  # 10.15 during `pub get`, while `gal` requires macOS 11. CocoaPods already
+  # covers every Darwin plugin in this app and respects our 11.0 Podfile target.
+  config:
+    enable-swift-package-manager: false
+
   uses-material-design: true
   generate: true
 
