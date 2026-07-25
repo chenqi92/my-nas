@@ -32,15 +32,21 @@ class MusicAudioHandler extends BaseAudioHandler
     _init();
   }
 
-  /// Android 端硬件均衡器（其他平台为 no-op，仍可放入 pipeline）
-  final AndroidEqualizer _androidEqualizer = AndroidEqualizer();
+  /// Android 端硬件均衡器。
+  ///
+  /// `AndroidEqualizer` 不能在 iOS/macOS 的音频管线中实例化，否则
+  /// just_audio 会调用不存在的 Android 平台方法并导致整首歌曲无法加载。
+  late final AndroidEqualizer? _androidEqualizer = Platform.isAndroid
+      ? AndroidEqualizer()
+      : null;
 
-  late final AudioPipeline _audioPipeline = AudioPipeline(
-    androidAudioEffects: [_androidEqualizer],
-  );
-
-  late final AudioPlayer _player =
-      AudioPlayer(audioPipeline: _audioPipeline);
+  late final AudioPlayer _player = Platform.isAndroid
+      ? AudioPlayer(
+          audioPipeline: AudioPipeline(
+            androidAudioEffects: [_androidEqualizer!],
+          ),
+        )
+      : AudioPlayer();
 
   StreamSubscription<EqualizerState>? _eqSub;
 
@@ -171,25 +177,38 @@ class MusicAudioHandler extends BaseAudioHandler
       }
 
       // 解码图片
-      logger.d('MusicAudioHandler: 开始处理封面图片 - 原始大小=${artworkData.length} bytes');
+      logger.d(
+        'MusicAudioHandler: 开始处理封面图片 - 原始大小=${artworkData.length} bytes',
+      );
       final originalImage = img.decodeImage(artworkData);
       if (originalImage == null) {
         logger.e('MusicAudioHandler: 无法解码封面图片');
         return null;
       }
 
-      logger.d('MusicAudioHandler: 原始尺寸=${originalImage.width}x${originalImage.height}');
+      logger.d(
+        'MusicAudioHandler: 原始尺寸=${originalImage.width}x${originalImage.height}',
+      );
 
       // 如果图片太大，调整大小
       img.Image processedImage;
-      if (originalImage.width > _maxArtworkSize || originalImage.height > _maxArtworkSize) {
+      if (originalImage.width > _maxArtworkSize ||
+          originalImage.height > _maxArtworkSize) {
         // 保持宽高比，将较长边缩放到 _maxArtworkSize
         if (originalImage.width > originalImage.height) {
-          processedImage = img.copyResize(originalImage, width: _maxArtworkSize);
+          processedImage = img.copyResize(
+            originalImage,
+            width: _maxArtworkSize,
+          );
         } else {
-          processedImage = img.copyResize(originalImage, height: _maxArtworkSize);
+          processedImage = img.copyResize(
+            originalImage,
+            height: _maxArtworkSize,
+          );
         }
-        logger.i('MusicAudioHandler: 封面已调整大小 ${originalImage.width}x${originalImage.height} -> ${processedImage.width}x${processedImage.height}');
+        logger.i(
+          'MusicAudioHandler: 封面已调整大小 ${originalImage.width}x${originalImage.height} -> ${processedImage.width}x${processedImage.height}',
+        );
       } else {
         processedImage = originalImage;
       }
@@ -201,7 +220,9 @@ class MusicAudioHandler extends BaseAudioHandler
       // 保存 hash 以便下次比较
       await hashFile.writeAsString(currentHash);
 
-      logger.i('MusicAudioHandler: 封面已保存 - path=$filePath, size=${jpegData.length} bytes, dimensions=${processedImage.width}x${processedImage.height}');
+      logger.i(
+        'MusicAudioHandler: 封面已保存 - path=$filePath, size=${jpegData.length} bytes, dimensions=${processedImage.width}x${processedImage.height}',
+      );
 
       // 验证文件是否存在
       if (!await file.exists()) {
@@ -238,7 +259,9 @@ class MusicAudioHandler extends BaseAudioHandler
   /// - Dart 层只在 paused 状态广播播放状态，不调用 _resetMediaItemForNowPlaying()
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    logger.i('MusicAudioHandler: App 生命周期变化 - $state, playing=${_player.playing}, hasMediaItem=${mediaItem.value != null}');
+    logger.i(
+      'MusicAudioHandler: App 生命周期变化 - $state, playing=${_player.playing}, hasMediaItem=${mediaItem.value != null}',
+    );
 
     switch (state) {
       case AppLifecycleState.inactive:
@@ -267,7 +290,9 @@ class MusicAudioHandler extends BaseAudioHandler
 
       case AppLifecycleState.resumed:
         // App 返回前台
-        logger.i('MusicAudioHandler: App 返回前台 (resumed), playing=${_player.playing}');
+        logger.i(
+          'MusicAudioHandler: App 返回前台 (resumed), playing=${_player.playing}',
+        );
 
         // 关键修复（2024-12-28 尝试十三）：
         // 根据 Apple 文档：音频会话可能在应用不活跃时被系统自动停用。
@@ -352,7 +377,9 @@ class MusicAudioHandler extends BaseAudioHandler
     _refreshCounter++;
 
     final cleanTitle = currentItem.title.replaceAll('\u200B', '');
-    logger.i('MusicAudioHandler: 刷新灵动岛 (counter=$_refreshCounter) - $cleanTitle');
+    logger.i(
+      'MusicAudioHandler: 刷新灵动岛 (counter=$_refreshCounter) - $cleanTitle',
+    );
 
     Uri? newArtUri;
 
@@ -391,28 +418,30 @@ class MusicAudioHandler extends BaseAudioHandler
   void _broadcastStateWithPlaying(bool playing) {
     final processingState = _mapProcessingState(_player.processingState);
 
-    playbackState.add(playbackState.value.copyWith(
-      controls: [
-        MediaControl.skipToPrevious,
-        if (playing) MediaControl.pause else MediaControl.play,
-        MediaControl.stop,
-        MediaControl.skipToNext,
-      ],
-      systemActions: const {
-        MediaAction.seek,
-        MediaAction.seekForward,
-        MediaAction.seekBackward,
-        MediaAction.skipToNext,
-        MediaAction.skipToPrevious,
-      },
-      androidCompactActionIndices: const [0, 1, 3],
-      processingState: processingState,
-      playing: playing,
-      updatePosition: _player.position,
-      bufferedPosition: _player.bufferedPosition,
-      speed: _player.speed,
-      queueIndex: _currentIndex,
-    ));
+    playbackState.add(
+      playbackState.value.copyWith(
+        controls: [
+          MediaControl.skipToPrevious,
+          if (playing) MediaControl.pause else MediaControl.play,
+          MediaControl.stop,
+          MediaControl.skipToNext,
+        ],
+        systemActions: const {
+          MediaAction.seek,
+          MediaAction.seekForward,
+          MediaAction.seekBackward,
+          MediaAction.skipToNext,
+          MediaAction.skipToPrevious,
+        },
+        androidCompactActionIndices: const [0, 1, 3],
+        processingState: processingState,
+        playing: playing,
+        updatePosition: _player.position,
+        bufferedPosition: _player.bufferedPosition,
+        speed: _player.speed,
+        queueIndex: _currentIndex,
+      ),
+    );
   }
 
   /// 广播播放状态
@@ -422,37 +451,39 @@ class MusicAudioHandler extends BaseAudioHandler
 
     // logger.d('MusicAudioHandler: 广播状态 - playing=$playing, processingState=$processingState, position=${_player.position}, hasMediaItem=${mediaItem.value != null}');
 
-    playbackState.add(playbackState.value.copyWith(
-      // 显示的控制按钮
-      controls: [
-        MediaControl.skipToPrevious,
-        if (playing) MediaControl.pause else MediaControl.play,
-        MediaControl.stop,
-        MediaControl.skipToNext,
-      ],
-      // 允许的系统操作
-      systemActions: const {
-        MediaAction.seek,
-        MediaAction.seekForward,
-        MediaAction.seekBackward,
-        MediaAction.skipToNext,
-        MediaAction.skipToPrevious,
-      },
-      // Android 紧凑视图显示的按钮索引
-      androidCompactActionIndices: const [0, 1, 3],
-      // 处理状态
-      processingState: processingState,
-      // 是否正在播放
-      playing: playing,
-      // 当前位置（用于 Now Playing 计算）
-      updatePosition: _player.position,
-      // 缓冲位置
-      bufferedPosition: _player.bufferedPosition,
-      // 播放速度
-      speed: _player.speed,
-      // 队列索引
-      queueIndex: _currentIndex,
-    ));
+    playbackState.add(
+      playbackState.value.copyWith(
+        // 显示的控制按钮
+        controls: [
+          MediaControl.skipToPrevious,
+          if (playing) MediaControl.pause else MediaControl.play,
+          MediaControl.stop,
+          MediaControl.skipToNext,
+        ],
+        // 允许的系统操作
+        systemActions: const {
+          MediaAction.seek,
+          MediaAction.seekForward,
+          MediaAction.seekBackward,
+          MediaAction.skipToNext,
+          MediaAction.skipToPrevious,
+        },
+        // Android 紧凑视图显示的按钮索引
+        androidCompactActionIndices: const [0, 1, 3],
+        // 处理状态
+        processingState: processingState,
+        // 是否正在播放
+        playing: playing,
+        // 当前位置（用于 Now Playing 计算）
+        updatePosition: _player.position,
+        // 缓冲位置
+        bufferedPosition: _player.bufferedPosition,
+        // 播放速度
+        speed: _player.speed,
+        // 队列索引
+        queueIndex: _currentIndex,
+      ),
+    );
   }
 
   /// 映射 just_audio 的处理状态到 audio_service
@@ -475,7 +506,9 @@ class MusicAudioHandler extends BaseAudioHandler
   /// 在设置新歌曲之前调用，确保旧的播放状态被正确清理
   @override
   Future<void> prepareForNewTrack() async {
-    logger.i('MusicAudioHandler: 准备切换歌曲, 当前歌曲=${_currentMusicItem?.displayTitle}');
+    logger.i(
+      'MusicAudioHandler: 准备切换歌曲, 当前歌曲=${_currentMusicItem?.displayTitle}',
+    );
 
     // 如果正在播放，先暂停并广播状态
     if (_player.playing) {
@@ -496,7 +529,9 @@ class MusicAudioHandler extends BaseAudioHandler
     MusicItem music, {
     Uint8List? artworkData,
   }) async {
-    logger.i('MusicAudioHandler: setCurrentMusic 被调用 - ${music.displayTitle}, hasArtwork=${artworkData != null}');
+    logger.i(
+      'MusicAudioHandler: setCurrentMusic 被调用 - ${music.displayTitle}, hasArtwork=${artworkData != null}',
+    );
 
     _currentMusicItem = music;
     _currentArtworkData = artworkData;
@@ -519,10 +554,7 @@ class MusicAudioHandler extends BaseAudioHandler
       // 封面图片 - 使用文件 URI
       // audio_service 会自动将这个显示在锁屏和控制中心
       artUri: artUri,
-      extras: {
-        'sourceId': music.sourceId,
-        'path': music.path,
-      },
+      extras: {'sourceId': music.sourceId, 'path': music.path},
     );
 
     mediaItem.add(item);
@@ -532,7 +564,8 @@ class MusicAudioHandler extends BaseAudioHandler
     _broadcastState(PlaybackEvent());
 
     logger.i(
-        'MusicAudioHandler: 设置当前音乐 - ${music.displayTitle} by ${music.displayArtist}, hasArtwork=${artUri != null}');
+      'MusicAudioHandler: 设置当前音乐 - ${music.displayTitle} by ${music.displayArtist}, hasArtwork=${artUri != null}',
+    );
 
     // 注意：移除了 iOS 延迟刷新代码（2024-12-28）
     // 原因：这个 500ms 延迟刷新会在歌曲开始播放后触发第二次 mediaItem.add()，
@@ -549,9 +582,7 @@ class MusicAudioHandler extends BaseAudioHandler
       // 保存封面到文件
       final artUri = await _saveArtworkToFile(artworkData, mediaItem.value!.id);
 
-      final updated = mediaItem.value!.copyWith(
-        artUri: artUri,
-      );
+      final updated = mediaItem.value!.copyWith(artUri: artUri);
       mediaItem.add(updated);
 
       // 重新广播状态以刷新 Now Playing
@@ -579,13 +610,15 @@ class MusicAudioHandler extends BaseAudioHandler
 
     // 转换为 MediaItem 列表并更新 queue
     final mediaItems = items
-        .map((m) => MediaItem(
-              id: m.id,
-              title: m.displayTitle,
-              artist: m.displayArtist,
-              album: m.displayAlbum,
-              duration: m.duration,
-            ))
+        .map(
+          (m) => MediaItem(
+            id: m.id,
+            title: m.displayTitle,
+            artist: m.displayArtist,
+            album: m.displayAlbum,
+            duration: m.duration,
+          ),
+        )
         .toList();
     queue.add(mediaItems);
 
@@ -603,6 +636,9 @@ class MusicAudioHandler extends BaseAudioHandler
   @override
   Future<void> play() async {
     logger.i('MusicAudioHandler: play() 被调用');
+    if (_player.processingState == ProcessingState.idle) {
+      throw StateError('Audio source is not ready');
+    }
     // 注意：不等待 _player.play()，因为在 iOS 上它可能不会立即返回
     // 这会导致调用者永远等待，进而导致切歌失败
     // play() 只是触发播放，实际的播放状态通过 playbackEventStream 监听
@@ -644,7 +680,9 @@ class MusicAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> skipToNext() async {
-    logger.i('MusicAudioHandler: skipToNext() 被调用 (来自灵动岛/锁屏/控制中心), queueLength=${_musicQueue.length}, currentIndex=$_currentIndex');
+    logger.i(
+      'MusicAudioHandler: skipToNext() 被调用 (来自灵动岛/锁屏/控制中心), queueLength=${_musicQueue.length}, currentIndex=$_currentIndex',
+    );
     if (_musicQueue.isEmpty) {
       logger.w('MusicAudioHandler: skipToNext() 队列为空，忽略');
       return;
@@ -657,7 +695,9 @@ class MusicAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> skipToPrevious() async {
-    logger.i('MusicAudioHandler: skipToPrevious() 被调用 (来自灵动岛/锁屏/控制中心), queueLength=${_musicQueue.length}, currentIndex=$_currentIndex, position=${_player.position}');
+    logger.i(
+      'MusicAudioHandler: skipToPrevious() 被调用 (来自灵动岛/锁屏/控制中心), queueLength=${_musicQueue.length}, currentIndex=$_currentIndex, position=${_player.position}',
+    );
     if (_musicQueue.isEmpty) {
       logger.w('MusicAudioHandler: skipToPrevious() 队列为空，忽略');
       return;
@@ -670,7 +710,8 @@ class MusicAudioHandler extends BaseAudioHandler
       return;
     }
 
-    final prevIndex = (_currentIndex - 1 + _musicQueue.length) % _musicQueue.length;
+    final prevIndex =
+        (_currentIndex - 1 + _musicQueue.length) % _musicQueue.length;
     logger.d('MusicAudioHandler: skipToPrevious() 切换到索引 $prevIndex');
     await _skipToIndex(prevIndex);
   }
@@ -683,12 +724,16 @@ class MusicAudioHandler extends BaseAudioHandler
 
   Future<void> _skipToIndex(int index) async {
     if (index < 0 || index >= _musicQueue.length) {
-      logger.w('MusicAudioHandler: _skipToIndex($index) 索引超出范围 [0, ${_musicQueue.length})');
+      logger.w(
+        'MusicAudioHandler: _skipToIndex($index) 索引超出范围 [0, ${_musicQueue.length})',
+      );
       return;
     }
 
     _currentIndex = index;
-    logger.i('MusicAudioHandler: _skipToIndex($index) 开始切换歌曲, hasCallback=${onSkipToIndex != null}');
+    logger.i(
+      'MusicAudioHandler: _skipToIndex($index) 开始切换歌曲, hasCallback=${onSkipToIndex != null}',
+    );
 
     // 调用外部回调处理音频源加载（因为涉及复杂的 NAS 文件处理）
     if (onSkipToIndex != null) {
@@ -731,7 +776,10 @@ class MusicAudioHandler extends BaseAudioHandler
   /// [url] 音频文件 URL（支持 file://, http://, https://）
   /// [headers] HTTP 请求头（可选）
   @override
-  Future<Duration?> setAudioSource(String url, {Map<String, String>? headers}) async {
+  Future<Duration?> setAudioSource(
+    String url, {
+    Map<String, String>? headers,
+  }) async {
     final uri = Uri.parse(url);
     AudioSource audioSource;
 
@@ -752,7 +800,8 @@ class MusicAudioHandler extends BaseAudioHandler
   }
 
   /// 设置音频源（内部方法，直接使用 AudioSource）
-  Future<Duration?> setAudioSourceRaw(AudioSource source) => _player.setAudioSource(source);
+  Future<Duration?> setAudioSourceRaw(AudioSource source) =>
+      _player.setAudioSource(source);
 
   /// 停止播放器
   @override
@@ -783,8 +832,10 @@ class MusicAudioHandler extends BaseAudioHandler
 
   /// 缓冲状态流
   @override
-  Stream<bool> get bufferingStream => _player.processingStateStream.map((state) =>
-      state == ProcessingState.buffering || state == ProcessingState.loading);
+  Stream<bool> get bufferingStream => _player.processingStateStream.map(
+    (state) =>
+        state == ProcessingState.buffering || state == ProcessingState.loading,
+  );
 
   /// 播放完成流
   /// 使用 distinct 确保只有状态变化时才发出事件
@@ -808,8 +859,7 @@ class MusicAudioHandler extends BaseAudioHandler
   Future<List<MediaItem>> getChildren(
     String parentMediaId, [
     Map<String, dynamic>? options,
-  ]) =>
-      MusicBrowserService.instance.getChildren(parentMediaId);
+  ]) => MusicBrowserService.instance.getChildren(parentMediaId);
 
   @override
   Future<MediaItem?> getMediaItem(String mediaId) =>
@@ -819,22 +869,17 @@ class MusicAudioHandler extends BaseAudioHandler
   Future<void> playFromMediaId(
     String mediaId, [
     Map<String, dynamic>? extras,
-  ]) =>
-      MusicBrowserService.instance.playFromMediaId(mediaId);
+  ]) => MusicBrowserService.instance.playFromMediaId(mediaId);
 
   @override
-  Future<void> playFromSearch(
-    String query, [
-    Map<String, dynamic>? extras,
-  ]) =>
+  Future<void> playFromSearch(String query, [Map<String, dynamic>? extras]) =>
       MusicBrowserService.instance.playFromSearch(query);
 
   @override
   Future<List<MediaItem>> search(
     String query, [
     Map<String, dynamic>? extras,
-  ]) =>
-      MusicBrowserService.instance.search(query);
+  ]) => MusicBrowserService.instance.search(query);
 
   /// 接入均衡器：初始应用一次 + 订阅后续变化
   Future<void> _initEqualizer() async {
@@ -853,10 +898,13 @@ class MusicAudioHandler extends BaseAudioHandler
   }
 
   Future<void> _applyEqualizer(EqualizerState state) async {
+    final equalizer = _androidEqualizer;
+    if (equalizer == null) return;
+
     try {
-      await _androidEqualizer.setEnabled(state.enabled);
+      await equalizer.setEnabled(state.enabled);
       if (!state.enabled) return;
-      final params = await _androidEqualizer.parameters;
+      final params = await equalizer.parameters;
       final bands = params.bands;
       // bands 数量由系统决定（一般 5 / 10），按比例线性插值
       for (var i = 0; i < bands.length; i++) {
@@ -883,21 +931,23 @@ class MusicAudioHandler extends BaseAudioHandler
 /// 全局 AudioHandler 初始化
 /// 在 main.dart 中调用
 Future<MusicAudioHandler> initAudioHandler() => AudioService.init(
-      builder: MusicAudioHandler.new,
-      config: AudioServiceConfig(
-      // Android 通知渠道配置
-      androidNotificationChannelId: 'com.kkape.mynas.channel.audio',
-      androidNotificationChannelName: appL10n.musicAudioHandlerNotificationChannelName,
-      androidNotificationChannelDescription: appL10n.musicAudioHandlerNotificationChannelDescription,
-      // Android 通知配置
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
-      // 快进/快退间隔
-      fastForwardInterval: Duration(seconds: 10),
-      rewindInterval: Duration(seconds: 10),
-      // 预加载（iOS 不需要，但对 Android 有帮助）
-      preloadArtwork: true,
-      // 通知点击后的行为
-      androidNotificationClickStartsActivity: true,
-    ),
-  );
+  builder: MusicAudioHandler.new,
+  config: AudioServiceConfig(
+    // Android 通知渠道配置
+    androidNotificationChannelId: 'com.kkape.mynas.channel.audio',
+    androidNotificationChannelName:
+        appL10n.musicAudioHandlerNotificationChannelName,
+    androidNotificationChannelDescription:
+        appL10n.musicAudioHandlerNotificationChannelDescription,
+    // Android 通知配置
+    androidNotificationOngoing: true,
+    androidStopForegroundOnPause: true,
+    // 快进/快退间隔
+    fastForwardInterval: Duration(seconds: 10),
+    rewindInterval: Duration(seconds: 10),
+    // 预加载（iOS 不需要，但对 Android 有帮助）
+    preloadArtwork: true,
+    // 通知点击后的行为
+    androidNotificationClickStartsActivity: true,
+  ),
+);

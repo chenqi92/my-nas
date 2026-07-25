@@ -925,12 +925,20 @@ class SourceManagerService {
     final resolvedApiKey = apiKey ?? source.apiKey ?? savedCredential?.apiKey;
 
     // 构建连接配置
+    final serviceExtraConfig = <String, dynamic>{
+      ...?source.extraConfig,
+      if (source.accessToken?.isNotEmpty ?? false)
+        'accessToken': source.accessToken,
+      if (source.refreshToken?.isNotEmpty ?? false)
+        'refreshToken': source.refreshToken,
+    };
+
     final config = ServiceConnectionConfig(
       baseUrl: source.baseUrl,
       username: source.username.isNotEmpty ? source.username : null,
       password: resolvedPassword,
       apiKey: resolvedApiKey,
-      extraConfig: source.extraConfig,
+      extraConfig: serviceExtraConfig.isEmpty ? null : serviceExtraConfig,
       verifySSL: !InsecureHttpClient.trustSelfSigned,
     );
 

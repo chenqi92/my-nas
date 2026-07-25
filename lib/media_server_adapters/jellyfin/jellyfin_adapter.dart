@@ -80,8 +80,8 @@ class JellyfinAdapter extends MediaServerAdapter {
       }
 
       // 根据配置选择认证方式
-      final accessToken = config.extraConfig?['accessToken'] as String?;
-      final userId = config.extraConfig?['userId'] as String?;
+      var accessToken = config.extraConfig?['accessToken'] as String?;
+      var userId = config.extraConfig?['userId'] as String?;
 
       if (accessToken != null && accessToken.isNotEmpty) {
         // 使用已有的 Access Token 认证（Quick Connect）
@@ -104,13 +104,17 @@ class JellyfinAdapter extends MediaServerAdapter {
             appL10n.jellyfinAdapterInvalidApiKeyError,
           );
         }
+        accessToken = config.apiKey;
+        userId = _api.userId;
       } else if (config.username != null && config.password != null) {
         // 使用用户名密码认证
         logger.i('JellyfinAdapter: 使用用户名密码认证');
-        await _api.authenticateByName(
+        final result = await _api.authenticateByName(
           username: config.username!,
           password: config.password!,
         );
+        accessToken = result.accessToken;
+        userId = result.userId;
       } else {
         return ServiceConnectionFailure(
           appL10n.jellyfinAdapterMissingCredentialsError,
@@ -118,6 +122,13 @@ class JellyfinAdapter extends MediaServerAdapter {
       }
 
       _connected = true;
+      _connection = config.copyWith(
+        extraConfig: {
+          ...?config.extraConfig,
+          'accessToken': ?accessToken,
+          'userId': ?userId,
+        },
+      );
       _virtualFs = JellyfinVirtualFileSystem(api: _api);
 
       logger.i('JellyfinAdapter: 连接成功');

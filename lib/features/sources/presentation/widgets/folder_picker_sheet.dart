@@ -91,11 +91,10 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
       minChildSize: 0.4,
       maxChildSize: 0.95,
       expand: false,
-      builder: (context, scrollController) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
+      builder: (context, scrollController) => Material(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           children: [
             // 拖动条
@@ -130,10 +129,14 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
                     labelText: context.l10n.folderPickerSelectSource,
                     prefixIcon: const Icon(Icons.storage),
                   ),
-                  items: widget.sources.map((source) => DropdownMenuItem(
-                      value: source,
-                      child: Text(source.displayName),
-                    )).toList(),
+                  items: widget.sources
+                      .map(
+                        (source) => DropdownMenuItem(
+                          value: source,
+                          child: Text(source.displayName),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (source) {
                     setState(() {
                       _selectedSource = source;
@@ -166,9 +169,9 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -198,9 +201,7 @@ class _FolderPickerSheetState extends State<FolderPickerSheet> {
             const Divider(height: 1),
 
             // 目录列表
-            Expanded(
-              child: _buildContent(scrollController),
-            ),
+            Expanded(child: _buildContent(scrollController)),
 
             // 底部安全区域
             SizedBox(height: bottomPadding > 0 ? bottomPadding : 16),

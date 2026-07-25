@@ -327,15 +327,22 @@ enum MusicScanPhase { scanning, metadata }
 
 /// 音乐排序选项
 enum MusicSortOption {
-  name('musicSortOptionName', Icons.sort_by_alpha_rounded),
-  artist('musicSortOptionArtist', Icons.person_rounded),
-  album('musicSortOptionAlbum', Icons.album_rounded),
-  dateAdded('musicSortOptionDateAdded', Icons.schedule_rounded),
-  duration('musicSortOptionDuration', Icons.timer_rounded);
+  name(Icons.sort_by_alpha_rounded),
+  artist(Icons.person_rounded),
+  album(Icons.album_rounded),
+  dateAdded(Icons.schedule_rounded),
+  duration(Icons.timer_rounded);
 
-  const MusicSortOption(this.label, this.icon);
-  final String label;
+  const MusicSortOption(this.icon);
   final IconData icon;
+
+  String localizedLabel(BuildContext context) => switch (this) {
+        MusicSortOption.name => context.l10n.musicSortOptionName,
+        MusicSortOption.artist => context.l10n.musicSortOptionArtist,
+        MusicSortOption.album => context.l10n.musicSortOptionAlbum,
+        MusicSortOption.dateAdded => context.l10n.musicSortOptionDateAdded,
+        MusicSortOption.duration => context.l10n.musicSortOptionDuration,
+      };
 }
 
 /// 排序方向
@@ -4082,7 +4089,7 @@ class _SortButton extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  sortState.option.label,
+                  sortState.option.localizedLabel(context),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -4309,7 +4316,7 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
                 // 排序按钮
                 _SpotifyIconButton(
                   icon: Icons.swap_vert_rounded,
-                  label: sortState.option.label,
+                  label: sortState.option.localizedLabel(context),
                   isDark: widget.isDark,
                   onTap: () => _showSortOptions(context, ref, sortState),
                 ),
@@ -8372,7 +8379,7 @@ class _SortOptionTile extends StatelessWidget {
           ),
         ),
         title: Text(
-          option.label,
+          option.localizedLabel(context),
           style: TextStyle(
             fontSize: 15,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,

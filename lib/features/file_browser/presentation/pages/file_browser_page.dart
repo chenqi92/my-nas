@@ -9,10 +9,16 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/file_browser/domain/file_open_target.dart';
 import 'package:my_nas/features/file_browser/presentation/providers/file_browser_provider.dart';
 import 'package:my_nas/features/file_browser/presentation/widgets/file_item_widget.dart';
+import 'package:my_nas/features/music/domain/entities/music_item.dart';
+import 'package:my_nas/features/music/presentation/pages/music_player_page.dart';
+import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/sources_page.dart';
+import 'package:my_nas/features/video/domain/entities/video_item.dart';
+import 'package:my_nas/features/video/presentation/pages/video_player_page.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
@@ -1191,10 +1197,82 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
     } else {
       // 正常模式
       final isDark = Theme.of(context).brightness == Brightness.dark;
-      if (file.isDirectory) {
-        ref.read(fileListProvider.notifier).loadDirectory(file.path);
+      switch (preferredFileOpenTarget(file)) {
+        case FileOpenTarget.directory:
+          ref.read(fileListProvider.notifier).loadDirectory(file.path);
+        case FileOpenTarget.video || FileOpenTarget.audio:
+          AppError.fireAndForget(
+            _openPlayableFile(file),
+            action: 'fileBrowser.openPlayableFile',
+          );
+        case FileOpenTarget.options:
+          _showFileOptions(context, file, isDark);
+      }
+    }
+  }
+
+  Future<void> _openPlayableFile(FileItem file) async {
+    final connection = ref.read(selectedBrowsableConnectionProvider);
+    if (connection == null) {
+      if (mounted) {
+        context.showErrorToast(context.l10n.musicSourceNotConnected);
+      }
+      return;
+    }
+
+    try {
+      final url = await connection.fileSystem.getFileUrl(file.path);
+      if (!mounted) return;
+
+      switch (preferredFileOpenTarget(file)) {
+        case FileOpenTarget.video:
+          // just_audio and media_kit can otherwise compete for the simulator's
+          // single audio device when a music track is still playing in the
+          // background. Stop the music session before opening a video.
+          await ref.read(musicPlayerControllerProvider.notifier).stop();
+          if (!mounted) return;
+          final video = VideoItem.fromFileItem(
+            file,
+            url,
+            sourceId: connection.sourceId,
+          );
+          await Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute<void>(
+              settings: const RouteSettings(name: '/video_player'),
+              builder: (_) => VideoPlayerPage(video: video),
+            ),
+          );
+        case FileOpenTarget.audio:
+          final music = MusicItem.fromFileItem(
+            file,
+            url,
+            sourceId: connection.isMediaServer ? null : connection.sourceId,
+          );
+          ref.read(playQueueProvider.notifier).setQueue([music]);
+          ref
+              .read(musicPlayerControllerProvider.notifier)
+              .updateCurrentIndex(0);
+          await ref.read(musicPlayerControllerProvider.notifier).play(music);
+          final playbackState = ref.read(musicPlayerControllerProvider);
+          final playbackError = playbackState.errorMessage;
+          if (playbackError != null) {
+            throw StateError(playbackError);
+          }
+          if (mounted) await MusicPlayerPage.open(context);
+        case FileOpenTarget.directory || FileOpenTarget.options:
+          return;
+      }
+    } on Exception catch (e, st) {
+      if (mounted) {
+        AppError.handleWithUI(
+          context,
+          e,
+          st,
+          context.l10n.musicPlayFailed(e.toString()),
+          'fileBrowser.openPlayableFile',
+        );
       } else {
-        _showFileOptions(context, file, isDark);
+        AppError.handle(e, st, 'fileBrowser.openPlayableFile');
       }
     }
   }
@@ -1486,6 +1564,25 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
             ),
           ),
           if (!file.isDirectory) ...[
+            if (file.type == FileType.video || file.type == FileType.audio)
+              _buildActionTile(
+                context,
+                isDark,
+                icon: file.type == FileType.video
+                    ? Icons.play_circle_rounded
+                    : Icons.play_arrow_rounded,
+                iconColor: AppColors.success,
+                title: file.type == FileType.video
+                    ? l.videoPageActionPlay
+                    : l.musicPlayLabel,
+                onTap: () {
+                  Navigator.pop(context);
+                  AppError.fireAndForget(
+                    _openPlayableFile(file),
+                    action: 'fileBrowser.openPlayableFile',
+                  );
+                },
+              ),
             _buildActionTile(
               context,
               isDark,

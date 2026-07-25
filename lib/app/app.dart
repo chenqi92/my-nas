@@ -42,7 +42,8 @@ class MyNasApp extends ConsumerStatefulWidget {
   ConsumerState<MyNasApp> createState() => _MyNasAppState();
 }
 
-class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver {
+class _MyNasAppState extends ConsumerState<MyNasApp>
+    with WidgetsBindingObserver {
   bool _deepLinkInitialized = false;
   bool _desktopLyricInitialized = false;
   bool _jumpListInitialized = false;
@@ -56,9 +57,19 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    // 在应用启动时就创建两类连接管理器。媒体服务器连接不能依赖用户先进入
+    // “数据源”页面，否则冷启动后的媒体库和实时事件会一直处于未连接状态。
+    ref
+      ..read(activeConnectionsProvider.notifier)
+      ..read(activeMediaServerConnectionsProvider.notifier);
+
     // 设置全局错误 Widget（只需设置一次）
     ErrorWidget.builder = (details) {
-      logger.e('Flutter Error: ${details.exception}', details.exception, details.stack);
+      logger.e(
+        'Flutter Error: ${details.exception}',
+        details.exception,
+        details.stack,
+      );
       return Material(
         child: Container(
           color: AppColors.errorLight,
@@ -66,11 +77,19 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppColors.error,
+              ),
               const SizedBox(height: 16),
               Text(
                 appL10n.appErrorWidgetTitle,
-                style: const TextStyle(fontSize: 20, color: AppColors.error, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: AppColors.error,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -237,8 +256,14 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
       logger.d('MyNasApp: 检查并恢复连接状态...');
       // 先刷新状态，让 UI 反映真实连接状态
       ref.read(activeConnectionsProvider.notifier).refresh();
+      ref.read(activeMediaServerConnectionsProvider.notifier).refresh();
       // 然后尝试自动重连
-      await ref.read(activeConnectionsProvider.notifier).autoConnectAll();
+      await Future.wait([
+        ref.read(activeConnectionsProvider.notifier).autoConnectAll(),
+        ref
+            .read(activeMediaServerConnectionsProvider.notifier)
+            .autoConnectAll(),
+      ]);
       logger.d('MyNasApp: 连接状态已刷新');
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'resumeBackgroundConnection');
@@ -323,10 +348,12 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
     return MaterialApp.router(
       title: 'MyNAS',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightFromPreset(colorPreset)
-          .copyWith(extensions: [lightTokens]),
-      darkTheme: AppTheme.darkFromPreset(colorPreset)
-          .copyWith(extensions: [darkTokens]),
+      theme: AppTheme.lightFromPreset(
+        colorPreset,
+      ).copyWith(extensions: [lightTokens]),
+      darkTheme: AppTheme.darkFromPreset(
+        colorPreset,
+      ).copyWith(extensions: [darkTokens]),
       themeMode: themeMode,
       locale: interfaceLocale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -341,9 +368,7 @@ class _MyNasAppState extends ConsumerState<MyNasApp> with WidgetsBindingObserver
           child: ToastOverlay(
             toastService: _toastService,
             child: AppLockLifecycleListener(
-              child: AppLockGate(
-                child: child ?? const SizedBox.shrink(),
-              ),
+              child: AppLockGate(child: child ?? const SizedBox.shrink()),
             ),
           ),
         );

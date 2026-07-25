@@ -2161,7 +2161,11 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
 
     final isDesktop = context.isDesktopLayout;
     return AdaptiveGlassHeader(
-      height: isDesktop ? 56 : 72,
+      // Mobile title + gap + statistics need 53 px with the current text
+      // metrics. Together with the 20 px vertical padding, 72 px leaves the
+      // Column one pixel short on iOS. Keep a little headroom for font metrics
+      // and accessibility scaling.
+      height: isDesktop ? 56 : 80,
       backgroundColor: uiStyle.isGlass
           ? tintColor
           : (isDark

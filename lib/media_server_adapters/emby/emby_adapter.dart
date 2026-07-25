@@ -104,10 +104,12 @@ class EmbyAdapter extends MediaServerAdapter {
       }
 
       // 认证
+      late final String accessToken;
       if (config.apiKey != null && config.apiKey!.isNotEmpty) {
         // API Key 认证
         final result = await _api.loginWithApiKey(config.apiKey!);
         _userId = result.userId;
+        accessToken = result.accessToken;
       } else if (config.username != null) {
         // 用户名密码认证
         final result = await _api.login(
@@ -115,12 +117,19 @@ class EmbyAdapter extends MediaServerAdapter {
           config.password ?? '',
         );
         _userId = result.userId;
+        accessToken = result.accessToken;
       } else {
         return ServiceConnectionFailure(appL10n.embyConnectAuthRequired);
       }
 
       _isConnected = true;
-      _config = config;
+      _config = config.copyWith(
+        extraConfig: {
+          ...?config.extraConfig,
+          'accessToken': accessToken,
+          if (_userId != null) 'userId': _userId,
+        },
+      );
 
       // 创建虚拟文件系统
       _virtualFs = EmbyVirtualFileSystem(

@@ -89,6 +89,37 @@ class ResilientSecureStorage {
     return true;
   }
 
+  void _activatePersistedFallback(String operation) {
+    if (!_fallbackActive) {
+      logger.w(
+        'ResilientSecureStorage: macOS Debug Keychain 无该条目 ($operation)， '
+        '已从本机 AES 加密存储恢复。正式构建仍使用系统 Keychain。',
+      );
+    }
+    _fallbackActive = true;
+  }
+
+  Future<String?> _readPersistedFallback(String key) async {
+    if (!_canUseFallback) return null;
+    try {
+      final value = (await _getFallbackBox()).get(key);
+      if (value != null) _activatePersistedFallback('read');
+      return value;
+    } on Exception catch (error) {
+      logger.w('ResilientSecureStorage: 读取 macOS Debug 加密备用存储失败', error);
+      return null;
+    }
+  }
+
+  Future<void> _deletePersistedFallback(String key) async {
+    if (!_canUseFallback) return;
+    try {
+      await (await _getFallbackBox()).delete(key);
+    } on Exception catch (error) {
+      logger.w('ResilientSecureStorage: 删除 macOS Debug 加密备用存储失败', error);
+    }
+  }
+
   Future<void> write({required String key, required String value}) async {
     if (_fallbackActive) {
       await (await _getFallbackBox()).put(key, value);
@@ -105,7 +136,11 @@ class ResilientSecureStorage {
   Future<String?> read({required String key}) async {
     if (_fallbackActive) return (await _getFallbackBox()).get(key);
     try {
-      return await _storage.read(key: key);
+      final value = await _storage.read(key: key);
+      // Unsigned macOS Debug builds may successfully return null from
+      // Keychain on a later process even though an earlier write had to use
+      // the encrypted fallback. Recover that persisted value across restarts.
+      return value ?? await _readPersistedFallback(key);
     } on Exception catch (error) {
       if (!_activateFallback(error, 'read')) rethrow;
       return (await _getFallbackBox()).get(key);
@@ -119,6 +154,9 @@ class ResilientSecureStorage {
     }
     try {
       await _storage.delete(key: key);
+      // Remove a value left by an earlier fallback process as well, otherwise
+      // it could reappear after the primary Keychain entry is deleted.
+      await _deletePersistedFallback(key);
     } on Exception catch (error) {
       if (!_activateFallback(error, 'delete')) rethrow;
       await (await _getFallbackBox()).delete(key);
@@ -132,6 +170,13 @@ class ResilientSecureStorage {
     }
     try {
       await _storage.deleteAll();
+      if (_canUseFallback) {
+        try {
+          await (await _getFallbackBox()).clear();
+        } on Exception catch (error) {
+          logger.w('ResilientSecureStorage: 清空 macOS Debug 加密备用存储失败', error);
+        }
+      }
     } on Exception catch (error) {
       if (!_activateFallback(error, 'deleteAll')) rethrow;
       await (await _getFallbackBox()).clear();
@@ -146,7 +191,13 @@ class ResilientSecureStorage {
       return Map<String, String>.from((await _getFallbackBox()).toMap());
     }
     try {
-      return await _storage.readAll();
+      final values = await _storage.readAll();
+      if (values.isNotEmpty || !_canUseFallback) return values;
+      final fallbackValues = Map<String, String>.from(
+        (await _getFallbackBox()).toMap(),
+      );
+      if (fallbackValues.isNotEmpty) _activatePersistedFallback('readAll');
+      return fallbackValues;
     } on Exception catch (error) {
       if (!_activateFallback(error, 'readAll')) rethrow;
       return Map<String, String>.from((await _getFallbackBox()).toMap());

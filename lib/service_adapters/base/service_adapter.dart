@@ -69,6 +69,26 @@ class ServiceConnectionConfig {
   final String? apiKey;
   final Map<String, dynamic>? extraConfig;
   final bool verifySSL;
+
+  /// 创建一份更新后的连接配置。
+  ///
+  /// 媒体服务器在账号登录后会取得运行期 access token；将它合并回配置，
+  /// 可以让 WebSocket 等连接后的能力复用同一份认证信息。
+  ServiceConnectionConfig copyWith({
+    String? baseUrl,
+    String? username,
+    String? password,
+    String? apiKey,
+    Map<String, dynamic>? extraConfig,
+    bool? verifySSL,
+  }) => ServiceConnectionConfig(
+    baseUrl: baseUrl ?? this.baseUrl,
+    username: username ?? this.username,
+    password: password ?? this.password,
+    apiKey: apiKey ?? this.apiKey,
+    extraConfig: extraConfig ?? this.extraConfig,
+    verifySSL: verifySSL ?? this.verifySSL,
+  );
 }
 
 /// 服务连接结果（sealed class 用于类型安全的错误处理）

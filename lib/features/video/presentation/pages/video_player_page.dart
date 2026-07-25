@@ -11,6 +11,7 @@ import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
+import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -102,6 +103,12 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
 
     // 开始播放并缓存源信息
     Future.microtask(() async {
+      if (!mounted) return;
+      // 视频和音乐共用底层音频输出：先停止音乐，避免设备占用、
+      // 声音重叠或切入视频后仍保留旧的 Now Playing 状态。
+      if (ref.read(currentMusicProvider) != null) {
+        await ref.read(musicPlayerControllerProvider.notifier).stop();
+      }
       if (!mounted) return;
       // 移动设备：保存初始亮度，用于退出时恢复
       if (_isMobile) {

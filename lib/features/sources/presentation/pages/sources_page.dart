@@ -46,6 +46,9 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
   Widget build(BuildContext context) {
     final sourcesAsync = ref.watch(sourcesProvider);
     final connections = ref.watch(activeConnectionsProvider);
+    final mediaServerConnections = ref.watch(
+      activeMediaServerConnectionsProvider,
+    );
     final discoveryState = ref.watch(networkDiscoveryProvider);
 
     final body = sourcesAsync.when(
@@ -76,10 +79,19 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
         }
 
         if (_isReorderMode) {
-          return _buildReorderableList(sources, connections);
+          return _buildReorderableList(
+            sources,
+            connections,
+            mediaServerConnections,
+          );
         }
 
-        return _buildSourcesList(sources, connections, discoveryState);
+        return _buildSourcesList(
+          sources,
+          connections,
+          mediaServerConnections,
+          discoveryState,
+        );
       },
     );
 
@@ -158,6 +170,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
   Widget _buildSourcesList(
     List<SourceEntity> sources,
     Map<String, SourceConnection> connections,
+    Map<String, MediaServerConnection> mediaServerConnections,
     NetworkDiscoveryState discoveryState,
   ) => LayoutBuilder(
     builder: (context, constraints) {
@@ -172,6 +185,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
       return _buildSourcesListView(
         sources,
         connections,
+        mediaServerConnections,
         discoveryState,
         horizontal: horizontal,
       );
@@ -181,6 +195,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
   Widget _buildSourcesListView(
     List<SourceEntity> sources,
     Map<String, SourceConnection> connections,
+    Map<String, MediaServerConnection> mediaServerConnections,
     NetworkDiscoveryState discoveryState, {
     required double horizontal,
   }) => ListView(
@@ -213,7 +228,14 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
         const SizedBox(height: 8),
         ...sources.map((source) {
           final connection = connections[source.id];
-          return _SourceCard(source: source, connection: connection);
+          final mediaServerConnection = mediaServerConnections[source.id];
+          return _SourceCard(
+            source: source,
+            status:
+                mediaServerConnection?.status ??
+                connection?.status ??
+                SourceStatus.disconnected,
+          );
         }),
       ],
     ],
@@ -259,6 +281,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
   Widget _buildReorderableList(
     List<SourceEntity> sources,
     Map<String, SourceConnection> connections,
+    Map<String, MediaServerConnection> mediaServerConnections,
   ) => ReorderableListView.builder(
     padding: const EdgeInsets.all(16),
     itemCount: sources.length,
@@ -280,10 +303,14 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
     itemBuilder: (context, index) {
       final source = sources[index];
       final connection = connections[source.id];
+      final mediaServerConnection = mediaServerConnections[source.id];
       return _ReorderableSourceCard(
         key: ValueKey(source.id),
         source: source,
-        connection: connection,
+        status:
+            mediaServerConnection?.status ??
+            connection?.status ??
+            SourceStatus.disconnected,
       );
     },
   );
@@ -362,14 +389,12 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
 class _ReorderableSourceCard extends StatelessWidget {
   const _ReorderableSourceCard({
     required this.source,
+    required this.status,
     super.key,
-    this.connection,
   });
 
   final SourceEntity source;
-  final SourceConnection? connection;
-
-  SourceStatus get _status => connection?.status ?? SourceStatus.disconnected;
+  final SourceStatus status;
 
   @override
   Widget build(BuildContext context) {
@@ -434,7 +459,7 @@ class _ReorderableSourceCard extends StatelessWidget {
   }
 
   Widget _buildStatusChip(BuildContext context, ThemeData theme) {
-    final (label, color) = switch (_status) {
+    final (label, color) = switch (status) {
       SourceStatus.connected => (
         context.l10n.sourcesPageStatusConnected,
         AppColors.success,
@@ -476,10 +501,10 @@ class _ReorderableSourceCard extends StatelessWidget {
 }
 
 class _SourceCard extends ConsumerStatefulWidget {
-  const _SourceCard({required this.source, this.connection});
+  const _SourceCard({required this.source, required this.status});
 
   final SourceEntity source;
-  final SourceConnection? connection;
+  final SourceStatus status;
 
   @override
   ConsumerState<_SourceCard> createState() => _SourceCardState();
@@ -489,8 +514,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
   bool _isConnecting = false;
   String? _errorMessage;
 
-  SourceStatus get _status =>
-      widget.connection?.status ?? SourceStatus.disconnected;
+  SourceStatus get _status => widget.status;
 
   @override
   Widget build(BuildContext context) {
@@ -698,11 +722,38 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
     String? usedPassword;
 
     try {
+      final isMediaServer =
+          widget.source.type.category == SourceCategory.mediaServers;
       // 本地存储不需要密码，直接连接
       if (widget.source.type == SourceType.local) {
         await ref
             .read(activeConnectionsProvider.notifier)
             .connect(widget.source, password: '', saveCredential: false);
+      } else if (isMediaServer) {
+        final manager = ref.read(sourceManagerProvider);
+        final credential = await manager.getCredential(widget.source.id);
+        var password = credential?.password;
+        final hasToken =
+            (credential?.apiKey?.isNotEmpty ?? false) ||
+            (widget.source.apiKey?.isNotEmpty ?? false) ||
+            (widget.source.accessToken?.isNotEmpty ?? false);
+        if ((password?.isEmpty ?? true) && !hasToken) {
+          if (!mounted) return;
+          password = await _showPasswordDialog();
+          if (password == null || password.isEmpty) return;
+        }
+
+        usedPassword = password;
+        final connection = await ref
+            .read(activeMediaServerConnectionsProvider.notifier)
+            .connect(
+              widget.source,
+              password: password,
+              apiKey: credential?.apiKey ?? widget.source.apiKey,
+            );
+        if (connection.status == SourceStatus.error) {
+          setState(() => _errorMessage = connection.errorMessage);
+        }
       } else {
         // 获取保存的凭证
         final manager = ref.read(sourceManagerProvider);
@@ -802,9 +853,15 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
   }
 
   Future<void> _disconnect() async {
-    await ref
-        .read(activeConnectionsProvider.notifier)
-        .disconnect(widget.source.id);
+    if (widget.source.type.category == SourceCategory.mediaServers) {
+      await ref
+          .read(activeMediaServerConnectionsProvider.notifier)
+          .disconnect(widget.source.id);
+    } else {
+      await ref
+          .read(activeConnectionsProvider.notifier)
+          .disconnect(widget.source.id);
+    }
   }
 
   void _editSource() {

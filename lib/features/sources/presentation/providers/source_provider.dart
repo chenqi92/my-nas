@@ -20,27 +20,36 @@ import 'package:my_nas/media_server_adapters/base/media_server_event_handler.dar
 import 'package:my_nas/media_server_adapters/base/media_server_sync_service.dart';
 
 /// 源管理服务 Provider
-final sourceManagerProvider = Provider<SourceManagerService>((ref) => SourceManagerService());
+final sourceManagerProvider = Provider<SourceManagerService>(
+  (ref) => SourceManagerService(),
+);
 
 /// 所有源列表 Provider
 final sourcesProvider =
     StateNotifierProvider<SourcesNotifier, AsyncValue<List<SourceEntity>>>(
-        SourcesNotifier.new);
+      SourcesNotifier.new,
+    );
 
 /// 活跃连接 Provider
 final activeConnectionsProvider =
-    StateNotifierProvider<ActiveConnectionsNotifier, Map<String, SourceConnection>>(
-        ActiveConnectionsNotifier.new);
+    StateNotifierProvider<
+      ActiveConnectionsNotifier,
+      Map<String, SourceConnection>
+    >(ActiveConnectionsNotifier.new);
 
 /// 活跃媒体服务器连接 Provider
 final activeMediaServerConnectionsProvider =
-    StateNotifierProvider<ActiveMediaServerConnectionsNotifier, Map<String, MediaServerConnection>>(
-        ActiveMediaServerConnectionsNotifier.new);
+    StateNotifierProvider<
+      ActiveMediaServerConnectionsNotifier,
+      Map<String, MediaServerConnection>
+    >(ActiveMediaServerConnectionsNotifier.new);
 
 /// 媒体库配置 Provider
 final mediaLibraryConfigProvider =
-    StateNotifierProvider<MediaLibraryConfigNotifier, AsyncValue<MediaLibraryConfig>>(
-        MediaLibraryConfigNotifier.new);
+    StateNotifierProvider<
+      MediaLibraryConfigNotifier,
+      AsyncValue<MediaLibraryConfig>
+    >(MediaLibraryConfigNotifier.new);
 
 /// 源列表管理
 class SourcesNotifier extends StateNotifier<AsyncValue<List<SourceEntity>>> {
@@ -58,18 +67,24 @@ class SourcesNotifier extends StateNotifier<AsyncValue<List<SourceEntity>>> {
 
       // 清理旧的移动端媒体源（已废弃）
       final oldMobileTypes = ['mobile_gallery', 'mobile_music', 'mobile_files'];
-      final oldSources = sources.where((s) => oldMobileTypes.contains(s.type.id)).toList();
+      final oldSources = sources
+          .where((s) => oldMobileTypes.contains(s.type.id))
+          .toList();
       for (final oldSource in oldSources) {
         await manager.removeSource(oldSource.id);
         // 清理关联的媒体库路径
-        await _ref.read(mediaLibraryConfigProvider.notifier).removePathsForSource(oldSource.id);
+        await _ref
+            .read(mediaLibraryConfigProvider.notifier)
+            .removePathsForSource(oldSource.id);
       }
       if (oldSources.isNotEmpty) {
         sources = await manager.getSources();
       }
 
       // 确保存在唯一的本机源
-      final localSources = sources.where((s) => s.type == SourceType.local).toList();
+      final localSources = sources
+          .where((s) => s.type == SourceType.local)
+          .toList();
       if (localSources.isEmpty) {
         // 创建本机源
         final localSource = SourceEntity(
@@ -131,6 +146,7 @@ class SourcesNotifier extends StateNotifier<AsyncValue<List<SourceEntity>>> {
 
     // 同时刷新连接状态
     _ref.read(activeConnectionsProvider.notifier).refresh();
+    _ref.read(activeMediaServerConnectionsProvider.notifier).refresh();
     await _load();
   }
 
@@ -189,7 +205,10 @@ class ActiveConnectionsNotifier
     // 等待 sourcesProvider 初始化完成
     // 只在应用启动时触发一次自动连接，而不是每次源列表变化都触发
     // 这样可以避免新建源时触发重复连接
-    _ref.listen<AsyncValue<List<SourceEntity>>>(sourcesProvider, (previous, next) {
+    _ref.listen<AsyncValue<List<SourceEntity>>>(sourcesProvider, (
+      previous,
+      next,
+    ) {
       if (next.hasValue && !_isAutoConnecting && !_hasAutoConnectedOnce) {
         // 数据已准备好，只在首次启动时自动连接（使用 microtask 避免在 listen 回调中直接调用）
         _hasAutoConnectedOnce = true;
@@ -297,14 +316,18 @@ class ActiveConnectionsNotifier
       refresh();
 
       // 检查是否有连接成功的源，并检查自动播放设置
-      final hasConnected = state.values.any((c) => c.status == SourceStatus.connected);
+      final hasConnected = state.values.any(
+        (c) => c.status == SourceStatus.connected,
+      );
       if (hasConnected) {
         final settings = _ref.read(musicSettingsProvider);
         if (settings.autoPlayOnConnect) {
           logger.i('SourceProvider: 检测到连接成功且启用了自动播放，尝试恢复播放状态');
           // 延迟一点执行，确保所有连接都已稳定
           Future.delayed(const Duration(milliseconds: 500), () {
-            _ref.read(musicPlayerControllerProvider.notifier).restoreLastPlayedState();
+            _ref
+                .read(musicPlayerControllerProvider.notifier)
+                .restoreLastPlayedState();
           });
         }
       }
@@ -361,9 +384,21 @@ class ActiveConnectionsNotifier
 /// 活跃媒体服务器连接管理
 class ActiveMediaServerConnectionsNotifier
     extends StateNotifier<Map<String, MediaServerConnection>> {
-  ActiveMediaServerConnectionsNotifier(this._ref) : super({});
+  ActiveMediaServerConnectionsNotifier(this._ref) : super({}) {
+    _ref.listen<AsyncValue<List<SourceEntity>>>(sourcesProvider, (
+      previous,
+      next,
+    ) {
+      if (next.hasValue && !_hasAutoConnectedOnce) {
+        _hasAutoConnectedOnce = true;
+        Future.microtask(autoConnectAll);
+      }
+    }, fireImmediately: true);
+  }
 
   final Ref _ref;
+  bool _hasAutoConnectedOnce = false;
+  bool _isAutoConnecting = false;
 
   void refresh() {
     final manager = _ref.read(sourceManagerProvider);
@@ -412,6 +447,45 @@ class ActiveMediaServerConnectionsNotifier
     return connection;
   }
 
+  /// 自动连接启用了自动连接的媒体服务器。
+  Future<void> autoConnectAll() async {
+    if (_isAutoConnecting) return;
+    _isAutoConnecting = true;
+    try {
+      final manager = _ref.read(sourceManagerProvider);
+      final sources = _ref.read(sourcesProvider).valueOrNull ?? const [];
+      final mediaServers = sources.where(
+        (source) =>
+            source.autoConnect &&
+            source.type.category == SourceCategory.mediaServers,
+      );
+
+      await Future.wait(
+        mediaServers.map((source) async {
+          final credential = await manager.getCredential(source.id);
+          final hasReusableAuthentication =
+              (credential?.password.isNotEmpty ?? false) ||
+              (credential?.apiKey?.isNotEmpty ?? false) ||
+              (source.apiKey?.isNotEmpty ?? false) ||
+              (source.accessToken?.isNotEmpty ?? false);
+          if (!hasReusableAuthentication) {
+            logger.w('MediaServerConnection: ${source.name} 缺少可复用凭证，跳过自动连接');
+            return;
+          }
+
+          await connect(
+            source,
+            password: credential?.password,
+            apiKey: credential?.apiKey ?? source.apiKey,
+            saveCredential: false,
+          );
+        }),
+      );
+    } finally {
+      _isAutoConnecting = false;
+    }
+  }
+
   /// 处理连接模式（直连模式/库模式）
   Future<void> _handleConnectionMode(
     SourceEntity source,
@@ -419,11 +493,10 @@ class ActiveMediaServerConnectionsNotifier
   ) async {
     // 获取连接模式配置
     final connectionMode = source.extraConfig?['connectionMode'] as String?;
-    final isLibraryMode = connectionMode == '库模式' || connectionMode == 'library';
+    final isLibraryMode =
+        connectionMode == '库模式' || connectionMode == 'library';
 
-    logger.i(
-      'MediaServerConnection: 连接模式 = ${isLibraryMode ? "库模式" : "直连模式"}',
-    );
+    logger.i('MediaServerConnection: 连接模式 = ${isLibraryMode ? "库模式" : "直连模式"}');
 
     if (isLibraryMode) {
       // 库模式：启动自动同步
@@ -455,7 +528,8 @@ class ActiveMediaServerConnectionsNotifier
     }
 
     // 获取 accessToken
-    final accessToken = source.accessToken ??
+    final accessToken =
+        source.accessToken ??
         source.extraConfig?['accessToken'] as String? ??
         connection.adapter.connection?.extraConfig?['accessToken'] as String?;
 
@@ -478,20 +552,19 @@ class ActiveMediaServerConnectionsNotifier
     handler.libraryChanges.listen((event) {
       logger.i('MediaServerConnection: 收到库变更事件，${event.addedItems.length} 新增');
       // 触发增量同步
-      _ref.read(mediaServerSyncServiceProvider).incrementalSync(
-            source.id,
-            connection.adapter,
-          );
+      _ref
+          .read(mediaServerSyncServiceProvider)
+          .incrementalSync(source.id, connection.adapter);
     });
   }
 
   /// 解析同步间隔配置
   Duration? _parseSyncInterval(String? interval) => switch (interval) {
-        '每小时' || 'hourly' => const Duration(hours: 1),
-        '每天' || 'daily' => const Duration(days: 1),
-        '每周' || 'weekly' => const Duration(days: 7),
-        _ => null, // 手动同步
-      };
+    '每小时' || 'hourly' => const Duration(hours: 1),
+    '每天' || 'daily' => const Duration(days: 1),
+    '每周' || 'weekly' => const Duration(days: 7),
+    _ => null, // 手动同步
+  };
 
   Future<void> disconnect(String sourceId) async {
     final manager = _ref.read(sourceManagerProvider);
@@ -564,7 +637,8 @@ class MediaLibraryConfigNotifier
       if (path.startsWith('/documents') || path.startsWith('/downloads')) {
         // 旧格式路径，添加新格式
         pathsToDelete.add('/files$path');
-      } else if (path.startsWith('/files/documents') || path.startsWith('/files/downloads')) {
+      } else if (path.startsWith('/files/documents') ||
+          path.startsWith('/files/downloads')) {
         // 新格式路径，添加旧格式
         pathsToDelete.add(path.replaceFirst('/files', ''));
       }
@@ -617,7 +691,11 @@ class MediaLibraryConfigNotifier
     await _save(newConfig);
   }
 
-  Future<void> togglePath(MediaType type, String pathId, {required bool enabled}) async {
+  Future<void> togglePath(
+    MediaType type,
+    String pathId, {
+    required bool enabled,
+  }) async {
     final current = state.valueOrNull ?? const MediaLibraryConfig();
     final paths = current.getPathsForType(type);
     final updatedPaths = paths.map((p) {
@@ -655,16 +733,18 @@ class MediaLibraryConfigNotifier
 
 /// 获取指定媒体类型的可用路径（带源连接状态）
 final mediaPathsWithSourceProvider =
-    Provider.family<List<(MediaLibraryPath, SourceConnection?)>, MediaType>(
-        (ref, type) {
-  final config = ref.watch(mediaLibraryConfigProvider).valueOrNull;
-  final connections = ref.watch(activeConnectionsProvider);
+    Provider.family<List<(MediaLibraryPath, SourceConnection?)>, MediaType>((
+      ref,
+      type,
+    ) {
+      final config = ref.watch(mediaLibraryConfigProvider).valueOrNull;
+      final connections = ref.watch(activeConnectionsProvider);
 
-  if (config == null) return [];
+      if (config == null) return [];
 
-  final paths = config.getEnabledPathsForType(type);
-  return paths.map((p) => (p, connections[p.sourceId])).toList();
-});
+      final paths = config.getEnabledPathsForType(type);
+      return paths.map((p) => (p, connections[p.sourceId])).toList();
+    });
 
 /// 存储类源列表（用于连接源页面）
 final storageSourcesProvider = Provider<List<SourceEntity>>((ref) {

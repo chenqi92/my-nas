@@ -7,6 +7,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/features/pt_sites/data/services/pt_site_api.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
+import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/domain/entities/source_form_config.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
@@ -1047,6 +1048,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
   );
 
   Future<void> _testConnection() async {
+    _syncTextFieldValues();
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -1474,7 +1476,18 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     );
   }
 
+  void _syncTextFieldValues() {
+    for (final entry in _controllers.entries) {
+      _formValues[entry.key] = entry.value.text;
+    }
+  }
+
   Future<void> _submit() async {
+    // Accessibility input, autofill and password replacement can update a
+    // TextEditingController before TextFormField.onChanged is delivered.
+    // Always use the controller as the source of truth before an external
+    // action.
+    _syncTextFieldValues();
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -1605,6 +1618,28 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       if (connected) {
         final password = _formValues['password'] as String? ?? '';
         await _addNewSourceWithCredential(source, password);
+
+        if (source.type.category == SourceCategory.mediaServers) {
+          try {
+            final connection = await ref
+                .read(activeMediaServerConnectionsProvider.notifier)
+                .connect(
+                  source,
+                  password: password.isEmpty ? null : password,
+                  apiKey: source.apiKey,
+                );
+            if (connection.status != SourceStatus.connected) {
+              throw Exception(
+                connection.errorMessage ??
+                    context.l10n.sourceFormConnectionCheckFailed,
+              );
+            }
+          } on Exception {
+            // 保持“验证 + 保存 + 激活连接”为一个事务，避免留下无法使用的半成品源。
+            await ref.read(sourcesProvider.notifier).removeSource(source.id);
+            rethrow;
+          }
+        }
 
         if (mounted) {
           _showSuccessAndPop(

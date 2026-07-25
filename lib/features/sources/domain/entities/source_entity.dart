@@ -190,8 +190,12 @@ enum SourceType {
     return true;
   }
 
-  /// 是否为服务类源
-  bool get isServiceSource => category.isServiceCategory;
+  /// 是否使用服务适配器连接。
+  ///
+  /// 媒体服务器在 UI 中单独归类，但连接层仍使用 [ServiceAdapter]，不能落入
+  /// [NasAdapter] 分支。这里描述连接能力，不再只依赖展示分组。
+  bool get isServiceSource =>
+      category.isServiceCategory || category == SourceCategory.mediaServers;
 
   /// 获取源类型的图标
   IconData get icon => switch (this) {

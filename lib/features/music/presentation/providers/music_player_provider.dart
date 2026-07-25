@@ -1723,9 +1723,19 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
         return;
       }
       logger.e('MusicPlayer: 播放失败', e, stackTrace);
+      try {
+        await _audioHandler.stop();
+      } on Exception catch (stopError, stopStackTrace) {
+        logger.w('MusicPlayer: 播放失败后的播放器清理也失败', stopError, stopStackTrace);
+      }
+      _cleanupCurrentProxy();
       state = state.copyWith(
         errorMessage: appL10n.musicPlayerPlaybackError(e),
+        isPlaying: false,
         isBuffering: false,
+        position: Duration.zero,
+        bufferedPosition: Duration.zero,
+        duration: Duration.zero,
       );
     } finally {
       // 重置播放操作标志
