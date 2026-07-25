@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
 import 'package:my_nas/service_adapters/transmission/api/transmission_api.dart';
 import 'package:my_nas/service_adapters/transmission/transmission_adapter.dart';
@@ -44,12 +45,13 @@ final transmissionConnectionProvider =
       TransmissionConnectionNotifier,
       TransmissionConnection?,
       String
-    >((ref, sourceId) => TransmissionConnectionNotifier(sourceId));
+    >(TransmissionConnectionNotifier.new);
 
 class TransmissionConnectionNotifier
     extends StateNotifier<TransmissionConnection?> {
-  TransmissionConnectionNotifier(this.sourceId) : super(null);
+  TransmissionConnectionNotifier(this._ref, this.sourceId) : super(null);
 
+  final Ref _ref;
   final String sourceId;
 
   /// 连接到 Transmission
@@ -68,9 +70,13 @@ class TransmissionConnectionNotifier
       status: TransmissionConnectionStatus.connecting,
     );
 
+    final storedPassword =
+        password ??
+        (await _ref.read(sourceManagerProvider).getCredential(source.id))
+            ?.password;
     final config = ServiceConnectionConfig.fromSource(
       source,
-      password: password,
+      password: storedPassword,
     );
 
     try {

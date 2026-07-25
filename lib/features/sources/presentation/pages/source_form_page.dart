@@ -1507,7 +1507,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
 
         // 如果输入了新密码，更新凭证
         if (password.isNotEmpty) {
-          await sourceManager.saveCredential(
+          await sourceManager.saveCredentialRequired(
             source.id,
             SourceCredential(password: password),
           );
@@ -1596,9 +1596,6 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
 
   /// 提交服务类源
   Future<void> _submitServiceSource(SourceEntity source) async {
-    final sourcesNotifier = ref.read(sourcesProvider.notifier);
-    final sourceManager = ref.read(sourceManagerProvider);
-
     try {
       // 验证连接
       final connected = await _validateServiceSourceConnection(source);
@@ -1606,17 +1603,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       if (!mounted) return;
 
       if (connected) {
-        // 连接成功，保存源
-        await sourcesNotifier.addSource(source);
-
-        // 保存凭证（密码）
         final password = _formValues['password'] as String? ?? '';
-        if (password.isNotEmpty) {
-          await sourceManager.saveCredential(
-            source.id,
-            SourceCredential(password: password),
-          );
-        }
+        await _addNewSourceWithCredential(source, password);
 
         if (mounted) {
           _showSuccessAndPop(
@@ -1629,14 +1617,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       }
     } on _ConnectionRequiresAuthorizationException catch (e) {
       if (!mounted) return;
-      await sourcesNotifier.addSource(source);
       final password = _formValues['password'] as String? ?? '';
-      if (password.isNotEmpty) {
-        await sourceManager.saveCredential(
-          source.id,
-          SourceCredential(password: password),
-        );
-      }
+      await _addNewSourceWithCredential(source, password);
       if (mounted) {
         _showSuccessAndPop(
           source,
@@ -1650,14 +1632,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       // 该源类型不支持表单内一键自动验证。不应阻断添加：直接保存源，并提示
       // 用户稍后到对应授权入口完成连接。
       if (!mounted) return;
-      await sourcesNotifier.addSource(source);
       final password = _formValues['password'] as String? ?? '';
-      if (password.isNotEmpty) {
-        await sourceManager.saveCredential(
-          source.id,
-          SourceCredential(password: password),
-        );
-      }
+      await _addNewSourceWithCredential(source, password);
       if (mounted) {
         _showSuccessAndPop(
           source,
@@ -1709,7 +1685,6 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     String password,
   ) async {
     final sourceManager = ref.read(sourceManagerProvider);
-    final sourcesNotifier = ref.read(sourcesProvider.notifier);
 
     // 弹出带在线验证的2FA弹框
     final result = await showTwoFASheetWithVerify(
@@ -1750,14 +1725,8 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         }
 
       case TwoFAResultType.skipped:
-        // 用户选择跳过验证，先保存源
-        await sourcesNotifier.addSource(source);
-        if (password.isNotEmpty) {
-          await sourceManager.saveCredential(
-            source.id,
-            SourceCredential(password: password),
-          );
-        }
+        // 用户选择跳过验证，保存源及凭证
+        await _addNewSourceWithCredential(source, password);
         // 更新连接状态（状态为 requires2FA）
         ref.read(activeConnectionsProvider.notifier).refresh();
         if (mounted) {
@@ -1780,26 +1749,44 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
     String password, [
     bool? rememberDevice,
   ]) async {
-    final sourceManager = ref.read(sourceManagerProvider);
-    final sourcesNotifier = ref.read(sourcesProvider.notifier);
-
     // 如果指定了 rememberDevice，更新源配置
     final sourceToSave = rememberDevice != null
         ? source.copyWith(rememberDevice: rememberDevice)
         : source;
 
-    await sourcesNotifier.addSource(sourceToSave);
+    await _addNewSourceWithCredential(sourceToSave, password);
+  }
 
-    if (password.isNotEmpty) {
-      // 获取已保存的凭证（可能包含 deviceId）
+  /// Saves the password before publishing a new source to the list.
+  ///
+  /// This prevents a failed Keychain write from leaving a source that looks
+  /// configured but asks for its password on every subsequent visit.
+  Future<void> _addNewSourceWithCredential(
+    SourceEntity source,
+    String password,
+  ) async {
+    final sourceManager = ref.read(sourceManagerProvider);
+    var credentialStored = false;
+
+    if (password.isNotEmpty || source.usesPasswordAuthentication) {
       final existingCredential = await sourceManager.getCredential(source.id);
-      await sourceManager.saveCredential(
+      await sourceManager.saveCredentialRequired(
         source.id,
         SourceCredential(
           password: password,
           deviceId: existingCredential?.deviceId,
         ),
       );
+      credentialStored = true;
+    }
+
+    try {
+      await ref.read(sourcesProvider.notifier).addSource(source);
+    } on Exception {
+      if (credentialStored) {
+        await sourceManager.removeCredential(source.id);
+      }
+      rethrow;
     }
   }
 

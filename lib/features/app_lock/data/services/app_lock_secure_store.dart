@@ -65,10 +65,10 @@ class AppLockSecureStore {
   static const _hashLengthBytes = 32;
 
   bool _handleStorageError(Object error, String operation) {
-    if (error is PlatformException) {
-      if (error.code == 'Unexpected security result code' ||
-          (error.message?.contains('-34018') ?? false) ||
-          (error.message?.contains('entitlement') ?? false)) {
+    if (isSecureStorageUnavailableError(error) || error is PlatformException) {
+      if (isSecureStorageUnavailableError(error) ||
+          (error is PlatformException &&
+              (error.message?.contains('entitlement') ?? false))) {
         if (_storageAvailable) {
           logger.w(
             'AppLockSecureStore: 系统安全存储不可用 ($operation)， '
@@ -120,7 +120,7 @@ class AppLockSecureStore {
   Future<bool> _safeWrite(String key, String value) async {
     if (_fallbackActive) return _fallbackWrite(key, value);
     try {
-      await _storage.write(key: key, value: value);
+      await writeSecureValueVerified(_storage, key: key, value: value);
       return true;
     } on Exception catch (e) {
       if (_handleStorageError(e, 'write($key)')) {

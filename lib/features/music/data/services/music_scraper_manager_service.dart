@@ -118,14 +118,14 @@ class MusicScraperManagerService {
     // 优先级：开放数据源（MusicBrainz / AcoustID）放最前；
     // 商业平台刮削源默认禁用，用户需在阅读风险提示后手动启用。
     final defaultTypes = [
-      (MusicScraperType.musicBrainz, true),    // 开放音乐数据库（CC0 元数据）
-      (MusicScraperType.acoustId, false),      // 声纹识别（需用户填入 API Key 后启用）
-      (MusicScraperType.kugouMusic, false),    // 商业平台 ToS 风险，默认禁用
+      (MusicScraperType.musicBrainz, true), // 开放音乐数据库（CC0 元数据）
+      (MusicScraperType.acoustId, false), // 声纹识别（需用户填入 API Key 后启用）
+      (MusicScraperType.kugouMusic, false), // 商业平台 ToS 风险，默认禁用
       (MusicScraperType.kuwoMusic, false),
       (MusicScraperType.miguMusic, false),
       (MusicScraperType.qqMusic, false),
-      (MusicScraperType.neteaseMusic, false),  // 加密绕过风险最高，默认禁用
-      (MusicScraperType.musicTagWeb, false),   // 自托管，需用户填入服务器地址后启用
+      (MusicScraperType.neteaseMusic, false), // 加密绕过风险最高，默认禁用
+      (MusicScraperType.musicTagWeb, false), // 自托管，需用户填入服务器地址后启用
     ];
 
     for (var i = 0; i < defaultTypes.length; i++) {
@@ -305,7 +305,9 @@ class MusicScraperManagerService {
   }
 
   /// 添加刮削源
-  Future<MusicScraperSourceEntity> addSource(MusicScraperSourceEntity source) async {
+  Future<MusicScraperSourceEntity> addSource(
+    MusicScraperSourceEntity source,
+  ) async {
     await _ensureInit();
 
     // 设置优先级为最低（列表末尾）
@@ -440,8 +442,12 @@ class MusicScraperManagerService {
   // ===== 凭证管理 =====
 
   /// 保存凭证到安全存储
-  Future<void> saveCredential(String sourceId, MusicScraperCredential credential) async {
-    await _secureStorage.write(
+  Future<void> saveCredential(
+    String sourceId,
+    MusicScraperCredential credential,
+  ) async {
+    await writeSecureValueVerified(
+      _secureStorage,
       key: '$_credentialPrefix$sourceId',
       value: json.encode(credential.toJson()),
     );
@@ -491,11 +497,14 @@ class MusicScraperManagerService {
   }
 
   /// 获取所有已启用且已配置的刮削器
-  Future<List<(MusicScraperSourceEntity, MusicScraper)>> getEnabledScrapers() async {
+  Future<List<(MusicScraperSourceEntity, MusicScraper)>>
+  getEnabledScrapers() async {
     final sources = await getSources();
     final result = <(MusicScraperSourceEntity, MusicScraper)>[];
 
-    scraperDebug('[MusicScraperManager] 所有源: ${sources.map((s) => '${s.type.name}(enabled=${s.isEnabled},configured=${s.isConfigured})').join(', ')}');
+    scraperDebug(
+      '[MusicScraperManager] 所有源: ${sources.map((s) => '${s.type.name}(enabled=${s.isEnabled},configured=${s.isConfigured})').join(', ')}',
+    );
 
     for (final source in sources) {
       if (!source.isEnabled) {
@@ -520,7 +529,9 @@ class MusicScraperManagerService {
       }
     }
 
-    scraperDebug('[MusicScraperManager] 可用刮削器: ${result.map((r) => r.$1.type.name).join(', ')}');
+    scraperDebug(
+      '[MusicScraperManager] 可用刮削器: ${result.map((r) => r.$1.type.name).join(', ')}',
+    );
     return result;
   }
 
@@ -536,29 +547,41 @@ class MusicScraperManagerService {
     final scrapers = await getEnabledScrapers();
     final results = <MusicScraperSearchResult>[];
 
-    scraperDebug('[MusicScraperManager] search: query=$query, artist=$artist, album=$album');
-    scraperDebug('[MusicScraperManager] Enabled scrapers: ${scrapers.map((s) => s.$1.type.name).join(', ')}');
+    scraperDebug(
+      '[MusicScraperManager] search: query=$query, artist=$artist, album=$album',
+    );
+    scraperDebug(
+      '[MusicScraperManager] Enabled scrapers: ${scrapers.map((s) => s.$1.type.name).join(', ')}',
+    );
 
     for (final (source, scraper) in scrapers) {
       try {
-        scraperDebug('[MusicScraperManager] Searching with ${source.type.name}...');
+        scraperDebug(
+          '[MusicScraperManager] Searching with ${source.type.name}...',
+        );
         final result = await scraper.search(
           query,
           artist: artist,
           album: album,
           limit: limit,
         );
-        scraperDebug('[MusicScraperManager] ${source.type.name}: found ${result.items.length} results');
+        scraperDebug(
+          '[MusicScraperManager] ${source.type.name}: found ${result.items.length} results',
+        );
         if (result.isNotEmpty) {
           results.add(result);
         }
       } on Exception catch (e, st) {
-        scraperDebug('[MusicScraperManager] ${source.type.name} search failed: $e');
+        scraperDebug(
+          '[MusicScraperManager] ${source.type.name} search failed: $e',
+        );
         AppError.ignore(e, st, '搜索失败: ${source.type}');
       }
     }
 
-    scraperDebug('[MusicScraperManager] Total results from ${results.length} sources');
+    scraperDebug(
+      '[MusicScraperManager] Total results from ${results.length} sources',
+    );
     return results;
   }
 
@@ -638,7 +661,9 @@ class MusicScraperManagerService {
         if (searchResult.isEmpty) continue;
 
         // 获取封面
-        final covers = await scraper.getCoverArt(searchResult.items.first.externalId);
+        final covers = await scraper.getCoverArt(
+          searchResult.items.first.externalId,
+        );
         if (covers.isNotEmpty) {
           return covers.first;
         }
@@ -660,10 +685,7 @@ class MusicScraperManagerService {
   }
 
   /// 获取歌词（尝试所有支持歌词的源）
-  Future<LyricScraperResult?> getLyrics({
-    String? title,
-    String? artist,
-  }) async {
+  Future<LyricScraperResult?> getLyrics({String? title, String? artist}) async {
     if (title == null) return null;
 
     final scrapers = await getEnabledScrapers();
@@ -682,7 +704,9 @@ class MusicScraperManagerService {
         if (searchResult.isEmpty) continue;
 
         // 获取歌词
-        final lyrics = await scraper.getLyrics(searchResult.items.first.externalId);
+        final lyrics = await scraper.getLyrics(
+          searchResult.items.first.externalId,
+        );
         if (lyrics != null && lyrics.hasLyrics) {
           return lyrics;
         }
@@ -725,7 +749,9 @@ class MusicScraperManagerService {
           detail = await scraper.getDetail(searchResult.items.first.externalId);
         }
       } on Exception catch (e) {
-        errors.add(appL10n.musicScraperSearchFailed(source.type.displayName, e));
+        errors.add(
+          appL10n.musicScraperSearchFailed(source.type.displayName, e),
+        );
       }
     }
 
@@ -756,7 +782,9 @@ class MusicScraperManagerService {
             }
           }
         } on Exception catch (e) {
-          errors.add(appL10n.musicScraperCoverFailed(source.type.displayName, e));
+          errors.add(
+            appL10n.musicScraperCoverFailed(source.type.displayName, e),
+          );
         }
       }
     }
@@ -775,10 +803,14 @@ class MusicScraperManagerService {
           );
 
           if (searchResult.isNotEmpty) {
-            lyrics = await scraper.getLyrics(searchResult.items.first.externalId);
+            lyrics = await scraper.getLyrics(
+              searchResult.items.first.externalId,
+            );
           }
         } on Exception catch (e) {
-          errors.add(appL10n.musicScraperLyricsFailed(source.type.displayName, e));
+          errors.add(
+            appL10n.musicScraperLyricsFailed(source.type.displayName, e),
+          );
         }
       }
     }

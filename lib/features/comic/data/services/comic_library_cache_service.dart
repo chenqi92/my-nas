@@ -44,15 +44,15 @@ class ComicLibraryCacheEntry {
   final int? fileSize;
 
   Map<String, dynamic> toJson() => {
-        'sourceId': sourceId,
-        'folderPath': folderPath,
-        'folderName': folderName,
-        'coverPath': coverPath,
-        'pageCount': pageCount,
-        'modifiedTime': modifiedTime?.toIso8601String(),
-        'comicType': comicType,
-        'fileSize': fileSize,
-      };
+    'sourceId': sourceId,
+    'folderPath': folderPath,
+    'folderName': folderName,
+    'coverPath': coverPath,
+    'pageCount': pageCount,
+    'modifiedTime': modifiedTime?.toIso8601String(),
+    'comicType': comicType,
+    'fileSize': fileSize,
+  };
 }
 
 /// 漫画库缓存
@@ -66,8 +66,11 @@ class ComicLibraryCache {
   factory ComicLibraryCache.fromJson(Map<String, dynamic> json) =>
       ComicLibraryCache(
         comics: (json['comics'] as List<dynamic>)
-            .map((e) =>
-                ComicLibraryCacheEntry.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => ComicLibraryCacheEntry.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
             .toList(),
         lastUpdated: DateTime.parse(json['lastUpdated'] as String),
         sourceIds: List<String>.from(json['sourceIds'] as List),
@@ -78,15 +81,16 @@ class ComicLibraryCache {
   final List<String> sourceIds;
 
   Map<String, dynamic> toJson() => {
-        'comics': comics.map((c) => c.toJson()).toList(),
-        'lastUpdated': lastUpdated.toIso8601String(),
-        'sourceIds': sourceIds,
-      };
+    'comics': comics.map((c) => c.toJson()).toList(),
+    'lastUpdated': lastUpdated.toIso8601String(),
+    'sourceIds': sourceIds,
+  };
 }
 
 /// 漫画库缓存服务
 class ComicLibraryCacheService {
-  factory ComicLibraryCacheService() => _instance ??= ComicLibraryCacheService._();
+  factory ComicLibraryCacheService() =>
+      _instance ??= ComicLibraryCacheService._();
   ComicLibraryCacheService._();
 
   static ComicLibraryCacheService? _instance;
@@ -105,8 +109,11 @@ class ComicLibraryCacheService {
       final data = await _storage.read(key: _cacheKey);
       if (data != null) {
         _cache = ComicLibraryCache.fromJson(
-            Map<String, dynamic>.from(jsonDecode(data) as Map));
-        logger.i('ComicLibraryCacheService: 加载缓存成功，共 ${_cache!.comics.length} 本漫画');
+          Map<String, dynamic>.from(jsonDecode(data) as Map),
+        );
+        logger.i(
+          'ComicLibraryCacheService: 加载缓存成功，共 ${_cache!.comics.length} 本漫画',
+        );
       }
     } on Exception catch (e, st) {
       AppError.ignore(e, st, 'ComicLibraryCacheService加载缓存失败');
@@ -134,7 +141,11 @@ class ComicLibraryCacheService {
   Future<void> saveCache(ComicLibraryCache cache) async {
     _cache = cache;
     try {
-      await _storage.write(key: _cacheKey, value: jsonEncode(cache.toJson()));
+      await writeSecureValueVerified(
+        _storage,
+        key: _cacheKey,
+        value: jsonEncode(cache.toJson()),
+      );
       logger.i('ComicLibraryCacheService: 保存缓存成功，共 ${cache.comics.length} 本漫画');
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'saveComicLibraryCache');
@@ -172,7 +183,9 @@ class ComicLibraryCacheService {
         sourceIds: _cache!.sourceIds.where((id) => id != sourceId).toList(),
       );
       await saveCache(newCache);
-      logger.i('ComicLibraryCacheService: 已删除 $deletedCount 本漫画 (sourceId: $sourceId)');
+      logger.i(
+        'ComicLibraryCacheService: 已删除 $deletedCount 本漫画 (sourceId: $sourceId)',
+      );
 
       SpotlightHook.afterDelete(
         SpotlightItemKind.comic,
@@ -189,7 +202,10 @@ class ComicLibraryCacheService {
 
     final originalCount = _cache!.comics.length;
     final filteredComics = _cache!.comics
-        .where((c) => !(c.sourceId == sourceId && c.folderPath.startsWith(pathPrefix)))
+        .where(
+          (c) =>
+              !(c.sourceId == sourceId && c.folderPath.startsWith(pathPrefix)),
+        )
         .toList();
     final deletedCount = originalCount - filteredComics.length;
 
@@ -200,7 +216,9 @@ class ComicLibraryCacheService {
         sourceIds: _cache!.sourceIds,
       );
       await saveCache(newCache);
-      logger.i('ComicLibraryCacheService: 已删除 $deletedCount 本漫画 (sourceId: $sourceId, path: $pathPrefix)');
+      logger.i(
+        'ComicLibraryCacheService: 已删除 $deletedCount 本漫画 (sourceId: $sourceId, path: $pathPrefix)',
+      );
     }
     return deletedCount;
   }
@@ -225,33 +243,37 @@ class ComicLibraryCacheService {
     final sizeText = size < 1024
         ? '$size B'
         : size < 1024 * 1024
-            ? '${(size / 1024).toStringAsFixed(1)} KB'
-            : '${(size / (1024 * 1024)).toStringAsFixed(2)} MB';
+        ? '${(size / 1024).toStringAsFixed(1)} KB'
+        : '${(size / (1024 * 1024)).toStringAsFixed(2)} MB';
 
     final age = DateTime.now().difference(cache.lastUpdated);
     final ageText = age.inHours < 1
         ? appL10n.comicCacheServiceMinutesAgo(age.inMinutes)
         : age.inHours < 24
-            ? appL10n.comicCacheServiceHoursAgo(age.inHours)
-            : appL10n.comicCacheServiceDaysAgo(age.inDays);
+        ? appL10n.comicCacheServiceHoursAgo(age.inHours)
+        : appL10n.comicCacheServiceDaysAgo(age.inDays);
 
-    return appL10n.comicCacheServiceInfoFormat(cache.comics.length, sizeText, ageText);
+    return appL10n.comicCacheServiceInfoFormat(
+      cache.comics.length,
+      sizeText,
+      ageText,
+    );
   }
 
   /// 获取漫画数量
   ///
   /// [sourceId] 可选，按源ID筛选
   /// [pathPrefix] 可选，按路径前缀筛选（需要同时提供 sourceId）
-  Future<int> getCount({
-    String? sourceId,
-    String? pathPrefix,
-  }) async {
+  Future<int> getCount({String? sourceId, String? pathPrefix}) async {
     if (_cache == null) await init();
     if (_cache == null) return 0;
 
     if (sourceId != null && pathPrefix != null) {
       return _cache!.comics
-          .where((c) => c.sourceId == sourceId && c.folderPath.startsWith(pathPrefix))
+          .where(
+            (c) =>
+                c.sourceId == sourceId && c.folderPath.startsWith(pathPrefix),
+          )
           .length;
     } else if (sourceId != null) {
       return _cache!.comics.where((c) => c.sourceId == sourceId).length;

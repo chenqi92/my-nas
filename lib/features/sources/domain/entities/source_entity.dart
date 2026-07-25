@@ -342,6 +342,7 @@ enum SourceStatus { disconnected, connecting, requires2FA, connected, error }
 /// 连接源实体
 class SourceEntity {
   static const sensitiveExtraConfigKeys = <String>{
+    'password',
     'accessToken',
     'refreshToken',
     'apiKey',
@@ -495,6 +496,42 @@ class SourceEntity {
 
   /// 是否使用 OAuth 认证
   bool get usesOAuth => accessToken != null && accessToken!.isNotEmpty;
+
+  /// Whether this source should have a password in secure storage.
+  ///
+  /// Sources that are anonymous, OAuth/API-key based, or explicitly use a
+  /// token-like authentication mode must not trigger a password prompt.
+  bool get usesPasswordAuthentication {
+    if (username.trim().isEmpty || usesApiKey || usesOAuth) return false;
+    if (extraConfig?['privateKey']?.toString().isNotEmpty ?? false) {
+      return false;
+    }
+
+    final authType = extraConfig?['authType']?.toString().toLowerCase() ?? '';
+    const passwordlessAuthMarkers = <String>[
+      'api key',
+      'apikey',
+      'token',
+      'oauth',
+      'quick connect',
+      'pin',
+      'cookie',
+      '请求头',
+      '令牌',
+    ];
+    if (passwordlessAuthMarkers.any(authType.contains)) return false;
+
+    return switch (type) {
+      SourceType.local ||
+      SourceType.upnp ||
+      SourceType.aria2 ||
+      SourceType.trakt ||
+      SourceType.moviepilot ||
+      SourceType.plex ||
+      SourceType.ptSite => false,
+      _ => true,
+    };
+  }
 
   /// 获取文件浏览器的初始路径
   ///

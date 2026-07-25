@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
@@ -188,17 +187,13 @@ class SourceManagerService {
   ///
   /// 返回 true 表示是可恢复的存储错误（应静默处理）
   bool _handleSecureStorageError(Object error, String operation) {
-    if (error is PlatformException) {
-      // Keychain entitlement 错误 (-34018)
-      if (error.code == 'Unexpected security result code' ||
-          (error.message?.contains('-34018') ?? false)) {
-        logger.w(
-          'SourceManagerService: 安全存储不可用 ($operation) - '
-          '可能缺少 Keychain entitlement 权限，凭证保存功能已禁用',
-        );
-        _secureStorageAvailable = false;
-        return true;
-      }
+    if (isSecureStorageUnavailableError(error)) {
+      logger.w(
+        'SourceManagerService: 安全存储不可用 ($operation) - '
+        '可能缺少 Keychain entitlement 权限，凭证保存功能已禁用',
+      );
+      _secureStorageAvailable = false;
+      return true;
     }
     return false;
   }
@@ -410,14 +405,16 @@ class SourceManagerService {
   SourceCredential _credentialFromSource(SourceEntity source) {
     final extraSecrets = <String, dynamic>{};
     final config = source.extraConfig;
+    final legacyPassword = config?['password'];
     if (config != null) {
       for (final key in SourceEntity.sensitiveExtraConfigKeys) {
+        if (key == 'password') continue;
         final value = config[key];
         if (value != null) extraSecrets[key] = value;
       }
     }
     return SourceCredential(
-      password: '',
+      password: legacyPassword is String ? legacyPassword : '',
       accessToken: source.accessToken,
       refreshToken: source.refreshToken,
       apiKey: source.apiKey,
@@ -463,7 +460,8 @@ class SourceManagerService {
         extraSecrets: sourceSecrets.extraSecrets,
       );
       final key = '$_credentialPrefix$sourceId';
-      await _secureStorage.write(
+      await writeSecureValueVerified(
+        _secureStorage,
         key: key,
         value: jsonEncode(replacement.toJson()),
       );
@@ -491,7 +489,7 @@ class SourceManagerService {
       final existing = await getCredential(sourceId);
       final merged = existing?.merge(credential) ?? credential;
       final value = jsonEncode(merged.toJson());
-      await _secureStorage.write(key: key, value: value);
+      await writeSecureValueVerified(_secureStorage, key: key, value: value);
       logger.i(
         'SourceManagerService: 保存凭证到安全存储 $sourceId (deviceId: ${merged.deviceId != null ? "有" : "无"})',
       );
@@ -501,6 +499,18 @@ class SourceManagerService {
         return false;
       }
       rethrow;
+    }
+  }
+
+  /// Saves a credential and reports an unavailable secret store as an error.
+  /// UI flows should use this method so they never claim a password was saved
+  /// when Keychain/Keystore silently rejected it.
+  Future<void> saveCredentialRequired(
+    String sourceId,
+    SourceCredential credential,
+  ) async {
+    if (!await saveCredential(sourceId, credential)) {
+      throw StateError(appL10n.sourcesSecurityStorageUnavailable);
     }
   }
 
@@ -554,7 +564,10 @@ class SourceManagerService {
   Future<void> updateDeviceId(String sourceId, String deviceId) async {
     final credential = await getCredential(sourceId);
     if (credential != null) {
-      await saveCredential(sourceId, credential.copyWith(deviceId: deviceId));
+      await saveCredentialRequired(
+        sourceId,
+        credential.copyWith(deviceId: deviceId),
+      );
       logger.i('SourceManagerService: 更新设备ID $sourceId');
     } else {
       logger.w('SourceManagerService: 无法更新设备ID，未找到凭证 $sourceId');
@@ -570,7 +583,7 @@ class SourceManagerService {
       final value = jsonEncode(
         credential.copyWith(clearDeviceId: true).toJson(),
       );
-      await _secureStorage.write(key: key, value: value);
+      await writeSecureValueVerified(_secureStorage, key: key, value: value);
       logger.i('SourceManagerService: 清除设备ID $sourceId');
     } on Exception catch (e) {
       if (!_handleSecureStorageError(e, 'clearDeviceId')) rethrow;
@@ -671,7 +684,7 @@ class SourceManagerService {
             final newDeviceId = source.rememberDevice
                 ? deviceId ?? savedCredential?.deviceId
                 : null;
-            await this.saveCredential(
+            await saveCredentialRequired(
               source.id,
               SourceCredential(password: password, deviceId: newDeviceId),
             );
@@ -767,7 +780,7 @@ class SourceManagerService {
             // 获取现有凭证中的密码，必须等待完成
             final credential = await getCredential(sourceId);
             if (credential != null) {
-              await saveCredential(
+              await saveCredentialRequired(
                 sourceId,
                 SourceCredential(
                   password: password ?? credential.password,
@@ -775,7 +788,7 @@ class SourceManagerService {
                 ),
               );
             } else if (password != null) {
-              await saveCredential(
+              await saveCredentialRequired(
                 sourceId,
                 SourceCredential(password: password, deviceId: deviceId),
               );
@@ -907,12 +920,16 @@ class SourceManagerService {
       status: SourceStatus.connecting,
     );
 
+    final savedCredential = await getCredential(source.id);
+    final resolvedPassword = password ?? savedCredential?.password;
+    final resolvedApiKey = apiKey ?? source.apiKey ?? savedCredential?.apiKey;
+
     // 构建连接配置
     final config = ServiceConnectionConfig(
       baseUrl: source.baseUrl,
       username: source.username.isNotEmpty ? source.username : null,
-      password: password,
-      apiKey: apiKey ?? source.apiKey,
+      password: resolvedPassword,
+      apiKey: resolvedApiKey,
       extraConfig: source.extraConfig,
       verifySSL: !InsecureHttpClient.trustSelfSigned,
     );
@@ -936,10 +953,10 @@ class SourceManagerService {
 
       if (connection.status == SourceStatus.connected) {
         // 保存凭证
-        if (saveCredential && password != null) {
-          await this.saveCredential(
+        if (saveCredential && resolvedPassword != null) {
+          await saveCredentialRequired(
             source.id,
-            SourceCredential(password: password),
+            SourceCredential(password: resolvedPassword),
           );
         }
         // 更新最后连接时间
@@ -1028,16 +1045,13 @@ class SourceManagerService {
     var pwd = password;
     if (pwd == null) {
       final credential = await getCredential(sourceId);
-      if (credential == null) {
-        // 本地存储不需要密码
-        if (source.type == SourceType.local) {
-          pwd = '';
-        } else {
-          logger.e('SourceManagerService: 重连失败 - 没有保存的凭证 $sourceId');
-          return null;
-        }
-      } else {
+      if (credential != null) {
         pwd = credential.password;
+      } else if (!source.usesPasswordAuthentication) {
+        pwd = '';
+      } else {
+        logger.e('SourceManagerService: 重连失败 - 没有保存的凭证 $sourceId');
+        return null;
       }
     }
 
@@ -1192,9 +1206,9 @@ class SourceManagerService {
       }
 
       final credential = await getCredential(source.id);
-      if (credential != null) {
+      if (credential != null || !source.usesPasswordAuthentication) {
         logger.i(
-          'SourceManagerService: 自动连接 ${source.name} (deviceId: ${credential.deviceId != null ? "有" : "无"})',
+          'SourceManagerService: 自动连接 ${source.name} (deviceId: ${credential?.deviceId != null ? "有" : "无"})',
         );
 
         // 带重试的连接逻辑
@@ -1212,7 +1226,9 @@ class SourceManagerService {
             // saveCredential=true 确保如果连接返回新的 deviceId，会被保存
             connection = await connect(
               source,
-              password: credential.password,
+              password: credential?.password ?? '',
+              saveCredential:
+                  credential != null || source.usesPasswordAuthentication,
             ).timeout(timeout);
 
             // 如果连接成功或者需要2FA，不再重试

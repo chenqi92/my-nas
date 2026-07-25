@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
 import 'package:my_nas/service_adapters/nastool/models/models.dart';
 import 'package:my_nas/service_adapters/nastool/nastool_adapter.dart';
@@ -44,11 +45,12 @@ final nastoolConnectionProvider =
       NasToolConnectionNotifier,
       NasToolConnection?,
       String
-    >((ref, sourceId) => NasToolConnectionNotifier(sourceId));
+    >(NasToolConnectionNotifier.new);
 
 class NasToolConnectionNotifier extends StateNotifier<NasToolConnection?> {
-  NasToolConnectionNotifier(this.sourceId) : super(null);
+  NasToolConnectionNotifier(this._ref, this.sourceId) : super(null);
 
+  final Ref _ref;
   final String sourceId;
 
   /// 连接到 NASTool
@@ -63,8 +65,14 @@ class NasToolConnectionNotifier extends StateNotifier<NasToolConnection?> {
       status: NasToolConnectionStatus.connecting,
     );
 
-    // 从 extraConfig 中获取密码（添加源时存储在 extraConfig['password'] 中）
-    final password = source.extraConfig?['password'] as String?;
+    // New sources keep passwords only in the OS-backed secret store. The
+    // extraConfig fallback supports records created by older app versions.
+    final credential = await _ref
+        .read(sourceManagerProvider)
+        .getCredential(source.id);
+    final password = credential != null
+        ? credential.password
+        : source.extraConfig?['password'] as String?;
     final config = ServiceConnectionConfig.fromSource(
       source,
       password: password,

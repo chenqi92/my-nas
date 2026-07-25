@@ -102,7 +102,10 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
     );
   }
 
-  List<Widget> _buildActions(NetworkDiscoveryState discoveryState, {required bool embedded}) {
+  List<Widget> _buildActions(
+    NetworkDiscoveryState discoveryState, {
+    required bool embedded,
+  }) {
     final iconSize = embedded ? 20.0 : 24.0;
     final density = embedded ? VisualDensity.compact : VisualDensity.standard;
     return [
@@ -116,14 +119,20 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
             : Icon(Icons.radar, size: iconSize),
         onPressed: discoveryState.isDiscovering
             ? null
-            : () => ref.read(networkDiscoveryProvider.notifier).startDiscovery(),
+            : () =>
+                  ref.read(networkDiscoveryProvider.notifier).startDiscovery(),
         tooltip: context.l10n.sourcesPageScanButton,
         visualDensity: density,
       ),
       IconButton(
-        icon: Icon(_isReorderMode ? Icons.done_rounded : Icons.reorder, size: iconSize),
+        icon: Icon(
+          _isReorderMode ? Icons.done_rounded : Icons.reorder,
+          size: iconSize,
+        ),
         onPressed: () => setState(() => _isReorderMode = !_isReorderMode),
-        tooltip: _isReorderMode ? context.l10n.sourcesPageReorderComplete : context.l10n.sourcesPageReorderStart,
+        tooltip: _isReorderMode
+            ? context.l10n.sourcesPageReorderComplete
+            : context.l10n.sourcesPageReorderStart,
         visualDensity: density,
       ),
       IconButton(
@@ -136,14 +145,14 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
   }
 
   Widget _buildEmbeddedToolbar(NetworkDiscoveryState discoveryState) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
-        child: Row(
-          children: [
-            const Spacer(),
-            ..._buildActions(discoveryState, embedded: true),
-          ],
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(16, 8, 8, 4),
+    child: Row(
+      children: [
+        const Spacer(),
+        ..._buildActions(discoveryState, embedded: true),
+      ],
+    ),
+  );
 
   /// 构建包含发现设备和已配置源的列表
   Widget _buildSourcesList(
@@ -151,64 +160,64 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
     Map<String, SourceConnection> connections,
     NetworkDiscoveryState discoveryState,
   ) => LayoutBuilder(
-        builder: (context, constraints) {
-          // 桌面下限宽 720 居中（macOS 系统设置 detail 风格），手机全宽。
-          // 用 LayoutBuilder 取实际可用宽度，避免 embedded 模式下用 screenWidth
-          // 算 padding 把内容挤到窄条里。
-          final isDesktop = context.isDesktopLayout;
-          final available = constraints.maxWidth;
-          final horizontal = isDesktop && available > 720
-              ? ((available - 720) / 2).clamp(16.0, double.infinity)
-              : 16.0;
-          return _buildSourcesListView(
-            sources,
-            connections,
-            discoveryState,
-            horizontal: horizontal,
-          );
-        },
+    builder: (context, constraints) {
+      // 桌面下限宽 720 居中（macOS 系统设置 detail 风格），手机全宽。
+      // 用 LayoutBuilder 取实际可用宽度，避免 embedded 模式下用 screenWidth
+      // 算 padding 把内容挤到窄条里。
+      final isDesktop = context.isDesktopLayout;
+      final available = constraints.maxWidth;
+      final horizontal = isDesktop && available > 720
+          ? ((available - 720) / 2).clamp(16.0, double.infinity)
+          : 16.0;
+      return _buildSourcesListView(
+        sources,
+        connections,
+        discoveryState,
+        horizontal: horizontal,
       );
+    },
+  );
 
   Widget _buildSourcesListView(
     List<SourceEntity> sources,
     Map<String, SourceConnection> connections,
     NetworkDiscoveryState discoveryState, {
     required double horizontal,
-  }) =>
-      ListView(
-      padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 16),
-      children: [
-        // 发现的设备部分
-        if (discoveryState.devices.isNotEmpty || discoveryState.isDiscovering) ...[
-          _buildSectionHeader(
-            context,
-            context.l10n.sourcesPageDiscoveredDevices,
-            subtitle: discoveryState.isDiscovering
-                ? context.l10n.sourcesPageDiscoveryScanning
-                : context.l10n.sourcesPageDiscoveryHint,
-            // 移除重复的loading指示器，仅保留AppBar中的雷达按钮loading
-          ),
-          const SizedBox(height: 8),
-          ...discoveryState.devices.map(
-            (device) => _DiscoveredDeviceCard(device: device),
-          ),
-          const SizedBox(height: 16),
-        ],
-
-        // 已配置的连接源部分
-        if (sources.isNotEmpty) ...[
-          _buildSectionHeader(context, context.l10n.sourcesPageConfiguredConnections),
-          const SizedBox(height: 8),
-          ...sources.map((source) {
-            final connection = connections[source.id];
-            return _SourceCard(
-              source: source,
-              connection: connection,
-            );
-          }),
-        ],
+  }) => ListView(
+    padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 16),
+    children: [
+      // 发现的设备部分
+      if (discoveryState.devices.isNotEmpty ||
+          discoveryState.isDiscovering) ...[
+        _buildSectionHeader(
+          context,
+          context.l10n.sourcesPageDiscoveredDevices,
+          subtitle: discoveryState.isDiscovering
+              ? context.l10n.sourcesPageDiscoveryScanning
+              : context.l10n.sourcesPageDiscoveryHint,
+          // 移除重复的loading指示器，仅保留AppBar中的雷达按钮loading
+        ),
+        const SizedBox(height: 8),
+        ...discoveryState.devices.map(
+          (device) => _DiscoveredDeviceCard(device: device),
+        ),
+        const SizedBox(height: 16),
       ],
-    );
+
+      // 已配置的连接源部分
+      if (sources.isNotEmpty) ...[
+        _buildSectionHeader(
+          context,
+          context.l10n.sourcesPageConfiguredConnections,
+        ),
+        const SizedBox(height: 8),
+        ...sources.map((source) {
+          final connection = connections[source.id];
+          return _SourceCard(source: source, connection: connection);
+        }),
+      ],
+    ],
+  );
 
   Widget _buildSectionHeader(
     BuildContext context,
@@ -251,76 +260,76 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
     List<SourceEntity> sources,
     Map<String, SourceConnection> connections,
   ) => ReorderableListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: sources.length,
-      onReorderItem: (oldIndex, newIndex) {
-        ref.read(sourcesProvider.notifier).reorderSources(oldIndex, newIndex);
-      },
-      proxyDecorator: (child, index, animation) => AnimatedBuilder(
-          animation: animation,
-          builder: (context, child) {
-            final elevation = Tween<double>(begin: 0, end: 8).evaluate(animation);
-            return Material(
-              elevation: elevation,
-              borderRadius: BorderRadius.circular(12),
-              child: child,
-            );
-          },
+    padding: const EdgeInsets.all(16),
+    itemCount: sources.length,
+    onReorderItem: (oldIndex, newIndex) {
+      ref.read(sourcesProvider.notifier).reorderSources(oldIndex, newIndex);
+    },
+    proxyDecorator: (child, index, animation) => AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final elevation = Tween<double>(begin: 0, end: 8).evaluate(animation);
+        return Material(
+          elevation: elevation,
+          borderRadius: BorderRadius.circular(12),
           child: child,
-        ),
-      itemBuilder: (context, index) {
-        final source = sources[index];
-        final connection = connections[source.id];
-        return _ReorderableSourceCard(
-          key: ValueKey(source.id),
-          source: source,
-          connection: connection,
         );
       },
-    );
+      child: child,
+    ),
+    itemBuilder: (context, index) {
+      final source = sources[index];
+      final connection = connections[source.id];
+      return _ReorderableSourceCard(
+        key: ValueKey(source.id),
+        source: source,
+        connection: connection,
+      );
+    },
+  );
 
   Widget _buildEmptyState(BuildContext context) => Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.cloud_off_outlined,
-                size: 40,
-                color: AppColors.primary,
-              ),
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: 24),
-            Text(
-              context.l10n.sourcesPageEmptyStateTitle,
-              style: Theme.of(context).textTheme.titleLarge,
+            child: Icon(
+              Icons.cloud_off_outlined,
+              size: 40,
+              color: AppColors.primary,
             ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.sourcesPageEmptyStateDescription,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            context.l10n.sourcesPageEmptyStateTitle,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            context.l10n.sourcesPageEmptyStateDescription,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () => _showAddSourceSheet(context),
-              icon: const Icon(Icons.add_rounded),
-              label: Text(context.l10n.sourcesPageAddSource),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: () => _showAddSourceSheet(context),
+            icon: const Icon(Icons.add_rounded),
+            label: Text(context.l10n.sourcesPageAddSource),
+          ),
+        ],
       ),
-    );
+    ),
+  );
 
   void _showAddSourceSheet(BuildContext context) {
     // 获取所有存储类源的已支持类型
@@ -352,15 +361,15 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
 /// 排序模式下的源卡片（带拖动手柄）
 class _ReorderableSourceCard extends StatelessWidget {
   const _ReorderableSourceCard({
-    required this.source, super.key,
+    required this.source,
+    super.key,
     this.connection,
   });
 
   final SourceEntity source;
   final SourceConnection? connection;
 
-  SourceStatus get _status =>
-      connection?.status ?? SourceStatus.disconnected;
+  SourceStatus get _status => connection?.status ?? SourceStatus.disconnected;
 
   @override
   Widget build(BuildContext context) {
@@ -390,10 +399,7 @@ class _ReorderableSourceCard extends StatelessWidget {
                 color: source.type.themeColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                source.type.icon,
-                color: source.type.themeColor,
-              ),
+              child: Icon(source.type.icon, color: source.type.themeColor),
             ),
             const SizedBox(width: 16),
 
@@ -429,11 +435,26 @@ class _ReorderableSourceCard extends StatelessWidget {
 
   Widget _buildStatusChip(BuildContext context, ThemeData theme) {
     final (label, color) = switch (_status) {
-      SourceStatus.connected => (context.l10n.sourcesPageStatusConnected, AppColors.success),
-      SourceStatus.connecting => (context.l10n.sourcesPageStatusConnecting, AppColors.warning),
-      SourceStatus.requires2FA => (context.l10n.sourcesPageStatusNeedsVerification, AppColors.warning),
-      SourceStatus.error => (context.l10n.sourcesPageStatusError, AppColors.error),
-      SourceStatus.disconnected => (context.l10n.sourcesPageStatusDisconnected, AppColors.lightOnSurfaceVariant),
+      SourceStatus.connected => (
+        context.l10n.sourcesPageStatusConnected,
+        AppColors.success,
+      ),
+      SourceStatus.connecting => (
+        context.l10n.sourcesPageStatusConnecting,
+        AppColors.warning,
+      ),
+      SourceStatus.requires2FA => (
+        context.l10n.sourcesPageStatusNeedsVerification,
+        AppColors.warning,
+      ),
+      SourceStatus.error => (
+        context.l10n.sourcesPageStatusError,
+        AppColors.error,
+      ),
+      SourceStatus.disconnected => (
+        context.l10n.sourcesPageStatusDisconnected,
+        AppColors.lightOnSurfaceVariant,
+      ),
     };
 
     return Container(
@@ -455,10 +476,7 @@ class _ReorderableSourceCard extends StatelessWidget {
 }
 
 class _SourceCard extends ConsumerStatefulWidget {
-  const _SourceCard({
-    required this.source,
-    this.connection,
-  });
+  const _SourceCard({required this.source, this.connection});
 
   final SourceEntity source;
   final SourceConnection? connection;
@@ -572,11 +590,26 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
 
   Widget _buildStatusChip(BuildContext context, ThemeData theme) {
     final (label, color) = switch (_status) {
-      SourceStatus.connected => (context.l10n.sourcesPageStatusConnected, AppColors.success),
-      SourceStatus.connecting => (context.l10n.sourcesPageStatusConnecting, AppColors.warning),
-      SourceStatus.requires2FA => (context.l10n.sourcesPageStatusNeedsVerification, AppColors.warning),
-      SourceStatus.error => (context.l10n.sourcesPageStatusError, AppColors.error),
-      SourceStatus.disconnected => (context.l10n.sourcesPageStatusDisconnected, AppColors.lightOnSurfaceVariant),
+      SourceStatus.connected => (
+        context.l10n.sourcesPageStatusConnected,
+        AppColors.success,
+      ),
+      SourceStatus.connecting => (
+        context.l10n.sourcesPageStatusConnecting,
+        AppColors.warning,
+      ),
+      SourceStatus.requires2FA => (
+        context.l10n.sourcesPageStatusNeedsVerification,
+        AppColors.warning,
+      ),
+      SourceStatus.error => (
+        context.l10n.sourcesPageStatusError,
+        AppColors.error,
+      ),
+      SourceStatus.disconnected => (
+        context.l10n.sourcesPageStatusDisconnected,
+        AppColors.lightOnSurfaceVariant,
+      ),
     };
 
     return Container(
@@ -612,10 +645,14 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
           // 存储类源显示"连接/断开"
           ListTile(
             leading: Icon(
-              _status == SourceStatus.connected ? Icons.link_off : Icons.link_rounded,
+              _status == SourceStatus.connected
+                  ? Icons.link_off
+                  : Icons.link_rounded,
             ),
             title: Text(
-              _status == SourceStatus.connected ? context.l10n.sourcesPageMenuDisconnect : context.l10n.sourcesPageMenuConnect,
+              _status == SourceStatus.connected
+                  ? context.l10n.sourcesPageMenuDisconnect
+                  : context.l10n.sourcesPageMenuConnect,
             ),
             onTap: () {
               Navigator.pop(context);
@@ -636,7 +673,10 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
           ),
           ListTile(
             leading: Icon(Icons.delete_rounded, color: AppColors.error),
-            title: Text(context.l10n.sourcesPageMenuDelete, style: TextStyle(color: AppColors.error)),
+            title: Text(
+              context.l10n.sourcesPageMenuDelete,
+              style: TextStyle(color: AppColors.error),
+            ),
             onTap: () {
               Navigator.pop(context);
               _deleteSource();
@@ -660,17 +700,16 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
     try {
       // 本地存储不需要密码，直接连接
       if (widget.source.type == SourceType.local) {
-        await ref.read(activeConnectionsProvider.notifier).connect(
-              widget.source,
-              password: '',
-              saveCredential: false,
-            );
+        await ref
+            .read(activeConnectionsProvider.notifier)
+            .connect(widget.source, password: '', saveCredential: false);
       } else {
         // 获取保存的凭证
         final manager = ref.read(sourceManagerProvider);
         final credential = await manager.getCredential(widget.source.id);
 
-        if (credential == null) {
+        final storedPassword = credential?.password ?? '';
+        if (widget.source.usesPasswordAuthentication && credential == null) {
           // 如果没有保存的凭证，显示密码输入对话框
           if (mounted) {
             final password = await _showPasswordDialog();
@@ -679,30 +718,29 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
               return;
             }
             usedPassword = password;
-            await ref.read(activeConnectionsProvider.notifier).connect(
-                  widget.source,
-                  password: password,
-                );
+            await ref
+                .read(activeConnectionsProvider.notifier)
+                .connect(widget.source, password: password);
           }
         } else {
           // 总是保存凭证，以便更新 deviceId
-          usedPassword = credential.password;
-          await ref.read(activeConnectionsProvider.notifier).connect(
-                widget.source,
-                password: credential.password,
-              );
+          usedPassword = storedPassword;
+          await ref
+              .read(activeConnectionsProvider.notifier)
+              .connect(widget.source, password: storedPassword);
         }
       }
 
-      final connection =
-          ref.read(activeConnectionsProvider)[widget.source.id];
+      final connection = ref.read(activeConnectionsProvider)[widget.source.id];
 
       // 处理需要 2FA 验证的情况
       if (connection?.status == SourceStatus.requires2FA) {
         if (mounted) {
           final result = await _show2FADialog();
           if (result != null && result.otpCode.isNotEmpty) {
-            await ref.read(activeConnectionsProvider.notifier).verify2FA(
+            await ref
+                .read(activeConnectionsProvider.notifier)
+                .verify2FA(
                   widget.source.id,
                   result.otpCode,
                   rememberDevice: result.rememberDevice,
@@ -727,10 +765,10 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
   }
 
   Future<TwoFAResult?> _show2FADialog() async => showTwoFASheet(
-      context,
-      initialRememberDevice: widget.source.rememberDevice,
-      sourceName: widget.source.displayName,
-    );
+    context,
+    initialRememberDevice: widget.source.rememberDevice,
+    sourceName: widget.source.displayName,
+  );
 
   Future<String?> _showPasswordDialog() async {
     final controller = TextEditingController();
@@ -743,7 +781,9 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
           obscureText: true,
           decoration: InputDecoration(
             labelText: context.l10n.sourcesPagePasswordLabel,
-            hintText: context.l10n.sourcesPagePasswordHint(widget.source.username),
+            hintText: context.l10n.sourcesPagePasswordHint(
+              widget.source.username,
+            ),
           ),
           autofocus: true,
         ),
@@ -780,7 +820,9 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.sourcesPageDeleteTitle),
-        content: Text(context.l10n.sourcesPageDeleteConfirm(widget.source.displayName)),
+        content: Text(
+          context.l10n.sourcesPageDeleteConfirm(widget.source.displayName),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -788,9 +830,7 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: Text(context.l10n.sourcesPageDeleteButton),
           ),
         ],
@@ -801,7 +841,9 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
       try {
         await ref.read(sourcesProvider.notifier).removeSource(widget.source.id);
         if (mounted) {
-          context.showSuccessToast(context.l10n.sourcesPageDeleteSuccess(widget.source.displayName));
+          context.showSuccessToast(
+            context.l10n.sourcesPageDeleteSuccess(widget.source.displayName),
+          );
         }
       } on Exception catch (e) {
         if (mounted) {
@@ -872,8 +914,9 @@ class _SourceTypeBottomSheet extends StatelessWidget {
                           ),
                         ),
                       ),
-                      ...groupedTypes[category]!
-                          .map((type) => _buildTypeTile(context, type)),
+                      ...groupedTypes[category]!.map(
+                        (type) => _buildTypeTile(context, type),
+                      ),
                     ],
                   ],
                 ),
@@ -894,9 +937,7 @@ class _SourceTypeBottomSheet extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: colorScheme.outline.withValues(alpha: 0.2),
-        ),
+        side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -907,11 +948,7 @@ class _SourceTypeBottomSheet extends StatelessWidget {
             color: colorScheme.primaryContainer.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            type.icon,
-            color: colorScheme.primary,
-            size: 24,
-          ),
+          child: Icon(type.icon, color: colorScheme.primary, size: 24),
         ),
         title: Text(
           type.displayName,
@@ -933,10 +970,7 @@ class _SourceTypeBottomSheet extends StatelessWidget {
         ),
         onTap: () {
           Navigator.pop(context);
-          SourceFormPage.openAdaptive<void>(
-            context,
-            sourceType: type,
-          );
+          SourceFormPage.openAdaptive<void>(context, sourceType: type);
         },
       ),
     );
@@ -1011,7 +1045,9 @@ class _DiscoveredDeviceCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 5, vertical: 1),
+                                horizontal: 5,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: accentColor.withValues(alpha: 0.14),
                                 borderRadius: BorderRadius.circular(4),
@@ -1046,7 +1082,10 @@ class _DiscoveredDeviceCard extends StatelessWidget {
                     label: Text(context.l10n.sourcesPageAddDeviceButton),
                     style: TextButton.styleFrom(
                       foregroundColor: accentColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -1065,10 +1104,7 @@ class _DiscoveredDeviceCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: accentColor.withValues(alpha: 0.4),
-          width: 1.5,
-        ),
+        side: BorderSide(color: accentColor.withValues(alpha: 0.4), width: 1.5),
       ),
       color: accentColor.withValues(alpha: isDark ? 0.08 : 0.06),
       child: ListTile(

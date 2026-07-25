@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:dartssh2/dartssh2.dart';
-import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/nas_adapters/base/nas_connection.dart';
@@ -127,7 +127,11 @@ class SftpAdapter implements NasAdapter {
     try {
       final pinned = await defaultSecureStorage.read(key: storageKey);
       if (pinned == null) {
-        await defaultSecureStorage.write(key: storageKey, value: value);
+        await writeSecureValueVerified(
+          defaultSecureStorage,
+          key: storageKey,
+          value: value,
+        );
         logger.i('SftpAdapter: 首次连接，已固定服务器主机密钥 $normalizedHost:$port');
         return true;
       }

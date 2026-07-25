@@ -53,7 +53,7 @@ class SecureStorageService {
   final FlutterSecureStorage _storage;
 
   Future<void> write({required String key, required String value}) =>
-      _storage.write(key: key, value: value);
+      writeSecureValueVerified(_storage, key: key, value: value);
 
   Future<String?> read({required String key}) => _storage.read(key: key);
 

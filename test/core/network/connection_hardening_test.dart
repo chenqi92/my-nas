@@ -50,6 +50,7 @@ void main() {
       apiKey: 'api-key',
       extraConfig: const {
         'path': '/media',
+        'password': 'legacy-password',
         'privateKey': 'private-key',
         'privateKeyPassphrase': 'passphrase',
       },
@@ -60,6 +61,57 @@ void main() {
     expect(json, isNot(contains('refreshToken')));
     expect(json, isNot(contains('apiKey')));
     expect(json['extraConfig'], {'path': '/media'});
+  });
+
+  group('SourceEntity password authentication', () {
+    SourceEntity source(
+      SourceType type, {
+      String username = 'alice',
+      String? apiKey,
+      Map<String, dynamic>? extraConfig,
+    }) => SourceEntity(
+      name: 'Source',
+      type: type,
+      host: 'source.local',
+      username: username,
+      apiKey: apiKey,
+      extraConfig: extraConfig,
+    );
+
+    test('requires a stored password for password-based services', () {
+      expect(source(SourceType.qbittorrent).usesPasswordAuthentication, isTrue);
+      expect(source(SourceType.nastool).usesPasswordAuthentication, isTrue);
+      expect(source(SourceType.webdav).usesPasswordAuthentication, isTrue);
+    });
+
+    test('does not prompt anonymous or token/key-based services', () {
+      expect(
+        source(SourceType.webdav, username: '').usesPasswordAuthentication,
+        isFalse,
+      );
+      expect(
+        source(
+          SourceType.jellyfin,
+          apiKey: 'api-key',
+        ).usesPasswordAuthentication,
+        isFalse,
+      );
+      expect(
+        source(
+          SourceType.qbittorrent,
+          extraConfig: const {'authType': 'API Key'},
+        ).usesPasswordAuthentication,
+        isFalse,
+      );
+      expect(
+        source(
+          SourceType.sftp,
+          extraConfig: const {'privateKey': 'pem'},
+        ).usesPasswordAuthentication,
+        isFalse,
+      );
+      expect(source(SourceType.upnp).usesPasswordAuthentication, isFalse);
+    });
   });
 
   test('SourceEntity does not reinterpret an unknown source as Synology', () {

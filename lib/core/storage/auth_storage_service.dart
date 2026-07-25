@@ -24,6 +24,7 @@ class SecureStorageException implements Exception {
   /// 是否是 Keychain entitlement 错误
   bool get isKeychainEntitlementError {
     final error = originalError;
+    if (error != null && isSecureStorageUnavailableError(error)) return true;
     if (error is PlatformException) {
       // macOS/iOS Keychain entitlement 错误码
       return error.code == 'Unexpected security result code' ||
@@ -61,11 +62,11 @@ class AuthStorageService {
   /// 返回 true 表示是可恢复的存储错误（已切换到降级存储或可静默处理）
   /// 返回 false 表示其他错误（应重新抛出）
   bool _handleStorageError(Object error, String operation) {
-    if (error is PlatformException) {
+    if (isSecureStorageUnavailableError(error) || error is PlatformException) {
       // Keychain entitlement 错误 (-34018)：常见于 macOS 未配置 keychain entitlement
-      if (error.code == 'Unexpected security result code' ||
-          (error.message?.contains('-34018') ?? false) ||
-          (error.message?.contains('entitlement') ?? false)) {
+      if (isSecureStorageUnavailableError(error) ||
+          (error is PlatformException &&
+              (error.message?.contains('entitlement') ?? false))) {
         if (_storageAvailable) {
           logger.w(
             'AuthStorageService: 系统 Keychain 不可用 ($operation) - '
@@ -132,7 +133,7 @@ class AuthStorageService {
       return _fallbackWrite(key, value);
     }
     try {
-      await _storage.write(key: key, value: value);
+      await writeSecureValueVerified(_storage, key: key, value: value);
       return true;
     } on Exception catch (e) {
       if (_handleStorageError(e, 'write($key)')) {

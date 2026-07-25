@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/service_adapters/aria2/api/aria2_api.dart';
 import 'package:my_nas/service_adapters/aria2/aria2_adapter.dart';
 import 'package:my_nas/service_adapters/base/service_adapter.dart';
@@ -44,11 +45,12 @@ final aria2ConnectionProvider =
       Aria2ConnectionNotifier,
       Aria2Connection?,
       String
-    >((ref, sourceId) => Aria2ConnectionNotifier(sourceId));
+    >(Aria2ConnectionNotifier.new);
 
 class Aria2ConnectionNotifier extends StateNotifier<Aria2Connection?> {
-  Aria2ConnectionNotifier(this.sourceId) : super(null);
+  Aria2ConnectionNotifier(this._ref, this.sourceId) : super(null);
 
+  final Ref _ref;
   final String sourceId;
 
   /// 连接到 Aria2
@@ -67,11 +69,20 @@ class Aria2ConnectionNotifier extends StateNotifier<Aria2Connection?> {
       status: Aria2ConnectionStatus.connecting,
     );
 
+    final credential = rpcSecret == null
+        ? await _ref.read(sourceManagerProvider).getCredential(source.id)
+        : null;
+    final secureRpcSecret = credential?.extraSecrets['rpcSecret'];
+    final storedRpcSecret =
+        rpcSecret ??
+        (secureRpcSecret is String ? secureRpcSecret : null) ??
+        source.extraConfig?['rpcSecret'] as String?;
+
     // 构建配置，传入 rpcSecret
     final config = ServiceConnectionConfig(
       baseUrl: 'http://${source.host}:${source.port}',
-      extraConfig: rpcSecret != null
-          ? {'rpcSecret': rpcSecret}
+      extraConfig: storedRpcSecret != null
+          ? {'rpcSecret': storedRpcSecret}
           : source.extraConfig,
     );
 

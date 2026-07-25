@@ -6,6 +6,10 @@
     <array>
         <string>group.com.kkape.mynas.app</string>
     </array>
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)group.com.kkape.mynas.app</string>
+    </array>
     <!-- CarPlay 音频应用授权（需 Apple 显式审核同意，个人 Apple ID 申不到） -->
     <key>com.apple.developer.carplay-audio</key>
     <true/>

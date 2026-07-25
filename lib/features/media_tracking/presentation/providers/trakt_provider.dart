@@ -9,12 +9,7 @@ import 'package:my_nas/service_adapters/trakt/api/trakt_api.dart';
 import 'package:my_nas/service_adapters/trakt/trakt_config.dart';
 
 /// Trakt 连接状态
-enum TraktConnectionStatus {
-  disconnected,
-  connecting,
-  connected,
-  error,
-}
+enum TraktConnectionStatus { disconnected, connecting, connected, error }
 
 /// Trakt 同步统计
 class TraktStats {
@@ -71,14 +66,13 @@ class TraktConnectionState {
     String? errorMessage,
     TraktDeviceCode? deviceCode,
     bool clearDeviceCode = false,
-  }) =>
-      TraktConnectionState(
-        status: status ?? this.status,
-        userSettings: userSettings ?? this.userSettings,
-        stats: stats ?? this.stats,
-        errorMessage: errorMessage,
-        deviceCode: clearDeviceCode ? null : (deviceCode ?? this.deviceCode),
-      );
+  }) => TraktConnectionState(
+    status: status ?? this.status,
+    userSettings: userSettings ?? this.userSettings,
+    stats: stats ?? this.stats,
+    errorMessage: errorMessage,
+    deviceCode: clearDeviceCode ? null : (deviceCode ?? this.deviceCode),
+  );
 }
 
 /// Trakt 持久化配置
@@ -93,15 +87,15 @@ class TraktConfig {
   });
 
   factory TraktConfig.fromJson(Map<String, dynamic> json) => TraktConfig(
-        clientId: json['clientId'] as String,
-        clientSecret: json['clientSecret'] as String,
-        useBuiltInCredentials: json['useBuiltInCredentials'] as bool? ?? false,
-        accessToken: json['accessToken'] as String?,
-        refreshToken: json['refreshToken'] as String?,
-        expiresAt: json['expiresAt'] != null
-            ? DateTime.parse(json['expiresAt'] as String)
-            : null,
-      );
+    clientId: json['clientId'] as String,
+    clientSecret: json['clientSecret'] as String,
+    useBuiltInCredentials: json['useBuiltInCredentials'] as bool? ?? false,
+    accessToken: json['accessToken'] as String?,
+    refreshToken: json['refreshToken'] as String?,
+    expiresAt: json['expiresAt'] != null
+        ? DateTime.parse(json['expiresAt'] as String)
+        : null,
+  );
 
   final String clientId;
   final String clientSecret;
@@ -116,13 +110,13 @@ class TraktConfig {
       expiresAt!.isAfter(DateTime.now());
 
   Map<String, dynamic> toJson() => {
-        'clientId': clientId,
-        'clientSecret': clientSecret,
-        'useBuiltInCredentials': useBuiltInCredentials,
-        'accessToken': accessToken,
-        'refreshToken': refreshToken,
-        'expiresAt': expiresAt?.toIso8601String(),
-      };
+    'clientId': clientId,
+    'clientSecret': clientSecret,
+    'useBuiltInCredentials': useBuiltInCredentials,
+    'accessToken': accessToken,
+    'refreshToken': refreshToken,
+    'expiresAt': expiresAt?.toIso8601String(),
+  };
 
   TraktConfig copyWith({
     String? clientId,
@@ -131,23 +125,21 @@ class TraktConfig {
     String? accessToken,
     String? refreshToken,
     DateTime? expiresAt,
-  }) =>
-      TraktConfig(
-        clientId: clientId ?? this.clientId,
-        clientSecret: clientSecret ?? this.clientSecret,
-        useBuiltInCredentials:
-            useBuiltInCredentials ?? this.useBuiltInCredentials,
-        accessToken: accessToken ?? this.accessToken,
-        refreshToken: refreshToken ?? this.refreshToken,
-        expiresAt: expiresAt ?? this.expiresAt,
-      );
+  }) => TraktConfig(
+    clientId: clientId ?? this.clientId,
+    clientSecret: clientSecret ?? this.clientSecret,
+    useBuiltInCredentials: useBuiltInCredentials ?? this.useBuiltInCredentials,
+    accessToken: accessToken ?? this.accessToken,
+    refreshToken: refreshToken ?? this.refreshToken,
+    expiresAt: expiresAt ?? this.expiresAt,
+  );
 }
 
 /// Trakt 连接管理器
 final traktConnectionProvider =
     StateNotifierProvider<TraktConnectionNotifier, TraktConnectionState>(
-  (ref) => TraktConnectionNotifier(),
-);
+      (ref) => TraktConnectionNotifier(),
+    );
 
 class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
   TraktConnectionNotifier() : super(const TraktConnectionState()) {
@@ -233,7 +225,9 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
     _isPolling = true;
 
     final interval = Duration(seconds: deviceCode.interval);
-    final expiresAt = DateTime.now().add(Duration(seconds: deviceCode.expiresIn));
+    final expiresAt = DateTime.now().add(
+      Duration(seconds: deviceCode.expiresIn),
+    );
 
     Future<void> poll() async {
       while (_isPolling && DateTime.now().isBefore(expiresAt)) {
@@ -241,7 +235,9 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
         if (!_isPolling) break;
 
         try {
-          final tokenResponse = await _api!.pollDeviceToken(deviceCode.deviceCode);
+          final tokenResponse = await _api!.pollDeviceToken(
+            deviceCode.deviceCode,
+          );
 
           if (tokenResponse != null) {
             // 授权成功！
@@ -251,11 +247,13 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
             _config = TraktConfig(
               clientId: clientId,
               clientSecret: clientSecret,
-              useBuiltInCredentials: clientId == TraktOAuthConfig.builtInClientId,
+              useBuiltInCredentials:
+                  clientId == TraktOAuthConfig.builtInClientId,
               accessToken: tokenResponse.accessToken,
               refreshToken: tokenResponse.refreshToken,
-              expiresAt:
-                  DateTime.now().add(Duration(seconds: tokenResponse.expiresIn)),
+              expiresAt: DateTime.now().add(
+                Duration(seconds: tokenResponse.expiresIn),
+              ),
             );
             await _saveConfig();
 
@@ -375,7 +373,8 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
       'useBuiltIn': useBuiltIn,
       'redirectUri': redirectUri,
     };
-    await _storage.write(
+    await writeSecureValueVerified(
+      _storage,
       key: _pendingOAuthKey,
       value: jsonEncode(pendingOAuth),
     );
@@ -459,7 +458,9 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
         useBuiltInCredentials: useBuiltIn,
         accessToken: tokenResponse.accessToken,
         refreshToken: tokenResponse.refreshToken,
-        expiresAt: DateTime.now().add(Duration(seconds: tokenResponse.expiresIn)),
+        expiresAt: DateTime.now().add(
+          Duration(seconds: tokenResponse.expiresIn),
+        ),
       );
       await _saveConfig();
 
@@ -518,7 +519,9 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
       _config = _config!.copyWith(
         accessToken: tokenResponse.accessToken,
         refreshToken: tokenResponse.refreshToken,
-        expiresAt: DateTime.now().add(Duration(seconds: tokenResponse.expiresIn)),
+        expiresAt: DateTime.now().add(
+          Duration(seconds: tokenResponse.expiresIn),
+        ),
       );
       await _saveConfig();
 
@@ -596,12 +599,14 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
     if (_config == null) return;
 
     try {
-      await _storage.write(
+      await writeSecureValueVerified(
+        _storage,
         key: _configKey,
         value: jsonEncode(_config!.toJson()),
       );
     } on Exception catch (e, st) {
       logger.e('TraktConnectionNotifier: 保存配置失败', e, st);
+      rethrow;
     }
   }
 

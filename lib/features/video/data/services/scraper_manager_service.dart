@@ -26,10 +26,7 @@ enum ScraperSourceEventType {
 
 /// 刮削源变更事件
 class ScraperSourceEvent {
-  const ScraperSourceEvent({
-    required this.type,
-    required this.source,
-  });
+  const ScraperSourceEvent({required this.type, required this.source});
 
   final ScraperSourceEventType type;
   final ScraperSourceEntity source;
@@ -98,7 +95,9 @@ class ScraperManagerService {
   Future<void> _syncExistingTmdbConfig() async {
     try {
       final sources = await getSources();
-      final tmdbSource = sources.where((s) => s.type == ScraperType.tmdb).firstOrNull;
+      final tmdbSource = sources
+          .where((s) => s.type == ScraperType.tmdb)
+          .firstOrNull;
       if (tmdbSource != null) {
         final credential = await getCredential(tmdbSource.id);
         if (credential?.apiKey != null && credential!.apiKey!.isNotEmpty) {
@@ -132,10 +131,14 @@ class ScraperManagerService {
 
     try {
       final list = (data as List).cast<Map<dynamic, dynamic>>();
-      final sources = list
-          .map((e) => ScraperSourceEntity.fromJson(Map<String, dynamic>.from(e)))
-          .toList()
-        ..sort((a, b) => a.priority.compareTo(b.priority));
+      final sources =
+          list
+              .map(
+                (e) =>
+                    ScraperSourceEntity.fromJson(Map<String, dynamic>.from(e)),
+              )
+              .toList()
+            ..sort((a, b) => a.priority.compareTo(b.priority));
       return sources;
     } on Exception catch (e, st) {
       logger.e('解析刮削源列表失败', e, st);
@@ -159,10 +162,7 @@ class ScraperManagerService {
     if (source.apiKey != null || source.cookie != null) {
       await saveCredential(
         source.id,
-        ScraperCredential(
-          apiKey: source.apiKey,
-          cookie: source.cookie,
-        ),
+        ScraperCredential(apiKey: source.apiKey, cookie: source.cookie),
       );
     }
 
@@ -178,10 +178,9 @@ class ScraperManagerService {
     logger.i('添加刮削源: ${source.displayName}');
 
     // 发出添加事件，用于触发元数据增强等后续操作
-    _eventController.add(ScraperSourceEvent(
-      type: ScraperSourceEventType.added,
-      source: newSource,
-    ));
+    _eventController.add(
+      ScraperSourceEvent(type: ScraperSourceEventType.added, source: newSource),
+    );
   }
 
   /// 更新刮削源
@@ -201,10 +200,7 @@ class ScraperManagerService {
     if (source.apiKey != null || source.cookie != null) {
       await saveCredential(
         source.id,
-        ScraperCredential(
-          apiKey: source.apiKey,
-          cookie: source.cookie,
-        ),
+        ScraperCredential(apiKey: source.apiKey, cookie: source.cookie),
       );
     }
 
@@ -223,10 +219,9 @@ class ScraperManagerService {
     logger.i('更新刮削源: ${source.displayName}');
 
     // 发出更新事件
-    _eventController.add(ScraperSourceEvent(
-      type: ScraperSourceEventType.updated,
-      source: source,
-    ));
+    _eventController.add(
+      ScraperSourceEvent(type: ScraperSourceEventType.updated, source: source),
+    );
   }
 
   /// 删除刮削源
@@ -254,10 +249,12 @@ class ScraperManagerService {
 
     // 发出删除事件
     if (removedSource != null) {
-      _eventController.add(ScraperSourceEvent(
-        type: ScraperSourceEventType.removed,
-        source: removedSource,
-      ));
+      _eventController.add(
+        ScraperSourceEvent(
+          type: ScraperSourceEventType.removed,
+          source: removedSource,
+        ),
+      );
     }
   }
 
@@ -304,9 +301,9 @@ class ScraperManagerService {
     // 保存时不包含敏感信息
     final data = sources.map((s) {
       final json = s.toJson()
-      // 移除敏感字段（存储在安全存储中）
-      ..remove('apiKey')
-      ..remove('cookie');
+        // 移除敏感字段（存储在安全存储中）
+        ..remove('apiKey')
+        ..remove('cookie');
       return json;
     }).toList();
 
@@ -350,13 +347,17 @@ class ScraperManagerService {
   }
 
   /// 保存凭证到安全存储
-  Future<void> saveCredential(String sourceId, ScraperCredential credential) async {
+  Future<void> saveCredential(
+    String sourceId,
+    ScraperCredential credential,
+  ) async {
     try {
       final key = '$_credentialPrefix$sourceId';
       final value = jsonEncode(credential.toJson());
-      await _secureStorage.write(key: key, value: value);
+      await writeSecureValueVerified(_secureStorage, key: key, value: value);
     } on Exception catch (e, st) {
       logger.e('保存刮削源凭证失败', e, st);
+      rethrow;
     }
   }
 
@@ -528,7 +529,9 @@ class ScraperManagerService {
       if (searchResult.isNotEmpty) {
         final item = searchResult.items.first;
         final scrapers = await getEnabledScrapers();
-        final scraper = scrapers.where((s) => s.type == item.source).firstOrNull;
+        final scraper = scrapers
+            .where((s) => s.type == item.source)
+            .firstOrNull;
         if (scraper != null) {
           return scraper.getMovieDetail(item.externalId, language: language);
         }
@@ -566,7 +569,9 @@ class ScraperManagerService {
       if (searchResult.isNotEmpty) {
         final item = searchResult.items.first;
         final scrapers = await getEnabledScrapers();
-        final scraper = scrapers.where((s) => s.type == item.source).firstOrNull;
+        final scraper = scrapers
+            .where((s) => s.type == item.source)
+            .firstOrNull;
         if (scraper != null) {
           return scraper.getTvDetail(item.externalId, language: language);
         }

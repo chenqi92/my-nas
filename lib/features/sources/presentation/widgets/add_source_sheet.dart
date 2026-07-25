@@ -490,7 +490,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
         // 如果输入了新密码，保存凭证（本地存储除外）
         if (!isLocal && password.isNotEmpty) {
           final manager = ref.read(sourceManagerProvider);
-          await manager.saveCredential(
+          await manager.saveCredentialRequired(
             source.id,
             SourceCredential(password: password),
           );
@@ -508,15 +508,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
 
         if (connection.status == SourceStatus.connected) {
           // 连接成功，保存源和凭证
-          await ref.read(sourcesProvider.notifier).addSource(source);
-          // 本地存储不需要保存凭证
-          if (!isLocal) {
-            final manager = ref.read(sourceManagerProvider);
-            await manager.saveCredential(
-              source.id,
-              SourceCredential(password: password),
-            );
-          }
+          await _addNewSourceWithCredential(source, password);
           if (mounted) {
             Navigator.pop(context);
             context.showSuccessToast(
@@ -539,22 +531,7 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
 
               if (verified.status == SourceStatus.connected) {
                 // 2FA验证成功，保存源
-                await ref.read(sourcesProvider.notifier).addSource(source);
-                // 保存凭证时需要保留 verify2FA 返回的 deviceId
-                if (!isLocal) {
-                  final manager = ref.read(sourceManagerProvider);
-                  // 先读取已保存的凭证（可能包含 deviceId）
-                  final existingCredential = await manager.getCredential(
-                    source.id,
-                  );
-                  await manager.saveCredential(
-                    source.id,
-                    SourceCredential(
-                      password: password,
-                      deviceId: existingCredential?.deviceId,
-                    ),
-                  );
-                }
+                await _addNewSourceWithCredential(source, password);
                 if (mounted) {
                   Navigator.pop(context);
                   context.showSuccessToast(
@@ -598,6 +575,33 @@ class _AddSourceSheetState extends ConsumerState<AddSourceSheet> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _addNewSourceWithCredential(
+    SourceEntity source,
+    String password,
+  ) async {
+    final manager = ref.read(sourceManagerProvider);
+    var credentialStored = false;
+
+    if (source.type != SourceType.local) {
+      final existingCredential = await manager.getCredential(source.id);
+      await manager.saveCredentialRequired(
+        source.id,
+        SourceCredential(
+          password: password,
+          deviceId: existingCredential?.deviceId,
+        ),
+      );
+      credentialStored = true;
+    }
+
+    try {
+      await ref.read(sourcesProvider.notifier).addSource(source);
+    } on Exception {
+      if (credentialStored) await manager.removeCredential(source.id);
+      rethrow;
     }
   }
 
