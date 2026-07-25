@@ -64,7 +64,7 @@ class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 局域网自动发现区：放在已连接源 grid 之上，无设备且未在扫描时收起。
+          // 局域网自动发现区：放在已连接源 grid 之上，入口始终可见。
           const _DiscoveredDevicesSection(),
           sourcesAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -128,7 +128,8 @@ class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
 ///
 /// 卡片头部含标题 + 扫描状态文案（正在扫描…/发现 N 台）+「重新扫描」按钮；
 /// 下方为设备行（类型图标 + 名称 + host:port·类型 +「添加」一键预填进添加源
-/// 表单）。无设备且未在扫描时整段收起不渲染。视觉对齐本页 [AppCard]。
+/// 表单）。没有结果时仍保留扫描入口，避免功能在扫描结束后“消失”。
+/// 视觉对齐本页 [AppCard]。
 class _DiscoveredDevicesSection extends ConsumerWidget {
   const _DiscoveredDevicesSection();
 
@@ -136,10 +137,6 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(networkDiscoveryProvider);
     final devices = state.devices;
-    // 无设备且未在扫描时收起（错误态也并入：无结果即不打扰）。
-    if (devices.isEmpty && !state.isDiscovering) {
-      return const SizedBox.shrink();
-    }
     final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
 
@@ -149,6 +146,8 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
         ? l.paneSourcesDiscoveryScanning
         : devices.isNotEmpty
         ? l.paneSourcesDiscoveryFound(devices.length)
+        : state.lastDiscoveryTime != null
+        ? l.paneSourcesDiscoveryEmpty
         : l.paneSourcesDiscoveryIdle;
 
     return Padding(

@@ -510,6 +510,8 @@ class _DiscoveryRow extends ConsumerWidget {
         ? l.paneSourcesDiscoveryScanning
         : count > 0
         ? l.paneSourcesDiscoveryFound(count)
+        : state.lastDiscoveryTime != null
+        ? l.paneSourcesDiscoveryEmpty
         : l.paneSourcesDiscoveryIdle;
 
     return SetRow(

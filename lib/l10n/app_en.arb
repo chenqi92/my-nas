@@ -831,6 +831,7 @@
       }
     }
   },
+  "paneSourcesDiscoveryEmpty": "No devices found yet. You can scan again.",
   "paneSourcesDiscoveryIdle": "Auto-discover devices to add via mDNS / Bonjour",
   "paneSourcesDiscoveryTitle": "Local network discovery",
   "paneSourcesDeviceCount": "{n}",
@@ -2246,8 +2247,21 @@
   "srcWizardStepConnection": "Connection",
   "srcWizardStepTest": "Test Connection",
   "srcWizardStepMapping": "Library Mapping",
-  "srcWizardNext": "Next",
+  "srcWizardNext": "Continue",
   "srcWizardPlanTag": "Planned",
+  "srcWizardManualTitle": "Choose manually",
+  "srcWizardManualHint": "If a device does not advertise a local network service, choose its type and configure it manually.",
+  "srcWizardStorageGroup": "STORAGE, PROTOCOLS & MEDIA SERVERS",
+  "srcWizardServiceGroup": "TOOLS & ONLINE SERVICES",
+  "srcWizardSelectHint": "Choose a source type to continue",
+  "srcWizardSelectedType": "Selected: {name}",
+  "@srcWizardSelectedType": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "transferPageClearCompletedDownloads": "Clear completed downloads",
   "transferPageClearCompletedUploads": "Clear completed uploads",
   "transferPageClearAllCache": "Clear all cache",
