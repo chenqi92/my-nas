@@ -2027,7 +2027,11 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
 
     // 获取分类设置
     final categorySettings = ref.watch(videoCategorySettingsProvider);
-    final visibleSections = categorySettings.visibleSections;
+    final visibleSections = categorySettings.visibleSectionsForLibrary(
+      movieCount: state.movieCount,
+      tvShowCount: state.tvShowGroupCount,
+      otherCount: state.otherCount,
+    );
 
     // 判断设备类型
     final screenWidth = MediaQuery.of(context).size.width;
@@ -2810,7 +2814,11 @@ class _VideoListPageState extends ConsumerState<VideoListPage> {
 
     // 获取分类设置
     final categorySettings = ref.watch(videoCategorySettingsProvider);
-    final visibleSections = categorySettings.visibleSections;
+    final visibleSections = categorySettings.visibleSectionsForLibrary(
+      movieCount: state.movieCount,
+      tvShowCount: state.tvShowGroupCount,
+      otherCount: state.otherCount,
+    );
 
     // 判断设备类型
     final screenWidth = MediaQuery.of(context).size.width;

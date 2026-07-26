@@ -449,6 +449,45 @@ class VideoCategorySettings {
     return visible;
   }
 
+  /// 获取当前资料库应展示的分类。
+  ///
+  /// 用户仍可隐藏“其他视频”；但当资料库只有未识别视频时，继续隐藏会让
+  /// 首页只剩统计数字而没有任何可操作内容，因此临时补回该分类作为兜底。
+  List<VideoCategorySectionConfig> visibleSectionsForLibrary({
+    required int movieCount,
+    required int tvShowCount,
+    required int otherCount,
+  }) {
+    final visible = visibleSections;
+    final onlyHasOtherVideos =
+        movieCount == 0 && tvShowCount == 0 && otherCount > 0;
+    final alreadyShowsOthers = visible.any(
+      (section) => section.category == VideoHomeCategory.others,
+    );
+    if (!onlyHasOtherVideos || alreadyShowsOthers) {
+      return visible;
+    }
+
+    VideoCategorySectionConfig? othersSection;
+    for (final section in sections) {
+      if (section.category == VideoHomeCategory.others) {
+        othersSection = section;
+        break;
+      }
+    }
+
+    final resolved = <VideoCategorySectionConfig>[
+      ...visible,
+      (othersSection ??
+              VideoCategorySectionConfig(
+                category: VideoHomeCategory.others,
+                order: sections.length,
+              ))
+          .copyWith(visible: true),
+    ]..sort((a, b) => a.order.compareTo(b.order));
+    return resolved;
+  }
+
   /// 获取所有分类（已排序）
   List<VideoCategorySectionConfig> get sortedSections {
     final sorted = List<VideoCategorySectionConfig>.from(sections)
