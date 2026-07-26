@@ -523,6 +523,10 @@ class _MediaTypeTab extends ConsumerWidget {
     Map<String, SourceConnection> connections,
     List<MediaLibraryPath> existingPaths,
   ) {
+    // 弹窗关闭后其 builder context 会立即失效。后续权限请求和扫描会跨越
+    // async gap，因此保留页面 context，避免授权返回后访问已销毁的 ancestor。
+    final pageContext = context;
+
     // 过滤出支持文件系统的已连接源
     final connectedSources = sources.where((s) {
       final conn = connections[s.id];
@@ -577,10 +581,11 @@ class _MediaTypeTab extends ConsumerWidget {
                   onTap: alreadyAdded
                       ? null
                       : () => _handleLocalSourceSelection(
-                            context,
+                            pageContext,
                             ref,
                             localSource,
                             connections,
+                            dismissContext: context,
                           ),
                 );
               }),
@@ -609,7 +614,7 @@ class _MediaTypeTab extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   Navigator.pop(context);
-                  _showFolderPicker(context, ref, remoteSources, connections);
+                  _showFolderPicker(pageContext, ref, remoteSources, connections);
                 },
               ),
             ],
@@ -626,17 +631,18 @@ class _MediaTypeTab extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     SourceEntity localSource,
-    Map<String, SourceConnection> connections,
-  ) {
+    Map<String, SourceConnection> connections, {
+    required BuildContext dismissContext,
+  }) {
     final isMobile = !kIsWeb && (Platform.isIOS || Platform.isAndroid);
 
     if (isMobile) {
       // 移动端：根据媒体类型自动选择路径
-      Navigator.pop(context);
+      Navigator.pop(dismissContext);
       _addLocalSourceToLibrary(context, ref, localSource, connections);
     } else {
       // 桌面端：显示文件夹选择器
-      Navigator.pop(context);
+      Navigator.pop(dismissContext);
       _showFolderPicker(context, ref, [localSource], connections);
     }
   }
@@ -696,7 +702,9 @@ class _MediaTypeTab extends ConsumerWidget {
       // 根据媒体类型选择路径前缀（photo/video/music）
       final (path, displayName) = switch (mediaType) {
         MediaType.photo || MediaType.video => ('/gallery', context.l10n.mediaLibraryLocalPhotoPath),
-        MediaType.music => ('/music', context.l10n.mediaLibraryLocalMusicPath),
+        // /music 根目录同时暴露 songs/albums/artists 三个虚拟视图，递归扫描
+        // 会把同一首歌收录三次。本机音乐库只扫描唯一的 songs 视图。
+        MediaType.music => ('/music/songs', context.l10n.mediaLibraryLocalMusicPath),
         MediaType.book || MediaType.comic || MediaType.note => ('/files', context.l10n.mediaLibraryLocalFilesPath),
       };
 
@@ -732,6 +740,7 @@ class _MediaTypeTab extends ConsumerWidget {
     SourceEntity localSource,
     Map<String, SourceConnection> connections,
   ) async {
+    final pageContext = context;
     final importType = switch (mediaType) {
       MediaType.book => FileImportType.book,
       MediaType.comic => FileImportType.comic,
@@ -774,7 +783,7 @@ class _MediaTypeTab extends ConsumerWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 Navigator.pop(context);
-                await _importFilesFromFilesApp(context, ref, localSource, connections, importType);
+                await _importFilesFromFilesApp(pageContext, ref, localSource, connections, importType);
               },
             ),
 
@@ -793,7 +802,7 @@ class _MediaTypeTab extends ConsumerWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () async {
                 Navigator.pop(context);
-                await _addFilesPathToLibrary(context, ref, localSource, connections, importType);
+                await _addFilesPathToLibrary(pageContext, ref, localSource, connections, importType);
               },
             ),
 
@@ -956,11 +965,12 @@ class _MediaTypeTab extends ConsumerWidget {
     List<SourceEntity> sources,
     Map<String, SourceConnection> connections,
   ) {
+    final pageContext = context;
     showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => FolderPickerSheet(
+      builder: (sheetContext) => FolderPickerSheet(
         sources: sources,
         connections: connections,
         onSelect: (sourceId, path, name) async {
@@ -972,11 +982,11 @@ class _MediaTypeTab extends ConsumerWidget {
           await ref
               .read(mediaLibraryConfigProvider.notifier)
               .addPath(mediaType, newPath);
-          if (context.mounted) {
-            Navigator.pop(context);
-            context.showSnackBar(context.l10n.mediaLibraryFolderPickerAddedToast(path));
-
-            // 添加后自动扫描该路径
+          if (sheetContext.mounted) {
+            Navigator.pop(sheetContext);
+          }
+          if (pageContext.mounted) {
+            pageContext.showSnackBar(pageContext.l10n.mediaLibraryFolderPickerAddedToast(path));
             _autoScanPath(ref, mediaType, newPath, connections);
           }
         },

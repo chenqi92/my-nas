@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/services/nas_file_system_registry.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -630,7 +631,50 @@ class MediaLibraryConfigNotifier
     try {
       final manager = _ref.read(sourceManagerProvider);
       await manager.init();
-      final config = await manager.getMediaLibraryConfig();
+      var config = await manager.getMediaLibraryConfig();
+
+      // 旧版本把本机音乐库配置为 /music。这个虚拟根目录包含
+      // songs/albums/artists 三个视图，递归扫描会重复收录同一首歌。
+      // 只迁移移动端本机源，NAS 等远程源的真实 /music 目录保持不变。
+      final isMobile = !kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.iOS ||
+              defaultTargetPlatform == TargetPlatform.android);
+      if (isMobile) {
+        final sources = await manager.getSources();
+        final localSourceIds = sources
+            .where((source) => source.type == SourceType.local)
+            .map((source) => source.id)
+            .toSet();
+        final migratedSourceIds = <String>{};
+        final migratedMusicPaths = config.musicPaths.map((path) {
+          if (localSourceIds.contains(path.sourceId) && path.path == '/music') {
+            migratedSourceIds.add(path.sourceId);
+            return path.copyWith(path: '/music/songs');
+          }
+          return path;
+        }).toList();
+
+        if (migratedSourceIds.isNotEmpty) {
+          config = config.copyWith(musicPaths: migratedMusicPaths);
+          await manager.saveMediaLibraryConfig(config);
+          for (final sourceId in migratedSourceIds) {
+            await Future.wait([
+              MusicDatabaseService().deleteByPath(sourceId, '/music/albums'),
+              MusicDatabaseService().deleteByPath(sourceId, '/music/artists'),
+              MusicLibraryCacheService().deleteByPath(
+                sourceId,
+                '/music/albums',
+              ),
+              MusicLibraryCacheService().deleteByPath(
+                sourceId,
+                '/music/artists',
+              ),
+            ]);
+          }
+          logger.i('MediaLibraryConfig: 已迁移本机音乐库到 /music/songs');
+        }
+      }
+
       state = AsyncValue.data(config);
     } on Exception catch (e, st) {
       // 捕获所有错误，包括 TypeError

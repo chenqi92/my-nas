@@ -240,8 +240,17 @@ linux/ffmpeg/ffmpeg
 # audiotags_fixed build artifacts
 packages/audiotags_fixed/android/.cxx/
 packages/audiotags_fixed/android/src/main/jniLibs/
+!packages/audiotags_fixed/android/src/main/jniLibs/
+packages/audiotags_fixed/android/src/main/jniLibs/*
+!packages/audiotags_fixed/android/src/main/jniLibs/arm64-v8a/
+!packages/audiotags_fixed/android/src/main/jniLibs/arm64-v8a/libaudiotags.so
+!packages/audiotags_fixed/android/src/main/jniLibs/armeabi-v7a/
+!packages/audiotags_fixed/android/src/main/jniLibs/armeabi-v7a/libaudiotags.so
+!packages/audiotags_fixed/android/src/main/jniLibs/x86_64/
+!packages/audiotags_fixed/android/src/main/jniLibs/x86_64/libaudiotags.so
 packages/audiotags_fixed/android/android.tar.gz
 packages/audiotags_fixed/logs/
+packages/audiotags_fixed/rust/Cargo.lock
 # Windows: CMake 构建时从 GitHub releases 自动下载并解压的预编译 Rust lib
 packages/audiotags_fixed/windows/windows.tar.gz
 packages/audiotags_fixed/windows/audiotags.dll

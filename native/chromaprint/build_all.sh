@@ -300,6 +300,8 @@ build_android_from_source() {
             -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI=$ABI \
             -DANDROID_PLATFORM=android-21 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SHARED_LINKER_FLAGS="-Wl,-z,max-page-size=16384" \
             -DBUILD_SHARED_LIBS=ON \
             -DBUILD_TOOLS=OFF \
             -DBUILD_TESTS=OFF \
@@ -309,9 +311,17 @@ build_android_from_source() {
 
         cmake --build . --config Release
 
+        # CMake 的产物位于 src/ 子目录；不要假设它在构建根目录。
+        local CHROMAPRINT_LIB
+        CHROMAPRINT_LIB=$(find "$BUILD_PATH" -type f -name "libchromaprint.so" -print -quit)
+        if [ -z "$CHROMAPRINT_LIB" ]; then
+            echo "错误: 未找到 $ABI 的 libchromaprint.so"
+            exit 1
+        fi
+
         # 复制产物
         mkdir -p "$ANDROID_OUTPUT/$ABI"
-        cp libchromaprint.so "$ANDROID_OUTPUT/$ABI/"
+        cp "$CHROMAPRINT_LIB" "$ANDROID_OUTPUT/$ABI/"
     done
 
     echo "✓ Android 编译完成"

@@ -1,7 +1,7 @@
 name: my_nas
 description: "跨平台 NAS 客户端 - 统一管理你的 NAS 资源"
 publish_to: "none"
-version: 1.2.0+11
+version: 1.2.1+12
 
 environment:
   sdk: ^3.10.1
@@ -72,7 +72,7 @@ dependencies:
   secure_application: ^4.1.0
 
   # AI / Machine Learning
-  tflite_flutter: ^0.11.0 # TensorFlow Lite for face detection & recognition
+  tflite_flutter: ^0.12.1 # TensorFlow Lite with Android 16KB page-size support
   google_mlkit_face_detection: ^0.12.0 # Face detection for mobile (iOS/Android)
 
   # Mobile Device Media Access (iOS/Android)

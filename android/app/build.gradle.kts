@@ -121,3 +121,26 @@ gradle.taskGraph.whenReady {
 flutter {
     source = "../.."
 }
+
+// `flutter pub get` may put the dev-only integration_test plugin in the legacy
+// source-tree registrant even though that plugin is absent from the release
+// classpath. Keep every production plugin registered and remove only that
+// generated test block before compiling a release build.
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    doFirst {
+        val registrant = file(
+            "src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java"
+        )
+        if (registrant.exists()) {
+            val integrationTestBlock = Regex(
+                """(?m)^[ \t]*try \{\r?\n[ \t]*flutterEngine\.getPlugins\(\)\.add\(new dev\.flutter\.plugins\.integration_test\.IntegrationTestPlugin\(\)\);\r?\n[ \t]*\} catch \(Exception e\) \{\r?\n[ \t]*Log\.e\(TAG, "Error registering plugin integration_test, dev\.flutter\.plugins\.integration_test\.IntegrationTestPlugin", e\);\r?\n[ \t]*\}\r?\n"""
+            )
+            val original = registrant.readText()
+            val filtered = original.replace(integrationTestBlock, "")
+            check(!filtered.contains("IntegrationTestPlugin")) {
+                "Failed to remove integration_test from the release plugin registrant"
+            }
+            registrant.writeText(filtered)
+        }
+    }
+}

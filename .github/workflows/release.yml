@@ -6,11 +6,9 @@ on:
       - main
     paths:
       - 'pubspec.yaml'
-  # 也支持手动推送 tag 触发
-  create:
-    tags:
-      - 'v*'
-  # 支持手动触发
+  # 自动创建的 release tag 不再次触发构建，避免同一 build number
+  # 被两条并发工作流重复提交到 App Store Connect。
+  # 补发或重试请使用手动触发。
   workflow_dispatch:
     inputs:
       force_release:
@@ -311,6 +309,38 @@ jobs:
           cd build/app/outputs/flutter-apk
           mv app-release.apk MyNAS-${{ needs.extract-version.outputs.version }}-android-universal.apk
 
+      - name: Verify Android 16 KB page-size compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="build/app/outputs/flutter-apk/MyNAS-${{ needs.extract-version.outputs.version }}-android-universal.apk"
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          ZIPALIGN=$(find "$SDK_ROOT/build-tools" -type f -name zipalign -print | sort -V | tail -1)
+          READELF=$(find "$SDK_ROOT/ndk" -type f -name llvm-readelf -print | sort -V | tail -1)
+
+          if [ -z "$ZIPALIGN" ] || [ -z "$READELF" ]; then
+            echo "::error::zipalign or llvm-readelf is unavailable"
+            exit 1
+          fi
+
+          "$ZIPALIGN" -c -P 16 4 "$APK"
+          VERIFY_DIR="$RUNNER_TEMP/android-16kb-verify"
+          rm -rf "$VERIFY_DIR"
+          unzip -q "$APK" 'lib/arm64-v8a/*.so' 'lib/x86_64/*.so' -d "$VERIFY_DIR"
+
+          while IFS= read -r library; do
+            if "$READELF" -lW "$library" \
+                | awk '$1 == "LOAD" && $NF == "0x1000" { found = 1 } END { exit !found }'; then
+              echo "::error::4 KB LOAD alignment: ${library#"$VERIFY_DIR"/}"
+              exit 1
+            fi
+          done < <(
+            find "$VERIFY_DIR/lib/arm64-v8a" "$VERIFY_DIR/lib/x86_64" \
+              -type f -name '*.so' -print
+          )
+
+          echo "All 64-bit Android native libraries support 16 KB pages"
+
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -488,9 +518,11 @@ jobs:
         with:
           xcode-version: latest-stable
 
-      - name: Install macOS Developer ID signing material
+      - name: Install macOS App Store and Developer ID signing material
         shell: bash
         env:
+          APPLE_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
+          APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD }}
           MACOS_DEVELOPER_ID_CERTIFICATE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_BASE64 }}
           MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
           APPLE_KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
@@ -502,6 +534,8 @@ jobs:
         run: |
           set -euo pipefail
           for name in \
+            APPLE_DISTRIBUTION_CERTIFICATE_BASE64 \
+            APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD \
             MACOS_DEVELOPER_ID_CERTIFICATE_BASE64 \
             MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD \
             APPLE_KEYCHAIN_PASSWORD \
@@ -516,21 +550,29 @@ jobs:
             fi
           done
 
-          CERTIFICATE_PATH="$RUNNER_TEMP/developer-id-application.p12"
+          DISTRIBUTION_CERTIFICATE_PATH="$RUNNER_TEMP/apple-distribution.p12"
+          DEVELOPER_ID_CERTIFICATE_PATH="$RUNNER_TEMP/developer-id-application.p12"
           KEYCHAIN_PATH="$RUNNER_TEMP/macos-signing.keychain-db"
           PROFILES_PATH="$HOME/Library/MobileDevice/Provisioning Profiles"
           API_KEY_PATH="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
 
-          printf '%s' "$MACOS_DEVELOPER_ID_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_PATH"
+          printf '%s' "$APPLE_DISTRIBUTION_CERTIFICATE_BASE64" \
+            | base64 --decode > "$DISTRIBUTION_CERTIFICATE_PATH"
+          printf '%s' "$MACOS_DEVELOPER_ID_CERTIFICATE_BASE64" \
+            | base64 --decode > "$DEVELOPER_ID_CERTIFICATE_PATH"
           security create-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security import "$CERTIFICATE_PATH" \
+          security import "$DISTRIBUTION_CERTIFICATE_PATH" \
+            -P "$APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security import "$DEVELOPER_ID_CERTIFICATE_PATH" \
             -P "$MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD" \
             -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
           security set-key-partition-list -S apple-tool:,apple:,codesign: \
             -s -k "$APPLE_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -q "Apple Distribution"
           security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep -q "Developer ID Application"
 
           mkdir -p "$PROFILES_PATH"
@@ -539,7 +581,7 @@ jobs:
           printf '%s' "$MACOS_WIDGET_PROVISIONING_PROFILE_BASE64" | base64 --decode \
             > "$PROFILES_PATH/mynas-macos-widgets.provisionprofile"
           printf '%s' "$APPLE_API_PRIVATE_KEY_BASE64" | base64 --decode > "$API_KEY_PATH"
-          chmod 600 "$CERTIFICATE_PATH" "$API_KEY_PATH"
+          chmod 600 "$DISTRIBUTION_CERTIFICATE_PATH" "$DEVELOPER_ID_CERTIFICATE_PATH" "$API_KEY_PATH"
 
           echo "APPLE_CI_KEYCHAIN=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
           echo "APPLE_API_KEY_PATH=$API_KEY_PATH" >> "$GITHUB_ENV"
@@ -621,6 +663,40 @@ jobs:
 
           echo "=== Flutter doctor ==="
           flutter doctor -v
+
+      - name: Archive and upload macOS build to App Store Connect
+        shell: bash
+        env:
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          ARCHIVE_PATH="$RUNNER_TEMP/MyNAS-AppStore.xcarchive"
+          EXPORT_PATH="$RUNNER_TEMP/MyNAS-AppStore-export"
+          rm -rf "$ARCHIVE_PATH" "$EXPORT_PATH"
+
+          xcodebuild archive \
+            -workspace macos/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath "$ARCHIVE_PATH" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$APPLE_API_KEY_PATH" \
+            -authenticationKeyID "$APPLE_API_KEY_ID" \
+            -authenticationKeyIssuerID "$APPLE_API_ISSUER_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            DEVELOPMENT_TEAM=2U97K3U27A
+
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist macos/ExportOptionsUpload.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$APPLE_API_KEY_PATH" \
+            -authenticationKeyID "$APPLE_API_KEY_ID" \
+            -authenticationKeyIssuerID "$APPLE_API_ISSUER_ID"
 
       - name: Configure Developer ID signing
         run: |
@@ -705,6 +781,7 @@ jobs:
           if [ -n "${APPLE_CI_KEYCHAIN:-}" ]; then
             security delete-keychain "$APPLE_CI_KEYCHAIN" 2>/dev/null || true
           fi
+          rm -f "$RUNNER_TEMP/apple-distribution.p12"
           rm -f "$RUNNER_TEMP/developer-id-application.p12"
           if [ -n "${APPLE_API_KEY_PATH:-}" ]; then
             rm -f "$APPLE_API_KEY_PATH"
@@ -1347,7 +1424,7 @@ jobs:
           fi
 
           if [ "${{ needs.build-macos.result }}" == "success" ]; then
-            STATUS="${STATUS}✅ macOS（Developer ID 签名并已公证）\n"
+            STATUS="${STATUS}✅ macOS（已提交 App Store Connect，DMG 已签名公证）\n"
           elif [ "${{ needs.build-macos.result }}" == "skipped" ]; then
             STATUS="${STATUS}⏭️ macOS (跳过 - 平台未配置)\n"
           else
@@ -1409,7 +1486,7 @@ jobs:
             |------|----------|----------|
             | **Android** | arm64-v8a | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-android-arm64-v8a.apk](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-android-arm64-v8a.apk) |
             | **iOS** | App Store | 已提交 App Store Connect（审核/上架状态以后台为准） |
-            | **macOS** | universal (Intel + Apple Silicon) | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg) |
+            | **macOS** | TestFlight / universal DMG | 已提交 App Store Connect；[下载 DMG](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg) |
             | **Windows** | x64 安装包 | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe) |
             | **Linux** | x64 | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-linux-x64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-linux-x64.tar.gz) |
             | **Linux (ARM)** | arm64 | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-linux-arm64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-linux-arm64.tar.gz) |
@@ -1442,6 +1519,8 @@ jobs:
             <details>
             <summary>macOS (点击展开)</summary>
 
+            macOS App Store 构建已由发布工作流提交到 App Store Connect，供 TestFlight 处理。
+
             | 架构 | 说明 | 下载 |
             |------|------|------|
             | universal | Universal binary，Apple Silicon (M 系列) 和 Intel Mac 通用 | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg) |
@@ -1471,7 +1550,7 @@ jobs:
 
             ### ⚠️ 注意事项
             - **iOS**: 工作流只负责签名并提交 App Store Connect；TestFlight/正式上架仍取决于 Apple 处理与审核状态
-            - **macOS**: DMG 已使用 Developer ID 签名、Apple 公证并 stapling
+            - **macOS**: 已提交 App Store Connect 供 TestFlight 处理；DMG 另使用 Developer ID 签名、公证并 stapling
             - **Windows**: EXE、DLL、MSIX 与 Inno 安装程序均使用时间戳 Authenticode 签名
             - **Linux**: 需要安装依赖：`sudo apt install libmpv1 libsecret-1-0`
 
