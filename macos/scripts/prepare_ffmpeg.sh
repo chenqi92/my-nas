@@ -94,9 +94,18 @@ if [ -f "$FFMPEG_SRC" ]; then
         # For Release/Profile, sign with the same identity as the app
         # and include sandbox entitlements
         if [ -f "$FFMPEG_ENTITLEMENTS" ]; then
-            SIGN_IDENTITY="${EXPANDED_CODE_SIGN_IDENTITY}"
-            if [ -z "$SIGN_IDENTITY" ]; then
-                SIGN_IDENTITY="${CODE_SIGN_IDENTITY}"
+            # Unsigned CI builds disable Xcode code signing. Xcode can still
+            # expose the project's Apple Development identity in
+            # EXPANDED_CODE_SIGN_IDENTITY, so do not attempt to use it when
+            # CODE_SIGNING_ALLOWED=NO; use an ad-hoc signature for the copied
+            # executable instead.
+            if [ "${CODE_SIGNING_ALLOWED:-YES}" = "NO" ]; then
+                SIGN_IDENTITY="-"
+            else
+                SIGN_IDENTITY="${EXPANDED_CODE_SIGN_IDENTITY}"
+                if [ -z "$SIGN_IDENTITY" ]; then
+                    SIGN_IDENTITY="${CODE_SIGN_IDENTITY}"
+                fi
             fi
             if [ -z "$SIGN_IDENTITY" ] || [ "$SIGN_IDENTITY" = "-" ]; then
                 SIGN_IDENTITY="-"

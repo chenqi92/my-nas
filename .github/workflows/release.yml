@@ -318,7 +318,9 @@ jobs:
         run: |
           set -euo pipefail
           APK="build/app/outputs/flutter-apk/MyNAS-${{ needs.extract-version.outputs.version }}-android-universal.apk"
-          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          # GitHub's Ubuntu image installs the SDK here but does not always
+          # export ANDROID_HOME/ANDROID_SDK_ROOT into later shell steps.
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
           ZIPALIGN=$(find "$SDK_ROOT/build-tools" -type f -name zipalign -print | sort -V | tail -1)
           READELF=$(find "$SDK_ROOT/ndk" -type f -name llvm-readelf -print | sort -V | tail -1)
 
