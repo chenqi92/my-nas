@@ -1650,7 +1650,7 @@ jobs:
             |------|------|------|
             | 安装包 | EXE 安装程序 (推荐) | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe) |
             | 便携版 | 解压即用，无需安装 | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-portable.zip) |
-            | MSIX | Authenticode 签名安装包 | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64.msix) |
+            | MSIX | MSIX 安装包（签名状态见上方） | [下载](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64.msix) |
 
             </details>
 
@@ -1665,9 +1665,9 @@ jobs:
             </details>
 
             ### ⚠️ 注意事项
-            - **iOS**: 工作流只负责签名并提交 App Store Connect；TestFlight/正式上架仍取决于 Apple 处理与审核状态
-            - **macOS**: 已提交 App Store Connect 供 TestFlight 处理；DMG 另使用 Developer ID 签名、公证并 stapling
-            - **Windows**: EXE、DLL、MSIX 与 Inno 安装程序均使用时间戳 Authenticode 签名
+            - **iOS**: 仅在配置 Apple 发布 Secrets 时由 CI 签名并提交 App Store Connect；否则发布 unsigned 编译校验产物
+            - **macOS**: 仅在配置 Apple 发布 Secrets 时由 CI 提交 App Store Connect 并生成已签名、公证的 DMG；否则发布 unsigned universal 编译产物
+            - **Windows**: 仅在配置发布证书时使用时间戳 Authenticode 签名；否则安装包与便携包均为未签名 CI 产物
             - **Linux**: 需要安装依赖：`sudo apt install libmpv1 libsecret-1-0`
 
         env:
