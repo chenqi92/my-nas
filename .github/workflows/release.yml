@@ -321,10 +321,15 @@ jobs:
           # GitHub's Ubuntu image installs the SDK here but does not always
           # export ANDROID_HOME/ANDROID_SDK_ROOT into later shell steps.
           SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
-          ZIPALIGN=$(find "$SDK_ROOT/build-tools" -type f -name zipalign -print | sort -V | tail -1)
-          READELF=$(find "$SDK_ROOT/ndk" -type f -name llvm-readelf -print | sort -V | tail -1)
+          ZIPALIGN=$(find "$SDK_ROOT/build-tools" -name zipalign -print | sort -V | tail -1)
+          # llvm-readelf is a symlink in current NDK releases, so filtering
+          # with `-type f` incorrectly treats the installed tool as missing.
+          READELF=$(find "$SDK_ROOT/ndk" -name llvm-readelf -print | sort -V | tail -1)
 
-          if [ -z "$ZIPALIGN" ] || [ -z "$READELF" ]; then
+          if [ ! -x "$ZIPALIGN" ] || [ ! -x "$READELF" ]; then
+            echo "SDK root: $SDK_ROOT"
+            echo "zipalign: ${ZIPALIGN:-not found}"
+            echo "llvm-readelf: ${READELF:-not found}"
             echo "::error::zipalign or llvm-readelf is unavailable"
             exit 1
           fi
