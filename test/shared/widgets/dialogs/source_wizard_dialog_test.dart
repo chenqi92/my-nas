@@ -88,6 +88,27 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('exposes S3 as a selectable desktop source type', (tester) async {
+    tester.view.physicalSize = const Size(1100, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final discovery = _FakeNetworkDiscoveryNotifier(
+      NetworkDiscoveryState(lastDiscoveryTime: DateTime(2026)),
+    );
+
+    await tester.pumpWidget(_host(discovery));
+    await tester.pumpAndSettle();
+
+    expect(find.text('S3 兼容存储'), findsOneWidget);
+    await tester.tap(find.text('S3 兼容存储'));
+    await tester.pump();
+
+    expect(find.text('已选择：S3 兼容存储'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('starts discovery when the wizard has no prior scan state', (
     tester,
   ) async {

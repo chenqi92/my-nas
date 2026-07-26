@@ -37,6 +37,7 @@ class TranscodingCapabilityService {
         SourceType.smb => TranscodingCapability.clientSide,
         SourceType.ftp => TranscodingCapability.clientSide,
         SourceType.sftp => TranscodingCapability.clientSide,
+        SourceType.s3 => TranscodingCapability.clientSide,
         SourceType.webdav => TranscodingCapability.clientSide,
         SourceType.nfs => TranscodingCapability.none,
         SourceType.local => TranscodingCapability.clientSide,

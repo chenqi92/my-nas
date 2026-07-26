@@ -19,6 +19,7 @@ import 'package:my_nas/nas_adapters/fnos/fnos_adapter.dart';
 import 'package:my_nas/nas_adapters/ftp/ftp_adapter.dart';
 import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/nas_adapters/qnap/qnap_adapter.dart';
+import 'package:my_nas/nas_adapters/s3/s3_adapter.dart';
 import 'package:my_nas/nas_adapters/sftp/sftp_adapter.dart';
 import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
 import 'package:my_nas/nas_adapters/synology/synology_adapter.dart';
@@ -1290,6 +1291,7 @@ class SourceManagerService {
     SourceType.smb => SmbAdapter(),
     SourceType.ftp => FtpAdapter(),
     SourceType.sftp => SftpAdapter(),
+    SourceType.s3 => S3Adapter(),
     SourceType.upnp => UpnpAdapter(),
     SourceType.local => LocalAdapter(),
     // 尚未接入的通用协议
@@ -1321,6 +1323,7 @@ class SourceManagerService {
     SourceType.smb => NasAdapterType.smb,
     SourceType.ftp => NasAdapterType.ftp,
     SourceType.sftp => NasAdapterType.sftp,
+    SourceType.s3 => NasAdapterType.s3,
     SourceType.upnp => NasAdapterType.upnp,
     SourceType.local => NasAdapterType.local,
     // 尚未接入的通用协议

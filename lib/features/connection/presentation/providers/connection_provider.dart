@@ -11,6 +11,7 @@ import 'package:my_nas/nas_adapters/fnos/fnos_adapter.dart';
 import 'package:my_nas/nas_adapters/ftp/ftp_adapter.dart';
 import 'package:my_nas/nas_adapters/local/local_adapter.dart';
 import 'package:my_nas/nas_adapters/qnap/qnap_adapter.dart';
+import 'package:my_nas/nas_adapters/s3/s3_adapter.dart';
 import 'package:my_nas/nas_adapters/sftp/sftp_adapter.dart';
 import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
 import 'package:my_nas/nas_adapters/synology/synology_adapter.dart';
@@ -346,6 +347,7 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
         NasAdapterType.smb => SmbAdapter(),
         NasAdapterType.ftp => FtpAdapter(),
         NasAdapterType.sftp => SftpAdapter(),
+        NasAdapterType.s3 => S3Adapter(),
         NasAdapterType.upnp => UpnpAdapter(),
         NasAdapterType.local => LocalAdapter(),
       };

@@ -687,6 +687,9 @@ class PhotoListNotifier extends StateNotifier<PhotoListState> {
     logger.i('PhotoListNotifier: 从 SQLite 加载了 ${allPhotos.length} 张照片');
   }
 
+  /// Reloads the persisted photo projection after background metadata updates.
+  Future<void> reloadFromDatabase() => _loadFromSqlite();
+
   /// 从旧缓存迁移到 SQLite
   Future<void> _migrateFromOldCache() async {
     final cache = _cacheService.getCache();

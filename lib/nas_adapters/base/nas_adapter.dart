@@ -11,6 +11,7 @@ enum NasAdapterType {
   smb,
   ftp,
   sftp,
+  s3,
   upnp,
   local,
 }

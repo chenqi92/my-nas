@@ -17,6 +17,9 @@ class PhotoEntity {
     this.lastUpdated,
     this.fileHash,
     this.perceptualHash,
+    this.latitude,
+    this.longitude,
+    this.locationScanned = false,
   });
 
   final String sourceId;
@@ -30,6 +33,14 @@ class PhotoEntity {
   final String? fileHash;
   /// 感知哈希（pHash），用于检测视觉相似的图片
   final String? perceptualHash;
+  /// GPS latitude decoded from image EXIF metadata.
+  final double? latitude;
+  /// GPS longitude decoded from image EXIF metadata.
+  final double? longitude;
+  /// Whether GPS metadata has already been checked for this file revision.
+  final bool locationScanned;
+
+  bool get hasLocation => latitude != null && longitude != null;
 
   String get uniqueKey => '${sourceId}_$filePath';
 
@@ -73,6 +84,9 @@ class PhotoEntity {
     DateTime? lastUpdated,
     String? fileHash,
     String? perceptualHash,
+    double? latitude,
+    double? longitude,
+    bool? locationScanned,
   }) =>
       PhotoEntity(
         sourceId: sourceId ?? this.sourceId,
@@ -84,6 +98,9 @@ class PhotoEntity {
         lastUpdated: lastUpdated ?? this.lastUpdated,
         fileHash: fileHash ?? this.fileHash,
         perceptualHash: perceptualHash ?? this.perceptualHash,
+        latitude: latitude ?? this.latitude,
+        longitude: longitude ?? this.longitude,
+        locationScanned: locationScanned ?? this.locationScanned,
       );
 }
 
@@ -107,6 +124,9 @@ class PhotoDatabaseService {
   static const String _colLastUpdated = 'last_updated';
   static const String _colFileHash = 'file_hash';
   static const String _colPerceptualHash = 'perceptual_hash';
+  static const String _colLatitude = 'latitude';
+  static const String _colLongitude = 'longitude';
+  static const String _colLocationScanned = 'location_scanned';
 
   /// 初始化数据库
   Future<void> init() async {
@@ -118,7 +138,7 @@ class PhotoDatabaseService {
 
       _db = await openDatabase(
         dbPath,
-        version: 2, // 升级版本以支持哈希字段
+        version: 3, // 升级版本以支持 EXIF GPS 位置索引
         onConfigure: _onConfigure,
         onCreate: (db, version) async {
           await db.execute('''
@@ -132,6 +152,9 @@ class PhotoDatabaseService {
               $_colLastUpdated INTEGER,
               $_colFileHash TEXT,
               $_colPerceptualHash TEXT,
+              $_colLatitude REAL,
+              $_colLongitude REAL,
+              $_colLocationScanned INTEGER NOT NULL DEFAULT 0,
               PRIMARY KEY ($_colSourceId, $_colFilePath)
             )
           ''');
@@ -148,6 +171,8 @@ class PhotoDatabaseService {
               'CREATE INDEX idx_photos_file_hash ON $_tablePhotos ($_colFileHash)');
           await db.execute(
               'CREATE INDEX idx_photos_perceptual_hash ON $_tablePhotos ($_colPerceptualHash)');
+          await db.execute(
+              'CREATE INDEX idx_photos_location ON $_tablePhotos ($_colLatitude, $_colLongitude)');
         },
         onUpgrade: (db, oldVersion, newVersion) async {
           // 从版本1升级到版本2：添加哈希字段
@@ -159,6 +184,17 @@ class PhotoDatabaseService {
             await db.execute(
                 'CREATE INDEX idx_photos_perceptual_hash ON $_tablePhotos ($_colPerceptualHash)');
             logger.i('PhotoDatabaseService: 数据库升级到版本2，添加哈希字段');
+          }
+          if (oldVersion < 3) {
+            await db.execute(
+                'ALTER TABLE $_tablePhotos ADD COLUMN $_colLatitude REAL');
+            await db.execute(
+                'ALTER TABLE $_tablePhotos ADD COLUMN $_colLongitude REAL');
+            await db.execute(
+                'ALTER TABLE $_tablePhotos ADD COLUMN $_colLocationScanned INTEGER NOT NULL DEFAULT 0');
+            await db.execute(
+                'CREATE INDEX idx_photos_location ON $_tablePhotos ($_colLatitude, $_colLongitude)');
+            logger.i('PhotoDatabaseService: 数据库升级到版本3，添加 GPS 位置字段');
           }
         },
       );
@@ -708,6 +744,9 @@ class PhotoDatabaseService {
             p.lastUpdated?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
         _colFileHash: p.fileHash,
         _colPerceptualHash: p.perceptualHash,
+        _colLatitude: p.latitude,
+        _colLongitude: p.longitude,
+        _colLocationScanned: p.locationScanned ? 1 : 0,
       };
 
   /// 从数据库行转换
@@ -725,7 +764,30 @@ class PhotoDatabaseService {
             : null,
         fileHash: row[_colFileHash] as String?,
         perceptualHash: row[_colPerceptualHash] as String?,
+        latitude: (row[_colLatitude] as num?)?.toDouble(),
+        longitude: (row[_colLongitude] as num?)?.toDouble(),
+        locationScanned: (row[_colLocationScanned] as int? ?? 0) != 0,
       );
+
+  /// Persists the result of a GPS EXIF lookup, including the no-location case.
+  Future<void> updateLocation(
+    String sourceId,
+    String filePath, {
+    double? latitude,
+    double? longitude,
+  }) async {
+    if (!_initialized) await init();
+    await _db!.update(
+      _tablePhotos,
+      {
+        _colLatitude: latitude,
+        _colLongitude: longitude,
+        _colLocationScanned: 1,
+      },
+      where: '$_colSourceId = ? AND $_colFilePath = ?',
+      whereArgs: [sourceId, filePath],
+    );
+  }
 
   /// 更新照片的哈希值
   Future<void> updateHash(

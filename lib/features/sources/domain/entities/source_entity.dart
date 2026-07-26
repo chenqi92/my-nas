@@ -23,6 +23,7 @@ enum SourceType {
   smb('SMB/CIFS', 'smb'),
   ftp('FTP', 'ftp'),
   sftp('SFTP', 'sftp'),
+  s3('S3 兼容存储', 's3'),
   nfs('NFS', 'nfs'),
   // 媒体发现（无需认证）
   upnp('UPnP/DLNA', 'upnp'),
@@ -63,6 +64,7 @@ enum SourceType {
     SourceType.smb => 445,
     SourceType.ftp => 21,
     SourceType.sftp => 22,
+    SourceType.s3 => 443,
     SourceType.nfs => 2049,
     SourceType.upnp => 0, // 自动发现，无固定端口
     // 本地存储
@@ -102,6 +104,7 @@ enum SourceType {
     // FTP / SFTP / UPnP 协议已接入
     SourceType.ftp => true,
     SourceType.sftp => true,
+    SourceType.s3 => true,
     SourceType.upnp => true,
     // NFS 仍未接入（无成熟 Dart 客户端）
     SourceType.nfs => false,
@@ -137,6 +140,7 @@ enum SourceType {
     SourceType.smb ||
     SourceType.ftp ||
     SourceType.sftp ||
+    SourceType.s3 ||
     SourceType.nfs ||
     SourceType.upnp => SourceCategory.genericProtocols,
     // 本地存储
@@ -170,6 +174,7 @@ enum SourceType {
     SourceType.smb ||
     SourceType.ftp ||
     SourceType.sftp ||
+    SourceType.s3 ||
     SourceType.upnp ||
     SourceType.local => true,
     _ => false,
@@ -209,6 +214,7 @@ enum SourceType {
     SourceType.smb => Icons.lan,
     SourceType.ftp => Icons.upload_file,
     SourceType.sftp => Icons.security,
+    SourceType.s3 => Icons.cloud_queue_rounded,
     SourceType.nfs => Icons.share_rounded,
     SourceType.upnp => Icons.cast,
     // 本地存储
@@ -243,6 +249,7 @@ enum SourceType {
     SourceType.smb => const Color(0xFFFF9800), // 橙色 - Windows/网络
     SourceType.ftp => const Color(0xFF795548), // 棕色 - 传统协议
     SourceType.sftp => const Color(0xFF607D8B), // 蓝灰 - 安全协议
+    SourceType.s3 => const Color(0xFFEF6C00), // 橙色 - 对象存储
     SourceType.nfs => const Color(0xFF009688), // 青绿 - Unix协议
     SourceType.upnp => const Color(0xFFE91E63), // 粉红 - 媒体发现
     // 本地存储 - 蓝色
@@ -277,6 +284,7 @@ enum SourceType {
     SourceType.smb => 'Windows 共享文件夹协议',
     SourceType.ftp => '文件传输协议（支持 TLS 加密）',
     SourceType.sftp => '基于 SSH 的安全文件传输',
+    SourceType.s3 => 'Amazon S3、MinIO、R2 等兼容对象存储',
     SourceType.nfs => '网络文件系统',
     SourceType.upnp => '自动发现局域网媒体设备',
     // 本地存储
@@ -303,6 +311,7 @@ enum SourceType {
   bool get defaultUseSsl => switch (this) {
     SourceType.synology ||
     SourceType.webdav ||
+    SourceType.s3 ||
     SourceType.trakt ||
     // PT 站点都使用 HTTPS
     SourceType.ptSite ||
@@ -363,6 +372,7 @@ class SourceEntity {
     'cookie',
     'customHeaders',
     'authorization',
+    'sessionToken',
     // Tracker RSS links commonly embed a passkey in their query string.
     'rssUrl',
     // Custom attendance endpoints can likewise embed passkeys/tokens.

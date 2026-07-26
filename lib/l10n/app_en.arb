@@ -2004,7 +2004,24 @@
       }
     }
   },
-  "photoPageMapComingSoon": "Cluster photo locations on a map by GPS EXIF (coming soon).",
+  "photoMapIndexing": "Reading GPS metadata {done}/{total}",
+  "@photoMapIndexing": {
+    "placeholders": {
+      "done": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "photoMapLocatedCount": "{count} geotagged photos",
+  "@photoMapLocatedCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "photoMapNoLocationsTitle": "No geotagged photos yet",
+  "photoMapNoLocationsHint": "Keep photo sources connected while MyNAS reads JPEG GPS EXIF headers locally. The OpenStreetMap base map requests tiles for the visible region.",
+  "photoMapIndexFailures": "{count} photos could not be checked and will be retried next time.",
+  "@photoMapIndexFailures": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "photoMapOpenPhoto": "Open photo",
   "photoPageSourceFilterTooltip": "Filter by source",
   "photoPageNoLibraryHint": "Once a Photos library is mapped, a responsive grid with time grouping appears here.",
   "photoPageNoFilteredPhotos": "No photos match the current filter.",

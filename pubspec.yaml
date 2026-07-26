@@ -15,6 +15,9 @@ dependencies:
   # UI
   cupertino_icons: ^1.0.8
   flutter_animate: ^4.5.2
+  flutter_map: ^8.3.1
+  flutter_map_marker_cluster: ^8.2.2
+  latlong2: ^0.9.1
   gap: ^3.0.1
   cached_network_image: ^3.4.1
   lottie: ^3.3.1 # Professional loading animations
@@ -30,6 +33,7 @@ dependencies:
   dio: ^5.8.0+1
   retrofit: ">=4.4.2 <4.9.0"
   connectivity_plus: ^6.1.1
+  minio: ^3.5.8 # Amazon S3-compatible object storage
 
   # Local Storage
   hive_ce: ^2.10.1

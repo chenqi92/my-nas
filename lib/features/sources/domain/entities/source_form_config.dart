@@ -126,6 +126,8 @@ class SourceFormConfig {
         return _getFtpConfig();
       case SourceType.sftp:
         return _getSftpConfig();
+      case SourceType.s3:
+        return _getS3Config();
       case SourceType.nfs:
         return _getNfsConfig();
       case SourceType.upnp:
@@ -498,6 +500,84 @@ class SourceFormConfig {
             type: SourceFormFieldType.select,
             options: ['自动', 'NFSv3', 'NFSv4'],
             defaultValue: '自动',
+          ),
+        ],
+      ),
+      _advancedSection(),
+    ],
+  );
+
+  static SourceFormConfig _getS3Config() => SourceFormConfig(
+    type: SourceType.s3,
+    sections: [
+      _basicInfoSection(),
+      SourceFormSection(
+        title: '连接配置',
+        fields: [
+          const SourceFormField(
+            key: 'host',
+            label: 'S3 Endpoint',
+            placeholder: 's3.amazonaws.com 或 minio.example.com',
+            helpText: '只填写域名或 IP，不包含 http://、https:// 和路径',
+          ),
+          SourceFormField(
+            key: 'port',
+            label: '端口',
+            type: SourceFormFieldType.number,
+            defaultValue: SourceType.s3.defaultPort.toString(),
+          ),
+          const SourceFormField(
+            key: 'useSsl',
+            label: '使用 HTTPS',
+            type: SourceFormFieldType.toggle,
+            defaultValue: 'true',
+          ),
+          const SourceFormField(
+            key: 'bucket',
+            label: 'Bucket',
+            placeholder: 'photos',
+          ),
+          const SourceFormField(
+            key: 'region',
+            label: 'Region',
+            placeholder: 'us-east-1',
+            defaultValue: 'us-east-1',
+            required: false,
+          ),
+          const SourceFormField(
+            key: 'rootPrefix',
+            label: '根目录前缀',
+            placeholder: 'backup/photos',
+            helpText: '可选，将此数据源限制在 Bucket 的指定前缀下',
+            required: false,
+          ),
+          const SourceFormField(
+            key: 'pathStyle',
+            label: '使用 Path-style 地址',
+            type: SourceFormFieldType.toggle,
+            defaultValue: 'true',
+            helpText: 'MinIO 等自托管服务通常开启；AWS 可按需关闭',
+          ),
+        ],
+      ),
+      const SourceFormSection(
+        title: '访问凭据',
+        fields: [
+          SourceFormField(
+            key: 'username',
+            label: 'Access Key',
+          ),
+          SourceFormField(
+            key: 'password',
+            label: 'Secret Key',
+            type: SourceFormFieldType.password,
+          ),
+          SourceFormField(
+            key: 'sessionToken',
+            label: 'Session Token',
+            type: SourceFormFieldType.password,
+            required: false,
+            helpText: '仅临时凭据需要填写',
           ),
         ],
       ),

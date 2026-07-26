@@ -13,6 +13,7 @@ import 'package:my_nas/media_server_adapters/plex/plex_adapter.dart';
 import 'package:my_nas/nas_adapters/fnos/fnos_adapter.dart';
 import 'package:my_nas/nas_adapters/ftp/ftp_adapter.dart';
 import 'package:my_nas/nas_adapters/qnap/qnap_adapter.dart';
+import 'package:my_nas/nas_adapters/s3/s3_adapter.dart';
 import 'package:my_nas/nas_adapters/sftp/sftp_adapter.dart';
 import 'package:my_nas/nas_adapters/smb/smb_adapter.dart';
 import 'package:my_nas/nas_adapters/ugreen/ugreen_adapter.dart';
@@ -26,6 +27,7 @@ void main() {
       FnOSAdapter,
       FtpAdapter,
       QnapAdapter,
+      S3Adapter,
       SftpAdapter,
       SmbAdapter,
       UGreenAdapter,
@@ -34,7 +36,7 @@ void main() {
       EmbyAdapter,
       JellyfinAdapter,
       PlexAdapter,
-    ], hasLength(11));
+    ], hasLength(12));
     expect(<Type>[
       SourceFormConfig,
       SourceFormPage,

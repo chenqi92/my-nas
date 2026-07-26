@@ -18,6 +18,9 @@ void main() {
         size: 1024,
         modifiedTime: modified,
         thumbnailUrl: 'https://example.test/thumb.jpg',
+        latitude: 31.2304,
+        longitude: 121.4737,
+        locationScanned: true,
       ),
     ]);
 
@@ -27,5 +30,7 @@ void main() {
     expect(items.single.sourceId, 'nas-1');
     expect(items.single.size, 1024);
     expect(items.single.modifiedAt, modified);
+    expect(items.single.latitude, 31.2304);
+    expect(items.single.longitude, 121.4737);
   });
 }

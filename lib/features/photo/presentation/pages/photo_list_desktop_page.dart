@@ -7,6 +7,7 @@ import 'package:my_nas/features/photo/data/services/photo_database_service.dart'
 import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_duplicates_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_list_page.dart';
+import 'package:my_nas/features/photo/presentation/pages/photo_map_view.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_people_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_viewer_page.dart';
 import 'package:my_nas/features/photo/presentation/providers/photo_favorites_provider.dart';
@@ -144,6 +145,7 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                 label: l.photoPageTabTimeline,
               ),
               AppSegmentedOption(value: 'albums', label: l.photoPageTabAlbums),
+              AppSegmentedOption(value: 'map', label: l.photoPageTabMap),
             ],
           ),
         ],
@@ -255,6 +257,17 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
                 ref: ref,
                 onOpen: (folder) => setState(() => _albumFolder = folder),
               )
+          else if (_view == 'map' && state is PhotoListLoaded)
+            PhotoMapView(
+              photos: state.displayPhotos,
+              onOpenPhoto: (photos, initialIndex) =>
+                  _openDesktopFullPhotoViewer(
+                    context,
+                    ref,
+                    photos: photos,
+                    initialIndex: initialIndex,
+                  ),
+            )
           else
             _PhotoBody(state: state, ref: ref),
         ],
@@ -655,6 +668,8 @@ List<PhotoItem> desktopPhotoViewerItems(List<PhotoEntity> photos) => [
       thumbnailUrl: photo.thumbnailUrl,
       size: photo.size,
       modifiedAt: photo.modifiedTime,
+      latitude: photo.latitude,
+      longitude: photo.longitude,
     ),
 ];
 
@@ -753,6 +768,8 @@ class _PhotoTileState extends ConsumerState<_PhotoTile> {
     thumbnailUrl: widget.photo.thumbnailUrl,
     size: widget.photo.size,
     modifiedAt: widget.photo.modifiedTime,
+    latitude: widget.photo.latitude,
+    longitude: widget.photo.longitude,
   );
 
   @override
