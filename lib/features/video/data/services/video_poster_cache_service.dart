@@ -2,8 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -222,7 +222,7 @@ class VideoPosterCacheService {
   /// 从 HTTP(S) URL 下载图片
   Future<Uint8List?> _downloadFromHttp(String url) async {
     try {
-      final response = await http.get(
+      final response = await InsecureHttpClient.get(
         Uri.parse(url),
         headers: {
           'User-Agent': 'MyNAS/1.0',

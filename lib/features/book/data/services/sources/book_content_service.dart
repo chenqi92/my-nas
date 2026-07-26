@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/sources/rule_parser.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
@@ -42,7 +43,7 @@ class BookContentService {
 
   static final instance = BookContentService._();
 
-  final _dio = Dio();
+  final _dio = DioClient.createTlsAware();
   final _random = Random();
   
   /// User-Agent 列表，模拟不同浏览器

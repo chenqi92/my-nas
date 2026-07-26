@@ -9640,6 +9640,32 @@
   "dioErrorNotFound": "Resource not found",
   "dioErrorServer": "Server error",
   "dioErrorRequestFailed": "Request failed",
+  "tlsCertificateValidationFailed": "The HTTPS certificate could not be verified",
+  "tlsTrustDialogTitle": "Trust this HTTPS certificate?",
+  "tlsTrustChangedDialogTitle": "Server certificate changed",
+  "tlsTrustDialogMessage": "The system cannot verify the HTTPS certificate for {endpoint}. Continue only if this is your device.",
+  "@tlsTrustDialogMessage": {
+    "placeholders": {
+      "endpoint": {
+        "type": "String"
+      }
+    }
+  },
+  "tlsTrustChangedDialogMessage": "The certificate for {endpoint} differs from the one previously saved. Cancel unless you changed the server certificate.",
+  "@tlsTrustChangedDialogMessage": {
+    "placeholders": {
+      "endpoint": {
+        "type": "String"
+      }
+    }
+  },
+  "tlsTrustFingerprint": "SHA-256 fingerprint",
+  "tlsTrustCertificateSubject": "Certificate",
+  "tlsTrustValidity": "Valid until",
+  "tlsTrustSaveAndRetryHint": "The fingerprint will be saved for this endpoint and the connection will retry automatically. You will be asked again if the certificate changes.",
+  "tlsTrustCancel": "Cancel",
+  "tlsTrustAndContinue": "Trust & Continue",
+  "tlsCertificateTrustDeclined": "The HTTPS certificate was not trusted",
   "kbd_b15d9127": "Close",
   "kbd_72a1c1c1": "Playback",
   "kbd_a8405768": "Play / Pause",

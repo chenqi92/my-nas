@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
@@ -14,8 +15,8 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 /// 歌词库丰富，特别是翻唱和小众歌曲
 class KugouScraper implements MusicScraper {
   KugouScraper() {
-    _dio = Dio(
-      BaseOptions(
+    _dio = DioClient.createTlsAware(
+      options: BaseOptions(
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         headers: {
@@ -135,8 +136,7 @@ class KugouScraper implements MusicScraper {
         return MusicScraperSearchResult.empty(type);
       }
 
-      final songs =
-          (dataSection['info'] as List?)
+      final songs = (dataSection['info'] as List?)
               ?.whereType<Map<String, dynamic>>()
               .toList() ??
           [];
@@ -248,8 +248,7 @@ class KugouScraper implements MusicScraper {
       }
 
       final searchData = searchResponse.data as Map<String, dynamic>;
-      final candidates =
-          (searchData['candidates'] as List?)
+      final candidates = (searchData['candidates'] as List?)
               ?.whereType<Map<String, dynamic>>()
               .toList() ??
           [];
@@ -412,8 +411,7 @@ class KugouScraper implements MusicScraper {
       }
       // 尝试从响应中提取错误信息
       if (responseData is Map<String, dynamic>) {
-        final errMsg =
-            responseData['errcode'] ??
+        final errMsg = responseData['errcode'] ??
             responseData['error'] ??
             responseData['message'];
         if (errMsg != null) {
@@ -421,8 +419,7 @@ class KugouScraper implements MusicScraper {
         }
       }
     } else {
-      errorMessage =
-          e.message ??
+      errorMessage = e.message ??
           e.error?.toString() ??
           appL10n.kugouScraperUnknownError(e.type.name);
     }

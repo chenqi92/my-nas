@@ -8,8 +8,19 @@
 	<false/>
 	<key>method</key>
 	<string>app-store-connect</string>
+	<key>installerSigningCertificate</key>
+	<string>3rd Party Mac Developer Installer</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.kkape.mynas</key>
+		<string>KKNas 1.2.1 macOS App Store</string>
+		<key>com.kkape.mynas.MyNasWidgets</key>
+		<string>KKNas 1.2.1 macOS Widgets App Store</string>
+	</dict>
+	<key>signingCertificate</key>
+	<string>3rd Party Mac Developer Application</string>
 	<key>signingStyle</key>
-	<string>automatic</string>
+	<string>manual</string>
 	<key>stripSwiftSymbols</key>
 	<true/>
 	<key>teamID</key>

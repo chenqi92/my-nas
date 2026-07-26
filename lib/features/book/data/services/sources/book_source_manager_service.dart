@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/domain/entities/book_source.dart';
 
@@ -329,7 +329,7 @@ class BookSourceManagerService {
   /// 从URL导入书源
   Future<List<BookSource>> importFromUrl(String url) async {
     try {
-      final dio = Dio();
+      final dio = DioClient.createTlsAware();
       dio.options.connectTimeout = const Duration(seconds: 10);
       dio.options.receiveTimeout = const Duration(seconds: 30);
       

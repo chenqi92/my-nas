@@ -7,6 +7,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
@@ -17,8 +18,8 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 /// 使用网易云音乐 API 获取元数据、封面和歌词
 class NeteaseScraper implements MusicScraper {
   NeteaseScraper({this.cookie}) {
-    _dio = Dio(
-      BaseOptions(
+    _dio = DioClient.createTlsAware(
+      options: BaseOptions(
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         headers: {
@@ -163,8 +164,7 @@ class NeteaseScraper implements MusicScraper {
         return MusicScraperSearchResult.empty(type);
       }
 
-      final songs =
-          (result['songs'] as List?)
+      final songs = (result['songs'] as List?)
               ?.whereType<Map<String, dynamic>>()
               .toList() ??
           [];
@@ -213,8 +213,7 @@ class NeteaseScraper implements MusicScraper {
         return null;
       }
       final data = response.data as Map<String, dynamic>;
-      final songs =
-          (data['songs'] as List?)
+      final songs = (data['songs'] as List?)
               ?.whereType<Map<String, dynamic>>()
               .toList() ??
           [];
@@ -369,8 +368,7 @@ class NeteaseScraper implements MusicScraper {
         return MusicScraperSearchResult.empty(type);
       }
 
-      final songs =
-          (result['songs'] as List?)
+      final songs = (result['songs'] as List?)
               ?.whereType<Map<String, dynamic>>()
               .toList() ??
           [];
@@ -399,8 +397,7 @@ class NeteaseScraper implements MusicScraper {
     final name = data['name'] as String? ?? '';
 
     // 艺术家
-    final artists =
-        (data['ar'] as List?)?.cast<Map<String, dynamic>>() ??
+    final artists = (data['ar'] as List?)?.cast<Map<String, dynamic>>() ??
         (data['artists'] as List?)?.cast<Map<String, dynamic>>() ??
         [];
     final artist = artists
@@ -409,8 +406,7 @@ class NeteaseScraper implements MusicScraper {
         .join(' / ');
 
     // 专辑
-    final album =
-        data['al'] as Map<String, dynamic>? ??
+    final album = data['al'] as Map<String, dynamic>? ??
         data['album'] as Map<String, dynamic>?;
     final albumName = album?['name'] as String?;
     final coverUrl = album?['picUrl'] as String?;
@@ -435,8 +431,7 @@ class NeteaseScraper implements MusicScraper {
     final name = data['name'] as String? ?? '';
 
     // 艺术家
-    final artists =
-        (data['ar'] as List?)?.cast<Map<String, dynamic>>() ??
+    final artists = (data['ar'] as List?)?.cast<Map<String, dynamic>>() ??
         (data['artists'] as List?)?.cast<Map<String, dynamic>>() ??
         [];
     final artist = artists
@@ -445,8 +440,7 @@ class NeteaseScraper implements MusicScraper {
         .join(' / ');
 
     // 专辑信息
-    final album =
-        data['al'] as Map<String, dynamic>? ??
+    final album = data['al'] as Map<String, dynamic>? ??
         data['album'] as Map<String, dynamic>?;
     final albumName = album?['name'] as String?;
     final coverUrl = album?['picUrl'] as String?;
@@ -458,9 +452,8 @@ class NeteaseScraper implements MusicScraper {
     final trackNumber = data['no'] as int?;
 
     // 碟号
-    final discNumber = data['cd'] != null
-        ? int.tryParse(data['cd'].toString())
-        : null;
+    final discNumber =
+        data['cd'] != null ? int.tryParse(data['cd'].toString()) : null;
 
     return MusicScraperDetail(
       externalId: id,
@@ -550,9 +543,8 @@ class NeteaseScraper implements MusicScraper {
   /// RSA 加密（简化实现）
   String _rsaEncrypt(String text, String pubKey, String modulus) {
     final textBytes = utf8.encode(text);
-    final textHex = textBytes
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
-        .join();
+    final textHex =
+        textBytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
 
     // 使用 BigInt 进行模幂运算
     final base = BigInt.parse(textHex, radix: 16);

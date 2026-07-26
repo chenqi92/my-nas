@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
@@ -16,16 +17,16 @@ class AcoustIdScraper implements FingerprintScraper {
   AcoustIdScraper({
     required this.apiKey,
     FingerprintService? fingerprintService,
-  }) : _fingerprintService = fingerprintService ?? FingerprintService.getInstance() {
-    _dio = Dio(BaseOptions(
-      baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'MyNAS/1.0',
-      },
-    ));
+  }) : _fingerprintService =
+            fingerprintService ?? FingerprintService.getInstance() {
+    _dio = DioClient.createTlsAware(
+      options: BaseOptions(
+        baseUrl: _baseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {'Accept': 'application/json', 'User-Agent': 'MyNAS/1.0'},
+      ),
+    );
   }
 
   static const String _baseUrl = 'https://api.acoustid.org/v2';
@@ -53,15 +54,17 @@ class AcoustIdScraper implements FingerprintScraper {
   Future<bool> testConnection() async {
     try {
       // 测试 API 连接（使用一个无效的指纹）
-      await _rateLimitedRequest(() => _dio.get<dynamic>(
-            '/lookup',
-            queryParameters: {
-              'client': apiKey,
-              'fingerprint': 'test',
-              'duration': 120,
-              'format': 'json',
-            },
-          ));
+      await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          '/lookup',
+          queryParameters: {
+            'client': apiKey,
+            'fingerprint': 'test',
+            'duration': 120,
+            'format': 'json',
+          },
+        ),
+      );
       return true;
     } on DioException catch (e) {
       // 如果是 API 错误但连接成功，也算成功
@@ -83,7 +86,8 @@ class AcoustIdScraper implements FingerprintScraper {
     String? album,
     int page = 1,
     int limit = 20,
-  }) async => MusicScraperSearchResult.empty(type);
+  }) async =>
+      MusicScraperSearchResult.empty(type);
 
   /// AcoustID 的 externalId 是 MusicBrainz Recording ID
   /// 需要通过 MusicBrainz API 获取详情
@@ -105,20 +109,24 @@ class AcoustIdScraper implements FingerprintScraper {
     int duration,
   ) async {
     try {
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            '/lookup',
-            queryParameters: {
-              'client': apiKey,
-              'fingerprint': fingerprint,
-              'duration': duration,
-              'format': 'json',
-              'meta': 'recordings+releasegroups+compress',
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          '/lookup',
+          queryParameters: {
+            'client': apiKey,
+            'fingerprint': fingerprint,
+            'duration': duration,
+            'format': 'json',
+            'meta': 'recordings+releasegroups+compress',
+          },
+        ),
+      );
 
       // 检查返回数据类型
       if (response.data is! Map<String, dynamic>) {
-        logger.w('AcoustIDScraper: lookupByFingerprint 返回非 JSON 数据: ${response.data.runtimeType}');
+        logger.w(
+          'AcoustIDScraper: lookupByFingerprint 返回非 JSON 数据: ${response.data.runtimeType}',
+        );
         return null;
       }
 
@@ -133,7 +141,8 @@ class AcoustIdScraper implements FingerprintScraper {
         );
       }
 
-      final results = (data['results'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final results =
+          (data['results'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
       if (results.isEmpty) {
         return FingerprintResult.empty(
@@ -147,7 +156,8 @@ class AcoustIdScraper implements FingerprintScraper {
       for (final result in results) {
         final score = (result['score'] as num?)?.toDouble() ?? 0.0;
         final acoustId = result['id'] as String?;
-        final recordings = (result['recordings'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        final recordings =
+            (result['recordings'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
         for (final recording in recordings) {
           final match = _parseRecording(recording, score, acoustId);
@@ -183,7 +193,10 @@ class AcoustIdScraper implements FingerprintScraper {
     } on FingerprintException {
       rethrow;
     } on Exception catch (e) {
-      throw FingerprintGenerationException(appL10n.acoustidScraperGenerationFailed, cause: e);
+      throw FingerprintGenerationException(
+        appL10n.acoustidScraperGenerationFailed,
+        cause: e,
+      );
     }
   }
 
@@ -230,14 +243,16 @@ class AcoustIdScraper implements FingerprintScraper {
     // 专辑（从 releasegroups 获取）
     String? album;
     int? year;
-    final releaseGroups = (data['releasegroups'] as List?)?.cast<Map<String, dynamic>>();
+    final releaseGroups =
+        (data['releasegroups'] as List?)?.cast<Map<String, dynamic>>();
     if (releaseGroups != null && releaseGroups.isNotEmpty) {
       final firstRelease = releaseGroups.first;
       album = firstRelease['title'] as String?;
 
       // 艺术家（如果录音没有艺术家）
       if (artist == null || artist.isEmpty) {
-        final releaseArtists = (firstRelease['artists'] as List?)?.cast<Map<String, dynamic>>();
+        final releaseArtists =
+            (firstRelease['artists'] as List?)?.cast<Map<String, dynamic>>();
         if (releaseArtists != null && releaseArtists.isNotEmpty) {
           artist = releaseArtists
               .map((a) => a['name'] as String? ?? '')

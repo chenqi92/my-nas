@@ -17,6 +17,7 @@ import 'package:my_nas/core/services/background_transfer_guard.dart';
 import 'package:my_nas/core/services/deep_link_service.dart';
 import 'package:my_nas/core/services/toast_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/widgets/tls_trust_prompt_host.dart';
 import 'package:my_nas/features/app_lock/presentation/widgets/app_lock_gate.dart';
 import 'package:my_nas/features/book/data/services/book_database_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
@@ -368,7 +369,11 @@ class _MyNasAppState extends ConsumerState<MyNasApp>
           child: ToastOverlay(
             toastService: _toastService,
             child: AppLockLifecycleListener(
-              child: AppLockGate(child: child ?? const SizedBox.shrink()),
+              child: AppLockGate(
+                child: TlsTrustPromptHost(
+                  child: child ?? const SizedBox.shrink(),
+                ),
+              ),
             ),
           ),
         );

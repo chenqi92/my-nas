@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_js/flutter_js.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/scraper/scrape_source.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
@@ -21,8 +22,7 @@ import 'package:my_nas/core/utils/logger.dart';
 /// - **URL / body / params / headers 模板**：`{{name}}` 占位符按 args 与
 ///   secrets 替换；URL 中的占位符自动 URL-encode。
 /// - **rateLimit**：按 source.id 维度的最小请求间隔（毫秒）。
-/// - **不做 SSL 信任域名**：sslTrustDomains 字段保留供未来扩展，目前 Dio
-///   走系统默认证书校验。
+/// - **HTTPS 信任**：系统证书失败时走应用级按端点证书确认、固定和自动重试。
 class ScrapeEngine {
   ScrapeEngine._();
   static final ScrapeEngine instance = ScrapeEngine._();
@@ -31,19 +31,19 @@ class ScrapeEngine {
   final Map<String, DateTime> _lastCallAt = {};
   JavascriptRuntime? _runtime;
 
-  Dio get _http => _dio ??= Dio(
-        BaseOptions(
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 20),
-          followRedirects: true,
-          validateStatus: (s) => s != null && s < 500,
-          headers: const {
-            'User-Agent':
-                'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-            'Accept': '*/*',
-          },
-        ),
-      );
+  Dio get _http => _dio ??= DioClient.createTlsAware(
+    options: BaseOptions(
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
+      followRedirects: true,
+      validateStatus: (s) => s != null && s < 500,
+      headers: const {
+        'User-Agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        'Accept': '*/*',
+      },
+    ),
+  );
 
   JavascriptRuntime get _js => _runtime ??= getJavascriptRuntime();
 
@@ -96,8 +96,9 @@ class ScrapeEngine {
   }) async {
     final endpoint = config.cover;
     if (endpoint == null) return const [];
-    final result = await _runEndpoint(config, endpoint, {'id': id},
-        action: 'cover');
+    final result = await _runEndpoint(config, endpoint, {
+      'id': id,
+    }, action: 'cover');
     if (result is List) {
       return [
         for (final e in result)
@@ -126,8 +127,7 @@ class ScrapeEngine {
       'artist': ?artist,
       'album': ?album,
     };
-    final result = await _runEndpoint(config, endpoint, args,
-        action: 'lyrics');
+    final result = await _runEndpoint(config, endpoint, args, action: 'lyrics');
     if (result is Map) return Map<String, dynamic>.from(result);
     if (result is String) return {'lrcContent': result};
     return null;
@@ -177,16 +177,11 @@ class ScrapeEngine {
     final url = _interpolate(endpoint.url, args, secrets, encode: true);
 
     // 合并 headers：全局 < endpoint < cookie
-    final headers = <String, String>{
-      ...?config.headers,
-      ...?endpoint.headers,
-    };
+    final headers = <String, String>{...?config.headers, ...?endpoint.headers};
     if (config.cookie != null && config.cookie!.isNotEmpty) {
       headers['Cookie'] = config.cookie!;
     }
-    headers.updateAll(
-      (_, v) => _interpolate(v, args, secrets, encode: false),
-    );
+    headers.updateAll((_, v) => _interpolate(v, args, secrets, encode: false));
 
     // params：拼到查询字符串里（占位符替换后做 url-encode）
     final params = endpoint.params?.map(
@@ -212,7 +207,8 @@ class ScrapeEngine {
     // 合并 endpoint.params 到 URL query
     var uri = Uri.parse(url);
     if (params != null && params.isNotEmpty) {
-      final merged = Map<String, String>.from(uri.queryParameters)..addAll(params);
+      final merged = Map<String, String>.from(uri.queryParameters)
+        ..addAll(params);
       uri = uri.replace(queryParameters: merged);
     }
 
@@ -236,16 +232,13 @@ class ScrapeEngine {
     required bool encode,
   }) {
     if (template.isEmpty) return template;
-    return template.replaceAllMapped(
-      RegExp(r'\{\{([a-zA-Z0-9_]+)\}\}'),
-      (m) {
-        final key = m.group(1)!;
-        final v = args[key] ?? secrets[key];
-        if (v == null) return m.group(0)!;
-        final s = v.toString();
-        return encode ? Uri.encodeQueryComponent(s) : s;
-      },
-    );
+    return template.replaceAllMapped(RegExp(r'\{\{([a-zA-Z0-9_]+)\}\}'), (m) {
+      final key = m.group(1)!;
+      final v = args[key] ?? secrets[key];
+      if (v == null) return m.group(0)!;
+      final s = v.toString();
+      return encode ? Uri.encodeQueryComponent(s) : s;
+    });
   }
 
   /// 把用户脚本包成函数体并执行；用 `JSON.stringify` 做返回值穿透。
@@ -256,7 +249,8 @@ class ScrapeEngine {
     Map<String, String>? secrets,
   ) {
     if (script.trim().isEmpty) return null;
-    final wrapped = '''
+    final wrapped =
+        '''
 JSON.stringify((function(response, args, secrets) {
 $script
 })(${jsonEncode(response)}, ${jsonEncode(args)}, ${jsonEncode(secrets ?? const {})}))

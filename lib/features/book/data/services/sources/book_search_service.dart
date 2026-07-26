@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/sources/book_source_manager_service.dart';
 import 'package:my_nas/features/book/data/services/sources/rule_parser.dart';
@@ -17,7 +18,7 @@ class BookSearchService {
 
   static final instance = BookSearchService._();
 
-  final _dio = Dio();
+  final _dio = DioClient.createTlsAware();
   final _random = Random();
   
   /// User-Agent 列表，模拟不同浏览器

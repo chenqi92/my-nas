@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/scraper/scrape_source.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
@@ -83,18 +84,13 @@ class ScrapeSourceManager {
     if (!_initialized) await init();
     var added = 0;
     final now = DateTime.now();
-    var nextOrder = _cache?.fold<int>(
-          0,
-          (m, s) => s.customOrder > m ? s.customOrder : m,
-        ) ??
-        0;
+    var nextOrder =
+        _cache?.fold<int>(0, (m, s) => s.customOrder > m ? s.customOrder : m) ??
+            0;
     for (final s in sources) {
       try {
         nextOrder++;
-        final entry = s.copyWith(
-          customOrder: nextOrder,
-          modifiedAt: now,
-        );
+        final entry = s.copyWith(customOrder: nextOrder, modifiedAt: now);
         await _box!.put(entry.id, jsonEncode(entry.toJson()));
         added++;
       } on Exception catch (e, st) {
@@ -125,11 +121,13 @@ class ScrapeSourceManager {
 
   /// 远端拉取并解析（与 [parseImport] 同样支持 4 种形态）。
   static Future<List<ScraperConfig>> fetchFromUrl(String url) async {
-    final dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 20),
-      headers: const {'Accept': 'application/json, text/plain, */*'},
-    ));
+    final dio = DioClient.createTlsAware(
+      options: BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 20),
+        headers: const {'Accept': 'application/json, text/plain, */*'},
+      ),
+    );
     final resp = await dio.getUri<String>(
       Uri.parse(url),
       options: Options(responseType: ResponseType.plain),
@@ -234,7 +232,10 @@ class ScrapeSourceManager {
   }
 
   /// 整体导出（用于备份 / 跨设备迁移）。包裹成 `{schema:1, sources:[...]}`。
-  String exportAll(List<ScraperConfig> sources, {bool includeSecrets = false}) =>
+  String exportAll(
+    List<ScraperConfig> sources, {
+    bool includeSecrets = false,
+  }) =>
       jsonEncode({
         'schema': 1,
         'sources': [

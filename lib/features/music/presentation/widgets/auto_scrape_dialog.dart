@@ -10,6 +10,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 import 'package:my_nas/features/music/data/services/live_activity_service.dart';
@@ -33,11 +34,7 @@ import 'package:path/path.dart' as p;
 ///
 /// 显示刮削进度和结果，允许用户选择下载封面和歌词
 class AutoScrapeDialog extends ConsumerStatefulWidget {
-  const AutoScrapeDialog({
-    super.key,
-    required this.music,
-    this.fileSystem,
-  });
+  const AutoScrapeDialog({super.key, required this.music, this.fileSystem});
 
   final MusicItem music;
   final NasFileSystem? fileSystem;
@@ -48,13 +45,11 @@ class AutoScrapeDialog extends ConsumerStatefulWidget {
     MusicItem music, {
     NasFileSystem? fileSystem,
   }) => showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AutoScrapeDialog(
-          music: music,
-          fileSystem: fileSystem,
-        ),
-      );
+    context: context,
+    barrierDismissible: false,
+    builder: (context) =>
+        AutoScrapeDialog(music: music, fileSystem: fileSystem),
+  );
 
   @override
   ConsumerState<AutoScrapeDialog> createState() => _AutoScrapeDialogState();
@@ -246,7 +241,9 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
   void _handleScrapeResult(MusicScrapeResult result) {
     if (!mounted) return;
 
-    if (result.detail == null && result.cover == null && result.lyrics == null) {
+    if (result.detail == null &&
+        result.cover == null &&
+        result.lyrics == null) {
       setState(() {
         _status = _ScrapeStatus.notFound;
         _statusMessage = context.l10n.musicAutoScrapeNotFound;
@@ -259,7 +256,9 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
 
     setState(() {
       _status = _ScrapeStatus.found;
-      _statusMessage = _usedFingerprint ? context.l10n.musicAutoScrapeFingerprintSuccess : context.l10n.musicAutoScrapeFoundResults;
+      _statusMessage = _usedFingerprint
+          ? context.l10n.musicAutoScrapeFingerprintSuccess
+          : context.l10n.musicAutoScrapeFoundResults;
       _progress = 1.0;
       _detail = result.detail;
       _cover = result.cover;
@@ -297,7 +296,8 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
     final baseName = p.basenameWithoutExtension(musicPath);
 
     var completedSteps = 0;
-    final totalSteps = (_downloadCover && _cover != null ? 1 : 0) +
+    final totalSteps =
+        (_downloadCover && _cover != null ? 1 : 0) +
         (_downloadLyrics && _lyrics != null ? 1 : 0) +
         (_writeToFile && _audioFormat != null ? 1 : 0);
 
@@ -354,7 +354,9 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       // 写入到文件标签
       if (_writeToFile && _audioFormat != null) {
         setState(() {
-          _statusMessage = context.l10n.musicAutoScrapeWritingTags(_audioFormat!.tagType);
+          _statusMessage = context.l10n.musicAutoScrapeWritingTags(
+            _audioFormat!.tagType,
+          );
         });
 
         await _writeTagsToFile(fileSystem, musicPath, coverData, coverMimeType);
@@ -396,7 +398,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
     if (_cover == null) return (null, null);
 
     try {
-      final dio = Dio();
+      final dio = DioClient.createTlsAware();
       final response = await dio.get<List<int>>(
         _cover!.coverUrl,
         options: Options(responseType: ResponseType.bytes),
@@ -405,7 +407,9 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       if (response.data == null) return (null, null);
 
       final coverData = Uint8List.fromList(response.data!);
-      final mimeType = _cover!.coverUrl.contains('.png') ? 'image/png' : 'image/jpeg';
+      final mimeType = _cover!.coverUrl.contains('.png')
+          ? 'image/png'
+          : 'image/jpeg';
 
       return (coverData, mimeType);
     } on Exception catch (e, st) {
@@ -470,41 +474,45 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       final existing = await db.get(sourceId, widget.music.path);
       if (existing != null) {
         // 补充缺失的元数据字段（不覆盖已有数据）
-        await db.upsert(existing.copyWith(
-          coverPath: localCoverPath,
-          // 只在缺失时补充
-          title: (existing.title == null || existing.title!.isEmpty)
-              ? _detail?.title
-              : existing.title,
-          artist: (existing.artist == null || existing.artist!.isEmpty)
-              ? _detail?.artist
-              : existing.artist,
-          album: (existing.album == null || existing.album!.isEmpty)
-              ? _detail?.album
-              : existing.album,
-          year: existing.year ?? _detail?.year,
-          trackNumber: existing.trackNumber ?? _detail?.trackNumber,
-          genre: (existing.genre == null || existing.genre!.isEmpty)
-              ? _detail?.genres?.join(', ')
-              : existing.genre,
-          lastUpdated: DateTime.now(),
-        ));
+        await db.upsert(
+          existing.copyWith(
+            coverPath: localCoverPath,
+            // 只在缺失时补充
+            title: (existing.title == null || existing.title!.isEmpty)
+                ? _detail?.title
+                : existing.title,
+            artist: (existing.artist == null || existing.artist!.isEmpty)
+                ? _detail?.artist
+                : existing.artist,
+            album: (existing.album == null || existing.album!.isEmpty)
+                ? _detail?.album
+                : existing.album,
+            year: existing.year ?? _detail?.year,
+            trackNumber: existing.trackNumber ?? _detail?.trackNumber,
+            genre: (existing.genre == null || existing.genre!.isEmpty)
+                ? _detail?.genres?.join(', ')
+                : existing.genre,
+            lastUpdated: DateTime.now(),
+          ),
+        );
       } else {
         // 如果数据库中没有这首歌，创建一个基本条目
-        await db.upsert(MusicTrackEntity(
-          sourceId: sourceId,
-          filePath: widget.music.path,
-          fileName: widget.music.name,
-          title: _detail?.title ?? widget.music.title,
-          artist: _detail?.artist ?? widget.music.artist,
-          album: _detail?.album ?? widget.music.album,
-          year: _detail?.year,
-          trackNumber: _detail?.trackNumber,
-          genre: _detail?.genres?.join(', '),
-          coverPath: localCoverPath,
-          duration: widget.music.duration?.inMilliseconds,
-          lastUpdated: DateTime.now(),
-        ));
+        await db.upsert(
+          MusicTrackEntity(
+            sourceId: sourceId,
+            filePath: widget.music.path,
+            fileName: widget.music.name,
+            title: _detail?.title ?? widget.music.title,
+            artist: _detail?.artist ?? widget.music.artist,
+            album: _detail?.album ?? widget.music.album,
+            year: _detail?.year,
+            trackNumber: _detail?.trackNumber,
+            genre: _detail?.genres?.join(', '),
+            coverPath: localCoverPath,
+            duration: widget.music.duration?.inMilliseconds,
+            lastUpdated: DateTime.now(),
+          ),
+        );
       }
 
       // 3. 更新当前播放状态（如果正在播放这首歌）
@@ -543,15 +551,20 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       }
 
       // 6. 更新播放队列中该歌曲的封面（确保队列列表显示正确）
-      ref.read(playQueueProvider.notifier).updateTrackCover(
-        widget.music.id,
-        coverData: coverData.toList(),
-        coverUrl: 'file://$localCoverPath',
-      );
+      ref
+          .read(playQueueProvider.notifier)
+          .updateTrackCover(
+            widget.music.id,
+            coverData: coverData.toList(),
+            coverUrl: 'file://$localCoverPath',
+          );
 
       // 7. 更新收藏和播放历史中的封面
       final newCoverUrl = 'file://$localCoverPath';
-      await MusicFavoritesService().updateCoverUrl(widget.music.path, newCoverUrl);
+      await MusicFavoritesService().updateCoverUrl(
+        widget.music.path,
+        newCoverUrl,
+      );
 
       // 8. 刷新收藏和播放历史的 provider（使 UI 立即更新）
       AppError.fireAndForget(
@@ -602,19 +615,21 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
         await db.upsert(updated);
       } else {
         // 如果数据库中没有这首歌，创建一个基本条目
-        await db.upsert(MusicTrackEntity(
-          sourceId: sourceId,
-          filePath: widget.music.path,
-          fileName: widget.music.name,
-          title: _detail?.title ?? widget.music.title,
-          artist: _detail?.artist ?? widget.music.artist,
-          album: _detail?.album ?? widget.music.album,
-          year: _detail?.year,
-          trackNumber: _detail?.trackNumber,
-          genre: _detail?.genres?.join(', '),
-          duration: widget.music.duration?.inMilliseconds,
-          lastUpdated: DateTime.now(),
-        ));
+        await db.upsert(
+          MusicTrackEntity(
+            sourceId: sourceId,
+            filePath: widget.music.path,
+            fileName: widget.music.name,
+            title: _detail?.title ?? widget.music.title,
+            artist: _detail?.artist ?? widget.music.artist,
+            album: _detail?.album ?? widget.music.album,
+            year: _detail?.year,
+            trackNumber: _detail?.trackNumber,
+            genre: _detail?.genres?.join(', '),
+            duration: widget.music.duration?.inMilliseconds,
+            lastUpdated: DateTime.now(),
+          ),
+        );
       }
 
       // 更新当前播放状态中的元数据（如果正在播放这首歌）
@@ -645,15 +660,17 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       }
 
       // 更新播放队列中该歌曲的元数据
-      ref.read(playQueueProvider.notifier).updateTrackMetadata(
-        widget.music.id,
-        title: _detail?.title,
-        artist: _detail?.artist,
-        album: _detail?.album,
-        year: _detail?.year,
-        trackNumber: _detail?.trackNumber,
-        genre: _detail?.genres?.join(', '),
-      );
+      ref
+          .read(playQueueProvider.notifier)
+          .updateTrackMetadata(
+            widget.music.id,
+            title: _detail?.title,
+            artist: _detail?.artist,
+            album: _detail?.album,
+            year: _detail?.year,
+            trackNumber: _detail?.trackNumber,
+            genre: _detail?.genres?.join(', '),
+          );
     } on Exception catch (e, st) {
       // 非关键功能，静默失败
       AppError.ignore(e, st, '同步元数据到数据库失败');
@@ -686,8 +703,8 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       );
 
       final result = await _tagWriter.writeToNasFile(
-        fileSystem, 
-        musicPath, 
+        fileSystem,
+        musicPath,
         tagData,
         sourceId: widget.music.sourceId,
       );
@@ -743,14 +760,9 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
       title: Row(
         children: [
-          Icon(
-            Icons.auto_fix_high_rounded,
-            color: AppColors.primary,
-          ),
+          Icon(Icons.auto_fix_high_rounded, color: AppColors.primary),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(context.l10n.musicAutoScrapeTitle),
-          ),
+          Expanded(child: Text(context.l10n.musicAutoScrapeTitle)),
           // 手动搜索按钮放在右上角
           TextButton.icon(
             onPressed: _openManualScraper,
@@ -794,10 +806,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
                 ),
                 child: Text(
                   _errorMessage!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.error,
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppColors.error),
                 ),
               ),
             ],
@@ -812,57 +821,57 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
   }
 
   Widget _buildMusicInfo(ThemeData theme, bool isDark) => Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
-            : Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          // 封面
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
-              color: AppColors.primary.withValues(alpha: 0.1),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: _buildCoverImage(),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: isDark
+          ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
+          : Colors.grey[100],
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      children: [
+        // 封面
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            color: AppColors.primary.withValues(alpha: 0.1),
           ),
-          const SizedBox(width: 12),
+          clipBehavior: Clip.antiAlias,
+          child: _buildCoverImage(),
+        ),
+        const SizedBox(width: 12),
 
-          // 信息
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.music.displayTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
+        // 信息
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.music.displayTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                widget.music.displayArtist,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark
+                      ? AppColors.darkOnSurfaceVariant
+                      : AppColors.lightOnSurfaceVariant,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  widget.music.displayArtist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
 
   Widget _buildCoverImage() {
     // 如果有 coverData，优先使用
@@ -870,10 +879,8 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       return Image.memory(
         Uint8List.fromList(widget.music.coverData!),
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.music_note_rounded,
-          color: AppColors.primary,
-        ),
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.music_note_rounded, color: AppColors.primary),
       );
     }
 
@@ -882,206 +889,197 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       return Image.network(
         widget.music.coverUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.music_note_rounded,
-          color: AppColors.primary,
-        ),
+        errorBuilder: (context, error, stackTrace) =>
+            Icon(Icons.music_note_rounded, color: AppColors.primary),
       );
     }
 
     // 默认图标
-    return Icon(
-      Icons.music_note_rounded,
-      color: AppColors.primary,
-    );
+    return Icon(Icons.music_note_rounded, color: AppColors.primary);
   }
 
   Widget _buildStatus(ThemeData theme, bool isDark) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 状态文字
-        Row(
-          children: [
-            if (_status == _ScrapeStatus.searching ||
-                _status == _ScrapeStatus.downloading)
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primary,
-                ),
-              )
-            else if (_status == _ScrapeStatus.found ||
-                _status == _ScrapeStatus.completed)
-              Icon(
-                Icons.check_circle_rounded,
-                size: 16,
-                color: AppColors.success,
-              )
-            else if (_status == _ScrapeStatus.notFound)
-              Icon(
-                Icons.search_off_rounded,
-                size: 16,
-                color: AppColors.warning,
-              )
-            else if (_status == _ScrapeStatus.error)
-              Icon(
-                Icons.error_rounded,
-                size: 16,
-                color: AppColors.error,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // 状态文字
+      Row(
+        children: [
+          if (_status == _ScrapeStatus.searching ||
+              _status == _ScrapeStatus.downloading)
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.primary,
               ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                _statusMessage,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.grey[300] : Colors.grey[700],
-                ),
+            )
+          else if (_status == _ScrapeStatus.found ||
+              _status == _ScrapeStatus.completed)
+            Icon(Icons.check_circle_rounded, size: 16, color: AppColors.success)
+          else if (_status == _ScrapeStatus.notFound)
+            Icon(Icons.search_off_rounded, size: 16, color: AppColors.warning)
+          else if (_status == _ScrapeStatus.error)
+            Icon(Icons.error_rounded, size: 16, color: AppColors.error),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _statusMessage,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.grey[300] : Colors.grey[700],
               ),
             ),
-          ],
-        ),
-
-        // 进度条
-        if (_progress != null &&
-            (_status == _ScrapeStatus.searching ||
-                _status == _ScrapeStatus.downloading)) ...[
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: _progress,
-            backgroundColor: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
-            color: AppColors.primary,
           ),
         ],
+      ),
+
+      // 进度条
+      if (_progress != null &&
+          (_status == _ScrapeStatus.searching ||
+              _status == _ScrapeStatus.downloading)) ...[
+        const SizedBox(height: 8),
+        LinearProgressIndicator(
+          value: _progress,
+          backgroundColor: isDark
+              ? AppColors.darkSurfaceVariant
+              : AppColors.lightSurfaceVariant,
+          color: AppColors.primary,
+        ),
       ],
-    );
+    ],
+  );
 
   Widget _buildResults(ThemeData theme, bool isDark) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.musicAutoScrapeFoundContent,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: isDark ? Colors.grey[300] : Colors.grey[700],
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        context.l10n.musicAutoScrapeFoundContent,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: isDark ? Colors.grey[300] : Colors.grey[700],
+        ),
+      ),
+      const SizedBox(height: 8),
+
+      // 元数据
+      if (_detail != null)
+        _buildResultRow(
+          isDark,
+          Icons.info_outline_rounded,
+          context.l10n.musicAutoScrapeMetadata,
+          '${_detail!.title} - ${_detail!.artist ?? context.l10n.musicAutoScrapeArtistUnknown}',
+          source: _detail!.source,
+          // 显示来源是否支持歌词
+          badge: _detail!.source.supportsLyrics
+              ? Icon(
+                  Icons.lyrics_rounded,
+                  size: 12,
+                  color: isDark ? Colors.cyan[300] : Colors.cyan[700],
+                )
+              : null,
+        ),
+
+      // 封面
+      if (_cover != null)
+        _buildResultRow(
+          isDark,
+          Icons.image_rounded,
+          _hasCover
+              ? context.l10n.musicAutoScrapeCoverExisting
+              : context.l10n.musicAutoScrapeCover,
+          _hasCover && _downloadCover
+              ? context.l10n.musicAutoScrapeCoverOverwrite
+              : context.l10n.musicAutoScrapeCoverFrom(
+                  _cover!.source.displayName,
+                ),
+          source: _cover!.source,
+          trailing: Checkbox(
+            value: _downloadCover,
+            onChanged: (v) => setState(() => _downloadCover = v ?? true),
+            visualDensity: VisualDensity.compact,
           ),
         ),
+
+      // 歌词
+      if (_lyrics != null && _lyrics!.hasLyrics)
+        _buildResultRow(
+          isDark,
+          Icons.lyrics_rounded,
+          _hasLyrics
+              ? context.l10n.musicAutoScrapeLyricsExisting
+              : context.l10n.musicAutoScrapeLyrics,
+          _hasLyrics && _downloadLyrics
+              ? context.l10n.musicAutoScrapeLyricsOverwrite
+              : _lyrics!.isLrc
+              ? context.l10n.musicAutoScrapeLyricsLrc
+              : context.l10n.musicAutoScrapeLyricsPlainText,
+          source: _lyrics!.source,
+          trailing: Checkbox(
+            value: _downloadLyrics,
+            onChanged: (v) => setState(() => _downloadLyrics = v ?? true),
+            visualDensity: VisualDensity.compact,
+          ),
+        ),
+
+      // 写入到文件标签选项
+      if (_audioFormat != null) ...[
         const SizedBox(height: 8),
-
-        // 元数据
-        if (_detail != null)
-          _buildResultRow(
-            isDark,
-            Icons.info_outline_rounded,
-            context.l10n.musicAutoScrapeMetadata,
-            '${_detail!.title} - ${_detail!.artist ?? context.l10n.musicAutoScrapeArtistUnknown}',
-            source: _detail!.source,
-            // 显示来源是否支持歌词
-            badge: _detail!.source.supportsLyrics
-                ? Icon(
-                    Icons.lyrics_rounded,
-                    size: 12,
-                    color: isDark ? Colors.cyan[300] : Colors.cyan[700],
-                  )
-                : null,
+        const Divider(height: 1),
+        const SizedBox(height: 8),
+        _buildResultRow(
+          isDark,
+          Icons.edit_note_rounded,
+          context.l10n.musicAutoScrapeWriteTags,
+          '${_audioFormat!.displayName} (${_audioFormat!.tagType})',
+          trailing: Checkbox(
+            value: _writeToFile,
+            onChanged: (v) => setState(() => _writeToFile = v ?? true),
+            visualDensity: VisualDensity.compact,
           ),
+        ),
+      ],
 
-        // 封面
-        if (_cover != null)
-          _buildResultRow(
-            isDark,
-            Icons.image_rounded,
-            _hasCover ? context.l10n.musicAutoScrapeCoverExisting : context.l10n.musicAutoScrapeCover,
-            _hasCover && _downloadCover
-                ? context.l10n.musicAutoScrapeCoverOverwrite
-                : context.l10n.musicAutoScrapeCoverFrom(_cover!.source.displayName),
-            source: _cover!.source,
-            trailing: Checkbox(
-              value: _downloadCover,
-              onChanged: (v) => setState(() => _downloadCover = v ?? true),
-              visualDensity: VisualDensity.compact,
-            ),
-          ),
-
-        // 歌词
-        if (_lyrics != null && _lyrics!.hasLyrics)
-          _buildResultRow(
-            isDark,
-            Icons.lyrics_rounded,
-            _hasLyrics ? context.l10n.musicAutoScrapeLyricsExisting : context.l10n.musicAutoScrapeLyrics,
-            _hasLyrics && _downloadLyrics
-                ? context.l10n.musicAutoScrapeLyricsOverwrite
-                : _lyrics!.isLrc
-                    ? context.l10n.musicAutoScrapeLyricsLrc
-                    : context.l10n.musicAutoScrapeLyricsPlainText,
-            source: _lyrics!.source,
-            trailing: Checkbox(
-              value: _downloadLyrics,
-              onChanged: (v) => setState(() => _downloadLyrics = v ?? true),
-              visualDensity: VisualDensity.compact,
-            ),
-          ),
-
-        // 写入到文件标签选项
-        if (_audioFormat != null) ...[
-          const SizedBox(height: 8),
-          const Divider(height: 1),
-          const SizedBox(height: 8),
-          _buildResultRow(
-            isDark,
-            Icons.edit_note_rounded,
-            context.l10n.musicAutoScrapeWriteTags,
-            '${_audioFormat!.displayName} (${_audioFormat!.tagType})',
-            trailing: Checkbox(
-              value: _writeToFile,
-              onChanged: (v) => setState(() => _writeToFile = v ?? true),
-              visualDensity: VisualDensity.compact,
-            ),
-          ),
-        ],
-
-        // 不支持写入标签时提示
-        if (_audioFormat == null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 14,
-                  color: isDark ? Colors.grey[500] : Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    context.l10n.musicAutoScrapeFormatNotSupported,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark ? Colors.grey[500] : Colors.grey[600],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // 无封面/歌词时提示
-        if (_cover == null && _lyrics == null && _detail != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              context.l10n.musicAutoScrapeNoCoverAndLyrics,
-              style: TextStyle(
-                fontSize: 12,
+      // 不支持写入标签时提示
+      if (_audioFormat == null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 14,
                 color: isDark ? Colors.grey[500] : Colors.grey[600],
               ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  context.l10n.musicAutoScrapeFormatNotSupported,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+      // 无封面/歌词时提示
+      if (_cover == null && _lyrics == null && _detail != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            context.l10n.musicAutoScrapeNoCoverAndLyrics,
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.grey[500] : Colors.grey[600],
             ),
           ),
-      ],
-    );
+        ),
+    ],
+  );
 
   Widget _buildResultRow(
     bool isDark,
@@ -1092,51 +1090,50 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
     Widget? trailing,
     Widget? badge,
   }) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 18,
-            color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.grey[300] : Colors.grey[700],
-                      ),
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: isDark
+              ? AppColors.darkOnSurfaceVariant
+              : AppColors.lightOnSurfaceVariant,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.grey[300] : Colors.grey[700],
                     ),
-                    if (badge != null) ...[
-                      const SizedBox(width: 4),
-                      badge,
-                    ],
-                  ],
-                ),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? Colors.grey[500] : Colors.grey[600],
                   ),
+                  if (badge != null) ...[const SizedBox(width: 4), badge],
+                ],
+              ),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? Colors.grey[500] : Colors.grey[600],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          ?trailing,
-        ],
-      ),
-    );
+        ),
+        ?trailing,
+      ],
+    ),
+  );
 
   List<Widget> _buildActions(bool isDark) {
     switch (_status) {
@@ -1149,9 +1146,11 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
         ];
 
       case _ScrapeStatus.found:
-        final hasDownloadable = (_downloadCover && _cover != null) ||
+        final hasDownloadable =
+            (_downloadCover && _cover != null) ||
             (_downloadLyrics && _lyrics != null);
-        final hasWritable = _writeToFile && _audioFormat != null && _detail != null;
+        final hasWritable =
+            _writeToFile && _audioFormat != null && _detail != null;
         final hasAction = hasDownloadable || hasWritable;
         return [
           TextButton(
@@ -1161,7 +1160,11 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
           if (hasAction && widget.fileSystem != null)
             FilledButton(
               onPressed: _downloadFiles,
-              child: Text(hasWritable ? context.l10n.musicAutoScrapeApply : context.l10n.musicAutoScrapeDownload),
+              child: Text(
+                hasWritable
+                    ? context.l10n.musicAutoScrapeApply
+                    : context.l10n.musicAutoScrapeDownload,
+              ),
             ),
         ];
 
@@ -1200,11 +1203,4 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
   }
 }
 
-enum _ScrapeStatus {
-  searching,
-  found,
-  downloading,
-  completed,
-  notFound,
-  error,
-}
+enum _ScrapeStatus { searching, found, downloading, completed, notFound, error }

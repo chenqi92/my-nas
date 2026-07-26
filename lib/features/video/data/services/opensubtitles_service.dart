@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
@@ -151,21 +151,21 @@ class OpenSubtitleResult {
   }
 
   static Map<String, String> _getLanguageDisplayNames() => <String, String>{
-    'zh-cn': appL10n.videoOpensubtitlesLanguageZhCn,
-    'zh-tw': appL10n.videoOpensubtitlesLanguageZhTw,
-    'zh': appL10n.videoOpensubtitlesLanguageZh,
-    'en': 'English',
-    'ja': appL10n.videoOpensubtitlesLanguageJa,
-    'ko': appL10n.videoOpensubtitlesLanguageKo,
-    'fr': 'Français',
-    'de': 'Deutsch',
-    'es': 'Español',
-    'pt': 'Português',
-    'ru': 'Русский',
-    'it': 'Italiano',
-    'th': 'ไทย',
-    'vi': 'Tiếng Việt',
-  };
+        'zh-cn': appL10n.videoOpensubtitlesLanguageZhCn,
+        'zh-tw': appL10n.videoOpensubtitlesLanguageZhTw,
+        'zh': appL10n.videoOpensubtitlesLanguageZh,
+        'en': 'English',
+        'ja': appL10n.videoOpensubtitlesLanguageJa,
+        'ko': appL10n.videoOpensubtitlesLanguageKo,
+        'fr': 'Français',
+        'de': 'Deutsch',
+        'es': 'Español',
+        'pt': 'Português',
+        'ru': 'Русский',
+        'it': 'Italiano',
+        'th': 'ไทย',
+        'vi': 'Tiếng Việt',
+      };
 }
 
 /// OpenSubtitles 下载结果
@@ -369,7 +369,10 @@ class OpenSubtitlesService {
           'page': '1',
         },
       );
-      final response = await http.get(uri, headers: _getHeaders());
+      final response = await InsecureHttpClient.get(
+        uri,
+        headers: _getHeaders(),
+      );
       if (response.statusCode == 200) return true;
       if (response.statusCode == 429) {
         logger.w('OpenSubtitles: 验证遇到频率限制，视为 API 可达');
@@ -390,7 +393,7 @@ class OpenSubtitlesService {
     }
 
     try {
-      final response = await http.post(
+      final response = await InsecureHttpClient.post(
         Uri.parse('$_baseUrl/login'),
         headers: _getHeaders(),
         body: jsonEncode({'username': username, 'password': password}),
@@ -438,7 +441,7 @@ class OpenSubtitlesService {
         '$_baseUrl/subtitles',
       ).replace(queryParameters: params.toQueryParams());
 
-      final response = await http.get(
+      final response = await InsecureHttpClient.get(
         uri,
         headers: _getHeaders(requireAuth: _jwtToken != null),
       );
@@ -469,7 +472,7 @@ class OpenSubtitlesService {
     try {
       await _ensureLoggedIn();
 
-      final response = await http.post(
+      final response = await InsecureHttpClient.post(
         Uri.parse('$_baseUrl/download'),
         headers: _getHeaders(requireAuth: true),
         body: jsonEncode({'file_id': fileId}),
@@ -507,7 +510,9 @@ class OpenSubtitlesService {
       }
 
       // 下载文件
-      final response = await http.get(Uri.parse(downloadResult.link));
+      final response = await InsecureHttpClient.get(
+        Uri.parse(downloadResult.link),
+      );
       if (response.statusCode == 200) {
         // 确定最终文件名
         var fileName = downloadResult.fileName;
@@ -546,7 +551,7 @@ class OpenSubtitlesService {
   /// 测试连接
   Future<bool> testConnection() async {
     try {
-      final response = await http.get(
+      final response = await InsecureHttpClient.get(
         Uri.parse('$_baseUrl/infos/user'),
         headers: _getHeaders(),
       );
@@ -564,9 +569,8 @@ final openSubtitlesServiceProvider = FutureProvider<OpenSubtitlesService?>((
   // 获取已配置的 OpenSubtitles 源
   final sourcesAsync = ref.watch(sourcesProvider);
   final sources = sourcesAsync.valueOrNull ?? [];
-  final openSubtitlesSources = sources
-      .where((s) => s.type == SourceType.opensubtitles)
-      .toList();
+  final openSubtitlesSources =
+      sources.where((s) => s.type == SourceType.opensubtitles).toList();
 
   if (openSubtitlesSources.isEmpty) {
     return null;
@@ -578,9 +582,8 @@ final openSubtitlesServiceProvider = FutureProvider<OpenSubtitlesService?>((
   // 优先使用用户自定义的 API Key，否则使用内置默认 Key
   final customApiKey =
       source.apiKey ?? source.extraConfig?['apiKey'] as String?;
-  final apiKey = (customApiKey?.isNotEmpty ?? false)
-      ? customApiKey!
-      : _defaultApiKey;
+  final apiKey =
+      (customApiKey?.isNotEmpty ?? false) ? customApiKey! : _defaultApiKey;
 
   return OpenSubtitlesService(
     apiKey: apiKey,

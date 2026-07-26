@@ -39,10 +39,10 @@ class UGreenAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-    type: NasAdapterType.ugreen,
-    name: appL10n.ugreenAdapterName,
-    version: AppConstants.appVersion,
-  );
+        type: NasAdapterType.ugreen,
+        name: appL10n.ugreenAdapterName,
+        version: AppConstants.appVersion,
+      );
 
   @override
   bool get isConnected => _connected;
@@ -79,17 +79,17 @@ class UGreenAdapter implements NasAdapter {
 
     return switch (authResult) {
       UGreenAuthSuccess(:final token) => await _handleLoginSuccess(
-        config,
-        token,
-      ),
+          config,
+          token,
+        ),
       UGreenAuthFailure(:final error) => () {
-        logger.e('UGreenAdapter: 登录失败 => $error');
-        return ConnectionFailure(error: error);
-      }(),
+          logger.e('UGreenAdapter: 登录失败 => $error');
+          return ConnectionFailure(error: error);
+        }(),
       UGreenAuthRequires2FA() => () {
-        logger.i('UGreenAdapter: 需要二次验证');
-        return const ConnectionRequires2FA(methods: [TwoFactorMethod.totp]);
-      }(),
+          logger.i('UGreenAdapter: 需要二次验证');
+          return const ConnectionRequires2FA(methods: [TwoFactorMethod.totp]);
+        }(),
     };
   }
 
@@ -110,13 +110,13 @@ class UGreenAdapter implements NasAdapter {
 
     return switch (authResult) {
       UGreenAuthSuccess(:final token) => await _handleLoginSuccess(
-        _config!,
-        token,
-      ),
+          _config!,
+          token,
+        ),
       UGreenAuthFailure(:final error) => ConnectionFailure(error: error),
       UGreenAuthRequires2FA() => ConnectionFailure(
-        error: appL10n.ugreen2FAVerifyFailedError,
-      ),
+          error: appL10n.ugreen2FAVerifyFailedError,
+        ),
     };
   }
 
@@ -201,18 +201,16 @@ class UGreenAdapter implements NasAdapter {
           password: config.password,
         );
 
-        if (!config.verifySSL) {
-          _webdavClient!.c.httpClientAdapter = IOHttpClientAdapter(
-            createHttpClient: () => HttpClient()
-              ..badCertificateCallback = (cert, host, port) =>
-                  TlsTrustStore.allowsInvalidCertificate(
-                    cert,
-                    host,
-                    port,
-                    allowSelfSigned: true,
-                  ),
-          );
-        }
+        _webdavClient!.c.httpClientAdapter = IOHttpClientAdapter(
+          createHttpClient: () => HttpClient()
+            ..badCertificateCallback =
+                (cert, host, port) => TlsTrustStore.allowsInvalidCertificate(
+                      cert,
+                      host,
+                      port,
+                      allowSelfSigned: !config.verifySSL,
+                    ),
+        );
 
         // 验证 WebDAV 连接
         await _webdavClient!.ping();

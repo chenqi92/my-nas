@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_nas/core/network/network_endpoint.dart';
+import 'package:my_nas/core/network/tls_trust_store.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/nas_adapters/base/dio_file_stream.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -35,6 +37,37 @@ void main() {
         'https://[2001:db8::10]:5001',
       );
     });
+  });
+
+  group('TlsTrustStore', () {
+    test('scopes trust to a normalized host and port', () {
+      expect(
+        TlsTrustStore.endpointKey(' NAS.Example.Test ', 5001),
+        'nas.example.test:5001',
+      );
+    });
+
+    test('formats SHA-256 fingerprints for user verification', () {
+      expect(TlsTrustStore.formatFingerprint('aabb01'), 'AA:BB:01');
+    });
+
+    test(
+      'recognizes certificate failures without classifying plain outages',
+      () {
+        expect(
+          TlsTrustStore.isCertificateValidationError(
+            HandshakeException('CERTIFICATE_VERIFY_FAILED: Hostname mismatch'),
+          ),
+          isTrue,
+        );
+        expect(
+          TlsTrustStore.isCertificateValidationError(
+            const SocketException('Connection refused'),
+          ),
+          isFalse,
+        );
+      },
+    );
   });
 
   test('SourceEntity excludes secrets from persisted JSON', () {
@@ -69,14 +102,15 @@ void main() {
       String username = 'alice',
       String? apiKey,
       Map<String, dynamic>? extraConfig,
-    }) => SourceEntity(
-      name: 'Source',
-      type: type,
-      host: 'source.local',
-      username: username,
-      apiKey: apiKey,
-      extraConfig: extraConfig,
-    );
+    }) =>
+        SourceEntity(
+          name: 'Source',
+          type: type,
+          host: 'source.local',
+          username: username,
+          apiKey: apiKey,
+          extraConfig: extraConfig,
+        );
 
     test('requires a stored password for password-based services', () {
       expect(source(SourceType.qbittorrent).usesPasswordAuthentication, isTrue);
@@ -218,7 +252,10 @@ void main() {
     expect(await api.listDirectory('/R&B/AC+DC = live?'), isEmpty);
 
     expect(adapter.requests[1].method, 'POST');
-    expect(adapter.requests[1].data['path'], '/R&B/AC+DC = live?');
+    expect(
+      (adapter.requests[1].data as Map<String, dynamic>)['path'],
+      '/R&B/AC+DC = live?',
+    );
     final download = Uri.parse(await api.getFileUrl('/R&B/AC+DC = live?.flac'));
     expect(download.queryParameters['path'], '/R&B/AC+DC = live?.flac');
     expect(download.queryParameters['token'], 'fn-token');
@@ -256,7 +293,10 @@ void main() {
       expect(await api.listDirectory('/R&B/AC+DC = live?'), isEmpty);
 
       expect(adapter.requests[2].path, '/ugreen/v1/filemgr/list');
-      expect(adapter.requests[2].data['path'], '/R&B/AC+DC = live?');
+      expect(
+        (adapter.requests[2].data as Map<String, dynamic>)['path'],
+        '/R&B/AC+DC = live?',
+      );
       final download = Uri.parse(
         await api.getFileUrl('/R&B/AC+DC = live?.flac'),
       );
@@ -288,8 +328,7 @@ class _QueueAdapter implements HttpClientAdapter {
 }
 
 String _soapPage({required int index, required int total}) {
-  final didl =
-      '''
+  final didl = '''
 <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
  xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
   <item id="item-$index" parentID="0">

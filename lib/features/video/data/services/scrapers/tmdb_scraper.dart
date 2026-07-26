@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_result.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
@@ -10,11 +11,8 @@ import 'package:my_nas/features/video/domain/interfaces/media_scraper.dart';
 
 /// TMDB 刮削器实现
 class TmdbScraper implements MediaScraper {
-  TmdbScraper({
-    required this.apiKey,
-    String? apiUrl,
-    String? imageProxy,
-  })  : _baseUrl = apiUrl ?? _defaultApiUrl,
+  TmdbScraper({required this.apiKey, String? apiUrl, String? imageProxy})
+      : _baseUrl = apiUrl ?? _defaultApiUrl,
         _imageBaseUrl = imageProxy ?? _defaultImageUrl;
 
   /// API Key
@@ -53,9 +51,11 @@ class TmdbScraper implements MediaScraper {
   }
 
   /// 带超时的 HTTP GET 请求
-  Future<http.Response> _httpGet(Uri uri) => http.get(uri).timeout(
+  Future<http.Response> _httpGet(Uri uri) =>
+      InsecureHttpClient.get(uri).timeout(
         _requestTimeout,
-        onTimeout: () => throw TimeoutException(appL10n.tmdbScraperRequestTimeout(uri)),
+        onTimeout: () =>
+            throw TimeoutException(appL10n.tmdbScraperRequestTimeout(uri)),
       );
 
   @override
@@ -63,9 +63,9 @@ class TmdbScraper implements MediaScraper {
     if (!isConfigured) return false;
 
     try {
-      final uri = Uri.parse('$_baseUrl/configuration').replace(
-        queryParameters: {'api_key': apiKey},
-      );
+      final uri = Uri.parse(
+        '$_baseUrl/configuration',
+      ).replace(queryParameters: {'api_key': apiKey});
       final response = await _httpGet(uri);
       return response.statusCode == 200;
     } on Exception catch (e) {
@@ -97,8 +97,9 @@ class TmdbScraper implements MediaScraper {
         params['year'] = year.toString();
       }
 
-      final uri =
-          Uri.parse('$_baseUrl/search/movie').replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$_baseUrl/search/movie',
+      ).replace(queryParameters: params);
       final response = await _httpGet(uri);
 
       if (response.statusCode == 200) {
@@ -148,8 +149,9 @@ class TmdbScraper implements MediaScraper {
         params['first_air_date_year'] = year.toString();
       }
 
-      final uri =
-          Uri.parse('$_baseUrl/search/tv').replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$_baseUrl/search/tv',
+      ).replace(queryParameters: params);
       final response = await _httpGet(uri);
 
       if (response.statusCode == 200) {
@@ -191,8 +193,9 @@ class TmdbScraper implements MediaScraper {
         'append_to_response': 'credits,videos,images',
       };
 
-      final uri = Uri.parse('$_baseUrl/movie/$externalId')
-          .replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$_baseUrl/movie/$externalId',
+      ).replace(queryParameters: params);
       final response = await _httpGet(uri);
 
       if (response.statusCode == 200) {
@@ -222,8 +225,9 @@ class TmdbScraper implements MediaScraper {
         'append_to_response': 'credits,videos,images',
       };
 
-      final uri = Uri.parse('$_baseUrl/tv/$externalId')
-          .replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$_baseUrl/tv/$externalId',
+      ).replace(queryParameters: params);
       final response = await _httpGet(uri);
 
       if (response.statusCode == 200) {
@@ -246,8 +250,11 @@ class TmdbScraper implements MediaScraper {
     int episodeNumber, {
     String? language,
   }) async {
-    final seasonDetail =
-        await getSeasonDetail(tvId, seasonNumber, language: language);
+    final seasonDetail = await getSeasonDetail(
+      tvId,
+      seasonNumber,
+      language: language,
+    );
     return seasonDetail?.getEpisode(episodeNumber);
   }
 
@@ -260,13 +267,11 @@ class TmdbScraper implements MediaScraper {
     if (!isConfigured) return null;
 
     try {
-      final params = {
-        'api_key': apiKey,
-        'language': language ?? 'zh-CN',
-      };
+      final params = {'api_key': apiKey, 'language': language ?? 'zh-CN'};
 
-      final uri = Uri.parse('$_baseUrl/tv/$tvId/season/$seasonNumber')
-          .replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$_baseUrl/tv/$tvId/season/$seasonNumber',
+      ).replace(queryParameters: params);
       final response = await _httpGet(uri);
 
       if (response.statusCode == 200) {
@@ -300,8 +305,8 @@ class TmdbScraper implements MediaScraper {
             source: ScraperType.tmdb,
             title: (isMovie ? item['title'] : item['name']) as String? ?? '',
             originalTitle: (isMovie
-                    ? item['original_title']
-                    : item['original_name']) as String?,
+                ? item['original_title']
+                : item['original_name']) as String?,
             overview: item['overview'] as String?,
             posterUrl: getImageUrlWithProxy(item['poster_path'] as String?),
             backdropUrl: getImageUrlWithProxy(
@@ -332,7 +337,8 @@ class TmdbScraper implements MediaScraper {
 
   ScraperMovieDetail _parseMovieDetail(Map<String, dynamic> json) {
     final credits = json['credits'] as Map<String, dynamic>?;
-    final collectionData = json['belongs_to_collection'] as Map<String, dynamic>?;
+    final collectionData =
+        json['belongs_to_collection'] as Map<String, dynamic>?;
 
     // 解析导演
     String? director;
@@ -387,8 +393,13 @@ class TmdbScraper implements MediaScraper {
       status: json['status'] as String?,
       collectionId: collectionData?['id']?.toString(),
       collectionName: collectionData?['name'] as String?,
-      collectionPosterUrl: getImageUrlWithProxy(collectionData?['poster_path'] as String?),
-      collectionBackdropUrl: getImageUrlWithProxy(collectionData?['backdrop_path'] as String?, size: 'w780'),
+      collectionPosterUrl: getImageUrlWithProxy(
+        collectionData?['poster_path'] as String?,
+      ),
+      collectionBackdropUrl: getImageUrlWithProxy(
+        collectionData?['backdrop_path'] as String?,
+        size: 'w780',
+      ),
       imdbId: json['imdb_id'] as String?,
     );
   }
@@ -440,10 +451,9 @@ class TmdbScraper implements MediaScraper {
 
     // 获取单集时长
     final episodeRunTime = json['episode_run_time'] as List?;
-    final runtime =
-        episodeRunTime != null && episodeRunTime.isNotEmpty
-            ? episodeRunTime.first as int
-            : null;
+    final runtime = episodeRunTime != null && episodeRunTime.isNotEmpty
+        ? episodeRunTime.first as int
+        : null;
 
     return ScraperTvDetail(
       externalId: (json['id'] as int).toString(),
@@ -510,55 +520,55 @@ class TmdbScraper implements MediaScraper {
 
   /// ISO 国家代码转换为本地化名称
   String _countryCodeToName(String code) => switch (code.toUpperCase()) {
-      'US' => appL10n.tmdbScraperCountryUs,
-      'CN' => appL10n.tmdbScraperCountryCn,
-      'JP' => appL10n.tmdbScraperCountryJp,
-      'KR' => appL10n.tmdbScraperCountryKr,
-      'GB' => appL10n.tmdbScraperCountryGb,
-      'FR' => appL10n.tmdbScraperCountryFr,
-      'DE' => appL10n.tmdbScraperCountryDe,
-      'IT' => appL10n.tmdbScraperCountryIt,
-      'ES' => appL10n.tmdbScraperCountryEs,
-      'CA' => appL10n.tmdbScraperCountryCa,
-      'AU' => appL10n.tmdbScraperCountryAu,
-      'IN' => appL10n.tmdbScraperCountryIn,
-      'TW' => appL10n.tmdbScraperCountryTw,
-      'HK' => appL10n.tmdbScraperCountryHk,
-      'TH' => appL10n.tmdbScraperCountryTh,
-      'RU' => appL10n.tmdbScraperCountryRu,
-      'BR' => appL10n.tmdbScraperCountryBr,
-      'MX' => appL10n.tmdbScraperCountryMx,
-      'NL' => appL10n.tmdbScraperCountryNl,
-      'SE' => appL10n.tmdbScraperCountrySe,
-      'DK' => appL10n.tmdbScraperCountryDk,
-      'NO' => appL10n.tmdbScraperCountryNo,
-      'FI' => appL10n.tmdbScraperCountryFi,
-      'BE' => appL10n.tmdbScraperCountryBe,
-      'AT' => appL10n.tmdbScraperCountryAt,
-      'CH' => appL10n.tmdbScraperCountryCh,
-      'NZ' => appL10n.tmdbScraperCountryNz,
-      'IE' => appL10n.tmdbScraperCountryIe,
-      'PL' => appL10n.tmdbScraperCountryPl,
-      'TR' => appL10n.tmdbScraperCountryTr,
-      'ZA' => appL10n.tmdbScraperCountryZa,
-      'SG' => appL10n.tmdbScraperCountrySg,
-      'MY' => appL10n.tmdbScraperCountryMy,
-      'ID' => appL10n.tmdbScraperCountryId,
-      'PH' => appL10n.tmdbScraperCountryPh,
-      'VN' => appL10n.tmdbScraperCountryVn,
-      'AR' => appL10n.tmdbScraperCountryAr,
-      'CL' => appL10n.tmdbScraperCountryCl,
-      'CO' => appL10n.tmdbScraperCountryCo,
-      'PE' => appL10n.tmdbScraperCountryPe,
-      'EG' => appL10n.tmdbScraperCountryEg,
-      'IL' => appL10n.tmdbScraperCountryIl,
-      'AE' => appL10n.tmdbScraperCountryAe,
-      'SA' => appL10n.tmdbScraperCountrySa,
-      'UA' => appL10n.tmdbScraperCountryUa,
-      'CZ' => appL10n.tmdbScraperCountryCz,
-      'HU' => appL10n.tmdbScraperCountryHu,
-      'PT' => appL10n.tmdbScraperCountryPt,
-      'GR' => appL10n.tmdbScraperCountryGr,
-      _ => code,
-    };
+        'US' => appL10n.tmdbScraperCountryUs,
+        'CN' => appL10n.tmdbScraperCountryCn,
+        'JP' => appL10n.tmdbScraperCountryJp,
+        'KR' => appL10n.tmdbScraperCountryKr,
+        'GB' => appL10n.tmdbScraperCountryGb,
+        'FR' => appL10n.tmdbScraperCountryFr,
+        'DE' => appL10n.tmdbScraperCountryDe,
+        'IT' => appL10n.tmdbScraperCountryIt,
+        'ES' => appL10n.tmdbScraperCountryEs,
+        'CA' => appL10n.tmdbScraperCountryCa,
+        'AU' => appL10n.tmdbScraperCountryAu,
+        'IN' => appL10n.tmdbScraperCountryIn,
+        'TW' => appL10n.tmdbScraperCountryTw,
+        'HK' => appL10n.tmdbScraperCountryHk,
+        'TH' => appL10n.tmdbScraperCountryTh,
+        'RU' => appL10n.tmdbScraperCountryRu,
+        'BR' => appL10n.tmdbScraperCountryBr,
+        'MX' => appL10n.tmdbScraperCountryMx,
+        'NL' => appL10n.tmdbScraperCountryNl,
+        'SE' => appL10n.tmdbScraperCountrySe,
+        'DK' => appL10n.tmdbScraperCountryDk,
+        'NO' => appL10n.tmdbScraperCountryNo,
+        'FI' => appL10n.tmdbScraperCountryFi,
+        'BE' => appL10n.tmdbScraperCountryBe,
+        'AT' => appL10n.tmdbScraperCountryAt,
+        'CH' => appL10n.tmdbScraperCountryCh,
+        'NZ' => appL10n.tmdbScraperCountryNz,
+        'IE' => appL10n.tmdbScraperCountryIe,
+        'PL' => appL10n.tmdbScraperCountryPl,
+        'TR' => appL10n.tmdbScraperCountryTr,
+        'ZA' => appL10n.tmdbScraperCountryZa,
+        'SG' => appL10n.tmdbScraperCountrySg,
+        'MY' => appL10n.tmdbScraperCountryMy,
+        'ID' => appL10n.tmdbScraperCountryId,
+        'PH' => appL10n.tmdbScraperCountryPh,
+        'VN' => appL10n.tmdbScraperCountryVn,
+        'AR' => appL10n.tmdbScraperCountryAr,
+        'CL' => appL10n.tmdbScraperCountryCl,
+        'CO' => appL10n.tmdbScraperCountryCo,
+        'PE' => appL10n.tmdbScraperCountryPe,
+        'EG' => appL10n.tmdbScraperCountryEg,
+        'IL' => appL10n.tmdbScraperCountryIl,
+        'AE' => appL10n.tmdbScraperCountryAe,
+        'SA' => appL10n.tmdbScraperCountrySa,
+        'UA' => appL10n.tmdbScraperCountryUa,
+        'CZ' => appL10n.tmdbScraperCountryCz,
+        'HU' => appL10n.tmdbScraperCountryHu,
+        'PT' => appL10n.tmdbScraperCountryPt,
+        'GR' => appL10n.tmdbScraperCountryGr,
+        _ => code,
+      };
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
@@ -14,8 +15,8 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 /// 咪咕音乐是中国移动旗下的音乐平台，无损音源丰富
 class MiguScraper implements MusicScraper {
   MiguScraper() {
-    _dio = Dio(
-      BaseOptions(
+    _dio = DioClient.createTlsAware(
+      options: BaseOptions(
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         headers: {
@@ -134,8 +135,7 @@ class MiguScraper implements MusicScraper {
         return MusicScraperSearchResult.empty(type);
       }
 
-      final songs =
-          (data['musics'] as List?)
+      final songs = (data['musics'] as List?)
               ?.whereType<Map<String, dynamic>>()
               .toList() ??
           [];

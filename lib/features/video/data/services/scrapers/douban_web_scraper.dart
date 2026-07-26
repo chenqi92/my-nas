@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_result.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
@@ -13,10 +14,7 @@ import 'package:my_nas/features/video/domain/interfaces/media_scraper.dart';
 /// 通过解析豆瓣网页获取影视信息
 /// 注意：频繁请求可能触发验证码或被封禁
 class DoubanWebScraper implements MediaScraper {
-  DoubanWebScraper({
-    required this.cookie,
-    this.requestInterval = 3,
-  });
+  DoubanWebScraper({required this.cookie, this.requestInterval = 3});
 
   /// Cookie（登录后的 Cookie）
   final String cookie;
@@ -25,7 +23,8 @@ class DoubanWebScraper implements MediaScraper {
   final int requestInterval;
 
   static const String _movieBaseUrl = 'https://movie.douban.com';
-  static const String _searchUrl = 'https://search.douban.com/movie/subject_search';
+  static const String _searchUrl =
+      'https://search.douban.com/movie/subject_search';
   static const Duration _requestTimeout = Duration(seconds: 20);
 
   DateTime? _lastRequestTime;
@@ -63,10 +62,11 @@ class DoubanWebScraper implements MediaScraper {
   /// 带超时和速率限制的 HTTP GET 请求
   Future<http.Response> _httpGet(Uri uri) async {
     await _waitForRateLimit();
-    return http.get(uri, headers: _headers).timeout(
-          _requestTimeout,
-          onTimeout: () => throw TimeoutException(appL10n.videoScraperDoubanRequestTimeout(uri)),
-        );
+    return InsecureHttpClient.get(uri, headers: _headers).timeout(
+      _requestTimeout,
+      onTimeout: () =>
+          throw TimeoutException(appL10n.videoScraperDoubanRequestTimeout(uri)),
+    );
   }
 
   @override
@@ -81,8 +81,7 @@ class DoubanWebScraper implements MediaScraper {
       if (response.statusCode == 200) {
         final body = response.body;
         // 检查是否被重定向到登录页
-        if (body.contains('accounts.douban.com') ||
-            body.contains('请先登录')) {
+        if (body.contains('accounts.douban.com') || body.contains('请先登录')) {
           logger.w('豆瓣 Cookie 已失效，需要重新登录');
           return false;
         }
@@ -108,10 +107,7 @@ class DoubanWebScraper implements MediaScraper {
 
     try {
       final start = (page - 1) * 15; // 豆瓣每页 15 条
-      final params = {
-        'search_text': query,
-        'start': start.toString(),
-      };
+      final params = {'search_text': query, 'start': start.toString()};
 
       final uri = Uri.parse(_searchUrl).replace(queryParameters: params);
       final response = await _httpGet(uri);
@@ -141,7 +137,9 @@ class DoubanWebScraper implements MediaScraper {
     int page = 1,
     String? language,
     int? year,
-  }) async => searchMovies(query, page: page, language: language, year: year); // 豆瓣搜索不区分电影和电视剧
+  }) async =>
+      searchMovies(query,
+          page: page, language: language, year: year); // 豆瓣搜索不区分电影和电视剧
 
   @override
   Future<ScraperMovieDetail?> getMovieDetail(
@@ -195,14 +193,16 @@ class DoubanWebScraper implements MediaScraper {
     int seasonNumber,
     int episodeNumber, {
     String? language,
-  }) async => null; // 豆瓣网页不提供详细的剧集信息
+  }) async =>
+      null; // 豆瓣网页不提供详细的剧集信息
 
   @override
   Future<ScraperSeasonDetail?> getSeasonDetail(
     String tvId,
     int seasonNumber, {
     String? language,
-  }) async => null; // 豆瓣网页不提供详细的季信息
+  }) async =>
+      null; // 豆瓣网页不提供详细的季信息
 
   @override
   void dispose() {
@@ -284,7 +284,9 @@ class DoubanWebScraper implements MediaScraper {
 
     try {
       // 标题
-      final titleElement = document.querySelector('h1 span[property="v:itemreviewed"]');
+      final titleElement = document.querySelector(
+        'h1 span[property="v:itemreviewed"]',
+      );
       final title = titleElement?.text.trim() ?? '';
       if (title.isEmpty) return null;
 
@@ -302,11 +304,15 @@ class DoubanWebScraper implements MediaScraper {
       final rating = double.tryParse(ratingElement?.text.trim() ?? '');
 
       // 简介
-      final summaryElement = document.querySelector('span[property="v:summary"]');
+      final summaryElement = document.querySelector(
+        'span[property="v:summary"]',
+      );
       final summary = summaryElement?.text.trim();
 
       // 类型
-      final genreElements = document.querySelectorAll('span[property="v:genre"]');
+      final genreElements = document.querySelectorAll(
+        'span[property="v:genre"]',
+      );
       final genres = genreElements.map((e) => e.text.trim()).toList();
 
       // 导演
@@ -318,8 +324,11 @@ class DoubanWebScraper implements MediaScraper {
       final cast = castElements.take(10).map((e) => e.text.trim()).toList();
 
       // 时长
-      final runtimeElement = document.querySelector('span[property="v:runtime"]');
-      final runtimeText = runtimeElement?.attributes['content'] ?? runtimeElement?.text ?? '';
+      final runtimeElement = document.querySelector(
+        'span[property="v:runtime"]',
+      );
+      final runtimeText =
+          runtimeElement?.attributes['content'] ?? runtimeElement?.text ?? '';
       final runtime = int.tryParse(runtimeText.replaceAll(RegExp(r'\D'), ''));
 
       return ScraperMovieDetail(

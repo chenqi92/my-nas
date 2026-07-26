@@ -29,10 +29,10 @@ class FnOSAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-    type: NasAdapterType.fnos,
-    name: appL10n.fnosAdapterName,
-    version: AppConstants.appVersion,
-  );
+        type: NasAdapterType.fnos,
+        name: appL10n.fnosAdapterName,
+        version: AppConstants.appVersion,
+      );
 
   @override
   bool get isConnected => _connected;
@@ -60,20 +60,18 @@ class FnOSAdapter implements NasAdapter {
         ),
       );
 
-      // 自签名证书支持
-      if (!config.verifySSL) {
-        (_dio!.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
-          final client = HttpClient()
-            ..badCertificateCallback = (cert, host, port) =>
-                TlsTrustStore.allowsInvalidCertificate(
-                  cert,
-                  host,
-                  port,
-                  allowSelfSigned: true,
-                );
-          return client;
-        };
-      }
+      // 严格模式也安装回调，以便接受用户按端点保存的证书指纹。
+      (_dio!.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+        final client = HttpClient()
+          ..badCertificateCallback =
+              (cert, host, port) => TlsTrustStore.allowsInvalidCertificate(
+                    cert,
+                    host,
+                    port,
+                    allowSelfSigned: !config.verifySSL,
+                  );
+        return client;
+      };
 
       // 初始化 API
       _api = FnOSApi(dio: _dio!);
@@ -122,12 +120,12 @@ class FnOSAdapter implements NasAdapter {
     return switch (result) {
       FnOSAuthSuccess() => await _completeConnection(result),
       FnOSAuthFailure(:final error, :final code) => ConnectionFailure(
-        error: error,
-        code: code,
-      ),
+          error: error,
+          code: code,
+        ),
       FnOSAuthRequires2FA() => ConnectionFailure(
-        error: appL10n.sourceManager2FAVerificationFailed,
-      ),
+          error: appL10n.sourceManager2FAVerificationFailed,
+        ),
     };
   }
 

@@ -9075,6 +9075,7 @@ class _ModernMusicTile extends ConsumerWidget {
   }
 
   void _showMoreOptions(BuildContext context, WidgetRef ref) {
+    final pageContext = context;
     showAdaptiveModalSheet<void>(
       context: context,
       backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
@@ -9082,128 +9083,175 @@ class _ModernMusicTile extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 拖拽指示器
-            const SheetDragHandle(bottomPadding: 0),
-            // 歌曲信息头
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: isDark
-                          ? AppColors.darkSurfaceVariant
-                          : AppColors.lightSurfaceVariant,
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: track.coverFile != null
-                        ? Image.file(
-                            track.coverFile!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Icon(
-                              Icons.music_note_rounded,
-                              color: isDark
-                                  ? AppColors.darkOnSurfaceVariant
-                                  : AppColors.lightOnSurfaceVariant,
-                            ),
-                          )
-                        : track.coverData != null
-                            ? Image.memory(
-                                Uint8List.fromList(track.coverData!),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, _, _) => Icon(
-                                  Icons.music_note_rounded,
-                                  color: isDark
-                                      ? AppColors.darkOnSurfaceVariant
-                                      : AppColors.lightOnSurfaceVariant,
-                                ),
-                              )
-                            : Icon(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 拖拽指示器
+              const SheetDragHandle(bottomPadding: 0),
+              // 歌曲信息头
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: isDark
+                            ? AppColors.darkSurfaceVariant
+                            : AppColors.lightSurfaceVariant,
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: track.coverFile != null
+                          ? Image.file(
+                              track.coverFile!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => Icon(
                                 Icons.music_note_rounded,
                                 color: isDark
                                     ? AppColors.darkOnSurfaceVariant
                                     : AppColors.lightOnSurfaceVariant,
                               ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          track.displayTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          track.displayArtist,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark
-                                ? AppColors.darkOnSurfaceVariant
-                                : AppColors.lightOnSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                            )
+                          : track.coverData != null
+                              ? Image.memory(
+                                  Uint8List.fromList(track.coverData!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => Icon(
+                                    Icons.music_note_rounded,
+                                    color: isDark
+                                        ? AppColors.darkOnSurfaceVariant
+                                        : AppColors.lightOnSurfaceVariant,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.music_note_rounded,
+                                  color: isDark
+                                      ? AppColors.darkOnSurfaceVariant
+                                      : AppColors.lightOnSurfaceVariant,
+                                ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            track.displayTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            track.displayArtist,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark
+                                  ? AppColors.darkOnSurfaceVariant
+                                  : AppColors.lightOnSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1),
-            _BottomSheetOption(
-              icon: Icons.queue_play_next_rounded,
-              label: context.l10n.musicListPlayNext,
-              isDark: isDark,
-              onTap: () {
-                Navigator.pop(context);
-                _addToPlayNext(context, ref);
-              },
-            ),
-            _BottomSheetOption(
-              icon: Icons.playlist_add_rounded,
-              label: context.l10n.musicContextMenuAddToQueue,
-              isDark: isDark,
-              onTap: () {
-                Navigator.pop(context);
-                _addToQueue(context, ref);
-              },
-            ),
-            _BottomSheetOption(
-              icon: Icons.favorite_border_rounded,
-              label: context.l10n.musicContextMenuAddToFavorites,
-              isDark: isDark,
-              onTap: () {
-                Navigator.pop(context);
-                _addToFavorites(context, ref);
-              },
-            ),
-            _BottomSheetOption(
-              icon: Icons.playlist_add_check_rounded,
-              label: context.l10n.musicContextMenuAddToPlaylist,
-              isDark: isDark,
-              onTap: () {
-                Navigator.pop(context);
-                _showPlaylistSelector(context, ref);
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
+              const Divider(height: 1),
+              _BottomSheetOption(
+                icon: Icons.queue_play_next_rounded,
+                label: context.l10n.musicListPlayNext,
+                isDark: isDark,
+                onTap: () {
+                  Navigator.pop(context);
+                  _addToPlayNext(context, ref);
+                },
+              ),
+              _BottomSheetOption(
+                icon: Icons.playlist_add_rounded,
+                label: context.l10n.musicContextMenuAddToQueue,
+                isDark: isDark,
+                onTap: () {
+                  Navigator.pop(context);
+                  _addToQueue(context, ref);
+                },
+              ),
+              _BottomSheetOption(
+                icon: Icons.search_rounded,
+                label: context.l10n.musicMenuManualScrape,
+                isDark: isDark,
+                onTap: () {
+                  Navigator.pop(context);
+                  unawaited(_openManualScraper(pageContext, ref));
+                },
+              ),
+              const Divider(height: 1),
+              _BottomSheetOption(
+                icon: Icons.favorite_border_rounded,
+                label: context.l10n.musicContextMenuAddToFavorites,
+                isDark: isDark,
+                onTap: () {
+                  Navigator.pop(context);
+                  _addToFavorites(context, ref);
+                },
+              ),
+              _BottomSheetOption(
+                icon: Icons.playlist_add_check_rounded,
+                label: context.l10n.musicContextMenuAddToPlaylist,
+                isDark: isDark,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showPlaylistSelector(context, ref);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _openManualScraper(BuildContext context, WidgetRef ref) async {
+    final connection = ref.read(activeConnectionsProvider)[track.sourceId];
+    if (connection == null || connection.status != SourceStatus.connected) {
+      if (context.mounted) {
+        context.showWarningToast(context.l10n.musicSourceNotConnected);
+      }
+      return;
+    }
+
+    try {
+      // Scraping reads through the source file system and does not need a
+      // playable URL. Local/permission-scoped sources can scrape successfully
+      // even when they cannot expose a direct playback URL at this moment.
+      final musicItem = track.toMusicItem();
+      if (!context.mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => ManualMusicScraperPage(
+            music: musicItem,
+            fileSystem: connection.adapter.fileSystem,
+          ),
+        ),
+      );
+    } on Exception catch (error, stackTrace) {
+      logger.e(
+        '_ModernMusicTile._openManualScraper: 打开手动刮削失败',
+        error,
+        stackTrace,
+      );
+      if (context.mounted) {
+        context.showErrorToast(context.l10n.musicActionFailed('$error'));
+      }
+    }
   }
 
   /// 添加到下一首播放

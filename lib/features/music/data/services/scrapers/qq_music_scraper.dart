@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
@@ -14,8 +15,8 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 /// 使用 QQ音乐 API 获取元数据、封面和歌词
 class QQMusicScraper implements MusicScraper {
   QQMusicScraper({this.cookie}) {
-    _dio = Dio(
-      BaseOptions(
+    _dio = DioClient.createTlsAware(
+      options: BaseOptions(
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         headers: {
@@ -445,8 +446,7 @@ class QQMusicScraper implements MusicScraper {
       }
       // 尝试从响应中提取错误信息
       if (responseData is Map<String, dynamic>) {
-        final errMsg =
-            responseData['errcode'] ??
+        final errMsg = responseData['errcode'] ??
             responseData['error'] ??
             responseData['message'];
         if (errMsg != null) {
@@ -454,8 +454,7 @@ class QQMusicScraper implements MusicScraper {
         }
       }
     } else {
-      errorMessage =
-          e.message ??
+      errorMessage = e.message ??
           e.error?.toString() ??
           appL10n.qqMusicScraperUnknownError(e.type.name);
     }

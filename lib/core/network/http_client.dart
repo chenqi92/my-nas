@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
-import 'package:my_nas/core/utils/hive_utils.dart';
+import 'package:my_nas/core/errors/exceptions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/tls_trust_store.dart';
+import 'package:my_nas/core/utils/hive_utils.dart';
 
 /// 支持自签名证书的 HTTP 客户端
 class InsecureHttpClient {
@@ -40,13 +42,13 @@ class InsecureHttpClient {
     if (_client != null) return _client!;
 
     final httpClient = HttpClient()
-      ..badCertificateCallback = (cert, host, port) =>
-          TlsTrustStore.allowsInvalidCertificate(
-            cert,
-            host,
-            port,
-            allowSelfSigned: trustSelfSigned,
-          );
+      ..badCertificateCallback =
+          (cert, host, port) => TlsTrustStore.allowsInvalidCertificate(
+                cert,
+                host,
+                port,
+                allowSelfSigned: trustSelfSigned,
+              );
 
     _client = IOClient(httpClient);
     return _client!;
@@ -55,39 +57,62 @@ class InsecureHttpClient {
   /// Creates an isolated client for an adapter with an explicit TLS policy.
   static http.Client createClient({required bool allowSelfSigned}) {
     final httpClient = HttpClient()
-      ..badCertificateCallback = (cert, host, port) =>
-          TlsTrustStore.allowsInvalidCertificate(
-            cert,
-            host,
-            port,
-            allowSelfSigned: allowSelfSigned,
-          );
+      ..badCertificateCallback =
+          (cert, host, port) => TlsTrustStore.allowsInvalidCertificate(
+                cert,
+                host,
+                port,
+                allowSelfSigned: allowSelfSigned,
+              );
     return IOClient(httpClient);
   }
 
   /// GET 请求
   static Future<http.Response> get(Uri url, {Map<String, String>? headers}) =>
-      client.get(url, headers: headers);
+      _withTlsRetry(url, () => client.get(url, headers: headers));
 
   /// POST 请求
   static Future<http.Response> post(
     Uri url, {
     Map<String, String>? headers,
     Object? body,
-  }) => client.post(url, headers: headers, body: body);
+  }) =>
+      _withTlsRetry(url, () => client.post(url, headers: headers, body: body));
 
   /// PUT 请求
   static Future<http.Response> put(
     Uri url, {
     Map<String, String>? headers,
     Object? body,
-  }) => client.put(url, headers: headers, body: body);
+  }) =>
+      _withTlsRetry(url, () => client.put(url, headers: headers, body: body));
 
   /// DELETE 请求
   static Future<http.Response> delete(
     Uri url, {
     Map<String, String>? headers,
-  }) => client.delete(url, headers: headers);
+  }) =>
+      _withTlsRetry(url, () => client.delete(url, headers: headers));
+
+  static Future<T> _withTlsRetry<T>(
+    Uri url,
+    Future<T> Function() request,
+  ) async {
+    try {
+      return await request();
+    } on Exception catch (error, stackTrace) {
+      if (url.scheme.toLowerCase() != 'https') rethrow;
+      final decision = await TlsTrustStore.requestTrustForEndpoint(url);
+      if (decision == TlsTrustDecision.trusted) return request();
+      if (decision == TlsTrustDecision.declined) {
+        throw TlsCertificateTrustDeclinedException(
+          message: appL10n.tlsCertificateTrustDeclined,
+          stackTrace: stackTrace,
+        );
+      }
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
 
   /// 关闭客户端
   static void close() {

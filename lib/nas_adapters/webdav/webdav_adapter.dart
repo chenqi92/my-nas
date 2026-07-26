@@ -24,10 +24,10 @@ class WebDavAdapter implements NasAdapter {
 
   @override
   NasAdapterInfo get info => NasAdapterInfo(
-    type: NasAdapterType.webdav,
-    name: 'WebDAV',
-    version: AppConstants.appVersion,
-  );
+        type: NasAdapterType.webdav,
+        name: 'WebDAV',
+        version: AppConstants.appVersion,
+      );
 
   @override
   bool get isConnected => _connected;
@@ -51,18 +51,16 @@ class WebDavAdapter implements NasAdapter {
         password: config.password,
       );
 
-      if (!config.verifySSL) {
-        _client!.c.httpClientAdapter = IOHttpClientAdapter(
-          createHttpClient: () => HttpClient()
-            ..badCertificateCallback = (cert, host, port) =>
-                TlsTrustStore.allowsInvalidCertificate(
-                  cert,
-                  host,
-                  port,
-                  allowSelfSigned: true,
-                ),
-        );
-      }
+      _client!.c.httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: () => HttpClient()
+          ..badCertificateCallback =
+              (cert, host, port) => TlsTrustStore.allowsInvalidCertificate(
+                    cert,
+                    host,
+                    port,
+                    allowSelfSigned: !config.verifySSL,
+                  ),
+      );
 
       // 设置超时和自签名证书支持
       _client!.setConnectTimeout(30000);

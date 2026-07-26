@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
@@ -415,9 +416,8 @@ class MusicScrapeService {
       // 标签缺失时仍可从常见的「歌手 - 标题.ext」文件名推出歌手。
       // 自动刮削把它作为约束，避免同名歌曲直接采用搜索接口第一项。
       final inferredArtist = track.displayArtist;
-      final searchArtist = inferredArtist == appL10n.musicUnknownArtist
-          ? null
-          : inferredArtist;
+      final searchArtist =
+          inferredArtist == appL10n.musicUnknownArtist ? null : inferredArtist;
 
       final result = await _scraperManager!.scrape(
         title: searchTitle,
@@ -429,8 +429,7 @@ class MusicScrapeService {
       );
 
       // 检查是否有任何有用的结果
-      final hasUsefulResult =
-          (needAnyMetadata && result.detail != null) ||
+      final hasUsefulResult = (needAnyMetadata && result.detail != null) ||
           (needCover && result.cover != null) ||
           (needLyrics && result.lyrics != null && result.lyrics!.hasLyrics);
 
@@ -534,7 +533,7 @@ class MusicScrapeService {
     // 下载封面（仅当缺少封面时）
     if (needCover && result.cover != null) {
       try {
-        final dio = Dio();
+        final dio = DioClient.createTlsAware();
         final response = await dio.get<List<int>>(
           result.cover!.coverUrl,
           options: Options(responseType: ResponseType.bytes),

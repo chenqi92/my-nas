@@ -2,7 +2,10 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
+import 'package:my_nas/core/errors/exceptions.dart';
+import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/hosts_resolver_service.dart';
+import 'package:my_nas/core/network/tls_trust_store.dart';
 
 /// 支持应用内 hosts 映射的 HTTP 客户端
 ///
@@ -26,7 +29,14 @@ class ResolvedHttpClient {
     if (_client != null) return _client!;
 
     final httpClient = HttpClient()
-      ..connectionFactory = _connectionFactory;
+      ..badCertificateCallback =
+          (certificate, host, port) => TlsTrustStore.allowsInvalidCertificate(
+                certificate,
+                host,
+                port,
+                allowSelfSigned: false,
+              );
+    apply(httpClient);
 
     _client = IOClient(httpClient);
     return _client!;
@@ -35,15 +45,22 @@ class ResolvedHttpClient {
   /// 包装外部传入的 HttpClient（用于 dio 等需要传入自定义 HttpClient 的场景）
   ///
   /// 调用方完全控制 HttpClient 的生命周期，本函数只是注入 connectionFactory。
-  static void apply(HttpClient httpClient) {
-    httpClient.connectionFactory = _connectionFactory;
+  static void apply(HttpClient httpClient, {bool allowSelfSigned = false}) {
+    httpClient.connectionFactory =
+        (uri, proxyHost, proxyPort) => _connectionFactory(
+              uri,
+              proxyHost,
+              proxyPort,
+              allowSelfSigned: allowSelfSigned,
+            );
   }
 
   static Future<ConnectionTask<Socket>> _connectionFactory(
     Uri uri,
     String? proxyHost,
-    int? proxyPort,
-  ) {
+    int? proxyPort, {
+    required bool allowSelfSigned,
+  }) async {
     // 走代理时跳过 hosts 映射 —— 代理服务器自己负责解析目标域名
     if (proxyHost != null && proxyPort != null) {
       return Socket.startConnect(proxyHost, proxyPort);
@@ -51,28 +68,71 @@ class ResolvedHttpClient {
 
     final resolved = HostsResolverService.instance.resolve(uri.host);
     final targetHost = resolved ?? uri.host;
-    return Socket.startConnect(targetHost, uri.port);
+    final socketTask = await Socket.startConnect(targetHost, uri.port);
+    if (uri.scheme.toLowerCase() != 'https') return socketTask;
+
+    // Supplying HttpClient.connectionFactory makes Dart expect an already
+    // secure socket for direct HTTPS connections. Upgrade explicitly while
+    // retaining the original host for SNI/certificate validation, even when
+    // the TCP destination came from the application Hosts mapping.
+    final secureSocket = socketTask.socket.then<Socket>(
+      (socket) => SecureSocket.secure(
+        socket,
+        host: uri.host,
+        onBadCertificate: (certificate) =>
+            TlsTrustStore.allowsInvalidCertificate(
+          certificate,
+          uri.host,
+          uri.port,
+          allowSelfSigned: allowSelfSigned,
+        ),
+      ),
+    );
+    return ConnectionTask.fromSocket<Socket>(secureSocket, socketTask.cancel);
   }
 
   static Future<http.Response> get(Uri url, {Map<String, String>? headers}) =>
-      client.get(url, headers: headers);
+      _withTlsRetry(url, () => client.get(url, headers: headers));
 
   static Future<http.Response> post(
     Uri url, {
     Map<String, String>? headers,
     Object? body,
   }) =>
-      client.post(url, headers: headers, body: body);
+      _withTlsRetry(url, () => client.post(url, headers: headers, body: body));
 
   static Future<http.Response> put(
     Uri url, {
     Map<String, String>? headers,
     Object? body,
   }) =>
-      client.put(url, headers: headers, body: body);
+      _withTlsRetry(url, () => client.put(url, headers: headers, body: body));
 
-  static Future<http.Response> delete(Uri url, {Map<String, String>? headers}) =>
-      client.delete(url, headers: headers);
+  static Future<http.Response> delete(
+    Uri url, {
+    Map<String, String>? headers,
+  }) =>
+      _withTlsRetry(url, () => client.delete(url, headers: headers));
+
+  static Future<T> _withTlsRetry<T>(
+    Uri url,
+    Future<T> Function() request,
+  ) async {
+    try {
+      return await request();
+    } on Exception catch (error, stackTrace) {
+      if (url.scheme.toLowerCase() != 'https') rethrow;
+      final decision = await TlsTrustStore.requestTrustForEndpoint(url);
+      if (decision == TlsTrustDecision.trusted) return request();
+      if (decision == TlsTrustDecision.declined) {
+        throw TlsCertificateTrustDeclinedException(
+          message: appL10n.tlsCertificateTrustDeclined,
+          stackTrace: stackTrace,
+        );
+      }
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
 
   static void close() {
     _client?.close();

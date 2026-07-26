@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
@@ -13,28 +14,25 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 /// 封面通过 Cover Art Archive 获取
 /// 文档: https://musicbrainz.org/doc/MusicBrainz_API
 class MusicBrainzScraper implements MusicScraper {
-  MusicBrainzScraper({
-    String? userAgent,
-  }) : _userAgent = userAgent ?? 'MyNAS/1.0 (https://github.com/my-nas)' {
-    _dio = Dio(BaseOptions(
-      baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': _userAgent,
-      },
-    ));
+  MusicBrainzScraper({String? userAgent})
+      : _userAgent = userAgent ?? 'MyNAS/1.0 (https://github.com/my-nas)' {
+    _dio = DioClient.createTlsAware(
+      options: BaseOptions(
+        baseUrl: _baseUrl,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {'Accept': 'application/json', 'User-Agent': _userAgent},
+      ),
+    );
 
-    _coverArtDio = Dio(BaseOptions(
-      baseUrl: _coverArtBaseUrl,
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': _userAgent,
-      },
-    ));
+    _coverArtDio = DioClient.createTlsAware(
+      options: BaseOptions(
+        baseUrl: _coverArtBaseUrl,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {'Accept': 'application/json', 'User-Agent': _userAgent},
+      ),
+    );
   }
 
   static const String _baseUrl = 'https://musicbrainz.org/ws/2';
@@ -59,14 +57,12 @@ class MusicBrainzScraper implements MusicScraper {
   @override
   Future<bool> testConnection() async {
     try {
-      await _rateLimitedRequest(() => _dio.get<dynamic>(
-            '/recording',
-            queryParameters: {
-              'query': 'test',
-              'limit': 1,
-              'fmt': 'json',
-            },
-          ));
+      await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          '/recording',
+          queryParameters: {'query': 'test', 'limit': 1, 'fmt': 'json'},
+        ),
+      );
       return true;
     } on Exception {
       return false;
@@ -94,24 +90,29 @@ class MusicBrainzScraper implements MusicScraper {
       final luceneQuery = queryParts.join(' AND ');
       final offset = (page - 1) * limit;
 
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            '/recording',
-            queryParameters: {
-              'query': luceneQuery,
-              'limit': limit,
-              'offset': offset,
-              'fmt': 'json',
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          '/recording',
+          queryParameters: {
+            'query': luceneQuery,
+            'limit': limit,
+            'offset': offset,
+            'fmt': 'json',
+          },
+        ),
+      );
 
       // 检查返回数据类型
       if (response.data is! Map<String, dynamic>) {
-        logger.w('MusicBrainzScraper: search 返回非 JSON 数据: ${response.data.runtimeType}');
+        logger.w(
+          'MusicBrainzScraper: search 返回非 JSON 数据: ${response.data.runtimeType}',
+        );
         return MusicScraperSearchResult.empty(type);
       }
 
       final data = response.data as Map<String, dynamic>;
-      final recordings = (data['recordings'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final recordings =
+          (data['recordings'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       final count = data['count'] as int? ?? 0;
 
       final items = recordings.map(_parseRecording).toList();
@@ -131,17 +132,21 @@ class MusicBrainzScraper implements MusicScraper {
   @override
   Future<MusicScraperDetail?> getDetail(String externalId) async {
     try {
-      final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-            '/recording/$externalId',
-            queryParameters: {
-              'inc': 'artists+releases+genres+isrcs+artist-credits',
-              'fmt': 'json',
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.get<dynamic>(
+          '/recording/$externalId',
+          queryParameters: {
+            'inc': 'artists+releases+genres+isrcs+artist-credits',
+            'fmt': 'json',
+          },
+        ),
+      );
 
       // 检查返回数据类型
       if (response.data is! Map<String, dynamic>) {
-        logger.w('MusicBrainzScraper: getDetail 返回非 JSON 数据: ${response.data.runtimeType}');
+        logger.w(
+          'MusicBrainzScraper: getDetail 返回非 JSON 数据: ${response.data.runtimeType}',
+        );
         return null;
       }
 
@@ -154,6 +159,7 @@ class MusicBrainzScraper implements MusicScraper {
       throw _handleDioError(e);
     }
   }
+
   /// 通过 Cover Art Archive 获取封面
   /// externalId 可以是 recording ID 或 release ID
   @override
@@ -164,13 +170,12 @@ class MusicBrainzScraper implements MusicScraper {
 
       // 如果是 recording ID，需要先获取关联的 release ID
       try {
-        final response = await _rateLimitedRequest(() => _dio.get<dynamic>(
-              '/recording/$externalId',
-              queryParameters: {
-                'inc': 'releases',
-                'fmt': 'json',
-              },
-            ));
+        final response = await _rateLimitedRequest(
+          () => _dio.get<dynamic>(
+            '/recording/$externalId',
+            queryParameters: {'inc': 'releases', 'fmt': 'json'},
+          ),
+        );
 
         if (response.data is Map<String, dynamic>) {
           final data = response.data as Map<String, dynamic>;
@@ -192,7 +197,9 @@ class MusicBrainzScraper implements MusicScraper {
 
       // 检查返回数据类型
       if (response.data is! Map<String, dynamic>) {
-        logger.w('MusicBrainzScraper: getCoverArt 返回非 JSON 数据: ${response.data.runtimeType}');
+        logger.w(
+          'MusicBrainzScraper: getCoverArt 返回非 JSON 数据: ${response.data.runtimeType}',
+        );
         return [];
       }
 
@@ -224,12 +231,14 @@ class MusicBrainzScraper implements MusicScraper {
         }
 
         if (imageUrl != null) {
-          results.add(CoverScraperResult(
-            source: type,
-            coverUrl: imageUrl,
-            thumbnailUrl: thumbnailUrl,
-            type: coverType,
-          ));
+          results.add(
+            CoverScraperResult(
+              source: type,
+              coverUrl: imageUrl,
+              thumbnailUrl: thumbnailUrl,
+              type: coverType,
+            ),
+          );
         }
       }
 
@@ -273,11 +282,13 @@ class MusicBrainzScraper implements MusicScraper {
 
     // 艺术家
     String? artist;
-    final artistCredit = (data['artist-credit'] as List?)?.cast<Map<String, dynamic>>();
+    final artistCredit =
+        (data['artist-credit'] as List?)?.cast<Map<String, dynamic>>();
     if (artistCredit != null && artistCredit.isNotEmpty) {
       artist = artistCredit.map((ac) {
         final artistData = ac['artist'] as Map<String, dynamic>?;
-        final name = ac['name'] as String? ?? artistData?['name'] as String? ?? '';
+        final name =
+            ac['name'] as String? ?? artistData?['name'] as String? ?? '';
         final joinPhrase = ac['joinphrase'] as String? ?? '';
         return '$name$joinPhrase';
       }).join();
@@ -321,11 +332,13 @@ class MusicBrainzScraper implements MusicScraper {
 
     // 艺术家
     String? artist;
-    final artistCredit = (data['artist-credit'] as List?)?.cast<Map<String, dynamic>>();
+    final artistCredit =
+        (data['artist-credit'] as List?)?.cast<Map<String, dynamic>>();
     if (artistCredit != null && artistCredit.isNotEmpty) {
       artist = artistCredit.map((ac) {
         final artistData = ac['artist'] as Map<String, dynamic>?;
-        final name = ac['name'] as String? ?? artistData?['name'] as String? ?? '';
+        final name =
+            ac['name'] as String? ?? artistData?['name'] as String? ?? '';
         final joinPhrase = ac['joinphrase'] as String? ?? '';
         return '$name$joinPhrase';
       }).join();
@@ -352,18 +365,21 @@ class MusicBrainzScraper implements MusicScraper {
       }
 
       // 唱片公司
-      final labelInfo = (firstRelease['label-info'] as List?)?.cast<Map<String, dynamic>>();
+      final labelInfo =
+          (firstRelease['label-info'] as List?)?.cast<Map<String, dynamic>>();
       if (labelInfo != null && labelInfo.isNotEmpty) {
         final labelData = labelInfo.first['label'] as Map<String, dynamic>?;
         label = labelData?['name'] as String?;
       }
 
       // 音轨信息
-      final media = (firstRelease['media'] as List?)?.cast<Map<String, dynamic>>();
+      final media =
+          (firstRelease['media'] as List?)?.cast<Map<String, dynamic>>();
       if (media != null && media.isNotEmpty) {
         for (var i = 0; i < media.length; i++) {
           final disc = media[i];
-          final tracks = (disc['tracks'] as List?)?.cast<Map<String, dynamic>>();
+          final tracks =
+              (disc['tracks'] as List?)?.cast<Map<String, dynamic>>();
           if (tracks != null) {
             for (final track in tracks) {
               final recording = track['recording'] as Map<String, dynamic>?;
@@ -378,11 +394,13 @@ class MusicBrainzScraper implements MusicScraper {
       }
 
       // 专辑艺术家
-      final releaseArtistCredit = (firstRelease['artist-credit'] as List?)?.cast<Map<String, dynamic>>();
+      final releaseArtistCredit = (firstRelease['artist-credit'] as List?)
+          ?.cast<Map<String, dynamic>>();
       if (releaseArtistCredit != null && releaseArtistCredit.isNotEmpty) {
         albumArtist = releaseArtistCredit.map((ac) {
           final artistData = ac['artist'] as Map<String, dynamic>?;
-          final name = ac['name'] as String? ?? artistData?['name'] as String? ?? '';
+          final name =
+              ac['name'] as String? ?? artistData?['name'] as String? ?? '';
           final joinPhrase = ac['joinphrase'] as String? ?? '';
           return '$name$joinPhrase';
         }).join();
@@ -393,7 +411,8 @@ class MusicBrainzScraper implements MusicScraper {
     final lengthMs = data['length'] as int?;
 
     // 流派
-    final genres = (data['genres'] as List?)?.cast<Map<String, dynamic>>()
+    final genres = (data['genres'] as List?)
+        ?.cast<Map<String, dynamic>>()
         .map((g) => g['name'] as String?)
         .where((name) => name != null && name.isNotEmpty)
         .cast<String>()

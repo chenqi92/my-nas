@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/features/music/data/services/scrapers/scraper_debug.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
@@ -13,8 +14,8 @@ import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
 /// 使用酷我音乐 API 获取元数据、封面和歌词
 class KuwoScraper implements MusicScraper {
   KuwoScraper() {
-    _dio = Dio(
-      BaseOptions(
+    _dio = DioClient.createTlsAware(
+      options: BaseOptions(
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         headers: {
@@ -228,9 +229,8 @@ class KuwoScraper implements MusicScraper {
 
     if (picUrl != null && picUrl.isNotEmpty) {
       // 替换为高清图片
-      final hdUrl = picUrl
-          .replaceAll('/120/', '/500/')
-          .replaceAll('/300/', '/500/');
+      final hdUrl =
+          picUrl.replaceAll('/120/', '/500/').replaceAll('/300/', '/500/');
       return [
         CoverScraperResult(
           source: type,
@@ -357,8 +357,7 @@ class KuwoScraper implements MusicScraper {
               .replaceFirst('MUSIC_', '');
     }
 
-    final songName =
-        data['name'] as String? ??
+    final songName = data['name'] as String? ??
         data['NAME'] as String? ??
         data['SONGNAME'] as String? ??
         '';
@@ -379,8 +378,7 @@ class KuwoScraper implements MusicScraper {
     }
 
     // 封面图片
-    final pic =
-        data['pic'] as String? ??
+    final pic = data['pic'] as String? ??
         data['albumpic'] as String? ??
         data['web_albumpic_short'] as String? ??
         data['hts_MVPIC'] as String? ??

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/errors.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 
@@ -24,7 +25,10 @@ enum PosterType {
 ///
 /// 从 TMDB 下载海报图片并上传到远程目录
 class RemotePosterService {
-  RemotePosterService({Dio? dio}) : _dio = dio ?? Dio();
+  RemotePosterService({Dio? dio})
+      : _dio = dio == null
+            ? DioClient.createTlsAware()
+            : DioClient.configureTls(dio);
 
   final Dio _dio;
 

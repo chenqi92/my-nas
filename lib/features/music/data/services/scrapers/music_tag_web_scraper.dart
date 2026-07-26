@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_source.dart';
 import 'package:my_nas/features/music/domain/interfaces/music_scraper.dart';
@@ -20,10 +21,8 @@ enum MusicTagWebSource {
   final String id;
   final String displayName;
 
-  static MusicTagWebSource fromId(String id) => MusicTagWebSource.values.firstWhere(
-        (s) => s.id == id,
-        orElse: () => MusicTagWebSource.netease,
-      );
+  static MusicTagWebSource fromId(String id) => MusicTagWebSource.values
+      .firstWhere((s) => s.id == id, orElse: () => MusicTagWebSource.netease);
 }
 
 /// Music Tag Web 刮削器
@@ -37,15 +36,17 @@ class MusicTagWebScraper implements MusicScraper {
     this.password,
     this.preferredSource = MusicTagWebSource.netease,
   }) {
-    _dio = Dio(BaseOptions(
-      baseUrl: _normalizeServerUrl(serverUrl),
-      connectTimeout: const Duration(seconds: 15),
-      receiveTimeout: const Duration(seconds: 15),
-      headers: {
-        'User-Agent': 'MyNAS/1.0',
-        'Content-Type': 'application/json',
-      },
-    ));
+    _dio = DioClient.createTlsAware(
+      options: BaseOptions(
+        baseUrl: _normalizeServerUrl(serverUrl),
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {
+          'User-Agent': 'MyNAS/1.0',
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
   }
 
   final String serverUrl;
@@ -71,7 +72,8 @@ class MusicTagWebScraper implements MusicScraper {
   /// 规范化服务器地址
   String _normalizeServerUrl(String url) {
     var normalized = url.trim();
-    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    if (!normalized.startsWith('http://') &&
+        !normalized.startsWith('https://')) {
       normalized = 'http://$normalized';
     }
     if (normalized.endsWith('/')) {
@@ -88,10 +90,7 @@ class MusicTagWebScraper implements MusicScraper {
     try {
       final response = await _dio.post<dynamic>(
         '/api/token/',
-        data: {
-          'username': username,
-          'password': password ?? '',
-        },
+        data: {'username': username, 'password': password ?? ''},
       );
 
       if (response.data != null && response.data is Map<String, dynamic>) {
@@ -111,13 +110,12 @@ class MusicTagWebScraper implements MusicScraper {
     try {
       await _ensureAuthenticated();
       // 尝试搜索测试
-      final response = await _rateLimitedRequest(() => _dio.post<dynamic>(
-            '/api/fetch_id3_by_title/',
-            data: {
-              'resource': preferredSource.id,
-              'title': 'test',
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.post<dynamic>(
+          '/api/fetch_id3_by_title/',
+          data: {'resource': preferredSource.id, 'title': 'test'},
+        ),
+      );
       return response.statusCode == 200;
     } on Exception {
       return false;
@@ -144,13 +142,12 @@ class MusicTagWebScraper implements MusicScraper {
         searchQuery += ' $album';
       }
 
-      final response = await _rateLimitedRequest(() => _dio.post<dynamic>(
-            '/api/fetch_id3_by_title/',
-            data: {
-              'resource': preferredSource.id,
-              'title': searchQuery,
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.post<dynamic>(
+          '/api/fetch_id3_by_title/',
+          data: {'resource': preferredSource.id, 'title': searchQuery},
+        ),
+      );
 
       if (response.data == null) {
         return MusicScraperSearchResult.empty(type);
@@ -215,13 +212,15 @@ class MusicTagWebScraper implements MusicScraper {
       await _ensureAuthenticated();
 
       // 搜索歌曲获取详情
-      final response = await _rateLimitedRequest(() => _dio.post<dynamic>(
-            '/api/fetch_id3_by_title/',
-            data: {
-              'resource': source,
-              'title': songId, // 尝试用 ID 搜索
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.post<dynamic>(
+          '/api/fetch_id3_by_title/',
+          data: {
+            'resource': source,
+            'title': songId, // 尝试用 ID 搜索
+          },
+        ),
+      );
 
       if (response.data == null) return null;
 
@@ -255,9 +254,9 @@ class MusicTagWebScraper implements MusicScraper {
 
       // 查找匹配的歌曲
       final song = validSongs.firstWhere(
-            (s) => s['id'].toString() == songId,
-            orElse: () => validSongs.first,
-          );
+        (s) => s['id'].toString() == songId,
+        orElse: () => validSongs.first,
+      );
 
       return _parseSongDetail(song, source);
     } on DioException catch (e) {
@@ -293,13 +292,12 @@ class MusicTagWebScraper implements MusicScraper {
     try {
       await _ensureAuthenticated();
 
-      final response = await _rateLimitedRequest(() => _dio.post<dynamic>(
-            '/api/fetch_lyric/',
-            data: {
-              'resource': source,
-              'song_id': songId,
-            },
-          ));
+      final response = await _rateLimitedRequest(
+        () => _dio.post<dynamic>(
+          '/api/fetch_lyric/',
+          data: {'resource': source, 'song_id': songId},
+        ),
+      );
 
       if (response.data == null) return null;
 
@@ -370,7 +368,10 @@ class MusicTagWebScraper implements MusicScraper {
   }
 
   /// 解析歌曲详情
-  MusicScraperDetail _parseSongDetail(Map<String, dynamic> data, String source) {
+  MusicScraperDetail _parseSongDetail(
+    Map<String, dynamic> data,
+    String source,
+  ) {
     final id = data['id']?.toString() ?? '';
     final name = data['name'] as String? ?? '';
     final artist = data['artist'] as String? ?? '';
