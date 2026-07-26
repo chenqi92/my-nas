@@ -128,15 +128,10 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 40,
+                  TraktAvatar(
+                    avatarUrl: userSettings?.avatarUrl,
                     backgroundColor: colorScheme.primaryContainer,
-                    backgroundImage: userSettings?.avatarUrl != null
-                        ? NetworkImage(userSettings!.avatarUrl!)
-                        : null,
-                    child: userSettings?.avatarUrl == null
-                        ? Icon(Icons.person_rounded, size: 40, color: colorScheme.primary)
-                        : null,
+                    foregroundColor: colorScheme.primary,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -1207,4 +1202,41 @@ class _TraktConnectionPageState extends ConsumerState<TraktConnectionPage>
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
+}
+
+/// Trakt 用户头像。
+///
+/// 头像服务不可达时显示本地占位图标，避免图片加载错误进入全局错误处理器。
+@visibleForTesting
+class TraktAvatar extends StatelessWidget {
+  const TraktAvatar({
+    required this.avatarUrl,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    super.key,
+  });
+
+  final String? avatarUrl;
+  final Color backgroundColor;
+  final Color foregroundColor;
+
+  @override
+  Widget build(BuildContext context) => CircleAvatar(
+    radius: 40,
+    backgroundColor: backgroundColor,
+    child: ClipOval(
+      child: avatarUrl != null
+          ? Image.network(
+              avatarUrl!,
+              width: 80,
+              height: 80,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => _fallback,
+            )
+          : _fallback,
+    ),
+  );
+
+  Widget get _fallback =>
+      Icon(Icons.person_rounded, size: 40, color: foregroundColor);
 }
