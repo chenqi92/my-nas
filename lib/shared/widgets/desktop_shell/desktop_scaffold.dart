@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/constants/app_constants.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/services/system_notification_service.dart';
 import 'package:my_nas/core/services/tray_service.dart';
 import 'package:my_nas/features/book/presentation/pages/book_list_page.dart'
     show BookListLoaded, bookListProvider;
@@ -13,8 +17,9 @@ import 'package:my_nas/features/comic/presentation/pages/comic_list_page.dart'
     show ComicListLoaded, comicListProvider;
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/downloader/presentation/widgets/download_detail_sheet.dart';
+import 'package:my_nas/features/file_browser/data/services/global_file_search_service.dart';
 import 'package:my_nas/features/file_browser/presentation/providers/file_browser_provider.dart'
-    show FileListLoaded, fileListProvider;
+    show browsableSourcesProvider, fileListProvider, selectedSourceIdProvider;
 import 'package:my_nas/features/music/presentation/pages/music_list_page.dart'
     show MusicListLoaded, musicListProvider;
 import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart';
@@ -386,27 +391,42 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
       return results.take(8).toList(growable: false);
     });
 
-    // 文件浏览器没有全盘索引；这里搜索当前已加载目录，避免把“全 NAS
-    // 递归搜索”伪装成已完成能力。
-    CmdkRegistry.instance.registerSearcher('files', (ref, query) {
-      final state = ref.read(fileListProvider);
-      if (state is! FileListLoaded) return const [];
-      final hit = state.files
-          .where(
-            (file) => desktopGlobalSearchMatches(query, [file.name, file.path]),
-          )
-          .take(6);
+    CmdkRegistry.instance.registerSearcher('files', (ref, query) async {
+      final sources = ref.read(browsableSourcesProvider);
+      final hit = await searchConnectedFileSystems(
+        [
+          for (final (source, connection) in sources)
+            GlobalFileSearchSource(
+              id: source.id,
+              name: source.displayName,
+              rootPath: source.initialBrowsePath,
+              fileSystem: connection.fileSystem,
+            ),
+        ],
+        query,
+        maxResultsPerSource: 6,
+      );
       return [
-        for (final file in hit)
+        for (final result in hit.take(12))
           CmdkCommand(
-            id: 'files.${file.path}',
-            label: file.name,
-            icon: file.isDirectory
+            id: 'files.${result.sourceId}.${result.file.path}',
+            label: result.file.name,
+            icon: result.file.isDirectory
                 ? Icons.folder_outlined
                 : Icons.insert_drive_file_outlined,
             group: l.shellNavGroupFoundation,
-            hint: state.path,
-            run: (_) => _go('/files'),
+            hint: '${result.sourceName} · ${result.file.path}',
+            run: (_) {
+              ref.read(selectedSourceIdProvider.notifier).state =
+                  result.sourceId;
+              final target = result.file.isDirectory
+                  ? result.file.path
+                  : parentDirectoryOf(result.file.path);
+              unawaited(
+                ref.read(fileListProvider.notifier).loadDirectory(target),
+              );
+              _go('/files');
+            },
           ),
       ];
     });
@@ -644,7 +664,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
     );
   }
 
-  /// 监听聚合下载任务，新出现的「已完成」任务在开关开启时弹应用内 toast。
+  /// 监听聚合下载任务，新出现的「已完成」任务在开关开启时发送系统通知，
+  /// 同时保留应用内 toast 作为前台反馈和原生通知不可用时的降级路径。
   /// 首帧把当前已完成项纳入基线，之后只对增量完成弹窗，并按 uniqueKey 去重。
   void _listenDownloadComplete() {
     ref.listen<List<UnifiedDownloadTask>>(aggregatedDownloadTasksProvider, (
@@ -664,7 +685,14 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
       final l = AppLocalizations.of(context);
       for (final t in completed) {
         if (_notifiedCompleted.add(t.uniqueKey) && notify) {
-          context.showSuccessToast(l.shellNavToastDownloadComplete(t.name));
+          final message = l.shellNavToastDownloadComplete(t.name);
+          context.showSuccessToast(message);
+          AppError.fireAndForget(
+            SystemNotificationService.instance
+                .show(title: AppConstants.appName, body: message)
+                .then<void>((_) {}),
+            action: 'downloadCompleteSystemNotification',
+          );
         }
       }
     });

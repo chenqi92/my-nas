@@ -365,6 +365,8 @@ class SourceEntity {
     'authorization',
     // Tracker RSS links commonly embed a passkey in their query string.
     'rssUrl',
+    // Custom attendance endpoints can likewise embed passkeys/tokens.
+    'checkInPath',
   };
 
   SourceEntity({

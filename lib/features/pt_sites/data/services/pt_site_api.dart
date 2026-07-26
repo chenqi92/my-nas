@@ -36,6 +36,9 @@ abstract class PTSiteApi {
   /// data. Implementations must opt in when they have a real parser/API.
   bool get supportsTransferStats => false;
 
+  /// 站点是否提供已配置且可调用的签到端点。
+  bool get supportsCheckIn => false;
+
   /// 获取基础 URL
   String get baseUrl => source.baseUrl;
 
@@ -78,10 +81,25 @@ abstract class PTSiteApi {
     int page = 1,
   });
 
+  Future<PTCheckInResult> checkIn() async =>
+      throw UnsupportedError('Check-in is not supported by this tracker.');
+
   /// 关闭连接
   void dispose() {
     _client.close();
   }
+}
+
+class PTCheckInResult {
+  const PTCheckInResult({
+    required this.success,
+    required this.message,
+    this.alreadyCheckedIn = false,
+  });
+
+  final bool success;
+  final bool alreadyCheckedIn;
+  final String message;
 }
 
 /// 排序方式
@@ -832,6 +850,45 @@ class MTeamApi extends PTSiteApi {
 class GenericPTSiteApi extends PTSiteApi {
   GenericPTSiteApi({required super.source, super.client});
 
+  String get _checkInPath =>
+      (source.extraConfig?['checkInPath'] as String? ?? '').trim();
+
+  @override
+  bool get supportsCheckIn => _checkInPath.isNotEmpty;
+
+  @override
+  Future<PTCheckInResult> checkIn() async {
+    if (!supportsCheckIn) return super.checkIn();
+    final trackerUri = Uri.parse(baseUrl);
+    final configured = Uri.tryParse(_checkInPath);
+    final uri = configured != null && configured.hasScheme
+        ? configured
+        : trackerUri.resolve(_checkInPath);
+    if (!_sameOrigin(trackerUri, uri)) {
+      throw StateError(
+        'The check-in endpoint must use the same origin as the tracker.',
+      );
+    }
+    final method = (source.extraConfig?['checkInMethod'] as String? ?? 'GET')
+        .toUpperCase();
+    final httpClient = _createHttpClient();
+    try {
+      final request = method == 'POST'
+          ? await httpClient.postUrl(uri)
+          : await httpClient.getUrl(uri);
+      headers.forEach(request.headers.set);
+      final response = await request.close();
+      final body = await response.transform(utf8.decoder).join();
+      final result = parsePTCheckInResponse(response.statusCode, body);
+      if (!result.success) {
+        throw StateError(result.message);
+      }
+      return result;
+    } finally {
+      httpClient.close();
+    }
+  }
+
   HttpClient _createHttpClient() {
     final httpClient = HttpClient()
       ..connectionTimeout = const Duration(seconds: 30);
@@ -1450,6 +1507,60 @@ class GenericPTSiteApi extends PTSiteApi {
     PTTransferLogType type = PTTransferLogType.all,
     int page = 1,
   }) async => throw UnimplementedError(appL10n.ptSiteUnimplementedError);
+}
+
+PTCheckInResult parsePTCheckInResponse(int statusCode, String body) {
+  final normalized = body.trim();
+  var message = normalized;
+  try {
+    final decoded = json.decode(normalized);
+    if (decoded is Map<String, dynamic>) {
+      message =
+          (decoded['message'] ?? decoded['msg'] ?? decoded['data'] ?? body)
+              .toString();
+      final success = decoded['success'];
+      final Object? code = decoded['code'];
+      if (success == false ||
+          (code != null && !_isSuccessfulCheckInCode(code))) {
+        return PTCheckInResult(success: false, message: message);
+      }
+    }
+  } on FormatException {
+    // HTML / 文本签到响应继续按 HTTP 状态和常见文案判断。
+  }
+  final lower = '$message $normalized'.toLowerCase();
+  final already =
+      lower.contains('already') ||
+      lower.contains('已签到') ||
+      lower.contains('已经签到') ||
+      lower.contains('重复签到');
+  final failed =
+      statusCode < 200 ||
+      statusCode >= 300 ||
+      lower.contains('签到失败') ||
+      lower.contains('check-in failed') ||
+      lower.contains('check in failed');
+  return PTCheckInResult(
+    success: !failed,
+    alreadyCheckedIn: already,
+    message: message.isEmpty
+        ? (already ? 'Already checked in.' : 'Check-in completed.')
+        : message,
+  );
+}
+
+bool _sameOrigin(Uri left, Uri right) =>
+    left.scheme.toLowerCase() == right.scheme.toLowerCase() &&
+    left.host.toLowerCase() == right.host.toLowerCase() &&
+    left.port == right.port;
+
+bool _isSuccessfulCheckInCode(Object code) {
+  if (code == 0 || code == 200) return true;
+  final normalized = code.toString().trim().toLowerCase();
+  return normalized == '0' ||
+      normalized == '200' ||
+      normalized == 'success' ||
+      normalized == 'ok';
 }
 
 /// PT 站点 API 工厂

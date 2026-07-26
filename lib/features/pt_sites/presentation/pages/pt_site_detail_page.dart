@@ -1246,22 +1246,23 @@ class _PTSiteDetailPageState extends ConsumerState<PTSiteDetailPage>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _TransferStatsSheet(sourceId: widget.source.id),
+      builder: (context) => PTTransferStatsSheet(sourceId: widget.source.id),
     );
   }
 }
 
 /// 传输统计弹框组件
-class _TransferStatsSheet extends ConsumerStatefulWidget {
-  const _TransferStatsSheet({required this.sourceId});
+class PTTransferStatsSheet extends ConsumerStatefulWidget {
+  const PTTransferStatsSheet({required this.sourceId, super.key});
 
   final String sourceId;
 
   @override
-  ConsumerState<_TransferStatsSheet> createState() => _TransferStatsSheetState();
+  ConsumerState<PTTransferStatsSheet> createState() =>
+      _TransferStatsSheetState();
 }
 
-class _TransferStatsSheetState extends ConsumerState<_TransferStatsSheet> {
+class _TransferStatsSheetState extends ConsumerState<PTTransferStatsSheet> {
   PTTransferLogType _selectedType = PTTransferLogType.all;
   PTTransferStats? _stats;
   bool _isLoading = true;

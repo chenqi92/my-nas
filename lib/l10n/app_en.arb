@@ -581,7 +581,7 @@
   "paneRemotedlGlobalLimitSetChip": "Set (qBittorrent)",
   "paneRemotedlGlobalLimitManagedTag": "Managed in client settings",
   "paneRemotedlNotifyTitle": "Notify on completion",
-  "paneRemotedlNotifyDesc": "In-app popup while running (system-level notifications planned)",
+  "paneRemotedlNotifyDesc": "Send a desktop system notification and keep the in-app completion alert",
   "paneRemotedlConnected": "Connected",
   "paneRemotedlDisconnected": "Disconnected",
   "paneRemotedlPreferenceChip": "Preferences",
@@ -1370,6 +1370,23 @@
   "filesCreateAction": "Create",
   "filesDownload": "Download",
   "filesShare": "Share",
+  "filesExtractHere": "Extract to current folder",
+  "filesExtracting": "Extracting {name}…",
+  "@filesExtracting": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "filesExtractSuccess": "Extracted {count} files to {path}",
+  "@filesExtractSuccess": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "path": {"type": "String"}
+    }
+  },
+  "filesExtractFailed": "Extraction failed: {error}",
+  "@filesExtractFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "filesExtractReadOnly": "The selected source is read-only and cannot extract files",
   "filesCopyTo": "Copy to...",
   "filesMoveTo": "Move to...",
   "filesRename": "Rename",
@@ -2074,6 +2091,14 @@
   "ptPageNoMatch": "No matching torrents.",
   "ptPageLoadMore": "Load more",
   "ptPageCheckIn": "Check-in",
+  "ptPageCheckInSuccess": "Check-in completed: {message}",
+  "@ptPageCheckInSuccess": {
+    "placeholders": {"message": {"type": "String"}}
+  },
+  "ptPageCheckInFailed": "Check-in failed: {error}",
+  "@ptPageCheckInFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
   "ptPageRatio": "Ratio",
   "ptPageBonus": "Bonus",
   "ptPageUploaded": "Uploaded",

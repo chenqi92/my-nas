@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +27,10 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
   final _focusNode = FocusNode();
   int _selected = 0;
   String _query = '';
+  List<CmdkCommand> _contentResults = const [];
+  Timer? _searchDebounce;
+  int _searchGeneration = 0;
+  bool _searching = false;
 
   @override
   void initState() {
@@ -36,22 +42,56 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  /// 合并：静态命令（matches query） + 所有 searcher 在 query 非空时的输出。
+  /// 合并：静态命令（matches query） + 已完成的异步内容搜索结果。
   List<CmdkCommand> _filtered() {
     final commands = CmdkRegistry.instance.all
         .where((c) => c.matches(_query))
-        .toList();
-    if (_query.isNotEmpty) {
-      for (final s in CmdkRegistry.instance.searchers) {
-        commands.addAll(s(ref, _query));
+        .toList()
+      ..addAll(_contentResults);
+    return List.unmodifiable(commands);
+  }
+
+  void _scheduleContentSearch(String value) {
+    _searchDebounce?.cancel();
+    final query = value.trim();
+    final generation = ++_searchGeneration;
+    if (query.isEmpty) {
+      setState(() {
+        _contentResults = const [];
+        _searching = false;
+      });
+      return;
+    }
+    setState(() {
+      _contentResults = const [];
+      _searching = true;
+    });
+    _searchDebounce = Timer(const Duration(milliseconds: 220), () {
+      unawaited(_loadContentResults(query, generation));
+    });
+  }
+
+  Future<void> _loadContentResults(String query, int generation) async {
+    final results = <CmdkCommand>[];
+    for (final searcher in CmdkRegistry.instance.searchers) {
+      try {
+        results.addAll(await Future.sync(() => searcher(ref, query)));
+      } on Exception {
+        // 单个数据源搜索失败不应让整个命令面板失效；其余域继续返回结果。
       }
     }
-    return List.unmodifiable(commands);
+    if (!mounted || generation != _searchGeneration) return;
+    setState(() {
+      _contentResults = List.unmodifiable(results);
+      _searching = false;
+      _selected = 0;
+    });
   }
 
   void _moveSelection(int delta, List<CmdkCommand> items) {
@@ -128,6 +168,7 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                                     _query = v;
                                     _selected = 0;
                                   });
+                                  _scheduleContentSearch(v);
                                 },
                                 decoration: InputDecoration(
                                   hintText: l.shellCmdkSearchPlaceholder,
@@ -147,7 +188,14 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                       ),
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxHeight: 420),
-                        child: items.isEmpty
+                        child: items.isEmpty && _searching
+                            ? const SizedBox(
+                                height: 96,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                            : items.isEmpty
                             ? Padding(
                                 padding: const EdgeInsets.all(24),
                                 child: Text(
@@ -155,27 +203,40 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                                   style: TextStyle(color: t.text2),
                                 ),
                               )
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                padding: const EdgeInsets.all(8),
-                                itemCount: items.length,
-                                itemBuilder: (_, i) {
-                                  final c = items[i];
-                                  final sel = i == _selected;
-                                  return _Item(
-                                    cmd: c,
-                                    selected: sel,
-                                    onTap: () {
-                                      widget.onClose();
-                                      c.run(context);
+                            : Stack(
+                                children: [
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    padding: const EdgeInsets.all(8),
+                                    itemCount: items.length,
+                                    itemBuilder: (_, i) {
+                                      final c = items[i];
+                                      final sel = i == _selected;
+                                      return _Item(
+                                        cmd: c,
+                                        selected: sel,
+                                        onTap: () {
+                                          widget.onClose();
+                                          c.run(context);
+                                        },
+                                        onHover: () {
+                                          if (_selected != i) {
+                                            setState(() => _selected = i);
+                                          }
+                                        },
+                                      );
                                     },
-                                    onHover: () {
-                                      if (_selected != i) {
-                                        setState(() => _selected = i);
-                                      }
-                                    },
-                                  );
-                                },
+                                  ),
+                                  if (_searching)
+                                    const Positioned(
+                                      left: 0,
+                                      right: 0,
+                                      top: 0,
+                                      child: LinearProgressIndicator(
+                                        minHeight: 2,
+                                      ),
+                                    ),
+                                ],
                               ),
                       ),
                     ],

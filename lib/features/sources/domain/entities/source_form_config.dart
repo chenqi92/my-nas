@@ -1282,6 +1282,28 @@ class SourceFormConfig {
           ),
         ],
       ),
+      const SourceFormSection(
+        title: '签到设置',
+        collapsible: true,
+        defaultExpanded: false,
+        description: '站点提供签到接口时填写；未配置则不会显示签到按钮',
+        fields: [
+          SourceFormField(
+            key: 'checkInPath',
+            label: '签到接口路径',
+            placeholder: '/attendance.php 或完整 URL',
+            required: false,
+          ),
+          SourceFormField(
+            key: 'checkInMethod',
+            label: '请求方式',
+            type: SourceFormFieldType.select,
+            options: ['GET', 'POST'],
+            defaultValue: 'GET',
+            required: false,
+          ),
+        ],
+      ),
       // 下载设置
       const SourceFormSection(
         title: '下载设置',

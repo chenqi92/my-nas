@@ -2,13 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
 
-/// 「下载完成通知」开关：下载任务完成时是否在应用内弹出 toast 提示。
-/// 持久化于 settings box，默认开启。系统级通知尚在规划中，当前仅在应用运行时
-/// 弹窗提示。
+/// 「下载完成通知」开关：下载任务完成时是否发送系统通知并显示应用内提示。
+/// 持久化于 settings box，默认开启。系统通知不可用时仍保留应用内提示。
 final downloadNotifyProvider =
     StateNotifierProvider<DownloadNotifyNotifier, bool>(
-  (ref) => DownloadNotifyNotifier(),
-);
+      (ref) => DownloadNotifyNotifier(),
+    );
 
 class DownloadNotifyNotifier extends StateNotifier<bool> {
   DownloadNotifyNotifier() : super(true) {

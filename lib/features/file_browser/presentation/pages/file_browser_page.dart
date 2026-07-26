@@ -9,6 +9,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/features/file_browser/data/services/remote_archive_extract_service.dart';
 import 'package:my_nas/features/file_browser/domain/file_open_target.dart';
 import 'package:my_nas/features/file_browser/presentation/providers/file_browser_provider.dart';
 import 'package:my_nas/features/file_browser/presentation/widgets/file_item_widget.dart';
@@ -1590,6 +1591,18 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
                 _downloadFile(file);
               },
             ),
+            if (remoteArchiveKindForName(file.name) != null)
+              _buildActionTile(
+                context,
+                isDark,
+                icon: Icons.unarchive_rounded,
+                iconColor: AppColors.fileArchive,
+                title: l.filesExtractHere,
+                onTap: () {
+                  Navigator.pop(context);
+                  _extractArchive(file);
+                },
+              ),
             _buildActionTile(
               context,
               isDark,
@@ -1650,6 +1663,42 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
         ],
       ),
     );
+  }
+
+  Future<void> _extractArchive(FileItem file) async {
+    final connection = ref.read(selectedBrowsableConnectionProvider);
+    final l = AppLocalizations.of(context);
+    if (connection == null ||
+        connection.isMediaServer ||
+        !connection.fileSystem.supportsWriteOperations) {
+      context.showErrorToast(l.filesExtractReadOnly);
+      return;
+    }
+    context.showInfoToast(l.filesExtracting(file.name));
+    try {
+      final result = await const RemoteArchiveExtractService().extract(
+        fileSystem: connection.fileSystem,
+        archive: file,
+        destinationDirectory: ref.read(currentPathProvider),
+      );
+      await ref.read(fileListProvider.notifier).refresh();
+      if (!mounted) return;
+      context.showSuccessToast(
+        l.filesExtractSuccess(result.fileCount, result.destinationPath),
+      );
+    } on Exception catch (e, st) {
+      if (!mounted) {
+        AppError.handle(e, st, 'fileBrowser.extractArchive');
+        return;
+      }
+      AppError.handleWithUI(
+        context,
+        e,
+        st,
+        l.filesExtractFailed(e.toString()),
+        'fileBrowser.extractArchive',
+      );
+    }
   }
 
   Widget _buildFileIcon(FileItem file, bool isDark) {

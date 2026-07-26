@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,17 +35,15 @@ class CmdkCommand {
 }
 
 /// 跨域搜索器：query 为空时返回空；非空时返回该域匹配的命令条目。
-typedef CmdkSearcher = List<CmdkCommand> Function(
-  WidgetRef ref,
-  String query,
-);
+typedef CmdkSearcher =
+    FutureOr<List<CmdkCommand>> Function(WidgetRef ref, String query);
 
 /// 全局命令注册表。`desktop_scaffold` 在初始化时注入路由跳转 / 主题切换 /
 /// "立即同步" / "添加数据源" 等命令；后续每个 feature 可在自己的 init
 /// hook 里 [register] 自己的命令（如 PT 搜索、传输管理）。
 ///
 /// 跨域内容搜索（影视 / 音乐 / 照片 / 阅读 / 文件 / 下载任务）通过
-/// [registerSearcher] 注入同步快照生成器：query 非空时被调用，返回值合并进结果。
+/// [registerSearcher] 注入同步或异步生成器：query 非空时被调用，返回值合并进结果。
 class CmdkRegistry {
   CmdkRegistry._();
   static final instance = CmdkRegistry._();

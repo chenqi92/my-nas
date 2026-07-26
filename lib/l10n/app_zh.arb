@@ -401,7 +401,7 @@
   "paneRemotedlGlobalLimitSetChip": "设置（qBittorrent）",
   "paneRemotedlGlobalLimitManagedTag": "客户端设置内管理",
   "paneRemotedlNotifyTitle": "完成后通知",
-  "paneRemotedlNotifyDesc": "应用运行时弹窗提示（系统级通知规划中）",
+  "paneRemotedlNotifyDesc": "发送桌面系统通知，并保留应用内完成提示",
   "paneRemotedlConnected": "已连接",
   "paneRemotedlDisconnected": "未连接",
   "paneRemotedlPreferenceChip": "偏好",
@@ -899,6 +899,23 @@
   "filesCreateAction": "创建",
   "filesDownload": "下载",
   "filesShare": "分享",
+  "filesExtractHere": "解压到当前目录",
+  "filesExtracting": "正在解压 {name}…",
+  "@filesExtracting": {
+    "placeholders": {"name": {"type": "String"}}
+  },
+  "filesExtractSuccess": "已解压 {count} 个文件到 {path}",
+  "@filesExtractSuccess": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "path": {"type": "String"}
+    }
+  },
+  "filesExtractFailed": "解压失败：{error}",
+  "@filesExtractFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
+  "filesExtractReadOnly": "当前数据源为只读，无法解压文件",
   "filesCopyTo": "复制到...",
   "filesMoveTo": "移动到...",
   "filesRename": "重命名",
@@ -1204,6 +1221,14 @@
   "ptPageNoMatch": "没有匹配的种子。",
   "ptPageLoadMore": "加载更多",
   "ptPageCheckIn": "签到",
+  "ptPageCheckInSuccess": "签到完成：{message}",
+  "@ptPageCheckInSuccess": {
+    "placeholders": {"message": {"type": "String"}}
+  },
+  "ptPageCheckInFailed": "签到失败：{error}",
+  "@ptPageCheckInFailed": {
+    "placeholders": {"error": {"type": "String"}}
+  },
   "ptPageRatio": "分享率",
   "ptPageBonus": "魔力",
   "ptPageUploaded": "上传",

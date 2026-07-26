@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/pt_sites/data/services/pt_site_api.dart'
+    show PTTorrentSortBy;
 import 'package:my_nas/features/pt_sites/domain/entities/pt_torrent.dart';
+import 'package:my_nas/features/pt_sites/presentation/pages/pt_site_detail_page.dart'
+    show PTTransferStatsSheet;
 import 'package:my_nas/features/pt_sites/presentation/providers/pt_site_provider.dart';
 import 'package:my_nas/features/pt_sites/presentation/widgets/send_to_downloader_sheet.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
@@ -161,6 +165,24 @@ class _PtSitesDesktopPageState extends ConsumerState<PtSitesDesktopPage> {
             category: _category,
             onCategory: (c) =>
                 setState(() => _category = _category == c ? null : c),
+            sortBy: listState.sortBy,
+            descending: listState.descending,
+            onSort: (sortBy) {
+              ref
+                  .read(ptTorrentListProvider(selected).notifier)
+                  .setSortBy(sortBy);
+              ref
+                  .read(ptTorrentListProvider(selected).notifier)
+                  .loadTorrents(refresh: true);
+            },
+            onToggleDirection: () {
+              ref
+                  .read(ptTorrentListProvider(selected).notifier)
+                  .toggleSortDirection();
+              ref
+                  .read(ptTorrentListProvider(selected).notifier)
+                  .loadTorrents(refresh: true);
+            },
             onSubmit: () => _search(selected),
             child: _resultsBody(context, t, conn, listState, selected),
           ),
@@ -355,6 +377,26 @@ class _SiteStatCard extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 11, color: t.text2),
           ),
+          if (conn.api?.supportsCheckIn ?? false) ...[
+            const SizedBox(height: 10),
+            _CheckInButton(sourceId: sourceId),
+          ],
+          if (conn.api?.supportsTransferStats ?? false) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: () => showAdaptiveModalSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => PTTransferStatsSheet(sourceId: sourceId),
+                ),
+                icon: const Icon(Icons.cloud_sync_rounded, size: 16),
+                label: Text(l.ptSiteDetailTransferList),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -379,6 +421,54 @@ class _SiteStatCard extends ConsumerWidget {
       );
 }
 
+class _CheckInButton extends ConsumerWidget {
+  const _CheckInButton({required this.sourceId});
+
+  final String sourceId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final state = ref.watch(ptCheckInProvider(sourceId));
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: OutlinedButton.icon(
+        onPressed: state.isLoading
+            ? null
+            : () async {
+                final result = await ref
+                    .read(ptCheckInProvider(sourceId).notifier)
+                    .perform();
+                if (!context.mounted) return;
+                final next = ref.read(ptCheckInProvider(sourceId));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      result != null
+                          ? l.ptPageCheckInSuccess(result.message)
+                          : l.ptPageCheckInFailed(next.error ?? ''),
+                    ),
+                  ),
+                );
+              },
+        icon: state.isLoading
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(
+                (state.result?.success ?? false)
+                    ? Icons.check_circle_outline_rounded
+                    : Icons.event_available_outlined,
+                size: 16,
+              ),
+        label: Text(l.ptPageCheckIn),
+      ),
+    );
+  }
+}
+
 /// 设计稿 `.panel`：顶部融入搜索框 + 分类 chip + 计数，下方 dense 表格。
 class _SearchPanel extends StatelessWidget {
   const _SearchPanel({
@@ -386,6 +476,10 @@ class _SearchPanel extends StatelessWidget {
     required this.resultCount,
     required this.category,
     required this.onCategory,
+    required this.sortBy,
+    required this.descending,
+    required this.onSort,
+    required this.onToggleDirection,
     required this.onSubmit,
     required this.child,
   });
@@ -394,6 +488,10 @@ class _SearchPanel extends StatelessWidget {
   final int resultCount;
   final String? category;
   final ValueChanged<String> onCategory;
+  final PTTorrentSortBy sortBy;
+  final bool descending;
+  final ValueChanged<PTTorrentSortBy> onSort;
+  final VoidCallback onToggleDirection;
   final VoidCallback onSubmit;
   final Widget child;
 
@@ -448,6 +546,39 @@ class _SearchPanel extends StatelessWidget {
                       onTap: () => onCategory(entry.key),
                     ),
                   ),
+                const SizedBox(width: 6),
+                PopupMenuButton<PTTorrentSortBy>(
+                  tooltip: l.ptSiteDetailSortMethod,
+                  initialValue: sortBy,
+                  onSelected: onSort,
+                  itemBuilder: (_) => [
+                    for (final option in _ptSortOptions(l))
+                      PopupMenuItem(
+                        value: option.$1,
+                        child: Row(
+                          children: [
+                            Icon(option.$3, size: 17),
+                            const SizedBox(width: 10),
+                            Text(option.$2),
+                          ],
+                        ),
+                      ),
+                  ],
+                  icon: const Icon(Icons.sort_rounded, size: 18),
+                ),
+                IconButton(
+                  tooltip: descending
+                      ? l.ptSiteDetailDescending
+                      : l.ptSiteDetailAscending,
+                  onPressed: onToggleDirection,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    descending
+                        ? Icons.arrow_downward_rounded
+                        : Icons.arrow_upward_rounded,
+                    size: 17,
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Text(
                   l.ptPageResultCount(resultCount),
@@ -462,6 +593,24 @@ class _SearchPanel extends StatelessWidget {
     );
   }
 }
+
+List<(PTTorrentSortBy, String, IconData)> _ptSortOptions(
+  AppLocalizations l,
+) => [
+  (PTTorrentSortBy.uploadTime, l.ptSiteDetailSortUploadTime, Icons.access_time),
+  (PTTorrentSortBy.size, l.ptSiteDetailSortSize, Icons.storage_rounded),
+  (PTTorrentSortBy.seeders, l.ptSiteDetailSortSeeders, Icons.upload_rounded),
+  (
+    PTTorrentSortBy.leechers,
+    l.ptSiteDetailSortLeechers,
+    Icons.download_rounded,
+  ),
+  (
+    PTTorrentSortBy.snatched,
+    l.ptSiteDetailSortSnatched,
+    Icons.check_circle_outline_rounded,
+  ),
+];
 
 /// 设计稿 `.dense-table thead`：标题/大小/做种/下载/评分/折扣/操作。
 class _ResultHeaderRow extends StatelessWidget {

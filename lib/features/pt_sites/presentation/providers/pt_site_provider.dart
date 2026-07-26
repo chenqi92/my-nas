@@ -116,6 +116,41 @@ class PTSiteConnectionNotifier extends StateNotifier<PTSiteConnection> {
   }
 }
 
+class PTCheckInState {
+  const PTCheckInState({this.isLoading = false, this.result, this.error});
+
+  final bool isLoading;
+  final PTCheckInResult? result;
+  final String? error;
+}
+
+final ptCheckInProvider =
+    StateNotifierProvider.family<PTCheckInNotifier, PTCheckInState, String>(
+  PTCheckInNotifier.new,
+);
+
+class PTCheckInNotifier extends StateNotifier<PTCheckInState> {
+  PTCheckInNotifier(this._ref, this._sourceId) : super(const PTCheckInState());
+
+  final Ref _ref;
+  final String _sourceId;
+
+  Future<PTCheckInResult?> perform() async {
+    final api = _ref.read(ptSiteConnectionProvider(_sourceId)).api;
+    if (api == null || !api.supportsCheckIn || state.isLoading) return null;
+
+    state = const PTCheckInState(isLoading: true);
+    try {
+      final result = await api.checkIn();
+      state = PTCheckInState(result: result);
+      return result;
+    } on Exception catch (e) {
+      state = PTCheckInState(error: e.toString());
+      return null;
+    }
+  }
+}
+
 /// 种子列表状态
 class PTTorrentListState {
   const PTTorrentListState({
