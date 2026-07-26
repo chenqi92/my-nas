@@ -124,8 +124,9 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
   /// 桌面分支：标准 [DesktopPageScaffold] 外壳 + 常驻左侧数据源侧栏。
   ///
-  /// body 给固定高度的卡片容器（左 200px 源侧栏 + 分隔线 + 右侧面包屑/网格），
-  /// 上传/新建等入口从移动端 FAB 改为页眉 actions 区，多选时右侧改用工具条。
+  /// body 填满页眉以下视口（左 200px 源侧栏 + 分隔线 + 右侧面包屑/网格），
+  /// 仅文件列表负责垂直滚动，避免页面与列表出现双重滚动条。上传/新建等入口从
+  /// 移动端 FAB 改为页眉 actions 区，多选时右侧改用工具条。
   Widget _buildDesktopLayout({
     required FileListState fileState,
     required String currentPath,
@@ -168,37 +169,32 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       ],
     );
 
-    // SingleChildScrollView 内需要有界高度：用视口高度减去页眉/留白的估值。
-    final bodyHeight = (context.screenHeight - 220).clamp(360.0, 1200.0);
-
     return DesktopPageScaffold(
       title: l.filesTitle,
       subtitle: subtitle,
       actions: _buildDesktopHeaderActions(isGridView, isDark, l),
-      body: SizedBox(
-        height: bodyHeight,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: t.panelBg,
-            border: Border.all(color: t.panelBorder),
-            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  width: 200,
-                  child: _buildDesktopSourceSidebar(
-                    browsableSources,
-                    selectedSourceId,
-                  ),
+      scrollable: false,
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          color: t.panelBg,
+          border: Border.all(color: t.panelBorder),
+          borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 200,
+                child: _buildDesktopSourceSidebar(
+                  browsableSources,
+                  selectedSourceId,
                 ),
-                VerticalDivider(width: 1, thickness: 1, color: t.panelBorder),
-                Expanded(child: rightPanel),
-              ],
-            ),
+              ),
+              VerticalDivider(width: 1, thickness: 1, color: t.panelBorder),
+              Expanded(child: rightPanel),
+            ],
           ),
         ),
       ),

@@ -3,7 +3,8 @@ import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_empty_state.dart';
 
 /// 所有「桌面变体」page 共用的页眉外框，统一 24/13.5 字号 + 上方 22px 间距
-/// + 居中 maxWidth 1340。子组件在 [body] slot 自由排版。
+/// + 居中 maxWidth 1340。普通页面默认整体滚动；文件浏览器等自身已有主滚动区的
+/// 页面可将 [scrollable] 设为 false，让 body 填满剩余视口，避免嵌套滚动。
 class DesktopPageScaffold extends StatelessWidget {
   const DesktopPageScaffold({
     required this.title,
@@ -11,6 +12,7 @@ class DesktopPageScaffold extends StatelessWidget {
     this.subtitle,
     this.actions,
     this.maxWidth = 1280,
+    this.scrollable = true,
     super.key,
   });
 
@@ -19,52 +21,59 @@ class DesktopPageScaffold extends StatelessWidget {
   final Widget body;
   final Widget? actions;
   final double maxWidth;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(28, 24, 28, 112),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: t.text0,
-                          ),
+    final page = Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: t.text0,
                         ),
-                        if (subtitle case final s?) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            s,
-                            style: TextStyle(fontSize: 13, color: t.text2),
-                          ),
-                        ],
+                      ),
+                      if (subtitle case final s?) ...[
+                        const SizedBox(height: 4),
+                        Text(s, style: TextStyle(fontSize: 13, color: t.text2)),
                       ],
-                    ),
+                    ],
                   ),
-                  if (actions != null) ...[const SizedBox(width: 18), actions!],
-                ],
-              ),
-              const SizedBox(height: 20),
-              body,
-            ],
-          ),
+                ),
+                if (actions != null) ...[const SizedBox(width: 18), actions!],
+              ],
+            ),
+            const SizedBox(height: 20),
+            if (scrollable) body else Expanded(child: body),
+          ],
         ),
       ),
+    );
+
+    if (scrollable) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(28, 24, 28, 112),
+        child: page,
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(28, 24, 28, 28),
+      child: page,
     );
   }
 }

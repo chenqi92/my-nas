@@ -10,7 +10,6 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
-import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
@@ -18,8 +17,8 @@ import 'package:my_nas/shared/widgets/dialogs/source_wizard_dialog.dart';
 
 /// 桌面端「数据源」骨架。
 ///
-/// 视觉对齐设计稿 ops2.jsx (Sources)：source card grid + 状态点 + 库映射
-/// chips + 「添加源」走 [SourceWizardDialog] 多步弹窗。
+/// 宽屏把「已配置的连接」作为主区域，把局域网发现收敛为右侧辅助面板；
+/// 窄屏按相同优先级纵向排列。添加源仍走 [SourceWizardDialog] 多步弹窗。
 class SourcesDesktopPage extends ConsumerStatefulWidget {
   const SourcesDesktopPage({super.key});
 
@@ -61,51 +60,58 @@ class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
           label: l.sourcesPageAddSource,
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 局域网自动发现区：放在已连接源 grid 之上，入口始终可见。
-          const _DiscoveredDevicesSection(),
-          sourcesAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text(
-              l.sourcesPageLoadError(e.toString()),
-              style: TextStyle(color: t.err),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final configured = sourcesAsync.when(
+            loading: () => const _SourcesLoadingPanel(),
+            error: (e, _) => _SourcesMessagePanel(
+              icon: Icons.error_outline_rounded,
+              message: l.sourcesPageLoadError(e.toString()),
+              color: t.err,
             ),
             data: (sources) {
-              if (sources.isEmpty) {
-                return DesktopComingSoon(
-                  icon: Icons.lan_outlined,
-                  message: l.sourcesPageEmptyHint,
-                );
-              }
               // 库映射来自 mediaLibraryConfig 派生：源 → 已映射的媒体类型集合，
               // 设计稿 s.libs 没有对应后端字段，故从既有 state 派生而非臆造。
               final libsConfig = ref
                   .watch(mediaLibraryConfigProvider)
                   .valueOrNull;
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: sources.length,
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 330,
-                  mainAxisExtent: 168,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 14,
-                ),
-                itemBuilder: (_, i) {
-                  final s = sources[i];
-                  return _SourceCard(
-                    source: s,
-                    conn: connections[s.id],
-                    libs: _libsForSource(libsConfig, s.id),
-                  );
-                },
+              return _ConfiguredSourcesSection(
+                sources: sources,
+                connections: connections,
+                libsConfig: libsConfig,
               );
             },
-          ),
-        ],
+          );
+
+          // 右栏控制在 400–460px，发现结果不会再横跨整页；小窗口改为
+          // 纵向布局，避免两个面板被硬挤成狭窄的两列。
+          if (constraints.maxWidth >= 1080) {
+            final discoveryWidth = (constraints.maxWidth * 0.36).clamp(
+              400.0,
+              460.0,
+            );
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: configured),
+                const SizedBox(width: 18),
+                SizedBox(
+                  width: discoveryWidth,
+                  child: const _DiscoveredDevicesSection(),
+                ),
+              ],
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              configured,
+              const SizedBox(height: 18),
+              const _DiscoveredDevicesSection(),
+            ],
+          );
+        },
       ),
     );
   }
@@ -124,12 +130,238 @@ class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
   }
 }
 
+/// 页面主区域：把已配置源呈现为一组全宽连接行，避免只有一个源时出现
+/// 一张孤零零的小卡片，也让状态、测试和更多操作保持在同一条阅读路径上。
+class _ConfiguredSourcesSection extends StatelessWidget {
+  const _ConfiguredSourcesSection({
+    required this.sources,
+    required this.connections,
+    required this.libsConfig,
+  });
+
+  final List<SourceEntity> sources;
+  final Map<String, SourceConnection> connections;
+  final MediaLibraryConfig? libsConfig;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final t = DesignTokens.of(context);
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PanelHeader(
+            icon: Icons.dns_rounded,
+            title: l.sourcesPageConfiguredConnections,
+            subtitle: l.paneSourcesCount(sources.length),
+          ),
+          _PanelDivider(color: t.hairline),
+          if (sources.isEmpty)
+            _SourcesEmptyState(
+              title: l.paneSourcesEmptyTitle,
+              description: l.paneSourcesEmptyDesc,
+            )
+          else
+            for (var i = 0; i < sources.length; i++) ...[
+              _SourceCard(
+                source: sources[i],
+                conn: connections[sources[i].id],
+                libs: _SourcesDesktopPageState._libsForSource(
+                  libsConfig,
+                  sources[i].id,
+                ),
+              ),
+              if (i != sources.length - 1)
+                Padding(
+                  padding: const EdgeInsets.only(left: 72),
+                  child: _PanelDivider(color: t.hairline),
+                ),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PanelHeader extends StatelessWidget {
+  const _PanelHeader({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: t.chipBgActive,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: t.accentBright),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: t.text0,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 11.5, color: t.text2),
+                ),
+              ],
+            ),
+          ),
+          if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+        ],
+      ),
+    );
+  }
+}
+
+class _PanelDivider extends StatelessWidget {
+  const _PanelDivider({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(height: 1, color: color);
+}
+
+class _SourcesLoadingPanel extends StatelessWidget {
+  const _SourcesLoadingPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final t = DesignTokens.of(context);
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          _PanelHeader(
+            icon: Icons.dns_rounded,
+            title: l.sourcesPageConfiguredConnections,
+            subtitle: l.paneSourcesLoading,
+          ),
+          _PanelDivider(color: t.hairline),
+          const SizedBox(
+            height: 112,
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SourcesMessagePanel extends StatelessWidget {
+  const _SourcesMessagePanel({
+    required this.icon,
+    required this.message,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String message;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 30),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 19, color: color),
+          const SizedBox(width: 9),
+          Flexible(
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12.5, color: color),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _SourcesEmptyState extends StatelessWidget {
+  const _SourcesEmptyState({required this.title, required this.description});
+
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = DesignTokens.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+      child: Column(
+        children: [
+          Icon(Icons.lan_outlined, size: 28, color: t.text3),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+              color: t.text1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 11.5, color: t.text2),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// 「发现的设备」区：mDNS / Bonjour 自动扫描到的可添加设备列表。
 ///
-/// 卡片头部含标题 + 扫描状态文案（正在扫描…/发现 N 台）+「重新扫描」按钮；
-/// 下方为设备行（类型图标 + 名称 + host:port·类型 +「添加」一键预填进添加源
-/// 表单）。没有结果时仍保留扫描入口，避免功能在扫描结束后“消失”。
-/// 视觉对齐本页 [AppCard]。
+/// 面板头部含扫描状态 + 重新扫描，下面使用紧凑设备行。宽屏时固定在右栏，
+/// 没有结果时仍保留扫描入口，避免功能在扫描结束后“消失”。
 class _DiscoveredDevicesSection extends ConsumerWidget {
   const _DiscoveredDevicesSection();
 
@@ -150,70 +382,66 @@ class _DiscoveredDevicesSection extends ConsumerWidget {
         ? l.paneSourcesDiscoveryEmpty
         : l.paneSourcesDiscoveryIdle;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: AppCard(
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.radar_rounded, size: 18, color: t.accentBright),
-                const SizedBox(width: 9),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l.paneSourcesDiscoveredSection,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: t.text0,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        statusText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 12, color: t.text2),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (state.isDiscovering)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 4),
-                    child: SizedBox(
-                      width: 14,
-                      height: 14,
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PanelHeader(
+            icon: Icons.radar_rounded,
+            title: l.paneSourcesDiscoveryTitle,
+            subtitle: statusText,
+            trailing: AppButton(
+              label: state.isDiscovering
+                  ? l.paneSourcesScanning
+                  : l.paneSourcesScan,
+              icon: state.isDiscovering
+                  ? Icons.sync_rounded
+                  : Icons.refresh_rounded,
+              dense: true,
+              onPressed: state.isDiscovering
+                  ? null
+                  : () => ref
+                        .read(networkDiscoveryProvider.notifier)
+                        .startDiscovery(),
+            ),
+          ),
+          _PanelDivider(color: t.hairline),
+          if (devices.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              child: Column(
+                children: [
+                  if (state.isDiscovering)
+                    SizedBox(
+                      width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: t.accentBright,
                       ),
-                    ),
+                    )
+                  else
+                    Icon(Icons.wifi_find_rounded, size: 26, color: t.text3),
+                  const SizedBox(height: 10),
+                  Text(
+                    statusText,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 11.5, color: t.text2),
                   ),
-                AppChip(
-                  label: state.isDiscovering
-                      ? l.paneSourcesScanning
-                      : l.paneSourcesScan,
-                  icon: Icons.refresh_rounded,
-                  compact: true,
-                  onTap: state.isDiscovering
-                      ? null
-                      : () => ref
-                            .read(networkDiscoveryProvider.notifier)
-                            .startDiscovery(),
+                ],
+              ),
+            )
+          else
+            for (var i = 0; i < devices.length; i++) ...[
+              _DiscoveryRow(device: devices[i]),
+              if (i != devices.length - 1)
+                Padding(
+                  padding: const EdgeInsets.only(left: 62),
+                  child: _PanelDivider(color: t.hairline),
                 ),
-              ],
-            ),
-            for (final device in devices) _DiscoveryRow(device: device),
-          ],
-        ),
+            ],
+        ],
       ),
     );
   }
@@ -230,7 +458,7 @@ class _DiscoveryRow extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
           Container(
@@ -268,11 +496,11 @@ class _DiscoveryRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          AppChip(
+          AppButton(
             label: l.paneSourcesAddShort,
             icon: Icons.add_rounded,
-            compact: true,
-            onTap: () => SourceFormPage.openAdaptive<void>(
+            dense: true,
+            onPressed: () => SourceFormPage.openAdaptive<void>(
               context,
               sourceType: device.type,
               initialValues: {
@@ -288,7 +516,7 @@ class _DiscoveryRow extends StatelessWidget {
   }
 }
 
-/// 单张数据源卡片。视觉对齐 ops2.jsx Sources 49-67。
+/// 单条已配置连接：在宽面板中横向排列关键信息和操作，小宽度时自动换行。
 class _SourceCard extends ConsumerWidget {
   const _SourceCard({
     required this.source,
@@ -382,113 +610,136 @@ class _SourceCard extends ConsumerWidget {
       conn?.errorMessage,
     );
 
-    final card = AppCard(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    final identity = Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: t.insetBg,
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Icon(source.type.icon, size: 20, color: t.accentBright),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: t.insetBg,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Icon(source.type.icon, size: 20, color: t.accentBright),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            source.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: t.text0,
-                            ),
-                          ),
-                        ),
-                        // 「需 2FA」从实时连接态派生（无静态 two_fa 字段）。
-                        if (status == SourceStatus.requires2FA) ...[
-                          const SizedBox(width: 7),
-                          const AppTag('2FA', variant: TagVariant.accent),
-                        ],
-                      ],
-                    ),
-                    Text(
-                      source.host.isEmpty
-                          ? source.type.displayName
-                          : '${source.type.displayName} · ${source.host}',
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      source.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: t.text2),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: t.text0,
+                      ),
                     ),
+                  ),
+                  // 「需 2FA」从实时连接态派生（无静态 two_fa 字段）。
+                  if (status == SourceStatus.requires2FA) ...[
+                    const SizedBox(width: 7),
+                    const AppTag('2FA', variant: TagVariant.accent),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                source.host.isEmpty
+                    ? source.type.displayName
+                    : '${source.type.displayName} · ${source.host}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11.5, color: t.text2),
+              ),
+              if (libs.isNotEmpty) ...[
+                const SizedBox(height: 7),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    for (final lib in libs)
+                      AppTag(l.sourcesPageLibraryTag(lib)),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              if (isPlan)
-                AppTag(l.sourcesPageComingSoon, variant: TagVariant.plan)
-              else
-                _SourceMenu(
-                  color: t.text2,
-                  onEdit: () => _edit(context),
-                  onReconnect: () => _reconnect(context, ref),
-                  onDelete: () => _confirmDelete(context, ref),
-                ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              StatusDot(dot),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: isErr ? t.err : t.text1,
-                  ),
-                ),
-              ),
-              if (!isPlan)
-                AppChip(
-                  label: l.sourcesPageTestConnection,
-                  compact: true,
-                  onTap: () => _reconnect(context, ref),
-                ),
-            ],
-          ),
-          if (libs.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                for (final lib in libs) AppTag(l.sourcesPageLibraryTag(lib)),
               ],
+            ],
+          ),
+        ),
+      ],
+    );
+
+    final stateAndActions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        StatusDot(dot),
+        const SizedBox(width: 8),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 138),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: isErr ? t.err : t.text1,
             ),
-          ],
+          ),
+        ),
+        if (!isPlan) ...[
+          const SizedBox(width: 14),
+          AppButton(
+            label: l.sourcesPageTestConnection,
+            dense: true,
+            onPressed: () => _reconnect(context, ref),
+          ),
+          const SizedBox(width: 4),
+          _SourceMenu(
+            color: t.text2,
+            onEdit: () => _edit(context),
+            onReconnect: () => _reconnect(context, ref),
+            onDelete: () => _confirmDelete(context, ref),
+          ),
+        ] else ...[
+          const SizedBox(width: 12),
+          AppTag(l.sourcesPageComingSoon, variant: TagVariant.plan),
         ],
+      ],
+    );
+
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 620) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                identity,
+                const SizedBox(height: 13),
+                Align(alignment: Alignment.centerRight, child: stateAndActions),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: identity),
+              const SizedBox(width: 18),
+              stateAndActions,
+            ],
+          );
+        },
       ),
     );
 
-    // plan 卡整体降透明，呼应设计稿 opacity:.75。
-    return isPlan ? Opacity(opacity: 0.75, child: card) : card;
+    // plan 行整体降透明，呼应既有视觉语义。
+    return isPlan ? Opacity(opacity: 0.75, child: row) : row;
   }
 
   /// 把（plan / 实时连接态）映射为「圆点 + 文案 + 是否错误色」。
