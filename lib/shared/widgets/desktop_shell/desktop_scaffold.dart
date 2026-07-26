@@ -7,9 +7,26 @@ import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/services/tray_service.dart';
+import 'package:my_nas/features/book/presentation/pages/book_list_page.dart'
+    show BookListLoaded, bookListProvider;
+import 'package:my_nas/features/comic/presentation/pages/comic_list_page.dart'
+    show ComicListLoaded, comicListProvider;
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
+import 'package:my_nas/features/downloader/presentation/widgets/download_detail_sheet.dart';
+import 'package:my_nas/features/file_browser/presentation/providers/file_browser_provider.dart'
+    show FileListLoaded, fileListProvider;
+import 'package:my_nas/features/music/presentation/pages/music_list_page.dart'
+    show MusicListLoaded, musicListProvider;
 import 'package:my_nas/features/music/presentation/providers/lyric_provider.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
+import 'package:my_nas/features/note/presentation/pages/note_list_page.dart'
+    show NotePageLoaded, notePageProvider;
+import 'package:my_nas/features/note/presentation/widgets/note_tree_widget.dart';
+import 'package:my_nas/features/photo/presentation/pages/photo_list_page.dart'
+    show PhotoListLoaded, photoListProvider;
+import 'package:my_nas/features/reading/presentation/pages/reading_desktop_page.dart'
+    show desktopReadingTabProvider;
+import 'package:my_nas/features/video/presentation/pages/video_detail_page.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
@@ -30,7 +47,34 @@ import 'package:my_nas/shared/widgets/desktop_shell/desktop_lyric_float.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_sidebar.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_topbar.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/mini_dock.dart';
-import 'package:my_nas/shared/widgets/dialogs/film_detail_sheet.dart';
+
+/// 顶部全局搜索承诺覆盖的内容域。测试以此防止桌面外壳重构时再次退化为
+/// 只有影视搜索。
+@visibleForTesting
+const desktopGlobalSearchDomains = <String>{
+  'video',
+  'music',
+  'photo',
+  'reading',
+  'files',
+  'downloads',
+};
+
+@visibleForTesting
+bool desktopGlobalSearchMatches(String query, Iterable<String?> fields) {
+  final normalized = query.trim().toLowerCase();
+  if (normalized.isEmpty) return false;
+  return fields.whereType<String>().any(
+    (field) => field.toLowerCase().contains(normalized),
+  );
+}
+
+Iterable<NoteTreeNode> _flattenNoteNodes(Iterable<NoteTreeNode> roots) sync* {
+  for (final node in roots) {
+    yield node;
+    yield* _flattenNoteNodes(node.children);
+  }
+}
 
 /// 桌面端新外壳的统一容器。仅在 `context.isDesktopLayout` 时被
 /// `main_scaffold.dart` 引用，移动端继续走旧 BottomNav 分支。
@@ -151,20 +195,24 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
 
   /// 注入跨域内容搜索器。query 非空时会被调用，搜索结果与静态命令一并显示。
   void _registerSearchers(AppLocalizations l) {
-    // 视频：在影视库 movies / tvShowGroups / others 内按 title 模糊匹配。
+    // 视频：在影视库 movies / tvShowGroups / others 内按标题和路径模糊匹配。
     CmdkRegistry.instance.registerSearcher('video', (ref, query) {
       final state = ref.read(videoListProvider);
       if (state is! VideoListLoaded) return const [];
-      final q = query.toLowerCase();
       final all = [
         ...state.movies,
         ...state.tvShowGroups.values.map((g) => g.representative),
         ...state.others,
       ];
-      final hit = all.where((m) {
-        final t = (m.title ?? m.fileName).toLowerCase();
-        return t.contains(q);
-      }).take(6);
+      final hit = all
+          .where(
+            (m) => desktopGlobalSearchMatches(query, [
+              m.title,
+              m.fileName,
+              m.filePath,
+            ]),
+          )
+          .take(6);
       return [
         for (final m in hit)
           CmdkCommand(
@@ -174,12 +222,218 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
             group: l.shellNavGroupFilms,
             hint: m.year != null ? '${m.year}' : null,
             run: (ctx) {
-              showDialog<void>(
-                context: ctx,
-                barrierColor: Colors.black.withValues(alpha: 0.55),
-                builder: (_) => FilmDetailSheet(meta: m),
+              Navigator.of(ctx, rootNavigator: true).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      VideoDetailPage(metadata: m, sourceId: m.sourceId),
+                ),
               );
             },
+          ),
+      ];
+    });
+
+    CmdkRegistry.instance.registerSearcher('music', (ref, query) {
+      final state = ref.read(musicListProvider);
+      if (state is! MusicListLoaded) return const [];
+      final hit = state.allTracks
+          .where(
+            (track) => desktopGlobalSearchMatches(query, [
+              track.displayTitle,
+              track.displayArtist,
+              track.displayAlbum,
+              track.fileName,
+              track.filePath,
+            ]),
+          )
+          .take(6);
+      return [
+        for (final track in hit)
+          CmdkCommand(
+            id: 'music.${track.sourceId}.${track.filePath}',
+            label: track.displayTitle,
+            icon: Icons.music_note_rounded,
+            group: l.shellNavGroupMyMedia,
+            hint: track.displayArtist,
+            run: (_) {
+              ref.read(musicListProvider.notifier).setSearchQuery(query);
+              _go('/music');
+            },
+          ),
+      ];
+    });
+
+    CmdkRegistry.instance.registerSearcher('photo', (ref, query) {
+      final state = ref.read(photoListProvider);
+      if (state is! PhotoListLoaded) return const [];
+      final hit = state.allPhotos
+          .where(
+            (photo) => desktopGlobalSearchMatches(query, [
+              photo.fileName,
+              photo.filePath,
+              photo.folderName,
+            ]),
+          )
+          .take(6);
+      return [
+        for (final photo in hit)
+          CmdkCommand(
+            id: 'photo.${photo.sourceId}.${photo.filePath}',
+            label: photo.fileName,
+            icon: Icons.photo_outlined,
+            group: l.shellNavGroupMyMedia,
+            hint: photo.folderName,
+            run: (_) {
+              ref.read(photoListProvider.notifier).setSearchQuery(query);
+              _go('/photo');
+            },
+          ),
+      ];
+    });
+
+    // 阅读：图书、漫画与已加载的笔记树共享一个搜索域，但点击时会落到
+    // 对应桌面分区，并复用各自已有的筛选状态。
+    CmdkRegistry.instance.registerSearcher('reading', (ref, query) {
+      final results = <CmdkCommand>[];
+      final books = ref.read(bookListProvider);
+      if (books is BookListLoaded) {
+        for (final book
+            in books.allBooks
+                .where(
+                  (book) => desktopGlobalSearchMatches(query, [
+                    book.displayName,
+                    book.displayAuthor,
+                    book.fileName,
+                    book.filePath,
+                  ]),
+                )
+                .take(4)) {
+          results.add(
+            CmdkCommand(
+              id: 'reading.book.${book.sourceId}.${book.filePath}',
+              label: book.displayName,
+              icon: Icons.menu_book_outlined,
+              group: l.shellNavGroupMyMedia,
+              hint: book.displayAuthor,
+              run: (_) {
+                ref.read(bookListProvider.notifier).setSearchQuery(query);
+                ref.read(desktopReadingTabProvider.notifier).state = '图书';
+                _go('/reading');
+              },
+            ),
+          );
+        }
+      }
+
+      final comics = ref.read(comicListProvider);
+      if (comics is ComicListLoaded) {
+        for (final comic
+            in comics.comics
+                .where(
+                  (comic) => desktopGlobalSearchMatches(query, [
+                    comic.folderName,
+                    comic.folderPath,
+                  ]),
+                )
+                .take(4)) {
+          results.add(
+            CmdkCommand(
+              id: 'reading.comic.${comic.sourceId}.${comic.folderPath}',
+              label: comic.folderName,
+              icon: Icons.collections_bookmark_outlined,
+              group: l.shellNavGroupMyMedia,
+              hint: comic.folderPath,
+              run: (_) {
+                ref.read(comicListProvider.notifier).setSearchQuery(query);
+                ref.read(desktopReadingTabProvider.notifier).state = '漫画';
+                _go('/reading');
+              },
+            ),
+          );
+        }
+      }
+
+      final notes = ref.read(notePageProvider);
+      if (notes is NotePageLoaded) {
+        for (final note
+            in _flattenNoteNodes(notes.treeNodes)
+                .where(
+                  (note) => desktopGlobalSearchMatches(query, [
+                    note.displayName,
+                    note.name,
+                    note.path,
+                  ]),
+                )
+                .take(4)) {
+          results.add(
+            CmdkCommand(
+              id: 'reading.note.${note.sourceId}.${note.path}',
+              label: note.displayName,
+              icon: note.type == NoteTreeNodeType.folder
+                  ? Icons.folder_outlined
+                  : Icons.note_outlined,
+              group: l.shellNavGroupMyMedia,
+              hint: note.path,
+              run: (_) {
+                ref.read(notePageProvider.notifier).setSearchQuery(query);
+                ref.read(desktopReadingTabProvider.notifier).state = '笔记';
+                _go('/reading');
+              },
+            ),
+          );
+        }
+      }
+      return results.take(8).toList(growable: false);
+    });
+
+    // 文件浏览器没有全盘索引；这里搜索当前已加载目录，避免把“全 NAS
+    // 递归搜索”伪装成已完成能力。
+    CmdkRegistry.instance.registerSearcher('files', (ref, query) {
+      final state = ref.read(fileListProvider);
+      if (state is! FileListLoaded) return const [];
+      final hit = state.files
+          .where(
+            (file) => desktopGlobalSearchMatches(query, [file.name, file.path]),
+          )
+          .take(6);
+      return [
+        for (final file in hit)
+          CmdkCommand(
+            id: 'files.${file.path}',
+            label: file.name,
+            icon: file.isDirectory
+                ? Icons.folder_outlined
+                : Icons.insert_drive_file_outlined,
+            group: l.shellNavGroupFoundation,
+            hint: state.path,
+            run: (_) => _go('/files'),
+          ),
+      ];
+    });
+
+    CmdkRegistry.instance.registerSearcher('downloads', (ref, query) {
+      final tasks = ref.read(aggregatedDownloadTasksProvider);
+      final hit = tasks
+          .where(
+            (task) => desktopGlobalSearchMatches(query, [
+              task.name,
+              task.sourceName,
+              task.savePath,
+            ]),
+          )
+          .take(6);
+      return [
+        for (final task in hit)
+          CmdkCommand(
+            id: 'downloads.${task.uniqueKey}',
+            label: task.name,
+            icon: Icons.download_rounded,
+            group: l.shellNavGroupTransferDownload,
+            hint: task.sourceName,
+            run: (ctx) => AppError.fireAndForget(
+              showDownloadDetailDrawer(ctx, task.uniqueKey),
+              action: 'openDownloadSearchResult',
+            ),
           ),
       ];
     });
@@ -231,9 +485,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => CastDeviceSheet(
-        onDeviceSelected: (_) => Navigator.of(ctx).pop(),
-      ),
+      builder: (ctx) =>
+          CastDeviceSheet(onDeviceSelected: (_) => Navigator.of(ctx).pop()),
     );
   }
 
@@ -281,8 +534,7 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
             const _OpenCmdkIntent(),
         const SingleActivator(LogicalKeyboardKey.keyK, control: true):
             const _OpenCmdkIntent(),
-        const SingleActivator(LogicalKeyboardKey.escape):
-            const _EscapeIntent(),
+        const SingleActivator(LogicalKeyboardKey.escape): const _EscapeIntent(),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
@@ -310,8 +562,10 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                       space: space,
                       collapsed: _collapsed,
                       currentRoute: currentPath,
-                      mediaGroups:
-                          _mediaGroups(l, ref.watch(mediaCountsProvider)),
+                      mediaGroups: _mediaGroups(
+                        l,
+                        ref.watch(mediaCountsProvider),
+                      ),
                       opsGroups: _opsGroups(l),
                       onSpaceChanged: (s) {
                         ref.read(desktopSpaceProvider.notifier).set(s);
@@ -338,7 +592,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                             onOpenActivity: () =>
                                 setState(() => _activityOpen = true),
                             onOpenAppearance: () => setState(
-                                () => _appearanceOpen = !_appearanceOpen),
+                              () => _appearanceOpen = !_appearanceOpen,
+                            ),
                           ),
                           Expanded(child: widget.navigationShell),
                         ],
@@ -348,9 +603,8 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
                 ),
                 if (hasMusic)
                   MiniDock(
-                    onOpenNowPlaying: () => GoRouter.of(context).push(
-                      '/music/player',
-                    ),
+                    onOpenNowPlaying: () =>
+                        GoRouter.of(context).push('/music/player'),
                     onOpenCast: _openCast,
                   ),
                 if (hasMusic && lyricFloat) const DesktopLyricFloat(),
@@ -393,131 +647,147 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
   /// 监听聚合下载任务，新出现的「已完成」任务在开关开启时弹应用内 toast。
   /// 首帧把当前已完成项纳入基线，之后只对增量完成弹窗，并按 uniqueKey 去重。
   void _listenDownloadComplete() {
-    ref.listen<List<UnifiedDownloadTask>>(
-      aggregatedDownloadTasksProvider,
-      (prev, next) {
-        final completed = next.where(
-          (t) => t.status == UnifiedDownloadStatus.completed,
-        );
-        if (!_completedBaselineReady) {
-          // 基线：首次回调把现有已完成任务标记为已见，不弹窗。
-          _completedBaselineReady = true;
-          _notifiedCompleted.addAll(completed.map((t) => t.uniqueKey));
-          return;
+    ref.listen<List<UnifiedDownloadTask>>(aggregatedDownloadTasksProvider, (
+      prev,
+      next,
+    ) {
+      final completed = next.where(
+        (t) => t.status == UnifiedDownloadStatus.completed,
+      );
+      if (!_completedBaselineReady) {
+        // 基线：首次回调把现有已完成任务标记为已见，不弹窗。
+        _completedBaselineReady = true;
+        _notifiedCompleted.addAll(completed.map((t) => t.uniqueKey));
+        return;
+      }
+      final notify = ref.read(downloadNotifyProvider);
+      final l = AppLocalizations.of(context);
+      for (final t in completed) {
+        if (_notifiedCompleted.add(t.uniqueKey) && notify) {
+          context.showSuccessToast(l.shellNavToastDownloadComplete(t.name));
         }
-        final notify = ref.read(downloadNotifyProvider);
-        final l = AppLocalizations.of(context);
-        for (final t in completed) {
-          if (_notifiedCompleted.add(t.uniqueKey) && notify) {
-            context.showSuccessToast(l.shellNavToastDownloadComplete(t.name));
-          }
-        }
-      },
-    );
+      }
+    });
   }
 
   // ---- nav items ----
 
   List<NavGroup> _mediaGroups(AppLocalizations l, MediaCounts counts) => [
-        NavGroup(items: [
-          NavEntry(
-            id: 'home',
-            route: '/home',
-            label: l.shellNavEntryHome,
-            icon: Icons.home_outlined,
-          ),
-        ]),
-        NavGroup(label: l.shellNavGroupMyMedia, items: [
-          NavEntry(
-            id: 'films',
-            route: '/video',
-            label: l.shellNavEntryFilms,
-            icon: Icons.movie_outlined,
-            count: formatCountBadge(counts.video),
-          ),
-          NavEntry(
-            id: 'live',
-            route: '/live',
-            label: l.shellNavEntryLive,
-            icon: Icons.cast_rounded,
-            live: true,
-          ),
-          NavEntry(
-            id: 'music',
-            route: '/music',
-            label: l.shellNavEntryMusic,
-            icon: Icons.library_music_outlined,
-            count: formatCountBadge(counts.music),
-          ),
-          NavEntry(
-            id: 'photos',
-            route: '/photo',
-            label: l.shellNavEntryPhotos,
-            icon: Icons.photo_library_outlined,
-            count: formatCountBadge(counts.photo),
-          ),
-          NavEntry(
-            id: 'reading',
-            route: '/reading',
-            label: l.shellNavEntryReading,
-            icon: Icons.menu_book_outlined,
-            count: formatCountBadge(counts.reading),
-          ),
-        ]),
-        NavGroup(label: l.shellNavGroupFoundation, items: [
-          NavEntry(
-            id: 'files',
-            route: '/files',
-            label: l.shellNavEntryFiles,
-            icon: Icons.folder_outlined,
-          ),
-        ]),
-      ];
+    NavGroup(
+      items: [
+        NavEntry(
+          id: 'home',
+          route: '/home',
+          label: l.shellNavEntryHome,
+          icon: Icons.home_outlined,
+        ),
+      ],
+    ),
+    NavGroup(
+      label: l.shellNavGroupMyMedia,
+      items: [
+        NavEntry(
+          id: 'films',
+          route: '/video',
+          label: l.shellNavEntryFilms,
+          icon: Icons.movie_outlined,
+          count: formatCountBadge(counts.video),
+        ),
+        NavEntry(
+          id: 'live',
+          route: '/live',
+          label: l.shellNavEntryLive,
+          icon: Icons.cast_rounded,
+          live: true,
+        ),
+        NavEntry(
+          id: 'music',
+          route: '/music',
+          label: l.shellNavEntryMusic,
+          icon: Icons.library_music_outlined,
+          count: formatCountBadge(counts.music),
+        ),
+        NavEntry(
+          id: 'photos',
+          route: '/photo',
+          label: l.shellNavEntryPhotos,
+          icon: Icons.photo_library_outlined,
+          count: formatCountBadge(counts.photo),
+        ),
+        NavEntry(
+          id: 'reading',
+          route: '/reading',
+          label: l.shellNavEntryReading,
+          icon: Icons.menu_book_outlined,
+          count: formatCountBadge(counts.reading),
+        ),
+      ],
+    ),
+    NavGroup(
+      label: l.shellNavGroupFoundation,
+      items: [
+        NavEntry(
+          id: 'files',
+          route: '/files',
+          label: l.shellNavEntryFiles,
+          icon: Icons.folder_outlined,
+        ),
+      ],
+    ),
+  ];
 
   List<NavGroup> _opsGroups(AppLocalizations l) => [
-        NavGroup(items: [
-          NavEntry(
-            id: 'ops',
-            route: '/ops',
-            label: l.shellNavEntryOpsOverview,
-            icon: Icons.dashboard_customize_outlined,
-          ),
-        ]),
-        NavGroup(label: l.shellNavGroupTransferDownload, items: [
-          NavEntry(
-            id: 'downloads',
-            route: '/download',
-            label: l.shellNavEntryDownloader,
-            icon: Icons.download_rounded,
-          ),
-          NavEntry(
-            id: 'transfers',
-            route: '/transfer',
-            label: l.shellNavEntryTransferQueue,
-            icon: Icons.swap_horiz_rounded,
-          ),
-        ]),
-        NavGroup(label: l.shellNavGroupResourceAutomation, items: [
-          NavEntry(
-            id: 'pt',
-            route: '/pt',
-            label: l.shellNavEntryPtSites,
-            icon: Icons.flag_circle_outlined,
-          ),
-          NavEntry(
-            id: 'nastool',
-            route: '/nastool',
-            label: l.shellNavEntryMediaAutomation,
-            icon: Icons.auto_awesome_outlined,
-          ),
-          NavEntry(
-            id: 'sources',
-            route: '/sources',
-            label: l.shellNavEntrySources,
-            icon: Icons.lan_rounded,
-          ),
-        ]),
-      ];
+    NavGroup(
+      items: [
+        NavEntry(
+          id: 'ops',
+          route: '/ops',
+          label: l.shellNavEntryOpsOverview,
+          icon: Icons.dashboard_customize_outlined,
+        ),
+      ],
+    ),
+    NavGroup(
+      label: l.shellNavGroupTransferDownload,
+      items: [
+        NavEntry(
+          id: 'downloads',
+          route: '/download',
+          label: l.shellNavEntryDownloader,
+          icon: Icons.download_rounded,
+        ),
+        NavEntry(
+          id: 'transfers',
+          route: '/transfer',
+          label: l.shellNavEntryTransferQueue,
+          icon: Icons.swap_horiz_rounded,
+        ),
+      ],
+    ),
+    NavGroup(
+      label: l.shellNavGroupResourceAutomation,
+      items: [
+        NavEntry(
+          id: 'pt',
+          route: '/pt',
+          label: l.shellNavEntryPtSites,
+          icon: Icons.flag_circle_outlined,
+        ),
+        NavEntry(
+          id: 'nastool',
+          route: '/nastool',
+          label: l.shellNavEntryMediaAutomation,
+          icon: Icons.auto_awesome_outlined,
+        ),
+        NavEntry(
+          id: 'sources',
+          route: '/sources',
+          label: l.shellNavEntrySources,
+          icon: Icons.lan_rounded,
+        ),
+      ],
+    ),
+  ];
 
   List<String> _crumbFor(AppLocalizations l, String path) {
     final map = <String, List<String>>{

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/aria2/presentation/providers/aria2_provider.dart';
+import 'package:my_nas/features/downloader/presentation/pages/downloader_list_page.dart';
 import 'package:my_nas/features/downloader/presentation/providers/downloader_aggregate_provider.dart';
 import 'package:my_nas/features/downloader/presentation/widgets/download_detail_sheet.dart';
 import 'package:my_nas/features/qbittorrent/presentation/providers/qbittorrent_provider.dart';
@@ -106,11 +107,13 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
         content: Text(l.dlPageDeleteSelectedConfirm(selected.length)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(l.dlPageCancel)),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.dlPageCancel),
+          ),
           FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(l.dlPageDelete)),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.dlPageDelete),
+          ),
         ],
       ),
     );
@@ -126,12 +129,15 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
     final allTasks = ref.watch(aggregatedDownloadTasksProvider);
     // 直连 HTTP 下载（DownloadService）任务，独立于下载器聚合，桌面端通过
     // 「下载管理」入口统一管理（文件/相册/书/笔记/漫画都可能创建这类任务）。
-    final directTasks = ref.watch(downloadTasksProvider).valueOrNull ?? const [];
+    final directTasks =
+        ref.watch(downloadTasksProvider).valueOrNull ?? const [];
     final directActive = directTasks
-        .where((task) =>
-            task.status == DownloadStatus.downloading ||
-            task.status == DownloadStatus.pending ||
-            task.status == DownloadStatus.paused)
+        .where(
+          (task) =>
+              task.status == DownloadStatus.downloading ||
+              task.status == DownloadStatus.pending ||
+              task.status == DownloadStatus.paused,
+        )
         .length;
 
     if (_client != null &&
@@ -143,8 +149,7 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
       final byClient = _client == null || task.sourceName == _client;
       final byFilter = _filter.matches(task.status);
       return byClient && byFilter;
-    }).toList()
-      ..sort((a, b) => b.downloadSpeed.compareTo(a.downloadSpeed));
+    }).toList()..sort((a, b) => b.downloadSpeed.compareTo(a.downloadSpeed));
 
     // 全局限速控件仅 qBittorrent 客户端支持（API 提供 setGlobalSpeedLimits）。
     final qbClients = clients
@@ -161,13 +166,27 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // 聚合台只提供通用任务操作；完整客户端页保留
+            // qBittorrent / Transmission / aria2 的专属设置与操作。
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => desktopDownloaderClientManagerPage(),
+                ),
+              ),
+              icon: const Icon(Icons.tune_rounded, size: 16),
+              label: Text(l.downloaderListPageTitle),
+            ),
+            const SizedBox(width: 8),
             // 直连 HTTP 下载的统一管理入口（复用已有 DownloadManagerSheet）。
             OutlinedButton.icon(
               onPressed: () => showDownloadManager(context),
               icon: const Icon(Icons.cloud_download_outlined, size: 16),
-              label: Text(directActive > 0
-                  ? '${l.downloadManagerTitle} ($directActive)'
-                  : l.downloadManagerTitle),
+              label: Text(
+                directActive > 0
+                    ? '${l.downloadManagerTitle} ($directActive)'
+                    : l.downloadManagerTitle,
+              ),
             ),
             const SizedBox(width: 8),
             FilledButton.icon(
@@ -244,6 +263,11 @@ class _DownloadsDesktopPageState extends ConsumerState<DownloadsDesktopPage> {
   }
 }
 
+/// 桌面聚合任务台的完整客户端管理目标。
+@visibleForTesting
+DownloaderListPage desktopDownloaderClientManagerPage() =>
+    const DownloaderListPage();
+
 class _Toolbar extends StatelessWidget {
   const _Toolbar({
     required this.clients,
@@ -309,31 +333,44 @@ class _SummaryBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       child: Row(
         children: [
-          _metric('↓ ${l.dlPageTotalDown}', formatSpeed(throughput.downloadSpeed),
-              t.accentBright, t),
-          _div(t),
-          _metric('↑ ${l.dlPageTotalUp}', formatSpeed(throughput.uploadSpeed),
-              t.text0, t),
-          _div(t),
-          _metric(l.dlPageActiveTasks,
-              '${throughput.activeCount} / ${throughput.totalCount}', t.text0, t),
+          _metric(
+            '↓ ${l.dlPageTotalDown}',
+            formatSpeed(throughput.downloadSpeed),
+            t.accentBright,
+            t,
+          ),
           _div(t),
           _metric(
-              l.dlPageOnlineClients,
-              '${throughput.connectedClients} / ${throughput.totalClients}',
-              t.text0,
-              t),
+            '↑ ${l.dlPageTotalUp}',
+            formatSpeed(throughput.uploadSpeed),
+            t.text0,
+            t,
+          ),
+          _div(t),
+          _metric(
+            l.dlPageActiveTasks,
+            '${throughput.activeCount} / ${throughput.totalCount}',
+            t.text0,
+            t,
+          ),
+          _div(t),
+          _metric(
+            l.dlPageOnlineClients,
+            '${throughput.connectedClients} / ${throughput.totalClients}',
+            t.text0,
+            t,
+          ),
         ],
       ),
     );
   }
 
   Widget _div(DesignTokens t) => Container(
-        width: 1,
-        height: 28,
-        margin: const EdgeInsets.symmetric(horizontal: 18),
-        color: t.hairline,
-      );
+    width: 1,
+    height: 28,
+    margin: const EdgeInsets.symmetric(horizontal: 18),
+    color: t.hairline,
+  );
 
   Widget _metric(String label, String value, Color color, DesignTokens t) =>
       Column(
@@ -397,8 +434,10 @@ class _TaskTable extends StatelessWidget {
         const SizedBox(height: 14),
         Row(
           children: [
-            Text(l.dlPageGlobalRateLimit,
-                style: TextStyle(fontSize: 12, color: t.text2)),
+            Text(
+              l.dlPageGlobalRateLimit,
+              style: TextStyle(fontSize: 12, color: t.text2),
+            ),
             const SizedBox(width: 8),
             if (qbSourceId != null)
               AppChip(
@@ -425,11 +464,11 @@ class _TaskTable extends StatelessWidget {
 
   Widget _headerRow(AppLocalizations l, DesignTokens t, bool allSelected) {
     TextStyle s() => TextStyle(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-          color: t.text3,
-        );
+      fontSize: 10.5,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
+      color: t.text3,
+    );
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
       decoration: BoxDecoration(
@@ -469,22 +508,22 @@ class _StatePill extends StatelessWidget {
   final UnifiedDownloadStatus status;
 
   static PillStatus _toPill(UnifiedDownloadStatus s) => switch (s) {
-        UnifiedDownloadStatus.downloading => PillStatus.downloading,
-        UnifiedDownloadStatus.seeding => PillStatus.seeding,
-        UnifiedDownloadStatus.paused => PillStatus.paused,
-        UnifiedDownloadStatus.waiting => PillStatus.queued,
-        UnifiedDownloadStatus.completed => PillStatus.completed,
-        UnifiedDownloadStatus.error => PillStatus.error,
-      };
+    UnifiedDownloadStatus.downloading => PillStatus.downloading,
+    UnifiedDownloadStatus.seeding => PillStatus.seeding,
+    UnifiedDownloadStatus.paused => PillStatus.paused,
+    UnifiedDownloadStatus.waiting => PillStatus.queued,
+    UnifiedDownloadStatus.completed => PillStatus.completed,
+    UnifiedDownloadStatus.error => PillStatus.error,
+  };
 
   @override
   Widget build(BuildContext context) => Align(
-        alignment: Alignment.centerLeft,
-        child: StatusPill(
-          _toPill(status),
-          label: status.label(AppLocalizations.of(context)),
-        ),
-      );
+    alignment: Alignment.centerLeft,
+    child: StatusPill(
+      _toPill(status),
+      label: status.label(AppLocalizations.of(context)),
+    ),
+  );
 }
 
 class _TaskRow extends StatelessWidget {
@@ -693,7 +732,6 @@ class _EmptyTasks extends StatelessWidget {
   }
 }
 
-
 enum _BatchOp { pause, resume, delete }
 
 /// qBittorrent 全局限速对话框：读取当前限速（KB/s）回填，可编辑后下发。
@@ -757,27 +795,35 @@ class _GlobalLimitDialogState extends ConsumerState<_GlobalLimitDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l.dlPageRateLimitUnitHint, style: const TextStyle(fontSize: 12.5)),
+          Text(
+            l.dlPageRateLimitUnitHint,
+            style: const TextStyle(fontSize: 12.5),
+          ),
           const SizedBox(height: 14),
           TextField(
             controller: _dl,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-                labelText: l.dlPageDownloadLimitLabel, isDense: true),
+              labelText: l.dlPageDownloadLimitLabel,
+              isDense: true,
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _up,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-                labelText: l.dlPageUploadLimitLabel, isDense: true),
+              labelText: l.dlPageUploadLimitLabel,
+              isDense: true,
+            ),
           ),
         ],
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l.dlPageCancel)),
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.dlPageCancel),
+        ),
         FilledButton(
           onPressed: _saving ? null : _apply,
           child: Text(l.dlPageApply),

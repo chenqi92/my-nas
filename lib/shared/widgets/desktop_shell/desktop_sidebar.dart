@@ -5,6 +5,14 @@ import 'package:my_nas/shared/providers/desktop_space_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 
+/// 根据实际绘制后的背景选取稳定可见的前景色。桌面主题允许用户切换
+/// 浅色/深色与强调色，不能假设 accent 在 selected 背景上始终有对比度。
+@visibleForTesting
+Color desktopReadableForeground(Color background) =>
+    background.computeLuminance() > 0.45
+    ? const Color(0xDE000000)
+    : Colors.white;
+
 /// sidebar 一级入口的描述符。`count`/`live` 由外部注入（订阅各 ListNotifier
 /// / sources / live 服务），sidebar 自身不订阅 provider —— 让外壳 / page 处
 /// 决定何时刷新。
@@ -105,12 +113,14 @@ class DesktopSidebar extends StatelessWidget {
               child: Column(
                 children: [
                   _CollapsedSpaceBtn(
+                    label: l.shellSidebarSpaceMedia,
                     icon: Icons.play_circle_outline_rounded,
                     selected: space == DesktopSpace.media,
                     onTap: () => onSpaceChanged(DesktopSpace.media),
                   ),
                   const SizedBox(height: 3),
                   _CollapsedSpaceBtn(
+                    label: l.shellSidebarSpaceOps,
                     icon: Icons.terminal_rounded,
                     selected: space == DesktopSpace.ops,
                     onTap: () => onSpaceChanged(DesktopSpace.ops),
@@ -249,11 +259,13 @@ class _Brand extends StatelessWidget {
 
 class _CollapsedSpaceBtn extends StatelessWidget {
   const _CollapsedSpaceBtn({
+    required this.label,
     required this.icon,
     required this.selected,
     required this.onTap,
   });
 
+  final String label;
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
@@ -261,19 +273,37 @@ class _CollapsedSpaceBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(9),
-          decoration: BoxDecoration(
-            color: selected ? t.segOnBg : Colors.transparent,
+    final selectedBg = Color.alphaBlend(t.segOnBg, t.sidebarBg);
+    final selectedFg = desktopReadableForeground(selectedBg);
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: label,
+        excludeFromSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            canRequestFocus: true,
+            focusColor: t.accent.withValues(alpha: 0.24),
             borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Icon(icon, size: 15, color: selected ? t.accent : t.text2),
+            child: Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: selected ? selectedBg : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: 15,
+                  color: selected ? selectedFg : t.text2,
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -297,9 +327,11 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    final bg = active ? t.chipBgActive : Colors.transparent;
-    final fg = active ? t.accentBright : t.text1;
-    final iconColor = active ? t.accentBright : t.text2;
+    final activeBg = Color.alphaBlend(t.chipBgActive, t.sidebarBg);
+    final bg = active ? activeBg : Colors.transparent;
+    final activeFg = desktopReadableForeground(activeBg);
+    final fg = active ? activeFg : t.text1;
+    final iconColor = active ? activeFg : t.text2;
 
     final body = collapsed
         ? Center(
@@ -319,7 +351,7 @@ class _NavItem extends StatelessWidget {
                   width: 3,
                   height: 18,
                   decoration: BoxDecoration(
-                    color: t.accentBright,
+                    color: activeFg,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 )
@@ -347,7 +379,7 @@ class _NavItem extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: active ? t.accentBright : t.text2,
+                    color: active ? activeFg : t.text2,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -355,13 +387,15 @@ class _NavItem extends StatelessWidget {
             ],
           );
 
-    return Padding(
+    final control = Padding(
       padding: const EdgeInsets.symmetric(vertical: 1),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          hoverColor: active ? t.chipBgActive : t.chipBg,
+          canRequestFocus: true,
+          focusColor: t.accent.withValues(alpha: 0.24),
+          hoverColor: active ? activeBg : t.chipBg,
           borderRadius: BorderRadius.circular(DesignTokens.radiusSm),
           child: Container(
             padding: collapsed
@@ -376,5 +410,21 @@ class _NavItem extends StatelessWidget {
         ),
       ),
     );
+    final semanticControl = Semantics(
+      button: true,
+      selected: active,
+      label: entry.count == null
+          ? entry.label
+          : '${entry.label}, ${entry.count}',
+      excludeSemantics: true,
+      child: control,
+    );
+    return collapsed
+        ? Tooltip(
+            message: entry.label,
+            excludeFromSemantics: true,
+            child: semanticControl,
+          )
+        : semanticControl;
   }
 }

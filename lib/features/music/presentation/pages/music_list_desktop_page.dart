@@ -118,12 +118,26 @@ class MusicListDesktopPage extends ConsumerStatefulWidget {
 
 class _MusicListDesktopPageState extends ConsumerState<MusicListDesktopPage> {
   String _view = 'songs';
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    ref.read(musicListProvider.notifier).setSearchQuery('');
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final state = ref.watch(musicListProvider);
     final loaded = state is MusicListLoaded ? state : null;
+    if (loaded != null && _searchController.text != loaded.searchQuery) {
+      _searchController.value = TextEditingValue(
+        text: loaded.searchQuery,
+        selection: TextSelection.collapsed(offset: loaded.searchQuery.length),
+      );
+    }
 
     final subtitle = loaded != null
         ? l.musicPageSubtitleLoaded(loaded.totalCount, loaded.albumCount)
@@ -135,6 +149,47 @@ class _MusicListDesktopPageState extends ConsumerState<MusicListDesktopPage> {
       actions: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          SizedBox(
+            width: 210,
+            child: TextField(
+              controller: _searchController,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: l.musicSearchHintShort,
+                prefixIcon: const Icon(Icons.search_rounded, size: 17),
+                suffixIcon: loaded?.searchQuery.isNotEmpty ?? false
+                    ? IconButton(
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).deleteButtonTooltip,
+                        onPressed: () {
+                          _searchController.clear();
+                          ref
+                              .read(musicListProvider.notifier)
+                              .setSearchQuery('');
+                        },
+                        icon: const Icon(Icons.close_rounded, size: 16),
+                      )
+                    : null,
+                isDense: true,
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: (value) =>
+                  ref.read(musicListProvider.notifier).setSearchQuery(value),
+            ),
+          ),
+          const SizedBox(width: 8),
+          AppChip(
+            label: l.paneAdvancedManageButton,
+            icon: Icons.library_music_rounded,
+            compact: true,
+            onTap: () => Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute<void>(
+                builder: (_) => desktopMusicFullManagerPage(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           const _DesktopLyricChip(),
           const SizedBox(width: 8),
           AppChip(
@@ -370,7 +425,15 @@ class _MainView extends StatelessWidget {
         message: l.musicPageEmptyHint,
       );
     }
-    final tracks = loaded.allTracks;
+    final tracks = desktopMusicDisplayTracks(loaded);
+    if (tracks.isEmpty) {
+      return _Empty(
+        icon: Icons.search_off_rounded,
+        message: loaded.searchQuery.isNotEmpty
+            ? l.musicSearchResultNotFound(loaded.searchQuery)
+            : l.musicPageEmptyHint,
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -380,11 +443,212 @@ class _MainView extends StatelessWidget {
             'albums' => _AlbumGrid(tracks: tracks),
             'artists' => _GroupList(tracks: tracks, byArtist: true),
             'folders' => _GroupList(tracks: tracks, byArtist: false),
-            _ => _SongTable(tracks: tracks, hasMore: loaded.hasMoreTracks),
+            _ => _SongTable(
+              tracks: tracks,
+              hasMore: loaded.searchQuery.isEmpty && loaded.hasMoreTracks,
+            ),
           },
         ),
       ],
     );
+  }
+}
+
+/// 搜索、流派/年代/最近分类与完整曲目操作的原生管理页。
+@visibleForTesting
+MusicListPage desktopMusicFullManagerPage() => const MusicListPage();
+
+/// 桌面表格必须使用已应用搜索和来源筛选的数据。
+@visibleForTesting
+List<MusicTrackEntity> desktopMusicDisplayTracks(MusicListLoaded loaded) =>
+    loaded.filteredMetadata;
+
+/// 桌面曲目菜单与重构前的完整操作集合。
+@visibleForTesting
+const desktopMusicTrackMenuActions = <String>{
+  'play_next',
+  'add_to_queue',
+  'add_to_playlist',
+  'manual_scrape',
+  'remove_from_library',
+  'delete_from_source',
+};
+
+Future<void> _handleDesktopTrackAction(
+  BuildContext context,
+  WidgetRef ref,
+  MusicTrackEntity track,
+  String action,
+) async {
+  final l = AppLocalizations.of(context);
+  final item = _entityToMusicItem(track);
+  switch (action) {
+    case 'play_next':
+      final queue = ref.read(playQueueProvider);
+      if (queue.isEmpty) {
+        ref.read(playQueueProvider.notifier).setQueue([item]);
+        ref.read(musicPlayerControllerProvider.notifier).updateCurrentIndex(0);
+        await ref.read(musicPlayerControllerProvider.notifier).play(item);
+      } else {
+        final player = ref.read(musicPlayerControllerProvider);
+        final next = [...queue];
+        next.insert((player.currentIndex + 1).clamp(0, next.length), item);
+        ref.read(playQueueProvider.notifier).setQueue(next);
+        if (context.mounted) {
+          context.showSuccessToast(l.musicToastPlayNextSuccess);
+        }
+      }
+    case 'add_to_queue':
+      ref.read(playQueueProvider.notifier).addToQueue(item);
+      context.showSuccessToast(l.musicToastQueueSuccess);
+    case 'add_to_playlist':
+      await _addDesktopTrackToPlaylist(context, ref, track);
+    case 'manual_scrape':
+      await _openManualScraper(context, ref, track);
+    case 'remove_from_library':
+      final confirmed = await _confirmDesktopTrackAction(
+        context,
+        title: l.musicRemoveFromLibraryTitle,
+        content: l.musicRemoveFromLibraryContent(track.displayTitle),
+        destructive: false,
+      );
+      if (!confirmed) return;
+      final success = await ref
+          .read(musicListProvider.notifier)
+          .removeFromLibrary(
+            track.sourceId,
+            track.filePath,
+            track.displayTitle,
+          );
+      if (context.mounted) {
+        (success ? context.showSuccessToast : context.showErrorToast)(
+          success
+              ? l.musicRemoveFromLibrarySuccess
+              : l.musicRemoveFromLibraryFailed,
+        );
+      }
+    case 'delete_from_source':
+      final confirmed = await _confirmDesktopTrackAction(
+        context,
+        title: l.musicDeleteSourceFileTitle,
+        content: l.musicDeleteSourceFileContent(track.displayTitle),
+        destructive: true,
+      );
+      if (!confirmed) return;
+      final success = await ref
+          .read(musicListProvider.notifier)
+          .deleteFromSource(track.sourceId, track.filePath, track.displayTitle);
+      if (context.mounted) {
+        (success ? context.showSuccessToast : context.showErrorToast)(
+          success
+              ? l.musicDeleteSourceFileSuccess
+              : l.musicDeleteSourceFileFailed,
+        );
+      }
+  }
+}
+
+Future<bool> _confirmDesktopTrackAction(
+  BuildContext context, {
+  required String title,
+  required String content,
+  required bool destructive,
+}) async =>
+    await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: destructive
+                ? FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  )
+                : null,
+            child: Text(MaterialLocalizations.of(context).okButtonLabel),
+          ),
+        ],
+      ),
+    ) ??
+    false;
+
+Future<void> _addDesktopTrackToPlaylist(
+  BuildContext context,
+  WidgetRef ref,
+  MusicTrackEntity track,
+) async {
+  final l = AppLocalizations.of(context);
+  final playlists = ref.read(playlistProvider).playlists;
+  final selected = await showDialog<String>(
+    context: context,
+    builder: (dialogContext) => SimpleDialog(
+      title: Text(l.musicAddToPlaylistTitle),
+      children: [
+        for (final playlist in playlists)
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(dialogContext).pop(playlist.id),
+            child: Text(playlist.name),
+          ),
+        SimpleDialogOption(
+          onPressed: () => Navigator.of(dialogContext).pop('__new__'),
+          child: Row(
+            children: [
+              const Icon(Icons.add_rounded, size: 18),
+              const SizedBox(width: 8),
+              Text(l.musicAddToPlaylistNew),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+  if (selected == null || !context.mounted) return;
+  final trackKey = '${track.sourceId}_${track.filePath}';
+  if (selected == '__new__') {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.musicPlaylistCreateTitle),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(hintText: l.musicPlaylistNameHint),
+          onSubmitted: (value) => Navigator.of(dialogContext).pop(value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(controller.text.trim()),
+            child: Text(l.musicPlaylistCreateAction),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.isEmpty) return;
+    await ref
+        .read(playlistProvider.notifier)
+        .createPlaylist(name: name, initialTracks: [trackKey]);
+    if (context.mounted) {
+      context.showSuccessToast(l.musicAddToPlaylistSuccess(name));
+    }
+    return;
+  }
+  final playlist = playlists.where((item) => item.id == selected).firstOrNull;
+  await ref.read(playlistProvider.notifier).addToPlaylist(selected, trackKey);
+  if (context.mounted && playlist != null) {
+    context.showSuccessToast(l.musicAddToPlaylistSuccess(playlist.name));
   }
 }
 
@@ -712,16 +976,44 @@ class _SongRow extends ConsumerWidget {
                 ),
               ),
               PopupMenuButton<String>(
-                tooltip: l.musicMenuManualScrape,
+                tooltip: l.musicMoreActionTooltip,
                 iconSize: 17,
                 padding: EdgeInsets.zero,
                 icon: Icon(Icons.more_horiz_rounded, color: t.text2),
-                onSelected: (value) {
-                  if (value == 'manual_scrape') {
-                    _openManualScraper(context, ref, track);
-                  }
-                },
+                onSelected: (value) =>
+                    _handleDesktopTrackAction(context, ref, track, value),
                 itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'play_next',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.skip_next_rounded, size: 18),
+                        const SizedBox(width: 10),
+                        Text(l.musicMenuPlayNext),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'add_to_queue',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.queue_music_rounded, size: 18),
+                        const SizedBox(width: 10),
+                        Text(l.musicMenuAddToQueue),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'add_to_playlist',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.playlist_add_rounded, size: 18),
+                        const SizedBox(width: 10),
+                        Text(l.musicMenuAddToPlaylist),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
                   PopupMenuItem(
                     value: 'manual_scrape',
                     child: Row(
@@ -729,6 +1021,38 @@ class _SongRow extends ConsumerWidget {
                         const Icon(Icons.auto_fix_high_rounded, size: 18),
                         const SizedBox(width: 10),
                         Text(l.musicMenuManualScrape),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'remove_from_library',
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.remove_circle_outline_rounded,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(l.musicMenuRemoveFromLibrary),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete_from_source',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_forever_outlined,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          l.musicMenuDeleteSourceFile,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
                       ],
                     ),
                   ),

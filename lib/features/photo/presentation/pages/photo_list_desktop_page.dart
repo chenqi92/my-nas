@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_nas/app/router/app_router.dart' show rootNavigatorKey;
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/photo/data/services/face_database_service.dart';
 import 'package:my_nas/features/photo/data/services/photo_database_service.dart';
@@ -7,8 +8,8 @@ import 'package:my_nas/features/photo/domain/entities/photo_item.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_duplicates_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_list_page.dart';
 import 'package:my_nas/features/photo/presentation/pages/photo_people_page.dart';
+import 'package:my_nas/features/photo/presentation/pages/photo_viewer_page.dart';
 import 'package:my_nas/features/photo/presentation/providers/photo_favorites_provider.dart';
-import 'package:my_nas/features/photo/presentation/widgets/desktop_photo_viewer.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -32,9 +33,17 @@ class PhotoListDesktopPage extends ConsumerStatefulWidget {
 
 class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
   String _view = 'timeline';
+  final _searchController = TextEditingController();
 
   /// 相册视图中钻取的文件夹路径；null 表示展示文件夹一览。
   String? _albumFolder;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    ref.read(photoListProvider.notifier).setSearchQuery('');
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +61,13 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
     final sourceFilter = state is PhotoListLoaded
         ? state.sourceFilter
         : PhotoSourceFilter.all;
+    if (state is PhotoListLoaded &&
+        _searchController.text != state.searchQuery) {
+      _searchController.value = TextEditingValue(
+        text: state.searchQuery,
+        selection: TextSelection.collapsed(offset: state.searchQuery.length),
+      );
+    }
 
     return DesktopPageScaffold(
       title: l.photoPageTitle,
@@ -59,6 +75,47 @@ class _PhotoListDesktopPageState extends ConsumerState<PhotoListDesktopPage> {
       actions: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          SizedBox(
+            width: 190,
+            child: TextField(
+              controller: _searchController,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: l.photoListSearchPhotos,
+                prefixIcon: const Icon(Icons.search_rounded, size: 17),
+                suffixIcon:
+                    state is PhotoListLoaded && state.searchQuery.isNotEmpty
+                    ? IconButton(
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).deleteButtonTooltip,
+                        onPressed: () {
+                          _searchController.clear();
+                          ref
+                              .read(photoListProvider.notifier)
+                              .setSearchQuery('');
+                        },
+                        icon: const Icon(Icons.close_rounded, size: 16),
+                      )
+                    : null,
+                isDense: true,
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: (value) =>
+                  ref.read(photoListProvider.notifier).setSearchQuery(value),
+            ),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute<void>(
+                builder: (_) => desktopPhotoFullManagerPage(),
+              ),
+            ),
+            icon: const Icon(Icons.manage_search_rounded, size: 16),
+            label: Text(l.paneAdvancedManageButton),
+          ),
+          const SizedBox(width: 4),
           IconButton(
             tooltip: l.maintPhotoTitle,
             icon: const Icon(Icons.photo_library_outlined, size: 18),
@@ -340,8 +397,9 @@ class _PhotoBody extends StatelessWidget {
               return _PhotoTile(
                 photo: p,
                 fileSystem: fs,
-                onTap: () => showDesktopPhotoViewer(
+                onTap: () => _openDesktopFullPhotoViewer(
                   context,
+                  ref,
                   photos: photos,
                   initialIndex: photos.indexOf(p),
                 ),
@@ -567,8 +625,9 @@ class _AlbumDetail extends StatelessWidget {
             return _PhotoTile(
               photo: p,
               fileSystem: fs,
-              onTap: () => showDesktopPhotoViewer(
+              onTap: () => _openDesktopFullPhotoViewer(
                 context,
+                ref,
                 photos: photos,
                 initialIndex: i,
               ),
@@ -578,6 +637,58 @@ class _AlbumDetail extends StatelessWidget {
       ],
     );
   }
+}
+
+/// 搜索、多选与批量上传/下载/删除的完整管理目标。
+@visibleForTesting
+PhotoListPage desktopPhotoFullManagerPage() => const PhotoListPage();
+
+/// 把桌面时间线的数据库实体投影为完整查看器数据。
+@visibleForTesting
+List<PhotoItem> desktopPhotoViewerItems(List<PhotoEntity> photos) => [
+  for (final photo in photos)
+    PhotoItem(
+      name: photo.fileName,
+      path: photo.filePath,
+      url: '',
+      sourceId: photo.sourceId,
+      thumbnailUrl: photo.thumbnailUrl,
+      size: photo.size,
+      modifiedAt: photo.modifiedTime,
+    ),
+];
+
+Future<void> _openDesktopFullPhotoViewer(
+  BuildContext context,
+  WidgetRef ref, {
+  required List<PhotoEntity> photos,
+  required int initialIndex,
+}) async {
+  final connections = ref.read(activeConnectionsProvider);
+  final navigator = rootNavigatorKey.currentState;
+  if (navigator == null) return;
+  await navigator.push(
+    MaterialPageRoute<void>(
+      builder: (_) => PhotoViewerPage(
+        photos: desktopPhotoViewerItems(photos),
+        initialIndex: initialIndex,
+        getPhotoUrl: (path, sourceId) async {
+          final fileSystem = connections[sourceId]?.adapter.fileSystem;
+          if (fileSystem == null) return null;
+          try {
+            return await fileSystem.getFileUrl(path);
+          } on Object {
+            return null;
+          }
+        },
+        getFileSystem: (sourceId) => connections[sourceId]?.adapter.fileSystem,
+        onPhotoDeleted: (_) {
+          ref.read(photoListProvider.notifier).forceRefresh();
+          ref.invalidate(photoFavoritesProvider);
+        },
+      ),
+    ),
+  );
 }
 
 class _TimelineLabel extends StatelessWidget {

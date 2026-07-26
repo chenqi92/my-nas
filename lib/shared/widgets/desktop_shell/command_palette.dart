@@ -9,8 +9,8 @@ import 'package:my_nas/shared/widgets/desktop_shell/command_registry.dart';
 
 /// 设计稿 `.cmdk`：⌘K 全局命令面板浮层。
 ///
-/// 现阶段只索引 [CmdkRegistry] 里的同步命令；跨域内容搜索（视频 / 音乐 /
-/// 照片 / 文件 / PT）作为后续 Group B 的迭代项接入。
+/// 同时索引 [CmdkRegistry] 里的同步命令和桌面外壳注册的影视、音乐、照片、
+/// 阅读、当前目录文件与下载任务内容搜索器。
 class CommandPalette extends ConsumerStatefulWidget {
   const CommandPalette({required this.onClose, super.key});
 

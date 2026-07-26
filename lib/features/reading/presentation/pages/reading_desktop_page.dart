@@ -6,10 +6,17 @@ import 'package:my_nas/app/router/app_router.dart' show rootNavigatorKey;
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/book/data/services/book_database_service.dart';
+import 'package:my_nas/features/book/data/services/online_book_shelf_service.dart';
+import 'package:my_nas/features/book/data/services/sources/book_source_manager_service.dart';
 import 'package:my_nas/features/book/domain/entities/book_item.dart';
+import 'package:my_nas/features/book/domain/entities/book_source.dart';
 import 'package:my_nas/features/book/presentation/pages/book_list_page.dart';
 import 'package:my_nas/features/book/presentation/pages/book_sources_page.dart';
+import 'package:my_nas/features/book/presentation/pages/online_book_detail_page.dart';
+import 'package:my_nas/features/book/presentation/pages/online_book_search_page.dart';
+import 'package:my_nas/features/book/presentation/providers/online_book_shelf_provider.dart';
 import 'package:my_nas/features/book/presentation/utils/book_navigator.dart';
+import 'package:my_nas/features/book/presentation/widgets/online_book_card.dart';
 import 'package:my_nas/features/comic/presentation/pages/comic_list_page.dart';
 import 'package:my_nas/features/comic/presentation/pages/comic_reader_page.dart';
 import 'package:my_nas/features/note/presentation/pages/note_list_page.dart';
@@ -33,8 +40,12 @@ class ReadingDesktopPage extends ConsumerStatefulWidget {
   ConsumerState<ReadingDesktopPage> createState() => _ReadingDesktopPageState();
 }
 
+/// 桌面阅读聚合页当前分区。全局搜索用它把命中的图书、漫画或笔记
+/// 直接带到对应分区，避免搜索完成后仍停留在「全部」。
+final desktopReadingTabProvider = StateProvider<String>((ref) => '全部');
+
 class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
-  String _tab = '全部';
+  bool _onlineBookShelf = false;
 
   static const _tabs = ['全部', '漫画', '图书', '笔记'];
 
@@ -44,12 +55,13 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     final comicState = ref.watch(comicListProvider);
     final bookState = ref.watch(bookListProvider);
     final noteState = ref.watch(notePageProvider);
+    final selectedTab = ref.watch(desktopReadingTabProvider);
 
     final comics = comicState is ComicListLoaded
-        ? comicState.comics
+        ? comicState.filteredComics
         : const <ComicItem>[];
     final books = bookState is BookListLoaded
-        ? bookState.allBooks
+        ? bookState.displayBooks
         : const <BookEntity>[];
     final notes = noteState is NotePageLoaded
         ? noteState.treeNodes
@@ -58,9 +70,13 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
         ref.watch(readingProgressMapProvider).valueOrNull ??
         const <String, double>{};
 
-    final showComics = _tab == '全部' || _tab == '漫画';
-    final showBooks = _tab == '全部' || _tab == '图书';
-    final showNotes = _tab == '全部' || _tab == '笔记';
+    final showComics = selectedTab == '全部' || selectedTab == '漫画';
+    final showBooks = selectedTab == '全部' || selectedTab == '图书';
+    final showNotes = selectedTab == '全部' || selectedTab == '笔记';
+    final usesOnlineBookShelf = desktopReadingUsesOnlineBookShelf(
+      tab: selectedTab,
+      onlineMode: _onlineBookShelf,
+    );
 
     return DesktopPageScaffold(
       title: l.readingPageTitle,
@@ -76,11 +92,37 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
               padding: const EdgeInsets.only(left: 8),
               child: AppChip(
                 label: _tabLabel(l, tab),
-                active: tab == _tab,
+                active: tab == selectedTab,
                 compact: false,
-                onTap: () => setState(() => _tab = tab),
+                onTap: () =>
+                    ref.read(desktopReadingTabProvider.notifier).state = tab,
               ),
             ),
+          if (selectedTab == '图书') ...[
+            const SizedBox(width: 12),
+            AppChip(
+              label: _onlineBookShelf
+                  ? l.readingViewLocalBooks
+                  : l.readingViewOnlineShelf,
+              icon: _onlineBookShelf
+                  ? Icons.storage_rounded
+                  : Icons.cloud_rounded,
+              active: _onlineBookShelf,
+              compact: false,
+              onTap: () => setState(() {
+                _onlineBookShelf = !_onlineBookShelf;
+              }),
+            ),
+            if (_onlineBookShelf) ...[
+              const SizedBox(width: 8),
+              AppChip(
+                label: l.readingSearchTooltip,
+                icon: Icons.search_rounded,
+                compact: false,
+                onTap: () => _pushPage(const OnlineBookSearchPage()),
+              ),
+            ],
+          ],
           const SizedBox(width: 12),
           AppChip(
             label: l.readingPageOnlineSources,
@@ -93,30 +135,49 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showComics && comics.isNotEmpty) ...[
-            if (_tab == '全部') _SectionHeader(l.readingPageSectionComic),
-            _ComicShelf(
-              comics: comics,
-              ref: ref,
-              progress: progressMap,
-              onOpen: _openComic,
-            ),
-            const SizedBox(height: 22),
+          if (usesOnlineBookShelf)
+            _OnlineBookShelf(
+              onOpen: _openOnlineBook,
+              onRemove: _removeOnlineBook,
+            )
+          else ...[
+            if (showComics && comics.isNotEmpty) ...[
+              if (selectedTab == '全部')
+                _SectionHeader(l.readingPageSectionComic),
+              _ComicShelf(
+                comics: comics,
+                ref: ref,
+                progress: progressMap,
+                onOpen: _openComic,
+              ),
+              const SizedBox(height: 22),
+            ],
+            if (showBooks && books.isNotEmpty) ...[
+              if (selectedTab == '全部') _SectionHeader(l.readingPageSectionBook),
+              _BookShelf(
+                books: books,
+                progress: progressMap,
+                onOpen: _openBook,
+              ),
+              const SizedBox(height: 22),
+            ],
+            if (showNotes && notes.isNotEmpty) ...[
+              if (selectedTab == '全部') _SectionHeader(l.readingPageSectionNote),
+              _NoteList(
+                nodes: notes,
+                onOpen: () => _pushPage(const NoteListPage()),
+              ),
+            ],
+            if (_isEmpty(
+              showComics,
+              comics,
+              showBooks,
+              books,
+              showNotes,
+              notes,
+            ))
+              _emptyOrStatus(comicState, bookState, noteState, selectedTab),
           ],
-          if (showBooks && books.isNotEmpty) ...[
-            if (_tab == '全部') _SectionHeader(l.readingPageSectionBook),
-            _BookShelf(books: books, progress: progressMap, onOpen: _openBook),
-            const SizedBox(height: 22),
-          ],
-          if (showNotes && notes.isNotEmpty) ...[
-            if (_tab == '全部') _SectionHeader(l.readingPageSectionNote),
-            _NoteList(
-              nodes: notes,
-              onOpen: () => _pushPage(const NoteListPage()),
-            ),
-          ],
-          if (_isEmpty(showComics, comics, showBooks, books, showNotes, notes))
-            _emptyOrStatus(comicState, bookState, noteState),
         ],
       ),
     );
@@ -134,6 +195,7 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     ComicListState comicState,
     BookListState bookState,
     NotePageState noteState,
+    String selectedTab,
   ) {
     final l = AppLocalizations.of(context);
     final anyLoading =
@@ -181,13 +243,13 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
       );
     }
     return DesktopComingSoon(
-      icon: switch (_tab) {
+      icon: switch (selectedTab) {
         '笔记' => Icons.edit_note_rounded,
         '漫画' => Icons.collections_bookmark_outlined,
         '图书' => Icons.menu_book_outlined,
         _ => Icons.auto_stories_outlined,
       },
-      message: switch (_tab) {
+      message: switch (selectedTab) {
         '笔记' => l.readingPageEmptyNote,
         '漫画' => l.readingPageEmptyComic,
         '图书' => l.readingPageEmptyBook,
@@ -257,10 +319,146 @@ class _ReadingDesktopPageState extends ConsumerState<ReadingDesktopPage> {
     ref.invalidate(readingProgressMapProvider);
   }
 
+  Future<void> _openOnlineBook(OnlineBookShelfItem item) async {
+    final l = AppLocalizations.of(context);
+    final source = await BookSourceManagerService.instance.getSourceById(
+      item.sourceId,
+    );
+    if (!mounted) return;
+    if (source == null) {
+      context.showErrorToast(l.readingBookSourceNotFound);
+      return;
+    }
+    _pushPage(
+      OnlineBookDetailPage(
+        book: OnlineBook(
+          name: item.name,
+          author: item.author,
+          bookUrl: item.bookUrl,
+          coverUrl: item.coverUrl,
+          intro: item.intro,
+          kind: item.kind,
+          lastChapter: item.lastChapter,
+          wordCount: item.wordCount,
+          source: source,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _removeOnlineBook(OnlineBookShelfItem item) async {
+    final l = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.readingDeleteBook),
+        content: Text(l.readingDeleteBookConfirm(item.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l.readingCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(l.readingDeleteConfirm),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await OnlineBookShelfService.instance.removeBook(item.id);
+      await ref.read(onlineBookShelfProvider.notifier).onBookRemoved();
+      if (mounted) context.showSuccessToast(l.readingDeleteBookRemoveSuccess);
+    } on Object {
+      if (mounted) context.showErrorToast(l.readingDeleteBookFailed);
+    }
+  }
+
   void _pushPage(Widget page) {
     final ctx = rootNavigatorKey.currentContext;
     if (ctx == null) return;
     Navigator.of(ctx).push(MaterialPageRoute<void>(builder: (_) => page));
+  }
+}
+
+/// 在桌面端只有「图书」分页会切换到在线书架，避免影响漫画和笔记。
+@visibleForTesting
+bool desktopReadingUsesOnlineBookShelf({
+  required String tab,
+  required bool onlineMode,
+}) => tab == '图书' && onlineMode;
+
+class _OnlineBookShelf extends ConsumerWidget {
+  const _OnlineBookShelf({required this.onOpen, required this.onRemove});
+
+  final ValueChanged<OnlineBookShelfItem> onOpen;
+  final ValueChanged<OnlineBookShelfItem> onRemove;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return ref
+        .watch(onlineBookShelfProvider)
+        .when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 64),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (_, _) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.cloud_off_rounded, size: 44),
+                  const SizedBox(height: 12),
+                  Text(l.readingOnlineShelfLoadFailed),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    onPressed: () =>
+                        ref.read(onlineBookShelfProvider.notifier).refresh(),
+                    icon: Icons.refresh_rounded,
+                    label: l.readingOnlineShelfRetry,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          data: (items) {
+            if (items.isEmpty) {
+              return DesktopComingSoon(
+                icon: Icons.cloud_off_rounded,
+                message:
+                    '${l.readingOnlineShelfEmpty}\n${l.readingOnlineShelfEmptyDesc}',
+              );
+            }
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 180,
+                childAspectRatio: 0.62,
+                crossAxisSpacing: 18,
+                mainAxisSpacing: 18,
+              ),
+              itemCount: items.length,
+              itemBuilder: (_, index) {
+                final item = items[index];
+                return OnlineBookCard(
+                  item: item,
+                  isDark: isDark,
+                  onTap: () => onOpen(item),
+                  onLongPress: () => onRemove(item),
+                );
+              },
+            );
+          },
+        );
   }
 }
 

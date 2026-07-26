@@ -119,33 +119,44 @@ class _SearchTrigger extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
     final l = AppLocalizations.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(DesignTokens.radius),
-        child: Container(
-          height: 34,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: t.cardBg,
+    return Semantics(
+      button: true,
+      label: l.shellTopbarSearchPlaceholder,
+      excludeSemantics: true,
+      child: Tooltip(
+        message: l.shellTopbarSearchPlaceholder,
+        excludeFromSemantics: true,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            canRequestFocus: true,
+            focusColor: t.accent.withValues(alpha: 0.22),
             borderRadius: BorderRadius.circular(DesignTokens.radius),
-            border: Border.all(color: t.hairline, width: 1),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.search_rounded, size: 16, color: t.text2),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  l.shellTopbarSearchPlaceholder,
-                  style: TextStyle(fontSize: 12.5, color: t.text2),
-                  overflow: TextOverflow.ellipsis,
-                ),
+            child: Container(
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: t.cardBg,
+                borderRadius: BorderRadius.circular(DesignTokens.radius),
+                border: Border.all(color: t.hairline, width: 1),
               ),
-              const SizedBox(width: 8),
-              const AppKbd('⌘K'),
-            ],
+              child: Row(
+                children: [
+                  Icon(Icons.search_rounded, size: 16, color: t.text2),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l.shellTopbarSearchPlaceholder,
+                      style: TextStyle(fontSize: 12.5, color: t.text2),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const AppKbd('⌘K'),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -173,6 +184,8 @@ class _TbIcon extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        canRequestFocus: true,
+        focusColor: t.accent.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(7),
         hoverColor: t.chipBg,
         child: SizedBox(
@@ -201,7 +214,13 @@ class _TbIcon extends StatelessWidget {
       ),
     );
     final tip = tooltip;
-    return tip == null ? btn : Tooltip(message: tip, child: btn);
+    if (tip == null) return btn;
+    return Semantics(
+      button: true,
+      label: tip,
+      excludeSemantics: true,
+      child: Tooltip(message: tip, excludeFromSemantics: true, child: btn),
+    );
   }
 }
 

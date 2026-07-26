@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/moviepilot/presentation/pages/moviepilot_detail_page.dart';
+import 'package:my_nas/features/nastool/presentation/pages/nastool_main_page.dart';
 import 'package:my_nas/features/nastool/presentation/providers/nastool_provider.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/add_subscription_sheet.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/subscription_detail_sheet.dart';
 import 'package:my_nas/features/nastool/presentation/widgets/subscription_poster.dart';
+import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/service_adapters/nastool/models/organization_models.dart';
@@ -14,7 +17,6 @@ import 'package:my_nas/service_adapters/nastool/models/sync_models.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
-import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 
@@ -64,8 +66,15 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
     final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
     final sources = ref.watch(nastoolSourcesProvider);
+    final moviePilotSources = ref
+        .watch(mediaManagementSourcesProvider)
+        .where((source) => source.type == SourceType.moviepilot)
+        .toList();
 
-    if (sources.isEmpty) {
+    if (!desktopAutomationHasConfiguredService(
+      nastoolCount: sources.length,
+      moviePilotCount: moviePilotSources.length,
+    )) {
       return DesktopPageScaffold(
         title: l.nastoolPageTitle,
         subtitle: l.nastoolPageSubtitle,
@@ -76,7 +85,18 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
       );
     }
 
+    if (sources.isEmpty) {
+      return DesktopPageScaffold(
+        title: l.nastoolPageTitle,
+        subtitle: l.nastoolPageSubtitle,
+        body: _MoviePilotGrid(sources: moviePilotSources),
+      );
+    }
+
     final selected = _sourceId ?? sources.first.id;
+    final selectedSource = sources.firstWhere(
+      (source) => source.id == selected,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _ensureConnected(selected);
     });
@@ -111,6 +131,12 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
                   onTap: () => setState(() => _sourceId = s.id),
                 ),
               ),
+          const SizedBox(width: 12),
+          OutlinedButton.icon(
+            onPressed: () => _pushPage(NasToolMainPage(source: selectedSource)),
+            icon: const Icon(Icons.dashboard_customize_rounded, size: 16),
+            label: Text(l.paneAdvancedManageButton),
+          ),
           const SizedBox(width: 12),
           FilledButton.icon(
             onPressed: () => showDialog<void>(
@@ -160,8 +186,7 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                      const SliverGridDelegateWithMaxCrossAxisExtent(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 160,
                     childAspectRatio: 0.65,
                     crossAxisSpacing: 16,
@@ -181,20 +206,38 @@ class _NasToolDesktopPageState extends ConsumerState<NasToolDesktopPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              _ToolsRow(sourceId: selected),
+              _ToolsRow(
+                sourceId: selected,
+                moviePilotSources: moviePilotSources,
+              ),
             ],
           );
         },
       ),
     );
   }
+
+  void _pushPage(Widget page) {
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).push(MaterialPageRoute<void>(builder: (_) => page));
+  }
 }
 
-/// 4 个自动化工具入口（插件商店 / 目录同步 / 转移历史 / 系统信息）+
-/// MoviePilot 规划占位。点击打开对应数据 sheet。
+/// MoviePilot-only configurations must still make the desktop automation page
+/// usable; previously the page incorrectly treated them as unconfigured.
+@visibleForTesting
+bool desktopAutomationHasConfiguredService({
+  required int nastoolCount,
+  required int moviePilotCount,
+}) => nastoolCount > 0 || moviePilotCount > 0;
+
+/// 4 个 NAStool 快捷工具 + 已配置 MoviePilot 实际入口。
 class _ToolsRow extends StatelessWidget {
-  const _ToolsRow({required this.sourceId});
+  const _ToolsRow({required this.sourceId, required this.moviePilotSources});
   final String sourceId;
+  final List<SourceEntity> moviePilotSources;
 
   void _open(BuildContext context, String title, Widget child) {
     showDialog<void>(
@@ -212,25 +255,37 @@ class _ToolsRow extends StatelessWidget {
         l.nastoolPageToolPluginStore,
         Icons.extension_outlined,
         () => _open(
-            context, l.nastoolPageToolPlugins, _PluginsSheet(sourceId: sourceId)),
+          context,
+          l.nastoolPageToolPlugins,
+          _PluginsSheet(sourceId: sourceId),
+        ),
       ),
       (
         l.nastoolPageToolSyncDirs,
         Icons.sync_alt_rounded,
-        () => _open(context, l.nastoolPageToolSyncDirs,
-            _SyncDirsSheet(sourceId: sourceId)),
+        () => _open(
+          context,
+          l.nastoolPageToolSyncDirs,
+          _SyncDirsSheet(sourceId: sourceId),
+        ),
       ),
       (
         l.nastoolPageToolTransferHistory,
         Icons.move_to_inbox_outlined,
-        () => _open(context, l.nastoolPageToolTransferHistory,
-            _TransferHistorySheet(sourceId: sourceId)),
+        () => _open(
+          context,
+          l.nastoolPageToolTransferHistory,
+          _TransferHistorySheet(sourceId: sourceId),
+        ),
       ),
       (
         l.nastoolPageToolSystemInfo,
         Icons.dns_outlined,
-        () => _open(context, l.nastoolPageToolSystemInfo,
-            _SystemInfoSheet(sourceId: sourceId)),
+        () => _open(
+          context,
+          l.nastoolPageToolSystemInfo,
+          _SystemInfoSheet(sourceId: sourceId),
+        ),
       ),
     ];
     return GridView.count(
@@ -243,10 +298,64 @@ class _ToolsRow extends StatelessWidget {
       children: [
         for (final (label, icon, onTap) in entries)
           _ToolCard(label: label, icon: icon, onTap: onTap),
-        const _ToolCard(
-          label: 'MoviePilot',
-          icon: Icons.auto_awesome_outlined,
-          plan: true,
+        for (final source in moviePilotSources)
+          _ToolCard(
+            label: source.displayName,
+            icon: Icons.auto_awesome_outlined,
+            onTap: () => Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute<void>(
+                builder: (_) => MoviePilotDetailPage(source: source),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _MoviePilotGrid extends StatelessWidget {
+  const _MoviePilotGrid({required this.sources});
+
+  final List<SourceEntity> sources;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final t = DesignTokens.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.nastoolPageAutomationTools,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: t.text0,
+          ),
+        ),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 260,
+            mainAxisExtent: 74,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
+          itemCount: sources.length,
+          itemBuilder: (_, index) {
+            final source = sources[index];
+            return _ToolCard(
+              label: source.displayName,
+              icon: Icons.auto_awesome_outlined,
+              onTap: () => Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => MoviePilotDetailPage(source: source),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -254,54 +363,43 @@ class _ToolsRow extends StatelessWidget {
 }
 
 class _ToolCard extends StatelessWidget {
-  const _ToolCard({
-    required this.label,
-    required this.icon,
-    this.onTap,
-    this.plan = false,
-  });
+  const _ToolCard({required this.label, required this.icon, this.onTap});
   final String label;
   final IconData icon;
   final VoidCallback? onTap;
-  final bool plan;
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
     final t = DesignTokens.of(context);
-    return Opacity(
-      opacity: plan ? 0.6 : 1,
-      child: AppCard(
-        onTap: plan ? null : onTap,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: t.chipBgActive,
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Icon(icon, size: 17, color: t.accentBright),
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: t.chipBgActive,
+              borderRadius: BorderRadius.circular(9),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: t.text0,
-                ),
+            child: Icon(icon, size: 17, color: t.accentBright),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: t.text0,
               ),
             ),
-            if (plan)
-              AppTag(l.nastoolPageTagPlan, variant: TagVariant.plan),
-          ],
-        ),
+          ),
+          Icon(Icons.chevron_right_rounded, size: 16, color: t.text3),
+        ],
       ),
     );
   }
@@ -353,10 +451,7 @@ class _ToolSheet extends StatelessWidget {
                 ),
               ),
               Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: child,
-                ),
+                child: Padding(padding: const EdgeInsets.all(16), child: child),
               ),
             ],
           ),
@@ -389,8 +484,10 @@ class _AsyncList<T> extends StatelessWidget {
       error: (e, _) => SizedBox(
         height: 200,
         child: Center(
-          child: Text(l.nastoolPageLoadFailed(e.toString()),
-              style: TextStyle(fontSize: 12.5, color: t.err)),
+          child: Text(
+            l.nastoolPageLoadFailed(e.toString()),
+            style: TextStyle(fontSize: 12.5, color: t.err),
+          ),
         ),
       ),
       data: (items) {
@@ -398,8 +495,10 @@ class _AsyncList<T> extends StatelessWidget {
           return SizedBox(
             height: 160,
             child: Center(
-              child: Text(empty,
-                  style: TextStyle(fontSize: 12.5, color: t.text2)),
+              child: Text(
+                empty,
+                style: TextStyle(fontSize: 12.5, color: t.text2),
+              ),
             ),
           );
         }
@@ -441,22 +540,29 @@ class _PluginsSheet extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(p.name,
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: t.text0)),
+                  Text(
+                    p.name,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: t.text0,
+                    ),
+                  ),
                   if (p.description != null && p.description!.isNotEmpty)
-                    Text(p.description!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11.5, color: t.text2)),
+                    Text(
+                      p.description!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 11.5, color: t.text2),
+                    ),
                 ],
               ),
             ),
             if (p.version != null)
-              Text('v${p.version}',
-                  style: TextStyle(fontSize: 11, color: t.text3)),
+              Text(
+                'v${p.version}',
+                style: TextStyle(fontSize: 11, color: t.text3),
+              ),
           ],
         ),
       ),
@@ -483,13 +589,17 @@ class _SyncDirsSheet extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${d.from ?? '—'}  →  ${d.to ?? '—'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12.5, color: t.text0)),
+                  Text(
+                    '${d.from ?? '—'}  →  ${d.to ?? '—'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12.5, color: t.text0),
+                  ),
                   if (d.mode != null)
-                    Text(d.mode!,
-                        style: TextStyle(fontSize: 11, color: t.text2)),
+                    Text(
+                      d.mode!,
+                      style: TextStyle(fontSize: 11, color: t.text2),
+                    ),
                 ],
               ),
             ),
@@ -498,8 +608,8 @@ class _SyncDirsSheet extends ConsumerWidget {
               onPressed: d.id == null
                   ? null
                   : () => ref
-                      .read(nastoolActionsProvider(sourceId))
-                      .runSyncDir(d.id!),
+                        .read(nastoolActionsProvider(sourceId))
+                        .runSyncDir(d.id!),
               icon: Icon(Icons.play_circle_outline, size: 18, color: t.accent),
             ),
           ],
@@ -543,13 +653,16 @@ class _TransferHistorySheet extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: t.text0),
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: t.text0,
+                    ),
                   ),
                   if (h.mode != null)
-                    Text(h.mode!,
-                        style: TextStyle(fontSize: 11, color: t.text2)),
+                    Text(
+                      h.mode!,
+                      style: TextStyle(fontSize: 11, color: t.text2),
+                    ),
                 ],
               ),
             ),
@@ -571,9 +684,13 @@ class _SystemInfoSheet extends ConsumerWidget {
     final async = ref.watch(nastoolSystemInfoProvider(sourceId));
     return async.when(
       loading: () => const SizedBox(
-          height: 160, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text(l.nastoolPageLoadFailed(e.toString()),
-          style: TextStyle(fontSize: 12.5, color: t.err)),
+        height: 160,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Text(
+        l.nastoolPageLoadFailed(e.toString()),
+        style: TextStyle(fontSize: 12.5, color: t.err),
+      ),
       data: (info) {
         String space(int? b) {
           if (b == null || b <= 0) return '—';
@@ -596,7 +713,10 @@ class _SystemInfoSheet extends ConsumerWidget {
           if (info.cpuUsage != null)
             ('CPU', '${info.cpuUsage!.toStringAsFixed(0)}%'),
           if (info.memoryUsage != null)
-            (l.nastoolPageInfoMemory, '${info.memoryUsage!.toStringAsFixed(0)}%'),
+            (
+              l.nastoolPageInfoMemory,
+              '${info.memoryUsage!.toStringAsFixed(0)}%',
+            ),
         ];
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -606,14 +726,19 @@ class _SystemInfoSheet extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 9),
                 child: Row(
                   children: [
-                    Text(label,
-                        style: TextStyle(fontSize: 12.5, color: t.text2)),
+                    Text(
+                      label,
+                      style: TextStyle(fontSize: 12.5, color: t.text2),
+                    ),
                     const Spacer(),
-                    Text(value,
-                        style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: t.text0)),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: t.text0,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -642,19 +767,27 @@ class _SubStatRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-            child:
-                _StatCard(value: '$total', label: l.nastoolPageStatSubscribing)),
+          child: _StatCard(
+            value: '$total',
+            label: l.nastoolPageStatSubscribing,
+          ),
+        ),
         const SizedBox(width: 14),
         Expanded(
-            child: _StatCard(value: '$movies', label: l.nastoolPageStatMovies)),
-        const SizedBox(width: 14),
-        Expanded(child: _StatCard(value: '$tv', label: l.nastoolPageStatTv)),
+          child: _StatCard(value: '$movies', label: l.nastoolPageStatMovies),
+        ),
         const SizedBox(width: 14),
         Expanded(
-            child: _StatCard(
-                value: '$chasing',
-                label: l.nastoolPageStatChasing,
-                accent: true)),
+          child: _StatCard(value: '$tv', label: l.nastoolPageStatTv),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: _StatCard(
+            value: '$chasing',
+            label: l.nastoolPageStatChasing,
+            accent: true,
+          ),
+        ),
       ],
     );
   }
@@ -710,65 +843,64 @@ class _SubCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () => showDialog<void>(
-          context: context,
-          barrierColor: Colors.black.withValues(alpha: 0.55),
-          builder: (_) =>
-              SubscriptionDetailSheet(sub: sub, sourceId: sourceId),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    SubscriptionPoster(path: sub.posterPath),
-                    if (sub.progress != null)
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: LinearProgressIndicator(
-                          value: sub.progress,
-                          minHeight: 4,
-                          backgroundColor: Colors.black.withValues(alpha: 0.4),
-                          valueColor: AlwaysStoppedAnimation(t.accentBright),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              sub.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: t.text0,
-              ),
-            ),
-            Text(
-              [
-                if (sub.year != null) sub.year!,
-                if (sub.seasonDisplay != null) sub.seasonDisplay!,
-                if (sub.isTv && sub.totalEp != null)
-                  '${sub.currentEp ?? 0}/${sub.totalEp}',
-              ].join(' · '),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11, color: t.text2),
-            ),
-          ],
-        ),
+    color: Colors.transparent,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => showDialog<void>(
+        context: context,
+        barrierColor: Colors.black.withValues(alpha: 0.55),
+        builder: (_) => SubscriptionDetailSheet(sub: sub, sourceId: sourceId),
       ),
-    );
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  SubscriptionPoster(path: sub.posterPath),
+                  if (sub.progress != null)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: LinearProgressIndicator(
+                        value: sub.progress,
+                        minHeight: 4,
+                        backgroundColor: Colors.black.withValues(alpha: 0.4),
+                        valueColor: AlwaysStoppedAnimation(t.accentBright),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            sub.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: t.text0,
+            ),
+          ),
+          Text(
+            [
+              if (sub.year != null) sub.year!,
+              if (sub.seasonDisplay != null) sub.seasonDisplay!,
+              if (sub.isTv && sub.totalEp != null)
+                '${sub.currentEp ?? 0}/${sub.totalEp}',
+            ].join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11, color: t.text2),
+          ),
+        ],
+      ),
+    ),
+  );
 }

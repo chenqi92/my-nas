@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/features/file_browser/presentation/pages/file_browser_page.dart';
 import 'package:my_nas/features/sources/data/services/network_discovery_service.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
+import 'package:my_nas/features/sources/domain/entities/source_category.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/pages/source_form_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
+import 'package:my_nas/features/sources/presentation/widgets/two_fa_sheet.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
@@ -14,6 +17,26 @@ import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/status_dot.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
 import 'package:my_nas/shared/widgets/dialogs/source_wizard_dialog.dart';
+
+/// 桌面端连接状态必须按源类型选择正确的连接容器。
+///
+/// Jellyfin / Emby / Plex 使用独立的媒体服务器适配器，不能回退到普通
+/// [SourceConnection]。公开为纯函数，便于防止桌面路由再次接错 Provider。
+SourceStatus? desktopSourceStatus(
+  SourceType type, {
+  SourceStatus? standardStatus,
+  SourceStatus? mediaServerStatus,
+}) => type.category == SourceCategory.mediaServers
+    ? mediaServerStatus
+    : standardStatus;
+
+String? desktopSourceError(
+  SourceType type, {
+  String? standardError,
+  String? mediaServerError,
+}) => type.category == SourceCategory.mediaServers
+    ? mediaServerError
+    : standardError;
 
 /// 桌面端「数据源」骨架。
 ///
@@ -27,6 +50,8 @@ class SourcesDesktopPage extends ConsumerStatefulWidget {
 }
 
 class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
+  bool _isReorderMode = false;
+
   @override
   void initState() {
     super.initState();
@@ -42,23 +67,37 @@ class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
     final l = AppLocalizations.of(context);
     final sourcesAsync = ref.watch(sourcesProvider);
     final connections = ref.watch(activeConnectionsProvider);
+    final mediaServerConnections = ref.watch(
+      activeMediaServerConnectionsProvider,
+    );
     final t = DesignTokens.of(context);
 
     return DesktopPageScaffold(
       title: l.sourcesPageTitle,
       subtitle: l.sourcesPageSubtitle,
-      actions: Padding(
-        padding: const EdgeInsets.only(left: 12),
-        child: AppButton(
-          variant: AppButtonVariant.primary,
-          onPressed: () => showDialog<void>(
-            context: context,
-            barrierColor: Colors.black.withValues(alpha: 0.5),
-            builder: (_) => const SourceWizardDialog(),
+      actions: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppButton(
+            variant: AppButtonVariant.ghost,
+            onPressed: () => setState(() => _isReorderMode = !_isReorderMode),
+            icon: _isReorderMode ? Icons.done_rounded : Icons.reorder_rounded,
+            label: _isReorderMode
+                ? l.sourcesPageReorderComplete
+                : l.sourcesPageReorderStart,
           ),
-          icon: Icons.add_rounded,
-          label: l.sourcesPageAddSource,
-        ),
+          const SizedBox(width: 8),
+          AppButton(
+            variant: AppButtonVariant.primary,
+            onPressed: () => showDialog<void>(
+              context: context,
+              barrierColor: Colors.black.withValues(alpha: 0.5),
+              builder: (_) => const SourceWizardDialog(),
+            ),
+            icon: Icons.add_rounded,
+            label: l.sourcesPageAddSource,
+          ),
+        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -78,7 +117,12 @@ class _SourcesDesktopPageState extends ConsumerState<SourcesDesktopPage> {
               return _ConfiguredSourcesSection(
                 sources: sources,
                 connections: connections,
+                mediaServerConnections: mediaServerConnections,
                 libsConfig: libsConfig,
+                reorderMode: _isReorderMode,
+                onReorder: (oldIndex, newIndex) => ref
+                    .read(sourcesProvider.notifier)
+                    .reorderSources(oldIndex, newIndex),
               );
             },
           );
@@ -136,12 +180,18 @@ class _ConfiguredSourcesSection extends StatelessWidget {
   const _ConfiguredSourcesSection({
     required this.sources,
     required this.connections,
+    required this.mediaServerConnections,
     required this.libsConfig,
+    required this.reorderMode,
+    required this.onReorder,
   });
 
   final List<SourceEntity> sources;
   final Map<String, SourceConnection> connections;
+  final Map<String, MediaServerConnection> mediaServerConnections;
   final MediaLibraryConfig? libsConfig;
+  final bool reorderMode;
+  final ReorderCallback onReorder;
 
   @override
   Widget build(BuildContext context) {
@@ -164,16 +214,28 @@ class _ConfiguredSourcesSection extends StatelessWidget {
               title: l.paneSourcesEmptyTitle,
               description: l.paneSourcesEmptyDesc,
             )
+          else if (reorderMode)
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              buildDefaultDragHandles: false,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: sources.length,
+              onReorderItem: onReorder,
+              itemBuilder: (context, index) => Column(
+                key: ValueKey(sources[index].id),
+                children: [
+                  _sourceCard(sources[index], reorderIndex: index),
+                  if (index != sources.length - 1)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 72),
+                      child: _PanelDivider(color: t.hairline),
+                    ),
+                ],
+              ),
+            )
           else
             for (var i = 0; i < sources.length; i++) ...[
-              _SourceCard(
-                source: sources[i],
-                conn: connections[sources[i].id],
-                libs: _SourcesDesktopPageState._libsForSource(
-                  libsConfig,
-                  sources[i].id,
-                ),
-              ),
+              _sourceCard(sources[i]),
               if (i != sources.length - 1)
                 Padding(
                   padding: const EdgeInsets.only(left: 72),
@@ -182,6 +244,26 @@ class _ConfiguredSourcesSection extends StatelessWidget {
             ],
         ],
       ),
+    );
+  }
+
+  Widget _sourceCard(SourceEntity source, {int? reorderIndex}) {
+    final standard = connections[source.id];
+    final media = mediaServerConnections[source.id];
+    return _SourceCard(
+      source: source,
+      status: desktopSourceStatus(
+        source.type,
+        standardStatus: standard?.status,
+        mediaServerStatus: media?.status,
+      ),
+      errorMessage: desktopSourceError(
+        source.type,
+        standardError: standard?.errorMessage,
+        mediaServerError: media?.errorMessage,
+      ),
+      libs: _SourcesDesktopPageState._libsForSource(libsConfig, source.id),
+      reorderIndex: reorderIndex,
     );
   }
 }
@@ -520,27 +602,88 @@ class _DiscoveryRow extends StatelessWidget {
 class _SourceCard extends ConsumerWidget {
   const _SourceCard({
     required this.source,
-    required this.conn,
+    required this.status,
+    required this.errorMessage,
     required this.libs,
+    this.reorderIndex,
   });
 
   final SourceEntity source;
-  final SourceConnection? conn;
+  final SourceStatus? status;
+  final String? errorMessage;
   final List<String> libs;
+  final int? reorderIndex;
 
-  /// 测试 / 重新连接当前源，并把结果以 SnackBar 反馈。
+  bool get _isMediaServer =>
+      source.type.category == SourceCategory.mediaServers;
+
+  /// 测试 / 重新连接当前源，并把结果以 SnackBar 反馈；普通源与媒体服务器
+  /// 分别走各自的连接容器，避免 Jellyfin / Emby / Plex 被当成 NAS 连接。
   Future<void> _reconnect(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context)
       ..showSnackBar(
         SnackBar(content: Text(l.sourcesPageConnecting(source.name))),
       );
-    final result = await ref
-        .read(activeConnectionsProvider.notifier)
-        .reconnect(source.id);
+
+    SourceStatus? resultStatus;
+    String? resultError;
+    try {
+      final manager = ref.read(sourceManagerProvider);
+      final credential = await manager.getCredential(source.id);
+      var password = credential?.password;
+
+      if (_isMediaServer) {
+        final apiKey = credential?.apiKey ?? source.apiKey;
+        final hasToken =
+            (apiKey?.isNotEmpty ?? false) ||
+            (source.accessToken?.isNotEmpty ?? false);
+        if ((password?.isEmpty ?? true) && !hasToken) {
+          if (!context.mounted) return;
+          password = await _showPasswordDialog(context);
+          if (password == null || password.isEmpty) return;
+        }
+        final notifier = ref.read(
+          activeMediaServerConnectionsProvider.notifier,
+        );
+        await notifier.disconnect(source.id);
+        final result = await notifier.connect(
+          source,
+          password: password,
+          apiKey: apiKey,
+          saveCredential: credential == null,
+        );
+        resultStatus = result.status;
+        resultError = result.errorMessage;
+      } else {
+        if (source.usesPasswordAuthentication && (password?.isEmpty ?? true)) {
+          if (!context.mounted) return;
+          password = await _showPasswordDialog(context);
+          if (password == null || password.isEmpty) return;
+        }
+        final result = await ref
+            .read(activeConnectionsProvider.notifier)
+            .connect(
+              source,
+              password: password ?? '',
+              saveCredential: credential == null,
+            );
+        resultStatus = result.status;
+        resultError = result.errorMessage;
+        if (result.status == SourceStatus.requires2FA && context.mounted) {
+          final verified = await _complete2FA(context, ref, password);
+          resultStatus = verified?.status ?? resultStatus;
+          resultError = verified?.errorMessage ?? resultError;
+        }
+      }
+    } on Object catch (e) {
+      resultStatus = SourceStatus.error;
+      resultError = '$e';
+    }
+
     if (!context.mounted) return;
-    final ok = result?.status == SourceStatus.connected;
-    final need2fa = result?.status == SourceStatus.requires2FA;
+    final ok = resultStatus == SourceStatus.connected;
+    final need2fa = resultStatus == SourceStatus.requires2FA;
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -552,13 +695,105 @@ class _SourceCard extends ConsumerWidget {
                 ? l.sourcesPageConnectNeeds2FA(source.name)
                 : l.sourcesPageConnectFailed(
                     source.name,
-                    result?.errorMessage != null
-                        ? l.sourcesPageErrorSuffix(result!.errorMessage!)
+                    resultError != null
+                        ? l.sourcesPageErrorSuffix(resultError)
                         : '',
                   ),
           ),
         ),
       );
+  }
+
+  Future<SourceConnection?> _complete2FA(
+    BuildContext context,
+    WidgetRef ref,
+    String? password,
+  ) async {
+    SourceConnection? verified;
+    await showTwoFASheetWithVerify(
+      context,
+      sourceName: source.displayName,
+      initialRememberDevice: source.rememberDevice,
+      allowSkip: false,
+      onVerify: (otpCode, rememberDevice) async {
+        verified = await ref
+            .read(activeConnectionsProvider.notifier)
+            .verify2FA(
+              source.id,
+              otpCode,
+              rememberDevice: rememberDevice,
+              password: password,
+            );
+        return verified?.status == SourceStatus.connected;
+      },
+    );
+    return verified;
+  }
+
+  Future<String?> _showPasswordDialog(BuildContext context) async {
+    final l = AppLocalizations.of(context);
+    final controller = TextEditingController();
+    try {
+      return await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.sourcesPagePasswordDialogTitle),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: l.sourcesPagePasswordLabel,
+              hintText: l.sourcesPagePasswordHint(source.username),
+            ),
+            onSubmitted: (value) => Navigator.of(ctx).pop(value),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(l.commonCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(controller.text),
+              child: Text(l.commonConfirm),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      controller.dispose();
+    }
+  }
+
+  Future<void> _disconnect(BuildContext context, WidgetRef ref) async {
+    if (_isMediaServer) {
+      await ref
+          .read(activeMediaServerConnectionsProvider.notifier)
+          .disconnect(source.id);
+    } else {
+      await ref.read(activeConnectionsProvider.notifier).disconnect(source.id);
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${source.displayName} · '
+            '${AppLocalizations.of(context).sourcesPageStatusDisconnected}',
+          ),
+        ),
+      );
+    }
+  }
+
+  void _browse(BuildContext context) {
+    Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => FileBrowserPage(
+          sourceId: source.id,
+          sourceName: source.displayName,
+        ),
+      ),
+    );
   }
 
   void _edit(BuildContext context) {
@@ -602,16 +837,20 @@ class _SourceCard extends ConsumerWidget {
     final t = DesignTokens.of(context);
     // 未实现的源类型即「即将推出」，与设计稿 plan 态对齐。
     final isPlan = !source.type.isSupported;
-    final status = conn?.status;
-    final (dot, label, isErr) = _statusView(
-      l,
-      isPlan,
-      status,
-      conn?.errorMessage,
-    );
+    final (dot, label, isErr) = _statusView(l, isPlan, status, errorMessage);
+    final connected = status == SourceStatus.connected;
 
     final identity = Row(
       children: [
+        if (reorderIndex != null) ...[
+          ReorderableDragStartListener(
+            index: reorderIndex!,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Icon(Icons.drag_indicator_rounded, color: t.text3),
+            ),
+          ),
+        ],
         Container(
           width: 42,
           height: 42,
@@ -695,15 +934,24 @@ class _SourceCard extends ConsumerWidget {
         if (!isPlan) ...[
           const SizedBox(width: 14),
           AppButton(
-            label: l.sourcesPageTestConnection,
+            label: status == SourceStatus.requires2FA
+                ? l.sourcesPageStatusNeedsVerification
+                : connected
+                ? l.sourcesPageMenuReconnect
+                : l.sourcesPageMenuConnect,
             dense: true,
             onPressed: () => _reconnect(context, ref),
           ),
           const SizedBox(width: 4),
           _SourceMenu(
             color: t.text2,
+            connected: connected,
+            onBrowse: source.type.supportsFileSystem && connected
+                ? () => _browse(context)
+                : null,
             onEdit: () => _edit(context),
             onReconnect: () => _reconnect(context, ref),
+            onDisconnect: () => _disconnect(context, ref),
             onDelete: () => _confirmDelete(context, ref),
           ),
         ] else ...[
@@ -739,7 +987,15 @@ class _SourceCard extends ConsumerWidget {
     );
 
     // plan 行整体降透明，呼应既有视觉语义。
-    return isPlan ? Opacity(opacity: 0.75, child: row) : row;
+    final interactiveRow = source.type.supportsFileSystem && connected
+        ? Material(
+            color: Colors.transparent,
+            child: InkWell(onTap: () => _browse(context), child: row),
+          )
+        : row;
+    return isPlan
+        ? Opacity(opacity: 0.75, child: interactiveRow)
+        : interactiveRow;
   }
 
   /// 把（plan / 实时连接态）映射为「圆点 + 文案 + 是否错误色」。
@@ -778,18 +1034,24 @@ class _SourceCard extends ConsumerWidget {
 }
 
 /// 卡片右上角 30x30 的「更多」菜单按钮（对齐设计稿 .icon-btn dots）。
-/// 提供 编辑 / 重新连接 / 删除（级联）三项操作。
+/// 保留旧版的文件浏览、连接/断开、编辑与级联删除入口。
 class _SourceMenu extends StatelessWidget {
   const _SourceMenu({
     required this.color,
+    required this.connected,
+    required this.onBrowse,
     required this.onEdit,
     required this.onReconnect,
+    required this.onDisconnect,
     required this.onDelete,
   });
 
   final Color color;
+  final bool connected;
+  final VoidCallback? onBrowse;
   final VoidCallback onEdit;
   final VoidCallback onReconnect;
+  final VoidCallback onDisconnect;
   final VoidCallback onDelete;
 
   @override
@@ -804,20 +1066,33 @@ class _SourceMenu extends StatelessWidget {
         icon: Icon(Icons.more_horiz_rounded, size: 18, color: color),
         onSelected: (v) {
           switch (v) {
+            case 'browse':
+              onBrowse?.call();
             case 'edit':
               onEdit();
             case 'reconnect':
               onReconnect();
+            case 'disconnect':
+              onDisconnect();
             case 'delete':
               onDelete();
           }
         },
         itemBuilder: (_) => [
+          if (onBrowse != null)
+            PopupMenuItem(value: 'browse', child: Text(l.shellNavEntryFiles)),
           PopupMenuItem(value: 'edit', child: Text(l.sourcesPageMenuEdit)),
           PopupMenuItem(
             value: 'reconnect',
-            child: Text(l.sourcesPageMenuReconnect),
+            child: Text(
+              connected ? l.sourcesPageMenuReconnect : l.sourcesPageMenuConnect,
+            ),
           ),
+          if (connected)
+            PopupMenuItem(
+              value: 'disconnect',
+              child: Text(l.sourcesPageMenuDisconnect),
+            ),
           PopupMenuItem(value: 'delete', child: Text(l.sourcesPageMenuDelete)),
         ],
       ),

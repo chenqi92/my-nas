@@ -447,6 +447,31 @@ class ActiveMediaServerConnectionsNotifier
     return connection;
   }
 
+  /// 使用安全存储中的凭证重新连接媒体服务器。
+  ///
+  /// 媒体服务器不能走 [ActiveConnectionsNotifier.reconnect]，后者只会创建
+  /// 普通 NAS/服务连接。桌面端和移动端统一从这里进入 Jellyfin / Emby /
+  /// Plex 的专用连接链路。
+  Future<MediaServerConnection?> reconnect(SourceEntity source) async {
+    final manager = _ref.read(sourceManagerProvider);
+    final credential = await manager.getCredential(source.id);
+    final password = credential?.password;
+    final apiKey = credential?.apiKey ?? source.apiKey;
+    final hasReusableAuthentication =
+        (password?.isNotEmpty ?? false) ||
+        (apiKey?.isNotEmpty ?? false) ||
+        (source.accessToken?.isNotEmpty ?? false);
+    if (!hasReusableAuthentication) return null;
+
+    await disconnect(source.id);
+    return connect(
+      source,
+      password: password,
+      apiKey: apiKey,
+      saveCredential: false,
+    );
+  }
+
   /// 自动连接启用了自动连接的媒体服务器。
   Future<void> autoConnectAll() async {
     if (_isAutoConnecting) return;

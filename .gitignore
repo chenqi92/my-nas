@@ -261,3 +261,6 @@ design
 # 本地设计 brief（喂给设计 AI 用，不入库）
 SETTINGS_REDESIGN_BRIEF.md
 docs
+
+# 本地桌面端功能核对报告（不入库）
+DESKTOP_FEATURE_PARITY.md

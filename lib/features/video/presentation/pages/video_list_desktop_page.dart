@@ -7,11 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/sources/presentation/pages/media_library_page.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/data/services/video_scanner_service.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
+import 'package:my_nas/features/video/presentation/pages/video_detail_page.dart';
+import 'package:my_nas/features/video/presentation/pages/video_duplicates_page.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, VideoListLoading, VideoTab, videoListProvider;
+import 'package:my_nas/features/video/presentation/widgets/video_category_settings_sheet.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
@@ -20,7 +24,8 @@ import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
 import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_page_scaffold.dart';
-import 'package:my_nas/shared/widgets/dialogs/film_detail_sheet.dart';
+import 'package:my_nas/shared/widgets/dialogs/film_detail_sheet.dart'
+    show playVideoMetadata;
 
 /// 影视库桌面筛选谓词（纯函数，便于测试）。
 ///
@@ -49,7 +54,7 @@ final _videoScanProgressProvider = StreamProvider<VideoScanProgress?>(
 /// 桌面端「影视库」。
 ///
 /// 接 `videoListProvider`：取 VideoListLoaded 状态后铺 hero（topRatedMovies
-/// 首条） + 类型 chips + 海报网格。点击海报弹出 [FilmDetailSheet]。
+/// 首条） + 类型 chips + 海报网格。点击海报进入完整 [VideoDetailPage]。
 class VideoListDesktopPage extends ConsumerStatefulWidget {
   const VideoListDesktopPage({super.key});
 
@@ -70,20 +75,47 @@ class _VideoListDesktopPageState extends ConsumerState<VideoListDesktopPage> {
     return DesktopPageScaffold(
       title: l.videoPageTitle,
       subtitle: l.videoPageSubtitle,
-      actions: AppSegmented<String>(
-        value: _view,
-        onChanged: (v) => setState(() => _view = v),
-        dense: true,
-        options: [
-          AppSegmentedOption(
-            value: 'grid',
-            label: l.videoPageViewGrid,
-            icon: Icons.grid_view_rounded,
+      actions: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: l.videoListTooltipCategorySettings,
+            onPressed: () => VideoCategorySettingsSheet.show(context),
+            icon: const Icon(Icons.tune_rounded, size: 18),
           ),
-          AppSegmentedOption(
-            value: 'list',
-            label: l.videoPageViewList,
-            icon: Icons.view_list_rounded,
+          IconButton(
+            tooltip: l.videoListMenuLibrarySettings,
+            onPressed: () => Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute<void>(builder: (_) => const MediaLibraryPage()),
+            ),
+            icon: const Icon(Icons.settings_rounded, size: 18),
+          ),
+          IconButton(
+            tooltip: l.videoListMenuFindDuplicates,
+            onPressed: () => Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const VideoDuplicatesPage(),
+              ),
+            ),
+            icon: const Icon(Icons.content_copy_rounded, size: 18),
+          ),
+          const SizedBox(width: 8),
+          AppSegmented<String>(
+            value: _view,
+            onChanged: (v) => setState(() => _view = v),
+            dense: true,
+            options: [
+              AppSegmentedOption(
+                value: 'grid',
+                label: l.videoPageViewGrid,
+                icon: Icons.grid_view_rounded,
+              ),
+              AppSegmentedOption(
+                value: 'list',
+                label: l.videoPageViewList,
+                icon: Icons.view_list_rounded,
+              ),
+            ],
           ),
         ],
       ),
@@ -722,11 +754,7 @@ class _Hero extends StatelessWidget {
     final backdrop =
         meta.displayBackdropUrl ?? meta.localPosterUrl ?? meta.posterUrl;
     return GestureDetector(
-      onTap: () => showDialog<void>(
-        context: context,
-        barrierColor: Colors.black.withValues(alpha: 0.55),
-        builder: (_) => FilmDetailSheet(meta: meta),
-      ),
+      onTap: () => _open(context, meta),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
         child: ConstrainedBox(
@@ -1258,12 +1286,25 @@ class _PosterCard extends StatelessWidget {
 }
 
 void _open(BuildContext context, VideoMetadata meta) {
-  showDialog<void>(
-    context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.55),
-    builder: (_) => FilmDetailSheet(meta: meta),
-  );
+  Navigator.of(
+    context,
+    rootNavigator: true,
+  ).push(MaterialPageRoute<void>(builder: (_) => desktopVideoDetailPage(meta)));
 }
+
+/// 桌面海报的目标页必须是完整详情，而非仅展示摘要的弹框。
+@visibleForTesting
+VideoDetailPage desktopVideoDetailPage(VideoMetadata metadata) =>
+    VideoDetailPage(metadata: metadata, sourceId: metadata.sourceId);
+
+/// 桌面影视库页头恢复的管理能力。
+@visibleForTesting
+const desktopVideoLibraryActions = <String>{
+  'category_settings',
+  'library_settings',
+  'duplicates',
+  'full_detail',
+};
 
 /// 兼容 NetworkImage / file:// / 缺图三种来源。无图时画一个占位色块。
 class _Image extends StatelessWidget {
