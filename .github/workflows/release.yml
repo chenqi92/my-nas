@@ -169,6 +169,8 @@ jobs:
     if: needs.extract-version.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    outputs:
+      distribution_signed: ${{ steps.signing.outputs.signing }}
     env:
       # 限制 Gradle daemon 内存使用
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 -Xmx3g"
@@ -204,8 +206,10 @@ jobs:
           set -euo pipefail
 
           if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ] || [ -z "${ANDROID_KEY_PROPERTIES_BASE64:-}" ]; then
-            echo "::error::Android release signing secrets are required for distributable builds"
-            exit 1
+            echo "::warning::Android release signing secrets are unavailable; building a development-signed CI artifact"
+            echo "ALLOW_DEBUG_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
+            echo "signing=development" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           umask 077
@@ -360,6 +364,8 @@ jobs:
     # 必须用 macos-15+，否则 device_info_plus 12.4 用到的 isiOSAppOnVision (iOS 17.2 SDK) 找不到
     runs-on: macos-15
     timeout-minutes: 60
+    outputs:
+      app_store_uploaded: ${{ steps.upload_ios.outputs.uploaded }}
     steps:
       - uses: actions/checkout@v4
 
@@ -377,6 +383,7 @@ jobs:
           cache: true
 
       - name: Install iOS distribution signing material
+        id: ios_signing
         shell: bash
         env:
           APPLE_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
@@ -390,6 +397,7 @@ jobs:
           APPLE_API_PRIVATE_KEY_BASE64: ${{ secrets.APPLE_API_PRIVATE_KEY_BASE64 }}
         run: |
           set -euo pipefail
+          SIGNING_AVAILABLE=true
           for name in \
             APPLE_DISTRIBUTION_CERTIFICATE_BASE64 \
             APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD \
@@ -401,10 +409,16 @@ jobs:
             APPLE_API_ISSUER_ID \
             APPLE_API_PRIVATE_KEY_BASE64; do
             if [ -z "${!name:-}" ]; then
-              echo "::error::Required iOS distribution secret is missing: $name"
-              exit 1
+              echo "::warning::iOS distribution secret is unavailable: $name"
+              SIGNING_AVAILABLE=false
             fi
           done
+
+          if [ "$SIGNING_AVAILABLE" != "true" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Building an unsigned iOS compile artifact; App Store upload is skipped"
+            exit 0
+          fi
 
           CERTIFICATE_PATH="$RUNNER_TEMP/apple-distribution.p12"
           KEYCHAIN_PATH="$RUNNER_TEMP/ios-signing.keychain-db"
@@ -436,6 +450,7 @@ jobs:
 
           echo "APPLE_CI_KEYCHAIN=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
           echo "APPLE_API_KEY_PATH=$API_KEYS_PATH/AuthKey_${APPLE_API_KEY_ID}.p8" >> "$GITHUB_ENV"
+          echo "available=true" >> "$GITHUB_OUTPUT"
 
       - name: Get dependencies
         run: flutter pub get
@@ -452,9 +467,29 @@ jobs:
           pod install --repo-update
 
       - name: Build signed App Store IPA
+        if: steps.ios_signing.outputs.available == 'true'
         run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
+      - name: Build unsigned iOS compile artifact
+        if: steps.ios_signing.outputs.available != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build ios --release --no-codesign
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/ios/iphoneos/Runner.app \
+            MyNAS-${{ needs.extract-version.outputs.version }}-ios-unsigned.zip
+
+      - name: Upload unsigned iOS artifact
+        if: steps.ios_signing.outputs.available != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-app
+          path: MyNAS-*-ios-unsigned.zip
+          retention-days: 3
+
       - name: Verify IPA signatures
+        if: steps.ios_signing.outputs.available == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -470,6 +505,8 @@ jobs:
       # App Store-signed IPAs are not directly installable from GitHub. Submit
       # the build to App Store Connect instead of publishing a misleading IPA.
       - name: Upload iOS build to App Store Connect
+        id: upload_ios
+        if: steps.ios_signing.outputs.available == 'true'
         shell: bash
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
@@ -479,6 +516,7 @@ jobs:
           IPA_PATH=$(find build/ios/ipa -name '*.ipa' -type f -print -quit)
           xcrun altool --upload-app --type ios --file "$IPA_PATH" \
             --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER_ID"
+          echo "uploaded=true" >> "$GITHUB_OUTPUT"
 
       - name: Remove iOS signing material
         if: always()
@@ -507,6 +545,9 @@ jobs:
     if: needs.extract-version.result == 'success'
     runs-on: macos-15
     timeout-minutes: 60
+    outputs:
+      app_store_uploaded: ${{ steps.upload_macos.outputs.uploaded }}
+      developer_id_signed: ${{ steps.macos_signing.outputs.available }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -519,6 +560,7 @@ jobs:
           xcode-version: latest-stable
 
       - name: Install macOS App Store and Developer ID signing material
+        id: macos_signing
         shell: bash
         env:
           APPLE_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.APPLE_DISTRIBUTION_CERTIFICATE_BASE64 }}
@@ -533,6 +575,7 @@ jobs:
           APPLE_API_PRIVATE_KEY_BASE64: ${{ secrets.APPLE_API_PRIVATE_KEY_BASE64 }}
         run: |
           set -euo pipefail
+          SIGNING_AVAILABLE=true
           for name in \
             APPLE_DISTRIBUTION_CERTIFICATE_BASE64 \
             APPLE_DISTRIBUTION_CERTIFICATE_PASSWORD \
@@ -545,10 +588,16 @@ jobs:
             APPLE_API_ISSUER_ID \
             APPLE_API_PRIVATE_KEY_BASE64; do
             if [ -z "${!name:-}" ]; then
-              echo "::error::Required macOS distribution secret is missing: $name"
-              exit 1
+              echo "::warning::macOS distribution secret is unavailable: $name"
+              SIGNING_AVAILABLE=false
             fi
           done
+
+          if [ "$SIGNING_AVAILABLE" != "true" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Building an unsigned macOS archive; App Store upload, Developer ID signing and notarization are skipped"
+            exit 0
+          fi
 
           DISTRIBUTION_CERTIFICATE_PATH="$RUNNER_TEMP/apple-distribution.p12"
           DEVELOPER_ID_CERTIFICATE_PATH="$RUNNER_TEMP/developer-id-application.p12"
@@ -585,6 +634,7 @@ jobs:
 
           echo "APPLE_CI_KEYCHAIN=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
           echo "APPLE_API_KEY_PATH=$API_KEY_PATH" >> "$GITHUB_ENV"
+          echo "available=true" >> "$GITHUB_OUTPUT"
 
       # 验证 checkout 完整性
       - name: Verify checkout
@@ -665,6 +715,8 @@ jobs:
           flutter doctor -v
 
       - name: Archive and upload macOS build to App Store Connect
+        id: upload_macos
+        if: steps.macos_signing.outputs.available == 'true'
         shell: bash
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
@@ -686,7 +738,6 @@ jobs:
             -authenticationKeyID "$APPLE_API_KEY_ID" \
             -authenticationKeyIssuerID "$APPLE_API_ISSUER_ID" \
             CODE_SIGN_STYLE=Automatic \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM=2U97K3U27A
 
           xcodebuild -exportArchive \
@@ -697,8 +748,10 @@ jobs:
             -authenticationKeyPath "$APPLE_API_KEY_PATH" \
             -authenticationKeyID "$APPLE_API_KEY_ID" \
             -authenticationKeyIssuerID "$APPLE_API_ISSUER_ID"
+          echo "uploaded=true" >> "$GITHUB_OUTPUT"
 
       - name: Configure Developer ID signing
+        if: steps.macos_signing.outputs.available == 'true'
         run: |
           sed -i '' \
             's/CODE_SIGN_IDENTITY = "-";/CODE_SIGN_IDENTITY = "Developer ID Application";/g' \
@@ -710,10 +763,27 @@ jobs:
             's/"CODE_SIGN_IDENTITY\[sdk=macosx\*\]" = "Apple Development";/"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";/g' \
             macos/Runner.xcodeproj/project.pbxproj
 
-      - name: Build macOS
+      - name: Build signed macOS app
+        if: steps.macos_signing.outputs.available == 'true'
         run: flutter build macos --release
 
+      - name: Build unsigned macOS compile artifact
+        if: steps.macos_signing.outputs.available != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter build macos --release --config-only
+          xcodebuild build \
+            -workspace macos/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath build/macos \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
       - name: Verify macOS code signature
+        if: steps.macos_signing.outputs.available == 'true'
         run: |
           codesign --verify --deep --strict --verbose=2 \
             build/macos/Build/Products/Release/my_nas.app
@@ -730,6 +800,7 @@ jobs:
           fi
 
       - name: Create DMG
+        if: steps.macos_signing.outputs.available == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -750,6 +821,7 @@ jobs:
           codesign --verify --strict --verbose=2 "$DMG"
 
       - name: Notarize and staple macOS DMG
+        if: steps.macos_signing.outputs.available == 'true'
         shell: bash
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
@@ -766,6 +838,15 @@ jobs:
           xcrun stapler validate "$DMG"
           spctl --assess --type open --context context:primary-signature --verbose=2 "$DMG"
 
+      - name: Create unsigned macOS archive
+        if: steps.macos_signing.outputs.available != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/macos/Build/Products/Release/my_nas.app \
+            MyNAS-${{ needs.extract-version.outputs.version }}-macos-unsigned.zip
+
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
@@ -773,6 +854,7 @@ jobs:
           retention-days: 3
           path: |
             MyNAS-*.dmg
+            MyNAS-*-macos-unsigned.zip
 
       - name: Remove macOS signing material
         if: always()
@@ -795,6 +877,8 @@ jobs:
     if: needs.extract-version.result == 'success'
     runs-on: windows-latest
     timeout-minutes: 60
+    outputs:
+      distribution_signed: ${{ steps.windows_signing.outputs.available }}
     env:
       # 兜底：让 cl.exe 对每个编译单元都注入静默宏，覆盖 CMake 定义可能漏到的 target。
       CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
@@ -802,16 +886,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Restore Windows code-signing certificate
+        id: windows_signing
         shell: pwsh
         env:
           WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 }}
           WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64)) {
-            throw "Required Windows distribution secret is missing: WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64"
+            Write-Warning "Windows signing certificate is unavailable; building unsigned CI artifacts"
+            "WINDOWS_CERTIFICATE_SUBJECT=CN=MyNAS Development" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            exit 0
           }
           if ([string]::IsNullOrWhiteSpace($env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD)) {
-            throw "Required Windows distribution secret is missing: WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD"
+            Write-Warning "Windows signing certificate password is unavailable; building unsigned CI artifacts"
+            "WINDOWS_CERTIFICATE_SUBJECT=CN=MyNAS Development" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            exit 0
           }
 
           $certificatePath = Join-Path $env:RUNNER_TEMP "windows-code-signing.pfx"
@@ -835,6 +926,7 @@ jobs:
           "WINDOWS_CERTIFICATE_PATH=$certificatePath" | Out-File -FilePath $env:GITHUB_ENV -Append
           "WINDOWS_CERTIFICATE_SUBJECT=$($certificate.Subject)" | Out-File -FilePath $env:GITHUB_ENV -Append
           "WINDOWS_SIGNTOOL=$($signTool.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "available=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -891,7 +983,7 @@ jobs:
           }
 
       - name: Sign Windows application binaries
-        if: steps.check_windows.outputs.supported == 'true'
+        if: steps.check_windows.outputs.supported == 'true' && steps.windows_signing.outputs.available == 'true'
         shell: pwsh
         env:
           WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD }}
@@ -934,10 +1026,14 @@ jobs:
           }
           Remove-Item -Recurse -Force $manifestDirectory
 
-          & $env:WINDOWS_SIGNTOOL sign /fd SHA256 /f $env:WINDOWS_CERTIFICATE_PATH /p $env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD /tr http://timestamp.digicert.com /td SHA256 $msix
-          if ($LASTEXITCODE -ne 0) { throw "MSIX signing failed" }
-          & $env:WINDOWS_SIGNTOOL verify /pa /v $msix
-          if ($LASTEXITCODE -ne 0) { throw "MSIX signature verification failed" }
+          if ("${{ steps.windows_signing.outputs.available }}" -eq "true") {
+            & $env:WINDOWS_SIGNTOOL sign /fd SHA256 /f $env:WINDOWS_CERTIFICATE_PATH /p $env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD /tr http://timestamp.digicert.com /td SHA256 $msix
+            if ($LASTEXITCODE -ne 0) { throw "MSIX signing failed" }
+            & $env:WINDOWS_SIGNTOOL verify /pa /v $msix
+            if ($LASTEXITCODE -ne 0) { throw "MSIX signature verification failed" }
+          } else {
+            Write-Warning "MSIX was created without Authenticode signing"
+          }
         env:
           WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD }}
 
@@ -991,10 +1087,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup build failed" }
 
           $installer = "MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe"
-          & $env:WINDOWS_SIGNTOOL sign /fd SHA256 /f $env:WINDOWS_CERTIFICATE_PATH /p $env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD /tr http://timestamp.digicert.com /td SHA256 $installer
-          if ($LASTEXITCODE -ne 0) { throw "Windows installer signing failed" }
-          & $env:WINDOWS_SIGNTOOL verify /pa /v $installer
-          if ($LASTEXITCODE -ne 0) { throw "Windows installer signature verification failed" }
+          if ("${{ steps.windows_signing.outputs.available }}" -eq "true") {
+            & $env:WINDOWS_SIGNTOOL sign /fd SHA256 /f $env:WINDOWS_CERTIFICATE_PATH /p $env:WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD /tr http://timestamp.digicert.com /td SHA256 $installer
+            if ($LASTEXITCODE -ne 0) { throw "Windows installer signing failed" }
+            & $env:WINDOWS_SIGNTOOL verify /pa /v $installer
+            if ($LASTEXITCODE -ne 0) { throw "Windows installer signature verification failed" }
+          } else {
+            Write-Warning "Inno Setup installer was created without Authenticode signing"
+          }
 
       - name: Upload Windows artifact
         if: steps.check_windows.outputs.supported == 'true'
@@ -1411,28 +1511,36 @@ jobs:
         run: |
           STATUS=""
 
-          if [ "${{ needs.build-android.result }}" == "success" ]; then
+          if [ "${{ needs.build-android.result }}" == "success" ] && [ "${{ needs.build-android.outputs.distribution_signed }}" == "available" ]; then
             STATUS="${STATUS}✅ Android（正式签名）\n"
+          elif [ "${{ needs.build-android.result }}" == "success" ]; then
+            STATUS="${STATUS}✅ Android（开发签名 CI 产物；仓库未配置发布签名）\n"
           else
             STATUS="${STATUS}❌ Android (构建失败)\n"
           fi
 
-          if [ "${{ needs.build-ios.result }}" == "success" ]; then
+          if [ "${{ needs.build-ios.result }}" == "success" ] && [ "${{ needs.build-ios.outputs.app_store_uploaded }}" == "true" ]; then
             STATUS="${STATUS}✅ iOS（已签名并提交 App Store Connect）\n"
+          elif [ "${{ needs.build-ios.result }}" == "success" ]; then
+            STATUS="${STATUS}✅ iOS（未签名编译产物；CI 未提交 App Store Connect）\n"
           else
             STATUS="${STATUS}❌ iOS (构建失败)\n"
           fi
 
-          if [ "${{ needs.build-macos.result }}" == "success" ]; then
+          if [ "${{ needs.build-macos.result }}" == "success" ] && [ "${{ needs.build-macos.outputs.app_store_uploaded }}" == "true" ]; then
             STATUS="${STATUS}✅ macOS（已提交 App Store Connect，DMG 已签名公证）\n"
+          elif [ "${{ needs.build-macos.result }}" == "success" ]; then
+            STATUS="${STATUS}✅ macOS（未签名编译产物；CI 未提交 App Store Connect）\n"
           elif [ "${{ needs.build-macos.result }}" == "skipped" ]; then
             STATUS="${STATUS}⏭️ macOS (跳过 - 平台未配置)\n"
           else
             STATUS="${STATUS}❌ macOS (构建失败)\n"
           fi
 
-          if [ "${{ needs.build-windows.result }}" == "success" ]; then
+          if [ "${{ needs.build-windows.result }}" == "success" ] && [ "${{ needs.build-windows.outputs.distribution_signed }}" == "true" ]; then
             STATUS="${STATUS}✅ Windows（Authenticode 签名）\n"
+          elif [ "${{ needs.build-windows.result }}" == "success" ]; then
+            STATUS="${STATUS}✅ Windows（未签名 CI 产物；仓库未配置发布证书）\n"
           elif [ "${{ needs.build-windows.result }}" == "skipped" ]; then
             STATUS="${STATUS}⏭️ Windows (跳过 - 平台未配置)\n"
           else
@@ -1485,8 +1593,8 @@ jobs:
             | 平台 | 推荐版本 | 下载链接 |
             |------|----------|----------|
             | **Android** | arm64-v8a | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-android-arm64-v8a.apk](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-android-arm64-v8a.apk) |
-            | **iOS** | App Store | 已提交 App Store Connect（审核/上架状态以后台为准） |
-            | **macOS** | TestFlight / universal DMG | 已提交 App Store Connect；[下载 DMG](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-macos.dmg) |
+            | **iOS** | TestFlight / CI 编译产物 | App Store Connect 提交状态见上方构建状态 |
+            | **macOS** | TestFlight / universal 构建 | App Store Connect 与签名状态见上方构建状态 |
             | **Windows** | x64 安装包 | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-windows-x64-setup.exe) |
             | **Linux** | x64 | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-linux-x64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-linux-x64.tar.gz) |
             | **Linux (ARM)** | arm64 | [⬇️ MyNAS-${{ needs.extract-version.outputs.version }}-linux-arm64.tar.gz](https://github.com/${{ github.repository }}/releases/download/${{ needs.extract-version.outputs.tag_name }}/MyNAS-${{ needs.extract-version.outputs.version }}-linux-arm64.tar.gz) |
@@ -1510,16 +1618,17 @@ jobs:
             <details>
             <summary>iOS (点击展开)</summary>
 
-            iOS 构建使用 Apple Distribution 证书签名，并由发布工作流提交到
-            App Store Connect。App Store 签名 IPA 不能作为 GitHub 附件直接安装，
-            TestFlight 与正式上架状态请以 App Store Connect 为准。
+            配置 Apple 发布 Secrets 时，工作流会使用 Apple Distribution 证书签名并提交
+            App Store Connect；未配置时仅发布不可直接安装的 unsigned 编译校验产物。
+            TestFlight 状态请以 App Store Connect 为准。
 
             </details>
 
             <details>
             <summary>macOS (点击展开)</summary>
 
-            macOS App Store 构建已由发布工作流提交到 App Store Connect，供 TestFlight 处理。
+            配置 Apple 发布 Secrets 时，工作流会提交 macOS App Store 构建并生成已签名、
+            已公证的 DMG；未配置时仅生成 unsigned universal 编译产物。
 
             | 架构 | 说明 | 下载 |
             |------|------|------|
