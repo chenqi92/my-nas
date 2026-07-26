@@ -395,7 +395,10 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           // 根据 provider 状态决定是否显示原生 Tab Bar
           NativeTabBarService.instance.setTabBarVisible(bottomNavVisible);
           if (bottomNavVisible) {
-            NativeTabBarService.instance.setSelectedIndex(currentIndex);
+            final nativeIndex = mobileMainTabIndexForBranch(currentIndex);
+            if (nativeIndex != null) {
+              NativeTabBarService.instance.setSelectedIndex(nativeIndex);
+            }
           }
         });
       } else if (!useNativeTabBar && wasUsingNative) {
@@ -415,7 +418,10 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         if (!mounted) return;
         NativeTabBarService.instance.setTabBarVisible(bottomNavVisible);
         if (bottomNavVisible && !_isHandlingTabChange) {
-          NativeTabBarService.instance.setSelectedIndex(currentIndex);
+          final nativeIndex = mobileMainTabIndexForBranch(currentIndex);
+          if (nativeIndex != null) {
+            NativeTabBarService.instance.setSelectedIndex(nativeIndex);
+          }
         }
       });
     }

@@ -42,5 +42,14 @@ void main() {
     test('branchRoutes 无重复路由', () {
       expect(branchRoutes.toSet().length, branchRoutes.length);
     });
+
+    test('移动端原生 Tab 索引从全局 branch 映射为 0..4', () {
+      expect(mobileMainTabIndexForBranch(AppBranch.video), 0);
+      expect(mobileMainTabIndexForBranch(AppBranch.music), 1);
+      expect(mobileMainTabIndexForBranch(AppBranch.photo), 2);
+      expect(mobileMainTabIndexForBranch(AppBranch.reading), 3);
+      expect(mobileMainTabIndexForBranch(AppBranch.mine), 4);
+      expect(mobileMainTabIndexForBranch(AppBranch.sources), isNull);
+    });
   });
 }

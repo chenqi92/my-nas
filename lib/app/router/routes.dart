@@ -66,6 +66,25 @@ abstract final class AppBranch {
   static const int count = 14;
 }
 
+/// iOS/Android 底部 5 个主 Tab 对应的全局 branch 索引。
+///
+/// 原生 iOS Tab Bar 使用 0..4 的局部索引，不能直接传入
+/// StatefulShellRoute 的 14 个全局 branch 索引。
+const List<int> mobileMainTabBranches = <int>[
+  AppBranch.video,
+  AppBranch.music,
+  AppBranch.photo,
+  AppBranch.reading,
+  AppBranch.mine,
+];
+
+/// 把全局 branch 索引转换为移动端底部 Tab 的 0..4 索引。
+/// 工具页等非主 Tab branch 返回 null，保留原有选中项。
+int? mobileMainTabIndexForBranch(int branchIndex) {
+  final index = mobileMainTabBranches.indexOf(branchIndex);
+  return index < 0 ? null : index;
+}
+
 /// branch index → 路由路径（与 [AppBranch] 同序）。供需要「按 branch index 反查
 /// 路由」或「按路由查 branch index」的桌面外壳使用，避免各处各维护一份顺序表。
 const List<String> branchRoutes = <String>[

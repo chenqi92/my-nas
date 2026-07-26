@@ -101,13 +101,16 @@ class NetworkDiscoveryNotifier extends StateNotifier<NetworkDiscoveryState> {
   final Map<String, BonsoirDiscovery> _discoveries = {};
   final Map<String, StreamSubscription<BonsoirDiscoveryEvent>> _subscriptions = {};
   Timer? _discoveryTimer;
+  bool _isStoppingAfterStreamError = false;
 
   /// 开始发现
   Future<void> startDiscovery() async {
+    if (!mounted) return;
     if (state.isDiscovering) return;
 
     // 先停止任何现有的发现
     await stopDiscovery();
+    if (!mounted) return;
 
     state = state.copyWith(isDiscovering: true, devices: [], error: null);
     logger.i('NetworkDiscovery: 开始发现局域网设备 (使用原生 API)');
@@ -123,11 +126,19 @@ class NetworkDiscoveryNotifier extends StateNotifier<NetworkDiscoveryState> {
         try {
           final discovery = BonsoirDiscovery(type: serviceType);
           await discovery.initialize();
+          if (!mounted) {
+            await discovery.stop();
+            return;
+          }
 
           // 监听发现事件
           // ignore: cancel_subscriptions - 已在 _subscriptions 中管理
           final subscription = discovery.eventStream?.listen(
-            (event) => _handleDiscoveryEvent(event, serviceType, sourceType, devices),
+            (event) =>
+                _handleDiscoveryEvent(event, serviceType, sourceType, devices),
+            onError: (Object error, StackTrace stackTrace) {
+              _handleDiscoveryStreamError(serviceType, error, stackTrace);
+            },
           );
 
           if (subscription != null) {
@@ -135,6 +146,11 @@ class NetworkDiscoveryNotifier extends StateNotifier<NetworkDiscoveryState> {
           }
 
           await discovery.start();
+          if (!mounted) {
+            await subscription?.cancel();
+            await discovery.stop();
+            return;
+          }
           _discoveries[serviceType] = discovery;
 
           logger.d('NetworkDiscovery: 开始监听服务类型 $serviceType');
@@ -144,13 +160,44 @@ class NetworkDiscoveryNotifier extends StateNotifier<NetworkDiscoveryState> {
       }
 
       // 设置超时，在一段时间后停止发现并更新状态
-      _discoveryTimer = Timer(const Duration(seconds: 10), _finishDiscovery);
+      _discoveryTimer = Timer(const Duration(seconds: 10), () {
+        AppError.fireAndForget(
+          _finishDiscovery(),
+          action: 'networkDiscovery.finishDiscovery',
+        );
+      });
     } on Exception catch (e, st) {
       logger.e('NetworkDiscovery: 发现失败', e, st);
-      state = state.copyWith(
-        isDiscovering: false,
-        error: e.toString(),
-      );
+      if (mounted) {
+        state = state.copyWith(isDiscovering: false, error: e.toString());
+      }
+    }
+  }
+
+  /// Bonsoir 在 iOS 切换前后台时可能为所有服务流同时上报
+  /// DefunctConnection。如果不提供 onError，这些错误会逃逸到
+  /// PlatformDispatcher，被记为多次未捕获 FATAL。发现会话已不可用时
+  /// 停止整个会话，保留已发现的设备，用户可手动重新扫描。
+  void _handleDiscoveryStreamError(
+    String serviceType,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    logger.w('NetworkDiscovery: $serviceType 发现连接中断', error, stackTrace);
+    if (_isStoppingAfterStreamError) return;
+
+    _isStoppingAfterStreamError = true;
+    AppError.fireAndForget(
+      _stopAfterDiscoveryStreamError(),
+      action: 'networkDiscovery.stopAfterStreamError',
+    );
+  }
+
+  Future<void> _stopAfterDiscoveryStreamError() async {
+    try {
+      await stopDiscovery();
+    } finally {
+      _isStoppingAfterStreamError = false;
     }
   }
 
@@ -161,6 +208,8 @@ class NetworkDiscoveryNotifier extends StateNotifier<NetworkDiscoveryState> {
     SourceType? sourceType,
     Set<DiscoveredDevice> devices,
   ) {
+    if (!mounted) return;
+
     switch (event) {
       case BonsoirDiscoveryServiceFoundEvent():
         logger.d('NetworkDiscovery: 发现服务 ${event.service.name} ($serviceType)');
@@ -221,12 +270,16 @@ class NetworkDiscoveryNotifier extends StateNotifier<NetworkDiscoveryState> {
   }
 
   /// 完成发现
-  void _finishDiscovery() {
+  Future<void> _finishDiscovery() async {
+    if (!mounted) return;
     logger.i('NetworkDiscovery: 发现完成，共 ${state.devices.length} 个设备');
     state = state.copyWith(
       isDiscovering: false,
       lastDiscoveryTime: DateTime.now(),
     );
+    // 超时不只是改 UI 状态；必须真正取消原生 mDNS 监听，
+    // 否则后台切换时仍会收到过期会话的错误事件。
+    await stopDiscovery();
   }
 
   /// 停止发现
@@ -250,7 +303,7 @@ class NetworkDiscoveryNotifier extends StateNotifier<NetworkDiscoveryState> {
     }
     _discoveries.clear();
 
-    if (state.isDiscovering) {
+    if (mounted && state.isDiscovering) {
       state = state.copyWith(isDiscovering: false);
     }
   }

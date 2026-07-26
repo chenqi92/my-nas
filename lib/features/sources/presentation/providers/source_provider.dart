@@ -106,10 +106,16 @@ class SourcesNotifier extends StateNotifier<AsyncValue<List<SourceEntity>>> {
 
       // 按 sortOrder 排序
       sources.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-      state = AsyncValue.data(sources);
+      // Provider 可能在异步初始化期间被销毁（例如应用退出、测试卸载根
+      // Widget）。此时继续写入 StateNotifier 会触发 dispose 后更新异常。
+      if (mounted) {
+        state = AsyncValue.data(sources);
+      }
     } on Exception catch (e, st) {
-      // 捕获所有错误，包括 TypeError
-      state = AsyncValue.error(e, st);
+      // 销毁后的异步任务无需再发布结果；同时避免错误分支再次写入已释放状态。
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
     }
   }
 
