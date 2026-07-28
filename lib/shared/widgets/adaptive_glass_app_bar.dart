@@ -1084,8 +1084,10 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
               // ignore: avoid_dynamic_calls
               (onSelectedCallback as Function)(parsedValue);
             }
-          } catch (e) {
-            // 回调解析/执行失败时忽略，不影响其他按钮的遍历
+          } catch (e, st) {
+            // 回调本身抛错时不能中断遍历，但必须留痕：
+            // 否则用户点菜单没反应且日志无迹可循。
+            AppError.handle(e, st, 'GlassGroupPopupMenuButton.onSelected');
           }
         }
         return;

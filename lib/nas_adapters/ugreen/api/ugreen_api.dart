@@ -86,7 +86,6 @@ class UGreenApi {
 
   final Dio dio;
   String? _token;
-  String? _staticToken;
   String? _tokenId;
   String? _loginPublicKey;
   String? _sessionCookie;
@@ -177,7 +176,6 @@ class UGreenApi {
             final sessionToken = tokenData['token']?.toString();
             final staticToken = tokenData['static_token']?.toString();
             _token = sessionToken ?? staticToken;
-            _staticToken = staticToken;
             _tokenId = tokenData['token_id']?.toString();
             _loginPublicKey = tokenData['public_key']?.toString();
           }
@@ -1064,7 +1062,6 @@ class UGreenApi {
 
   void _invalidateSession() {
     _token = null;
-    _staticToken = null;
     _tokenId = null;
     _loginPublicKey = null;
     _sessionCookie = null;

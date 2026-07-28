@@ -11,7 +11,6 @@ analyzer:
     # 它们的代码生成 / Rust bridge stub 不应让主项目的 analyze fail
     - "packages/**"
   errors:
-    invalid_annotation_target: ignore
     # StreamAudioSource 被标记为 @experimental，但它是 just_audio 中
     # 处理自定义流的唯一方式，对于 SMB/WebDAV 等协议没有替代方案
     deprecated_member_use: warning
