@@ -401,14 +401,12 @@ class AppError {
     String? code;
 
     if (error is AppException) {
-      // ignore: no_runtimeType_toString
       type = error.runtimeType.toString();
       message = error.message ?? error.toString();
       if (error is ServerException) {
         code = error.statusCode?.toString();
       }
     } else if (error is Failure) {
-      // ignore: no_runtimeType_toString
       type = error.runtimeType.toString();
       message = error.message ?? error.toString();
       if (error is ServerFailure) {
@@ -419,11 +417,9 @@ class AppError {
       message = error.message ?? error.toString();
       code = error.response?.statusCode?.toString();
     } else if (error is Exception) {
-      // ignore: no_runtimeType_toString
       type = error.runtimeType.toString();
       message = error.toString();
     } else if (error is Error) {
-      // ignore: no_runtimeType_toString
       type = error.runtimeType.toString();
       message = error.toString();
     } else {

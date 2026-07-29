@@ -914,7 +914,6 @@ class _NoteListPageState extends ConsumerState<NoteListPage> {
       case MediaFileAction.deleteFromSource:
         if (!context.mounted) return;
         final confirmed = await showDeleteConfirmDialog(
-          // ignore: use_build_context_synchronously
           context: context,
           title: context.l10n.noteListDeleteConfirmTitle,
           content: context.l10n.noteListDeleteConfirmContent(node.displayName),
@@ -2295,7 +2294,6 @@ class _NoteListContentState extends ConsumerState<NoteListContent> {
       case MediaFileAction.deleteFromSource:
         if (!context.mounted) return;
         final confirmed = await showDeleteConfirmDialog(
-          // ignore: use_build_context_synchronously
           context: context,
           title: context.l10n.noteListDeleteConfirmTitle,
           content: context.l10n.noteListDeleteConfirmContent(node.displayName),

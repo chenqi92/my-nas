@@ -105,7 +105,6 @@ class SubtitleService {
                 return <FileItem>[];
               },
             );
-        // ignore: avoid_catches_without_on_clauses
       } catch (e, st) {
         // 捕获所有错误（包括 Error），防止目录列表失败导致闪退
         AppError.ignore(e, st, '目录列表失败，字幕搜索跳过: $videoDir');
@@ -145,7 +144,6 @@ class SubtitleService {
                   return '';
                 },
               );
-          // ignore: avoid_catches_without_on_clauses
         } catch (e) {
           logger.w('SubtitleService: 获取字幕URL失败: ${file.path}', e);
           continue;
@@ -172,7 +170,6 @@ class SubtitleService {
       });
 
       logger.i('SubtitleService: 共找到 ${subtitles.length} 个字幕');
-      // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       // 使用 catch 而非 on Exception catch 捕获所有错误
       // 字幕搜索失败不应影响视频播放
@@ -257,7 +254,6 @@ class SubtitleService {
               language: index.language,
             );
           }
-          // ignore: avoid_catches_without_on_clauses
         } catch (e) {
           logger.w('SubtitleService: 获取字幕URL失败: ${index.subtitlePath}', e);
         }
@@ -273,7 +269,6 @@ class SubtitleService {
         final bScore = _getLanguageScore(b.language);
         return aScore.compareTo(bScore);
       });
-      // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       AppError.ignore(e, st, '从缓存获取字幕失败，不影响播放');
     }

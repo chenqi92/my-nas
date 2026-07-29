@@ -2047,7 +2047,6 @@ class _PathCardState extends ConsumerState<_PathCard> {
         case MediaType.note:
           break;
       }
-    // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       // 使用通用 catch 捕获所有类型（SMB 库可能抛出 String 类型异常）
       if (mounted) {

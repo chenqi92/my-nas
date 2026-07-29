@@ -299,7 +299,6 @@ class BookCoverService {
       } on TimeoutException {
         logger.w('PDF 打开超时，跳过封面提取: $bookPath');
         return null;
-        // ignore: avoid_catches_without_on_clauses
       } catch (e) {
         // PDF 库可能抛出各种非 Exception 的错误
         logger.w('PDF 打开失败，跳过封面提取: $bookPath', e);

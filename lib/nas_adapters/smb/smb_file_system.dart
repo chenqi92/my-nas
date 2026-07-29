@@ -100,7 +100,6 @@ class SmbFileSystem implements NasFileSystem {
             type: SmbConnectionType.general,
           );
           return MapEntry(path, files);
-          // ignore: avoid_catches_without_on_clauses
         } catch (e) {
           logger.w('SmbFileSystem: 并行列出目录失败: $path - $e');
           return MapEntry(path, <FileItem>[]);
@@ -149,7 +148,6 @@ class SmbFileSystem implements NasFileSystem {
                 : null;
             return MapEntry(path, mtime);
           }, type: SmbConnectionType.general);
-          // ignore: avoid_catches_without_on_clauses
         } catch (e) {
           return MapEntry<String, DateTime?>(path, null);
         }
@@ -358,7 +356,6 @@ class SmbFileSystem implements NasFileSystem {
             // 使用 try-catch 防止连接已断开时的错误
             try {
               await raf.close();
-              // ignore: avoid_catches_without_on_clauses
             } catch (_) {
               // 忽略关闭时的错误，连接可能已经断开
             }
@@ -393,7 +390,6 @@ class SmbFileSystem implements NasFileSystem {
                 }
               }
               await controller.close();
-              // ignore: avoid_catches_without_on_clauses
             } catch (e, st) {
               // 上报流读取错误
               AppError.handle(e, st, 'SmbFileSystem.streamRead', {
@@ -410,7 +406,6 @@ class SmbFileSystem implements NasFileSystem {
             } finally {
               try {
                 await raf.close();
-                // ignore: avoid_catches_without_on_clauses
               } catch (_) {
                 // 忽略关闭时的错误，连接可能已经断开
               }
@@ -419,11 +414,9 @@ class SmbFileSystem implements NasFileSystem {
           }(), action: 'SmbFileSystem.getFileStream');
 
           return controller.stream;
-          // ignore: avoid_catches_without_on_clauses
         } catch (_) {
           try {
             await raf.close();
-            // ignore: avoid_catches_without_on_clauses
           } catch (_) {
             // 忽略关闭时的错误
           }
@@ -531,7 +524,6 @@ class SmbFileSystem implements NasFileSystem {
       try {
         final existing = await client.file(destPath);
         await client.delete(existing);
-        // ignore: avoid_catches_without_on_clauses
       } catch (e, st) {
         AppError.ignore(e, st, 'SMB copy: 目标不存在或无法删除，继续创建');
       }
@@ -546,7 +538,6 @@ class SmbFileSystem implements NasFileSystem {
         }
         await writer.flush();
         await writer.close();
-        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         await writer.close();
         rethrow;
@@ -614,7 +605,6 @@ class SmbFileSystem implements NasFileSystem {
       try {
         final existingFile = await client.file(remotePath);
         await client.delete(existingFile);
-        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         // 文件不存在或删除失败，忽略错误继续写入
       }
@@ -630,7 +620,6 @@ class SmbFileSystem implements NasFileSystem {
         writer.add(data);
         await writer.flush();
         await writer.close();
-        // ignore: avoid_catches_without_on_clauses
       } catch (e) {
         await writer.close();
         rethrow;

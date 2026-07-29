@@ -219,7 +219,6 @@ class TTSAutoScrollController {
 
     // 获取段落位置
     final scrollableContext = _scrollController!.position.context.storageContext;
-    // ignore: use_build_context_synchronously
     final scrollableRenderObject = scrollableContext.findRenderObject();
     if (scrollableRenderObject == null) return;
 

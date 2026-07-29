@@ -1125,7 +1125,6 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
               .map((track) => track.path)
               .toSet(),
         ));
-        // ignore: avoid_catches_without_on_clauses
       } catch (e) {
         logger.w('扫描音乐文件夹失败: ${mediaPath.path} - $e');
       }
@@ -1439,7 +1438,6 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
       await _loadCategorizedData();
 
       return tracks.length;
-      // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       // 使用通用 catch 捕获所有类型（SMB 库可能抛出 String 类型异常）
       AppError.handle(e, st, 'MusicListNotifier.scanSinglePath', {
@@ -1488,7 +1486,6 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
           onBatchFound?.call();
         }
       }
-      // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       logger.w('扫描子文件夹失败: $path - $e');
       Error.throwWithStackTrace(e, st);
@@ -1640,7 +1637,6 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
           onBatchFound?.call();
         }
       }
-      // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       logger.w('扫描子文件夹失败: $path - $e');
       Error.throwWithStackTrace(e, st);

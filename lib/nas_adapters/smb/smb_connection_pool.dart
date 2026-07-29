@@ -68,7 +68,6 @@ class DedicatedConnection {
           stopHeartbeat();
           _onDisconnect?.call();
         }
-      // ignore: avoid_catches_without_on_clauses
       } catch (e) {
         if (!_closed) {
           logger.w('SMB DedicatedConnection: 心跳异常 $e');
@@ -97,7 +96,6 @@ class DedicatedConnection {
 
     try {
       await client.close();
-    // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       logger.w('SMB DedicatedConnection: 关闭连接失败', e, st);
     }
@@ -158,7 +156,6 @@ class _PooledConnection {
         timeout,
         onTimeout: () => false,
       );
-    // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       logger.w('SMB 连接健康检查失败', e, st);
       return false;
@@ -316,7 +313,6 @@ class SmbConnectionPool {
     _connections.remove(conn);
     try {
       await conn.client.close();
-    // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       logger.w('SMB Pool: 关闭连接失败', e, st);
     }
@@ -474,7 +470,6 @@ class SmbConnectionPool {
       );
 
       return (client: client, releaseCallback: _releaseDedicatedSlot);
-    // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       // 创建失败，释放槽位并上报错误
       await _releaseDedicatedSlot();
@@ -536,7 +531,6 @@ class SmbConnectionPool {
         ..startHeartbeat();
 
       return connection;
-    // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       // 创建失败，释放槽位并上报错误
       await _releaseDedicatedSlot();
@@ -589,7 +583,6 @@ class SmbConnectionPool {
       for (final conn in _connections) {
         try {
           await conn.client.close();
-        // ignore: avoid_catches_without_on_clauses
         } catch (e, st) {
           AppError.ignore(e, st, 'SMB Pool: 关闭连接失败');
         }

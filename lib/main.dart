@@ -135,7 +135,6 @@ void _reportFlutterError(FlutterErrorDetails details) {
 
 /// 记录平台异步错误（仅本地日志）
 void _reportPlatformError(Object error, StackTrace stack) {
-  // ignore: no_runtimeType_toString
   final errorType = error.runtimeType.toString();
   logger.f('[PlatformDispatcherError] $errorType: $error', error, stack);
 }

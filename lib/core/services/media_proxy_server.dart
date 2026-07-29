@@ -162,13 +162,11 @@ class MediaProxyServer {
       try {
         // 只有在还没发送响应头时才能设置状态码
         request.response.statusCode = HttpStatus.internalServerError;
-        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         // 响应头可能已经发送
       }
       try {
         await request.response.close();
-        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         // 响应可能已经关闭
       }
@@ -303,7 +301,6 @@ class MediaProxyServer {
       }
       try {
         await request.response.close();
-        // ignore: avoid_catches_without_on_clauses
       } catch (_) {
         // 响应可能已经关闭
       }
@@ -436,13 +433,11 @@ class _ProxyTransfer {
     _isCancelled = true;
     try {
       await _iterator.cancel();
-      // ignore: avoid_catches_without_on_clauses
     } catch (_) {
       // 底层连接可能已经被播放器关闭。
     }
     try {
       await _response.close();
-      // ignore: avoid_catches_without_on_clauses
     } catch (_) {
       // HTTP 客户端可能已经断开。
     }

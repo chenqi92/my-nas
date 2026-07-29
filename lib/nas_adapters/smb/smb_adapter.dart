@@ -349,7 +349,6 @@ class SmbAdapter implements NasAdapter {
     try {
       // 关闭连接池（会关闭所有连接）
       await _connectionPool?.dispose();
-      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       logger.w('SmbAdapter: 断开连接时出错', e);
     }
@@ -385,7 +384,6 @@ class SmbAdapter implements NasAdapter {
         _connected = false;
         return false;
       }
-      // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       logger.w('SmbAdapter: 连接健康检查 - 失败', e);
       // 标记连接已断开

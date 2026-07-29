@@ -423,7 +423,6 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
           });
         }
       });
-    // ignore: avoid_catches_without_on_clauses
     } catch (e, st) {
       // 某些平台可能不支持电池API，或者存在类型转换问题
       // 使用裸 catch 是因为需要捕获 TypeError（不是 Exception 的子类）
@@ -435,7 +434,6 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
   Future<int> _safeBatteryLevel() async {
     try {
       return await _battery.batteryLevel;
-    // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       // battery_plus 在某些 iOS 版本可能返回 String 而不是 int
       // 导致 "type 'String' is not a subtype of type 'int?'" 错误
