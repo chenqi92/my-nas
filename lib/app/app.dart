@@ -17,6 +17,7 @@ import 'package:my_nas/core/services/background_transfer_guard.dart';
 import 'package:my_nas/core/services/deep_link_service.dart';
 import 'package:my_nas/core/services/toast_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 import 'package:my_nas/core/widgets/tls_trust_prompt_host.dart';
 import 'package:my_nas/features/app_lock/presentation/widgets/app_lock_gate.dart';
 import 'package:my_nas/features/book/data/services/book_database_service.dart';
@@ -364,7 +365,7 @@ class _MyNasAppState extends ConsumerState<MyNasApp>
       builder: (context, child) {
         // 更新全局 l10n，供无 BuildContext 的 service/notifier 层使用
         appL10n = AppLocalizations.of(context);
-        return ToastServiceProvider(
+        Widget content = ToastServiceProvider(
           service: _toastService,
           child: ToastOverlay(
             toastService: _toastService,
@@ -377,6 +378,16 @@ class _MyNasAppState extends ConsumerState<MyNasApp>
             ),
           ),
         );
+        // TV 10-foot UI：观看距离远，全局轻度放大文字
+        if (TvCapabilities.isAndroidTv) {
+          content = MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              textScaler: const TextScaler.linear(1.1),
+            ),
+            child: content,
+          );
+        }
+        return content;
       },
     );
   }

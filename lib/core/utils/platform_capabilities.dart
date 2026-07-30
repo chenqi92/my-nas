@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 
 /// 平台能力检测工具
 /// 用于检测当前平台支持的功能
@@ -14,6 +15,13 @@ class PlatformCapabilities {
   /// 是否为移动平台
   static bool get isMobile =>
       !kIsWeb && (Platform.isIOS || Platform.isAndroid);
+
+  /// 是否为 Android TV / 电视盒子
+  ///
+  /// 依赖启动时 TvCapabilities.init() 的探测结果；注意 TV 设备的
+  /// isMobile 也为 true（Android 平台），需要 TV 特化行为时先判本项。
+  static bool get isTV => TvCapabilities.isAndroidTv;
+
 
   /// 是否为 Web 平台
   static bool get isWeb => kIsWeb;

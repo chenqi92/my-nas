@@ -976,6 +976,33 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
         _startHideControlsTimer();
       },
 
+      // TV 遥控器：确认键播放/暂停，媒体键快进快退
+      CommonShortcuts.select: () {
+        playerNotifier.playOrPause();
+        _startHideControlsTimer();
+      },
+      CommonShortcuts.mediaPlayPause: () {
+        playerNotifier.playOrPause();
+        _startHideControlsTimer();
+      },
+      CommonShortcuts.mediaPlay: () {
+        playerNotifier.playOrPause();
+        _startHideControlsTimer();
+      },
+      CommonShortcuts.mediaPause: () {
+        playerNotifier.playOrPause();
+        _startHideControlsTimer();
+      },
+      CommonShortcuts.mediaRewind: () {
+        playerNotifier.seekBackward();
+        _startHideControlsTimer();
+      },
+      CommonShortcuts.mediaFastForward: () {
+        playerNotifier.seekForward();
+        _startHideControlsTimer();
+      },
+      CommonShortcuts.mediaStop: _handleBack,
+
       // 快进/快退 (左右箭头 - 5秒)
       CommonShortcuts.previous: () {
         playerNotifier.seekBackward();

@@ -22,6 +22,7 @@ import 'package:my_nas/core/services/performance_mode_service.dart';
 import 'package:my_nas/core/sync/app_settings_sync_module.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 import 'package:my_nas/features/book/data/services/sources/book_source_manager_service.dart';
 import 'package:my_nas/features/book/data/services/sync/book_sources_sync_module.dart';
 import 'package:my_nas/features/music/data/services/ios_carplay_bridge.dart';
@@ -168,6 +169,15 @@ Future<void> _initApp() async {
 
   // Initialize MediaKit for video playback
   MediaKit.ensureInitialized();
+
+  // 探测 Android TV / 电视盒子（结果缓存，供 PlatformCapabilities.isTV 使用）
+  await TvCapabilities.init();
+  if (TvCapabilities.isAndroidTv) {
+    // 电视上没有触屏/鼠标，强制显示传统焦点高亮，保证遥控器 D-pad 可见焦点框
+    FocusManager.instance.highlightStrategy =
+        FocusHighlightStrategy.alwaysTraditional;
+    logger.i('Android TV detected: traditional focus highlight enabled');
+  }
 
   // Initialize JustAudioMediaKit to use MediaKit as audio backend
   // This fixes the just_audio_windows threading issue on Windows

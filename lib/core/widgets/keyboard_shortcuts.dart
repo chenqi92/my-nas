@@ -163,6 +163,29 @@ class CommonShortcuts {
   /// 静音切换 (M)
   static const mute = ShortcutKey(LogicalKeyboardKey.keyM);
 
+  // === TV 遥控器 / 媒体键 ===
+  /// 确认键（遥控器 D-pad 中键，Android KEYCODE_DPAD_CENTER）
+  static const select = ShortcutKey(LogicalKeyboardKey.select);
+
+  /// 媒体播放/暂停键（遥控器、蓝牙键盘媒体键）
+  static const mediaPlayPause = ShortcutKey(LogicalKeyboardKey.mediaPlayPause);
+
+  /// 媒体播放键
+  static const mediaPlay = ShortcutKey(LogicalKeyboardKey.mediaPlay);
+
+  /// 媒体暂停键
+  static const mediaPause = ShortcutKey(LogicalKeyboardKey.mediaPause);
+
+  /// 媒体快退键
+  static const mediaRewind = ShortcutKey(LogicalKeyboardKey.mediaRewind);
+
+  /// 媒体快进键
+  static const mediaFastForward =
+      ShortcutKey(LogicalKeyboardKey.mediaFastForward);
+
+  /// 媒体停止键
+  static const mediaStop = ShortcutKey(LogicalKeyboardKey.mediaStop);
+
   // === 全屏 ===
   /// 全屏切换 (F)
   static const fullscreen = ShortcutKey(LogicalKeyboardKey.keyF);

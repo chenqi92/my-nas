@@ -1,0 +1,248 @@
+name: Android TV
+
+# Android TV 与手机共用同一份 APK（manifest 里 leanback 声明为 required=false）。
+# 本工作流：
+# 1. verify-tv-manifest：PR/push 触碰 Android 清单时校验 TV 声明未回退（无需 Flutter，秒级）
+# 2. build-tv-apk：手动触发，或在 "Build and Release" 成功完成后自动构建 TV APK，
+#    用 aapt dump badging 断言 TV 兼容特性，产出 MyNAS-<version>-androidtv-<abi>.apk
+#    并附加到 v<version> Release
+#
+# 说明：这里用 workflow_run 而非 release: published 触发，因为 release.yml 用
+# GITHUB_TOKEN 创建 Release，GitHub 的循环保护会导致 release 事件不触发下游工作流。
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'android/app/src/main/AndroidManifest.xml'
+      - '.github/workflows/android-tv.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'android/app/src/main/AndroidManifest.xml'
+      - '.github/workflows/android-tv.yml'
+  workflow_run:
+    workflows: ["Build and Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      upload_to_release:
+        description: '构建后上传到当前版本对应的 GitHub Release（tag 必须已存在）'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  # 轻量校验：manifest 中 TV 相关声明是否齐全（防回退）
+  verify-tv-manifest:
+    # workflow_run 触发时跳过校验，直接进构建（校验已在 push/PR 阶段做过）
+    if: github.event_name != 'workflow_run'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify TV declarations in AndroidManifest.xml
+        run: |
+          set -euo pipefail
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          FAIL=0
+
+          check() {
+            if grep -q "$1" "$MANIFEST"; then
+              echo "OK: $2"
+            else
+              echo "::error::$MANIFEST missing: $2"
+              FAIL=1
+            fi
+          }
+
+          check 'android.intent.category.LEANBACK_LAUNCHER' 'LEANBACK_LAUNCHER category'
+          check 'android.software.leanback' 'uses-feature android.software.leanback'
+          check 'android.hardware.touchscreen' 'uses-feature android.hardware.touchscreen (required=false)'
+          check 'android:banner=' 'application android:banner'
+
+          if [ ! -f "android/app/src/main/res/drawable-xhdpi/tv_banner.png" ]; then
+            echo "::error::TV banner asset missing: android/app/src/main/res/drawable-xhdpi/tv_banner.png"
+            FAIL=1
+          else
+            echo "OK: tv_banner.png exists"
+          fi
+
+          exit $FAIL
+
+  # 构建 TV APK（内容与手机 APK 相同，独立命名便于电视盒子侧载识别）
+  build-tv-apk:
+    needs: verify-tv-manifest
+    # 手动触发；或 "Build and Release" 成功完成后自动触发。
+    # always() 让 workflow_run 场景（verify 被 skip）也能进入，再用条件筛选。
+    if: |
+      always() &&
+      (needs.verify-tv-manifest.result == 'success' || needs.verify-tv-manifest.result == 'skipped') &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2 -Xmx3g"
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android/sdk/ndk/25*
+          sudo rm -rf /usr/local/lib/android/sdk/ndk/26*
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
+
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          FULL_VERSION_RAW=$(grep "^version:" pubspec.yaml | sed 's/version: //' | tr -d ' ')
+          VERSION=$(echo "$FULL_VERSION_RAW" | cut -d'+' -f1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+      - name: Restore Android release signing
+        id: signing
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEY_PROPERTIES_BASE64 }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${ANDROID_KEYSTORE_BASE64:-}" ] || [ -z "${ANDROID_KEY_PROPERTIES_BASE64:-}" ]; then
+            echo "::warning::Android release signing secrets are unavailable; building a development-signed TV artifact"
+            echo "ALLOW_DEBUG_RELEASE_SIGNING=true" >> "$GITHUB_ENV"
+            echo "signing=development" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" \
+            | base64 --decode > android/app/release-keystore.jks
+          printf '%s' "$ANDROID_KEY_PROPERTIES_BASE64" \
+            | base64 --decode > android/key.properties
+
+          if [ ! -s android/app/release-keystore.jks ]; then
+            echo "::error::Decoded Android release keystore is empty"
+            exit 1
+          fi
+          if [ ! -s android/key.properties ]; then
+            echo "::error::Decoded android/key.properties is empty"
+            exit 1
+          fi
+
+          sed -i -E \
+            's|^[[:space:]]*storeFile[[:space:]]*[=:].*$|storeFile=release-keystore.jks|' \
+            android/key.properties
+          chmod 600 android/app/release-keystore.jks android/key.properties
+          echo "signing=available" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Cache Gradle wrapper
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/wrapper
+            ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-wrapper-
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build APK (split per ABI)
+        run: flutter build apk --release --split-per-abi
+
+      # 用 aapt dump badging 断言产物具备 TV 兼容特性（防止只改了源码没生效）
+      - name: Verify TV compatibility (aapt badging)
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          AAPT=$(find "$SDK_ROOT/build-tools" -name aapt -print | sort -V | tail -1)
+          if [ ! -x "$AAPT" ]; then
+            echo "::error::aapt is unavailable under $SDK_ROOT/build-tools"
+            exit 1
+          fi
+
+          BADGING=$("$AAPT" dump badging "$APK")
+          FAIL=0
+
+          assert_badging() {
+            if echo "$BADGING" | grep -q "$1"; then
+              echo "OK: $2"
+            else
+              echo "::error::APK badging missing: $2"
+              FAIL=1
+            fi
+          }
+
+          assert_badging "leanback-launchable-activity" "leanback launchable activity"
+          assert_badging "uses-feature-not-required: name='android.software.leanback'" "leanback feature not required"
+          assert_badging "uses-feature-not-required: name='android.hardware.touchscreen'" "touchscreen not required"
+          assert_badging "banner='" "TV banner"
+
+          exit $FAIL
+
+      - name: Rename APKs
+        run: |
+          cd build/app/outputs/flutter-apk
+          V="${{ steps.version.outputs.version }}"
+          mv app-arm64-v8a-release.apk   "MyNAS-$V-androidtv-arm64-v8a.apk"
+          mv app-armeabi-v7a-release.apk "MyNAS-$V-androidtv-armeabi-v7a.apk"
+          mv app-x86_64-release.apk      "MyNAS-$V-androidtv-x86_64.apk"
+          ls -la MyNAS-*.apk
+
+      - name: Upload TV artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: androidtv-apks
+          path: build/app/outputs/flutter-apk/MyNAS-*-androidtv-*.apk
+          retention-days: 3
+
+      # workflow_run（Release 完成后）自动上传；手动触发且勾选 upload_to_release 时也上传。
+      # 两种情况 tag 都是 v<version>（release.yml 用同一版本号打 tag）。
+      - name: Upload to GitHub Release
+        if: github.event_name == 'workflow_run' || (github.event_name == 'workflow_dispatch' && inputs.upload_to_release)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="v${{ steps.version.outputs.version }}"
+          if ! gh release view "$TAG" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+            echo "::warning::Release $TAG does not exist yet; skipping TV APK upload (artifacts still available on this run)"
+            exit 0
+          fi
+          gh release upload "$TAG" \
+            build/app/outputs/flutter-apk/MyNAS-*-androidtv-*.apk \
+            --repo "${{ github.repository }}" --clobber
+
+      - name: Remove Android signing material
+        if: always()
+        shell: bash
+        run: rm -f android/app/release-keystore.jks android/key.properties
