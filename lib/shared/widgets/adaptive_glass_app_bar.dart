@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -756,10 +757,147 @@ class GlassIconButton extends ConsumerWidget {
   }
 }
 
+/// 判断菜单项颜色是否表示"破坏性操作"（删除等）。
+///
+/// 原生 UIMenu 用 .destructive 属性把这类项显示为红色。Flutter 侧惯例是给
+/// Text/Icon 直接上红色，这里把已知的几种红做等价判断。
+bool _isDestructiveColor(Color? color) {
+  if (color == null) return false;
+  final argb = color.toARGB32();
+  return argb == Colors.red.toARGB32() ||
+      argb == Colors.redAccent.toARGB32() ||
+      argb == AppColors.error.toARGB32();
+}
+
+/// 无法映射时使用的占位 SF Symbol。
+///
+/// 仅在原生侧已经拿到配置、但 Dart 侧判定应回退 Flutter 渲染的边界情况下出现；
+/// 正常路径不会用到（见 [_ButtonConfigs.hasUnmappedIcon]）。用问号而不是实心圆，
+/// 让"映射缺失"在真机上一眼可辨，而不是伪装成一个正常图标。
+const String _kFallbackSFSymbol = 'questionmark';
+
+/// 按钮配置提取结果
+class _ButtonConfigs {
+  const _ButtonConfigs({
+    required this.configs,
+    required this.hasUnmappedIcon,
+  });
+
+  final List<Map<String, dynamic>> configs;
+
+  /// 是否存在无法映射成 SF Symbol 的图标
+  final bool hasUnmappedIcon;
+}
+
+/// 将 Flutter [IconData] 转换为 iOS/macOS SF Symbol 名称。
+///
+/// 返回 null 表示没有合适的映射 —— 调用方应据此回退到 Flutter 渲染，
+/// 而不是塞一个语义不符的符号给原生侧。
+///
+/// 这里是全局唯一的映射表：按钮图标与弹出菜单项图标共用，
+/// 避免两份表各自演化后行为不一致。
+String? glassIconToSFSymbol(IconData? icon) {
+  if (icon == null) return null;
+
+  final mapping = <int, String>{
+    // 通用操作
+    Icons.search_rounded.codePoint: 'magnifyingglass',
+    Icons.tune_rounded.codePoint: 'slider.horizontal.3',
+    Icons.more_vert_rounded.codePoint: 'ellipsis',
+    Icons.more_horiz_rounded.codePoint: 'ellipsis',
+    Icons.settings_rounded.codePoint: 'gearshape',
+    Icons.refresh_rounded.codePoint: 'arrow.clockwise',
+    Icons.add_rounded.codePoint: 'plus',
+    Icons.close_rounded.codePoint: 'xmark',
+    Icons.check_rounded.codePoint: 'checkmark',
+    Icons.arrow_back_rounded.codePoint: 'chevron.left',
+    Icons.arrow_back_ios_new_rounded.codePoint: 'chevron.left',
+    Icons.edit_rounded.codePoint: 'pencil',
+    Icons.delete_rounded.codePoint: 'trash',
+    Icons.info_rounded.codePoint: 'info.circle',
+    Icons.info_outline_rounded.codePoint: 'info.circle',
+    Icons.person_rounded.codePoint: 'person',
+    Icons.clear_all_rounded.codePoint: 'xmark.circle',
+    Icons.visibility_off_rounded.codePoint: 'eye.slash',
+    Icons.visibility_rounded.codePoint: 'eye',
+
+    // 排序和筛选
+    Icons.swap_vert_rounded.codePoint: 'arrow.up.arrow.down',
+    Icons.sort_rounded.codePoint: 'arrow.up.arrow.down',
+    Icons.sort_by_alpha_rounded.codePoint: 'textformat.abc',
+    Icons.filter_alt_rounded.codePoint: 'line.3.horizontal.decrease.circle',
+    // 非 rounded 变体：文档示例与部分调用点仍在用
+    Icons.filter_alt.codePoint: 'line.3.horizontal.decrease.circle',
+    Icons.filter_list_rounded.codePoint: 'line.3.horizontal.decrease',
+    Icons.schedule_rounded.codePoint: 'clock',
+    Icons.calendar_today_rounded.codePoint: 'calendar',
+    Icons.star_rounded.codePoint: 'star.fill',
+
+    // 列表和视图
+    Icons.list_rounded.codePoint: 'list.bullet',
+    Icons.queue_music_rounded.codePoint: 'list.bullet',
+    Icons.check_circle_outline_rounded.codePoint: 'checkmark.circle',
+    Icons.view_timeline_rounded.codePoint: 'list.bullet.rectangle',
+    Icons.grid_view_rounded.codePoint: 'square.grid.2x2',
+    Icons.view_module_rounded.codePoint: 'square.grid.2x2',
+    Icons.playlist_add_rounded.codePoint: 'plus.rectangle.on.rectangle',
+
+    // 下拉箭头
+    Icons.arrow_drop_down_rounded.codePoint: 'chevron.down',
+    Icons.arrow_drop_up_rounded.codePoint: 'chevron.up',
+    Icons.expand_more_rounded.codePoint: 'chevron.down',
+    Icons.expand_less_rounded.codePoint: 'chevron.up',
+
+    // 阅读相关
+    Icons.menu_book_rounded.codePoint: 'book.fill',
+    Icons.collections_bookmark_rounded.codePoint: 'books.vertical.fill',
+    Icons.note_alt_rounded.codePoint: 'note.text',
+    Icons.bookmark_rounded.codePoint: 'bookmark.fill',
+    Icons.bookmark_border_rounded.codePoint: 'bookmark',
+    Icons.auto_stories_rounded.codePoint: 'book.pages',
+
+    // 媒体相关
+    Icons.photo_library_rounded.codePoint: 'photo.on.rectangle',
+    Icons.video_library_rounded.codePoint: 'video.fill',
+    Icons.music_note_rounded.codePoint: 'music.note',
+    Icons.album_rounded.codePoint: 'opticaldisc.fill',
+    Icons.live_tv_rounded.codePoint: 'play.tv',
+    Icons.movie_rounded.codePoint: 'film',
+    Icons.movie_filter_rounded.codePoint: 'film',
+    Icons.local_movies_rounded.codePoint: 'film',
+    Icons.tv_rounded.codePoint: 'tv',
+    Icons.fiber_new_rounded.codePoint: 'sparkles',
+    Icons.auto_awesome_rounded.codePoint: 'sparkles',
+    Icons.favorite_rounded.codePoint: 'heart.fill',
+    Icons.favorite_border_rounded.codePoint: 'heart',
+
+    // 云和存储
+    Icons.cloud_rounded.codePoint: 'cloud.fill',
+    Icons.cloud_outlined.codePoint: 'cloud',
+    Icons.folder_rounded.codePoint: 'folder.fill',
+    // SF Symbol 没有稳定可用的 "special folder" 变体，退回普通文件夹而不是
+    // 赌一个可能在 iOS 15/16 上返回 nil 的名字。
+    Icons.folder_special_rounded.codePoint: 'folder.fill',
+    Icons.storage_rounded.codePoint: 'externaldrive.fill',
+    Icons.phone_iphone_rounded.codePoint: 'iphone',
+
+    // 复制和重复
+    Icons.content_copy_rounded.codePoint: 'doc.on.doc',
+    Icons.copy_rounded.codePoint: 'doc.on.doc',
+
+    // 分享和导出
+    Icons.share_rounded.codePoint: 'square.and.arrow.up',
+    Icons.download_rounded.codePoint: 'arrow.down.circle',
+    Icons.upload_rounded.codePoint: 'arrow.up.circle',
+  };
+
+  return mapping[icon.codePoint];
+}
+
 /// 玻璃效果按钮组 - 将多个按钮组合在一起
 ///
 /// iOS 26+: 使用原生 UIGlassEffect 实现真正的 Liquid Glass 效果
-/// iOS 13-25: 使用原生 UIBlurEffect 回退
+/// iOS 15.5-25: 使用原生 UIBlurEffect 回退
 /// 其他平台: 使用 Flutter BackdropFilter
 ///
 /// 多个相邻的按钮会合并在同一个胶囊形玻璃背景中
@@ -776,12 +914,42 @@ class GlassButtonGroup extends ConsumerStatefulWidget {
   /// 按钮间距
   final double spacing;
 
+  // 以下常量必须与原生侧（ios/macos Runner/GlassButtonGroup.swift）保持一致，
+  // 否则 Dart 给出的 SizedBox 宽度与原生 UIStackView 实际需要的宽度不符，
+  // 按钮会被挤压。原生侧从 creationParams 读取同一批数值，不再各自硬编码。
+
+  /// 单个按钮边长
+  static const double buttonSize = 40;
+
+  /// 按钮之间的最小间距（原生侧 stackView.spacing 的下限）
+  static const double minButtonSpacing = 8;
+
+  /// 玻璃容器左右内边距（单侧）
+  static const double horizontalInset = 10;
+
+  /// 胶囊圆角
+  static const double groupCornerRadius = 22;
+
+  /// 容器高度
+  static const double groupHeight = 44;
+
+  /// 带下拉指示器的按钮额外占用的宽度
+  static const double chevronExtraWidth = 12;
+
   @override
   ConsumerState<GlassButtonGroup> createState() => _GlassButtonGroupState();
 }
 
 class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
   MethodChannel? _channel;
+
+  /// 已推送给原生侧的主题，用于判断是否需要调用 updateTheme。
+  /// 原生 PlatformView 只创建一次，主题变化必须主动同步，否则配色不跟随。
+  bool? _syncedIsDark;
+
+  /// 已推送给原生侧的菜单项，用于判断是否需要调用 updateMenuItems。
+  /// itemBuilder 的结果会随语言/状态变化，原生 UIMenu 需要同步刷新。
+  final Map<int, List<Map<String, dynamic>>> _syncedMenuItems = {};
 
   @override
   void dispose() {
@@ -792,40 +960,66 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
   }
 
   /// 从 children 中提取按钮配置
-  List<Map<String, dynamic>> _extractButtonConfigs() {
+  ///
+  /// 返回的 [_ButtonConfigs.hasUnmappedIcon] 表示存在无法映射成 SF Symbol 的图标。
+  /// 此时调用方应放弃原生渲染，改走 Flutter 实现 —— 否则原生侧只能画一个
+  /// 无意义的占位符号，用户看到的是错图标。
+  _ButtonConfigs _extractButtonConfigs() {
     final configs = <Map<String, dynamic>>[];
+    var hasUnmappedIcon = false;
+
+    // tintColor 只在调用方显式指定颜色时下发；为 null 时由原生侧按当前
+    // isDark / isEnabled 自行推导默认色。这样主题切换只需一次 updateTheme，
+    // 不必重新下发整套颜色。
     for (final child in widget.children) {
       if (child is GlassGroupIconButton) {
-        // 将 IconData 转换为 SF Symbol 名称
-        final sfSymbol = _iconDataToSFSymbol(child.icon);
+        final sfSymbol = glassIconToSFSymbol(child.icon);
+        if (sfSymbol == null) hasUnmappedIcon = true;
+        final isEnabled = child.onPressed != null;
         configs.add({
-          'icon': sfSymbol,
+          'icon': sfSymbol ?? _kFallbackSFSymbol,
           'tooltip': child.tooltip,
           'isMenuButton': false,
           'menuItems': <Map<String, dynamic>>[],
+          'isEnabled': isEnabled,
+          'badge': child.badge,
+          'tintColor': child.color?.toARGB32(),
+          'showsChevron': false,
         });
       } else if (child is GlassGroupPopupMenuButton) {
         // PopupMenu 按钮 - 提取菜单项传递给原生端
-        final sfSymbol = _iconDataToSFSymbol(child.icon);
+        final sfSymbol = glassIconToSFSymbol(child.icon);
+        if (sfSymbol == null) hasUnmappedIcon = true;
         final menuItems = _extractMenuItems(child);
         configs.add({
-          'icon': sfSymbol,
+          'icon': sfSymbol ?? _kFallbackSFSymbol,
           'tooltip': child.tooltip,
           'isMenuButton': true,
           'menuItems': menuItems,
+          'isEnabled': true,
+          'badge': false,
+          'tintColor': child.color?.toARGB32(),
+          'showsChevron': false,
         });
       } else if (child is GlassGroupDynamicButton) {
         // 动态图标按钮
-        final sfSymbol = _iconDataToSFSymbol(child.icon);
+        final sfSymbol = glassIconToSFSymbol(child.icon);
+        if (sfSymbol == null) hasUnmappedIcon = true;
+        final isEnabled = child.onPressed != null;
         configs.add({
-          'icon': sfSymbol,
+          'icon': sfSymbol ?? _kFallbackSFSymbol,
           'tooltip': child.tooltip,
           'isMenuButton': false,
           'menuItems': <Map<String, dynamic>>[],
+          'isEnabled': isEnabled,
+          'badge': false,
+          'tintColor': child.color?.toARGB32(),
+          'showsChevron': child.showDropdownIndicator,
         });
       }
     }
-    return configs;
+
+    return _ButtonConfigs(configs: configs, hasUnmappedIcon: hasUnmappedIcon);
   }
 
   /// 从 GlassGroupPopupMenuButton 提取菜单项
@@ -852,22 +1046,26 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
           final child = menuItem.child;
           if (child is Text) {
             title = child.data ?? '';
+            isDestructive = _isDestructiveColor(child.style?.color);
           } else if (child is Row) {
             // 常见模式: Row(children: [Icon, SizedBox, Text])
             for (final rowChild in child.children) {
               if (rowChild is Text) {
                 title = rowChild.data ?? '';
+                // 破坏性操作通常把红色加在 Row 内的 Text 上，而不是直接的
+                // child 上，所以这里也要检查，否则删除项在原生菜单里不显红。
+                if (_isDestructiveColor(rowChild.style?.color)) {
+                  isDestructive = true;
+                }
               } else if (rowChild is Icon) {
-                iconName = _iconDataToSFSymbol(rowChild.icon ?? Icons.circle);
+                iconName = glassIconToSFSymbol(rowChild.icon);
+                if (_isDestructiveColor(rowChild.color)) {
+                  isDestructive = true;
+                }
               }
             }
           }
-          
-          // 检查是否为红色/破坏性操作
-          if (child is Text && child.style?.color == Colors.red) {
-            isDestructive = true;
-          }
-          
+
           menuItems.add({
             'title': title,
             'icon': iconName,
@@ -881,78 +1079,6 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
     } catch (e) {
       return [];
     }
-  }
-
-  /// 将 Flutter IconData 转换为 iOS SF Symbol 名称
-  String _iconDataToSFSymbol(IconData icon) {
-    // 常用图标映射
-    final mapping = <int, String>{
-      // 通用操作
-      Icons.search_rounded.codePoint: 'magnifyingglass',
-      Icons.tune_rounded.codePoint: 'slider.horizontal.3',
-      Icons.more_vert_rounded.codePoint: 'ellipsis',
-      Icons.settings_rounded.codePoint: 'gearshape',
-      Icons.refresh_rounded.codePoint: 'arrow.clockwise',
-      Icons.add_rounded.codePoint: 'plus',
-      Icons.close_rounded.codePoint: 'xmark',
-      Icons.check_rounded.codePoint: 'checkmark',
-      Icons.arrow_back_rounded.codePoint: 'chevron.left',
-      Icons.arrow_back_ios_new_rounded.codePoint: 'chevron.left',
-
-      // 排序和筛选
-      Icons.swap_vert_rounded.codePoint: 'arrow.up.arrow.down',
-      Icons.sort_rounded.codePoint: 'arrow.up.arrow.down',
-      Icons.filter_alt_rounded.codePoint: 'line.3.horizontal.decrease.circle',
-      Icons.filter_list_rounded.codePoint: 'line.3.horizontal.decrease',
-
-      // 列表和视图
-      Icons.list_rounded.codePoint: 'list.bullet',
-      Icons.queue_music_rounded.codePoint: 'list.bullet',
-      Icons.check_circle_outline_rounded.codePoint: 'checkmark.circle',
-      Icons.view_timeline_rounded.codePoint: 'list.bullet.rectangle',
-      Icons.grid_view_rounded.codePoint: 'square.grid.2x2',
-      Icons.view_module_rounded.codePoint: 'square.grid.2x2',
-
-      // 下拉箭头
-      Icons.arrow_drop_down_rounded.codePoint: 'chevron.down',
-      Icons.arrow_drop_up_rounded.codePoint: 'chevron.up',
-      Icons.expand_more_rounded.codePoint: 'chevron.down',
-      Icons.expand_less_rounded.codePoint: 'chevron.up',
-
-      // 阅读相关
-      Icons.menu_book_rounded.codePoint: 'book.fill',
-      Icons.collections_bookmark_rounded.codePoint: 'books.vertical.fill',
-      Icons.note_alt_rounded.codePoint: 'note.text',
-      Icons.bookmark_rounded.codePoint: 'bookmark.fill',
-      Icons.bookmark_border_rounded.codePoint: 'bookmark',
-      Icons.auto_stories_rounded.codePoint: 'book.pages',
-
-      // 媒体相关
-      Icons.photo_library_rounded.codePoint: 'photo.on.rectangle',
-      Icons.video_library_rounded.codePoint: 'video.fill',
-      Icons.music_note_rounded.codePoint: 'music.note',
-      Icons.album_rounded.codePoint: 'opticaldisc.fill',
-      Icons.live_tv_rounded.codePoint: 'play.tv',
-      Icons.movie_rounded.codePoint: 'film',
-      Icons.tv_rounded.codePoint: 'tv',
-
-      // 云和存储
-      Icons.cloud_rounded.codePoint: 'cloud.fill',
-      Icons.cloud_outlined.codePoint: 'cloud',
-      Icons.folder_rounded.codePoint: 'folder.fill',
-      Icons.storage_rounded.codePoint: 'externaldrive.fill',
-      Icons.phone_iphone_rounded.codePoint: 'iphone',
-
-      // 复制和重复
-      Icons.content_copy_rounded.codePoint: 'doc.on.doc',
-      Icons.copy_rounded.codePoint: 'doc.on.doc',
-
-      // 分享和导出
-      Icons.share_rounded.codePoint: 'square.and.arrow.up',
-      Icons.download_rounded.codePoint: 'arrow.down.circle',
-      Icons.upload_rounded.codePoint: 'arrow.up.circle',
-    };
-    return mapping[icon.codePoint] ?? 'circle';
   }
 
   void _handleButtonTap(int index) {
@@ -1041,25 +1167,84 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
     _channel?.setMethodCallHandler((call) async {
       // 检查是否已 dispose，防止崩溃
       if (!mounted) return;
-      
+
       switch (call.method) {
         case 'onButtonTap':
           final index = call.arguments as int;
           _handleButtonTap(index);
         case 'onMenuItemSelected':
-          // iOS 14+ 原生菜单选中回调
+          // 原生菜单选中回调
           final args = call.arguments as Map<Object?, Object?>;
           final buttonIndex = args['buttonIndex']! as int;
           final value = args['value'] as String?;
           if (value != null) {
             _handleMenuItemSelected(buttonIndex, value);
           }
-        case 'onMenuButtonTap':
-          // iOS 13 回退: 需要 Flutter 显示菜单
-          final index = call.arguments as int;
-          _handleButtonTap(index);
       }
     });
+
+    // 记录创建时的状态作为同步基线：PlatformView 已经带着 creationParams
+    // 创建完成，此刻原生侧与 Dart 侧是一致的。
+    _syncedIsDark = Theme.of(context).brightness == Brightness.dark;
+    _syncedMenuItems.clear();
+    final extracted = _extractButtonConfigs();
+    for (var i = 0; i < extracted.configs.length; i++) {
+      final items = extracted.configs[i]['menuItems'];
+      if (items is List<Map<String, dynamic>>) {
+        _syncedMenuItems[i] = items;
+      }
+    }
+  }
+
+  /// 把 Dart 侧的主题与菜单项变化推送到原生 PlatformView。
+  ///
+  /// PlatformView 只在首次 build 时用 creationParams 创建，之后 Flutter 侧
+  /// 重建不会重新传参。原生侧早就实现了 updateTheme / updateMenuItems 两个
+  /// handler，但此前从未被调用，导致切换深浅色或语言后原生按钮不跟随。
+  void _syncNativeState(bool isDark, List<Map<String, dynamic>> configs) {
+    final channel = _channel;
+    if (channel == null) return;
+
+    if (_syncedIsDark != isDark) {
+      _syncedIsDark = isDark;
+      AppError.fireAndForget(
+        channel.invokeMethod<void>('updateTheme', isDark),
+        action: 'GlassButtonGroup.updateTheme',
+      );
+    }
+
+    for (var i = 0; i < configs.length; i++) {
+      final items = configs[i]['menuItems'];
+      if (items is! List<Map<String, dynamic>> || items.isEmpty) continue;
+      // 菜单项由 itemBuilder 动态生成，语言或业务状态变化后内容会变，
+      // 需要重新下发，否则原生 UIMenu 停留在旧文案。
+      if (!_menuItemsEqual(_syncedMenuItems[i], items)) {
+        _syncedMenuItems[i] = items;
+        AppError.fireAndForget(
+          channel.invokeMethod<void>('updateMenuItems', {
+            'buttonIndex': i,
+            'items': items,
+          }),
+          action: 'GlassButtonGroup.updateMenuItems',
+        );
+      }
+    }
+  }
+
+  bool _menuItemsEqual(
+    List<Map<String, dynamic>>? a,
+    List<Map<String, dynamic>> b,
+  ) {
+    if (a == null || a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i]['title'] != b[i]['title'] ||
+          a[i]['icon'] != b[i]['icon'] ||
+          a[i]['value'] != b[i]['value'] ||
+          a[i]['isDestructive'] != b[i]['isDestructive']) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /// 处理原生菜单选中
@@ -1245,23 +1430,54 @@ class _GlassButtonGroupState extends ConsumerState<GlassButtonGroup> {
   }
 
   Widget _buildNativeGlassButtonGroup(bool isDark) {
-    final buttonConfigs = _extractButtonConfigs();
-    final buttonCount = buttonConfigs.length;
+    final extracted = _extractButtonConfigs();
 
-    // iOS 26 风格：更宽松的按钮布局
-    // 每个按钮 40px + 分隔线 0.5px + 左右内边距 20px
-    final width = buttonCount * 40.0 + (buttonCount - 1) * 0.5 + 20;
-    const height = 44.0;
+    // 存在无法映射的图标时放弃原生渲染：原生侧只能画占位符号，
+    // 用户看到的是错图标。Flutter 实现虽然玻璃质感稍弱，但图标是对的。
+    if (extracted.hasUnmappedIcon) {
+      return _buildFlutterGlassButtonGroup(isDark);
+    }
+
+    final buttonConfigs = extracted.configs;
+    final buttonCount = buttonConfigs.length;
+    if (buttonCount == 0) return const SizedBox.shrink();
+
+    // 宽度必须与原生 UIStackView/NSStackView 的实际布局一致，否则按钮被挤压。
+    // 原生侧 spacing 取 max(spacing, minButtonSpacing)，这里用同一个值计算，
+    // 并把它一起过桥，避免两边各自推导。
+    final effectiveSpacing =
+        math.max(widget.spacing, GlassButtonGroup.minButtonSpacing);
+
+    // 带下拉指示器的按钮在原生侧更宽
+    final chevronCount =
+        buttonConfigs.where((c) => c['showsChevron'] == true).length;
+
+    final width = buttonCount * GlassButtonGroup.buttonSize +
+        (buttonCount - 1) * effectiveSpacing +
+        GlassButtonGroup.horizontalInset * 2 +
+        chevronCount * GlassButtonGroup.chevronExtraWidth;
+
+    const height = GlassButtonGroup.groupHeight;
 
     final creationParams = <String, dynamic>{
       'isDark': isDark,
       'items': buttonConfigs,
-      'buttonSize': 40.0,
-      'spacing': widget.spacing,
-      'cornerRadius': 22.0,
+      'buttonSize': GlassButtonGroup.buttonSize,
+      'spacing': effectiveSpacing,
+      'cornerRadius': GlassButtonGroup.groupCornerRadius,
+      'horizontalInset': GlassButtonGroup.horizontalInset,
+      'chevronExtraWidth': GlassButtonGroup.chevronExtraWidth,
     };
 
-    final viewType = 'com.kkape.mynas/glass_button_group';
+    // PlatformView 已存在时，把主题/菜单变化推给原生侧。
+    // 放在 post-frame 而不是 build 内，避免在 build 期间触发平台调用。
+    if (_channel != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncNativeState(isDark, buttonConfigs);
+      });
+    }
+
+    const viewType = 'com.kkape.mynas/glass_button_group';
 
     if (Platform.isIOS) {
       return SizedBox(
@@ -1728,7 +1944,7 @@ Future<T?> _showNativeApplePopupMenu<T>({
           if (child is Text) {
             title = child.data ?? '';
           } else if (child is Icon) {
-            icon = _iconDataToSFSymbol(child.icon);
+            icon = glassIconToSFSymbol(child.icon);
           }
         }
       } else if (item.child is ListTile) {
@@ -1738,7 +1954,7 @@ Future<T?> _showNativeApplePopupMenu<T>({
           title = (listTile.title! as Text).data ?? '';
         }
         if (listTile.leading is Icon) {
-          icon = _iconDataToSFSymbol((listTile.leading! as Icon).icon);
+          icon = glassIconToSFSymbol((listTile.leading! as Icon).icon);
         }
       } else {
         // 其他类型，尝试获取 Widget 的描述性文本
@@ -1807,36 +2023,6 @@ String _extractTextFromWidget(Widget? widget) {
     }
   }
   return '';
-}
-
-/// 将 Flutter IconData 转换为 iOS SF Symbol 名称
-String? _iconDataToSFSymbol(IconData? icon) {
-  if (icon == null) return null;
-
-  final mapping = <int, String>{
-    Icons.add_rounded.codePoint: 'plus',
-    Icons.delete_rounded.codePoint: 'trash',
-    Icons.edit_rounded.codePoint: 'pencil',
-    Icons.share_rounded.codePoint: 'square.and.arrow.up',
-    Icons.copy_rounded.codePoint: 'doc.on.doc',
-    Icons.content_copy_rounded.codePoint: 'doc.on.doc',
-    Icons.favorite_rounded.codePoint: 'heart.fill',
-    Icons.favorite_border_rounded.codePoint: 'heart',
-    Icons.queue_music_rounded.codePoint: 'list.bullet',
-    Icons.playlist_add_rounded.codePoint: 'plus.rectangle.on.rectangle',
-    Icons.info_rounded.codePoint: 'info.circle',
-    Icons.settings_rounded.codePoint: 'gearshape',
-    Icons.refresh_rounded.codePoint: 'arrow.clockwise',
-    Icons.download_rounded.codePoint: 'arrow.down.circle',
-    Icons.upload_rounded.codePoint: 'arrow.up.circle',
-    Icons.folder_rounded.codePoint: 'folder',
-    Icons.person_rounded.codePoint: 'person',
-    Icons.album_rounded.codePoint: 'opticaldisc',
-    Icons.cloud_rounded.codePoint: 'cloud',
-    Icons.photo_library_rounded.codePoint: 'photo.on.rectangle',
-  };
-
-  return mapping[icon.codePoint];
 }
 
 /// 玻璃风格弹出菜单路由

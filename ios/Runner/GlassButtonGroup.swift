@@ -7,12 +7,10 @@ import UIKit
 /// 多个按钮组合在同一个胶囊形玻璃背景中
 ///
 /// iOS 26+: 使用 UIGlassEffect
-/// iOS 13-25: 使用 UIVisualEffectView + UIBlurEffect 回退
+/// iOS 15.5-25: 使用 UIVisualEffectView + UIBlurEffect 回退
 ///
-/// 对于弹出菜单按钮：
-/// - iOS 14+: 使用原生 UIButton.menu + showsMenuAsPrimaryAction，点击即弹出原生菜单
-/// - iOS 13: 使用 UIContextMenuInteraction
-/// - iOS < 13: 通过 MethodChannel 回退到 Flutter 弹窗
+/// 弹出菜单按钮使用原生 UIButton.menu + showsMenuAsPrimaryAction，点击即弹出。
+/// 最低部署版本为 15.5，因此不再保留 iOS 13/14 的 UIContextMenuInteraction 回退。
 
 // MARK: - Button Data
 
@@ -21,6 +19,11 @@ struct GlassButtonItem {
     let tooltip: String?
     let isMenuButton: Bool
     let menuItems: [GlassMenuItem]
+    let isEnabled: Bool
+    let badge: Bool
+    /// ARGB32，由 Flutter 侧按主题解析后下发
+    let tintColor: Int?
+    let showsChevron: Bool
 }
 
 struct GlassMenuItem {
@@ -28,6 +31,19 @@ struct GlassMenuItem {
     let icon: String?
     let value: String
     let isDestructive: Bool
+}
+
+// MARK: - Color Bridging
+
+extension UIColor {
+    /// 从 Flutter 侧的 ARGB32 整数构造颜色（Color.toARGB32() 的结果）
+    convenience init(argb: Int) {
+        let alpha = CGFloat((argb >> 24) & 0xFF) / 255.0
+        let red = CGFloat((argb >> 16) & 0xFF) / 255.0
+        let green = CGFloat((argb >> 8) & 0xFF) / 255.0
+        let blue = CGFloat(argb & 0xFF) / 255.0
+        self.init(red: red, green: green, blue: blue, alpha: alpha)
+    }
 }
 
 // MARK: - Custom Glass Container View
@@ -47,17 +63,30 @@ class GlassContainerView: UIView {
             glassEffect.isInteractive = true
             glassView = UIVisualEffectView(effect: glassEffect)
         } else {
-            let blurStyle: UIBlurEffect.Style = isDark ? .systemThinMaterialDark : .systemThinMaterialLight
+            // iOS 26 以下没有 UIGlassEffect。thinMaterial 比 Liquid Glass 明显更"厚"，
+            // 观感差距大；ultraThin 更接近，配合下面的高光描边进一步缩小差距。
+            let blurStyle: UIBlurEffect.Style = isDark
+                ? .systemUltraThinMaterialDark
+                : .systemUltraThinMaterialLight
             glassView = UIVisualEffectView(effect: UIBlurEffect(style: blurStyle))
         }
-        
+
         super.init(frame: .zero)
-        
+
         // 设置视图属性
         backgroundColor = .clear
         clipsToBounds = true
         layer.cornerRadius = cornerRadius
         layer.cornerCurve = .continuous
+
+        // iOS 26 的 Liquid Glass 自带边缘高光；低版本用一圈极细描边模拟，
+        // 否则 ultraThin 在浅色背景上几乎看不出边界。
+        if #unavailable(iOS 26.0) {
+            layer.borderWidth = 0.5
+            layer.borderColor = (isDark
+                ? UIColor.white.withAlphaComponent(0.18)
+                : UIColor.white.withAlphaComponent(0.55)).cgColor
+        }
         
         // 设置玻璃视图
         glassView.translatesAutoresizingMaskIntoConstraints = false
@@ -86,11 +115,16 @@ class GlassContainerView: UIView {
     
     func updateTheme(isDark: Bool) {
         glassView.overrideUserInterfaceStyle = isDark ? .dark : .light
-        
+
         // 只在非 iOS 26 时更新 blur effect（iOS 26 使用 UIGlassEffect 自动响应主题）
         if #unavailable(iOS 26.0) {
-            let blurStyle: UIBlurEffect.Style = isDark ? .systemThinMaterialDark : .systemThinMaterialLight
+            let blurStyle: UIBlurEffect.Style = isDark
+                ? .systemUltraThinMaterialDark
+                : .systemUltraThinMaterialLight
             glassView.effect = UIBlurEffect(style: blurStyle)
+            layer.borderColor = (isDark
+                ? UIColor.white.withAlphaComponent(0.18)
+                : UIColor.white.withAlphaComponent(0.55)).cgColor
         }
     }
     
@@ -137,6 +171,8 @@ class GlassButtonGroupFactory: NSObject, FlutterPlatformViewFactory {
 // MARK: - Platform View
 
 class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
+    private static let badgeSize: CGFloat = 8
+
     private let containerView: UIView
     private let glassContainer: GlassContainerView
     private let stackView: UIStackView
@@ -145,6 +181,9 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
     private let viewId: Int64
     private var isDark: Bool
     private var buttonItems: [GlassButtonItem] = []
+    /// 与 Flutter 侧宽度公式共享的布局参数
+    private let chevronExtraWidth: Double
+    private let horizontalInset: Double
 
     init(
         frame: CGRect,
@@ -157,9 +196,14 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
         // 解析参数
         let params = args as? [String: Any] ?? [:]
         isDark = params["isDark"] as? Bool ?? false
-        let buttonSize = params["buttonSize"] as? Double ?? 36.0
-        let spacing = params["spacing"] as? Double ?? 0.0
+        let buttonSize = params["buttonSize"] as? Double ?? 40.0
+        // Flutter 侧已经取过 max(spacing, minSpacing)，这里直接用，
+        // 保证两侧算出的总宽度一致（不一致会导致按钮被挤压）。
+        let spacing = params["spacing"] as? Double ?? 8.0
         let cornerRadius = params["cornerRadius"] as? Double ?? 22.0
+        let horizontalInset = params["horizontalInset"] as? Double ?? 10.0
+        chevronExtraWidth = params["chevronExtraWidth"] as? Double ?? 12.0
+        self.horizontalInset = horizontalInset
 
         // 解析按钮数据
         if let itemsData = params["items"] as? [[String: Any]] {
@@ -176,10 +220,14 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
                     }
                 }
                 return GlassButtonItem(
-                    icon: item["icon"] as? String ?? "circle",
+                    icon: item["icon"] as? String ?? "questionmark",
                     tooltip: item["tooltip"] as? String,
                     isMenuButton: item["isMenuButton"] as? Bool ?? false,
-                    menuItems: menuItems
+                    menuItems: menuItems,
+                    isEnabled: item["isEnabled"] as? Bool ?? true,
+                    badge: item["badge"] as? Bool ?? false,
+                    tintColor: item["tintColor"] as? Int,
+                    showsChevron: item["showsChevron"] as? Bool ?? false
                 )
             }
         }
@@ -199,7 +247,7 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
         stackView.axis = .horizontal
         stackView.alignment = .center
         stackView.distribution = .fill
-        stackView.spacing = CGFloat(max(spacing, 8.0))
+        stackView.spacing = CGFloat(spacing)
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
         super.init()
@@ -232,15 +280,59 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
         let image = UIImage(systemName: item.icon, withConfiguration: config)
         button.setImage(image, for: .normal)
-        button.tintColor = isDark ? .white : UIColor(white: 0.2, alpha: 1.0)
+
+        // 启用状态与配色：Flutter 侧只在调用方显式指定颜色时下发 tintColor，
+        // 其余情况由这里按当前主题推导，这样主题切换只需一次 updateTheme。
+        button.isEnabled = item.isEnabled
+        button.tintColor = resolveTint(for: item)
+
+        // 带下拉指示器的按钮更宽（与 Flutter 侧宽度公式中的 chevronExtraWidth 对应）
+        let buttonWidth = item.showsChevron
+            ? CGFloat(size) + CGFloat(chevronExtraWidth)
+            : CGFloat(size)
 
         // 设置大小 - 使用较低优先级避免约束冲突
         button.translatesAutoresizingMaskIntoConstraints = false
-        let widthConstraint = button.widthAnchor.constraint(equalToConstant: CGFloat(size))
+        let widthConstraint = button.widthAnchor.constraint(equalToConstant: buttonWidth)
         let heightConstraint = button.heightAnchor.constraint(equalToConstant: CGFloat(size))
         widthConstraint.priority = .defaultHigh
         heightConstraint.priority = .defaultHigh
         NSLayoutConstraint.activate([widthConstraint, heightConstraint])
+
+        // 下拉指示器：单独一层 image view，避免改动主图标的居中布局。
+        // 不设 tintColor —— UIKit 的 tintColor 会沿视图层级向下继承，
+        // 所以 updateTheme 改 button.tintColor 时 chevron 自动跟随。
+        if item.showsChevron {
+            let chevronConfig = UIImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+            let chevron = UIImageView(
+                image: UIImage(systemName: "chevron.down", withConfiguration: chevronConfig)
+            )
+            chevron.translatesAutoresizingMaskIntoConstraints = false
+            chevron.isUserInteractionEnabled = false
+            chevron.contentMode = .scaleAspectFit
+            button.addSubview(chevron)
+            NSLayoutConstraint.activate([
+                chevron.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -2),
+                chevron.centerYAnchor.constraint(equalTo: button.centerYAnchor)
+            ])
+        }
+
+        // 角标：指示筛选等激活状态。此前该状态没有过桥，iOS 上完全不显示。
+        if item.badge {
+            let badgeView = UIView()
+            badgeView.translatesAutoresizingMaskIntoConstraints = false
+            badgeView.backgroundColor = .systemRed
+            badgeView.layer.cornerRadius = Self.badgeSize / 2
+            badgeView.isUserInteractionEnabled = false
+            button.addSubview(badgeView)
+            NSLayoutConstraint.activate([
+                badgeView.widthAnchor.constraint(equalToConstant: Self.badgeSize),
+                badgeView.heightAnchor.constraint(equalToConstant: Self.badgeSize),
+                // 贴着图标右上角，但留出边距避免被玻璃容器圆角裁掉
+                badgeView.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -4),
+                badgeView.topAnchor.constraint(equalTo: button.topAnchor, constant: 6)
+            ])
+        }
 
         // 如果是菜单按钮，配置原生 UIMenu
         if item.isMenuButton && !item.menuItems.isEmpty {
@@ -250,52 +342,53 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
             button.addTarget(self, action: #selector(buttonTapped(_:)), for: .touchUpInside)
         }
 
-        // 设置 tooltip（iOS 15+）
+        // 设置 tooltip（iOS 15+，指针设备上才可见）
         if #available(iOS 15.0, *), let tooltip = item.tooltip {
             button.toolTip = tooltip
         }
+        // 触摸设备没有 tooltip，用无障碍标签承载同一份文案
+        button.accessibilityLabel = item.tooltip
 
         return button
     }
 
-    /// 配置原生 UIMenu - iOS 14+ 系统会自动应用 Liquid Glass 样式
-    private func configureNativeMenu(for button: UIButton, items: [GlassMenuItem], index: Int) {
-        if #available(iOS 14.0, *) {
-            // iOS 14+: 使用原生 UIButton.menu，点击即弹出
-            // 系统会自动应用 iOS 26 Liquid Glass 样式
-            let actions = items.map { item -> UIAction in
-                var image: UIImage?
-                if let iconName = item.icon {
-                    let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-                    image = UIImage(systemName: iconName, withConfiguration: config)
-                }
+    /// 按当前主题与启用状态解析按钮着色
+    private func resolveTint(for item: GlassButtonItem) -> UIColor {
+        if !item.isEnabled {
+            return isDark
+                ? UIColor.white.withAlphaComponent(0.38)
+                : UIColor.black.withAlphaComponent(0.26)
+        }
+        if let argb = item.tintColor {
+            return UIColor(argb: argb)
+        }
+        return isDark ? .white : UIColor(white: 0.2, alpha: 1.0)
+    }
 
-                return UIAction(
-                    title: item.title,
-                    image: image,
-                    attributes: item.isDestructive ? .destructive : [],
-                    handler: { [weak self] _ in
-                        NSLog("🍿 GlassButtonGroup: Native menu selected: \(item.value)")
-                        self?.methodChannel?.invokeMethod("onMenuItemSelected", arguments: [
-                            "buttonIndex": index,
-                            "value": item.value
-                        ])
-                    }
-                )
+    /// 配置原生 UIMenu - 系统会自动应用 iOS 26 Liquid Glass 样式
+    private func configureNativeMenu(for button: UIButton, items: [GlassMenuItem], index: Int) {
+        let actions = items.map { item -> UIAction in
+            var image: UIImage?
+            if let iconName = item.icon {
+                let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+                image = UIImage(systemName: iconName, withConfiguration: config)
             }
 
-            let menu = UIMenu(title: "", children: actions)
-            button.menu = menu
-            button.showsMenuAsPrimaryAction = true  // 点击即显示菜单，无需长按
-
-            NSLog("🍿 GlassButtonGroup: Configured native UIMenu for button \(index) with \(items.count) items")
-        } else {
-            // iOS 13: 使用 UIContextMenuInteraction
-            let interaction = UIContextMenuInteraction(delegate: self)
-            button.addInteraction(interaction)
-            // 也添加点击事件作为回退
-            button.addTarget(self, action: #selector(menuButtonTapped(_:)), for: .touchUpInside)
+            return UIAction(
+                title: item.title,
+                image: image,
+                attributes: item.isDestructive ? .destructive : [],
+                handler: { [weak self] _ in
+                    self?.methodChannel?.invokeMethod("onMenuItemSelected", arguments: [
+                        "buttonIndex": index,
+                        "value": item.value
+                    ])
+                }
+            )
         }
+
+        button.menu = UIMenu(title: "", children: actions)
+        button.showsMenuAsPrimaryAction = true  // 点击即显示菜单，无需长按
     }
 
     private func setupConstraints() {
@@ -308,8 +401,8 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
 
             // Stack view 在 glass container 内部居中
             stackView.centerYAnchor.constraint(equalTo: glassContainer.contentView.centerYAnchor),
-            stackView.leadingAnchor.constraint(equalTo: glassContainer.contentView.leadingAnchor, constant: 10),
-            stackView.trailingAnchor.constraint(equalTo: glassContainer.contentView.trailingAnchor, constant: -10)
+            stackView.leadingAnchor.constraint(equalTo: glassContainer.contentView.leadingAnchor, constant: CGFloat(horizontalInset)),
+            stackView.trailingAnchor.constraint(equalTo: glassContainer.contentView.trailingAnchor, constant: -CGFloat(horizontalInset))
         ])
     }
 
@@ -349,37 +442,40 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
             )
         }
 
-        if #available(iOS 14.0, *) {
-            let button = buttons[buttonIndex]
-            let actions = menuItems.map { item -> UIAction in
-                var image: UIImage?
-                if let iconName = item.icon {
-                    let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-                    image = UIImage(systemName: iconName, withConfiguration: config)
-                }
-
-                return UIAction(
-                    title: item.title,
-                    image: image,
-                    attributes: item.isDestructive ? .destructive : [],
-                    handler: { [weak self] _ in
-                        self?.methodChannel?.invokeMethod("onMenuItemSelected", arguments: [
-                            "buttonIndex": buttonIndex,
-                            "value": item.value
-                        ])
-                    }
-                )
+        let button = buttons[buttonIndex]
+        let actions = menuItems.map { item -> UIAction in
+            var image: UIImage?
+            if let iconName = item.icon {
+                let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+                image = UIImage(systemName: iconName, withConfiguration: config)
             }
-            button.menu = UIMenu(title: "", children: actions)
-        }
 
-        // 同时更新本地存储的菜单项
+            return UIAction(
+                title: item.title,
+                image: image,
+                attributes: item.isDestructive ? .destructive : [],
+                handler: { [weak self] _ in
+                    self?.methodChannel?.invokeMethod("onMenuItemSelected", arguments: [
+                        "buttonIndex": buttonIndex,
+                        "value": item.value
+                    ])
+                }
+            )
+        }
+        button.menu = UIMenu(title: "", children: actions)
+
+        // 同时更新本地存储的菜单项（保留其余字段，避免丢掉 badge/tint 等状态）
         if buttonIndex < buttonItems.count {
+            let existing = buttonItems[buttonIndex]
             buttonItems[buttonIndex] = GlassButtonItem(
-                icon: buttonItems[buttonIndex].icon,
-                tooltip: buttonItems[buttonIndex].tooltip,
+                icon: existing.icon,
+                tooltip: existing.tooltip,
                 isMenuButton: true,
-                menuItems: menuItems
+                menuItems: menuItems,
+                isEnabled: existing.isEnabled,
+                badge: existing.badge,
+                tintColor: existing.tintColor,
+                showsChevron: existing.showsChevron
             )
         }
     }
@@ -390,8 +486,12 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
         glassContainer.overrideUserInterfaceStyle = isDark ? .dark : .light
         glassContainer.updateTheme(isDark: isDark)
 
+        // 按每个按钮各自的 item 重新解析着色：自定义色要保留，
+        // 禁用态要保持变淡，不能一律刷成主题前景色。
         for button in buttons {
-            button.tintColor = isDark ? .white : UIColor(white: 0.2, alpha: 1.0)
+            let index = button.tag
+            guard index >= 0 && index < buttonItems.count else { continue }
+            button.tintColor = resolveTint(for: buttonItems[index])
         }
     }
 
@@ -399,50 +499,8 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
         methodChannel?.invokeMethod("onButtonTap", arguments: sender.tag)
     }
 
-    @objc private func menuButtonTapped(_ sender: UIButton) {
-        // iOS 13 回退: 通知 Flutter 显示菜单
-        let index = sender.tag
-        methodChannel?.invokeMethod("onMenuButtonTap", arguments: index)
-    }
-
     func view() -> UIView {
         return containerView
-    }
-}
-
-// MARK: - UIContextMenuInteractionDelegate (iOS 13 fallback)
-
-extension GlassButtonGroupPlatformView: UIContextMenuInteractionDelegate {
-    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
-        guard let button = interaction.view as? UIButton else { return nil }
-        let index = button.tag
-        guard index >= 0 && index < buttonItems.count else { return nil }
-
-        let item = buttonItems[index]
-        guard item.isMenuButton else { return nil }
-
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
-            let actions = item.menuItems.map { menuItem -> UIAction in
-                var image: UIImage?
-                if let iconName = menuItem.icon {
-                    let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-                    image = UIImage(systemName: iconName, withConfiguration: config)
-                }
-
-                return UIAction(
-                    title: menuItem.title,
-                    image: image,
-                    attributes: menuItem.isDestructive ? .destructive : [],
-                    handler: { _ in
-                        self?.methodChannel?.invokeMethod("onMenuItemSelected", arguments: [
-                            "buttonIndex": index,
-                            "value": menuItem.value
-                        ])
-                    }
-                )
-            }
-            return UIMenu(title: "", children: actions)
-        }
     }
 }
 
@@ -456,11 +514,9 @@ class GlassButtonGroupPlugin: NSObject, FlutterPlugin {
         NSLog("🔮 GlassButtonGroupPlugin: Registered")
 
         if #available(iOS 26.0, *) {
-            NSLog("🔮 GlassButtonGroupPlugin: iOS 26+ - Using UIGlassEffect with native menus")
-        } else if #available(iOS 14.0, *) {
-            NSLog("🔮 GlassButtonGroupPlugin: iOS 14+ - Using native UIButton.menu")
+            NSLog("🔮 GlassButtonGroupPlugin: iOS 26+ - Using UIGlassEffect")
         } else {
-            NSLog("🔮 GlassButtonGroupPlugin: iOS < 14 - Using UIContextMenuInteraction fallback")
+            NSLog("🔮 GlassButtonGroupPlugin: iOS < 26 - Using UIBlurEffect fallback")
         }
     }
 }
