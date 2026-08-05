@@ -17,6 +17,7 @@ import 'package:my_nas/shared/services/native_tab_bar_service.dart';
 import 'package:my_nas/shared/services/update_service.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_scaffold.dart';
 import 'package:my_nas/shared/widgets/desktop_shortcuts.dart';
+import 'package:my_nas/shared/widgets/tab_bar_minimize_on_scroll.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
@@ -308,9 +309,14 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       );
     } else if (useNativeTabBar) {
       // iOS 玻璃风格：使用原生 UITabBar
+      //
+      // 在这里统一包一层滚动最小化，而不是逐个页面包裹：
+      // NotificationListener 会收到所有后代的滚动通知，一处接线覆盖全部
+      // 主 Tab 页面，也不会漏掉后续新增的滚动区域。
+      // 此分支仅 iOS 玻璃模式可达，Android / 桌面 / 经典模式不受影响。
       scaffold = Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : null,
-        body: widget.navigationShell,
+        body: TabBarMinimizeOnScroll(child: widget.navigationShell),
       );
     } else {
       // 其他情况: 使用 Flutter 底部导航栏

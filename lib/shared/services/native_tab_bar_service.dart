@@ -183,6 +183,13 @@ class NativeTabBarService {
       return;
     }
 
+    // 原生侧在 visible=true 时会清掉最小化状态（最小化属于上一个页面的
+    // 滚动位置，不该跨页继承）。这里同步重置去重缓存，否则下次真要最小化时
+    // 会被误判为「状态未变」而不下发。
+    if (visible) {
+      _lastMinimized = null;
+    }
+
     await AppError.guard(
       () => _channel!.invokeMethod<void>('setTabBarVisible', visible),
       action: 'setTabBarVisible',

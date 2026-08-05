@@ -67,6 +67,9 @@ class _TabBarMinimizeOnScrollState extends State<TabBarMinimizeOnScroll> {
     // 只响应竖直方向的主滚动区，忽略横向列表等嵌套滚动
     if (notification.metrics.axis != Axis.vertical) return;
 
+    // 忽略不可滚动的短内容：其 pixels 恒为 0，一次弹性拖拽就会误触发
+    if (notification.metrics.maxScrollExtent <= 0) return;
+
     // 顶部回弹区间一律视为展开，否则下拉刷新时底栏会误收
     if (notification.metrics.pixels <= 0) {
       _apply(minimized: false);

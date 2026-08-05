@@ -349,6 +349,12 @@ class NativeTabBarController: UITabBarController, UITabBarControllerDelegate {
     /// setTabBarHidden 的可用版本不确定，这里做运行时探测并保留 alpha 回退。
     private func setTabBarVisible(_ visible: Bool) {
         isTabBarUserHidden = !visible
+        // 重新显示时清掉最小化状态：最小化是「当前页面滚动位置」的产物，
+        // 页面都换了就不该继承。否则从详情页返回后底栏会卡在收起状态，
+        // 而 Flutter 侧的去重逻辑又不会再下发 false，直接锁死。
+        if visible {
+            isTabBarMinimized = false
+        }
         applyTabBarHidden(!visible || isTabBarMinimized, animated: true)
     }
 
