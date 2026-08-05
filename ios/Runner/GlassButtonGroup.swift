@@ -184,6 +184,8 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
     /// 与 Flutter 侧宽度公式共享的布局参数
     private let chevronExtraWidth: Double
     private let horizontalInset: Double
+    /// 按压触觉反馈。复用同一个实例，避免每次按下都新建。
+    private let selectionFeedback = UISelectionFeedbackGenerator()
 
     init(
         frame: CGRect,
@@ -342,6 +344,15 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
             button.addTarget(self, action: #selector(buttonTapped(_:)), for: .touchUpInside)
         }
 
+        // 按压反馈：UIGlassEffect 的 isInteractive 只负责玻璃本身的形变，
+        // 按钮内容不会跟着响应，需要自己加缩放 + 触觉。
+        button.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
+        button.addTarget(
+            self,
+            action: #selector(buttonTouchUp(_:)),
+            for: [.touchUpInside, .touchUpOutside, .touchCancel]
+        )
+
         // 设置 tooltip（iOS 15+，指针设备上才可见）
         if #available(iOS 15.0, *), let tooltip = item.tooltip {
             button.toolTip = tooltip
@@ -497,6 +508,31 @@ class GlassButtonGroupPlatformView: NSObject, FlutterPlatformView {
 
     @objc private func buttonTapped(_ sender: UIButton) {
         methodChannel?.invokeMethod("onButtonTap", arguments: sender.tag)
+    }
+
+    /// 按下：轻微缩放 + 轻触反馈
+    @objc private func buttonTouchDown(_ sender: UIButton) {
+        selectionFeedback.selectionChanged()
+        UIView.animate(
+            withDuration: 0.12,
+            delay: 0,
+            options: [.curveEaseOut, .beginFromCurrentState]
+        ) {
+            sender.transform = CGAffineTransform(scaleX: 0.88, y: 0.88)
+        }
+    }
+
+    /// 抬起：弹回。用 spring 贴近 iOS 26 玻璃控件的回弹手感。
+    @objc private func buttonTouchUp(_ sender: UIButton) {
+        UIView.animate(
+            withDuration: 0.3,
+            delay: 0,
+            usingSpringWithDamping: 0.55,
+            initialSpringVelocity: 0.4,
+            options: [.beginFromCurrentState]
+        ) {
+            sender.transform = .identity
+        }
     }
 
     func view() -> UIView {

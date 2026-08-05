@@ -113,6 +113,28 @@ class NativeTabBarService {
     return result ?? 0;
   }
 
+  /// 设置原生 Tab Bar 是否处于「滚动最小化」状态（仅 iOS 26+ 生效）
+  ///
+  /// iOS 26 的 `tabBarMinimizeBehavior` 依赖 UIKit 自己找到一个原生
+  /// UIScrollView 来追踪滚动，而 Flutter 的滚动全部发生在 FlutterView
+  /// 内部，UIKit 追踪不到，该属性形同虚设。因此原生侧设为 `.never`，
+  /// 由 Flutter 监听自己的滚动事件后调用此方法显式驱动。
+  ///
+  /// iOS 26 以下与非 iOS 平台调用即忽略，行为完全不变。
+  Future<void> setTabBarMinimized({required bool minimized}) async {
+    if (!_isIOS || _channel == null) return;
+    if (_lastMinimized == minimized) return;
+    _lastMinimized = minimized;
+
+    await AppError.guard(
+      () => _channel!.invokeMethod<void>('setTabBarMinimized', minimized),
+      action: 'setTabBarMinimized',
+    );
+  }
+
+  /// 上一次下发的最小化状态，避免滚动过程中每帧都过桥
+  bool? _lastMinimized;
+
   /// 获取 Tab Bar 高度
   Future<double> getTabBarHeight() async {
     if (!_isIOS || _channel == null) return 49.0; // iOS 默认 tab bar 高度
