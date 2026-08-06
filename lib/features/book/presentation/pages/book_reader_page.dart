@@ -36,6 +36,7 @@ import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/error_widget.dart';
 import 'package:my_nas/shared/widgets/lottie_loading.dart';
+import 'package:my_nas/shared/widgets/page_curl_view.dart';
 import 'package:my_nas/shared/widgets/reader_settings_sheet.dart';
 import 'package:path/path.dart' as path;
 import 'package:url_launcher/url_launcher.dart';
@@ -352,7 +353,8 @@ class BookReaderPage extends ConsumerStatefulWidget {
   ConsumerState<BookReaderPage> createState() => _BookReaderPageState();
 }
 
-class _BookReaderPageState extends ConsumerState<BookReaderPage> {
+class _BookReaderPageState extends ConsumerState<BookReaderPage>
+    with SingleTickerProviderStateMixin {
   bool _showControls = false;
   bool _showToc = false;
   bool _showMoreMenu = false; // 更多菜单
@@ -376,6 +378,13 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
   final bool _useWebViewRenderer = true; // 使用 WebView 渲染器 (更精确的分页)
   bool _webViewPaginationReady = false; // WebView 分页是否已准备就绪
 
+  // Shader 翻页相关（simulation 模式专用）
+  late final AnimationController _curlController;
+  double _curlProgress = 0;
+  double _curlDirection = 1.0; // 1.0=下一页, -1.0=上一页
+  double _curlDragStartY = 0.5; // 拖拽起点 Y，折线倾斜角
+  bool _isCurlAnimating = false;
+
   // 状态栏相关
   final Battery _battery = Battery();
   int _batteryLevel = 100;
@@ -386,6 +395,20 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
   @override
   void initState() {
     super.initState();
+
+    // Shader 翻页动画控制器
+    _curlController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    // 直接用 controller 的线性值驱动进度。
+    // 不套 CurvedAnimation：animateTo(from:) 的坐标是 controller 的线性值，
+    // 而 CurvedAnimation.value 是曲线值，混用会让松手瞬间进度跳变。
+    // 缓动改由 animateTo(curve:) 在收尾时指定。
+    _curlController.addListener(() {
+      setState(() => _curlProgress = _curlController.value);
+    });
+
     // 隐藏原生 Tab Bar（iOS 玻璃风格）
     NativeTabBarService.instance.setTabBarVisible(false);
     // 隐藏 Flutter 导航栏（经典风格）
@@ -608,6 +631,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
       ..removeListener(_onScroll)
       ..dispose();
     _pageController?.dispose();
+    _curlController.dispose();
     _timeTimer?.cancel();
     // 恢复导航栏可见性（通过 Provider 引用计数，由 MainScaffold 决定实际状态）
     BottomNavVisibilityNotifier.instance?.show();
@@ -1319,7 +1343,13 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
       );
     }
 
-    // 滑动/仿真/覆盖模式 - 使用自定义动画
+    // 仿真翻页 - 用 shader 做真实卷页，需要自行接管手势
+    // （PageView 只给单页 itemBuilder，拿不到「当前页 + 目标页」两张图）
+    if (pageMode == BookPageTurnMode.simulation) {
+      return _buildCurlContent(settings);
+    }
+
+    // 滑动/覆盖模式 - 使用自定义动画
     return PageView.builder(
       controller: _pageController,
       itemCount: _pages.length,
@@ -1354,6 +1384,110 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
     });
     // 保存进度
     _savePageProgress(page);
+  }
+
+  /// Shader 翻页内容（simulation 模式专用）
+  Widget _buildCurlContent(BookReaderSettings settings) {
+    if (_currentPage >= _pages.length) return const SizedBox.shrink();
+
+    final current = _buildPageItem(_currentPage, settings);
+    final nextIndex = _curlDirection > 0
+        ? (_currentPage + 1).clamp(0, _pages.length - 1)
+        : (_currentPage - 1).clamp(0, _pages.length - 1);
+    final next = _buildPageItem(nextIndex, settings);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragStart: (details) {
+        if (_isCurlAnimating) return;
+        final y = details.localPosition.dy;
+        final height = MediaQuery.of(context).size.height;
+        setState(() {
+          _curlDragStartY = (y / height).clamp(0.0, 1.0);
+          _curlDirection = 1.0; // 默认向左翻，手势方向确定后再调整
+        });
+      },
+      onHorizontalDragUpdate: (details) {
+        if (_isCurlAnimating) return;
+        final dx = details.primaryDelta ?? 0;
+        if (dx == 0) return;
+        final width = MediaQuery.of(context).size.width;
+
+        // 方向只在进度归零时才允许重新判定：一旦卷起就锁定方向，
+        // 中途反向拖是「收回」而不是「改翻另一边」。
+        if (_curlProgress <= 0) {
+          final newDirection = dx > 0 ? -1.0 : 1.0; // 右滑=上一页，左滑=下一页
+          if (_curlDirection != newDirection) {
+            setState(() => _curlDirection = newDirection);
+          }
+        }
+
+        // 进度按「顺着翻页方向」为正、反向为负累加。
+        // 之前用 dx.abs() 累加，反向拖也会推进进度，导致想收回却翻了页。
+        final signed = _curlDirection > 0 ? -dx : dx;
+        setState(() {
+          _curlProgress = (_curlProgress + signed / width).clamp(0.0, 1.0);
+        });
+      },
+      onHorizontalDragEnd: (details) {
+        if (_isCurlAnimating) return;
+
+        // 已在首页/末页且继续往外翻：没有目标页，直接回弹，
+        // 否则 shader 会拿到两张相同的图，看起来像卡住。
+        final atEdge = (_curlDirection > 0 && _currentPage >= _pages.length - 1) ||
+            (_curlDirection < 0 && _currentPage <= 0);
+
+        // 根据进度和速度决定是否翻页
+        final velocity = details.primaryVelocity ?? 0;
+        final shouldTurn =
+            !atEdge && (_curlProgress > 0.3 || velocity.abs() > 300);
+
+        if (shouldTurn) {
+          _isCurlAnimating = true;
+          _curlController.value = _curlProgress;
+          _curlController
+              .animateTo(1, curve: Curves.easeOutCubic)
+              .then((_) {
+            if (!mounted) return;
+            final targetPage = _curlDirection > 0
+                ? _currentPage + 1
+                : _currentPage - 1;
+
+            // 先把进度清零再切页：反过来会先渲染一帧「新页 + 满卷曲」，
+            // 视觉上是明显的闪跳。
+            _curlController.value = 0;
+            setState(() {
+              _curlProgress = 0;
+              _isCurlAnimating = false;
+            });
+            if (targetPage >= 0 && targetPage < _pages.length) {
+              _onPageChanged(targetPage);
+            }
+          });
+        } else {
+          // 回弹
+          _isCurlAnimating = true;
+          _curlController.value = _curlProgress;
+          _curlController
+              .animateTo(0, curve: Curves.easeOutCubic)
+              .then((_) {
+            if (!mounted) return;
+            setState(() {
+              _curlProgress = 0;
+              _isCurlAnimating = false;
+            });
+          });
+        }
+      },
+      child: PageCurlView(
+        currentPage: current,
+        nextPage: next,
+        progress: _curlProgress,
+        direction: _curlDirection,
+        dragStartY: _curlDragStartY,
+        backgroundColor: settings.theme.backgroundColor,
+      ),
+    );
   }
 
   /// 构建页面内容项
