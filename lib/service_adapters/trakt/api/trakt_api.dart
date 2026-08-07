@@ -61,11 +61,25 @@ class TraktApi {
   }
 
   /// 获取 OAuth 授权 URL
-  String getAuthorizationUrl() =>
-      '$authUrl/oauth/authorize'
-      '?response_type=code'
-      '&client_id=$clientId'
-      '&redirect_uri=$redirectUri';
+  ///
+  /// [state] CSRF 令牌，回调时必须比对，防止授权码注入。
+  /// [codeChallenge] PKCE 的 S256 challenge，与换取 token 时的
+  /// `code_verifier` 配对，防止授权码在深度链接被同机其它应用截获后复用。
+  String getAuthorizationUrl({String? state, String? codeChallenge}) {
+    final params = <String, String>{
+      'response_type': 'code',
+      'client_id': clientId,
+      'redirect_uri': redirectUri,
+      if (state != null) 'state': state,
+      if (codeChallenge != null) ...{
+        'code_challenge': codeChallenge,
+        'code_challenge_method': 'S256',
+      },
+    };
+    return Uri.parse('$authUrl/oauth/authorize')
+        .replace(queryParameters: params)
+        .toString();
+  }
 
   // ==================== Device Code Flow ====================
 
@@ -179,20 +193,28 @@ class TraktApi {
   }
 
   /// 使用授权码获取 Token
-  Future<TraktTokenResponse> exchangeCodeForToken(String code) async {
+  ///
+  /// [codeVerifier] PKCE 的原始 verifier，与授权 URL 里的 challenge 配对。
+  Future<TraktTokenResponse> exchangeCodeForToken(
+    String code, {
+    String? codeVerifier,
+  }) async {
     final url = Uri.parse('$apiUrl/oauth/token');
 
     try {
+      final body = <String, String>{
+        'code': code,
+        'client_id': clientId,
+        'client_secret': clientSecret,
+        'redirect_uri': redirectUri,
+        'grant_type': 'authorization_code',
+        if (codeVerifier != null) 'code_verifier': codeVerifier,
+      };
+
       final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'code': code,
-          'client_id': clientId,
-          'client_secret': clientSecret,
-          'redirect_uri': redirectUri,
-          'grant_type': 'authorization_code',
-        }),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode == 200) {

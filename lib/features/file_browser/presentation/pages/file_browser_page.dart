@@ -1498,7 +1498,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   void _showFileOptions(BuildContext context, FileItem file, bool isDark) {
@@ -1827,7 +1827,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   void _showDeleteConfirm(FileItem file, bool isDark) {

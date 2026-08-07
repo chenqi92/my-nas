@@ -823,33 +823,37 @@ class _SourceCardState extends ConsumerState<_SourceCard> {
 
   Future<String?> _showPasswordDialog() async {
     final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.sourcesPagePasswordDialogTitle),
-        content: TextField(
-          controller: controller,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: context.l10n.sourcesPagePasswordLabel,
-            hintText: context.l10n.sourcesPagePasswordHint(
-              widget.source.username,
+    try {
+      return await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(context.l10n.sourcesPagePasswordDialogTitle),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: context.l10n.sourcesPagePasswordLabel,
+              hintText: context.l10n.sourcesPagePasswordHint(
+                widget.source.username,
+              ),
             ),
+            autofocus: true,
           ),
-          autofocus: true,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.sourcesPageCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: Text(context.l10n.sourcesPageConnectButton),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.sourcesPageCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(context.l10n.sourcesPageConnectButton),
-          ),
-        ],
-      ),
-    );
+      );
+    } finally {
+      controller.dispose();
+    }
   }
 
   Future<void> _disconnect() async {

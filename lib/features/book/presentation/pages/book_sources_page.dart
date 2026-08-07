@@ -225,6 +225,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
         context.showToast(context.l10n.bookSourcesImportSuccess(count));
       }
     } catch (e, st) {
+      if (!mounted) return;
       AppError.handleWithUI(context, e, st, context.l10n.bookSourcesImportFailed, 'importBookSources');
     }
   }

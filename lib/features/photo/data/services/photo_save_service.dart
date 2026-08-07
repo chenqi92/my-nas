@@ -7,6 +7,7 @@ import 'package:gal/gal.dart';
 import 'package:image/image.dart' as img;
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart' hide FileType;
@@ -64,8 +65,12 @@ class PhotoSaveService {
       ..i('PhotoSaveService: 平台信息 - isDesktop=$isDesktop, isMobile=$isMobile, canSaveToGallery=$canSaveToGallery');
 
       // 1. 下载文件到临时目录
+      // 远端文件名可能含 Windows 非法字符或超长，需清洗后再拼本地路径。
       final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, 'photo_download_$fileName');
+      final tempPath = p.join(
+        tempDir.path,
+        'photo_download_${sanitizeFileName(fileName)}',
+      );
       tempFile = File(tempPath);
       logger.i('PhotoSaveService: 临时文件路径: $tempPath');
 
@@ -156,7 +161,10 @@ class PhotoSaveService {
 
       // 2. 获取文件流并写入临时文件
       final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, 'photo_download_$fileName');
+      final tempPath = p.join(
+        tempDir.path,
+        'photo_download_${sanitizeFileName(fileName)}',
+      );
       tempFile = File(tempPath);
       logger..i('PhotoSaveService: 临时文件路径: $tempPath')
 
@@ -384,7 +392,10 @@ class PhotoSaveService {
 
       // 1. 下载文件到临时目录
       final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, 'share_$fileName');
+      final tempPath = p.join(
+        tempDir.path,
+        'share_${sanitizeFileName(fileName)}',
+      );
       tempFile = File(tempPath);
 
       final response = await _dio.download(
@@ -459,7 +470,10 @@ class PhotoSaveService {
     try {
       // 保存到临时文件
       final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, 'share_$fileName');
+      final tempPath = p.join(
+        tempDir.path,
+        'share_${sanitizeFileName(fileName)}',
+      );
       tempFile = File(tempPath);
       await tempFile.writeAsBytes(bytes);
 
@@ -554,7 +568,10 @@ class PhotoSaveService {
 
       // 2. 获取文件流并写入临时文件
       final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(tempDir.path, 'share_$fileName');
+      final tempPath = p.join(
+        tempDir.path,
+        'share_${sanitizeFileName(fileName)}',
+      );
       tempFile = File(tempPath);
 
       final stream = await fileSystem.getFileStream(path);

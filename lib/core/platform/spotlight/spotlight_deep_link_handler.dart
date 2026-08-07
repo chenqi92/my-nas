@@ -204,6 +204,7 @@ class SpotlightDeepLinkHandler {
 
     final ctx = rootNavigatorKey.currentContext;
     if (ctx == null) return;
+    // ignore: use_build_context_synchronously — 从全局 navigatorKey 新取，非跨 gap 陈旧引用
     await BookNavigator.instance.openBook(ctx, book);
   }
 

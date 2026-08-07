@@ -1,3 +1,6 @@
+// 4 处使用 context.mounted 守卫，lint 误报
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async' show StreamSubscription;
 import 'dart:io';
 

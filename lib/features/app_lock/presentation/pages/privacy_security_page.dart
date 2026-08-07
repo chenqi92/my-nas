@@ -275,7 +275,8 @@ class _PrivacySecurityPageState extends ConsumerState<PrivacySecurityPage> {
   Future<bool> _verifyCurrentPin() async {
     final l = AppLocalizations.of(context);
     final controller = TextEditingController();
-    final result = await showDialog<bool>(
+    try {
+      final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l.appLockUnlockTitle),
@@ -312,7 +313,10 @@ class _PrivacySecurityPageState extends ConsumerState<PrivacySecurityPage> {
         ],
       ),
     );
-    return result ?? false;
+      return result ?? false;
+    } finally {
+      controller.dispose();
+    }
   }
 }
 

@@ -1,5 +1,8 @@
 // ignore_for_file: unused_field, unused_element
 
+// Lint 报 "unrelated mounted" 是误报：switch 分支内检查后 lint 无法追踪
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';

@@ -27,9 +27,22 @@ class ScrapeEngine {
   ScrapeEngine._();
   static final ScrapeEngine instance = ScrapeEngine._();
 
+  /// 同时保活的 JS 运行时上限。超出后按最近最少使用淘汰并释放。
+  static const _maxRuntimes = 4;
+
   Dio? _dio;
   final Map<String, DateTime> _lastCallAt = {};
-  JavascriptRuntime? _runtime;
+
+  /// 按 source.id 隔离的 JS 运行时。
+  ///
+  /// 不能共用单个全局运行时：用户导入的脚本运行在同一个 global 上时，
+  /// 一个恶意源可以覆写 `JSON.stringify`（引擎正是用它穿透返回值）
+  /// 或在 global 上留驻函数，从而篡改后续任意源的解析结果、读取其它
+  /// 源写入 global 的数据。按源隔离把污染限制在该源自身。
+  final Map<String, JavascriptRuntime> _runtimes = {};
+
+  /// 运行时访问顺序，末尾为最近使用。
+  final List<String> _runtimeLru = [];
 
   Dio get _http => _dio ??= DioClient.createTlsAware(
     options: BaseOptions(
@@ -45,7 +58,70 @@ class ScrapeEngine {
     ),
   );
 
-  JavascriptRuntime get _js => _runtime ??= getJavascriptRuntime();
+  /// 取得 [sourceId] 专属的运行时，必要时创建并淘汰最旧的。
+  JavascriptRuntime _jsFor(String sourceId) {
+    _runtimeLru
+      ..remove(sourceId)
+      ..add(sourceId);
+
+    final existing = _runtimes[sourceId];
+    if (existing != null) return existing;
+
+    while (_runtimeLru.length > _maxRuntimes) {
+      final evicted = _runtimeLru.removeAt(0);
+      _disposeRuntime(evicted);
+    }
+
+    final runtime = getJavascriptRuntime();
+    _bootstrap(runtime);
+    _runtimes[sourceId] = runtime;
+    return runtime;
+  }
+
+  /// 在运行时里固定一份 `JSON.stringify` 引用。
+  ///
+  /// 引擎依赖 `JSON.stringify` 把脚本返回值穿透回 Dart，脚本自身可以
+  /// 覆写它。用 `writable: false, configurable: false` 定义副本，使脚本
+  /// 既不能重新赋值也不能 delete，保证返回值编码始终走原生实现。
+  void _bootstrap(JavascriptRuntime runtime) {
+    final result = runtime.evaluate('''
+Object.defineProperty(globalThis, '__mynasStringify', {
+  value: JSON.stringify,
+  writable: false,
+  configurable: false,
+  enumerable: false
+});
+true
+''');
+    if (result.isError) {
+      logger.w('scrape: js bootstrap failed: ${result.stringResult}');
+    }
+  }
+
+  void _disposeRuntime(String sourceId) {
+    final runtime = _runtimes.remove(sourceId);
+    if (runtime == null) return;
+    try {
+      runtime.dispose();
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, 'JS 运行时释放失败，已从缓存移除');
+    }
+  }
+
+  /// 释放某个源的运行时。源被删除或脚本被编辑后调用，
+  /// 避免旧脚本留在 global 上的状态影响新脚本。
+  void invalidateSource(String sourceId) {
+    _runtimeLru.remove(sourceId);
+    _disposeRuntime(sourceId);
+  }
+
+  /// 释放全部运行时。
+  void disposeAll() {
+    for (final id in _runtimes.keys.toList()) {
+      _disposeRuntime(id);
+    }
+    _runtimeLru.clear();
+  }
 
   // ============ 公开调用 ============
 
@@ -145,7 +221,13 @@ class ScrapeEngine {
       await _respectRateLimit(config);
       final responseText = await _fetch(config, endpoint, args);
       if (responseText == null) return null;
-      return _runScript(endpoint.script, responseText, args, config.secrets);
+      return _runScript(
+        config.id,
+        endpoint.script,
+        responseText,
+        args,
+        config.secrets,
+      );
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'scrape.$action', {
         'source': config.id,
@@ -241,8 +323,11 @@ class ScrapeEngine {
     });
   }
 
-  /// 把用户脚本包成函数体并执行；用 `JSON.stringify` 做返回值穿透。
+  /// 把用户脚本包成函数体并执行；用固定的 `JSON.stringify` 副本做返回值穿透。
+  ///
+  /// [sourceId] 决定用哪个隔离运行时执行，见 [_jsFor]。
   dynamic _runScript(
+    String sourceId,
     String script,
     String response,
     Map<String, dynamic> args,
@@ -251,11 +336,11 @@ class ScrapeEngine {
     if (script.trim().isEmpty) return null;
     final wrapped =
         '''
-JSON.stringify((function(response, args, secrets) {
+__mynasStringify((function(response, args, secrets) {
 $script
 })(${jsonEncode(response)}, ${jsonEncode(args)}, ${jsonEncode(secrets ?? const {})}))
 ''';
-    final result = _js.evaluate(wrapped);
+    final result = _jsFor(sourceId).evaluate(wrapped);
     if (result.isError) {
       logger.w('scrape: js error: ${result.stringResult}');
       return null;

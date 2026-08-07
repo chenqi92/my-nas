@@ -265,6 +265,8 @@ class JumpListController {
 
     final ctx = rootNavigatorKey.currentContext;
     if (ctx != null) {
+      // ctx 在 await 之后才从全局 navigatorKey 取值，不是跨 gap 的陈旧引用
+      // ignore: use_build_context_synchronously
       ctx.go(Routes.musicPlayer);
     }
   }
@@ -293,11 +295,13 @@ class JumpListController {
     if (ctx == null) return;
 
     // 先回到 /video（保证 NavigationRail 在视频 tab），再 push 播放器。
+    // ignore: use_build_context_synchronously — 从全局 navigatorKey 新取，非跨 gap 陈旧引用
     ctx.go(Routes.video);
     // 等一帧让 go_router 完成 navigation 再 push。
     await Future<void>.delayed(const Duration(milliseconds: 50));
     final navCtx = rootNavigatorKey.currentContext;
     if (navCtx != null) {
+      // ignore: use_build_context_synchronously — 同上，await 后重新取
       await Navigator.of(navCtx).push<void>(
         MaterialPageRoute<void>(builder: (_) => VideoPlayerPage(video: video)),
       );

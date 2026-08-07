@@ -46,6 +46,8 @@ class _ScrapeSourcesPageState extends State<ScrapeSourcesPage> {
     );
     if (added != null && added > 0 && mounted) {
       await _load();
+      // _load() 之后 sheet 可能已被 dismiss，需重新确认
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.scrapeSourcesPageImportedCount(added))),
       );

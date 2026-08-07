@@ -605,33 +605,37 @@ class _ServiceSourceCardState extends ConsumerState<_ServiceSourceCard> {
 
   Future<String?> _showPasswordDialog() async {
     final controller = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.sourcesPasswordDialogTitle),
-        content: TextField(
-          controller: controller,
-          obscureText: true,
-          decoration: InputDecoration(
-            labelText: context.l10n.sourcesPasswordFieldLabel,
-            hintText: context.l10n.sourcesPasswordFieldHint(
-              widget.source.username,
+    try {
+      return await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(context.l10n.sourcesPasswordDialogTitle),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+            decoration: InputDecoration(
+              labelText: context.l10n.sourcesPasswordFieldLabel,
+              hintText: context.l10n.sourcesPasswordFieldHint(
+                widget.source.username,
+              ),
             ),
+            autofocus: true,
           ),
-          autofocus: true,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.sourcesCancelButton),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, controller.text),
+              child: Text(context.l10n.sourcesConfirmButton),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.sourcesCancelButton),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(context.l10n.sourcesConfirmButton),
-          ),
-        ],
-      ),
-    );
+      );
+    } finally {
+      controller.dispose();
+    }
   }
 
   void _editSource() {

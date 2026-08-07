@@ -38,8 +38,14 @@
 	<string>NSApplication</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoadsForMedia</key>
-		<true/>
+		<!-- NSAllowsArbitraryLoadsForMedia は付けない。
+		     これが緩めるのは AVFoundation / NSURLSession 経由の読み込みだが、
+		     本アプリの再生は media_kit / just_audio_media_kit（libmpv、生ソケット）
+		     を通るため ATS の管轄外で、そもそもこのフラグの効果を受けない。
+		     つまり付けても再生には効かず、AVFoundation を使う他経路の平文 HTTP を
+		     無条件に許すだけになるので外している。
+		     ユーザーが登録する LAN 上の NAS（http://192.168.x.x など）は
+		     下の NSAllowsLocalNetworking で許可される。 -->
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>

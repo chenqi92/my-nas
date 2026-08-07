@@ -12273,6 +12273,7 @@
   "traktProviderAuthorizationTimeout": "Authorization timed out, please try again",
   "traktProviderMissingCredentials": "Client ID and Client Secret are required",
   "traktProviderNoPendingOAuth": "No pending OAuth request",
+  "traktProviderInvalidOAuthState": "OAuth callback verification failed, please authorize again",
   "traktProviderTokenRefreshFailed": "Token refresh failed, please log in again",
   "musicScraperFormPageValidationFieldRequired": "{label} cannot be empty",
   "@musicScraperFormPageValidationFieldRequired": {

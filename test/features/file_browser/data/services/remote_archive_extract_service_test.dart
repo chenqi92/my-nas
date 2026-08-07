@@ -77,6 +77,15 @@ void main() {
     expect(safeArchiveRelativePath(r'folder\ok.txt'), 'folder/ok.txt');
   });
 
+  test('sanitizes archive entry segments illegal on Windows', () {
+    // 首段的 `x:` 会先被盘符检查拒绝（返回 null），冒号清洗只对非首段生效。
+    expect(safeArchiveRelativePath('a:b.txt'), isNull);
+    expect(safeArchiveRelativePath('dir/a:b.txt'), 'dir/a_b.txt');
+    expect(safeArchiveRelativePath('dir/re*port?.txt'), 'dir/re_port_.txt');
+    expect(safeArchiveRelativePath('CON.txt'), '_CON.txt');
+    expect(safeArchiveRelativePath('trailing. '), 'trailing');
+  });
+
   test('recognizes supported archive names and output base names', () {
     expect(remoteArchiveKindForName('photos.ZIP'), RemoteArchiveKind.zip);
     expect(

@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/storage/fallback_box_key.dart';
 import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:pointycastle/digests/sha256.dart';
@@ -82,11 +82,6 @@ class AppLockSecureStore {
     return false;
   }
 
-  List<int> _deriveFallbackKey() {
-    final material = '${Platform.localHostname}|mynas-app-lock-fallback|v1';
-    return sha256.convert(utf8.encode(material)).bytes;
-  }
-
   Future<Box<String>> _getFallbackBox() async {
     if (_fallbackBox != null && _fallbackBox!.isOpen) return _fallbackBox!;
     return _fallbackInit ??= _openFallbackBox();
@@ -94,10 +89,10 @@ class AppLockSecureStore {
 
   Future<Box<String>> _openFallbackBox() async {
     try {
-      final cipher = HiveAesCipher(_deriveFallbackKey());
-      final box = await Hive.openBox<String>(
+      final box = await FallbackBoxKey.openBox(
         _fallbackBoxName,
-        encryptionCipher: cipher,
+        domain: 'mynas-app-lock-fallback',
+        legacyMaterial: '${Platform.localHostname}|mynas-app-lock-fallback|v1',
       );
       _fallbackBox = box;
       return box;

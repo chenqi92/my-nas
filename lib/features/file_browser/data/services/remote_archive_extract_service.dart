@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart' as archive_lib;
+import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -202,7 +203,12 @@ String? safeArchiveRelativePath(String entryName) {
   }
   final parts = normalized.split('/').where((part) => part.isNotEmpty).toList();
   if (parts.isEmpty || parts.any((part) => part == '..')) return null;
-  final safe = parts.where((part) => part != '.').join('/');
+  // 压缩包条目名可能含 `:` 等 Windows 非法字符，落到本地临时目录时
+  // `File()` 会抛异常。这里统一清洗，保证本地落地与远端上传路径一致。
+  final safe = parts
+      .where((part) => part != '.')
+      .map((part) => sanitizeFileName(part, fallback: 'unnamed_entry'))
+      .join('/');
   return safe.isEmpty ? null : safe;
 }
 

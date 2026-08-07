@@ -934,7 +934,7 @@ class _PlaylistDetailPageState extends ConsumerState<PlaylistDetailPage>
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   void _showClearConfirm() {

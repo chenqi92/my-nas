@@ -147,6 +147,7 @@ class _AdaptiveImageState extends State<AdaptiveImage> {
       fit: widget.fit,
       width: widget.width,
       height: widget.height,
+      cacheWidth: _decodeCacheWidth(context),
       // 使用 frameBuilder 实现平滑加载，避免闪烁
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
         if (wasSynchronouslyLoaded || frame != null) {
@@ -165,11 +166,25 @@ class _AdaptiveImageState extends State<AdaptiveImage> {
       width: widget.width,
       height: widget.height,
       fadeInDuration: widget.fadeInDuration,
+      // 海报墙里的原图常为 1000×1500+，一屏几十张即数百 MB 解码峰值。
+      // 按控件逻辑宽 × 像素密度限制解码尺寸，避免移动端 OOM。
+      memCacheWidth: _decodeCacheWidth(context),
       placeholder: (context, _) =>
           widget.placeholder?.call(context) ?? _buildDefaultPlaceholder(),
       errorWidget: (context, _, error) =>
           widget.errorWidget?.call(context, error) ?? _buildDefaultError(context),
     );
+
+  /// 按控件宽度 × 设备像素比推导解码宽度上限。
+  ///
+  /// 未显式指定宽度（`width == null`，如铺满父容器）时返回 null，
+  /// 交给原始尺寸解码 —— 此时无法预知实际布局宽，强行截断会糊。
+  int? _decodeCacheWidth(BuildContext context) {
+    final width = widget.width;
+    if (width == null || !width.isFinite || width <= 0) return null;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return (width * dpr).round();
+  }
 
   Widget _buildDefaultPlaceholder() => Builder(
       builder: (ctx) => Container(

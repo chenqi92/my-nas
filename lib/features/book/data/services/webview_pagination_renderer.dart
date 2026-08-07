@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/book_html_sanitizer.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/book_content_processor.dart';
 import 'package:my_nas/features/reading/data/services/reader_settings_service.dart';
@@ -293,50 +294,15 @@ class WebViewPaginationRenderer {
     return '#$r$g$b';
   }
 
-  /// 清理 HTML 内容：移除可能的外层 HTML 结构
-  /// MOBI 解析出的内容可能包含完整的 HTML 文档结构，
-  /// 直接嵌入会导致嵌套 HTML 文档，浏览器无法正确渲染
+  /// 清理 HTML 内容
+  ///
+  /// 1. 外层 HTML 结构（DOCTYPE / html / head / body）由 DOM 解析剥离，
+  ///    避免嵌入后形成嵌套文档导致渲染异常。
+  /// 2. 同时按白名单过滤标签与属性 —— 在线书源正文属于不可信输入，
+  ///    未过滤时 `<script>` / `onerror=` / `javascript:` 会在 WebView 中执行。
   String _sanitizeHtmlContent(String content) {
-    var cleaned = content;
-    
-    // 移除 DOCTYPE
-    cleaned = cleaned.replaceAll(
-      RegExp('<!DOCTYPE[^>]*>', caseSensitive: false),
-      '',
-    );
-    
-    // 移除 html 标签
-    cleaned = cleaned.replaceAll(
-      RegExp('</?html[^>]*>', caseSensitive: false),
-      '',
-    );
-    
-    // 移除 head 及其内容
-    cleaned = cleaned.replaceAll(
-      RegExp('<head[^>]*>.*?</head>', caseSensitive: false, dotAll: true),
-      '',
-    );
-    
-    // 移除 body 标签（保留内容）
-    cleaned = cleaned.replaceAll(
-      RegExp('</?body[^>]*>', caseSensitive: false),
-      '',
-    );
-    
-    // 移除 meta 标签
-    cleaned = cleaned.replaceAll(
-      RegExp('<meta[^>]*/?>', caseSensitive: false),
-      '',
-    );
-    
-    // 移除 xml 声明
-    cleaned = cleaned.replaceAll(
-      RegExp(r'<\?xml[^>]*\?>', caseSensitive: false),
-      '',
-    );
-    
     // 如果内容为空或只有空白，返回提示
-    final trimmed = cleaned.trim();
+    final trimmed = sanitizeBookHtml(content);
     if (trimmed.isEmpty) {
       return '<p style="color: #999; text-align: center; padding: 20px;">${appL10n.webviewContentParsingFailed}</p>';
     }

@@ -6245,6 +6245,7 @@
   "traktProviderAuthorizationTimeout": "授权超时，请重试",
   "traktProviderMissingCredentials": "需要提供 Client ID 和 Client Secret",
   "traktProviderNoPendingOAuth": "没有待处理的 OAuth 请求",
+  "traktProviderInvalidOAuthState": "OAuth 回调校验失败，请重新授权",
   "traktProviderTokenRefreshFailed": "Token 刷新失败，请重新登录",
   "musicScraperFormPageValidationFieldRequired": "{label}不能为空",
   "musicHomeSectionHeroPlayer": "开始探索你的音乐",

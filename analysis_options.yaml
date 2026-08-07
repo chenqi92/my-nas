@@ -129,7 +129,6 @@ linter:
     use_to_and_as_if_applicable: true
 
     # Flutter specific
-    # 禁用：有太多误报，且已手动在关键位置添加了 context.mounted 检查
-    use_build_context_synchronously: false
+    use_build_context_synchronously: true
     use_key_in_widget_constructors: true
     sort_child_properties_last: true

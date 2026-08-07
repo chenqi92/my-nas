@@ -1,3 +1,6 @@
+// 6 处：4 处已有 mounted 检查（lint 误报"unrelated"），2 处单 await 后立即用
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';

@@ -1580,6 +1580,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
           await ref
               .read(activeConnectionsProvider.notifier)
               .connect(source, password: password);
+          if (!mounted) return;
           _showSuccessAndPop(
             source,
             context.l10n.sourceFormConnectSuccess(source.displayName),
@@ -1594,6 +1595,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
         // 连接失败
         // 断开临时连接
         await sourceManager.disconnect(source.id);
+        if (!mounted) return;
         _showErrorSnackBar(
           context.l10n.sourceFormConnectionFailed(
             connection.errorMessage ?? context.l10n.sourceFormUnknownError,
@@ -1603,6 +1605,7 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
       default:
         // 其他状态
         await sourceManager.disconnect(source.id);
+        if (!mounted) return;
         _showErrorSnackBar(context.l10n.sourceFormConnectionStatusError);
     }
   }
@@ -1631,7 +1634,9 @@ class _SourceFormPageState extends ConsumerState<SourceFormPage>
             if (connection.status != SourceStatus.connected) {
               throw Exception(
                 connection.errorMessage ??
-                    context.l10n.sourceFormConnectionCheckFailed,
+                    (mounted
+                        ? context.l10n.sourceFormConnectionCheckFailed
+                        : 'connection check failed'),
               );
             }
           } on Exception {

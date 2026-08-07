@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/storage/fallback_box_key.dart';
 import 'package:my_nas/core/storage/secure_storage_options.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
@@ -81,16 +81,6 @@ class AuthStorageService {
     return false;
   }
 
-  /// 派生本地降级存储的 AES key
-  ///
-  /// 注意：仅作降级使用，安全级别低于系统 Keychain。
-  /// key 由设备主机名 + 固定 salt 派生，攻击者反编译应用并拿到设备
-  /// 后可还原。设计目的是避免明文持久化凭证，而非抵抗本地攻击者。
-  List<int> _deriveFallbackKey() {
-    final material = '${Platform.localHostname}|mynas-auth-fallback|v1';
-    return sha256.convert(utf8.encode(material)).bytes;
-  }
-
   /// 获取或初始化降级 box
   Future<Box<String>> _getFallbackBox() async {
     if (_fallbackBox != null && _fallbackBox!.isOpen) return _fallbackBox!;
@@ -99,10 +89,10 @@ class AuthStorageService {
 
   Future<Box<String>> _openFallbackBox() async {
     try {
-      final cipher = HiveAesCipher(_deriveFallbackKey());
-      final box = await Hive.openBox<String>(
+      final box = await FallbackBoxKey.openBox(
         _fallbackBoxName,
-        encryptionCipher: cipher,
+        domain: 'mynas-auth-fallback',
+        legacyMaterial: '${Platform.localHostname}|mynas-auth-fallback|v1',
       );
       _fallbackBox = box;
       return box;

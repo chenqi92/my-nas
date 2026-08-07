@@ -114,8 +114,13 @@ class ProgressivePagination {
       final page = initialResult.pages[i];
 
       // 检查页面溢出情况
-      final overflowRatio =
-          ReadableAreaCalculator.checkPageOverflow(page, context, settings);
+      final overflowRatio = ReadableAreaCalculator.checkPageOverflow(
+        page,
+        // context 用于静态计算布局尺寸，不触发 setState/navigation
+        // ignore: use_build_context_synchronously
+        context,
+        settings,
+      );
 
       if (overflowRatio > 0.1) {
         // 页面溢出超过10%,需要拆分

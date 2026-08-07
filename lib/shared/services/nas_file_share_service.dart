@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -53,8 +54,11 @@ class NasFileShareService {
       }
 
       // 2. 流式写到临时目录
+      // 远端文件名可能含 Windows 非法字符或超长，直接拼进本地路径会抛异常。
       final tempDir = await getTemporaryDirectory();
-      tempFile = File(p.join(tempDir.path, 'share_$fileName'));
+      tempFile = File(
+        p.join(tempDir.path, 'share_${sanitizeFileName(fileName)}'),
+      );
 
       final stream = await fileSystem.getFileStream(path);
       final sink = tempFile.openWrite();

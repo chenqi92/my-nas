@@ -398,6 +398,9 @@ class _StreamImageState extends State<StreamImage> {
         alignment: widget.alignment,
         width: widget.width,
         height: widget.height,
+        // 海报墙里的原图常为 1000×1500+，一屏几十张即数百 MB 解码峰值。
+        // 按控件逻辑宽 × 像素密度限制解码尺寸，避免移动端 OOM。
+        memCacheWidth: _decodeCacheWidth(context),
         placeholder: (_, _) => widget.placeholder ?? _buildPlaceholder(),
         errorWidget: (_, _, _) => widget.errorWidget ?? _buildError(),
       );
@@ -414,6 +417,7 @@ class _StreamImageState extends State<StreamImage> {
           alignment: widget.alignment,
           width: widget.width,
           height: widget.height,
+          cacheWidth: _decodeCacheWidth(context),
           errorBuilder: (_, _, _) => widget.errorWidget ?? _buildError(),
         );
       }
@@ -421,6 +425,17 @@ class _StreamImageState extends State<StreamImage> {
 
     // 默认使用流式加载
     return _buildStreamImage();
+  }
+
+  /// 按控件宽度 × 设备像素比推导解码宽度上限。
+  ///
+  /// 未显式指定宽度（`width == null`，如铺满父容器）时返回 null，
+  /// 交给原始尺寸解码 —— 此时无法预知实际布局宽，强行截断会糊。
+  int? _decodeCacheWidth(BuildContext context) {
+    final width = widget.width;
+    if (width == null || !width.isFinite || width <= 0) return null;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return (width * dpr).round();
   }
 
   /// 构建流式加载的图片组件
@@ -451,13 +466,16 @@ class _StreamImageState extends State<StreamImage> {
     }
 
     // 显示流式加载的图片
-    return Image.memory(
-      _imageBytes!,
-      fit: widget.fit,
-      alignment: widget.alignment,
-      width: widget.width,
-      height: widget.height,
-      errorBuilder: (_, _, _) => widget.errorWidget ?? _buildError(),
+    return Builder(
+      builder: (context) => Image.memory(
+        _imageBytes!,
+        fit: widget.fit,
+        alignment: widget.alignment,
+        width: widget.width,
+        height: widget.height,
+        cacheWidth: _decodeCacheWidth(context),
+        errorBuilder: (_, _, _) => widget.errorWidget ?? _buildError(),
+      ),
     );
   }
 

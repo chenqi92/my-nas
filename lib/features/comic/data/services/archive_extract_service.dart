@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart' as archive_lib;
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
@@ -452,7 +453,20 @@ class ArchiveExtractService {
       return null;
     }
 
-    final outputPath = path.normalize(path.join(outputDir, normalizedName));
+    final outputPath = path.normalize(
+      // file.name 来自压缩包条目，可能含 `:` 等 Windows 非法字符，
+      // 直接 `p.join` 在 Windows 上落地会抛异常。
+      path.join(
+        outputDir,
+        normalizedName
+            .split('/')
+            .map((seg) => sanitizeFileName(
+              seg,
+              fallback: 'unnamed_entry',
+            ))
+            .join('/'),
+      ),
+    );
     if (!path.isWithin(
       path.canonicalize(outputDir),
       path.canonicalize(outputPath),

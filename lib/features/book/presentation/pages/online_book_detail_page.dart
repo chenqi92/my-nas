@@ -414,6 +414,7 @@ class _OnlineBookDetailPageState extends ConsumerState<OnlineBookDetailPage>
     if (_chapters != null && _chapters!.isNotEmpty) {
       _openReader(_chapters!.first);
     } else {
+      if (!mounted) return;
       context.showToast(context.l10n.bookDetailNoChaptersToRead);
     }
   }

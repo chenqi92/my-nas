@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/storage/secure_storage_options.dart';
@@ -366,12 +368,19 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
       redirectUri: redirectUri,
     );
 
+    // CSRF 令牌 + PKCE verifier，回调时比对 / 换 token 时配对
+    final oauthState = _randomUrlSafeToken();
+    final codeVerifier = _randomUrlSafeToken();
+    final codeChallenge = _s256Challenge(codeVerifier);
+
     // 保存待处理的 OAuth 状态（用于回调时恢复）
     final pendingOAuth = {
       'clientId': effectiveClientId,
       'clientSecret': effectiveClientSecret,
       'useBuiltIn': useBuiltIn,
       'redirectUri': redirectUri,
+      'state': oauthState,
+      'codeVerifier': codeVerifier,
     };
     await writeSecureValueVerified(
       _storage,
@@ -380,11 +389,32 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
     );
 
     state = state.copyWith(status: TraktConnectionStatus.connecting);
-    return _api!.getAuthorizationUrl();
+    return _api!.getAuthorizationUrl(
+      state: oauthState,
+      codeChallenge: codeChallenge,
+    );
   }
 
+  /// 生成 URL-safe 随机令牌（32 字节熵，无填充）
+  ///
+  /// 同时用于 OAuth `state` 和 PKCE `code_verifier`（RFC 7636 要求
+  /// verifier 长度 43-128，32 字节 base64url 后为 43 字符）。
+  static String _randomUrlSafeToken() {
+    final rng = Random.secure();
+    final bytes = List<int>.generate(32, (_) => rng.nextInt(256));
+    return base64Url.encode(bytes).replaceAll('=', '');
+  }
+
+  /// PKCE S256：`BASE64URL(SHA256(verifier))`，去掉填充
+  static String _s256Challenge(String verifier) =>
+      base64Url.encode(sha256.convert(ascii.encode(verifier)).bytes)
+          .replaceAll('=', '');
+
   /// 处理 OAuth 回调（深度链接回调后调用）
-  Future<void> handleOAuthCallback(String code) async {
+  ///
+  /// [returnedState] 为回调 URL 携带的 `state`，必须与发起授权时保存的值一致，
+  /// 否则视为授权码注入（任意应用/网页都能触发 `mynas://` 深度链接）。
+  Future<void> handleOAuthCallback(String code, {String? returnedState}) async {
     try {
       // 读取待处理的 OAuth 状态
       final pendingJson = await _storage.read(key: _pendingOAuthKey);
@@ -397,9 +427,18 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
       final clientSecret = pending['clientSecret'] as String;
       final useBuiltIn = pending['useBuiltIn'] as bool? ?? false;
       final redirectUri = pending['redirectUri'] as String;
+      final expectedState = pending['state'] as String?;
+      final codeVerifier = pending['codeVerifier'] as String?;
 
-      // 清除待处理状态
+      // 清除待处理状态（无论成功失败都不复用，防止重放）
       await _storage.delete(key: _pendingOAuthKey);
+
+      // 严格比对 state：缺失或不匹配一律拒绝换取 token
+      if (expectedState == null ||
+          returnedState == null ||
+          !_constantTimeEquals(expectedState, returnedState)) {
+        throw Exception(appL10n.traktProviderInvalidOAuthState);
+      }
 
       // 使用授权码换取 Token
       await _authenticateWithCodeInternal(
@@ -408,6 +447,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
         clientSecret: clientSecret,
         redirectUri: redirectUri,
         useBuiltIn: useBuiltIn,
+        codeVerifier: codeVerifier,
       );
     } on Exception catch (e, st) {
       logger.e('TraktConnectionNotifier: OAuth 回调处理失败', e, st);
@@ -416,6 +456,16 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  /// 定长比较，避免按字符提前返回泄露匹配前缀长度
+  static bool _constantTimeEquals(String a, String b) {
+    if (a.length != b.length) return false;
+    var diff = 0;
+    for (var i = 0; i < a.length; i++) {
+      diff |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+    }
+    return diff == 0;
   }
 
   /// 使用授权码完成认证（兼容旧接口 - OOB 模式）
@@ -440,6 +490,7 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
     required String clientSecret,
     required String redirectUri,
     required bool useBuiltIn,
+    String? codeVerifier,
   }) async {
     state = state.copyWith(status: TraktConnectionStatus.connecting);
 
@@ -449,7 +500,10 @@ class TraktConnectionNotifier extends StateNotifier<TraktConnectionState> {
         clientSecret: clientSecret,
         redirectUri: redirectUri,
       );
-      final tokenResponse = await _api!.exchangeCodeForToken(code);
+      final tokenResponse = await _api!.exchangeCodeForToken(
+        code,
+        codeVerifier: codeVerifier,
+      );
 
       // 保存配置
       _config = TraktConfig(

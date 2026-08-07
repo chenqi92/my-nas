@@ -116,6 +116,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
       // 加载哈希计算状态
       final hashCalcStats = await _db.getHashStats();
 
+      if (!mounted) return;
       setState(() {
         _nameSizeStats = nameSizeStats;
         _nameSizeDuplicates = nameSizeDups;
@@ -133,6 +134,7 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
         });
       }
     } on Exception catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = AppLocalizations.of(context).dedupLoadFailed('$e');
         _isLoading = false;
@@ -152,12 +154,14 @@ class _PhotoDuplicatesPageState extends ConsumerState<PhotoDuplicatesPage>
       final nameStats = await _db.getNameDuplicateStats();
       final nameDups = await _db.getDuplicatesByFileName();
 
+      if (!mounted) return;
       setState(() {
         _nameStats = nameStats;
         _nameDuplicates = nameDups;
         _isLoading = false;
       });
     } on Exception catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = AppLocalizations.of(context).dedupLoadFailed('$e');
         _isLoading = false;

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:local_auth/local_auth.dart';
@@ -69,6 +70,7 @@ class AppLockService {
 
   /// 当前设备是否可用生物识别（硬件存在且至少录入了一种）
   Future<bool> isBiometricAvailable() async {
+    if (!_platformSupportsBiometric) return false;
     try {
       final canCheck = await _localAuth.canCheckBiometrics;
       if (!canCheck) return false;
@@ -84,6 +86,7 @@ class AppLockService {
 
   /// 触发生物识别。成功返回 true，用户取消 / 失败返回 false
   Future<bool> authenticateBiometric({required String reason}) async {
+    if (!_platformSupportsBiometric) return false;
     try {
       return await _localAuth.authenticate(
         localizedReason: reason,
@@ -96,4 +99,9 @@ class AppLockService {
       return false;
     }
   }
+
+  /// local_auth 在 Linux 上抛出 MissingPluginException，
+  /// 为避免每次调用都走异常路径，入口处显式短路。
+  static bool get _platformSupportsBiometric =>
+      !Platform.isLinux;
 }

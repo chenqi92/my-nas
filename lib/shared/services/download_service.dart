@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -151,7 +152,11 @@ class DownloadService {
     String? customPath,
   }) async {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
-    final savePath = customPath ?? path.join(await downloadDirectory, fileName);
+    // 远端文件名可能含 Windows 非法字符或超长，需清洗后再拼本地落地路径。
+    // customPath 由调用方给出，视为已确定的完整路径，不做清洗。
+    final savePath =
+        customPath ??
+        path.join(await downloadDirectory, sanitizeFileName(fileName));
 
     final task = DownloadTask(
       id: id,

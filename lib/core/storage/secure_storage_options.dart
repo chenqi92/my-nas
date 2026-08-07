@@ -1,11 +1,10 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:my_nas/core/storage/fallback_box_key.dart';
 import 'package:my_nas/core/utils/logger.dart';
 
 /// Shared secure storage configuration for credentials and other sensitive data.
@@ -51,12 +50,6 @@ class ResilientSecureStorage {
 
   bool get _canUseFallback => kDebugMode && Platform.isMacOS;
 
-  List<int> _deriveFallbackKey() {
-    final material =
-        '${Platform.localHostname}|mynas-secure-storage-debug-fallback|v1';
-    return sha256.convert(utf8.encode(material)).bytes;
-  }
-
   Future<Box<String>> _getFallbackBox() async {
     if (_fallbackBox != null && _fallbackBox!.isOpen) return _fallbackBox!;
     return _fallbackInit ??= _openFallbackBox();
@@ -64,9 +57,11 @@ class ResilientSecureStorage {
 
   Future<Box<String>> _openFallbackBox() async {
     try {
-      final box = await Hive.openBox<String>(
+      final box = await FallbackBoxKey.openBox(
         _fallbackBoxName,
-        encryptionCipher: HiveAesCipher(_deriveFallbackKey()),
+        domain: 'mynas-secure-storage-debug-fallback',
+        legacyMaterial:
+            '${Platform.localHostname}|mynas-secure-storage-debug-fallback|v1',
       );
       _fallbackBox = box;
       return box;

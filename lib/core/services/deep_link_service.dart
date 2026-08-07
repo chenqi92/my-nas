@@ -10,8 +10,11 @@ import 'package:my_nas/features/music/presentation/providers/music_player_provid
 
 /// Trakt OAuth 回调数据
 class TraktOAuthCallback {
-  const TraktOAuthCallback({required this.code});
+  const TraktOAuthCallback({required this.code, this.state});
   final String code;
+
+  /// 回调携带的 CSRF 令牌，由 provider 与发起授权时保存的值比对
+  final String? state;
 }
 
 /// Trakt OAuth 回调流
@@ -92,7 +95,7 @@ class DeepLinkService {
   }
 
   /// 处理 Trakt OAuth 回调
-  /// URL 格式: mynas://trakt/callback?code=AUTHORIZATION_CODE
+  /// URL 格式: mynas://trakt/callback?code=AUTHORIZATION_CODE&state=CSRF_TOKEN
   void _handleTraktCallback(Uri uri) {
     final code = uri.queryParameters['code'];
     if (code == null || code.isEmpty) {
@@ -101,7 +104,9 @@ class DeepLinkService {
     }
 
     logger.i('DeepLinkService: Received Trakt OAuth code');
-    _traktCallbackController.add(TraktOAuthCallback(code: code));
+    _traktCallbackController.add(
+      TraktOAuthCallback(code: code, state: uri.queryParameters['state']),
+    );
   }
 
   /// 处理音乐控制命令
