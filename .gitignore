@@ -31,7 +31,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-pubspec.lock
+# pubspec.lock 纳入版本控制（应用项目，锁定依赖解析结果）
 
 # Symbolication related
 app.*.symbols

@@ -12,6 +12,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/debug_log.dart';
+import 'package:my_nas/core/utils/nas_path.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 import 'package:my_nas/features/music/data/services/live_activity_service.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
@@ -28,7 +29,6 @@ import 'package:my_nas/features/music/presentation/providers/music_player_provid
 import 'package:my_nas/features/music/presentation/providers/music_scraper_provider.dart';
 import 'package:my_nas/main.dart' show audioHandler;
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
-import 'package:path/path.dart' as p;
 
 /// 自动刮削对话框
 ///
@@ -292,8 +292,9 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
 
     final fileSystem = widget.fileSystem!;
     final musicPath = widget.music.path;
-    final musicDir = p.dirname(musicPath);
-    final baseName = p.basenameWithoutExtension(musicPath);
+    // 远端 NAS 路径用 / 分隔；不能用 p.dirname（Windows 宿主上会混入 \）
+    final musicDir = nasPathDirname(musicPath);
+    final baseName = nasPathBasenameWithoutExtension(musicPath);
 
     var completedSteps = 0;
     final totalSteps =
@@ -431,7 +432,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       final ext = _cover!.coverUrl.contains('.png') ? 'png' : 'jpg';
 
       // 尝试保存为 folder.jpg，如果已存在则保存为 {filename}-cover.jpg
-      final folderCoverPath = p.join(musicDir, 'folder.$ext');
+      final folderCoverPath = nasPathJoin(musicDir, 'folder.$ext');
       var exists = false;
       try {
         await fileSystem.getFileInfo(folderCoverPath);
@@ -441,7 +442,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       }
 
       final coverPath = exists
-          ? p.join(musicDir, '$baseName-cover.$ext')
+          ? nasPathJoin(musicDir, '$baseName-cover.$ext')
           : folderCoverPath;
 
       await fileSystem.writeFile(coverPath, coverData);
@@ -742,7 +743,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       final lrcContent = _lyrics!.lrcContent ?? _lyrics!.plainText ?? '';
       if (lrcContent.isEmpty) return;
 
-      final lrcPath = p.join(musicDir, '$baseName.lrc');
+      final lrcPath = nasPathJoin(musicDir, '$baseName.lrc');
       // 使用 UTF-8 编码保存歌词文件
       final utf8Bytes = const Utf8Encoder().convert(lrcContent);
       await fileSystem.writeFile(lrcPath, Uint8List.fromList(utf8Bytes));

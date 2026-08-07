@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/nas_path.dart';
 import 'package:my_nas/features/music/data/services/audiotags_metadata_writer.dart';
 import 'package:my_nas/features/music/data/services/ffmpeg_metadata_writer.dart';
 import 'package:my_nas/features/music/data/services/metadata_write_lock.dart';
@@ -172,7 +173,7 @@ class UnifiedMetadataWriter implements MusicMetadataWriter {
   }) async {
     await _ensureInitialized();
 
-    final ext = p.extension(remotePath).toLowerCase();
+    final ext = nasPathExtension(remotePath).toLowerCase();
 
     if (!isFormatSupported(ext)) {
       return NasMetadataWriteResult(
@@ -307,8 +308,9 @@ class UnifiedMetadataWriter implements MusicMetadataWriter {
     String remotePath,
     void Function(double progress) onProgress,
   ) async {
-    final directory = p.dirname(remotePath);
-    final fileName = p.basename(remotePath);
+    // 远端路径用 / 分隔，不能用 p.dirname/p.basename（Windows 宿主上会混入 \）
+    final directory = nasPathDirname(remotePath);
+    final fileName = nasPathBasename(remotePath);
 
     onProgress(0.0);
 

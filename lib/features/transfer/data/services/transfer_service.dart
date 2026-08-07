@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/nas_path.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/transfer/data/services/media_cache_service.dart';
@@ -168,7 +169,8 @@ class TransferService {
         fileName: fileName,
         fileSize: fileSize,
         targetSourceId: targetSourceId,
-        targetPath: p.join(targetPath, fileName),
+        // 上传目标是远端 NAS 路径，用 / 拼接（Windows 宿主上 p.join 会混入 \）
+        targetPath: nasPathJoin(targetPath, fileName),
         createdAt: DateTime.now(),
         assetId: assetId,
         songId: songId,
@@ -203,7 +205,8 @@ class TransferService {
     if (!_initialized) await init();
 
     try {
-      final fileName = p.basename(sourcePath);
+      // sourcePath 是远端路径，取名用 POSIX 风格；targetPath 是本机目录，用平台风格
+      final fileName = nasPathBasename(sourcePath);
       final task = TransferTask(
         id: const Uuid().v4(),
         type: TransferType.download,
@@ -249,7 +252,7 @@ class TransferService {
     }
 
     try {
-      final fileName = p.basename(sourcePath);
+      final fileName = nasPathBasename(sourcePath);
       final cachePath = await _cacheService.getCacheFilePath(sourceId, sourcePath, mediaType);
 
       final task = TransferTask(
@@ -574,7 +577,7 @@ class TransferService {
     var lastTime = DateTime.now();
     await fs.upload(
       localFile.path,
-      p.dirname(task.targetPath),
+      nasPathDirname(task.targetPath),
       fileName: task.fileName,
       onProgress: (sent, total) {
         if (_isInterrupted(task)) throw const _TransferInterrupted();

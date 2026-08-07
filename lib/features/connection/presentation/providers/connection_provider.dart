@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/storage/auth_storage_service.dart';
 import 'package:my_nas/core/storage/storage_service.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -319,7 +320,8 @@ class ConnectionStateNotifier extends StateNotifier<NasConnectionState> {
       username: credentials.username,
       password: credentials.password,
       useSsl: connection.useSsl,
-      verifySSL: false,
+      // 跟随全局「信任自签名证书」开关，不硬编码 false
+      verifySSL: !InsecureHttpClient.trustSelfSigned,
       rememberLogin: true,
       rememberDevice: rememberDevice,
       connectionId: credentials.connectionId,

@@ -11,6 +11,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/connection/presentation/providers/connection_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_adapter.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
+import 'package:my_nas/shared/providers/source_defaults_provider.dart';
 import 'package:my_nas/shared/utils/form_l10n.dart';
 
 class ConnectionPage extends ConsumerStatefulWidget {
@@ -68,7 +69,9 @@ class _ConnectionPageState extends ConsumerState<ConnectionPage>
           username: _usernameController.text.trim(),
           password: _passwordController.text,
           useSsl: _useSsl,
-          verifySSL: false,
+          // 跟随全局「信任自签名证书」开关，不硬编码 false（即 allowSelfSigned=true）；
+          // 自签名端点由 TlsTrustStore 的确认弹窗按指纹固定。
+          verifySSL: !ref.read(trustSelfSignedCertProvider),
           rememberLogin: _rememberLogin,
           rememberDevice: _rememberDevice,
         );

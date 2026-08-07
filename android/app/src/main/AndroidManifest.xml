@@ -35,11 +35,16 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
+    <!--
+      networkSecurityConfig 生效时 usesCleartextTraffic 被忽略（API 24+），
+      保留该属性只为兼容读取 manifest 的构建期检查工具；实际策略见 res/xml/network_security_config.xml。
+    -->
     <application
         android:label="MyNAS"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:banner="@drawable/tv_banner"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="true">
         <!-- Android Auto / Automotive OS：声明本应用提供媒体浏览服务 -->
         <meta-data

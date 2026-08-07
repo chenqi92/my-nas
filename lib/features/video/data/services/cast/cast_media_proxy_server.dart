@@ -20,11 +20,14 @@ class CastMediaProxyServer {
   /// 服务器端口
   final int port;
 
-  /// HTTP 服务器实例
-  HttpServer? _server;
+  /// 已绑定的监听套接字（loopback + 当前 LAN 地址）
+  final List<HttpServer> _servers = [];
 
   /// 是否正在运行
-  bool get isRunning => _server != null;
+  bool get isRunning => _servers.isNotEmpty;
+
+  /// 当前已绑定的 LAN 地址，网络切换后用于判断是否需要重新绑定
+  String? _boundLanIp;
 
   /// 注册的媒体流
   final Map<String, _StreamRegistration> _streams = {};
@@ -53,14 +56,46 @@ class CastMediaProxyServer {
     }
 
     try {
-      final info = NetworkInfo();
-      _localIp = await info.getWifiIP();
+      // getWifiIP 在有线连接 / 桌面端可能返回 null 或抛插件异常，回退到枚举网卡
+      final wifiIp = await AppError.guard(
+        () => NetworkInfo().getWifiIP(),
+        action: 'getWifiIP',
+      );
+      _localIp = wifiIp ?? await _firstPrivateIpv4();
       _localIpCachedAt = DateTime.now();
       return _localIp;
     } catch (e, st) {
       AppError.handle(e, st, 'getLocalIp');
       return null;
     }
+  }
+
+  /// 枚举网卡取第一个私有网段 IPv4（有线连接下 getWifiIP 会返回 null）
+  Future<String?> _firstPrivateIpv4() async {
+    final interfaces = await NetworkInterface.list(
+      type: InternetAddressType.IPv4,
+      includeLoopback: false,
+      includeLinkLocal: false,
+    );
+
+    for (final interface in interfaces) {
+      for (final address in interface.addresses) {
+        if (_isPrivateIpv4(address.address)) return address.address;
+      }
+    }
+    return null;
+  }
+
+  /// 判断是否为 RFC1918 私有地址（只在局域网内暴露代理）
+  bool _isPrivateIpv4(String ip) {
+    final parts = ip.split('.');
+    if (parts.length != 4) return false;
+    final first = int.tryParse(parts[0]);
+    final second = int.tryParse(parts[1]);
+    if (first == null || second == null) return false;
+    return first == 10 ||
+        (first == 172 && second >= 16 && second <= 31) ||
+        (first == 192 && second == 168);
   }
 
   /// 清除 IP 缓存（网络变化时调用）
@@ -84,7 +119,7 @@ class CastMediaProxyServer {
       ..get('/subtitle/<token>', _handleSubtitleRequest)
       ..head('/subtitle/<token>', _handleSubtitleHeadRequest)
       // 健康检查
-      ..get('/health', (shelf.Request request) => shelf.Response.ok('OK'));
+      ..get('/health', _handleHealthRequest);
 
     // CORS 中间件
     shelf.Handler corsHandler(shelf.Handler innerHandler) => (request) async {
@@ -100,18 +135,28 @@ class CastMediaProxyServer {
         return response.change(headers: _corsHeaders);
       };
 
+    // 不加 shelf.logRequests()：请求行包含 URL 中的 token（LAN 代理访问凭据），
+    // 会被 logger 落盘到 app.log。
     final handler = const shelf.Pipeline()
-        .addMiddleware(shelf.logRequests())
         .addMiddleware(corsHandler)
         .addHandler(router.call);
 
     try {
-      _server = await shelf_io.serve(
-        handler,
-        InternetAddress.anyIPv4,
-        port,
-        shared: true,
-      );
+      // 只绑定 loopback + 当前 LAN 地址，不用 InternetAddress.anyIPv4：
+      // anyIPv4 会在所有网卡（含 VPN / 热点 / 公网网卡）上监听。
+      final lanIp = await getLocalIp();
+      final addresses = <InternetAddress>[InternetAddress.loopbackIPv4];
+      if (lanIp != null) {
+        final lanAddress = InternetAddress.tryParse(lanIp);
+        if (lanAddress != null) addresses.add(lanAddress);
+      }
+
+      for (final address in addresses) {
+        _servers.add(
+          await shelf_io.serve(handler, address, port, shared: true),
+        );
+      }
+      _boundLanIp = lanIp;
 
       // 启动自动清理定时器（每30分钟清理一次过期流）
       _cleanupTimer = Timer.periodic(
@@ -119,26 +164,62 @@ class CastMediaProxyServer {
         (_) => cleanupExpiredStreams(),
       );
 
-      logger.i('投屏代理服务器启动成功: http://0.0.0.0:$port');
+      if (lanIp == null) {
+        logger.w('投屏代理服务器仅绑定 loopback：未取到局域网 IPv4 地址');
+      } else {
+        logger.i('投屏代理服务器启动成功，已绑定 loopback 与局域网地址，端口 $port');
+      }
     } catch (e, st) {
+      // 部分地址绑定成功时要回收，避免端口悬挂
+      await _closeServers();
       AppError.handle(e, st, 'startCastProxyServer');
       rethrow;
     }
   }
 
+  /// 健康检查（不泄露主机名/路径等信息）
+  shelf.Response _handleHealthRequest(shelf.Request request) =>
+      shelf.Response.ok('OK');
+
   /// CORS 响应头
+  ///
+  /// 不下发 `Access-Control-Allow-Origin`：DLNA / AirPlay 设备不是浏览器，不走
+  /// 同源策略；给 `*` 只会让局域网内任意网页脚本能读取代理响应内容。
   static const _corsHeaders = <String, String>{
-    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
     'Access-Control-Allow-Headers': 'Range, Content-Type',
     'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Accept-Ranges',
   };
 
   /// 确保服务器运行
+  ///
+  /// 网络切换后 LAN 地址会变，此时重新绑定，否则投屏 URL 指向已失效的地址。
   Future<void> ensureRunning() async {
     if (!isRunning) {
       await start();
+      return;
     }
+
+    final currentIp = await getLocalIp(forceRefresh: true);
+    if (currentIp != _boundLanIp) {
+      logger.i('局域网地址变化，重新绑定投屏代理服务器');
+      await _closeServers();
+      _cleanupTimer?.cancel();
+      _cleanupTimer = null;
+      await start();
+    }
+  }
+
+  /// 关闭所有监听套接字（保留已注册的流）
+  Future<void> _closeServers() async {
+    for (final server in _servers) {
+      await AppError.guard(
+        () => server.close(force: true),
+        action: 'closeCastProxyServer',
+      );
+    }
+    _servers.clear();
+    _boundLanIp = null;
   }
 
   /// 停止服务器
@@ -148,8 +229,7 @@ class CastMediaProxyServer {
 
     if (!isRunning) return;
 
-    await _server?.close(force: true);
-    _server = null;
+    await _closeServers();
     _streams.clear();
     clearIpCache();
     logger.i('投屏代理服务器已停止');
@@ -157,12 +237,15 @@ class CastMediaProxyServer {
 
   /// 注册媒体流
   /// 返回访问 token
+  ///
+  /// [createdAt] 仅用于测试注入注册时间以验证 token 时效，生产代码不要传。
   String registerStream({
     required String path,
     required NasFileSystem fileSystem,
     String? mimeType,
     int? fileSize,
     String? subtitlePath,
+    DateTime? createdAt,
   }) {
     final token = const Uuid().v4();
 
@@ -172,7 +255,7 @@ class CastMediaProxyServer {
       mimeType: mimeType ?? _getMimeType(path),
       fileSize: fileSize,
       subtitlePath: subtitlePath,
-      createdAt: DateTime.now(),
+      createdAt: createdAt ?? DateTime.now(),
     );
 
     // 不记录 token：它是 LAN 代理的访问凭据，日志会落盘到 app.log。
@@ -203,14 +286,31 @@ class CastMediaProxyServer {
     return 'http://$localIp:$port/subtitle/$token';
   }
 
+  /// token 有效期：与 [cleanupExpiredStreams] 默认值一致
+  static const _tokenMaxAge = Duration(hours: 2);
+
+  /// 按 token 取注册信息，超期视为无效并立即移除
+  ///
+  /// 定时清理每 30 分钟才跑一次，中间窗口内过期 token 仍可用，所以每次请求都校验。
+  _StreamRegistration? _resolveRegistration(String? token) {
+    if (token == null) return null;
+
+    final registration = _streams[token];
+    if (registration == null) return null;
+
+    if (DateTime.now().difference(registration.createdAt) > _tokenMaxAge) {
+      _streams.remove(token);
+      logger.w('投屏 token 已过期，拒绝请求');
+      return null;
+    }
+
+    return registration;
+  }
+
   /// 处理媒体流请求
   Future<shelf.Response> _handleStreamRequest(shelf.Request request) async {
     final token = request.params['token'];
-    if (token == null) {
-      return shelf.Response.notFound('Token required');
-    }
-
-    final registration = _streams[token];
+    final registration = _resolveRegistration(token);
     if (registration == null) {
       return shelf.Response.notFound('Stream not found');
     }
@@ -234,7 +334,6 @@ class CastMediaProxyServer {
       final headers = <String, String>{
         'Content-Type': registration.mimeType,
         'Accept-Ranges': 'bytes',
-        'Access-Control-Allow-Origin': '*',
       };
 
       // 处理 Range 响应
@@ -263,19 +362,15 @@ class CastMediaProxyServer {
         headers: headers,
       );
     } catch (e, st) {
-      AppError.handle(e, st, 'handleStreamRequest', {'token': token});
+      // 不把 token 写进 extraData：它是访问凭据，会落盘到 app.log
+      AppError.handle(e, st, 'handleStreamRequest', {'path': registration.path});
       return shelf.Response.internalServerError(body: 'Error streaming file: $e');
     }
   }
 
   /// 处理媒体流 HEAD 请求（DLNA 设备经常先发 HEAD 请求获取文件信息）
   Future<shelf.Response> _handleStreamHeadRequest(shelf.Request request) async {
-    final token = request.params['token'];
-    if (token == null) {
-      return shelf.Response.notFound('Token required');
-    }
-
-    final registration = _streams[token];
+    final registration = _resolveRegistration(request.params['token']);
     if (registration == null) {
       return shelf.Response.notFound('Stream not found');
     }
@@ -297,11 +392,7 @@ class CastMediaProxyServer {
   /// 处理字幕请求
   Future<shelf.Response> _handleSubtitleRequest(shelf.Request request) async {
     final token = request.params['token'];
-    if (token == null) {
-      return shelf.Response.notFound('Token required');
-    }
-
-    final registration = _streams[token];
+    final registration = _resolveRegistration(token);
     if (registration == null || registration.subtitlePath == null) {
       return shelf.Response.notFound('Subtitle not found');
     }
@@ -315,23 +406,17 @@ class CastMediaProxyServer {
         stream,
         headers: {
           'Content-Type': mimeType,
-          'Access-Control-Allow-Origin': '*',
         },
       );
     } catch (e, st) {
-      AppError.handle(e, st, 'handleSubtitleRequest', {'token': token});
+      AppError.handle(e, st, 'handleSubtitleRequest');
       return shelf.Response.internalServerError(body: 'Error loading subtitle: $e');
     }
   }
 
   /// 处理字幕 HEAD 请求
   Future<shelf.Response> _handleSubtitleHeadRequest(shelf.Request request) async {
-    final token = request.params['token'];
-    if (token == null) {
-      return shelf.Response.notFound('Token required');
-    }
-
-    final registration = _streams[token];
+    final registration = _resolveRegistration(request.params['token']);
     if (registration == null || registration.subtitlePath == null) {
       return shelf.Response.notFound('Subtitle not found');
     }
@@ -384,7 +469,7 @@ class CastMediaProxyServer {
   }
 
   /// 清理过期的流注册
-  void cleanupExpiredStreams({Duration maxAge = const Duration(hours: 2)}) {
+  void cleanupExpiredStreams({Duration maxAge = _tokenMaxAge}) {
     final now = DateTime.now();
     final expiredTokens = <String>[];
 

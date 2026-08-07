@@ -14,6 +14,9 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 
 final _logger = logger;
 
+/// PT 站是否允许无效证书：跟随源级 `verifySSL`，未配置时按安全默认（校验）。
+///
+/// 不硬编码 true：PT 站请求头带 Cookie / passkey，MITM 即凭证泄露。
 bool _allowInvalidCertificatesForSource(SourceEntity source) {
   final verifySSL = source.extraConfig?['verifySSL'];
   if (verifySSL is bool) return !verifySSL;
@@ -115,16 +118,15 @@ class MTeamApi extends PTSiteApi {
   /// 创建禁用自动重定向的 IOClient，以便更好地处理 302 等状态码
   static http.Client _createIOClient({required bool allowInvalidCertificates}) {
     final httpClient = HttpClient();
-    if (allowInvalidCertificates) {
-      // ignore: cascade_invocations
-      httpClient.badCertificateCallback = (cert, host, port) =>
-          TlsTrustStore.allowsInvalidCertificate(
-            cert,
-            host,
-            port,
-            allowSelfSigned: true,
-          );
-    }
+    // 严格模式也安装回调：否则用户已按端点确认并固定的指纹会被忽略。
+    // ignore: cascade_invocations
+    httpClient.badCertificateCallback = (cert, host, port) =>
+        TlsTrustStore.allowsInvalidCertificate(
+          cert,
+          host,
+          port,
+          allowSelfSigned: allowInvalidCertificates,
+        );
     // ignore: cascade_invocations
     httpClient.connectionTimeout = const Duration(seconds: 30);
     // 禁用自动重定向，以便能够检测到 302 等认证问题
@@ -891,16 +893,15 @@ class GenericPTSiteApi extends PTSiteApi {
 
   HttpClient _createHttpClient() {
     final httpClient = HttpClient()
-      ..connectionTimeout = const Duration(seconds: 30);
-    if (_allowInvalidCertificatesForSource(source)) {
-      httpClient.badCertificateCallback = (cert, host, port) =>
+      ..connectionTimeout = const Duration(seconds: 30)
+      // 严格模式也安装回调：否则用户已按端点确认并固定的指纹会被忽略。
+      ..badCertificateCallback = (cert, host, port) =>
           TlsTrustStore.allowsInvalidCertificate(
             cert,
             host,
             port,
-            allowSelfSigned: true,
+            allowSelfSigned: _allowInvalidCertificatesForSource(source),
           );
-    }
     return httpClient;
   }
 

@@ -13,6 +13,7 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart'
         updateMetadata;
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/nas_path.dart';
 import 'package:my_nas/features/music/data/services/ffmpeg_audio_tag_service.dart';
 import 'package:my_nas/features/music/data/services/music_audio_cache_service.dart';
 import 'package:my_nas/features/music/data/services/ncm_decrypt_service.dart';
@@ -164,13 +165,13 @@ class MusicTagWriterService {
 
   /// 检查文件格式是否支持写入
   bool isFormatSupported(String filePath) {
-    final ext = p.extension(filePath).toLowerCase();
+    final ext = nasPathExtension(filePath).toLowerCase();
     return SupportedAudioFormat.fromExtension(ext) != null;
   }
 
   /// 获取支持的格式信息
   SupportedAudioFormat? getFormat(String filePath) {
-    final ext = p.extension(filePath).toLowerCase();
+    final ext = nasPathExtension(filePath).toLowerCase();
     return SupportedAudioFormat.fromExtension(ext);
   }
 
@@ -381,7 +382,7 @@ class MusicTagWriterService {
 
     final format = getFormat(remotePath);
     if (format == null) {
-      return MusicTagWriteResult.failure(appL10n.musicTagWriterUnsupportedFormat(p.extension(remotePath)));
+      return MusicTagWriteResult.failure(appL10n.musicTagWriterUnsupportedFormat(nasPathExtension(remotePath)));
     }
 
     if (tagData.isEmpty) {
@@ -398,7 +399,7 @@ class MusicTagWriterService {
       logger.i('MusicTagWriterService: 开始写入标签到 NAS 文件 $remotePath');
 
       // 1. 下载整个文件到本地临时目录
-      final ext = p.extension(remotePath).toLowerCase();
+      final ext = nasPathExtension(remotePath).toLowerCase();
       final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(999999)}';
       tempFile = File(p.join(_tempDir.path, 'tag_edit_$uniqueId$ext'));
 
@@ -510,9 +511,10 @@ class MusicTagWriterService {
       }
 
       // 6. 上传新文件到 NAS（与原文件同目录，但扩展名不同）
-      final baseName = p.basenameWithoutExtension(remotePath);
-      final dirPath = p.dirname(remotePath);
-      final newPath = p.join(dirPath, '$baseName$outputExt');
+      // 远端路径用 / 分隔；不能用 p.dirname/p.join（Windows 宿主上会混入 \）
+      final baseName = nasPathBasenameWithoutExtension(remotePath);
+      final dirPath = nasPathDirname(remotePath);
+      final newPath = nasPathJoin(dirPath, '$baseName$outputExt');
 
       logger.d('MusicTagWriterService: 上传转换后的文件到 $newPath');
       final modifiedData = await tempAudioFile.readAsBytes();

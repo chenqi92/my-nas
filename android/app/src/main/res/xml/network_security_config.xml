@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  网络安全策略。
+
+  base-config 保留明文放行：用户自行配置的 NAS / 下载器 / PT 站大量是局域网 HTTP
+  地址（如 http://192.168.1.100:5000），而 network-security-config 的 <domain> 只支持
+  精确域名或 IP 字面量，不支持 CIDR / 通配，无法表达「仅私有网段放行」，也没有运行时
+  追加例外的 API。若 base-config 置为 false，所有局域网 HTTP 源会直接不可用。
+
+  因此改为对本应用**硬编码的公网端点**逐个禁明文（cleartextTrafficPermitted="false"）：
+  这些端点请求头带 API key / OAuth token / Cookie，被 DNS 劫持降级到 HTTP 时凭证会明文
+  外泄。禁明文后平台层直接拦截降级请求。
+
+  trust-anchors 只含 system：用户/设备安装的 CA 不参与校验。自签名 NAS 证书由 Dart 层
+  按指纹固定（lib/core/network/tls_trust_store.dart），不依赖系统信任库。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- 刮削 / 元数据 -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">themoviedb.org</domain>
+        <domain includeSubdomains="true">tmdb.org</domain>
+        <domain includeSubdomains="true">douban.com</domain>
+        <domain includeSubdomains="true">musicbrainz.org</domain>
+        <domain includeSubdomains="true">coverartarchive.org</domain>
+        <domain includeSubdomains="true">acoustid.org</domain>
+        <domain includeSubdomains="true">opensubtitles.com</domain>
+    </domain-config>
+
+    <!-- 媒体追踪 / 账号（OAuth token、session） -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">trakt.tv</domain>
+        <domain includeSubdomains="true">plex.tv</domain>
+        <domain includeSubdomains="true">last.fm</domain>
+        <domain includeSubdomains="true">audioscrobbler.com</domain>
+        <domain includeSubdomains="true">listenbrainz.org</domain>
+    </domain-config>
+
+    <!-- 音乐刮削源（酷我 kuwo.cn 仅提供 HTTP，不列入，由 base-config 放行） -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">163.com</domain>
+        <domain includeSubdomains="true">kugou.com</domain>
+        <domain includeSubdomains="true">migu.cn</domain>
+        <domain includeSubdomains="true">qq.com</domain>
+    </domain-config>
+
+    <!-- PT 站 API（Cookie / passkey） -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">m-team.cc</domain>
+    </domain-config>
+
+    <!-- DoH 解析器与更新检查 -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">cloudflare-dns.com</domain>
+        <domain includeSubdomains="true">dns.google</domain>
+        <domain includeSubdomains="true">doh.pub</domain>
+        <domain includeSubdomains="true">alidns.com</domain>
+        <domain includeSubdomains="true">github.com</domain>
+        <domain includeSubdomains="true">githubusercontent.com</domain>
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">openstreetmap.org</domain>
+    </domain-config>
+</network-security-config>

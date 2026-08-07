@@ -91,9 +91,13 @@ class TlsTrustStore {
 
   /// Callback used by all HTTP stacks.
   ///
-  /// A previously approved pin is honored even while the legacy global
-  /// self-signed switch is off. With the legacy switch on, the existing TOFU
-  /// behavior is preserved for compatibility.
+  /// 只放行用户已确认并固定的指纹。未固定的证书一律拒绝本次握手：
+  /// 该回调是同步的，无法在此等待用户确认，因此由 [requestTrustForEndpoint]
+  /// 的确认队列在连接失败后补上弹窗，用户同意后固定指纹并自动重试。
+  ///
+  /// [allowSelfSigned] 为 legacy 全局「信任自签名证书」开关。它**不再**静默固定
+  /// 证书（首连即被 MITM 会被永久劫持），只决定是否主动把该端点排进确认队列，
+  /// 以覆盖没有重试包装的调用方。
   static bool allowsInvalidCertificate(
     X509Certificate certificate,
     String host,
@@ -113,12 +117,29 @@ class TlsTrustStore {
       return matches;
     }
 
-    if (!allowSelfSigned) return false;
+    if (allowSelfSigned) {
+      logger.w('TlsTrustStore: $key 证书未固定，改为请求用户确认（不再静默信任）');
+      _enqueueTrustFromSyncCallback(host, port);
+    }
+    return false;
+  }
 
-    _pins[key] = fingerprint;
-    logger.i('TlsTrustStore: 全局自签名开关已信任并固定证书 $key');
-    unawaited(_persist());
-    return true;
+  /// 同步回调里发起确认请求：无法 await，故只排队，本次握手仍然失败。
+  ///
+  /// 同一端点在确认完成前只探测一次，避免重试风暴刷出多个弹窗。
+  static final Set<String> _inFlightSyncPrompts = {};
+
+  static void _enqueueTrustFromSyncCallback(String host, int port) {
+    final key = endpointKey(host, port);
+    if (!_inFlightSyncPrompts.add(key)) return;
+
+    unawaited(
+      requestTrustForEndpoint(Uri(scheme: 'https', host: host, port: port))
+          .catchError((Object e, StackTrace st) {
+        logger.w('TlsTrustStore: 请求确认 $key 的证书失败', e, st);
+        return TlsTrustDecision.notRequired;
+      }).whenComplete(() => _inFlightSyncPrompts.remove(key)),
+    );
   }
 
   /// Inspects an HTTPS endpoint after a failed connection. A prompt is queued

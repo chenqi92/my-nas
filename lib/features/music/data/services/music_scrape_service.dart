@@ -7,13 +7,13 @@ import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/nas_path.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
 import 'package:my_nas/features/music/data/services/music_scraper_manager_service.dart';
 import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
-import 'package:path/path.dart' as p;
 
 /// 音乐刮削进度事件
 class MusicScrapeProgress {
@@ -467,9 +467,9 @@ class MusicScrapeService {
     if (fileSystem == null) return false;
 
     try {
-      final musicDir = p.dirname(musicPath);
-      final baseName = p.basenameWithoutExtension(musicPath);
-      final lrcPath = p.join(musicDir, '$baseName.lrc');
+      final musicDir = nasPathDirname(musicPath);
+      final baseName = nasPathBasenameWithoutExtension(musicPath);
+      final lrcPath = nasPathJoin(musicDir, '$baseName.lrc');
 
       // 尝试获取文件信息，如果成功则文件存在
       await fileSystem.getFileInfo(lrcPath);
@@ -488,11 +488,11 @@ class MusicScrapeService {
     NasFileSystem? fileSystem,
   ) async {
     if (fileSystem == null) return null;
-    final musicDir = p.dirname(track.filePath);
-    final baseName = p.basenameWithoutExtension(track.filePath);
+    final musicDir = nasPathDirname(track.filePath);
+    final baseName = nasPathBasenameWithoutExtension(track.filePath);
     const exts = ['jpg', 'jpeg', 'png', 'webp'];
     for (final ext in exts) {
-      final coverPath = p.join(musicDir, '$baseName-cover.$ext');
+      final coverPath = nasPathJoin(musicDir, '$baseName-cover.$ext');
       try {
         await fileSystem.getFileInfo(coverPath);
       } catch (_) {
@@ -556,9 +556,9 @@ class MusicScrapeService {
           // 让其它播放器（VLC、PotPlayer、Jellyfin 等）也能识别封面
           if (fileSystem != null) {
             try {
-              final musicDir = p.dirname(track.filePath);
-              final baseName = p.basenameWithoutExtension(track.filePath);
-              final coverPath = p.join(musicDir, '$baseName-cover.jpg');
+              final musicDir = nasPathDirname(track.filePath);
+              final baseName = nasPathBasenameWithoutExtension(track.filePath);
+              final coverPath = nasPathJoin(musicDir, '$baseName-cover.jpg');
               await fileSystem.writeFile(coverPath, coverData);
             } catch (e, st) {
               logger.w('MusicScrapeService: 回写 sidecar 封面失败: $e');
@@ -581,9 +581,9 @@ class MusicScrapeService {
         final lrcContent =
             result.lyrics!.lrcContent ?? result.lyrics!.plainText ?? '';
         if (lrcContent.isNotEmpty) {
-          final musicDir = p.dirname(track.filePath);
-          final baseName = p.basenameWithoutExtension(track.filePath);
-          final lrcPath = p.join(musicDir, '$baseName.lrc');
+          final musicDir = nasPathDirname(track.filePath);
+          final baseName = nasPathBasenameWithoutExtension(track.filePath);
+          final lrcPath = nasPathJoin(musicDir, '$baseName.lrc');
           final utf8Bytes = const Utf8Encoder().convert(lrcContent);
           await fileSystem.writeFile(lrcPath, Uint8List.fromList(utf8Bytes));
         }

@@ -190,14 +190,15 @@ void main() {
     });
 
     group('CORS headers', () {
-      test('should include CORS headers in response', () async {
+      test('should not expose wildcard allow-origin', () async {
         await server.start();
 
         final response = await http.get(
           Uri.parse('http://localhost:18899/health'),
         );
 
-        expect(response.headers['access-control-allow-origin'], equals('*'));
+        // 投屏设备不是浏览器，无需 CORS 放行；`*` 会让局域网内任意网页读取代理响应
+        expect(response.headers.containsKey('access-control-allow-origin'), isFalse);
       });
 
       test('should handle OPTIONS preflight request', () async {
@@ -214,6 +215,80 @@ void main() {
           response.headers.value('access-control-allow-methods'),
           isNotNull,
         );
+      });
+    });
+
+    group('Token 时效校验', () {
+      test('过期 token 的 HEAD 请求返回 404', () async {
+        await server.start();
+
+        final token = server.registerStream(
+          path: '/test/video.mp4',
+          fileSystem: mockFileSystem,
+          fileSize: 1024,
+          createdAt: DateTime.now().subtract(const Duration(hours: 3)),
+        );
+
+        final response = await http.head(
+          Uri.parse('http://localhost:18899/stream/$token'),
+        );
+
+        expect(response.statusCode, equals(404));
+      });
+
+      test('过期 token 的 GET 请求返回 404', () async {
+        await server.start();
+
+        final token = server.registerStream(
+          path: '/test/video.mp4',
+          fileSystem: mockFileSystem,
+          fileSize: 1024,
+          createdAt: DateTime.now().subtract(const Duration(hours: 3)),
+        );
+
+        final response = await http.get(
+          Uri.parse('http://localhost:18899/stream/$token'),
+        );
+
+        expect(response.statusCode, equals(404));
+      });
+
+      test('过期 token 的字幕请求返回 404', () async {
+        await server.start();
+
+        final token = server.registerStream(
+          path: '/test/video.mp4',
+          fileSystem: mockFileSystem,
+          subtitlePath: '/test/video.srt',
+          createdAt: DateTime.now().subtract(const Duration(hours: 3)),
+        );
+
+        final response = await http.get(
+          Uri.parse('http://localhost:18899/subtitle/$token'),
+        );
+
+        expect(response.statusCode, equals(404));
+      });
+
+      test('未过期 token 仍可访问', () async {
+        await server.start();
+
+        when(
+          () => mockFileSystem.getFileStream(any(), range: any(named: 'range')),
+        ).thenAnswer((_) async => const Stream<List<int>>.empty());
+
+        final token = server.registerStream(
+          path: '/test/video.mp4',
+          fileSystem: mockFileSystem,
+          fileSize: 1024,
+          createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
+        );
+
+        final response = await http.head(
+          Uri.parse('http://localhost:18899/stream/$token'),
+        );
+
+        expect(response.statusCode, equals(200));
       });
     });
   });

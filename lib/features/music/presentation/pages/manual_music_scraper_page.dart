@@ -10,6 +10,7 @@ import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/debug_log.dart';
+import 'package:my_nas/core/utils/nas_path.dart';
 import 'package:my_nas/features/music/data/services/live_activity_service.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
 import 'package:my_nas/features/music/data/services/music_database_service.dart';
@@ -31,7 +32,6 @@ import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
-import 'package:path/path.dart' as p;
 
 /// 手动音乐刮削页面
 class ManualMusicScraperPage extends ConsumerStatefulWidget {
@@ -349,8 +349,9 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
     setState(() => _isScraping = true);
 
     try {
-      final musicDir = p.dirname(widget.music.path);
-      final baseName = p.basenameWithoutExtension(widget.music.path);
+      // 远端 NAS 路径用 / 分隔；不能用 p.dirname（Windows 宿主上会混入 \）
+      final musicDir = nasPathDirname(widget.music.path);
+      final baseName = nasPathBasenameWithoutExtension(widget.music.path);
 
       Uint8List? coverData;
       String? coverMimeType;
@@ -684,7 +685,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
     try {
       final ext = _selectedCover!.coverUrl.contains('.png') ? 'png' : 'jpg';
 
-      final folderCoverPath = p.join(musicDir, 'folder.$ext');
+      final folderCoverPath = nasPathJoin(musicDir, 'folder.$ext');
       var exists = false;
       try {
         await fileSystem.getFileInfo(folderCoverPath);
@@ -693,8 +694,9 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
         exists = false;
       }
 
-      final coverPath =
-          exists ? p.join(musicDir, '$baseName-cover.$ext') : folderCoverPath;
+      final coverPath = exists
+          ? nasPathJoin(musicDir, '$baseName-cover.$ext')
+          : folderCoverPath;
 
       await fileSystem.writeFile(coverPath, coverData);
     } on Exception catch (e, st) {
@@ -714,7 +716,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
           _selectedLyrics!.lrcContent ?? _selectedLyrics!.plainText ?? '';
       if (lrcContent.isEmpty) return;
 
-      final lrcPath = p.join(musicDir, '$baseName.lrc');
+      final lrcPath = nasPathJoin(musicDir, '$baseName.lrc');
       final utf8Bytes = const Utf8Encoder().convert(lrcContent);
       await fileSystem.writeFile(lrcPath, Uint8List.fromList(utf8Bytes));
     } on Exception catch (e, st) {
