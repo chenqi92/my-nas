@@ -16,12 +16,12 @@ class PlatformCapabilities {
   static bool get isMobile =>
       !kIsWeb && (Platform.isIOS || Platform.isAndroid);
 
-  /// 是否为 Android TV / 电视盒子
+  /// 是否按电视（10-foot UI + D-pad）处理
   ///
-  /// 依赖启动时 TvCapabilities.init() 的探测结果；注意 TV 设备的
-  /// isMobile 也为 true（Android 平台），需要 TV 特化行为时先判本项。
-  static bool get isTV => TvCapabilities.isAndroidTv;
-
+  /// 依赖启动时 TvCapabilities.init() 的探测结果，并包含用户手动 override；
+  /// 注意 TV 设备的 isMobile 也为 true（Android 平台），需要 TV 特化行为时
+  /// 先判本项。override 为 forceOn 时在桌面上也会为 true。
+  static bool get isTV => TvCapabilities.isTvMode;
 
   /// 是否为 Web 平台
   static bool get isWeb => kIsWeb;

@@ -171,12 +171,17 @@ Future<void> _initApp() async {
   MediaKit.ensureInitialized();
 
   // 探测 Android TV / 电视盒子（结果缓存，供 PlatformCapabilities.isTV 使用）
+  // 需在 Hive.initFlutter() 之后：会读 settings box 里的手动 override
   await TvCapabilities.init();
-  if (TvCapabilities.isAndroidTv) {
+  if (TvCapabilities.isTvMode) {
     // 电视上没有触屏/鼠标，强制显示传统焦点高亮，保证遥控器 D-pad 可见焦点框
     FocusManager.instance.highlightStrategy =
         FocusHighlightStrategy.alwaysTraditional;
-    logger.i('Android TV detected: traditional focus highlight enabled');
+    logger.i(
+      'TV mode enabled (device=${TvCapabilities.isTvDevice}, '
+      'override=${TvCapabilities.override.name}): '
+      'traditional focus highlight enabled',
+    );
   }
 
   // Initialize JustAudioMediaKit to use MediaKit as audio backend

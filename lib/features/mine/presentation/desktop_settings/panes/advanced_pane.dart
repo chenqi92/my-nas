@@ -12,10 +12,13 @@ import 'package:my_nas/core/platform/spotlight/spotlight_indexer.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_reindex_coordinator.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_settings.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 import 'package:my_nas/features/mine/presentation/pages/hosts_mapping_page.dart';
 import 'package:my_nas/features/mine/presentation/pages/spotlight_settings_page.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
+import 'package:my_nas/shared/providers/tv_mode_provider.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
+import 'package:my_nas/shared/widgets/atoms/app_segmented.dart';
 import 'package:my_nas/shared/widgets/atoms/app_switch.dart';
 import 'package:my_nas/shared/widgets/atoms/app_tag.dart';
 import 'package:my_nas/shared/widgets/atoms/settings_atoms.dart';
@@ -87,7 +90,8 @@ class _AdvancedPaneState extends ConsumerState<AdvancedPane> {
           children: const [
             _SpotlightRow(),
             _JumpListRow(),
-            _DeepLinkRow(last: true),
+            _DeepLinkRow(),
+            _TvModeRow(last: true),
           ],
         ),
         SetSection(
@@ -255,9 +259,7 @@ class _JumpListRow extends StatelessWidget {
 
 /// 深度链接行：`mynas://` 已在系统注册并由 DeepLinkService 处理（OAuth 回调等）。
 class _DeepLinkRow extends StatelessWidget {
-  const _DeepLinkRow({required this.last});
-
-  final bool last;
+  const _DeepLinkRow();
 
   @override
   Widget build(BuildContext context) {
@@ -265,13 +267,58 @@ class _DeepLinkRow extends StatelessWidget {
     return SetRow(
       title: l.paneAdvancedDeepLinkTitle,
       desc: l.paneAdvancedDeepLinkDesc,
-      last: last,
       trailing: Text(
         l.paneAdvancedDeepLinkRegistered,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: DesignTokens.of(context).text2,
+        ),
+      ),
+    );
+  }
+}
+
+/// TV 模式行：三档 override（自动 / 开 / 关），对应 [TvModeOverride]。
+///
+/// 桌面上打开是查看 / 验证 TV 布局的唯一入口（桌面设置走 pane，不经 MinePage）；
+/// 在自动识别不到的电视盒子上，用户也靠它手动开启。
+class _TvModeRow extends ConsumerWidget {
+  const _TvModeRow({required this.last});
+
+  final bool last;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final override = ref.watch(tvModeOverrideProvider);
+
+    return SetRow(
+      title: l.paneAdvancedTvModeTitle,
+      desc: TvCapabilities.isTvDevice
+          ? l.paneAdvancedTvModeDescDetected
+          : l.paneAdvancedTvModeDesc,
+      last: last,
+      trailing: AppSegmented<TvModeOverride>(
+        value: override,
+        dense: true,
+        options: [
+          AppSegmentedOption(
+            value: TvModeOverride.auto,
+            label: l.paneAdvancedTvModeAuto,
+          ),
+          AppSegmentedOption(
+            value: TvModeOverride.forceOn,
+            label: l.paneAdvancedTvModeOn,
+          ),
+          AppSegmentedOption(
+            value: TvModeOverride.forceOff,
+            label: l.paneAdvancedTvModeOff,
+          ),
+        ],
+        onChanged: (value) => AppError.fireAndForget(
+          ref.read(tvModeOverrideProvider.notifier).setOverride(value),
+          action: 'AdvancedPane.setTvModeOverride',
         ),
       ),
     );

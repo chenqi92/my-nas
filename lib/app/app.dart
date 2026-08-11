@@ -379,7 +379,7 @@ class _MyNasAppState extends ConsumerState<MyNasApp>
           ),
         );
         // TV 10-foot UI：观看距离远，全局轻度放大文字
-        if (TvCapabilities.isAndroidTv) {
+        if (TvCapabilities.isTvMode) {
           content = MediaQuery(
             data: MediaQuery.of(context).copyWith(
               textScaler: const TextScaler.linear(1.1),

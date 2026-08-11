@@ -18,6 +18,7 @@ import 'package:my_nas/shared/services/update_service.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_scaffold.dart';
 import 'package:my_nas/shared/widgets/desktop_shortcuts.dart';
 import 'package:my_nas/shared/widgets/tab_bar_minimize_on_scroll.dart';
+import 'package:my_nas/shared/widgets/tv_shell/tv_scaffold.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
@@ -224,10 +225,13 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     // 处理 UI 风格变化时的原生 Tab Bar 订阅
     _handleUiStyleChange(uiStyle, useNativeTabBar, currentIndex, bottomNavVisible);
 
-    // Shell 布局判断：桌面平台始终走 Rail；移动平台始终走底栏；Web 按宽度。
+    // Shell 布局判断：TV 模式优先；其次桌面平台走 Rail；移动平台走底栏；Web 按宽度。
     // 与 context.isDesktop（屏宽≥1200）解耦，避免桌面端缩窗口时退化为手机布局。
     final Widget scaffold;
-    if (context.isDesktopLayout) {
+    if (context.isTvLayout) {
+      // TV 模式：左侧 Rail + 主内容 + overscan 安全区
+      scaffold = TvScaffold(navigationShell: widget.navigationShell);
+    } else if (context.isDesktopLayout) {
       // 桌面下统一覆盖各 page 的 AppBar 主题：高度 48（vs 56）、字号略减、
       // 去掉默认 elevation，使用扁平边框分隔。各 page 自己用 AppBar()
       // 都会自动应用，无需逐个改。自定义 Container 顶部条不受影响（需要
@@ -621,7 +625,7 @@ class _AnimatedBottomNavState extends State<_AnimatedBottomNav>
   @override
   Widget build(BuildContext context) => SizeTransition(
         sizeFactor: _curve,
-        alignment: Alignment.topLeft,
+        axisAlignment: -1.0,
         child: SlideTransition(
           position: _slide,
           child: FadeTransition(

@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 import 'package:my_nas/features/app_lock/presentation/pages/privacy_security_page.dart';
 import 'package:my_nas/features/book/presentation/pages/book_settings_page.dart';
 import 'package:my_nas/features/book/presentation/pages/book_sources_page.dart';
@@ -42,9 +44,11 @@ import 'package:my_nas/features/video/presentation/providers/live_stream_provide
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
 import 'package:my_nas/shared/pages/favorites_page.dart';
 import 'package:my_nas/shared/providers/language_preference_provider.dart';
+import 'package:my_nas/shared/providers/tv_mode_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_container.dart';
+import 'package:my_nas/shared/widgets/adaptive_list_tile.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
@@ -404,6 +408,8 @@ class MinePage extends ConsumerWidget {
               ),
             ),
           ],
+          _buildDivider(isDark),
+          _TvModeTile(isDark: isDark),
         ],
       ),
       _MineSection(
@@ -1288,6 +1294,146 @@ class _PTSitesTile extends ConsumerWidget {
 }
 
 /// 语言偏好设置组件
+/// TV 模式档位切换：自动 / 始终开启 / 始终关闭。
+///
+/// 自动识别不到的电视盒子靠它手动开启；在手机 / 桌面上打开可直接查看 TV 布局。
+class _TvModeTile extends ConsumerWidget {
+  const _TvModeTile({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final override = ref.watch(tvModeOverrideProvider);
+
+    return _mineTileRow(
+      context,
+      isDark: isDark,
+      icon: Icons.tv_rounded,
+      iconColor: AppColors.info,
+      title: context.l10n.mineTvMode,
+      subtitle: _summary(context, override),
+      onTap: () => showAdaptiveModalSheet<void>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (_) => _TvModeSheet(isDark: isDark),
+      ),
+    );
+  }
+
+  String _summary(BuildContext context, TvModeOverride override) =>
+      switch (override) {
+        TvModeOverride.forceOn => context.l10n.mineTvModeForceOn,
+        TvModeOverride.forceOff => context.l10n.mineTvModeForceOff,
+        TvModeOverride.auto => TvCapabilities.isTvDevice
+            ? context.l10n.mineTvModeAutoDetected
+            : context.l10n.mineTvModeAutoNotDetected,
+      };
+}
+
+class _TvModeSheet extends ConsumerWidget {
+  const _TvModeSheet({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final override = ref.watch(tvModeOverrideProvider);
+    final isDesktop = context.isDesktopLayout;
+    final radius = isDesktop
+        ? const BorderRadius.all(Radius.circular(20))
+        : const BorderRadius.vertical(top: Radius.circular(24));
+    final mutedColor = isDark
+        ? AppColors.darkOnSurfaceVariant
+        : AppColors.lightOnSurfaceVariant;
+
+    return ClipRRect(
+      borderRadius: radius,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.darkSurface.withValues(alpha: 0.95)
+              : AppColors.lightSurface.withValues(alpha: 0.98),
+          borderRadius: radius,
+        ),
+        child: SafeArea(
+          top: !isDesktop,
+          bottom: !isDesktop,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SheetDragHandle(),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  isDesktop ? AppSpacing.lg : AppSpacing.sm,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.mineTvModeSheetTitle,
+                      style: context.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? AppColors.darkOnSurface
+                            : AppColors.lightOnSurface,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      context.l10n.mineTvModeSheetHint,
+                      style: context.textTheme.bodySmall
+                          ?.copyWith(color: mutedColor),
+                    ),
+                  ],
+                ),
+              ),
+              for (final mode in TvModeOverride.values)
+                AdaptiveRadioListTile<TvModeOverride>(
+                  title: Text(_label(context, mode)),
+                  value: mode,
+                  groupValue: override,
+                  onChanged: (value) {
+                    if (value == null) return;
+                    AppError.fireAndForget(
+                      ref
+                          .read(tvModeOverrideProvider.notifier)
+                          .setOverride(value),
+                      action: 'MinePage.setTvModeOverride',
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.xs,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: Text(
+                  context.l10n.mineTvModeRestartHint,
+                  style: context.textTheme.bodySmall?.copyWith(color: mutedColor),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _label(BuildContext context, TvModeOverride mode) => switch (mode) {
+        TvModeOverride.auto => context.l10n.mineTvModeAuto,
+        TvModeOverride.forceOn => context.l10n.mineTvModeForceOn,
+        TvModeOverride.forceOff => context.l10n.mineTvModeForceOff,
+      };
+}
+
 class _LanguagePreferenceTile extends ConsumerWidget {
   const _LanguagePreferenceTile({required this.isDark});
 

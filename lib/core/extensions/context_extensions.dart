@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/services/toast_service.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/toast_overlay.dart';
@@ -141,6 +142,16 @@ extension BuildContextExtensions on BuildContext {
     }
     return Platform.isMacOS || Platform.isWindows || Platform.isLinux;
   }
+
+  /// 是否使用 TV Shell 布局（10-foot UI + D-pad 焦点导航）。
+  ///
+  /// 与 [isDesktopLayout] 平行、且优先级更高：Shell 层应先判本项，
+  /// 命中后走 TvScaffold，不再进入桌面 / 移动分支。
+  ///
+  /// 取值来自 [TvCapabilities.isTvMode]（feature 探测 + 用户手动 override），
+  /// 不看屏幕宽度 —— 电视的逻辑宽度常与桌面重合，宽度无法区分二者。
+  /// 因为 override 可在桌面强制打开，桌面上也可能为 true（用于验证）。
+  bool get isTvLayout => TvCapabilities.isTvMode;
 
   // Navigation
   NavigatorState get navigator => Navigator.of(this);
