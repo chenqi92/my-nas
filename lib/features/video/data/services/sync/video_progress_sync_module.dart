@@ -1,4 +1,5 @@
 import 'package:hive_ce/hive.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/video/data/services/video_history_service.dart';
@@ -136,10 +137,14 @@ class VideoProgressSyncModule implements SyncableModule {
     if (historyListRaw is List) {
       for (final raw in historyListRaw) {
         if (raw is Map) {
+          // catch Object 而非 Exception：fromJson 内部是 `as String` 强转，
+          // 字段类型不对抛的是 TypeError（Error 不是 Exception），
+          // 只 catch Exception 会让单条坏数据中断整批导入。
           try {
             final item = VideoHistoryItem.fromJson(raw);
             localHistory[item.videoPath] = item;
-          } on Exception catch (_) {
+          } on Object catch (e, st) {
+            AppError.ignore(e, st, '本地历史单条解析失败，跳过该条');
             continue;
           }
         }
@@ -149,8 +154,9 @@ class VideoProgressSyncModule implements SyncableModule {
     for (final raw in items) {
       if (raw is! Map) continue;
       try {
-        final path = raw['videoPath'] as String?;
-        if (path == null || path.isEmpty) continue;
+        final rawPath = raw['videoPath'];
+        if (rawPath is! String || rawPath.isEmpty) continue;
+        final path = rawPath;
 
         // 1. 进度合并
         final remoteProgressAt = _tryParseDate(raw['progressUpdatedAt']);
@@ -211,7 +217,9 @@ class VideoProgressSyncModule implements SyncableModule {
             );
           }
         }
-      } on Exception catch (_) {
+      } on Object catch (e, st) {
+        // 同上：远端单条记录字段类型不对不能中断整批（跨端写入方可能是别的客户端）。
+        AppError.ignore(e, st, '远端 video_progress 单条记录解析失败，跳过该条');
         continue;
       }
     }

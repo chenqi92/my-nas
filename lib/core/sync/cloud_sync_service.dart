@@ -312,7 +312,11 @@ class CloudSyncService {
     for (var attempt = 1; attempt <= _maxRetries; attempt++) {
       try {
         return await _syncModuleOnce(module, backend, manifest, newManifest);
-      } on Exception catch (e, st) {
+      }
+      // catch Object 而非 Exception：模块解析远端数据时的类型错误是 TypeError
+      // （Error 不是 Exception），只 catch Exception 会让单个模块的坏数据
+      // 逃出这里、跳过后续模块和 writeManifest，整轮同步中断。
+      on Object catch (e, st) {
         lastError = e;
         AppError.handle(e, st, 'cloudSync.${module.key}.attempt$attempt');
         if (attempt < _maxRetries) {
