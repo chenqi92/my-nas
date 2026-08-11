@@ -319,6 +319,66 @@ void main() {
       expect(itemFor(roundTripped, path)['positionMs'], isA<int>());
     });
 
+    test('时间戳小数位可能是 0 / 3 / 6 位，带或不带 Z', () async {
+      // DateTime.now() 常带微秒 => toIso8601String() 输出 6 位小数。
+      // 对端严格按 3 位解析（如 Swift ISO8601DateFormatter.withFractionalSeconds）
+      // 会解析失败，所以这里把三种精度都固定成契约。
+      await putProgress(
+        '/micro',
+        positionMs: 1,
+        durationMs: 2,
+        updatedAt: '2026-03-01T10:00:00.123456',
+      );
+      await putProgress(
+        '/milli',
+        positionMs: 1,
+        durationMs: 2,
+        updatedAt: '2026-03-01T10:00:00.000',
+      );
+      await putProgress(
+        '/utc',
+        positionMs: 1,
+        durationMs: 2,
+        updatedAt: '2026-03-01T10:00:00.000Z',
+      );
+
+      final data = await module().exportData();
+
+      expect(itemFor(data, '/micro')['progressUpdatedAt'],
+          '2026-03-01T10:00:00.123456');
+      expect(itemFor(data, '/milli')['progressUpdatedAt'],
+          '2026-03-01T10:00:00.000');
+      expect(itemFor(data, '/utc')['progressUpdatedAt'],
+          '2026-03-01T10:00:00.000Z');
+    });
+
+    test('微秒精度时间戳参与 last-wins 且不丢精度', () async {
+      const path = '/media/Micro.mkv';
+      await putProgress(
+        path,
+        positionMs: 1000,
+        durationMs: 5000,
+        updatedAt: '2026-03-01T10:00:00.123456',
+      );
+
+      // 同一秒内、仅微秒更大 => 远端应当胜出
+      await module().importData({
+        'version': 1,
+        'items': [
+          {
+            'videoPath': path,
+            'positionMs': 4000,
+            'durationMs': 5000,
+            'progressUpdatedAt': '2026-03-01T10:00:00.123457',
+          },
+        ],
+      });
+
+      final stored = progressBox.get(path) as Map;
+      expect(stored['positionMs'], 4000);
+      expect(stored['updatedAt'], '2026-03-01T10:00:00.123457');
+    });
+
     test('时长字段是毫秒整数，不是秒也不是浮点', () async {
       const path = '/media/Units.mkv';
       await putProgress(
@@ -633,6 +693,43 @@ void main() {
       );
 
       expect(await module().exportData(), exported);
+    });
+
+    test('空 items 不截断本地历史', () async {
+      // 先写本地 3 条
+      await putHistory([
+        historyItem(path: '/local/1', watchedAt: DateTime(2026, 1, 1)),
+        historyItem(path: '/local/2', watchedAt: DateTime(2026, 1, 2)),
+        historyItem(path: '/local/3', watchedAt: DateTime(2026, 1, 3)),
+      ]);
+
+      // 远端传空 items
+      await module().importData({'version': 1, 'items': []});
+
+      final history = await module().exportData();
+      expect((history['items'] as List).length, 3); // 本地不被截断
+    });
+
+    test('一条格式错不杀整批', () async {
+      final remoteData = {
+        'version': 1,
+        'items': [
+          {'videoPath': 123}, // videoPath 不是字符串
+          {
+            'videoPath': '/good',
+            'positionMs': 1000,
+            'durationMs': 2000,
+            'progressUpdatedAt': '2026-01-01T10:00:00.000Z',
+          },
+          'not a map', // 根本不是 map
+        ],
+      };
+
+      await module().importData(remoteData);
+      final exported = await module().exportData();
+      final items = exported['items'] as List;
+      expect(items.length, 1); // 只有好的那条
+      expect(items[0]['videoPath'], '/good');
     });
   });
 }
