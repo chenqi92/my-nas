@@ -75,6 +75,7 @@ class _VideoListDesktopPageState extends ConsumerState<VideoListDesktopPage> {
     return DesktopPageScaffold(
       title: l.videoPageTitle,
       subtitle: l.videoPageSubtitle,
+      maxWidth: double.infinity,
       actions: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -120,7 +121,7 @@ class _VideoListDesktopPageState extends ConsumerState<VideoListDesktopPage> {
         ],
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _ScanProgressBanner(),
           switch (state) {
@@ -281,6 +282,7 @@ class _LoadedState extends ConsumerState<_Loaded> {
   String _watched = 'all';
   final Set<String> _genres = {};
   final Set<String> _sources = {};
+  final GlobalKey _searchFieldKey = GlobalKey();
 
   bool get _hasFilter =>
       _watched != 'all' || _genres.isNotEmpty || _sources.isNotEmpty;
@@ -382,28 +384,19 @@ class _LoadedState extends ConsumerState<_Loaded> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (hero != null) ...[_Hero(meta: hero), const SizedBox(height: 22)],
-        Row(
-          children: [
-            for (final (label, tab) in tabs)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: AppChip(
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 980;
+            final tabButtons = <Widget>[
+              for (final (label, tab) in tabs)
+                AppChip(
                   label: label,
                   active: state.currentTab == tab,
                   compact: true,
                   onTap: () => notifier.setTab(tab),
                 ),
-              ),
-            const Spacer(),
-            SizedBox(
-              width: 220,
-              child: _VideoSearchField(
-                initial: state.searchQuery,
-                onChanged: notifier.setSearchQuery,
-              ),
-            ),
-            const SizedBox(width: 8),
-            AppSegmented<String>(
+            ];
+            final sort = AppSegmented<String>(
               value: _sort,
               dense: true,
               onChanged: (v) => setState(() => _sort = v),
@@ -414,13 +407,58 @@ class _LoadedState extends ConsumerState<_Loaded> {
                 ),
                 AppSegmentedOption(value: 'year', label: l.videoPageSortYear),
               ],
-            ),
-            const SizedBox(width: 8),
-            _FilterIconButton(
+            );
+            final filter = _FilterIconButton(
               active: _hasFilter,
               onTap: () => _openFilter(allGenres, sourceOptions),
-            ),
-          ],
+            );
+
+            if (compact) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(spacing: 8, runSpacing: 8, children: tabButtons),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _VideoSearchField(
+                          key: _searchFieldKey,
+                          initial: state.searchQuery,
+                          onChanged: notifier.setSearchQuery,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      sort,
+                      const SizedBox(width: 8),
+                      filter,
+                    ],
+                  ),
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(
+                  child: Wrap(spacing: 8, runSpacing: 8, children: tabButtons),
+                ),
+                const SizedBox(width: 16),
+                SizedBox(
+                  width: 220,
+                  child: _VideoSearchField(
+                    key: _searchFieldKey,
+                    initial: state.searchQuery,
+                    onChanged: notifier.setSearchQuery,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                sort,
+                const SizedBox(width: 8),
+                filter,
+              ],
+            );
+          },
         ),
         const SizedBox(height: 14),
         if (items.isEmpty)
@@ -433,7 +471,7 @@ class _LoadedState extends ConsumerState<_Loaded> {
         else if (view == 'grid')
           _PosterGrid(items: items, sourceNames: badgeNames)
         else
-          _PosterList(items: items, sourceNames: badgeNames),
+          desktopVideoPosterList(items: items, sourceNames: badgeNames),
       ],
     );
   }
@@ -533,7 +571,11 @@ class _FilteredEmpty extends StatelessWidget {
 
 /// 桌面影视库搜索框：输入防抖 300ms 后回调 [onChanged]，清空时立即回调空串。
 class _VideoSearchField extends StatefulWidget {
-  const _VideoSearchField({required this.initial, required this.onChanged});
+  const _VideoSearchField({
+    required this.initial,
+    required this.onChanged,
+    super.key,
+  });
   final String initial;
   final void Function(String query) onChanged;
 
@@ -546,6 +588,19 @@ class _VideoSearchFieldState extends State<_VideoSearchField> {
     text: widget.initial,
   );
   Timer? _debounce;
+
+  @override
+  void didUpdateWidget(covariant _VideoSearchField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initial == oldWidget.initial || widget.initial == _ctrl.text) {
+      return;
+    }
+    _debounce?.cancel();
+    _ctrl.value = TextEditingValue(
+      text: widget.initial,
+      selection: TextSelection.collapsed(offset: widget.initial.length),
+    );
+  }
 
   @override
   void dispose() {
@@ -1073,6 +1128,12 @@ class _PosterGrid extends StatelessWidget {
   }
 }
 
+@visibleForTesting
+Widget desktopVideoPosterList({
+  required List<VideoMetadata> items,
+  required Map<String, String> sourceNames,
+}) => _PosterList(items: items, sourceNames: sourceNames);
+
 class _PosterList extends StatelessWidget {
   const _PosterList({required this.items, required this.sourceNames});
   final List<VideoMetadata> items;
@@ -1100,8 +1161,12 @@ class _PosterList extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               child: Row(
                 children: [
-                  AspectRatio(
-                    aspectRatio: 2 / 3,
+                  SizedBox(
+                    key: ValueKey(
+                      'desktop-video-list-poster-${meta.uniqueKey}',
+                    ),
+                    width: 64,
+                    height: 96,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(6),
                       child: _Image(

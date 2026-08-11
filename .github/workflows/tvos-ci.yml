@@ -1,0 +1,56 @@
+name: tvOS CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '.github/workflows/tvos-ci.yml'
+      - 'tvos/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '.github/workflows/tvos-ci.yml'
+      - 'tvos/**'
+
+jobs:
+  test:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select tvOS simulator
+        id: simulator
+        shell: bash
+        run: |
+          udid="$(python3 - <<'PY'
+          import json
+          import subprocess
+
+          data = json.loads(subprocess.check_output([
+              'xcrun', 'simctl', 'list', 'devices', 'available', '--json'
+          ]))
+          for runtime, devices in data['devices'].items():
+              if 'tvOS' not in runtime:
+                  continue
+              for device in devices:
+                  if device.get('isAvailable') and device['name'].startswith('Apple TV'):
+                      print(device['udid'])
+                      raise SystemExit(0)
+          PY
+          )"
+          if [[ -z "$udid" ]]; then
+            echo 'No available tvOS simulator found.' >&2
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+
+      - name: Build and test tvOS app
+        run: >-
+          xcodebuild
+          -project tvos/KKNasTV/KKNasTV.xcodeproj
+          -scheme KKNasTV
+          -destination 'platform=tvOS Simulator,id=${{ steps.simulator.outputs.udid }}'
+          CODE_SIGNING_ALLOWED=NO
+          test

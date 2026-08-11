@@ -1,0 +1,487 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		064FA11E3628EBB01BB492AE /* PlayerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD7FD9A36083A3B44825BC63 /* PlayerScreen.swift */; };
+		10947BA3DCE0516A65D3C740 /* ServerAccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86570870327295D0931C836 /* ServerAccountStore.swift */; };
+		166E6DFA7ADD05B2051CC354 /* TVDeviceProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C99506751BD1C9B0152F078 /* TVDeviceProfile.swift */; };
+		2796C2E8E887AE719E5315FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 14049B6DDA2D462E39C9B34D /* Assets.xcassets */; };
+		2F67D0F9C999199F1B9022AB /* MediaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DB827ADE2A6BD470D230256 /* MediaModels.swift */; };
+		372944C0782A0BE4949A5BCF /* LibraryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4190E5E2211A07D2AC38A460 /* LibraryViews.swift */; };
+		41B2FCE851DFB5942ED4A58D /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 562CA28B3C57DE326B9B1835 /* AppModel.swift */; };
+		47EB4D4A21EE7F1DD97B80FD /* KKNasTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67309A2BD12C1D4A1A821FB6 /* KKNasTVApp.swift */; };
+		6586D1ABC38DF627C8B9B89D /* MediaServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24C1461FDB812E3752EAEA3 /* MediaServerClient.swift */; };
+		6F760C7F28CA311DC0CDE0A1 /* MediaComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E931D93ABDF609CAA4FCDCE9 /* MediaComponents.swift */; };
+		7B5C7DA0816A1543B1EE5ABF /* KKNasTVTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B39B537E61AEA6ABA09FC7E /* KKNasTVTests.swift */; };
+		B1C497F2D1C1C1C2938F5942 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F10C9708C1A171A445C9117 /* ContentView.swift */; };
+		BAD30B1BFFFB451ABCFF5958 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD233B583A5C6E3D06E5C82 /* SettingsView.swift */; };
+		C1C0B32BF781E96440E028D3 /* MediaSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCF58E33C61AA63CCB4C24C0 /* MediaSearchView.swift */; };
+		C528411C2EECED9F95753424 /* ConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C75FC1DBF7EC1FBD8FA8D68 /* ConnectionView.swift */; };
+		C9A1303AA907BA382728A1CF /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A77E4E3B3EBBE459032A0E8 /* HomeView.swift */; };
+		DF5850989B1BC4F68592F06E /* MediaDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F434C9C106DDBD645225E0C /* MediaDetailView.swift */; };
+		E5DFC553B95512EB473269B2 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F584EB5EE89EB7EE9F5A0532 /* MainTabView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CCC5E95157FFF85F5749CAA5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 975F16082934271CC054905E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FAA41E6448FB9EBB4FC136EF;
+			remoteInfo = KKNasTV;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0C99506751BD1C9B0152F078 /* TVDeviceProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVDeviceProfile.swift; sourceTree = "<group>"; };
+		14049B6DDA2D462E39C9B34D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		275287D44371E386B13754E4 /* KKNasTV.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = KKNasTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3B39B537E61AEA6ABA09FC7E /* KKNasTVTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KKNasTVTests.swift; sourceTree = "<group>"; };
+		4190E5E2211A07D2AC38A460 /* LibraryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViews.swift; sourceTree = "<group>"; };
+		4F10C9708C1A171A445C9117 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		562CA28B3C57DE326B9B1835 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		5DB827ADE2A6BD470D230256 /* MediaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaModels.swift; sourceTree = "<group>"; };
+		5FD233B583A5C6E3D06E5C82 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		67309A2BD12C1D4A1A821FB6 /* KKNasTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KKNasTVApp.swift; sourceTree = "<group>"; };
+		7F434C9C106DDBD645225E0C /* MediaDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailView.swift; sourceTree = "<group>"; };
+		80B2D17EBCC7100A65FEFD53 /* KKNasTVTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KKNasTVTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8A77E4E3B3EBBE459032A0E8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		9C75FC1DBF7EC1FBD8FA8D68 /* ConnectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionView.swift; sourceTree = "<group>"; };
+		AD7FD9A36083A3B44825BC63 /* PlayerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerScreen.swift; sourceTree = "<group>"; };
+		B24C1461FDB812E3752EAEA3 /* MediaServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaServerClient.swift; sourceTree = "<group>"; };
+		B86570870327295D0931C836 /* ServerAccountStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerAccountStore.swift; sourceTree = "<group>"; };
+		BCF58E33C61AA63CCB4C24C0 /* MediaSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSearchView.swift; sourceTree = "<group>"; };
+		C16B861EE4E97FF15F75709B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E931D93ABDF609CAA4FCDCE9 /* MediaComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaComponents.swift; sourceTree = "<group>"; };
+		F584EB5EE89EB7EE9F5A0532 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		343A1170202383830035A0F3 /* KKNasTV */ = {
+			isa = PBXGroup;
+			children = (
+				562CA28B3C57DE326B9B1835 /* AppModel.swift */,
+				14049B6DDA2D462E39C9B34D /* Assets.xcassets */,
+				9C75FC1DBF7EC1FBD8FA8D68 /* ConnectionView.swift */,
+				4F10C9708C1A171A445C9117 /* ContentView.swift */,
+				8A77E4E3B3EBBE459032A0E8 /* HomeView.swift */,
+				C16B861EE4E97FF15F75709B /* Info.plist */,
+				67309A2BD12C1D4A1A821FB6 /* KKNasTVApp.swift */,
+				4190E5E2211A07D2AC38A460 /* LibraryViews.swift */,
+				F584EB5EE89EB7EE9F5A0532 /* MainTabView.swift */,
+				E931D93ABDF609CAA4FCDCE9 /* MediaComponents.swift */,
+				7F434C9C106DDBD645225E0C /* MediaDetailView.swift */,
+				5DB827ADE2A6BD470D230256 /* MediaModels.swift */,
+				BCF58E33C61AA63CCB4C24C0 /* MediaSearchView.swift */,
+				B24C1461FDB812E3752EAEA3 /* MediaServerClient.swift */,
+				AD7FD9A36083A3B44825BC63 /* PlayerScreen.swift */,
+				B86570870327295D0931C836 /* ServerAccountStore.swift */,
+				5FD233B583A5C6E3D06E5C82 /* SettingsView.swift */,
+				0C99506751BD1C9B0152F078 /* TVDeviceProfile.swift */,
+			);
+			path = KKNasTV;
+			sourceTree = "<group>";
+		};
+		38054BD6DFFB171CCCE77665 /* KKNasTVTests */ = {
+			isa = PBXGroup;
+			children = (
+				3B39B537E61AEA6ABA09FC7E /* KKNasTVTests.swift */,
+			);
+			path = KKNasTVTests;
+			sourceTree = "<group>";
+		};
+		41728CC98D45D73F119EDE1C = {
+			isa = PBXGroup;
+			children = (
+				343A1170202383830035A0F3 /* KKNasTV */,
+				38054BD6DFFB171CCCE77665 /* KKNasTVTests */,
+				FC7F5E89E76C355037F4FF4F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FC7F5E89E76C355037F4FF4F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				275287D44371E386B13754E4 /* KKNasTV.app */,
+				80B2D17EBCC7100A65FEFD53 /* KKNasTVTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		681F1E1EE788F503FDF84159 /* KKNasTVTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 83A354150BF3D7CB6D307002 /* Build configuration list for PBXNativeTarget "KKNasTVTests" */;
+			buildPhases = (
+				3D58879EC098BA3A6B8E4A1F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2F60DDF7C4624BAC868CB5DF /* PBXTargetDependency */,
+			);
+			name = KKNasTVTests;
+			packageProductDependencies = (
+			);
+			productName = KKNasTVTests;
+			productReference = 80B2D17EBCC7100A65FEFD53 /* KKNasTVTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		FAA41E6448FB9EBB4FC136EF /* KKNasTV */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AC11661D222A029D9A8FA27D /* Build configuration list for PBXNativeTarget "KKNasTV" */;
+			buildPhases = (
+				C351E70234067226CB760E67 /* Sources */,
+				9772C0DED3FF1DA5D7B3607E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KKNasTV;
+			packageProductDependencies = (
+			);
+			productName = KKNasTV;
+			productReference = 275287D44371E386B13754E4 /* KKNasTV.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		975F16082934271CC054905E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					681F1E1EE788F503FDF84159 = {
+						DevelopmentTeam = 2U97K3U27A;
+					};
+					FAA41E6448FB9EBB4FC136EF = {
+						DevelopmentTeam = 2U97K3U27A;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 7D18BFF6D09DAB34D4D51125 /* Build configuration list for PBXProject "KKNasTV" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 41728CC98D45D73F119EDE1C;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FC7F5E89E76C355037F4FF4F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FAA41E6448FB9EBB4FC136EF /* KKNasTV */,
+				681F1E1EE788F503FDF84159 /* KKNasTVTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9772C0DED3FF1DA5D7B3607E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2796C2E8E887AE719E5315FE /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3D58879EC098BA3A6B8E4A1F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7B5C7DA0816A1543B1EE5ABF /* KKNasTVTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C351E70234067226CB760E67 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				41B2FCE851DFB5942ED4A58D /* AppModel.swift in Sources */,
+				C528411C2EECED9F95753424 /* ConnectionView.swift in Sources */,
+				B1C497F2D1C1C1C2938F5942 /* ContentView.swift in Sources */,
+				C9A1303AA907BA382728A1CF /* HomeView.swift in Sources */,
+				47EB4D4A21EE7F1DD97B80FD /* KKNasTVApp.swift in Sources */,
+				372944C0782A0BE4949A5BCF /* LibraryViews.swift in Sources */,
+				E5DFC553B95512EB473269B2 /* MainTabView.swift in Sources */,
+				6F760C7F28CA311DC0CDE0A1 /* MediaComponents.swift in Sources */,
+				DF5850989B1BC4F68592F06E /* MediaDetailView.swift in Sources */,
+				2F67D0F9C999199F1B9022AB /* MediaModels.swift in Sources */,
+				C1C0B32BF781E96440E028D3 /* MediaSearchView.swift in Sources */,
+				6586D1ABC38DF627C8B9B89D /* MediaServerClient.swift in Sources */,
+				064FA11E3628EBB01BB492AE /* PlayerScreen.swift in Sources */,
+				10947BA3DCE0516A65D3C740 /* ServerAccountStore.swift in Sources */,
+				BAD30B1BFFFB451ABCFF5958 /* SettingsView.swift in Sources */,
+				166E6DFA7ADD05B2051CC354 /* TVDeviceProfile.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2F60DDF7C4624BAC868CB5DF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FAA41E6448FB9EBB4FC136EF /* KKNasTV */;
+			targetProxy = CCC5E95157FFF85F5749CAA5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		032145B6E9D376CED9890828 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kkape.mynas.tests;
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KKNas.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/KKNas";
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Release;
+		};
+		263388710B65F80D0035B5D9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 2U97K3U27A;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Release;
+		};
+		60A840868035CAA4F4173084 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kkape.mynas.tests;
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KKNas.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/KKNas";
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
+		B8209CBBEDC912585EBD536B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 15;
+				DEVELOPMENT_TEAM = 2U97K3U27A;
+				INFOPLIST_FILE = KKNasTV/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.2.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kkape.mynas;
+				PRODUCT_MODULE_NAME = KKNasTV;
+				PRODUCT_NAME = KKNas;
+				SDKROOT = appletvos;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
+		D330D6E0FC3A021566B32CD9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 2U97K3U27A;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
+		D381DEE5DEB946454234DBB6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 15;
+				DEVELOPMENT_TEAM = 2U97K3U27A;
+				INFOPLIST_FILE = KKNasTV/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.2.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kkape.mynas;
+				PRODUCT_MODULE_NAME = KKNasTV;
+				PRODUCT_NAME = KKNas;
+				SDKROOT = appletvos;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7D18BFF6D09DAB34D4D51125 /* Build configuration list for PBXProject "KKNasTV" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D330D6E0FC3A021566B32CD9 /* Debug */,
+				263388710B65F80D0035B5D9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		83A354150BF3D7CB6D307002 /* Build configuration list for PBXNativeTarget "KKNasTVTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				60A840868035CAA4F4173084 /* Debug */,
+				032145B6E9D376CED9890828 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AC11661D222A029D9A8FA27D /* Build configuration list for PBXNativeTarget "KKNasTV" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B8209CBBEDC912585EBD536B /* Debug */,
+				D381DEE5DEB946454234DBB6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 975F16082934271CC054905E /* Project object */;
+}

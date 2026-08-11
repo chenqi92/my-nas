@@ -346,7 +346,8 @@ class NativeTabBarController: UITabBarController, UITabBarControllerDelegate {
     ///
     /// UITabBarController 下不再直接改 tabBar.isHidden —— Apple 明确建议用
     /// controller 级 API，否则 iPad / visionOS 的变体 tab bar 不会跟着隐藏。
-    /// setTabBarHidden 的可用版本不确定，这里做运行时探测并保留 alpha 回退。
+    /// setTabBarHidden 仅在 iOS 18+ 可用，这里同时做版本与运行时探测，
+    /// 并为更低系统保留 alpha 回退。
     private func setTabBarVisible(_ visible: Bool) {
         isTabBarUserHidden = !visible
         // 重新显示时清掉最小化状态：最小化是「当前页面滚动位置」的产物，
@@ -376,10 +377,10 @@ class NativeTabBarController: UITabBarController, UITabBarControllerDelegate {
 
     /// 统一的隐藏落地点，避免 visible / minimized 两条路径互相打断动画
     private func applyTabBarHidden(_ hidden: Bool, animated: Bool) {
-        // setTabBarHidden(_:animated:) 是 controller 级 API，但可用版本不明确，
-        // 用 responds(to:) 运行时探测；不可用时回退到 alpha + isHidden。
+        // setTabBarHidden(_:animated:) 是 iOS 18+ 的 controller 级 API。
+        // availability 保护编译期，responds(to:) 保护运行时；低版本回退。
         let selector = NSSelectorFromString("setTabBarHidden:animated:")
-        if responds(to: selector) {
+        if #available(iOS 18.0, *), responds(to: selector) {
             setTabBarHidden(hidden, animated: animated)
             return
         }

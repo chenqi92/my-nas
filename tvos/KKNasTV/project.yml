@@ -1,0 +1,67 @@
+name: KKNasTV
+options:
+  bundleIdPrefix: com.kkape
+  deploymentTarget:
+    tvOS: "17.0"
+  xcodeVersion: "26.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: 2U97K3U27A
+    SWIFT_VERSION: 5.0
+    TVOS_DEPLOYMENT_TARGET: "17.0"
+targets:
+  KKNasTV:
+    type: application
+    platform: tvOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: KKNasTV
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: App Icon & Top Shelf Image
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
+        CURRENT_PROJECT_VERSION: 15
+        DEVELOPMENT_TEAM: 2U97K3U27A
+        MARKETING_VERSION: 1.2.3
+        PRODUCT_BUNDLE_IDENTIFIER: com.kkape.mynas
+        PRODUCT_MODULE_NAME: KKNasTV
+        PRODUCT_NAME: KKNas
+        SUPPORTED_PLATFORMS: "appletvos appletvsimulator"
+        TARGETED_DEVICE_FAMILY: 3
+    info:
+      path: KKNasTV/Info.plist
+      properties:
+        CFBundleDisplayName: KKNas
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSLocalNetworkUsageDescription: KKNas 需要访问局域网以连接 Jellyfin 或 Emby 媒体服务器。
+        UIApplicationSupportsIndirectInputEvents: true
+  KKNasTVTests:
+    type: bundle.unit-test
+    platform: tvOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: KKNasTVTests
+    dependencies:
+      - target: KKNasTV
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.kkape.mynas.tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/KKNas.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/KKNas"
+schemes:
+  KKNasTV:
+    build:
+      targets:
+        KKNasTV: all
+        KKNasTVTests: [test]
+    test:
+      gatherCoverageData: true
+      targets:
+        - KKNasTVTests
+    archive:
+      config: Release

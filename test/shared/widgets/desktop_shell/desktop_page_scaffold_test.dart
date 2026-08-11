@@ -53,4 +53,35 @@ void main() {
     expect(find.byType(SingleChildScrollView), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('uncapped mode consumes the available desktop width', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1800, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: DesktopPageScaffold(
+            title: 'Films',
+            maxWidth: double.infinity,
+            body: Text('Content'),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getSize(find.byKey(const ValueKey('desktop-page-content'))).width,
+      1744,
+    );
+    expect(
+      tester.getSize(find.byKey(const ValueKey('desktop-page-body'))).width,
+      1744,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

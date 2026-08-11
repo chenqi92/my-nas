@@ -31,7 +31,9 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-# pubspec.lock 纳入版本控制（应用项目，锁定依赖解析结果）
+# 根应用的 pubspec.lock 纳入版本控制；vendored 库及未维护 example 不提交解析副产物。
+packages/*/pubspec.lock
+packages/*/example/pubspec.lock
 
 # Symbolication related
 app.*.symbols
@@ -94,6 +96,9 @@ packages/*/example/android/**/GeneratedPluginRegistrant.kt
 **/macos/**/xcuserdata
 **/macos/Pods/
 **/macos/.symlinks/
+
+# tvOS / Xcode user state
+**/tvos/**/xcuserdata/
 
 # Windows related
 **/windows/flutter/ephemeral/
