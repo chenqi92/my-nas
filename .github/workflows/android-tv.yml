@@ -16,11 +16,25 @@ on:
     paths:
       - 'android/app/src/main/AndroidManifest.xml'
       - '.github/workflows/android-tv.yml'
+      - 'lib/core/utils/tv_capabilities.dart'
+      - 'lib/core/widgets/tv_focus/**'
+      - 'lib/shared/widgets/tv_shell/**'
+      - 'lib/shared/widgets/shell_layout.dart'
+      - 'lib/features/video/presentation/pages/tv_home_page.dart'
+      - 'test/core/widgets/tv_focus/**'
+      - 'test/shared/widgets/tv_shell/**'
   pull_request:
     branches: [main, develop]
     paths:
       - 'android/app/src/main/AndroidManifest.xml'
       - '.github/workflows/android-tv.yml'
+      - 'lib/core/utils/tv_capabilities.dart'
+      - 'lib/core/widgets/tv_focus/**'
+      - 'lib/shared/widgets/tv_shell/**'
+      - 'lib/shared/widgets/shell_layout.dart'
+      - 'lib/features/video/presentation/pages/tv_home_page.dart'
+      - 'test/core/widgets/tv_focus/**'
+      - 'test/shared/widgets/tv_shell/**'
   workflow_run:
     workflows: ["Build and Release"]
     types: [completed]
@@ -41,43 +55,124 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 用 XML 解析而非 grep：grep 只能确认「文件里出现过这个字符串」，
+      # 若 required 从 false 翻成 true（TV 被 Play 商店过滤掉的经典回退），
+      # 关键字仍在、grep 仍通过。这里按元素读属性值。
       - name: Verify TV declarations in AndroidManifest.xml
+        shell: bash
         run: |
           set -euo pipefail
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          FAIL=0
+          python3 - <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
 
-          check() {
-            if grep -q "$1" "$MANIFEST"; then
-              echo "OK: $2"
-            else
-              echo "::error::$MANIFEST missing: $2"
-              FAIL=1
-            fi
+          MANIFEST = "android/app/src/main/AndroidManifest.xml"
+          ANDROID = "{http://schemas.android.com/apk/res/android}"
+          failures = []
+
+          root = ET.parse(MANIFEST).getroot()
+
+          def ok(msg):
+              print(f"OK: {msg}")
+
+          def fail(msg):
+              print(f"::error::{MANIFEST}: {msg}")
+              failures.append(msg)
+
+          # 1. uses-feature 必须存在且 required="false"（同一 APK 兼容手机与电视）
+          features = {
+              el.get(f"{ANDROID}name"): el.get(f"{ANDROID}required")
+              for el in root.findall("uses-feature")
           }
+          for name in ("android.software.leanback", "android.hardware.touchscreen"):
+              if name not in features:
+                  fail(f"missing uses-feature {name}")
+              elif features[name] != "false":
+                  fail(
+                      f"uses-feature {name} must be android:required=\"false\", "
+                      f"got {features[name]!r}"
+                  )
+              else:
+                  ok(f'uses-feature {name} required="false"')
 
-          check 'android.intent.category.LEANBACK_LAUNCHER' 'LEANBACK_LAUNCHER category'
-          check 'android.software.leanback' 'uses-feature android.software.leanback'
-          check 'android.hardware.touchscreen' 'uses-feature android.hardware.touchscreen (required=false)'
-          check 'android:banner=' 'application android:banner'
+          app = root.find("application")
+          if app is None:
+              fail("missing <application>")
+              sys.exit(1)
+
+          # 2. TV 启动器需要 banner，否则电视桌面上没有图标
+          banner = app.get(f"{ANDROID}banner")
+          if banner:
+              ok(f"application android:banner={banner}")
+          else:
+              fail("application missing android:banner")
+
+          # 3. LEANBACK_LAUNCHER 必须和 MAIN action 在同一个 intent-filter 内，
+          #    否则电视启动器不会把它当成入口。
+          leanback_entry = False
+          for activity in app.findall("activity"):
+              for f in activity.findall("intent-filter"):
+                  actions = {a.get(f"{ANDROID}name") for a in f.findall("action")}
+                  categories = {c.get(f"{ANDROID}name") for c in f.findall("category")}
+                  if (
+                      "android.intent.action.MAIN" in actions
+                      and "android.intent.category.LEANBACK_LAUNCHER" in categories
+                  ):
+                      leanback_entry = True
+          if leanback_entry:
+              ok("LEANBACK_LAUNCHER category on a MAIN intent-filter")
+          else:
+              fail("no intent-filter pairs action MAIN with LEANBACK_LAUNCHER")
+
+          sys.exit(1 if failures else 0)
+          PY
 
           if [ ! -f "android/app/src/main/res/drawable-xhdpi/tv_banner.png" ]; then
             echo "::error::TV banner asset missing: android/app/src/main/res/drawable-xhdpi/tv_banner.png"
-            FAIL=1
-          else
-            echo "OK: tv_banner.png exists"
+            exit 1
           fi
+          echo "OK: tv_banner.png exists"
 
-          exit $FAIL
+  # TV 专项测试：焦点组件、Rail↔branch 映射、BACK 降级、shell 布局分支。
+  # ci.yml 的 flutter test 已覆盖这些文件，此处单独跑一遍是为了在只改 TV
+  # 代码时拿到独立信号，不必等整棵测试树。
+  tv-tests:
+    if: github.event_name != 'workflow_run'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Run TV tests
+        run: |
+          flutter test \
+            test/app/branch_index_test.dart \
+            test/core/utils/tv_capabilities_test.dart \
+            test/core/widgets/tv_focus/tv_focus_test.dart \
+            test/shared/widgets/shell_layout_test.dart \
+            test/shared/widgets/tv_shell/tv_back_policy_test.dart
 
   # 构建 TV APK（内容与手机 APK 相同，独立命名便于电视盒子侧载识别）
   build-tv-apk:
-    needs: verify-tv-manifest
+    needs: [verify-tv-manifest, tv-tests]
     # 手动触发；或 "Build and Release" 成功完成后自动触发。
-    # always() 让 workflow_run 场景（verify 被 skip）也能进入，再用条件筛选。
+    # always() 让 workflow_run 场景（两个前置 job 都被 skip）也能进入，再用条件筛选。
     if: |
       always() &&
       (needs.verify-tv-manifest.result == 'success' || needs.verify-tv-manifest.result == 'skipped') &&
+      (needs.tv-tests.result == 'success' || needs.tv-tests.result == 'skipped') &&
       (github.event_name == 'workflow_dispatch' ||
        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
     runs-on: ubuntu-latest

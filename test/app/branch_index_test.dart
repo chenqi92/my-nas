@@ -52,4 +52,48 @@ void main() {
       expect(mobileMainTabIndexForBranch(AppBranch.sources), isNull);
     });
   });
+
+  group('TV Rail index ↔ branch mapping', () {
+    test('Rail 索引不是恒等映射（回归：Rail 4 应是 mine 而非 photo）', () {
+      // TV Rail 只有 5 项，其局部索引 0..4 若被当成 branch 直接传 goBranch，
+      // Rail 4（我的）会落到 branch 4（photo）。锁死这个易混点。
+      expect(tvRailBranchForIndex(4), AppBranch.mine);
+      expect(tvRailBranchForIndex(4), isNot(AppBranch.photo));
+    });
+
+    test('每个 Rail 索引映射到预期 branch', () {
+      expect(tvRailBranchForIndex(0), AppBranch.video);
+      expect(tvRailBranchForIndex(1), AppBranch.music);
+      expect(tvRailBranchForIndex(2), AppBranch.photo);
+      expect(tvRailBranchForIndex(3), AppBranch.reading);
+      expect(tvRailBranchForIndex(4), AppBranch.mine);
+    });
+
+    test('branch → Rail 索引是上面的逆映射', () {
+      for (var i = 0; i < tvRailBranches.length; i++) {
+        expect(tvRailIndexForBranch(tvRailBranchForIndex(i)), i);
+      }
+    });
+
+    test('非 Rail branch 返回 null（保留原选中项）', () {
+      expect(tvRailIndexForBranch(AppBranch.sources), isNull);
+      expect(tvRailIndexForBranch(AppBranch.live), isNull);
+      expect(tvRailIndexForBranch(AppBranch.ops), isNull);
+    });
+
+    test('越界 Rail 索引回落到首个 Tab', () {
+      expect(tvRailBranchForIndex(-1), tvRailBranches.first);
+      expect(tvRailBranchForIndex(99), tvRailBranches.first);
+    });
+
+    test('Rail 与移动端底栏共用同一组 Tab', () {
+      // 两处若分别维护顺序，改一处漏一处会导致同一 Tab 在手机/TV 上不同页。
+      expect(tvRailBranches, mobileMainTabBranches);
+    });
+
+    test('TV 首个 Tab 是影视（BACK 回首页的落点）', () {
+      // tv_back_policy 的 goHomeBranch 用 tvRailBranches.first 作为落点。
+      expect(tvRailBranches.first, AppBranch.video);
+    });
+  });
 }

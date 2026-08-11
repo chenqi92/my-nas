@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/features/video/presentation/pages/tv_home_page.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
@@ -30,6 +31,7 @@ class TvScaffold extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final branchIndex = navigationShell.currentIndex;
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0A0D12) : AppColors.lightBackground,
@@ -38,12 +40,19 @@ class TvScaffold extends ConsumerWidget {
         child: Row(
           children: [
             _TvNavigationRail(
-              currentIndex: _mapBranchToRailIndex(navigationShell.currentIndex),
+              // 工具页等非 Rail branch 返回 null，此时保留首个 Tab 的高亮。
+              currentIndex: tvRailIndexForBranch(branchIndex) ?? 0,
               onDestinationSelected: (index) =>
                   _onDestinationSelected(context, index),
+              // 强制 initialLocation：清空该 branch 栈，直达设置主页。
+              onSettingsSelected: () => navigationShell.goBranch(
+                AppBranch.mine,
+                initialLocation: true,
+              ),
             ),
             Expanded(
-              child: navigationShell.currentIndex == 0
+              // 影视 branch 在 TV 上换成 shelves 首页；其余 branch 用各自的页面。
+              child: branchIndex == AppBranch.video
                   ? const TvHomePage()
                   : navigationShell,
             ),
@@ -53,22 +62,8 @@ class TvScaffold extends ConsumerWidget {
     );
   }
 
-  /// 将 StatefulShellRoute 的 branch index 映射到 Rail 的 0-4 索引。
-  /// Rail 只显示 5 个主 Tab，桌面的 home/live/ops 不显示。
-  int _mapBranchToRailIndex(int branchIndex) => switch (branchIndex) {
-        0 => 0, // video
-        1 => 1, // music
-        2 => 2, // photo
-        3 => 3, // reading
-        4 => 4, // mine
-        _ => 0,
-      };
-
-  /// 将 Rail 的 0-4 索引映射回 StatefulShellRoute 的 branch index。
-  int _mapRailIndexToBranch(int railIndex) => railIndex;
-
   void _onDestinationSelected(BuildContext context, int railIndex) {
-    final branchIndex = _mapRailIndexToBranch(railIndex);
+    final branchIndex = tvRailBranchForIndex(railIndex);
     navigationShell.goBranch(
       branchIndex,
       initialLocation: branchIndex == navigationShell.currentIndex,
@@ -81,10 +76,12 @@ class _TvNavigationRail extends StatelessWidget {
   const _TvNavigationRail({
     required this.currentIndex,
     required this.onDestinationSelected,
+    required this.onSettingsSelected,
   });
 
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
+  final VoidCallback onSettingsSelected;
 
   static const _destinations = [
     _TvDestination(
@@ -135,6 +132,7 @@ class _TvNavigationRail extends StatelessWidget {
                 onTap: () => onDestinationSelected(i),
               ),
             const Spacer(),
+            // 设置入口：切到「我的」Tab（设置在该 Tab 内），与桌面 Cmd+, 一致。
             _TvRailItem(
               destination: const _TvDestination(
                 icon: Icons.settings_outlined,
@@ -142,10 +140,7 @@ class _TvNavigationRail extends StatelessWidget {
                 labelKey: 'mineSettings',
               ),
               selected: false,
-              onTap: () {
-                // TV 上设置入口：导航到 mine 页（包含设置入口）
-                // 如果已经在 mine 页，不做任何操作
-              },
+              onTap: onSettingsSelected,
             ),
             const SizedBox(height: 24),
           ],

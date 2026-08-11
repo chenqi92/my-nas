@@ -85,6 +85,26 @@ int? mobileMainTabIndexForBranch(int branchIndex) {
   return index < 0 ? null : index;
 }
 
+/// TV 导航 Rail 的 5 个主 Tab 对应的全局 branch 索引。
+///
+/// 与 [mobileMainTabBranches] 同一组 tab（影视/音乐/相册/阅读/我的），
+/// 复用同一份顺序而不是各写一遍：Rail 的局部索引 0..4 不能直接当 branch 用
+/// （Rail 索引 4 是 mine=6，若按恒等映射会落到 photo=4）。
+const List<int> tvRailBranches = mobileMainTabBranches;
+
+/// 把 TV Rail 的 0..4 索引转换为全局 branch 索引。越界回落到首个 Tab。
+int tvRailBranchForIndex(int railIndex) =>
+    railIndex >= 0 && railIndex < tvRailBranches.length
+        ? tvRailBranches[railIndex]
+        : tvRailBranches.first;
+
+/// 把全局 branch 索引转换为 TV Rail 的 0..4 索引。
+/// 非 Rail 上的 branch（工具页等）返回 null，保留原有选中项。
+int? tvRailIndexForBranch(int branchIndex) {
+  final index = tvRailBranches.indexOf(branchIndex);
+  return index < 0 ? null : index;
+}
+
 /// branch index → 路由路径（与 [AppBranch] 同序）。供需要「按 branch index 反查
 /// 路由」或「按路由查 branch index」的桌面外壳使用，避免各处各维护一份顺序表。
 const List<String> branchRoutes = <String>[

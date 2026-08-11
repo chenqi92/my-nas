@@ -4,12 +4,14 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/router/app_router.dart';
 import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/app/theme/ui_style.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/shared/providers/bottom_nav_visibility_provider.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
@@ -17,7 +19,9 @@ import 'package:my_nas/shared/services/native_tab_bar_service.dart';
 import 'package:my_nas/shared/services/update_service.dart';
 import 'package:my_nas/shared/widgets/desktop_shell/desktop_scaffold.dart';
 import 'package:my_nas/shared/widgets/desktop_shortcuts.dart';
+import 'package:my_nas/shared/widgets/shell_layout.dart';
 import 'package:my_nas/shared/widgets/tab_bar_minimize_on_scroll.dart';
+import 'package:my_nas/shared/widgets/tv_shell/tv_back_policy.dart';
 import 'package:my_nas/shared/widgets/tv_shell/tv_scaffold.dart';
 import 'package:my_nas/shared/widgets/update_dialog.dart';
 
@@ -227,11 +231,18 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
 
     // Shell 布局判断：TV 模式优先；其次桌面平台走 Rail；移动平台走底栏；Web 按宽度。
     // 与 context.isDesktop（屏宽≥1200）解耦，避免桌面端缩窗口时退化为手机布局。
+    // 优先级定义在 resolveShellLayout（纯函数，有单测穷举组合）。
+    final layout = resolveShellLayout(
+      isTvLayout: context.isTvLayout,
+      isDesktopLayout: context.isDesktopLayout,
+      useNativeTabBar: useNativeTabBar,
+    );
+
     final Widget scaffold;
-    if (context.isTvLayout) {
+    if (layout == ShellLayout.tv) {
       // TV 模式：左侧 Rail + 主内容 + overscan 安全区
       scaffold = TvScaffold(navigationShell: widget.navigationShell);
-    } else if (context.isDesktopLayout) {
+    } else if (layout == ShellLayout.desktop) {
       // 桌面下统一覆盖各 page 的 AppBar 主题：高度 48（vs 56）、字号略减、
       // 去掉默认 elevation，使用扁平边框分隔。各 page 自己用 AppBar()
       // 都会自动应用，无需逐个改。自定义 Container 顶部条不受影响（需要
@@ -311,7 +322,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           child: DesktopScaffold(navigationShell: widget.navigationShell),
         ),
       );
-    } else if (useNativeTabBar) {
+    } else if (layout == ShellLayout.nativeTabBar) {
       // iOS 玻璃风格：使用原生 UITabBar
       //
       // 在这里统一包一层滚动最小化，而不是逐个页面包裹：
@@ -348,7 +359,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
 
     // 桌面 / Web 注册全局快捷键（Cmd+1..5 切 tab、Esc pop）；
     // iOS / Android 直接返回 scaffold，DesktopShortcuts 内部会判断并 no-op。
-    return DesktopShortcuts(
+    final shortcuts = DesktopShortcuts(
       onSwitchTab: (index) {
         widget.navigationShell.goBranch(
           index,
@@ -379,6 +390,53 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       },
       child: scaffold,
     );
+
+    // TV：遥控器 BACK 走逐级降级（模态 → 详情 → 首页 Tab → 退出应用）。
+    // 非 TV 不包 PopScope，保持手机的系统返回手势和桌面行为不变。
+    if (!context.isTvLayout) return shortcuts;
+
+    return PopScope(
+      // canPop: false 让所有 BACK 先进 onPopInvokedWithResult；
+      // 只有解析成 exitApp 时才手动把这次返回交还系统。
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _handleTvBack();
+      },
+      child: shortcuts,
+    );
+  }
+
+  /// TV BACK 键：按 [resolveTvBackAction] 的降级顺序执行。
+  void _handleTvBack() {
+    final idx = widget.navigationShell.currentIndex;
+    final branchKey = idx >= 0 && idx < branchNavigatorKeys.length
+        ? branchNavigatorKeys[idx]
+        : null;
+    final branchNav = branchKey?.currentState;
+    final rootNav = rootNavigatorKey.currentState;
+
+    final action = resolveTvBackAction(
+      rootCanPop: rootNav?.canPop() ?? false,
+      branchCanPop: branchNav?.canPop() ?? false,
+      isHomeBranch: idx == tvRailBranches.first,
+    );
+
+    switch (action) {
+      case TvBackAction.popRoot:
+        rootNav?.maybePop();
+      case TvBackAction.popBranch:
+        branchNav?.maybePop();
+      case TvBackAction.goHomeBranch:
+        widget.navigationShell.goBranch(tvRailBranches.first);
+      case TvBackAction.exitApp:
+        // 交还系统：Android 上即退出应用。SystemNavigator.pop 在这里等价于
+        // 让这次 BACK「未被消费」，不能用 Navigator.pop（栈底无可 pop 项）。
+        AppError.fireAndForget(
+          SystemNavigator.pop(),
+          action: 'tvBack.exitApp',
+        );
+    }
   }
 
   /// 处理 UI 风格变化
