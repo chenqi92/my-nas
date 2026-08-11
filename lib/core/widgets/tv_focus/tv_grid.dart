@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_nas/core/widgets/tv_focus/tv_focus_scroll.dart';
 
 /// TV 网格（Grid）：二维焦点导航的卡片网格，支持 D-pad 上下左右。
 ///
@@ -46,16 +47,20 @@ class TvGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) => FocusTraversalGroup(
         policy: OrderedTraversalPolicy(),
-        child: GridView.builder(
-          padding: padding,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: mainAxisSpacing,
-            crossAxisSpacing: crossAxisSpacing,
-            childAspectRatio: childAspectRatio,
+        // TvFocusScroll 挂在内部：网格靠 D-pad 走，下一行卡片通常在视口外，
+        // 少了这层焦点会移到看不见的地方（画面不动，用户以为遥控器坏了）。
+        child: TvFocusScroll(
+          child: GridView.builder(
+            padding: padding,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisSpacing: mainAxisSpacing,
+              crossAxisSpacing: crossAxisSpacing,
+              childAspectRatio: childAspectRatio,
+            ),
+            itemCount: itemCount,
+            itemBuilder: itemBuilder,
           ),
-          itemCount: itemCount,
-          itemBuilder: itemBuilder,
         ),
       );
 }

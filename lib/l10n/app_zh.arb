@@ -1348,6 +1348,15 @@
   "videoPageTabTvShows": "剧集",
   "videoPageTabOther": "其他",
   "videoPageTabRecent": "最近添加",
+  "tvEmptySection": "{section}暂无内容",
+  "@tvEmptySection": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
+  "tvLoadFailed": "加载失败",
   "videoPageSortRating": "评分",
   "videoPageSortYear": "年份",
   "videoSearchHint": "搜索影视",

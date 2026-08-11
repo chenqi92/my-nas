@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_nas/app/router/routes.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/widgets/tv_focus/tv_focus_scroll.dart';
 import 'package:my_nas/features/video/presentation/pages/tv_home_page.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 
@@ -14,12 +15,15 @@ import 'package:my_nas/l10n/app_localizations.dart';
 /// - **主题**：深色背景 #0A0D12，卡片背景 #161D2B，焦点白边 2px。
 /// - **字体**：放大 1.1 倍（已在 app.dart 处理，此处不再重复）。
 ///
+/// - **焦点滚动**：非影视 branch 复用手机端页面，外面统一套一层
+///   [TvFocusScroll]，保证 D-pad 选中的项会滚进视口。
+///
 /// 布局结构：
 /// ```
 /// SafeArea(48px overscan)
 ///   Row
 ///     ├─ _TvNavigationRail(88px)
-///     └─ Expanded(child: navigationShell)
+///     └─ Expanded(child: TvHomePage | TvFocusScroll(navigationShell))
 /// ```
 class TvScaffold extends ConsumerWidget {
   const TvScaffold({required this.navigationShell, super.key});
@@ -54,7 +58,12 @@ class TvScaffold extends ConsumerWidget {
               // 影视 branch 在 TV 上换成 shelves 首页；其余 branch 用各自的页面。
               child: branchIndex == AppBranch.video
                   ? const TvHomePage()
-                  : navigationShell,
+                  // 其余 branch 直接复用手机端页面，它们内部没有 TvFocusScroll。
+                  // 少了这层，D-pad 能把焦点移到视口外的列表项上而画面不动 ——
+                  // 遥控器看着像失灵。挂在这里而不是逐个改页面：TvFocusScroll
+                  // 只需要是可滚动容器的祖先，一处就能覆盖四个 branch。
+                  // TvHomePage 自带一层，所以不套进来，避免嵌套重复滚动。
+                  : TvFocusScroll(child: navigationShell),
             ),
           ],
         ),

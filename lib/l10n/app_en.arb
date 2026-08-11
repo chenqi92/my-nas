@@ -2337,6 +2337,15 @@
   "videoPageTabTvShows": "TV Shows",
   "videoPageTabOther": "Other",
   "videoPageTabRecent": "Recently Added",
+  "tvEmptySection": "Nothing in {section}",
+  "@tvEmptySection": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
+  "tvLoadFailed": "Failed to load",
   "videoPageSortRating": "Rating",
   "videoPageSortYear": "Year",
   "videoSearchHint": "Search films",

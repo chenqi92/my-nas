@@ -104,22 +104,56 @@ class VideoControls extends ConsumerWidget {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              // 顶部栏
-              _buildTopBar(context, ref),
+          child: _withTvFocusTheme(
+            context,
+            Column(
+              children: [
+                // 顶部栏
+                _buildTopBar(context, ref),
 
-              // 中间区域
-              const Spacer(),
-              _buildCenterControls(context),
-              const Spacer(),
+                // 中间区域
+                const Spacer(),
+                _buildCenterControls(context),
+                const Spacer(),
 
-              // 底部控制栏
-              _buildBottomBar(context),
-            ],
+                // 底部控制栏
+                _buildBottomBar(context),
+              ],
+            ),
           ),
         ),
       );
+
+  /// TV：给顶部/底部栏的原生按钮补一个「隔着几米也看得见」的焦点样式。
+  ///
+  /// 这些按钮（[IconButton] / [PopupMenuButton] / [Slider]）本身就有焦点语义，
+  /// 不需要也不应该套 [TvFocusable]，方向键能直接遍历到。问题只在于 Material
+  /// 默认的聚焦高亮是一层很淡的 overlay —— 压在视频画面上基本看不出来。
+  /// 这里统一改成实心底色 + 白描边。
+  Widget _withTvFocusTheme(BuildContext context, Widget child) {
+    if (!TvCapabilities.isTvMode) return child;
+
+    final theme = Theme.of(context);
+    return Theme(
+      data: theme.copyWith(
+        iconButtonTheme: IconButtonThemeData(
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.focused)
+                  ? Colors.white24
+                  : Colors.transparent,
+            ),
+            side: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.focused)
+                  ? const BorderSide(color: Colors.white, width: 2)
+                  : BorderSide.none,
+            ),
+          ),
+        ),
+      ),
+      child: child,
+    );
+  }
 
   Widget _buildTopBar(BuildContext context, WidgetRef ref) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -190,6 +224,7 @@ class VideoControls extends ConsumerWidget {
               icon: _getReplayIcon(),
               seekInterval: seekInterval,
               needsLabel: _needsSeekLabel,
+              focusable: false,
             ),
           )
         else
@@ -230,6 +265,7 @@ class VideoControls extends ConsumerWidget {
               icon: _getForwardIcon(),
               seekInterval: seekInterval,
               needsLabel: _needsSeekLabel,
+              focusable: false,
             ),
           )
         else
@@ -520,6 +556,7 @@ class _SeekButton extends StatelessWidget {
     required this.icon,
     required this.seekInterval,
     required this.needsLabel,
+    this.focusable = true,
   });
 
   final VoidCallback onPressed;
@@ -527,9 +564,22 @@ class _SeekButton extends StatelessWidget {
   final int seekInterval;
   final bool needsLabel;
 
+  /// 是否自带焦点语义（内部使用 [IconButton]）。
+  ///
+  /// TV 上传 false：外层由 [TvFocusable] 提供焦点框和 SELECT 激活，
+  /// 内部再套一个 [IconButton] 会变成两个焦点节点（D-pad 要按两次才过得去）。
+  final bool focusable;
+
   @override
   Widget build(BuildContext context) {
     if (needsLabel) {
+      if (!focusable) {
+        return SizedBox(
+          width: 48,
+          height: 48,
+          child: _buildLabeledIcon(),
+        );
+      }
       // 对于没有内置图标的秒数，使用 replay_10/forward_10 作为基础图标
       // 用黑色背景完全遮盖原图标中的 "10"，然后叠加自定义数字
       return SizedBox(
@@ -539,43 +589,53 @@ class _SeekButton extends StatelessWidget {
           onPressed: onPressed,
           iconSize: 48,
           padding: EdgeInsets.zero,
-          icon: Stack(
-            alignment: Alignment.center,
-            children: [
-              // 基础图标 (replay_10 或 forward_10)
-              Icon(icon, color: Colors.white, size: 48),
-              // 用黑色背景完全遮盖原图标中心的 "10" 数字
-              Container(
-                width: 18,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // 在遮盖区域上叠加自定义数字
-              Text(
-                '$seekInterval',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  height: 1,
-                ),
-              ),
-            ],
-          ),
+          icon: _buildLabeledIcon(),
         ),
       );
     }
 
     // 对于有内置图标的秒数（5, 10, 30），直接显示图标
+    if (!focusable) {
+      return Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(icon, color: Colors.white, size: 48),
+      );
+    }
+
     return IconButton(
       onPressed: onPressed,
       iconSize: 48,
       icon: Icon(icon, color: Colors.white),
     );
   }
+
+  /// 自定义秒数的叠加图标（基础图标 + 遮盖块 + 数字）。
+  Widget _buildLabeledIcon() => Stack(
+        alignment: Alignment.center,
+        children: [
+          // 基础图标 (replay_10 或 forward_10)
+          Icon(icon, color: Colors.white, size: 48),
+          // 用黑色背景完全遮盖原图标中心的 "10" 数字
+          Container(
+            width: 18,
+            height: 14,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // 在遮盖区域上叠加自定义数字
+          Text(
+            '$seekInterval',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              height: 1,
+            ),
+          ),
+        ],
+      );
 }
 
 /// 画面比例快捷按钮

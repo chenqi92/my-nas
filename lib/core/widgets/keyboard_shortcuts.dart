@@ -6,11 +6,28 @@ import 'package:my_nas/shared/utils/form_l10n.dart';
 ///
 /// 包装子组件并处理键盘事件，支持各种媒体播放页面的快捷键操作。
 /// 使用 [KeyboardListener] 监听键盘事件，避免与其他焦点组件冲突。
+///
+/// ## 与 D-pad 焦点遍历的关系（TV）
+///
+/// 本组件挂的 [Focus] 节点默认 `autofocus: true`，且命中 [shortcuts] 时返回
+/// [KeyEventResult.handled]。两者在电视上都会挡住遥控器：
+///
+/// 1. 本节点抢到焦点后，子树里的按钮一个都拿不到焦点（焦点框不出现）；
+/// 2. 方向键被 [shortcuts]（左右 seek / 上下音量）吃掉，事件不再上浮到
+///    `WidgetsApp` 根部的默认 `Shortcuts`，[DirectionalFocusIntent] 永不触发，
+///    D-pad 无法在按钮间移动。
+///
+/// 因此调用方在「子树里有需要遥控器操作的控件」时应传
+/// [reserveDirectionalKeys] = true（把方向键让给焦点遍历），并把 [autofocus]
+/// 交给子树里真正该获得初始焦点的控件；控件不可见时再收回来。
+/// 见 `video_player_page.dart` 的用法。
 class KeyboardShortcuts extends StatelessWidget {
   const KeyboardShortcuts({
     required this.child,
     required this.shortcuts,
     this.autofocus = true,
+    this.focusNode,
+    this.reserveDirectionalKeys = false,
     super.key,
   });
 
@@ -23,12 +40,41 @@ class KeyboardShortcuts extends StatelessWidget {
   /// 是否自动获取焦点
   final bool autofocus;
 
+  /// 外部持有的焦点节点。
+  ///
+  /// 调用方需要在「子树控件消失后把焦点收回来」时传入（例如播放器控制条隐藏
+  /// 后，方向键要重新用于 seek）。传 null 时由内部 [Focus] 自行管理。
+  final FocusNode? focusNode;
+
+  /// 是否把方向键让给焦点遍历，不当作快捷键消费。
+  ///
+  /// 为 true 时，方向键（含带修饰键的组合）即使在 [shortcuts] 里也不触发，
+  /// 事件继续上浮，交给 Flutter 默认的 [DirectionalFocusIntent] 移动焦点。
+  final bool reserveDirectionalKeys;
+
+  /// 是否为方向键。
+  ///
+  /// 用逐个比较而不是 `const Set`：[LogicalKeyboardKey] 覆写了 `==`，
+  /// 不满足 const 集合要求的 primitive equality，写成 const Set 会编译失败。
+  static bool _isDirectionalKey(LogicalKeyboardKey key) =>
+      key == LogicalKeyboardKey.arrowLeft ||
+      key == LogicalKeyboardKey.arrowRight ||
+      key == LogicalKeyboardKey.arrowUp ||
+      key == LogicalKeyboardKey.arrowDown;
+
   @override
   Widget build(BuildContext context) => Focus(
         autofocus: autofocus,
+        focusNode: focusNode,
         onKeyEvent: (node, event) {
           // 只处理按下事件
           if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+          // 方向键留给 D-pad 焦点遍历：必须在查表之前返回 ignored，
+          // 否则 handled 会截断事件上浮，根部的方向焦点意图收不到。
+          if (reserveDirectionalKeys && _isDirectionalKey(event.logicalKey)) {
+            return KeyEventResult.ignored;
+          }
 
           final key = ShortcutKey.fromKeyEvent(event);
           if (key != null && shortcuts.containsKey(key)) {

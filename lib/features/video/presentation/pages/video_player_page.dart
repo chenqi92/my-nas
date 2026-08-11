@@ -88,6 +88,20 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
   // 是否启用手势控制：非 TV 模式的移动端支持
   bool get _enableGestures => _isMobile && !TvCapabilities.isTvMode;
 
+  /// 快捷键层的焦点节点（TV 需要在控制条隐藏后把焦点收回来）。
+  ///
+  /// 控制条可见时焦点属于控制条里的按钮（D-pad 在按钮间走）；控制条隐藏后
+  /// 那些按钮连同焦点节点一起离开 widget 树，若不主动收回，primaryFocus 会落空，
+  /// 方向键 / SELECT 全部失效。见 [_syncTvShortcutFocus]。
+  final FocusNode _shortcutsFocusNode =
+      FocusNode(debugLabel: 'videoPlayerShortcuts');
+
+  /// TV 上方向键是否让给焦点遍历：控制条可见（且未锁定）时让出。
+  ///
+  /// 非 TV 恒为 false —— 桌面/移动端方向键仍是 seek / 音量快捷键。
+  bool get _reserveDirectionalKeys =>
+      TvCapabilities.isTvMode && _showControls && !_isLocked;
+
   // 初始亮度，用于退出时恢复
   double? _initialBrightness;
 
@@ -307,6 +321,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
     WidgetsBinding.instance.removeObserver(this);
     _hideControlsTimer?.cancel();
     _mouseExitDebounceTimer?.cancel();
+    _shortcutsFocusNode.dispose();
     // 同步停止播放 - 使用缓存的 notifier 引用，避免在 dispose 后使用 ref
     _playerNotifier?.stopSync();
     // 后台更新缩略图（仅对没有刮削封面的视频有效）
@@ -373,12 +388,52 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
     });
   }
 
+  /// 控制条显隐的唯一写入口。
+  ///
+  /// 收敛成一个方法是为了 TV：每次显隐都要同步焦点归属（[_syncTvShortcutFocus]），
+  /// 散落的 `setState(() => _showControls = ...)` 很容易漏掉其中一处，
+  /// 漏掉的那一处在电视上表现为「遥控器整个失灵」。
+  void _setShowControls(bool value) {
+    if (_showControls == value) return;
+    setState(() => _showControls = value);
+    _syncTvShortcutFocus();
+  }
+
+  /// TV：在「快捷键层」和「控制条按钮」之间交接焦点。
+  ///
+  /// 控制条隐藏时焦点必须落在 [_shortcutsFocusNode]：按钮连同焦点节点已离开
+  /// widget 树，不收回来 primaryFocus 就是空的，方向键和 SELECT 全部无响应。
+  ///
+  /// 控制条出现时必须反过来主动让位。Flutter 的 autofocus 只在所属 scope
+  /// 没有 focusedChild 时才生效，快捷键节点占着焦点时新插入的
+  /// 播放/暂停按钮 autofocus 会被直接丢弃（焦点框不出现）；unfocus 之后
+  /// autofocus 才能落到按钮上。
+  ///
+  /// 注意用 `hasPrimaryFocus` 而不是 `hasFocus`：快捷键节点是所有控制条按钮的
+  /// 祖先，任一按钮持有焦点时它的 `hasFocus` 都是 true。
+  void _syncTvShortcutFocus() {
+    if (!TvCapabilities.isTvMode) return;
+
+    if (_showControls && !_isLocked) {
+      // 让位给控制条里 autofocus 的按钮。
+      if (_shortcutsFocusNode.hasPrimaryFocus) {
+        _shortcutsFocusNode.unfocus();
+      }
+      return;
+    }
+
+    // 控制条已隐藏（或已锁定）：焦点回到快捷键层，方向键恢复 seek 语义。
+    if (!_shortcutsFocusNode.hasPrimaryFocus) {
+      _shortcutsFocusNode.requestFocus();
+    }
+  }
+
   void _startHideControlsTimer() {
     _hideControlsTimer?.cancel();
     if (_showControls) {
       _hideControlsTimer = Timer(const Duration(seconds: 4), () {
         if (mounted && _showControls && !_isLocked) {
-          setState(() => _showControls = false);
+          _setShowControls(false);
         }
       });
     }
@@ -387,14 +442,14 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
   void _toggleControls() {
     if (_isLocked) {
       // 锁定时只显示锁定按钮
-      setState(() => _showControls = !_showControls);
+      _setShowControls(!_showControls);
       return;
     }
     // 点击时重置鼠标状态（解决底部弹窗关闭后状态异常的问题）
     if (_isDesktop) {
       _isMouseInVideoArea = true;
     }
-    setState(() => _showControls = !_showControls);
+    _setShowControls(!_showControls);
     _startHideControlsTimer();
   }
 
@@ -404,8 +459,8 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
     // 取消退出防抖计时器（避免快速进出时的误触发）
     _mouseExitDebounceTimer?.cancel();
     _isMouseInVideoArea = true;
-    if (!_showControls && !_isLocked) {
-      setState(() => _showControls = true);
+    if (!_isLocked) {
+      _setShowControls(true);
     }
     _startHideControlsTimer();
   }
@@ -421,8 +476,8 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
       _isMouseInVideoArea = false;
       // 鼠标离开时隐藏控制栏
       _hideControlsTimer?.cancel();
-      if (_showControls && !_isLocked) {
-        setState(() => _showControls = false);
+      if (!_isLocked) {
+        _setShowControls(false);
       }
     });
   }
@@ -431,8 +486,8 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
   void _onMouseMove() {
     if (!_isDesktop || !_isMouseInVideoArea) return;
     // 如果控制栏未显示，则显示
-    if (!_showControls && !_isLocked) {
-      setState(() => _showControls = true);
+    if (!_isLocked) {
+      _setShowControls(true);
     }
     // 重置隐藏计时器
     _startHideControlsTimer();
@@ -632,6 +687,11 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
       },
       child: KeyboardShortcuts(
         shortcuts: _buildKeyboardShortcuts(playerNotifier, playerState),
+        focusNode: _shortcutsFocusNode,
+        reserveDirectionalKeys: _reserveDirectionalKeys,
+        // TV 且控制条可见时不抢初始焦点，留给控制条里 autofocus 的播放按钮；
+        // 其余情况（桌面/移动端、或控制条已隐藏）快捷键层需要焦点才能收到按键。
+        autofocus: !_reserveDirectionalKeys,
         child: Scaffold(
           backgroundColor: Colors.black,
           body: MouseRegion(
@@ -868,6 +928,9 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                               child: IconButton(
                                 onPressed: () {
                                   setState(() => _isLocked = !_isLocked);
+                                  // 锁定会让控制条按钮退出可交互状态，
+                                  // TV 需要重新计算焦点归属。
+                                  _syncTvShortcutFocus();
                                   _startHideControlsTimer();
                                 },
                                 icon: Icon(
@@ -973,7 +1036,12 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
   ) {
     if (_isLocked) {
       // 锁定状态下只允许解锁
-      return {CommonShortcuts.escape: () => setState(() => _isLocked = false)};
+      return {
+        CommonShortcuts.escape: () {
+          setState(() => _isLocked = false);
+          _syncTvShortcutFocus();
+        },
+      };
     }
 
     return {
@@ -988,7 +1056,16 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
       },
 
       // TV 遥控器：确认键播放/暂停，媒体键快进快退
+      //
+      // 注意：控制条可见时焦点在控制条按钮上，SELECT 被按钮的 ActivateIntent
+      // 吃掉，走不到这里。所以这个回调只在「控制条隐藏」时触发 —— 此时 TV 的
+      // 惯例是先唤出控制条而不是直接改播放状态。
       CommonShortcuts.select: () {
+        if (TvCapabilities.isTvMode && !_showControls) {
+          _setShowControls(true);
+          _startHideControlsTimer();
+          return;
+        }
         playerNotifier.playOrPause();
         _startHideControlsTimer();
       },

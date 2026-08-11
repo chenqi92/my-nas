@@ -156,6 +156,8 @@ MyNAS 是一款跨平台的家用 NAS 媒体管理工具，把你常用的多种
 | Windows | 10+ | ✅ |
 | iOS | 12.0+ | ✅ 含麦克风 / 相机权限、应用签名、**CarPlay 音乐浏览** |
 | Android | 6.0+ | ✅ 含媒体通知、应用 ID 规范 |
+| **Android TV** | 6.0+ | ✅ D-pad 导航、焦点管理、海报网格、shelves 布局 |
+| **tvOS** | 17.0+ | 🚧 SwiftUI 原生客户端（`apple_tv/`），video-only v1，需在 Mac 上创建 Xcode 项目后编译（见 `apple_tv/README.md`） |
 | Linux | - | 🚧 编译通过，部分依赖支持有限（如 share_plus） |
 
 ## Xcode 配置（macOS / iOS，新手必读）

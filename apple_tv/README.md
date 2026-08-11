@@ -83,17 +83,43 @@ swift build          # 构建 MyNASSync library
 swift test           # 跑 30 个协议测试，应该全过（或者全过 + 几个 ISO8601 精度边界 case）
 ```
 
-### 2. 用 Xcode 打开 app
+### 2. 创建 Xcode 项目并添加 app target
 
-```bash
-open MyNASTV.xcodeproj
-```
+**当前状态**：`apple_tv/` 下没有 `.xcodeproj` 文件，只有 Swift Package（`Package.swift`）定义了 `MyNASSync` library + tests。`MyNASTV/` 目录存放 SwiftUI app 源码，但未配置为 Xcode app target。
 
-或者从 Xcode → File → Open → 选 `apple_tv/` 目录。
+**首次构建步骤**：
 
-- Target 选 `MyNASTV`
-- 设备选 `Apple TV` 或 `Apple TV 4K (2nd generation)` simulator（tvOS 17.0+）
-- Cmd+R 运行
+1. 在 Xcode 中创建新项目：
+   - File → New → Project
+   - 平台选 tvOS → App
+   - Product Name: `MyNASTV`
+   - Interface: SwiftUI
+   - Language: Swift
+   - 保存到 `apple_tv/` 目录，与现有 `MyNASTV/` 文件夹同级
+
+2. 将现有源码添加到项目：
+   - 删除 Xcode 自动生成的 `MyNASTV/` 模板文件
+   - 在 Project Navigator 中右键 → Add Files to "MyNASTV"
+   - 选择现有的 `MyNASTV/` 目录（包含 `MyNASTVApp.swift` 等文件）
+   - 勾选 "Copy items if needed"（如果文件已在正确位置可不勾选）
+   - Target 选 `MyNASTV`
+
+3. 添加 `MyNASSync` library 依赖：
+   - Project Settings → `MyNASTV` target → General → Frameworks, Libraries, and Embedded Content
+   - 点 `+` → Add Other → Add Package Dependency
+   - 选择本地路径：`apple_tv/`（包含 `Package.swift` 的目录）
+   - 或者在 Project Settings → Package Dependencies 中添加本地 package
+
+4. 配置 Signing & Capabilities：
+   - 选择你的 Apple Developer Team
+   - Bundle Identifier 改为你自己的（如 `com.yourname.mynas.tv`）
+
+5. 运行：
+   - Target 选 `MyNASTV`
+   - 设备选 `Apple TV` 或 `Apple TV 4K (2nd generation)` simulator（tvOS 17.0+）
+   - Cmd+R 运行
+
+**注意**：初次编译可能遇到 import 路径、`Sendable` 约束、typo 等小错误（代码在 Windows 环境编写，未在 Mac 上验证过），预计几十行改动即可通过编译。
 
 ### 3. 真机部署
 

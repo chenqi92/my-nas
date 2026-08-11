@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/core/widgets/tv_focus/tv_focus_scroll.dart';
 import 'package:my_nas/core/widgets/tv_focus/tv_focusable.dart';
 import 'package:my_nas/core/widgets/tv_focus/tv_shelf.dart';
@@ -9,6 +10,8 @@ import 'package:my_nas/core/widgets/tv_focus/tv_shelf.dart';
 /// - [TvFocusable] 能被 D-pad 遍历，SELECT / ENTER 触发 onPressed
 /// - [TvShelf] 内左右键在 shelf 内走
 /// - [TvFocusScroll] 在焦点移到视口外的卡片时把它滚进来
+/// - [KeyboardShortcuts] 不挡住 D-pad（`reserveDirectionalKeys`），
+///   且能把焦点交接给子树里 autofocus 的控件
 ///
 /// 这些是遥控器唯一的操作通路，没有触摸兜底：一旦焦点走不通或 SELECT 不响应，
 /// 电视上表现为「整个页面点不动」，因此值得用 widget 测试锁住。
@@ -304,6 +307,203 @@ void main() {
       expect(tester.takeException(), isNull);
 
       node.dispose();
+    });
+  });
+
+  group('KeyboardShortcuts 与 D-pad 共存', () {
+    /// 播放器的结构：快捷键层包着一个「会消失」的控制条。
+    ///
+    /// 控制条可见时方向键必须让给焦点遍历，隐藏时又要还原成 seek 快捷键。
+    /// 两者共用同一个 [FocusNode]，交接错了在电视上就是遥控器失灵。
+    Widget buildPlayerLike({
+      required FocusNode shortcutsNode,
+      required bool showControls,
+      required VoidCallback onSeekForward,
+      required FocusNode playNode,
+      required FocusNode nextNode,
+    }) =>
+        MaterialApp(
+          home: KeyboardShortcuts(
+            focusNode: shortcutsNode,
+            reserveDirectionalKeys: showControls,
+            autofocus: !showControls,
+            shortcuts: {CommonShortcuts.next: onSeekForward},
+            child: Column(
+              children: [
+                const Text('video'),
+                if (showControls)
+                  Row(
+                    children: [
+                      TvFocusable(
+                        autofocus: true,
+                        focusNode: playNode,
+                        onPressed: () {},
+                        child: const Text('play'),
+                      ),
+                      TvFocusable(
+                        focusNode: nextNode,
+                        onPressed: () {},
+                        child: const Text('next'),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        );
+
+    testWidgets('控制条隐藏时方向键仍是 seek 快捷键', (tester) async {
+      final shortcutsNode = FocusNode(debugLabel: 'shortcuts');
+      final playNode = FocusNode(debugLabel: 'play');
+      final nextNode = FocusNode(debugLabel: 'next');
+      addTearDown(shortcutsNode.dispose);
+      addTearDown(playNode.dispose);
+      addTearDown(nextNode.dispose);
+
+      var seekCalls = 0;
+      await tester.pumpWidget(
+        buildPlayerLike(
+          shortcutsNode: shortcutsNode,
+          showControls: false,
+          onSeekForward: () => seekCalls++,
+          playNode: playNode,
+          nextNode: nextNode,
+        ),
+      );
+      await tester.pump();
+
+      expect(shortcutsNode.hasPrimaryFocus, isTrue);
+      await pressKey(tester, LogicalKeyboardKey.arrowRight);
+      expect(seekCalls, 1);
+    });
+
+    testWidgets('控制条可见时方向键让给焦点遍历，不再触发 seek', (tester) async {
+      final shortcutsNode = FocusNode(debugLabel: 'shortcuts');
+      final playNode = FocusNode(debugLabel: 'play');
+      final nextNode = FocusNode(debugLabel: 'next');
+      addTearDown(shortcutsNode.dispose);
+      addTearDown(playNode.dispose);
+      addTearDown(nextNode.dispose);
+
+      var seekCalls = 0;
+      await tester.pumpWidget(
+        buildPlayerLike(
+          shortcutsNode: shortcutsNode,
+          showControls: true,
+          onSeekForward: () => seekCalls++,
+          playNode: playNode,
+          nextNode: nextNode,
+        ),
+      );
+      await tester.pump();
+
+      // 控制条可见时初始焦点应落在播放按钮上（焦点框要看得见）
+      expect(playNode.hasPrimaryFocus, isTrue);
+
+      await pressKey(tester, LogicalKeyboardKey.arrowRight);
+      expect(nextNode.hasPrimaryFocus, isTrue,
+          reason: '方向键应移动焦点而不是被快捷键吃掉');
+      expect(seekCalls, 0);
+    });
+
+    testWidgets('快捷键层持有焦点时，子树 autofocus 需先 unfocus 才能接手',
+        (tester) async {
+      final shortcutsNode = FocusNode(debugLabel: 'shortcuts');
+      final playNode = FocusNode(debugLabel: 'play');
+      final nextNode = FocusNode(debugLabel: 'next');
+      addTearDown(shortcutsNode.dispose);
+      addTearDown(playNode.dispose);
+      addTearDown(nextNode.dispose);
+
+      Widget build(bool showControls) => buildPlayerLike(
+            shortcutsNode: shortcutsNode,
+            showControls: showControls,
+            onSeekForward: () {},
+            playNode: playNode,
+            nextNode: nextNode,
+          );
+
+      await tester.pumpWidget(build(false));
+      await tester.pump();
+      expect(shortcutsNode.hasPrimaryFocus, isTrue);
+
+      // 不 unfocus 直接显示控制条：autofocus 会被丢弃（scope 已有 focusedChild）
+      await tester.pumpWidget(build(true));
+      await tester.pump();
+      expect(playNode.hasPrimaryFocus, isFalse,
+          reason: 'autofocus 只在 scope 没有 focusedChild 时生效');
+      expect(shortcutsNode.hasPrimaryFocus, isTrue);
+
+      // 主动让位后 autofocus 才落到播放按钮上（video_player_page 的做法）
+      shortcutsNode.unfocus();
+      await tester.pumpWidget(build(false));
+      await tester.pump();
+      shortcutsNode.unfocus();
+      await tester.pumpWidget(build(true));
+      await tester.pump();
+      expect(playNode.hasPrimaryFocus, isTrue);
+    });
+
+    testWidgets('控制条自动隐藏后焦点被收回，方向键不落空', (tester) async {
+      final shortcutsNode = FocusNode(debugLabel: 'shortcuts');
+      final playNode = FocusNode(debugLabel: 'play');
+      final nextNode = FocusNode(debugLabel: 'next');
+      addTearDown(shortcutsNode.dispose);
+      addTearDown(playNode.dispose);
+      addTearDown(nextNode.dispose);
+
+      var seekCalls = 0;
+      Widget build(bool showControls) => buildPlayerLike(
+            shortcutsNode: shortcutsNode,
+            showControls: showControls,
+            onSeekForward: () => seekCalls++,
+            playNode: playNode,
+            nextNode: nextNode,
+          );
+
+      await tester.pumpWidget(build(true));
+      await tester.pump();
+      expect(playNode.hasPrimaryFocus, isTrue);
+
+      // 模拟 video_player_page 的隐藏路径：先 setState 再收回焦点。
+      // 不收回的话按钮节点随子树销毁，primaryFocus 落空 → 遥控器整个失灵。
+      await tester.pumpWidget(build(false));
+      shortcutsNode.requestFocus();
+      await tester.pump();
+
+      expect(shortcutsNode.hasPrimaryFocus, isTrue,
+          reason: '控制条消失后焦点必须回到快捷键层');
+
+      await pressKey(tester, LogicalKeyboardKey.arrowRight);
+      expect(seekCalls, 1, reason: '隐藏后方向键恢复 seek 语义');
+    });
+
+    testWidgets('reserveDirectionalKeys 只放行方向键，其他快捷键照常', (tester) async {
+      final shortcutsNode = FocusNode(debugLabel: 'shortcuts');
+      addTearDown(shortcutsNode.dispose);
+
+      var seekCalls = 0;
+      var pauseCalls = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: KeyboardShortcuts(
+            focusNode: shortcutsNode,
+            reserveDirectionalKeys: true,
+            shortcuts: {
+              CommonShortcuts.next: () => seekCalls++,
+              CommonShortcuts.playPause: () => pauseCalls++,
+            },
+            child: const Text('video'),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await pressKey(tester, LogicalKeyboardKey.arrowRight);
+      expect(seekCalls, 0, reason: '方向键被让给焦点遍历');
+
+      await pressKey(tester, LogicalKeyboardKey.space);
+      expect(pauseCalls, 1, reason: '非方向键不受影响');
     });
   });
 }
