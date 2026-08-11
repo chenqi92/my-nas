@@ -157,8 +157,12 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
     _startHideControlsTimer();
   }
 
-  /// 检查画中画支持
+  /// 检查画中画支持：TV 模式不支持 PiP
   Future<void> _checkPipSupport() async {
+    if (TvCapabilities.isTvMode) {
+      setState(() => _isPipSupported = false);
+      return;
+    }
     final supported = await _playerNotifier?.isPipSupported ?? false;
     if (mounted) {
       setState(() => _isPipSupported = supported);
@@ -332,9 +336,9 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
     });
   }
 
-  /// 调整屏幕亮度（仅移动设备）
+  /// 调整屏幕亮度（仅移动设备，TV 模式不支持）
   Future<void> _setBrightness(double brightness) async {
-    if (!_isMobile) return;
+    if (!_isMobile || TvCapabilities.isTvMode) return;
     try {
       await ScreenBrightness.instance.setApplicationScreenBrightness(
         brightness,

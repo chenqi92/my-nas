@@ -5,6 +5,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 import 'package:my_nas/features/app_lock/data/services/app_lock_secure_store.dart';
 import 'package:my_nas/features/app_lock/domain/app_lock_settings.dart';
 
@@ -69,8 +70,9 @@ class AppLockService {
   // ─── 生物识别 ──────────────────────────────────────────
 
   /// 当前设备是否可用生物识别（硬件存在且至少录入了一种）
+  /// TV 模式不支持生物识别
   Future<bool> isBiometricAvailable() async {
-    if (!_platformSupportsBiometric) return false;
+    if (!_platformSupportsBiometric || TvCapabilities.isTvMode) return false;
     try {
       final canCheck = await _localAuth.canCheckBiometrics;
       if (!canCheck) return false;
@@ -85,8 +87,9 @@ class AppLockService {
   }
 
   /// 触发生物识别。成功返回 true，用户取消 / 失败返回 false
+  /// TV 模式不支持生物识别
   Future<bool> authenticateBiometric({required String reason}) async {
-    if (!_platformSupportsBiometric) return false;
+    if (!_platformSupportsBiometric || TvCapabilities.isTvMode) return false;
     try {
       return await _localAuth.authenticate(
         localizedReason: reason,

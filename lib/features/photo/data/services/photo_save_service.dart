@@ -10,6 +10,7 @@ import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart' hide FileType;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -42,11 +43,11 @@ class PhotoSaveService {
   /// 是否支持保存到相册
   bool get canSaveToGallery => PlatformCapabilities.canSaveToGallery;
 
-  /// 是否支持系统分享
-  bool get canShare => PlatformCapabilities.canShare;
+  /// 是否支持系统分享（TV 模式不支持）
+  bool get canShare => PlatformCapabilities.canShare && !TvCapabilities.isTvMode;
 
-  /// 是否支持完整的系统分享
-  bool get canShareNatively => PlatformCapabilities.canShareNatively;
+  /// 是否支持完整的系统分享（TV 模式不支持）
+  bool get canShareNatively => PlatformCapabilities.canShareNatively && !TvCapabilities.isTvMode;
 
   /// 下载照片（通过 HTTP URL）
   /// - 桌面端：弹出文件选择对话框，用户选择保存位置
@@ -286,12 +287,17 @@ class PhotoSaveService {
     return SaveResult.failure(appL10n.photoSaveUnsupportedUrlType);
   }
 
-  /// 桌面端：弹出文件对话框让用户选择保存位置
+  /// 桌面端：弹出文件对话框让用户选择保存位置（TV 模式不支持）
   Future<SaveResult> _saveToDesktop(
     File sourceFile,
     String fileName, {
     bool deleteAfter = true,
   }) async {
+    if (TvCapabilities.isTvMode) {
+      if (deleteAfter) await _cleanupTempFile(sourceFile);
+      return SaveResult.failure(appL10n.photoSavePlatformNotSupported);
+    }
+
     try {
       // 弹出保存文件对话框
       final result = await FilePicker.platform.saveFile(
