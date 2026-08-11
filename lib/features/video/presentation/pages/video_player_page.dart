@@ -10,6 +10,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/utils/logger.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
@@ -83,6 +84,9 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
   // 是否为桌面设备（支持鼠标悬停显示控制栏）
   bool get _isDesktop =>
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+
+  // 是否启用手势控制：非 TV 模式的移动端支持
+  bool get _enableGestures => _isMobile && !TvCapabilities.isTvMode;
 
   // 初始亮度，用于退出时恢复
   double? _initialBrightness;
@@ -635,17 +639,20 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                 playerState: playerState,
                 onTap: _toggleControls,
                 onDoubleTap: _handleDoubleTap,
-                onVolumeChange: _isMobile
+                onVolumeChange: _enableGestures
                     ? (volume) {
                         playerNotifier.setVolume(volume);
                         _startHideControlsTimer();
                       }
-                    : (_) {}, // 桌面端禁用手势音量控制
-                onBrightnessChange: _isMobile ? _setBrightness : null,
-                onSeek: (position) {
-                  playerNotifier.seek(position);
-                  _startHideControlsTimer();
-                },
+                    : (_) {},
+                onBrightnessChange: _enableGestures ? _setBrightness : null,
+                onSeek: _enableGestures
+                    ? (position) {
+                        playerNotifier.seek(position);
+                        _startHideControlsTimer();
+                      }
+                    : (_) {},
+                enableGestures: _enableGestures,
                 child: Stack(
                   children: [
                     // 视频画面

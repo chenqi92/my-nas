@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
+import 'package:my_nas/core/widgets/tv_focus/tv_focusable.dart';
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
 import 'package:my_nas/features/video/presentation/providers/video_player_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/aspect_ratio_selector.dart';
@@ -153,11 +155,24 @@ class VideoControls extends ConsumerWidget {
         ),
       );
 
-  Widget _buildCenterControls(BuildContext context) => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // 上一个（播放列表）
-          if (hasPlaylist)
+  Widget _buildCenterControls(BuildContext context) {
+    final isTvMode = TvCapabilities.isTvMode;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 上一个（播放列表）
+        if (hasPlaylist)
+          if (isTvMode)
+            TvFocusable(
+              onPressed: hasPrevious ? onPlayPrevious! : () {},
+              child: _buildButton(
+                Icons.skip_previous_rounded,
+                36,
+                hasPrevious ? Colors.white : Colors.white38,
+              ),
+            )
+          else
             IconButton(
               onPressed: hasPrevious ? onPlayPrevious : null,
               iconSize: 36,
@@ -166,15 +181,37 @@ class VideoControls extends ConsumerWidget {
                 color: hasPrevious ? Colors.white : Colors.white38,
               ),
             ),
-          // 快退
+        // 快退
+        if (isTvMode)
+          TvFocusable(
+            onPressed: onSeekBackward,
+            child: _SeekButton(
+              onPressed: onSeekBackward,
+              icon: _getReplayIcon(),
+              seekInterval: seekInterval,
+              needsLabel: _needsSeekLabel,
+            ),
+          )
+        else
           _SeekButton(
             onPressed: onSeekBackward,
             icon: _getReplayIcon(),
             seekInterval: seekInterval,
             needsLabel: _needsSeekLabel,
           ),
-          const SizedBox(width: 24),
-          // 播放/暂停
+        const SizedBox(width: 24),
+        // 播放/暂停
+        if (isTvMode)
+          TvFocusable(
+            autofocus: true,
+            onPressed: onPlayPause,
+            child: _buildButton(
+              state.isPlaying ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
+              64,
+              Colors.white,
+            ),
+          )
+        else
           IconButton(
             onPressed: onPlayPause,
             iconSize: 64,
@@ -183,16 +220,37 @@ class VideoControls extends ConsumerWidget {
               color: Colors.white,
             ),
           ),
-          const SizedBox(width: 24),
-          // 快进
+        const SizedBox(width: 24),
+        // 快进
+        if (isTvMode)
+          TvFocusable(
+            onPressed: onSeekForward,
+            child: _SeekButton(
+              onPressed: onSeekForward,
+              icon: _getForwardIcon(),
+              seekInterval: seekInterval,
+              needsLabel: _needsSeekLabel,
+            ),
+          )
+        else
           _SeekButton(
             onPressed: onSeekForward,
             icon: _getForwardIcon(),
             seekInterval: seekInterval,
             needsLabel: _needsSeekLabel,
           ),
-          // 下一个（播放列表）
-          if (hasPlaylist)
+        // 下一个（播放列表）
+        if (hasPlaylist)
+          if (isTvMode)
+            TvFocusable(
+              onPressed: hasNext ? onPlayNext! : () {},
+              child: _buildButton(
+                Icons.skip_next_rounded,
+                36,
+                hasNext ? Colors.white : Colors.white38,
+              ),
+            )
+          else
             IconButton(
               onPressed: hasNext ? onPlayNext : null,
               iconSize: 36,
@@ -201,7 +259,13 @@ class VideoControls extends ConsumerWidget {
                 color: hasNext ? Colors.white : Colors.white38,
               ),
             ),
-        ],
+      ],
+    );
+  }
+
+  Widget _buildButton(IconData icon, double size, Color color) => Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(icon, size: size, color: color),
       );
 
   Widget _buildBottomBar(BuildContext context) => Padding(

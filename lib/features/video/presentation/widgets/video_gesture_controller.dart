@@ -57,6 +57,7 @@ class VideoGestureController extends StatefulWidget {
     required this.onTap,
     required this.onDoubleTap,
     this.onBrightnessChange,
+    this.enableGestures = true,
     super.key,
   });
 
@@ -67,6 +68,7 @@ class VideoGestureController extends StatefulWidget {
   final VoidCallback onTap;
   final void Function(TapDownDetails) onDoubleTap;
   final ValueChanged<double>? onBrightnessChange;
+  final bool enableGestures;
 
   @override
   State<VideoGestureController> createState() => _VideoGestureControllerState();
@@ -208,9 +210,9 @@ class _VideoGestureControllerState extends State<VideoGestureController> {
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
         onDoubleTapDown: widget.onDoubleTap,
-        onPanStart: _onPanStart,
-        onPanUpdate: _onPanUpdate,
-        onPanEnd: _onPanEnd,
+        onPanStart: widget.enableGestures ? _onPanStart : null,
+        onPanUpdate: widget.enableGestures ? _onPanUpdate : null,
+        onPanEnd: widget.enableGestures ? _onPanEnd : null,
         child: Stack(
           children: [
             widget.child,
