@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:my_nas/core/services/nas_file_system_registry.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
+import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/stream_image.dart';
 
 /// 视频海报组件
@@ -9,6 +10,7 @@ import 'package:my_nas/shared/widgets/stream_image.dart';
 /// 智能检测 URL 类型并选择合适的加载方式：
 /// - `http://` 或 `https://` → CachedNetworkImage
 /// - NAS 路径（以 `/` 开头）→ StreamImage（自动从 Registry 获取 fileSystem）
+/// - `file://` 或本机绝对路径 → AdaptiveImage
 class VideoPoster extends StatelessWidget {
   const VideoPoster({
     required this.posterUrl,
@@ -98,18 +100,16 @@ class VideoPoster extends StatelessWidget {
         placeholder: _buildPlaceholder(context),
         errorWidget: _buildError(context),
       );
-    } else if (isNasPath(posterUrl) && fs == null) {
-      // NAS 路径但没有 fileSystem - 显示占位符
-      imageWidget = _buildPlaceholder(context);
     } else {
-      // 其他情况 - 尝试作为网络 URL
-      imageWidget = CachedNetworkImage(
+      // file://、本机绝对路径，或缺少 NAS fileSystem 时由 AdaptiveImage
+      // 判断是否为可读的本地文件。这样既兼容离线缓存，也不会把路径误当 URL。
+      imageWidget = AdaptiveImage(
         imageUrl: posterUrl!,
         fit: fit,
         width: width,
         height: height,
-        placeholder: (context, url) => _buildPlaceholder(context),
-        errorWidget: (context, url, error) => _buildError(context),
+        placeholder: (_) => _buildPlaceholder(context),
+        errorWidget: (_, _) => _buildError(context),
       );
     }
 

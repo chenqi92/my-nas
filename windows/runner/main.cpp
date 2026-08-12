@@ -6,6 +6,7 @@
 #include "flutter_window.h"
 #include "jumplist_channel.h"
 #include "single_instance.h"
+#include "system_proxy.h"
 #include "utils.h"
 
 namespace {
@@ -77,6 +78,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
       return EXIT_SUCCESS;
     }
   }
+
+  // Dart's HttpClient only consumes proxy environment variables. Import the
+  // current Win11 user's static system proxy before the Dart VM starts.
+  ApplyWindowsSystemProxyEnvironment();
 
   flutter::DartProject project(L"data");
 

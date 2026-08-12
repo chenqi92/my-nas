@@ -38,10 +38,10 @@ import 'package:my_nas/features/video/presentation/widgets/detail_master_panel.d
 import 'package:my_nas/features/video/presentation/widgets/recommendations_section.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_download_dialog.dart';
 import 'package:my_nas/features/video/presentation/widgets/unified_episode_selector.dart';
+import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/providers/ui_style_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_glass_app_bar.dart';
-import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/rounded_back_button.dart';
 import 'package:my_nas/shared/widgets/sheet_drag_handle.dart';
@@ -472,11 +472,12 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            AdaptiveImage(
-              imageUrl: url,
+            VideoPoster(
+              posterUrl: url,
+              sourceId: _selectedMetadata.sourceId,
               fit: BoxFit.cover,
-              placeholder: (_) => ColoredBox(color: cs.surfaceContainerHighest),
-              errorWidget: (_, _) => ColoredBox(color: cs.surfaceContainerHighest),
+              placeholder: ColoredBox(color: cs.surfaceContainerHighest),
+              errorWidget: ColoredBox(color: cs.surfaceContainerHighest),
             ),
             // 底部渐变到 surface，实现与下方内容衔接
             DecoratedBox(

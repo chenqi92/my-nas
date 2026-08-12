@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:my_nas/core/i18n/app_l10n.dart';
-import 'package:my_nas/core/network/http_client.dart';
+import 'package:my_nas/core/network/resolved_http_client.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_result.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
@@ -52,7 +52,7 @@ class TmdbScraper implements MediaScraper {
 
   /// 带超时的 HTTP GET 请求
   Future<http.Response> _httpGet(Uri uri) =>
-      InsecureHttpClient.get(uri).timeout(
+      ResolvedHttpClient.get(uri).timeout(
         _requestTimeout,
         onTimeout: () =>
             throw TimeoutException(appL10n.tmdbScraperRequestTimeout(uri)),

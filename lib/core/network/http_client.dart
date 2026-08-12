@@ -101,7 +101,10 @@ class InsecureHttpClient {
     try {
       return await request();
     } on Exception catch (error, stackTrace) {
-      if (url.scheme.toLowerCase() != 'https') rethrow;
+      if (url.scheme.toLowerCase() != 'https' ||
+          !TlsTrustStore.isCertificateValidationError(error)) {
+        rethrow;
+      }
       final decision = await TlsTrustStore.requestTrustForEndpoint(url);
       if (decision == TlsTrustDecision.trusted) return request();
       if (decision == TlsTrustDecision.declined) {

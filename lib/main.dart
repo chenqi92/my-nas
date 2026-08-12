@@ -14,6 +14,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:my_nas/app/app.dart';
 import 'package:my_nas/core/di/injection.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
+import 'package:my_nas/core/network/app_http_overrides.dart';
 import 'package:my_nas/core/network/hosts_resolver_service.dart';
 import 'package:my_nas/core/network/http_client.dart';
 import 'package:my_nas/core/platform/jump_list_service.dart';
@@ -53,6 +54,10 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 late IMusicAudioHandler audioHandler;
 
 Future<void> main(List<String> args) async {
+  // Dart HttpClient defaults to DIRECT. Install the proxy-aware factory before
+  // any main or desktop child-window service can create an HTTP client.
+  HttpOverrides.global = AppHttpOverrides();
+
   // 检查是否是桌面歌词子窗口（macOS 和 Windows 都使用 desktop_multi_window）
   if (args.isNotEmpty && args.first == 'multi_window') {
     // 子窗口入口：args[1] = windowId, args[2] = arguments

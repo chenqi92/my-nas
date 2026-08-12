@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui' show ImageFilter;
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
@@ -16,6 +14,7 @@ import 'package:my_nas/features/video/presentation/pages/video_duplicates_page.d
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, VideoListLoading, VideoTab, videoListProvider;
 import 'package:my_nas/features/video/presentation/widgets/video_category_settings_sheet.dart';
+import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_button.dart';
@@ -818,7 +817,11 @@ class _Hero extends StatelessWidget {
             alignment: AlignmentDirectional.bottomStart,
             children: [
               Positioned.fill(
-                child: _Image(url: backdrop, fallbackColor: t.bgStrong),
+                child: _Image(
+                  url: backdrop,
+                  sourceId: meta.sourceId,
+                  fallbackColor: t.bgStrong,
+                ),
               ),
               Positioned.fill(
                 child: Container(
@@ -1170,7 +1173,8 @@ class _PosterList extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(6),
                       child: _Image(
-                        url: meta.localPosterUrl ?? meta.posterUrl,
+                        url: meta.displayPosterUrl,
+                        sourceId: meta.sourceId,
                         fallbackColor: DesignTokens.of(context).insetBg,
                       ),
                     ),
@@ -1229,7 +1233,7 @@ class _PosterCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = DesignTokens.of(context);
-    final poster = meta.localPosterUrl ?? meta.posterUrl;
+    final poster = meta.displayPosterUrl;
     return GestureDetector(
       onTap: () => _open(context, meta),
       child: MouseRegion(
@@ -1243,7 +1247,11 @@ class _PosterCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    _Image(url: poster, fallbackColor: t.insetBg),
+                    _Image(
+                      url: poster,
+                      sourceId: meta.sourceId,
+                      fallbackColor: t.insetBg,
+                    ),
                     if (meta.rating != null)
                       Positioned(
                         top: 8,
@@ -1371,39 +1379,31 @@ const desktopVideoLibraryActions = <String>{
   'full_detail',
 };
 
-/// 兼容 NetworkImage / file:// / 缺图三种来源。无图时画一个占位色块。
+/// 统一兼容网络、本地缓存与 NAS 路径。无图时画一个占位色块。
 class _Image extends StatelessWidget {
-  const _Image({required this.url, required this.fallbackColor});
+  const _Image({required this.url, required this.fallbackColor, this.sourceId});
   final String? url;
   final Color fallbackColor;
+  final String? sourceId;
 
   @override
   Widget build(BuildContext context) {
-    if (url == null || url!.isEmpty) {
-      return Container(
-        color: fallbackColor,
-        alignment: Alignment.center,
+    final fallback = ColoredBox(
+      color: fallbackColor,
+      child: Center(
         child: Icon(
           Icons.movie_outlined,
           color: DesignTokens.of(context).text3,
           size: 28,
         ),
-      );
-    }
-    if (url!.startsWith('file://')) {
-      return Image.file(
-        File(url!.substring(7)),
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => Container(color: fallbackColor),
-      );
-    }
-    // 网络海报走磁盘缓存（VID-SCR-04），避免每次滚动重拉。
-    return CachedNetworkImage(
-      imageUrl: url!,
+      ),
+    );
+    return VideoPoster(
+      posterUrl: url,
+      sourceId: sourceId,
       fit: BoxFit.cover,
-      fadeInDuration: const Duration(milliseconds: 150),
-      errorWidget: (_, _, _) => Container(color: fallbackColor),
-      placeholder: (_, _) => Container(color: fallbackColor),
+      placeholder: fallback,
+      errorWidget: fallback,
     );
   }
 }

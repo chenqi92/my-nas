@@ -76,6 +76,9 @@ bool SingleInstanceTryForwardOrAcquire(
     ::SendMessageW(primary, WM_COPYDATA, 0, reinterpret_cast<LPARAM>(&cds));
   }
 
+  if (!::IsWindowVisible(primary)) {
+    ::ShowWindow(primary, SW_SHOW);
+  }
   if (::IsIconic(primary)) {
     ::ShowWindow(primary, SW_RESTORE);
   }
