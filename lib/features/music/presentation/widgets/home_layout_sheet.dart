@@ -106,7 +106,7 @@ class _HomeLayoutSheetState extends ConsumerState<HomeLayoutSheet> {
                     itemCount: _sections.length,
                     proxyDecorator: (child, index, animation) =>
                         _buildProxyDecorator(child, animation, isDark),
-                    onReorderItem: _onReorder,
+                    onReorder: _onReorder,
                     itemBuilder: (context, index) {
                       final config = _sections[index];
                       return _SectionTile(

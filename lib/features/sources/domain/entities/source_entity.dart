@@ -354,31 +354,6 @@ enum SourceStatus { disconnected, connecting, requires2FA, connected, error }
 
 /// 连接源实体
 class SourceEntity {
-  static const sensitiveExtraConfigKeys = <String>{
-    'password',
-    'accessToken',
-    'refreshToken',
-    'apiKey',
-    'apiToken',
-    'authToken',
-    'token',
-    'plexToken',
-    'xApiKey',
-    'clientSecret',
-    'rpcSecret',
-    'passkey',
-    'privateKey',
-    'privateKeyPassphrase',
-    'cookie',
-    'customHeaders',
-    'authorization',
-    'sessionToken',
-    // Tracker RSS links commonly embed a passkey in their query string.
-    'rssUrl',
-    // Custom attendance endpoints can likewise embed passkeys/tokens.
-    'checkInPath',
-  };
-
   SourceEntity({
     required this.name,
     required this.type,
@@ -432,6 +407,32 @@ class SourceEntity {
     // 排序顺序
     sortOrder: json['sortOrder'] as int? ?? 0,
   );
+
+  /// extraConfig 中属于凭证性质、不得进入日志 / 同步载荷的键。
+  static const sensitiveExtraConfigKeys = <String>{
+    'password',
+    'accessToken',
+    'refreshToken',
+    'apiKey',
+    'apiToken',
+    'authToken',
+    'token',
+    'plexToken',
+    'xApiKey',
+    'clientSecret',
+    'rpcSecret',
+    'passkey',
+    'privateKey',
+    'privateKeyPassphrase',
+    'cookie',
+    'customHeaders',
+    'authorization',
+    'sessionToken',
+    // Tracker RSS links commonly embed a passkey in their query string.
+    'rssUrl',
+    // Custom attendance endpoints can likewise embed passkeys/tokens.
+    'checkInPath',
+  };
 
   final String id;
   final String name;

@@ -29,7 +29,7 @@ void main() {
       expect(nasPathJoin('/', 'folder.jpg'), '/folder.jpg');
     });
 
-    test('Windows 本地路径用 \\ 拼接', () {
+    test(r'Windows 本地路径用 \ 拼接', () {
       expect(nasPathJoin(r'C:\music', 'folder.jpg'), r'C:\music\folder.jpg');
       expect(nasPathJoin(r'\\nas\share', 'folder.jpg'), r'\\nas\share\folder.jpg');
     });

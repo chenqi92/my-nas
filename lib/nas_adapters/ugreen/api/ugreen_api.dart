@@ -475,7 +475,7 @@ class UGreenApi {
 
         final respData = response.data;
         logger.d('UGreenApi: listDirectory 响应 => $respData');
-        var files = _extractSuccessfulList(respData, const [
+        final files = _extractSuccessfulList(respData, const [
           'list',
           'files',
           'items',
@@ -1048,7 +1048,7 @@ class UGreenApi {
       final downloadPath = responseData['dl_url']?.toString();
       if (downloadPath == null || downloadPath.isEmpty) return null;
       final downloadUri = Uri.tryParse(downloadPath);
-      final resolved = downloadUri?.hasScheme == true
+      final resolved = (downloadUri?.hasScheme ?? false)
           ? downloadUri!.toString()
           : Uri.parse(dio.options.baseUrl).resolve(downloadPath).toString();
       _v2DownloadCache[path] = (url: resolved, createdAt: DateTime.now());
@@ -1127,7 +1127,7 @@ class UGreenApi {
       if (_username != null && _password != null) {
         final result = await login(username: _username!, password: _password!);
         if (result is UGreenAuthSuccess) {
-          final retryHeaders = headers?.containsKey('x-ugreen-token') == true
+          final retryHeaders = (headers?.containsKey('x-ugreen-token') ?? false)
               ? {
                   ...?_v2AuthHeaders(),
                   if (headers?['referer'] != null)

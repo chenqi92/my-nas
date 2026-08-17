@@ -827,10 +827,12 @@ class VideoDatabaseService {
       final updates = <String, dynamic>{};
       if (fileInfo.source != null) updates[_colVideoSource] = fileInfo.source;
       if (fileInfo.codec != null) updates[_colVideoCodec] = fileInfo.codec;
-      if (fileInfo.hdrFormat != null)
+      if (fileInfo.hdrFormat != null) {
         updates[_colHdrFormat] = fileInfo.hdrFormat;
-      if (fileInfo.audioFormat != null)
+      }
+      if (fileInfo.audioFormat != null) {
         updates[_colAudioFormat] = fileInfo.audioFormat;
+      }
       if (fileInfo.is3D) updates[_colIs3D] = 1;
       if (fileInfo.isRemux) updates[_colIsRemux] = 1;
 
@@ -4808,7 +4810,7 @@ class VideoDatabaseService {
         .replaceAll('_', r'\_');
     final where = pathPrefix != null
         ? '$_colSourceId = ? AND '
-              '($_colFilePath = ? OR $_colFilePath LIKE ? ESCAPE \'\\\')'
+              "($_colFilePath = ? OR $_colFilePath LIKE ? ESCAPE '\\')"
         : '$_colSourceId = ?';
     final whereArgs = pathPrefix != null
         ? [sourceId, pathPrefix, '$escapedPrefix%']

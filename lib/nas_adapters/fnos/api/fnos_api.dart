@@ -340,7 +340,7 @@ class FnOSApi {
 
         final data = response.data;
         logger.d('FnOSApi: listDirectory 响应 ($endpoint) => $data');
-        var files = _extractSuccessfulList(data, const [
+        final files = _extractSuccessfulList(data, const [
           'list',
           'files',
           'items',
@@ -489,7 +489,8 @@ class FnOSApi {
 
   /// 获取缩略图 URL
   String? getThumbnailUrl(String path, {ThumbnailSize? size}) {
-    if (_token == null) return null;
+    final token = _token;
+    if (token == null) return null;
 
     final baseUrl = dio.options.baseUrl;
     final sizeParam = switch (size) {
@@ -501,7 +502,7 @@ class FnOSApi {
     };
     return Uri.parse('$baseUrl/api/v1/file/thumbnail')
         .replace(
-          queryParameters: {'path': path, 'size': sizeParam, 'token': _token!},
+          queryParameters: {'path': path, 'size': sizeParam, 'token': token},
         )
         .toString();
   }

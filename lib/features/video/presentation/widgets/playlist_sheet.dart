@@ -172,7 +172,7 @@ class _PlaylistPanelState extends ConsumerState<_PlaylistPanel>
                                 : ReorderableListView.builder(
                                     padding: const EdgeInsets.symmetric(vertical: 8),
                                     itemCount: playlist.items.length,
-                                    onReorderItem: playlistNotifier.moveItem,
+                                    onReorder: playlistNotifier.moveItem,
                                     itemBuilder: (context, index) {
                                       final item = playlist.items[index];
                                       final isPlaying = index == playlist.currentIndex;

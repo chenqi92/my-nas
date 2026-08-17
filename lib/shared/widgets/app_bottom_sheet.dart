@@ -251,10 +251,11 @@ class _ScrollableBottomSheet extends ConsumerWidget {
 
     Widget content = DecoratedBox(decoration: decoration, child: child);
 
-    if (glassStyle.needsBlur) {
+    final blurFilter = glassStyle.blurFilter;
+    if (blurFilter != null) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
+        child: BackdropFilter(filter: blurFilter, child: content),
       );
     }
 
@@ -425,10 +426,11 @@ class _FixedBottomSheet extends ConsumerWidget {
       ),
     );
 
-    if (glassStyle.needsBlur) {
+    final blurFilter = glassStyle.blurFilter;
+    if (blurFilter != null) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
+        child: BackdropFilter(filter: blurFilter, child: content),
       );
     }
 

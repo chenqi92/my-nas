@@ -285,7 +285,7 @@ class _SourcesPageState extends ConsumerState<SourcesPage>
   ) => ReorderableListView.builder(
     padding: const EdgeInsets.all(16),
     itemCount: sources.length,
-    onReorderItem: (oldIndex, newIndex) {
+    onReorder: (oldIndex, newIndex) {
       ref.read(sourcesProvider.notifier).reorderSources(oldIndex, newIndex);
     },
     proxyDecorator: (child, index, animation) => AnimatedBuilder(

@@ -23,12 +23,12 @@ class NetworkEndpoint {
       parsed = Uri.tryParse('$defaultScheme://$raw');
     }
 
-    final scheme = parsed?.hasScheme == true ? parsed!.scheme : defaultScheme;
-    var effectiveHost = parsed?.host.isNotEmpty == true ? parsed!.host : raw;
+    final scheme = (parsed?.hasScheme ?? false) ? parsed!.scheme : defaultScheme;
+    var effectiveHost = (parsed?.host.isNotEmpty ?? false) ? parsed!.host : raw;
     if (effectiveHost.startsWith('[') && effectiveHost.endsWith(']')) {
       effectiveHost = effectiveHost.substring(1, effectiveHost.length - 1);
     }
-    final effectivePort = parsed?.hasPort == true
+    final effectivePort = (parsed?.hasPort ?? false)
         ? parsed!.port
         : hasExplicitScheme
         ? (scheme == 'https' ? 443 : 80)

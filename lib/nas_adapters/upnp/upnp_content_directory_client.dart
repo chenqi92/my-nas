@@ -288,8 +288,9 @@ class UpnpContentDirectoryClient {
     final value = resource.innerText.trim().toLowerCase();
     final protocol = resource.getAttribute('protocolInfo')?.toLowerCase() ?? '';
     var score = 0;
-    if (value.startsWith('https://') || value.startsWith('http://'))
+    if (value.startsWith('https://') || value.startsWith('http://')) {
       score += 100;
+    }
     if (protocol.startsWith('http-get:')) score += 50;
     final type = upnpClass?.toLowerCase();
     String? expectedMimePrefix;

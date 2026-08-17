@@ -72,7 +72,7 @@ class SftpAdapter implements NasAdapter {
       final identities = usePrivateKey
           ? SSHKeyPair.fromPem(
               privateKey?.trim() ?? '',
-              passphrase?.isEmpty == true ? null : passphrase,
+              (passphrase?.isEmpty ?? false) ? null : passphrase,
             )
           : null;
 

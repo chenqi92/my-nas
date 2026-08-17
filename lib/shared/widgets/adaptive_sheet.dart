@@ -520,10 +520,11 @@ class _MobileBottomSheet extends ConsumerWidget {
       content = DecoratedBox(decoration: decoration, child: buildContent(null));
     }
 
-    if (glassStyle.needsBlur) {
+    final blurFilter = glassStyle.blurFilter;
+    if (blurFilter != null) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
+        child: BackdropFilter(filter: blurFilter, child: content),
       );
     }
 
@@ -679,10 +680,11 @@ class _DesktopDialog extends ConsumerWidget {
       ),
     );
 
-    if (glassStyle.needsBlur) {
+    final blurFilter = glassStyle.blurFilter;
+    if (blurFilter != null) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
+        child: BackdropFilter(filter: blurFilter, child: content),
       );
     }
 
@@ -822,9 +824,10 @@ class _DesktopSidePanel extends ConsumerWidget {
       ),
     );
 
-    if (glassStyle.needsBlur) {
+    final blurFilter = glassStyle.blurFilter;
+    if (blurFilter != null) {
       content = ClipRect(
-        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
+        child: BackdropFilter(filter: blurFilter, child: content),
       );
     }
 

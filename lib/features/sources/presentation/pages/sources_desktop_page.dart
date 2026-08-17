@@ -220,7 +220,7 @@ class _ConfiguredSourcesSection extends StatelessWidget {
               buildDefaultDragHandles: false,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: sources.length,
-              onReorderItem: onReorder,
+              onReorder: onReorder,
               itemBuilder: (context, index) => Column(
                 key: ValueKey(sources[index].id),
                 children: [

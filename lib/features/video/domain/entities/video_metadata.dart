@@ -250,13 +250,6 @@ class VideoMetadata {
   int? playbackPositionTicks; // 播放位置（时间刻度）
   DateTime? lastPlayedAt; // 最后播放时间
 
-  /// 海报显示优先级：
-  /// 1. 本地缓存的海报（离线可用，file:// 路径）
-  /// 2. TMDB 海报（需网络，但会被 CachedNetworkImage 缓存）
-  /// 3. NAS 内置缩略图（需 NAS 连接）
-  /// 4. 生成的视频缩略图（本地文件）
-  ///
-  /// 注意：localPosterUrl 始终指向本地 file:// 缓存路径，不会是 NAS 路径
   /// 背景图显示优先级：本地缓存的背景图（NFO fanart，离线可用）优先，其次网络 backdrop。
   String? get displayBackdropUrl {
     if (localBackdropUrl != null && localBackdropUrl!.isNotEmpty) {
@@ -266,6 +259,13 @@ class VideoMetadata {
     return null;
   }
 
+  /// 海报显示优先级：
+  /// 1. 本地缓存的海报（离线可用，file:// 路径）
+  /// 2. TMDB 海报（需网络，但会被 CachedNetworkImage 缓存）
+  /// 3. NAS 内置缩略图（需 NAS 连接）
+  /// 4. 生成的视频缩略图（本地文件）
+  ///
+  /// 注意：localPosterUrl 始终指向本地 file:// 缓存路径，不会是 NAS 路径
   String? get displayPosterUrl {
     // 本地缓存优先（离线可用）
     if (localPosterUrl != null && localPosterUrl!.isNotEmpty) return localPosterUrl;

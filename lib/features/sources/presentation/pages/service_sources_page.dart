@@ -145,7 +145,7 @@ class _ServiceSourcesPageState extends ConsumerState<ServiceSourcesPage>
   ) => ReorderableListView.builder(
     padding: const EdgeInsets.all(16),
     itemCount: sources.length,
-    onReorderItem: (oldIndex, newIndex) {
+    onReorder: (oldIndex, newIndex) {
       // 需要找到在全局列表中的真实索引
       final allSources = ref.read(sourcesProvider).valueOrNull ?? [];
       final sourceIds = sources.map((s) => s.id).toList();

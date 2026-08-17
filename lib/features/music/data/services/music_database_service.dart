@@ -833,7 +833,7 @@ class MusicDatabaseService {
       columns: [_colFilePath],
       where:
           '$_colSourceId = ? AND '
-          '($_colFilePath = ? OR $_colFilePath LIKE ? ESCAPE \'\\\')',
+          "($_colFilePath = ? OR $_colFilePath LIKE ? ESCAPE '\\')",
       whereArgs: [sourceId, pathPrefix, '$escapedPrefix%'],
     );
     final missing = rows

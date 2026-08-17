@@ -98,7 +98,7 @@ class _LiveStreamSettingsPageState
       ReorderableListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: sources.length,
-        onReorderItem: (oldIndex, newIndex) {
+        onReorder: (oldIndex, newIndex) {
           ref
               .read(liveStreamSettingsProvider.notifier)
               .reorder(oldIndex, newIndex);

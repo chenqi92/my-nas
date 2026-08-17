@@ -1265,7 +1265,8 @@ VideoScannerService: 增量同步完成
     var unchangedDirectories = 0;
     var changedDirectories = 0;
     var newDirectories = 0;
-    var deletedDirectories = 0;
+    // 增量扫描沿着变更分支下行，不做全量比对，因此不统计目录删除。
+    const deletedDirectories = 0;
 
     // 使用队列进行广度优先遍历（只遍历有变化的分支）
     final dirsToCheck = <String>[rootPath];

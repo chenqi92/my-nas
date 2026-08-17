@@ -105,11 +105,12 @@ class GlassContainer extends ConsumerWidget {
     );
 
     // 如果需要模糊效果，包装 BackdropFilter
-    if (glassStyle.needsBlur) {
+    final blurFilter = glassStyle.blurFilter;
+    if (blurFilter != null) {
       content = ClipRRect(
         borderRadius: borderRadius,
         clipBehavior: clipBehavior,
-        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
+        child: BackdropFilter(filter: blurFilter, child: content),
       );
     }
 
@@ -164,10 +165,11 @@ class GlassBottomSheetContainer extends ConsumerWidget {
 
     Widget content = DecoratedBox(decoration: decoration, child: child);
 
-    if (glassStyle.needsBlur) {
+    final blurFilter = glassStyle.blurFilter;
+    if (blurFilter != null) {
       content = ClipRRect(
         borderRadius: borderRadius,
-        child: BackdropFilter(filter: glassStyle.blurFilter, child: content),
+        child: BackdropFilter(filter: blurFilter, child: content),
       );
     }
 

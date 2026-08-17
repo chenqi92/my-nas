@@ -72,7 +72,7 @@ class UpnpAdapter implements NasAdapter {
         useSsl: config.useSsl,
         basePath: config.basePath,
       );
-      final descriptionUrl = descriptionUri?.hasScheme == true
+      final descriptionUrl = (descriptionUri?.hasScheme ?? false)
           ? descriptionUri.toString()
           : baseUri
                 .replace(
