@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
@@ -3792,7 +3793,7 @@ class _ContinueWatchingSection extends ConsumerWidget {
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   // 预构建更多屏幕外的 item，让图片提前开始加载
-                  cacheExtent: 500,
+                  scrollCacheExtent: const ScrollCacheExtent.pixels(500),
                   itemCount: playableItems.length,
                   itemBuilder: (context, index) =>
                       _CombinedContinueWatchingCard(item: playableItems[index], isDark: isDark),
@@ -5057,7 +5058,7 @@ class _CategoryRow extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             // 预构建更多屏幕外的 item，让图片提前开始加载
-            cacheExtent: 500,
+            scrollCacheExtent: const ScrollCacheExtent.pixels(500),
             itemCount: displayItems.length + (showViewMore ? 1 : 0),
             itemBuilder: (context, index) {
               // 最后一个是"查看更多"卡片
@@ -6274,7 +6275,7 @@ class _CategoryFullPageState extends ConsumerState<_CategoryFullPage> {
                 : GridView.builder(
                     padding: gridConfig.padding,
                     // 限制预加载区域，减少内存占用和初始加载时间
-                    cacheExtent: 200,
+                    scrollCacheExtent: const ScrollCacheExtent.pixels(200),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: gridConfig.crossAxisCount,
                       childAspectRatio: gridConfig.childAspectRatio,
@@ -6893,7 +6894,7 @@ class _TvShowRow extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             // 预构建更多屏幕外的 item，让图片提前开始加载
-            cacheExtent: 500,
+            scrollCacheExtent: const ScrollCacheExtent.pixels(500),
             itemCount: displayGroups.length + (showViewMore ? 1 : 0),
             itemBuilder: (context, index) {
               if (showViewMore && index == displayGroups.length) {
@@ -9177,7 +9178,7 @@ class _MovieCollectionRow extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             // 预构建更多屏幕外的 item，让图片提前开始加载
-            cacheExtent: 500,
+            scrollCacheExtent: const ScrollCacheExtent.pixels(500),
             itemCount: displayItems.length,
             itemBuilder: (context, index) {
               final collection = displayItems[index];

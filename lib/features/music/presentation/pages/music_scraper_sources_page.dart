@@ -168,7 +168,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
           child: ReorderableListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: sources.length,
-            onReorder: (oldIndex, newIndex) =>
+            onReorderItem: (oldIndex, newIndex) =>
                 _handleReorder(sources, oldIndex, newIndex),
             proxyDecorator: (child, index, animation) => AnimatedBuilder(
               animation: animation,
@@ -217,7 +217,7 @@ class _MusicScraperSourcesPageState extends ConsumerState<MusicScraperSourcesPag
   ///
   /// [reorderable] 直接来自 provider 的 `state.sources`，索引一致。
   /// 仍按 id 回查 provider 当前 sources（防止 ref.watch 与 ReorderableListView
-  /// 的 onReorder 之间发生过状态更新导致索引漂移）。
+  /// 的 onReorderItem 之间发生过状态更新导致索引漂移）。
   void _handleReorder(
     List<MusicScraperSourceEntity> reorderable,
     int oldIndex,

@@ -127,7 +127,7 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
   ) => ReorderableListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: sortedTypes.length,
-        onReorder: (oldIndex, newIndex) =>
+        onReorderItem: (oldIndex, newIndex) =>
             _handleReorder(sources, sortedTypes, oldIndex, newIndex),
         proxyDecorator: (child, index, animation) => AnimatedBuilder(
           animation: animation,

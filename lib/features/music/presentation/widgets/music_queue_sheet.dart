@@ -321,7 +321,7 @@ class MusicQueueSheet extends ConsumerWidget {
         ),
         child: child,
       ),
-      onReorder: (oldIndex, newIndex) {
+      onReorderItem: (oldIndex, newIndex) {
         ref.read(playQueueProvider.notifier).reorder(oldIndex, newIndex);
         // 更新当前索引
         if (oldIndex == playerState.currentIndex) {

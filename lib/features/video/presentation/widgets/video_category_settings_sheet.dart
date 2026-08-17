@@ -296,7 +296,7 @@ class _VideoCategorySettingsSheetState
         buildDefaultDragHandles: false,
         padding: EdgeInsets.zero,
         itemCount: sections.length,
-        onReorder: (oldIndex, newIndex) {
+        onReorderItem: (oldIndex, newIndex) {
           // 需要将索引转换回完整列表的索引
           final settings = ref.read(videoCategorySettingsProvider);
           final allSorted = settings.sortedSections;

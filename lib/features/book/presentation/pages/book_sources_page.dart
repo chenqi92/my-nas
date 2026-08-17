@@ -160,7 +160,7 @@ class _BookSourcesPageState extends ConsumerState<BookSourcesPage>
     return ReorderableListView.builder(
       padding: AppSpacing.paddingMd,
       itemCount: sources.length,
-      onReorder: _handleReorder,
+      onReorderItem: _handleReorder,
       proxyDecorator: (child, index, animation) => AnimatedBuilder(
           animation: animation,
           builder: (context, child) => Material(

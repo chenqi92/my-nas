@@ -110,7 +110,7 @@ class _DraggableListState<T> extends State<DraggableList<T>> {
       padding: widget.padding,
       itemExtent: widget.itemExtent,
       itemCount: widget.items.length,
-      onReorder: _handleReorder,
+      onReorderItem: _handleReorder,
       proxyDecorator: widget.proxyDecorator ?? _defaultProxyDecorator,
       buildDefaultDragHandles: widget.dragHandleBuilder == null,
       itemBuilder: (context, index) {

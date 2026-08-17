@@ -65,7 +65,10 @@ void main() {
     await tester.pumpWidget(host(enableGestures: false, onTap: () => taps++));
 
     await tester.tap(gestureSurface());
-    await tester.pump();
+    // 同一个 GestureDetector 还挂着 onDoubleTapDown：双击识别器会把 arena
+    // hold 到 kDoubleTapTimeout(300ms) 结束，onTap 在那之前不会回调。
+    // 只 pump 一帧拿不到 tap，必须把测试时钟推过双击窗口。
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(taps, 1, reason: '遥控器 SELECT 会走 tap，必须保留');
   });
