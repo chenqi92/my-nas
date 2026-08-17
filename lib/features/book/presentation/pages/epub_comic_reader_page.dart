@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
@@ -155,14 +156,17 @@ class EpubComicReaderNotifier extends StateNotifier<EpubComicReaderState> {
   Future<void> ensurePageLoaded(int page) => _loadPageBatch(page);
 
   void ensurePageLoadedInBackground(int page) {
-    unawaited(_ensurePageLoadedInBackground(page));
+    AppError.fireAndForget(
+      _ensurePageLoadedInBackground(page),
+      action: 'epubComicReader.ensurePageLoadedInBackground',
+    );
   }
 
   Future<void> _ensurePageLoadedInBackground(int page) async {
     try {
       await ensurePageLoaded(page);
-    } catch (e, st) {
-      logger.e('EpubComicReader: 分批加载失败', e, st);
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'epubComicReader.loadPageBatch', {'page': page});
     }
   }
 

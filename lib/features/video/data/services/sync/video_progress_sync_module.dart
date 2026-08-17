@@ -31,6 +31,9 @@ class VideoProgressSyncModule implements SyncableModule {
   String get displayName => appL10n.syncModuleVideoProgress;
 
   @override
+  SyncMergePolicy get mergePolicy => SyncMergePolicy.recordMerge;
+
+  @override
   Future<DateTime?> getLocalUpdatedAt() async {
     await _service.init();
 
@@ -79,7 +82,7 @@ class VideoProgressSyncModule implements SyncableModule {
       ...progressMap.keys,
       ...historyByPath.keys,
       ...watchedMap.keys,
-    };
+    }.toList()..sort();
 
     final items = <Map<String, dynamic>>[];
     for (final path in paths) {
@@ -115,14 +118,14 @@ class VideoProgressSyncModule implements SyncableModule {
       items.add(record);
     }
 
-    return {
-      'version': 1,
-      'items': items,
-    };
+    return {'version': 1, 'items': items};
   }
 
   @override
-  Future<void> importData(Map<String, dynamic> data) async {
+  Future<void> importData(
+    Map<String, dynamic> data, {
+    DateTime? remoteUpdatedAt,
+  }) async {
     await _service.init();
 
     final items = (data['items'] as List?) ?? const [];
@@ -184,7 +187,8 @@ class VideoProgressSyncModule implements SyncableModule {
         final remoteWatchedAt = _tryParseDate(raw['watchedAt']);
         if (remoteWatchedAt != null) {
           final localWatchedAt = _tryParseDate(watchedBox.get(path));
-          if (localWatchedAt == null || remoteWatchedAt.isAfter(localWatchedAt)) {
+          if (localWatchedAt == null ||
+              remoteWatchedAt.isAfter(localWatchedAt)) {
             await watchedBox.put(path, remoteWatchedAt.toIso8601String());
           }
         }

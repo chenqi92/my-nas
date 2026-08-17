@@ -118,7 +118,10 @@ class MediaProxyServer {
   /// 取消注册文件
   void unregisterFile(String id) {
     _proxyFiles.remove(id);
-    unawaited(_cancelTransfers(id));
+    AppError.fireAndForget(
+      _cancelTransfers(id),
+      action: 'mediaProxyServer.cancelTransfers',
+    );
     logger.d('MediaProxyServer: 取消注册文件 $id');
   }
 
@@ -162,13 +165,13 @@ class MediaProxyServer {
       try {
         // 只有在还没发送响应头时才能设置状态码
         request.response.statusCode = HttpStatus.internalServerError;
-      } catch (_) {
-        // 响应头可能已经发送
+      } on Object catch (responseError, responseStack) {
+        AppError.ignore(responseError, responseStack, '媒体代理响应头已发送，无法改写错误状态');
       }
       try {
         await request.response.close();
-      } catch (_) {
-        // 响应可能已经关闭
+      } on Object catch (closeError, closeStack) {
+        AppError.ignore(closeError, closeStack, '媒体代理错误响应已由客户端关闭');
       }
     }
   }
@@ -261,7 +264,7 @@ class MediaProxyServer {
       transfer = _ProxyTransfer(iterator, request.response);
       _activeTransfers.putIfAbsent(id, () => <_ProxyTransfer>{}).add(transfer);
 
-      unawaited(
+      AppError.fireAndForget(
         request.response.done.then<void>(
           (_) => transfer?.cancel(),
           onError: (Object error, StackTrace st) async {
@@ -269,6 +272,7 @@ class MediaProxyServer {
             await transfer?.cancel();
           },
         ),
+        action: 'mediaProxyServer.observeClientDisconnect',
       );
 
       while (!transfer.isCancelled && await iterator.moveNext()) {
@@ -301,8 +305,8 @@ class MediaProxyServer {
       }
       try {
         await request.response.close();
-      } catch (_) {
-        // 响应可能已经关闭
+      } on Object catch (e, st) {
+        AppError.ignore(e, st, '媒体代理响应已关闭，无需重复关闭');
       }
     }
   }
@@ -433,13 +437,13 @@ class _ProxyTransfer {
     _isCancelled = true;
     try {
       await _iterator.cancel();
-    } catch (_) {
-      // 底层连接可能已经被播放器关闭。
+    } on Object catch (e, st) {
+      AppError.ignore(e, st, '播放器已关闭媒体代理底层数据流');
     }
     try {
       await _response.close();
-    } catch (_) {
-      // HTTP 客户端可能已经断开。
+    } on Object catch (e, st) {
+      AppError.ignore(e, st, '媒体代理 HTTP 客户端已断开');
     }
   }
 }

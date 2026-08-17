@@ -52,13 +52,12 @@ void main() {
     required int positionMs,
     required int durationMs,
     required String updatedAt,
-  }) =>
-      progressBox.put(path, {
-        'videoPath': path,
-        'positionMs': positionMs,
-        'durationMs': durationMs,
-        'updatedAt': updatedAt,
-      });
+  }) => progressBox.put(path, {
+    'videoPath': path,
+    'positionMs': positionMs,
+    'durationMs': durationMs,
+    'updatedAt': updatedAt,
+  });
 
   Future<void> putHistory(List<VideoHistoryItem> items) =>
       historyBox.put('list', items.map((h) => h.toJson()).toList());
@@ -73,23 +72,22 @@ void main() {
     int size = 1024,
     Duration? lastPosition = const Duration(seconds: 30),
     Duration? duration = const Duration(minutes: 90),
-  }) =>
-      VideoHistoryItem(
-        videoPath: path,
-        videoName: name,
-        videoUrl: url,
-        sourceId: sourceId,
-        thumbnailUrl: thumbnailUrl,
-        size: size,
-        lastPosition: lastPosition,
-        duration: duration,
-        watchedAt: watchedAt,
-      );
+  }) => VideoHistoryItem(
+    videoPath: path,
+    videoName: name,
+    videoUrl: url,
+    sourceId: sourceId,
+    thumbnailUrl: thumbnailUrl,
+    size: size,
+    lastPosition: lastPosition,
+    duration: duration,
+    watchedAt: watchedAt,
+  );
 
   Map<String, dynamic> itemFor(Map<String, dynamic> data, String path) =>
-      (data['items'] as List)
-          .cast<Map<String, dynamic>>()
-          .firstWhere((e) => e['videoPath'] == path);
+      (data['items'] as List).cast<Map<String, dynamic>>().firstWhere(
+        (e) => e['videoPath'] == path,
+      );
 
   group('module identity', () {
     test('key 决定远端文件名 video_progress.json，不能改', () {
@@ -309,8 +307,7 @@ void main() {
       ]);
 
       final data = await module().exportData();
-      final roundTripped =
-          jsonDecode(jsonEncode(data)) as Map<String, dynamic>;
+      final roundTripped = jsonDecode(jsonEncode(data)) as Map<String, dynamic>;
 
       expect(roundTripped, data);
       // 时间戳是字符串（ISO8601），不是 epoch 数字 —— 与 manifest.json 的
@@ -344,12 +341,18 @@ void main() {
 
       final data = await module().exportData();
 
-      expect(itemFor(data, '/micro')['progressUpdatedAt'],
-          '2026-03-01T10:00:00.123456');
-      expect(itemFor(data, '/milli')['progressUpdatedAt'],
-          '2026-03-01T10:00:00.000');
-      expect(itemFor(data, '/utc')['progressUpdatedAt'],
-          '2026-03-01T10:00:00.000Z');
+      expect(
+        itemFor(data, '/micro')['progressUpdatedAt'],
+        '2026-03-01T10:00:00.123456',
+      );
+      expect(
+        itemFor(data, '/milli')['progressUpdatedAt'],
+        '2026-03-01T10:00:00.000',
+      );
+      expect(
+        itemFor(data, '/utc')['progressUpdatedAt'],
+        '2026-03-01T10:00:00.000Z',
+      );
     });
 
     test('微秒精度时间戳参与 last-wins 且不丢精度', () async {
@@ -559,7 +562,8 @@ void main() {
         ],
       });
 
-      final list = (historyBox.get('list') as List).cast<Map<dynamic, dynamic>>();
+      final list = (historyBox.get('list') as List)
+          .cast<Map<dynamic, dynamic>>();
       expect(list.single['videoName'], 'New name');
     });
 
@@ -587,13 +591,17 @@ void main() {
               'videoName': 'Item $i',
               'videoUrl': 'smb://host/share/$i.mkv',
               // i 越大时间越新
-              'historyAddedAt':
-                  DateTime(2026, 1, 1).add(Duration(minutes: i)).toIso8601String(),
+              'historyAddedAt': DateTime(
+                2026,
+                1,
+                1,
+              ).add(Duration(minutes: i)).toIso8601String(),
             },
         ],
       });
 
-      final list = (historyBox.get('list') as List).cast<Map<dynamic, dynamic>>();
+      final list = (historyBox.get('list') as List)
+          .cast<Map<dynamic, dynamic>>();
 
       expect(list.length, 100);
       expect(list.first['videoPath'], '/media/149.mkv');
@@ -704,7 +712,7 @@ void main() {
       ]);
 
       // 远端传空 items
-      await module().importData({'version': 1, 'items': []});
+      await module().importData({'version': 1, 'items': <Object?>[]});
 
       final history = await module().exportData();
       expect((history['items'] as List).length, 3); // 本地不被截断
@@ -727,9 +735,10 @@ void main() {
 
       await module().importData(remoteData);
       final exported = await module().exportData();
-      final items = exported['items'] as List;
+      final items = exported['items'] as List<dynamic>;
       expect(items.length, 1); // 只有好的那条
-      expect(items[0]['videoPath'], '/good');
+      final item = items.single as Map<String, dynamic>;
+      expect(item['videoPath'], '/good');
     });
   });
 }

@@ -1,3 +1,4 @@
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/note/data/services/note_state_service.dart';
@@ -24,9 +25,13 @@ class NoteSyncModule implements SyncableModule {
   String get displayName => appL10n.syncModuleNotes;
 
   @override
+  SyncMergePolicy get mergePolicy => SyncMergePolicy.recordMerge;
+
+  @override
   Future<DateTime?> getLocalUpdatedAt() async {
     await _service.init();
-    final list = _service.getAllStates();
+    final list = _service.getAllStates().toList()
+      ..sort((a, b) => a.notePath.compareTo(b.notePath));
     DateTime? maxAt;
     for (final s in list) {
       if (maxAt == null || s.updatedAt.isAfter(maxAt)) maxAt = s.updatedAt;
@@ -38,16 +43,19 @@ class NoteSyncModule implements SyncableModule {
   Future<Map<String, dynamic>> exportData() async {
     await _service.init();
     final list = _service.getAllStates();
-    return {
-      'version': 1,
-      'states': list.map((s) => s.toMap()).toList(),
-    };
+    return {'version': 1, 'states': list.map((s) => s.toMap()).toList()};
   }
 
   @override
-  Future<void> importData(Map<String, dynamic> data) async {
+  Future<void> importData(
+    Map<String, dynamic> data, {
+    DateTime? remoteUpdatedAt,
+  }) async {
     await _service.init();
-    final list = (data['states'] as List?) ?? const [];
+    final list = data['states'];
+    if (list is! List) {
+      throw const FormatException('note_states.states 必须是数组');
+    }
     for (final raw in list) {
       if (raw is! Map) continue;
       try {
@@ -58,7 +66,8 @@ class NoteSyncModule implements SyncableModule {
           continue;
         }
         await _service.saveState(_merge(local, remote));
-      } on Exception catch (_) {
+      } on Object catch (e, st) {
+        AppError.ignore(e, st, '远端 note_states 单条记录解析失败，跳过该条');
         continue;
       }
     }

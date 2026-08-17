@@ -39,26 +39,29 @@ class NasFileShareService {
     void Function(double progress)? onProgress,
   }) async {
     if (!canShare) {
-      return NasFileShareResult.failure(appL10n.nasFileSharePlatformNotSupported);
+      return NasFileShareResult.failure(
+        appL10n.nasFileSharePlatformNotSupported,
+      );
     }
 
     File? tempFile;
+    Directory? workDirectory;
     try {
       // 1. 探测文件大小（用于进度回调，非必须）
       int? totalSize;
       try {
         final info = await fileSystem.getFileInfo(path);
         totalSize = info.size;
-      } on Exception catch (_) {
+      } on Object catch (e, st) {
         // 部分协议拿不到大小，继续无进度即可
+        AppError.ignore(e, st, '分享远端文件时无法获取大小，继续使用无进度模式');
       }
 
       // 2. 流式写到临时目录
       // 远端文件名可能含 Windows 非法字符或超长，直接拼进本地路径会抛异常。
       final tempDir = await getTemporaryDirectory();
-      tempFile = File(
-        p.join(tempDir.path, 'share_${sanitizeFileName(fileName)}'),
-      );
+      workDirectory = await tempDir.createTemp('mynas_share_');
+      tempFile = File(p.join(workDirectory.path, sanitizeFileName(fileName)));
 
       final stream = await fileSystem.getFileStream(path);
       final sink = tempFile.openWrite();
@@ -87,34 +90,46 @@ class NasFileShareService {
       );
 
       // 4. 延迟清理临时文件——让系统分享面板有时间读完
-      _scheduleCleanup(tempFile);
+      _scheduleCleanup(workDirectory);
 
       return switch (result.status) {
         ShareResultStatus.success => const NasFileShareResult.success(),
         ShareResultStatus.dismissed => const NasFileShareResult.cancelled(),
-        ShareResultStatus.unavailable =>
-          NasFileShareResult.failure(appL10n.nasFileShareUnavailable),
+        ShareResultStatus.unavailable => NasFileShareResult.failure(
+          appL10n.nasFileShareUnavailable,
+        ),
       };
-    } on Exception catch (e, st) {
-      AppError.ignore(e, st, 'NasFileShareService.shareFromStream 失败');
-      if (tempFile != null) {
-        _scheduleCleanup(tempFile);
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'NasFileShareService.shareFromStream');
+      if (workDirectory != null) {
+        _scheduleCleanup(workDirectory);
       }
       return NasFileShareResult.failure(e.toString());
     }
   }
 
-  static void _scheduleCleanup(File file) {
-    Future<void>.delayed(const Duration(seconds: 30), () async {
-      try {
-        if (file.existsSync()) {
-          await file.delete();
-        }
-      } on Exception catch (e, st) {
-        AppError.ignore(e, st, 'NasFileShareService 清理临时文件失败');
+  static void _scheduleCleanup(Directory directory) {
+    AppError.fireAndForget(
+      _cleanupLater(directory),
+      action: 'nasFileShare.cleanupTemporaryDirectory',
+    );
+    logger.d('NasFileShareService: 已安排 5 分钟后清理 ${directory.path}');
+  }
+
+  static Future<void> _cleanupLater(Directory directory) async {
+    await Future<void>.delayed(const Duration(minutes: 5));
+    try {
+      final resolved = p.canonicalize(directory.absolute.path);
+      final name = p.basename(resolved);
+      if (!name.startsWith('mynas_share_')) {
+        throw StateError('拒绝清理非分享临时目录: $resolved');
       }
-    });
-    logger.d('NasFileShareService: 已安排 30s 后清理 ${file.path}');
+      if (await directory.exists()) {
+        await directory.delete(recursive: true);
+      }
+    } on Object catch (e, st) {
+      AppError.ignore(e, st, 'NasFileShareService 清理临时目录失败');
+    }
   }
 }
 
@@ -125,7 +140,7 @@ class NasFileShareResult {
   const NasFileShareResult.success() : this._(NasFileShareStatus.success);
   const NasFileShareResult.cancelled() : this._(NasFileShareStatus.cancelled);
   const NasFileShareResult.failure(String message)
-      : this._(NasFileShareStatus.failure, message);
+    : this._(NasFileShareStatus.failure, message);
 
   final NasFileShareStatus status;
   final String? error;

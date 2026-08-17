@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 
 /// 把 [MusicItem] 的封面解析为 [ImageProvider]，按「内嵌字节 → file:// 本地 →
@@ -20,7 +21,8 @@ ImageProvider? musicCoverProvider(MusicItem? music) {
   final url = music.coverUrl;
   if (url == null || url.isEmpty) return null;
   if (url.startsWith('file://')) {
-    return FileImage(File(url.substring(7)));
+    final path = localPathFromFileUri(url);
+    return path == null ? null : FileImage(File(path));
   }
   if (url.startsWith('/')) {
     return FileImage(File(url));

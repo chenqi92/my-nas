@@ -19,15 +19,11 @@ public struct CloudSyncReport: Equatable, Sendable {
     }
 }
 
-/// 一轮 video_progress 同步。
+/// 一轮 video_progress 双向记录合并。
 ///
-/// 决策逻辑逐条对应 Dart `_syncModuleOnce`（lib/core/sync/cloud_sync_service.dart:334）：
-/// 1. 两端都没有 → skipped
-/// 2. 远端严格更新 → 拉取 + 合并；拿不到文件时**继续往下**判推送（Dart 是 fall-through）
-/// 3. 本地严格更新 → 推送
-/// 4. 否则 → skipped，manifest 保留远端时间
-///
-/// 时间相等时两个分支都不成立，落到 skipped —— 与 Dart 的 `isAfter` 语义一致。
+/// 不能只比较两份快照的最大时间戳：两台设备各自新增不同记录时，其中一份快照
+/// 虽然“更晚”，却并不包含另一台的记录。本协调器始终读取远端内容，以
+/// videoPath 和各字段时间戳合并后，把并集写回。
 public actor CloudSyncCoordinator {
     public static let moduleKey = "video_progress"
 
@@ -73,48 +69,105 @@ public actor CloudSyncCoordinator {
     }
 
     private func syncOnce() async throws -> CloudSyncReport {
-        let manifest = try await backend.readManifest()
-        // 拷贝后只改自己的 key，其它模块条目原样写回（见 SyncManifest 注释）
-        var newManifest = manifest
-
+        let manifestDocument = try await backend.readManifestDocument()
+        let manifest = try manifestDocument.map {
+            try JSONDecoder().decode(SyncManifest.self, from: $0.data)
+        } ?? SyncManifest()
         let remoteAt = manifest.updatedAt(forModule: Self.moduleKey)
         var state = try store.load()
+        let localBefore = state
         let localAt = state.localUpdatedAt
 
-        if localAt == nil, remoteAt == nil {
-            return CloudSyncReport(moduleKey: Self.moduleKey, outcome: .skipped)
+        let remoteDocument = try await backend.readModuleDocument(Self.moduleKey)
+        let remoteData = remoteDocument?.data
+        if remoteAt != nil, remoteDocument == nil {
+            throw CloudSyncError.remoteModuleMissing(key: Self.moduleKey)
         }
 
-        // 远端更新 → 拉取
-        if let remoteAt, localAt == nil || remoteAt > localAt! {
-            if let data = try await backend.readModule(Self.moduleKey) {
-                let payload = try JSONDecoder().decode(VideoProgressPayload.self, from: data)
-                state.merge(remote: payload)
-                try store.save(state)
-                newManifest.setUpdatedAt(remoteAt, forModule: Self.moduleKey)
-                try await backend.writeManifest(newManifest)
-                return CloudSyncReport(moduleKey: Self.moduleKey, outcome: .pulled)
+        var normalizedRemote: VideoProgressPayload?
+        if let remoteData {
+            let payload = try JSONDecoder().decode(VideoProgressPayload.self, from: remoteData)
+            var remoteState = VideoProgressState()
+            remoteState.merge(remote: payload)
+            normalizedRemote = remoteState.exportPayload()
+            state.merge(remote: payload)
+        }
+
+        let localChanged = state != localBefore
+        if localChanged { try store.save(state) }
+
+        let merged = state.exportPayload()
+        let shouldUpload = remoteData == nil ? localAt != nil : merged != normalizedRemote
+
+        if shouldUpload {
+            let data = try Self.encode(merged)
+            let written = try await backend.writeModuleIfUnchanged(
+                Self.moduleKey,
+                data: data,
+                expected: remoteDocument
+            )
+            guard written else {
+                throw CloudSyncError.concurrentRemoteChange(key: Self.moduleKey)
             }
-            // manifest 说有、文件却读不到（被删了 / 半个写入）：不 return，
-            // 往下走推送分支。Dart 在这里也是 fall-through。
-        }
 
-        // 本地更新 → 推送
-        if let localAt, remoteAt == nil || localAt > remoteAt! {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let data = try encoder.encode(state.exportPayload())
-            try await backend.writeModule(Self.moduleKey, data: data)
-            newManifest.setUpdatedAt(localAt, forModule: Self.moduleKey)
-            try await backend.writeManifest(newManifest)
+            let updatedAt = Self.nextUpdatedAt(
+                localAt: localAt,
+                remoteAt: remoteAt,
+                mergedAt: state.localUpdatedAt
+            )
+            try await updateManifest(updatedAt: updatedAt)
             return CloudSyncReport(moduleKey: Self.moduleKey, outcome: .pushed)
         }
 
-        // 一致 → 保留 manifest 里的远端时间
-        if let remoteAt {
-            newManifest.setUpdatedAt(remoteAt, forModule: Self.moduleKey)
-            try await backend.writeManifest(newManifest)
+        // 模块文件写成功、manifest 条件写冲突后，下轮即使快照已一致也要
+        // 修复落后的索引时间，否则其它设备仍会按旧时间判断方向。
+        if remoteData != nil,
+           let mergedAt = state.localUpdatedAt,
+           remoteAt == nil || remoteAt! < mergedAt
+        {
+            try await updateManifest(updatedAt: mergedAt)
         }
-        return CloudSyncReport(moduleKey: Self.moduleKey, outcome: .skipped)
+        return CloudSyncReport(
+            moduleKey: Self.moduleKey,
+            outcome: localChanged ? .pulled : .skipped
+        )
+    }
+
+    private func updateManifest(updatedAt: Date) async throws {
+        // 模块写完后重新读 manifest，只改自己的 key，并用 ETag 条件写保存，
+        // 不能让 tvOS 覆盖同期由 Flutter 写入的其它模块索引。
+        let document = try await backend.readManifestDocument()
+        var latest = try document.map {
+            try JSONDecoder().decode(SyncManifest.self, from: $0.data)
+        } ?? SyncManifest()
+        if let existing = latest.updatedAt(forModule: Self.moduleKey), existing > updatedAt {
+            return
+        }
+        latest.setUpdatedAt(updatedAt, forModule: Self.moduleKey)
+        let written = try await backend.writeManifestIfUnchanged(
+            latest,
+            expected: document
+        )
+        guard written else {
+            throw CloudSyncError.concurrentRemoteChange(key: "manifest")
+        }
+    }
+
+    private static func encode(_ payload: VideoProgressPayload) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(payload)
+    }
+
+    private static func nextUpdatedAt(
+        localAt: Date?,
+        remoteAt: Date?,
+        mergedAt: Date?
+    ) -> Date {
+        var next = [localAt, remoteAt, mergedAt].compactMap { $0 }.max() ?? Date()
+        if let remoteAt, next <= remoteAt {
+            next = remoteAt.addingTimeInterval(0.001)
+        }
+        return next
     }
 }

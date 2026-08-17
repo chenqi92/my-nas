@@ -5,11 +5,13 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/book_html_sanitizer.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/book_content_processor.dart';
 import 'package:my_nas/features/reading/data/services/reader_settings_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// 分页信息
 class PaginationInfo {
@@ -30,13 +32,12 @@ class PaginationInfo {
     int? currentPage,
     double? pageWidth,
     double? pageHeight,
-  }) =>
-      PaginationInfo(
-        totalPages: totalPages ?? this.totalPages,
-        currentPage: currentPage ?? this.currentPage,
-        pageWidth: pageWidth ?? this.pageWidth,
-        pageHeight: pageHeight ?? this.pageHeight,
-      );
+  }) => PaginationInfo(
+    totalPages: totalPages ?? this.totalPages,
+    currentPage: currentPage ?? this.currentPage,
+    pageWidth: pageWidth ?? this.pageWidth,
+    pageHeight: pageHeight ?? this.pageHeight,
+  );
 }
 
 /// WebView 分页渲染器
@@ -96,7 +97,7 @@ class WebViewPaginationRenderer {
       ),
       initialSettings: InAppWebViewSettings(
         // 性能优化
-        useShouldOverrideUrlLoading: false,
+        useShouldOverrideUrlLoading: true,
         mediaPlaybackRequiresUserGesture: true,
         allowsInlineMediaPlayback: false,
         javaScriptEnabled: true,
@@ -123,6 +124,27 @@ class WebViewPaginationRenderer {
         // 页面加载完成后初始化分页
         await _initializePagination();
       },
+      shouldOverrideUrlLoading: (controller, navigationAction) async {
+        final value = navigationAction.request.url?.toString();
+        switch (classifyBookNavigation(value)) {
+          case BookNavigationDecision.allowInternal:
+            return NavigationActionPolicy.ALLOW;
+          case BookNavigationDecision.launchExternal:
+            try {
+              await launchUrl(
+                Uri.parse(value!),
+                mode: LaunchMode.externalApplication,
+              );
+            } on Object catch (e, st) {
+              AppError.handle(e, st, 'bookReader.launchExternalLink', {
+                'url': value,
+              });
+            }
+            return NavigationActionPolicy.CANCEL;
+          case BookNavigationDecision.block:
+            return NavigationActionPolicy.CANCEL;
+        }
+      },
       onConsoleMessage: (controller, message) {
         if (kDebugMode) {
           logger.d('WebView Console: ${message.message}');
@@ -134,28 +156,27 @@ class WebViewPaginationRenderer {
   /// 设置 JavaScript 处理器
   void _setupJavaScriptHandlers(InAppWebViewController controller) {
     // 分页准备完成
-    controller..addJavaScriptHandler(
-      handlerName: 'onPaginationReady',
-      callback: (args) {
-        if (args.isNotEmpty) {
-          final data = args[0] as Map<String, dynamic>;
-          _paginationInfo = PaginationInfo(
-            totalPages: data['totalPages'] as int,
-            currentPage: 0,
-            pageWidth: (data['pageWidth'] as num).toDouble(),
-            pageHeight: (data['pageHeight'] as num).toDouble(),
-          );
-          _isReady = true;
-          _isLoading = false;
-          onLoadingStateChanged?.call(false);
-          onPaginationReady(_paginationInfo!);
-          logger.i('WebView 分页准备完成: ${_paginationInfo!.totalPages} 页');
-        }
-      },
-    )
-
-    // 页码变化
-
+    controller
+      ..addJavaScriptHandler(
+        handlerName: 'onPaginationReady',
+        callback: (args) {
+          if (args.isNotEmpty) {
+            final data = args[0] as Map<String, dynamic>;
+            _paginationInfo = PaginationInfo(
+              totalPages: data['totalPages'] as int,
+              currentPage: 0,
+              pageWidth: (data['pageWidth'] as num).toDouble(),
+              pageHeight: (data['pageHeight'] as num).toDouble(),
+            );
+            _isReady = true;
+            _isLoading = false;
+            onLoadingStateChanged?.call(false);
+            onPaginationReady(_paginationInfo!);
+            logger.i('WebView 分页准备完成: ${_paginationInfo!.totalPages} 页');
+          }
+        },
+      )
+      // 页码变化
       ..addJavaScriptHandler(
         handlerName: 'onPageChanged',
         callback: (args) {
@@ -184,7 +205,8 @@ class WebViewPaginationRenderer {
 
     try {
       await _controller!.evaluateJavascript(source: 'initPagination()');
-    } on Exception catch (e) {
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'webViewPagination.initialize');
       logger.e('初始化分页失败', e);
     }
   }
@@ -197,10 +219,11 @@ class WebViewPaginationRenderer {
     final clampedPage = pageIndex.clamp(0, _paginationInfo!.totalPages - 1);
 
     try {
-      await _controller!.evaluateJavascript(
-        source: 'goToPage($clampedPage)',
-      );
-    } on Exception catch (e) {
+      await _controller!.evaluateJavascript(source: 'goToPage($clampedPage)');
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'webViewPagination.goToPage', {
+        'page': clampedPage,
+      });
       logger.e('跳转页面失败', e);
     }
   }
@@ -241,10 +264,9 @@ class WebViewPaginationRenderer {
 
     final css = _getThemeCss(theme);
     try {
-      await _controller!.evaluateJavascript(
-        source: 'updateTheme(`$css`)',
-      );
-    } on Exception catch (e) {
+      await _controller!.evaluateJavascript(source: 'updateTheme(`$css`)');
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'webViewPagination.updateTheme');
       logger.e('更新主题失败', e);
     }
   }
@@ -268,7 +290,8 @@ class WebViewPaginationRenderer {
       );
       // 字体变化后需要重新计算分页
       await _initializePagination();
-    } on Exception catch (e) {
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'webViewPagination.updateFontSettings');
       logger.e('更新字体设置失败', e);
     }
   }
@@ -306,7 +329,7 @@ class WebViewPaginationRenderer {
     if (trimmed.isEmpty) {
       return '<p style="color: #999; text-align: center; padding: 20px;">${appL10n.webviewContentParsingFailed}</p>';
     }
-    
+
     return trimmed;
   }
 
@@ -319,7 +342,7 @@ class WebViewPaginationRenderer {
   ) {
     // 清理内容，移除嵌套的 HTML 结构
     final sanitizedContent = _sanitizeHtmlContent(content);
-    
+
     final theme = settings.theme;
     final bgColor = _colorToHex(theme.backgroundColor);
     final textColor = _colorToHex(theme.textColor);

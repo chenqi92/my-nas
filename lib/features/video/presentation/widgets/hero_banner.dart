@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
-import 'package:my_nas/core/services/nas_file_system_registry.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
-import 'package:my_nas/shared/widgets/stream_image.dart';
+import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
 
 /// 英雄横幅组件 - Netflix/Infuse 风格的大图推荐展示
 class HeroBanner extends StatefulWidget {
@@ -96,11 +94,11 @@ class _HeroBannerState extends State<HeroBanner> {
               },
               itemCount: widget.items.length,
               itemBuilder: (context, index) => _HeroBannerItem(
-                  metadata: widget.items[index],
-                  onTap: () => widget.onItemTap(widget.items[index]),
-                  onPlayTap: () => widget.onPlayTap(widget.items[index]),
-                  isDark: isDark,
-                ),
+                metadata: widget.items[index],
+                onTap: () => widget.onItemTap(widget.items[index]),
+                onPlayTap: () => widget.onPlayTap(widget.items[index]),
+                isDark: isDark,
+              ),
             ),
 
             // 底部指示器
@@ -169,7 +167,7 @@ class _HeroBannerItem extends StatelessWidget {
     // 优先使用背景图，没有则使用海报
     // 背景图: backdropUrl (TMDB) 或 localBackdropPath (本地)
     // 海报: displayPosterUrl (会自动处理本地缓存)
-    final imageUrl = metadata.backdropUrl ?? metadata.displayPosterUrl;
+    final imageUrl = metadata.displayBackdropUrl ?? metadata.displayPosterUrl;
     final hasImage = imageUrl != null && imageUrl.isNotEmpty;
 
     return GestureDetector(
@@ -235,7 +233,9 @@ class _HeroBannerItem extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      metadata.category == MediaCategory.tvShow ? context.l10n.videoPosterCardTvShow : context.l10n.videoPosterCardMovie,
+                      metadata.category == MediaCategory.tvShow
+                          ? context.l10n.videoPosterCardTvShow
+                          : context.l10n.videoPosterCardMovie,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
@@ -280,11 +280,7 @@ class _HeroBannerItem extends StatelessWidget {
                       const SizedBox(width: 16),
                     ],
                     if (metadata.rating != null && metadata.rating! > 0) ...[
-                      Icon(
-                        Icons.star_rounded,
-                        color: Colors.amber,
-                        size: 18,
-                      ),
+                      Icon(Icons.star_rounded, color: Colors.amber, size: 18),
                       const SizedBox(width: 4),
                       Text(
                         metadata.ratingText,
@@ -320,32 +316,36 @@ class _HeroBannerItem extends StatelessWidget {
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
-                    children: metadata.genreList.take(3).map((genre) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
+                    children: metadata.genreList
+                        .take(3)
+                        .map(
+                          (genre) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Text(
+                              genre,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 11,
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          genre,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 11,
-                          ),
-                        ),
-                      )).toList(),
+                        )
+                        .toList(),
                   ),
                 const SizedBox(height: 16),
 
                 // 简介
-                if (metadata.overview != null &&
-                    metadata.overview!.isNotEmpty)
+                if (metadata.overview != null && metadata.overview!.isNotEmpty)
                   Text(
                     metadata.overview!,
                     maxLines: 2,
@@ -419,50 +419,25 @@ class _HeroBannerItem extends StatelessWidget {
   }
 
   /// 智能图片加载 - 支持 NAS 路径和网络 URL
-  Widget _buildSmartImage(String imageUrl, String sourceId) {
-    // 检查是否是 NAS 路径
-    final isNasPath = imageUrl.startsWith('/') &&
-        !imageUrl.startsWith('//') &&
-        !imageUrl.contains('://');
-
-    if (isNasPath) {
-      // NAS 路径 - 使用 StreamImage
-      final fileSystem = NasFileSystemRegistry.instance.get(sourceId);
-      return StreamImage(
-        path: imageUrl,
-        fileSystem: fileSystem,
-        fit: BoxFit.cover,
-        alignment: Alignment.topCenter, // 顶部对齐，优先显示图片上半部分
-        placeholder: _buildPlaceholder(),
-        errorWidget: _buildPlaceholder(),
-      );
-    }
-
-    // 网络 URL - 使用 CachedNetworkImage
-    if (imageUrl.startsWith('http')) {
-      return CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        alignment: Alignment.topCenter, // 顶部对齐，优先显示图片上半部分
-        placeholder: (_, _) => _buildPlaceholder(),
-        errorWidget: (_, _, _) => _buildPlaceholder(),
-      );
-    }
-
-    // 其他情况显示占位符
-    return _buildPlaceholder();
-  }
+  Widget _buildSmartImage(String imageUrl, String sourceId) => VideoPoster(
+    posterUrl: imageUrl,
+    sourceId: sourceId,
+    fit: BoxFit.cover,
+    alignment: Alignment.topCenter,
+    placeholder: _buildPlaceholder(),
+    errorWidget: _buildPlaceholder(),
+  );
 
   Widget _buildPlaceholder() => ColoredBox(
-      color: isDark ? AppColors.darkBackground : AppColors.lightOutline,
-      child: Center(
-        child: Icon(
-          Icons.movie_rounded,
-          size: 80,
-          color: isDark ? Colors.grey[700] : Colors.grey[400],
-        ),
+    color: isDark ? AppColors.darkBackground : AppColors.lightOutline,
+    child: Center(
+      child: Icon(
+        Icons.movie_rounded,
+        size: 80,
+        color: isDark ? Colors.grey[700] : Colors.grey[400],
       ),
-    );
+    ),
+  );
 }
 
 /// 紧凑版英雄横幅（用于移动端）
@@ -516,24 +491,21 @@ class _CompactHeroBannerState extends State<CompactHeroBanner> {
               onPageChanged: (page) => setState(() => _currentPage = page),
               itemCount: widget.items.length,
               itemBuilder: (context, index) => AnimatedBuilder(
-                  animation: _pageController,
-                  builder: (context, child) {
-                    double value = 1;
-                    if (_pageController.position.haveDimensions) {
-                      value = (_pageController.page! - index).abs();
-                      value = (1 - (value * 0.2)).clamp(0.8, 1.0);
-                    }
-                    return Transform.scale(
-                      scale: value,
-                      child: child,
-                    );
-                  },
-                  child: _CompactBannerCard(
-                    metadata: widget.items[index],
-                    onTap: () => widget.onItemTap(widget.items[index]),
-                    isDark: isDark,
-                  ),
+                animation: _pageController,
+                builder: (context, child) {
+                  double value = 1;
+                  if (_pageController.position.haveDimensions) {
+                    value = (_pageController.page! - index).abs();
+                    value = (1 - (value * 0.2)).clamp(0.8, 1.0);
+                  }
+                  return Transform.scale(scale: value, child: child);
+                },
+                child: _CompactBannerCard(
+                  metadata: widget.items[index],
+                  onTap: () => widget.onItemTap(widget.items[index]),
+                  isDark: isDark,
                 ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -549,7 +521,9 @@ class _CompactHeroBannerState extends State<CompactHeroBanner> {
                 decoration: BoxDecoration(
                   color: index == _currentPage
                       ? AppColors.primary
-                      : (isDark ? AppColors.darkOutline : AppColors.lightOutline),
+                      : (isDark
+                            ? AppColors.darkOutline
+                            : AppColors.lightOutline),
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -574,7 +548,7 @@ class _CompactBannerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = metadata.backdropUrl ?? metadata.displayPosterUrl;
+    final imageUrl = metadata.displayBackdropUrl ?? metadata.displayPosterUrl;
     final hasImage = imageUrl != null && imageUrl.isNotEmpty;
 
     return GestureDetector(
@@ -646,7 +620,8 @@ class _CompactBannerCard extends StatelessWidget {
                               fontSize: 13,
                             ),
                           ),
-                        if (metadata.rating != null && metadata.rating! > 0) ...[
+                        if (metadata.rating != null &&
+                            metadata.rating! > 0) ...[
                           const SizedBox(width: 12),
                           Icon(
                             Icons.star_rounded,
@@ -702,41 +677,23 @@ class _CompactBannerCard extends StatelessWidget {
   }
 
   /// 智能图片加载 - 支持 NAS 路径和网络 URL
-  Widget _buildSmartImage(String imageUrl, String sourceId) {
-    // 检查是否是 NAS 路径
-    final isNasPath = imageUrl.startsWith('/') &&
-        !imageUrl.startsWith('//') &&
-        !imageUrl.contains('://');
-
-    if (isNasPath) {
-      final fileSystem = NasFileSystemRegistry.instance.get(sourceId);
-      return StreamImage(
-        path: imageUrl,
-        fileSystem: fileSystem,
-        fit: BoxFit.cover,
-        alignment: Alignment.topCenter, // 顶部对齐，优先显示图片上半部分
-        placeholder: _buildPlaceholder(),
-        errorWidget: _buildPlaceholder(),
-      );
-    }
-
-    if (imageUrl.startsWith('http')) {
-      return CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        alignment: Alignment.topCenter, // 顶部对齐，优先显示图片上半部分
-      );
-    }
-
-    return _buildPlaceholder();
-  }
+  Widget _buildSmartImage(String imageUrl, String sourceId) => VideoPoster(
+    posterUrl: imageUrl,
+    sourceId: sourceId,
+    fit: BoxFit.cover,
+    alignment: Alignment.topCenter,
+    placeholder: _buildPlaceholder(),
+    errorWidget: _buildPlaceholder(),
+  );
 
   Widget _buildPlaceholder() => ColoredBox(
-      color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
-      child: Icon(
-        Icons.movie_rounded,
-        size: 50,
-        color: isDark ? Colors.grey[600] : Colors.grey[400],
-      ),
-    );
+    color: isDark
+        ? AppColors.darkSurfaceVariant
+        : AppColors.lightSurfaceVariant,
+    child: Icon(
+      Icons.movie_rounded,
+      size: 50,
+      color: isDark ? Colors.grey[600] : Colors.grey[400],
+    ),
+  );
 }

@@ -8,6 +8,7 @@ import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_metadata_writer.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 /// 基于 FFmpeg 的元数据写入实现
 ///
@@ -126,10 +127,9 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
   Future<String?> _findTonePath() async {
     // 检查系统 PATH
     try {
-      final result = await Process.run(
-        Platform.isWindows ? 'where' : 'which',
-        ['tone'],
-      );
+      final result = await Process.run(Platform.isWindows ? 'where' : 'which', [
+        'tone',
+      ]);
       if (result.exitCode == 0) {
         return 'tone';
       }
@@ -192,7 +192,10 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
   }
 
   /// 使用 Tone CLI 写入
-  Future<bool> _writeWithTone(String filePath, WritableMetadata metadata) async {
+  Future<bool> _writeWithTone(
+    String filePath,
+    WritableMetadata metadata,
+  ) async {
     File? coverFile;
     try {
       final args = <String>['tag', filePath];
@@ -225,7 +228,10 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
 
       // 处理封面
       if (metadata.coverData != null && metadata.coverData!.isNotEmpty) {
-        coverFile = await _saveTempCover(metadata.coverData!, metadata.coverMimeType);
+        coverFile = await _saveTempCover(
+          metadata.coverData!,
+          metadata.coverMimeType,
+        );
         if (coverFile != null) {
           args.addAll(['--cover', coverFile.path]);
         }
@@ -256,7 +262,10 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
   }
 
   /// 使用系统 FFmpeg 写入
-  Future<bool> _writeWithFFmpeg(String filePath, WritableMetadata metadata) async {
+  Future<bool> _writeWithFFmpeg(
+    String filePath,
+    WritableMetadata metadata,
+  ) async {
     try {
       final ext = p.extension(filePath);
       final tempOutput = '${filePath}_temp$ext';
@@ -269,7 +278,10 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
       // 添加封面（如果有）
       File? coverFile;
       if (metadata.coverData != null && metadata.coverData!.isNotEmpty) {
-        coverFile = await _saveTempCover(metadata.coverData!, metadata.coverMimeType);
+        coverFile = await _saveTempCover(
+          metadata.coverData!,
+          metadata.coverMimeType,
+        );
         if (coverFile != null) {
           args.addAll(['-i', coverFile.path]);
         }
@@ -346,7 +358,10 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
   }
 
   /// 使用 FFmpegKit 写入（移动平台）
-  Future<bool> _writeWithFFmpegKit(String filePath, WritableMetadata metadata) async {
+  Future<bool> _writeWithFFmpegKit(
+    String filePath,
+    WritableMetadata metadata,
+  ) async {
     File? coverFile;
     String? tempOutput;
 
@@ -361,7 +376,10 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
 
       // 添加封面（如果有）
       if (metadata.coverData != null && metadata.coverData!.isNotEmpty) {
-        coverFile = await _saveTempCover(metadata.coverData!, metadata.coverMimeType);
+        coverFile = await _saveTempCover(
+          metadata.coverData!,
+          metadata.coverMimeType,
+        );
         if (coverFile != null) {
           args.addAll(['-i', _escapeFFmpegPath(coverFile.path)]);
         }
@@ -372,16 +390,28 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
 
       // 添加元数据
       if (metadata.title != null) {
-        args.addAll(['-metadata', 'title=${_escapeMetadataValue(metadata.title!)}']);
+        args.addAll([
+          '-metadata',
+          'title=${_escapeMetadataValue(metadata.title!)}',
+        ]);
       }
       if (metadata.artist != null) {
-        args.addAll(['-metadata', 'artist=${_escapeMetadataValue(metadata.artist!)}']);
+        args.addAll([
+          '-metadata',
+          'artist=${_escapeMetadataValue(metadata.artist!)}',
+        ]);
       }
       if (metadata.album != null) {
-        args.addAll(['-metadata', 'album=${_escapeMetadataValue(metadata.album!)}']);
+        args.addAll([
+          '-metadata',
+          'album=${_escapeMetadataValue(metadata.album!)}',
+        ]);
       }
       if (metadata.albumArtist != null) {
-        args.addAll(['-metadata', 'album_artist=${_escapeMetadataValue(metadata.albumArtist!)}']);
+        args.addAll([
+          '-metadata',
+          'album_artist=${_escapeMetadataValue(metadata.albumArtist!)}',
+        ]);
       }
       if (metadata.year != null) {
         args.addAll(['-metadata', 'date=${metadata.year}']);
@@ -390,7 +420,10 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
         args.addAll(['-metadata', 'track=${metadata.trackNumber}']);
       }
       if (metadata.genre != null) {
-        args.addAll(['-metadata', 'genre=${_escapeMetadataValue(metadata.genre!)}']);
+        args.addAll([
+          '-metadata',
+          'genre=${_escapeMetadataValue(metadata.genre!)}',
+        ]);
       }
 
       // 如果有封面，映射封面流
@@ -460,7 +493,7 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
     // FFmpegKit 在移动端需要对路径中的特殊字符进行处理
     if (path.contains(' ') || path.contains("'")) {
       // 使用单引号包裹，并转义内部的单引号
-      return "'${path.replaceAll("'", r"'\''")}'";//  ignore: use_raw_strings
+      return "'${path.replaceAll("'", r"'\''")}'"; //  ignore: use_raw_strings
     }
     return path;
   }
@@ -468,14 +501,19 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
   /// 转义元数据值（处理特殊字符）
   String _escapeMetadataValue(String value) =>
       // ignore: use_raw_strings
-      value.replaceAll(r'\', r'\\').replaceAll('"', r'\"').replaceAll("'", r"\'");
+      value
+          .replaceAll(r'\', r'\\')
+          .replaceAll('"', r'\"')
+          .replaceAll("'", r"\'");
 
   /// 保存临时封面文件
   Future<File?> _saveTempCover(Uint8List data, String mimeType) async {
     try {
       final tempDir = await getTemporaryDirectory();
       final ext = mimeType.contains('png') ? '.png' : '.jpg';
-      final coverFile = File(p.join(tempDir.path, 'temp_cover_${DateTime.now().millisecondsSinceEpoch}$ext'));
+      final coverFile = File(
+        p.join(tempDir.path, 'temp_cover_${const Uuid().v4()}$ext'),
+      );
       await coverFile.writeAsBytes(data);
       return coverFile;
     } catch (e) {
@@ -489,11 +527,10 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
     String filePath,
     Uint8List coverData, {
     String mimeType = 'image/jpeg',
-  }) async =>
-      writeMetadata(
-        filePath,
-        WritableMetadata(coverData: coverData, coverMimeType: mimeType),
-      );
+  }) async => writeMetadata(
+    filePath,
+    WritableMetadata(coverData: coverData, coverMimeType: mimeType),
+  );
 
   @override
   Future<bool> removeAllMetadata(String filePath) async {
@@ -501,7 +538,11 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
 
     if (_toneAvailable) {
       try {
-        final result = await Process.run(_tonePath!, ['tag', filePath, '--remove-all']);
+        final result = await Process.run(_tonePath!, [
+          'tag',
+          filePath,
+          '--remove-all',
+        ]);
         return result.exitCode == 0;
       } catch (e) {
         logger.e('FFmpegMetadataWriter: 清除元数据失败', e);
@@ -538,9 +579,12 @@ class FFmpegMetadataWriter implements MusicMetadataWriter {
 
         final command = [
           '-y',
-          '-i', _escapeFFmpegPath(filePath),
-          '-c', 'copy',
-          '-map_metadata', '-1',
+          '-i',
+          _escapeFFmpegPath(filePath),
+          '-c',
+          'copy',
+          '-map_metadata',
+          '-1',
           _escapeFFmpegPath(tempOutput),
         ].join(' ');
 

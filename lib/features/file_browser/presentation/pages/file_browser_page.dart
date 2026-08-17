@@ -9,6 +9,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:my_nas/features/file_browser/data/services/remote_archive_extract_service.dart';
 import 'package:my_nas/features/file_browser/domain/file_open_target.dart';
 import 'package:my_nas/features/file_browser/presentation/providers/file_browser_provider.dart';
@@ -2322,6 +2323,7 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
     final l = AppLocalizations.of(context);
     File? tempFile;
+    Directory? shareWorkDir;
     final messenger = ScaffoldMessenger.of(context);
     final loadingController = messenger.showSnackBar(
       SnackBar(
@@ -2342,13 +2344,8 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
 
     try {
       final tempDir = await getTemporaryDirectory();
-      final shareDir = Directory(p.join(tempDir.path, 'mynas_share'));
-      if (!shareDir.existsSync()) {
-        await shareDir.create(recursive: true);
-      }
-      // 在文件名前加时间戳，避免重名冲突
-      final stamp = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
-      tempFile = File(p.join(shareDir.path, '${stamp}_${file.name}'));
+      shareWorkDir = await tempDir.createTemp('mynas_share_');
+      tempFile = File(p.join(shareWorkDir.path, sanitizeFileName(file.name)));
 
       final stream = await connection.fileSystem.getFileStream(file.path);
       final sink = tempFile.openWrite();
@@ -2387,17 +2384,20 @@ class _FileBrowserPageState extends ConsumerState<FileBrowserPage>
       }
     } finally {
       // 5 分钟后清理临时文件，给系统分享面板足够时间使用
-      if (tempFile != null) {
-        final fileToCleanup = tempFile;
-        Future<void>.delayed(const Duration(minutes: 5), () async {
-          try {
-            if (await fileToCleanup.exists()) {
-              await fileToCleanup.delete();
+      if (shareWorkDir != null) {
+        final directoryToCleanup = shareWorkDir;
+        AppError.fireAndForget(
+          Future<void>.delayed(const Duration(minutes: 5), () async {
+            try {
+              if (await directoryToCleanup.exists()) {
+                await directoryToCleanup.delete(recursive: true);
+              }
+            } on Exception catch (e, st) {
+              AppError.ignore(e, st, '清理分享临时目录失败');
             }
-          } on Exception catch (e, st) {
-            AppError.ignore(e, st, '清理分享临时文件失败');
-          }
-        });
+          }),
+          action: 'fileBrowser.share.cleanupTempDirectory',
+        );
       }
     }
   }

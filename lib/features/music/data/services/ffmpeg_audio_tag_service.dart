@@ -8,6 +8,7 @@ import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_tag_writer_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 /// FFmpeg 音频标签写入服务
 ///
@@ -15,7 +16,6 @@ import 'package:path_provider/path_provider.dart';
 /// 相比 audio_metadata_reader 库，FFmpeg 写入的文件保持更好的兼容性，
 /// 特别是在 iOS AVFoundation 上不会出现 -11800 解码错误。
 class FfmpegAudioTagService {
-
   factory FfmpegAudioTagService() => _instance ??= FfmpegAudioTagService._();
   FfmpegAudioTagService._();
 
@@ -55,14 +55,14 @@ class FfmpegAudioTagService {
       // 使用正确的扩展名，FFmpeg 需要根据扩展名确定输出格式
       // 例如: input.flac -> input_ffmpeg_tmp.flac
       final ext = p.extension(inputFile.path); // .flac
-      final basePath = inputFile.path.substring(0, inputFile.path.length - ext.length);
+      final basePath = inputFile.path.substring(
+        0,
+        inputFile.path.length - ext.length,
+      );
       final tempOutput = File('${basePath}_ffmpeg_tmp$ext');
 
       // 构建 FFmpeg 参数
-      final args = <String>[
-        '-i',
-        inputFile.path,
-      ];
+      final args = <String>['-i', inputFile.path];
 
       // 如果有封面图片，添加图片输入
       if (coverFile != null && await coverFile.exists()) {
@@ -84,10 +84,7 @@ class FfmpegAudioTagService {
       if (coverFile != null && await coverFile.exists()) {
         args
           ..addAll(['-c:v', 'copy'])
-          ..addAll([
-            '-disposition:v:0',
-            'attached_pic',
-          ]); // 标记为附加图片
+          ..addAll(['-disposition:v:0', 'attached_pic']); // 标记为附加图片
         updatedFields.add(appL10n.ffmpegAudioTagFieldCover);
       }
 
@@ -164,8 +161,9 @@ class FfmpegAudioTagService {
       } else {
         // 获取错误日志
         final logs = await session.getAllLogsAsString();
-        final errorSnippet =
-            logs != null && logs.length > 500 ? logs.substring(logs.length - 500) : logs ?? '';
+        final errorSnippet = logs != null && logs.length > 500
+            ? logs.substring(logs.length - 500)
+            : logs ?? '';
 
         logger
           ..e('FfmpegAudioTagService: FFmpeg 写入失败')
@@ -177,11 +175,14 @@ class FfmpegAudioTagService {
         }
 
         return MusicTagWriteResult.failure(
-            appL10n.ffmpegAudioTagWriteFailedWithCode('$returnCode'));
+          appL10n.ffmpegAudioTagWriteFailedWithCode('$returnCode'),
+        );
       }
     } on Exception catch (e, st) {
       AppError.handle(e, st, 'FfmpegAudioTagService.writeFlacTags');
-      return MusicTagWriteResult.failure(appL10n.ffmpegAudioTagWriteException(e));
+      return MusicTagWriteResult.failure(
+        appL10n.ffmpegAudioTagWriteException(e),
+      );
     }
   }
 
@@ -202,7 +203,7 @@ class FfmpegAudioTagService {
     try {
       final isSameFile = inputFile.path == outputFile.path;
       final actualOutput = isSameFile
-          ? File(p.join(_tempDir!.path, 'repair_${DateTime.now().millisecondsSinceEpoch}.flac'))
+          ? File(p.join(_tempDir!.path, 'repair_${const Uuid().v4()}.flac'))
           : outputFile;
 
       final args = <String>[

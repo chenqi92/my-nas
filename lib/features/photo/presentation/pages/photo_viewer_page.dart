@@ -9,6 +9,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
@@ -31,7 +32,8 @@ typedef PhotoUrlGetter = Future<String?> Function(String path, String sourceId);
 typedef FileSystemGetter = NasFileSystem? Function(String sourceId);
 
 /// 相册文件系统获取回调（用于 Live Photo）
-typedef GalleryFileSystemGetter = MobileGalleryFileSystem? Function(String sourceId);
+typedef GalleryFileSystemGetter =
+    MobileGalleryFileSystem? Function(String sourceId);
 
 /// 照片删除回调
 typedef PhotoDeleteCallback = void Function(PhotoItem photo);
@@ -39,7 +41,9 @@ typedef PhotoDeleteCallback = void Function(PhotoItem photo);
 /// 照片查看器页面
 class PhotoViewerPage extends StatefulWidget {
   const PhotoViewerPage({
-    required this.photos, required this.initialIndex, super.key,
+    required this.photos,
+    required this.initialIndex,
+    super.key,
     this.getPhotoUrl,
     this.getFileSystem,
     this.getGalleryFileSystem,
@@ -50,8 +54,10 @@ class PhotoViewerPage extends StatefulWidget {
   final int initialIndex;
   final PhotoUrlGetter? getPhotoUrl;
   final FileSystemGetter? getFileSystem;
+
   /// 获取相册文件系统（用于 Live Photo 视频访问）
   final GalleryFileSystemGetter? getGalleryFileSystem;
+
   /// 照片删除后的回调（用于通知列表页刷新）
   final PhotoDeleteCallback? onPhotoDeleted;
 
@@ -134,7 +140,10 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
   /// 加载当前照片的收藏状态
   Future<void> _loadFavoriteStatus() async {
     final photo = widget.photos[_currentIndex];
-    final isFav = await _favoritesService.isFavorite(photo.path, photo.sourceId);
+    final isFav = await _favoritesService.isFavorite(
+      photo.path,
+      photo.sourceId,
+    );
     if (mounted) {
       setState(() {
         _isFavorite = isFav;
@@ -247,7 +256,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       // 打开视频并播放
       final media = videoPath.startsWith('file://')
           ? Media(videoPath)
-          : Media('file://$videoPath');
+          : Media(localPathToFileUri(videoPath));
       await _livePhotoPlayer!.open(media, play: true);
       // 设置音量（Live Photo 通常需要静音或低音量）
       await _livePhotoPlayer!.setVolume(50);
@@ -435,68 +444,75 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
   }
 
   /// 构建错误提示组件
-  Widget _buildErrorWidget(PhotoItem photo, Future<String?> Function() onLoadUrl) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.broken_image_outlined,
-          size: 64,
+  Widget _buildErrorWidget(
+    PhotoItem photo,
+    Future<String?> Function() onLoadUrl,
+  ) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(
+        Icons.broken_image_outlined,
+        size: 64,
+        color: Colors.white.withValues(alpha: 0.5),
+      ),
+      const SizedBox(height: 16),
+      Text(
+        context.l10n.photoViewerLoadFailed,
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.7),
+          fontSize: 16,
+        ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        photo.name,
+        style: TextStyle(
           color: Colors.white.withValues(alpha: 0.5),
+          fontSize: 12,
         ),
-        const SizedBox(height: 16),
-        Text(
-          context.l10n.photoViewerLoadFailed,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
-            fontSize: 16,
-          ),
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+      const SizedBox(height: 16),
+      TextButton.icon(
+        onPressed: () {
+          onLoadUrl();
+          setState(() {});
+        },
+        icon: const Icon(Icons.refresh_rounded, color: Colors.white70),
+        label: Text(
+          context.l10n.photoViewerRetry,
+          style: const TextStyle(color: Colors.white70),
         ),
-        const SizedBox(height: 8),
-        Text(
-          photo.name,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 12,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 16),
-        TextButton.icon(
-          onPressed: () {
-            onLoadUrl();
-            setState(() {});
-          },
-          icon: const Icon(Icons.refresh_rounded, color: Colors.white70),
-          label: Text(context.l10n.photoViewerRetry, style: const TextStyle(color: Colors.white70)),
-        ),
-      ],
-    );
+      ),
+    ],
+  );
 
   /// 构建键盘快捷键映射
   Map<ShortcutKey, VoidCallback> _buildKeyboardShortcuts(PhotoItem photo) => {
-        // 导航
-        CommonShortcuts.previous: _goToPrevious,
-        CommonShortcuts.next: _goToNext,
-        CommonShortcuts.first: () => _pageController.jumpToPage(0),
-        CommonShortcuts.last: () => _pageController.jumpToPage(widget.photos.length - 1),
+    // 导航
+    CommonShortcuts.previous: _goToPrevious,
+    CommonShortcuts.next: _goToNext,
+    CommonShortcuts.first: () => _pageController.jumpToPage(0),
+    CommonShortcuts.last: () =>
+        _pageController.jumpToPage(widget.photos.length - 1),
 
-        // 播放/暂停 用于切换覆盖层
-        CommonShortcuts.playPause: _toggleOverlay,
+    // 播放/暂停 用于切换覆盖层
+    CommonShortcuts.playPause: _toggleOverlay,
 
-        // 收藏 (L)
-        CommonShortcuts.favorite: _toggleFavorite,
+    // 收藏 (L)
+    CommonShortcuts.favorite: _toggleFavorite,
 
-        // 信息 (I)
-        CommonShortcuts.info: () => _showPhotoInfo(context, photo),
+    // 信息 (I)
+    CommonShortcuts.info: () => _showPhotoInfo(context, photo),
 
-        // 退出 (Esc)
-        CommonShortcuts.escape: () => Navigator.of(context).pop(),
+    // 退出 (Esc)
+    CommonShortcuts.escape: () => Navigator.of(context).pop(),
 
-        // 返回 (Backspace)
-        CommonShortcuts.back: () => Navigator.of(context).pop(),
-      };
+    // 返回 (Backspace)
+    CommonShortcuts.back: () => Navigator.of(context).pop(),
+  };
 
   /// 显示快捷键帮助
   void _showKeyboardHelp() {
@@ -508,7 +524,10 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
         (key: '→', description: context.l10n.photoViewerKeyboardNext),
         (key: 'Home', description: context.l10n.photoViewerKeyboardFirst),
         (key: 'End', description: context.l10n.photoViewerKeyboardLast),
-        (key: 'Space', description: context.l10n.photoViewerKeyboardToggleControls),
+        (
+          key: 'Space',
+          description: context.l10n.photoViewerKeyboardToggleControls,
+        ),
         (key: 'L', description: context.l10n.photoViewerKeyboardToggleFavorite),
         (key: 'I', description: context.l10n.photoViewerKeyboardInfo),
         (key: 'Esc', description: context.l10n.photoViewerKeyboardExit),
@@ -531,357 +550,357 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       child: Scaffold(
         backgroundColor: Colors.black,
         body: GestureDetector(
-        onTap: _toggleOverlay,
-        // Live Photo: 长按播放视频
-        onLongPressStart: photo.isLivePhoto
-            ? (_) => _startLivePhotoPlayback(photo)
-            : null,
-        onLongPressEnd: photo.isLivePhoto
-            ? (_) => _stopLivePhotoPlayback()
-            : null,
-        onLongPressCancel: photo.isLivePhoto
-            ? _stopLivePhotoPlayback
-            : null,
-        behavior: HitTestBehavior.opaque,
-        child: Stack(
-          children: [
-            // 照片查看器 - 使用 PhotoViewGallery 解决放大后拖动与翻页的手势冲突
-            PhotoViewGallery.builder(
-              scrollPhysics: const BouncingScrollPhysics(),
-              pageController: _pageController,
-              itemCount: widget.photos.length,
-              onPageChanged: (index) {
-                // 切换页面时停止 Live Photo 播放
-                _stopLivePhotoPlayback();
-                setState(() {
-                  _currentIndex = index;
-                });
-                // 预加载当前页的原图 URL
-                _preloadPhotoUrl(index);
-                // 翻页时重置自动隐藏定时器
-                if (_showOverlay) {
-                  _startAutoHideTimer();
-                }
-                // 加载新页面的收藏状态
-                _loadFavoriteStatus();
-              },
-              builder: (context, index) {
-                final item = widget.photos[index];
-                final cachedUrl = _loadedUrls[item.path];
-                final fileSystem = widget.getFileSystem?.call(item.sourceId);
-                return _buildPhotoViewGalleryPageOptions(
-                  item,
-                  cachedUrl,
-                  () => _loadPhotoUrl(index),
-                  fileSystem,
-                );
-              },
-              backgroundDecoration: const BoxDecoration(color: Colors.black),
-              loadingBuilder: (context, event) => Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(
-                      value: event == null || event.expectedTotalBytes == null
-                          ? null
-                          : event.cumulativeBytesLoaded / event.expectedTotalBytes!,
-                      color: Colors.white,
-                    ),
-                    if (event != null && event.expectedTotalBytes != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        '${((event.cumulativeBytesLoaded / event.expectedTotalBytes!) * 100).toInt()}%',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-
-            // Live Photo 视频播放层
-            if (_isPlayingLivePhoto && _livePhotoVideoController != null)
-              Positioned.fill(
-                child: Video(
-                  controller: _livePhotoVideoController!,
-                  controls: (state) => const SizedBox.shrink(),
-                  fit: BoxFit.contain,
-                ),
-              ),
-
-            // Live Photo 准备中指示器
-            if (_isPreparingLivePhoto)
-              Positioned.fill(
-                child: ColoredBox(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  ),
-                ),
-              ),
-
-            // Live Photo 徽章
-            if (photo.isLivePhoto && !_isPlayingLivePhoto)
-              Positioned(
-                top: MediaQuery.of(context).padding.top + 60,
-                left: 16,
-                child: _LivePhotoBadge(
-                  isPlaying: _isPlayingLivePhoto,
-                  isPreparing: _isPreparingLivePhoto,
-                ),
-              ),
-
-            // 顶部返回按钮（浮动）
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: IgnorePointer(
-                ignoring: !_showOverlay,
-                child: FadeTransition(
-                  opacity: _overlayAnimation,
-                  child: _buildTopBar(context, photo),
-                ),
-              ),
-            ),
-
-            // 底部操作栏（浮动）
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                ignoring: !_showOverlay,
-                child: FadeTransition(
-                  opacity: _overlayAnimation,
-                  child: _buildBottomBar(context, photo),
-                ),
-              ),
-            ),
-
-            // 左右导航按钮（桌面端）
-            if (isDesktop && _showOverlay) ...[
-              // 上一张
-              if (_currentIndex > 0)
-                Positioned(
-                  left: 16,
-                  top: 0,
-                  bottom: 0,
-                  child: Center(
-                    child: _NavButton(
-                      icon: Icons.arrow_back_ios_rounded,
-                      onTap: _goToPrevious,
-                    ),
-                  ),
-                ),
-              // 下一张
-              if (_currentIndex < widget.photos.length - 1)
-                Positioned(
-                  right: 16,
-                  top: 0,
-                  bottom: 0,
-                  child: Center(
-                    child: _NavButton(
-                      icon: Icons.arrow_forward_ios_rounded,
-                      onTap: _goToNext,
-                    ),
-                  ),
-                ),
-            ],
-          ],
-        ),
-      ),
-      ),
-    );
-  }
-
-  Widget _buildTopBar(BuildContext context, PhotoItem photo) => DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black54,
-            Colors.transparent,
-          ],
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          child: Row(
+          onTap: _toggleOverlay,
+          // Live Photo: 长按播放视频
+          onLongPressStart: photo.isLivePhoto
+              ? (_) => _startLivePhotoPlayback(photo)
+              : null,
+          onLongPressEnd: photo.isLivePhoto
+              ? (_) => _stopLivePhotoPlayback()
+              : null,
+          onLongPressCancel: photo.isLivePhoto ? _stopLivePhotoPlayback : null,
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
             children: [
-              // 返回按钮
-              IconButton(
-                icon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Colors.white,
-                  size: 32,
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-                tooltip: context.l10n.photoViewerTooltipBack,
-              ),
-              // 页码指示器（居中显示）
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${_currentIndex + 1} / ${widget.photos.length}',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 12,
-                      ),
-                    ),
-                    Text(
-                      photo.name,
-                      style: const TextStyle(
+              // 照片查看器 - 使用 PhotoViewGallery 解决放大后拖动与翻页的手势冲突
+              PhotoViewGallery.builder(
+                scrollPhysics: const BouncingScrollPhysics(),
+                pageController: _pageController,
+                itemCount: widget.photos.length,
+                onPageChanged: (index) {
+                  // 切换页面时停止 Live Photo 播放
+                  _stopLivePhotoPlayback();
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                  // 预加载当前页的原图 URL
+                  _preloadPhotoUrl(index);
+                  // 翻页时重置自动隐藏定时器
+                  if (_showOverlay) {
+                    _startAutoHideTimer();
+                  }
+                  // 加载新页面的收藏状态
+                  _loadFavoriteStatus();
+                },
+                builder: (context, index) {
+                  final item = widget.photos[index];
+                  final cachedUrl = _loadedUrls[item.path];
+                  final fileSystem = widget.getFileSystem?.call(item.sourceId);
+                  return _buildPhotoViewGalleryPageOptions(
+                    item,
+                    cachedUrl,
+                    () => _loadPhotoUrl(index),
+                    fileSystem,
+                  );
+                },
+                backgroundDecoration: const BoxDecoration(color: Colors.black),
+                loadingBuilder: (context, event) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(
+                        value: event == null || event.expectedTotalBytes == null
+                            ? null
+                            : event.cumulativeBytesLoaded /
+                                  event.expectedTotalBytes!,
                         color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                      if (event != null &&
+                          event.expectedTotalBytes != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          '${((event.cumulativeBytesLoaded / event.expectedTotalBytes!) * 100).toInt()}%',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-              // 占位，保持标题居中
-              const SizedBox(width: 48),
+
+              // Live Photo 视频播放层
+              if (_isPlayingLivePhoto && _livePhotoVideoController != null)
+                Positioned.fill(
+                  child: Video(
+                    controller: _livePhotoVideoController!,
+                    controls: (state) => const SizedBox.shrink(),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+
+              // Live Photo 准备中指示器
+              if (_isPreparingLivePhoto)
+                Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Live Photo 徽章
+              if (photo.isLivePhoto && !_isPlayingLivePhoto)
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 60,
+                  left: 16,
+                  child: _LivePhotoBadge(
+                    isPlaying: _isPlayingLivePhoto,
+                    isPreparing: _isPreparingLivePhoto,
+                  ),
+                ),
+
+              // 顶部返回按钮（浮动）
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: IgnorePointer(
+                  ignoring: !_showOverlay,
+                  child: FadeTransition(
+                    opacity: _overlayAnimation,
+                    child: _buildTopBar(context, photo),
+                  ),
+                ),
+              ),
+
+              // 底部操作栏（浮动）
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: IgnorePointer(
+                  ignoring: !_showOverlay,
+                  child: FadeTransition(
+                    opacity: _overlayAnimation,
+                    child: _buildBottomBar(context, photo),
+                  ),
+                ),
+              ),
+
+              // 左右导航按钮（桌面端）
+              if (isDesktop && _showOverlay) ...[
+                // 上一张
+                if (_currentIndex > 0)
+                  Positioned(
+                    left: 16,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: _NavButton(
+                        icon: Icons.arrow_back_ios_rounded,
+                        onTap: _goToPrevious,
+                      ),
+                    ),
+                  ),
+                // 下一张
+                if (_currentIndex < widget.photos.length - 1)
+                  Positioned(
+                    right: 16,
+                    top: 0,
+                    bottom: 0,
+                    child: Center(
+                      child: _NavButton(
+                        icon: Icons.arrow_forward_ios_rounded,
+                        onTap: _goToNext,
+                      ),
+                    ),
+                  ),
+              ],
             ],
           ),
         ),
       ),
     );
+  }
 
-  Widget _buildBottomBar(BuildContext context, PhotoItem photo) => DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            Colors.black87,
-            Colors.transparent,
-          ],
-        ),
+  Widget _buildTopBar(BuildContext context, PhotoItem photo) => DecoratedBox(
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Colors.black54, Colors.transparent],
       ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    ),
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Row(
           children: [
-            // 照片信息
-            if (photo.modifiedAt != null || photo.size > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // 日期
-                    if (photo.modifiedAt != null) ...[
-                      Icon(
-                        Icons.calendar_today_rounded,
-                        color: Colors.white.withValues(alpha: 0.7),
-                        size: 14,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        DateFormat('yyyy-MM-dd HH:mm').format(photo.modifiedAt!),
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (photo.size > 0) const SizedBox(width: 16),
-                    ],
-                    // 文件大小（仅当 size > 0 时显示）
-                    if (photo.size > 0) ...[
-                      Icon(
-                        Icons.insert_drive_file_outlined,
-                        color: Colors.white.withValues(alpha: 0.7),
-                        size: 14,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        photo.displaySize,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+            // 返回按钮
+            IconButton(
+              icon: const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: Colors.white,
+                size: 32,
               ),
-            // 操作按钮
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              onPressed: () => Navigator.of(context).pop(),
+              tooltip: context.l10n.photoViewerTooltipBack,
+            ),
+            // 页码指示器（居中显示）
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 详细信息
-                  _ActionButton(
-                    icon: Icons.info_outline,
-                    label: context.l10n.photoViewerActionInfo,
-                    onTap: () {
-                      _startAutoHideTimer();
-                      _showPhotoInfo(context, photo);
-                    },
-                  ),
-                  // 收藏
-                  _ActionButton(
-                    icon: _isFavorite ? Icons.favorite_rounded : Icons.favorite_border,
-                    label: _isFavorite ? context.l10n.photoViewerActionFavorited : context.l10n.photoViewerActionFavorite,
-                    onTap: _isTogglingFavorite
-                        ? null
-                        : () {
-                            _startAutoHideTimer();
-                            _toggleFavorite();
-                          },
-                  ),
-                  // 下载（所有平台都支持，桌面端用文件选择器，移动端保存到相册）
-                  _ActionButton(
-                    icon: Icons.download_outlined,
-                    label: PlatformCapabilities.isMobile ? context.l10n.photoViewerActionSave : context.l10n.photoViewerActionDownload,
-                    onTap: () {
-                      _startAutoHideTimer();
-                      _downloadPhoto(context, photo);
-                    },
-                  ),
-                  // 分享（仅在支持分享的平台显示）
-                  if (PlatformCapabilities.canShare)
-                    _ActionButton(
-                      icon: Icons.share_outlined,
-                      label: context.l10n.photoViewerActionShare,
-                      onTap: () {
-                        _startAutoHideTimer();
-                        _sharePhoto(context, photo);
-                      },
+                  Text(
+                    '${_currentIndex + 1} / ${widget.photos.length}',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 12,
                     ),
-                  // 删除
-                  _ActionButton(
-                    icon: Icons.delete_outline,
-                    label: context.l10n.photoViewerActionDelete,
-                    onTap: () {
-                      _startAutoHideTimer();
-                      _confirmDelete(context, photo);
-                    },
+                  ),
+                  Text(
+                    photo.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
+            // 占位，保持标题居中
+            const SizedBox(width: 48),
           ],
         ),
       ),
-    );
+    ),
+  );
+
+  Widget _buildBottomBar(BuildContext context, PhotoItem photo) => DecoratedBox(
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [Colors.black87, Colors.transparent],
+      ),
+    ),
+    child: SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 照片信息
+          if (photo.modifiedAt != null || photo.size > 0)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 日期
+                  if (photo.modifiedAt != null) ...[
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      DateFormat('yyyy-MM-dd HH:mm').format(photo.modifiedAt!),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                    if (photo.size > 0) const SizedBox(width: 16),
+                  ],
+                  // 文件大小（仅当 size > 0 时显示）
+                  if (photo.size > 0) ...[
+                    Icon(
+                      Icons.insert_drive_file_outlined,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      size: 14,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      photo.displaySize,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          // 操作按钮
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // 详细信息
+                _ActionButton(
+                  icon: Icons.info_outline,
+                  label: context.l10n.photoViewerActionInfo,
+                  onTap: () {
+                    _startAutoHideTimer();
+                    _showPhotoInfo(context, photo);
+                  },
+                ),
+                // 收藏
+                _ActionButton(
+                  icon: _isFavorite
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border,
+                  label: _isFavorite
+                      ? context.l10n.photoViewerActionFavorited
+                      : context.l10n.photoViewerActionFavorite,
+                  onTap: _isTogglingFavorite
+                      ? null
+                      : () {
+                          _startAutoHideTimer();
+                          _toggleFavorite();
+                        },
+                ),
+                // 下载（所有平台都支持，桌面端用文件选择器，移动端保存到相册）
+                _ActionButton(
+                  icon: Icons.download_outlined,
+                  label: PlatformCapabilities.isMobile
+                      ? context.l10n.photoViewerActionSave
+                      : context.l10n.photoViewerActionDownload,
+                  onTap: () {
+                    _startAutoHideTimer();
+                    _downloadPhoto(context, photo);
+                  },
+                ),
+                // 分享（仅在支持分享的平台显示）
+                if (PlatformCapabilities.canShare)
+                  _ActionButton(
+                    icon: Icons.share_outlined,
+                    label: context.l10n.photoViewerActionShare,
+                    onTap: () {
+                      _startAutoHideTimer();
+                      _sharePhoto(context, photo);
+                    },
+                  ),
+                // 删除
+                _ActionButton(
+                  icon: Icons.delete_outline,
+                  label: context.l10n.photoViewerActionDelete,
+                  onTap: () {
+                    _startAutoHideTimer();
+                    _confirmDelete(context, photo);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   void _showPhotoInfo(BuildContext context, PhotoItem photo) {
     showAdaptiveModalSheet<void>(
@@ -911,36 +930,62 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white70,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              _InfoRow(label: context.l10n.photoViewerInfoFileName, value: photo.name),
-              _InfoRow(label: context.l10n.photoViewerInfoPath, value: photo.path),
+              _InfoRow(
+                label: context.l10n.photoViewerInfoFileName,
+                value: photo.name,
+              ),
+              _InfoRow(
+                label: context.l10n.photoViewerInfoPath,
+                value: photo.path,
+              ),
               if (photo.size > 0)
-                _InfoRow(label: context.l10n.photoViewerInfoSize, value: photo.displaySize),
+                _InfoRow(
+                  label: context.l10n.photoViewerInfoSize,
+                  value: photo.displaySize,
+                ),
               if (photo.displayResolution != null)
-                _InfoRow(label: context.l10n.photoViewerInfoResolution, value: photo.displayResolution!),
+                _InfoRow(
+                  label: context.l10n.photoViewerInfoResolution,
+                  value: photo.displayResolution!,
+                ),
               if (photo.isLivePhoto)
-                _InfoRow(label: context.l10n.photoViewerInfoType, value: context.l10n.photoViewerInfoTypeLivePhoto),
+                _InfoRow(
+                  label: context.l10n.photoViewerInfoType,
+                  value: context.l10n.photoViewerInfoTypeLivePhoto,
+                ),
               if (photo.modifiedAt != null)
                 _InfoRow(
                   label: context.l10n.photoViewerInfoModifiedTime,
-                  value: DateFormat('yyyy-MM-dd HH:mm:ss').format(photo.modifiedAt!),
+                  value: DateFormat(
+                    'yyyy-MM-dd HH:mm:ss',
+                  ).format(photo.modifiedAt!),
                 ),
               if (photo.takenAt != null)
                 _InfoRow(
                   label: context.l10n.photoViewerInfoTakenTime,
-                  value: DateFormat('yyyy-MM-dd HH:mm:ss').format(photo.takenAt!),
+                  value: DateFormat(
+                    'yyyy-MM-dd HH:mm:ss',
+                  ).format(photo.takenAt!),
                 ),
               if (photo.cameraInfo != null)
-                _InfoRow(label: context.l10n.photoViewerInfoCamera, value: photo.cameraInfo!),
+                _InfoRow(
+                  label: context.l10n.photoViewerInfoCamera,
+                  value: photo.cameraInfo!,
+                ),
               if (photo.hasLocation)
                 _InfoRow(
                   label: context.l10n.photoViewerInfoLocation,
-                  value: '${photo.latitude?.toStringAsFixed(6)}, ${photo.longitude?.toStringAsFixed(6)}',
+                  value:
+                      '${photo.latitude?.toStringAsFixed(6)}, ${photo.longitude?.toStringAsFixed(6)}',
                 ),
             ],
           ),
@@ -968,7 +1013,10 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       final hasPermission = await saveService.requestGalleryPermission();
       if (!hasPermission) {
         if (!context.mounted) return;
-        _showErrorSnackBar(context, context.l10n.photoViewerDownloadNoPermission);
+        _showErrorSnackBar(
+          context,
+          context.l10n.photoViewerDownloadNoPermission,
+        );
         return;
       }
     }
@@ -1032,7 +1080,9 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   valueListenable: progressNotifier,
                   builder: (context, progress, _) => Text(
                     progress > 0
-                        ? (saveService.isMobile ? context.l10n.photoViewerDownloadingSaving : context.l10n.photoViewerDownloadingProgress)
+                        ? (saveService.isMobile
+                              ? context.l10n.photoViewerDownloadingSaving
+                              : context.l10n.photoViewerDownloadingProgress)
                         : context.l10n.photoViewerDownloadConnecting,
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
@@ -1046,7 +1096,9 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () {
-                      cancelToken.cancel(context.l10n.photoViewerDownloadCancel);
+                      cancelToken.cancel(
+                        context.l10n.photoViewerDownloadCancel,
+                      );
                       if (isDialogOpen) {
                         isDialogOpen = false;
                         Navigator.of(dialogContext).pop();
@@ -1054,7 +1106,9 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white70,
-                      side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -1198,7 +1252,9 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   ValueListenableBuilder<double>(
                     valueListenable: progressNotifier,
                     builder: (context, progress, _) => Text(
-                      progress > 0 ? context.l10n.photoViewerSharePreparing : context.l10n.photoViewerShareConnecting,
+                      progress > 0
+                          ? context.l10n.photoViewerSharePreparing
+                          : context.l10n.photoViewerShareConnecting,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
@@ -1211,7 +1267,9 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                     width: double.infinity,
                     child: OutlinedButton(
                       onPressed: () {
-                        cancelToken.cancel(context.l10n.photoViewerDownloadCancel);
+                        cancelToken.cancel(
+                          context.l10n.photoViewerDownloadCancel,
+                        );
                         if (isDialogOpen) {
                           isDialogOpen = false;
                           Navigator.of(dialogContext).pop();
@@ -1219,7 +1277,9 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white70,
-                        side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                        side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.3),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -1260,7 +1320,10 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
     if (!context.mounted || result.isCancelled) return;
 
     if (result.isFailure) {
-      _showErrorSnackBar(context, result.error ?? context.l10n.photoViewerShareFailed);
+      _showErrorSnackBar(
+        context,
+        result.error ?? context.l10n.photoViewerShareFailed,
+      );
     }
   }
 
@@ -1287,7 +1350,7 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
     } else if (isLocalFile) {
       copyTitle = context.l10n.photoViewerShareCopyPath;
       copySubtitle = context.l10n.photoViewerShareCopyPathSubtitle;
-      copyContent = Uri.parse(url).toFilePath();
+      copyContent = localPathFromFileUri(url) ?? url;
     } else {
       // SMB/WebDAV 等
       copyTitle = context.l10n.photoViewerShareCopyPath;
@@ -1322,7 +1385,10 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white70,
+                    ),
                     onPressed: () => Navigator.pop(sheetContext),
                   ),
                 ],
@@ -1336,7 +1402,10 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
                 onTap: () {
                   Navigator.pop(sheetContext);
                   Clipboard.setData(ClipboardData(text: copyContent));
-                  _showSuccessSnackBar(context, context.l10n.photoViewerShareCopied(copyTitle));
+                  _showSuccessSnackBar(
+                    context,
+                    context.l10n.photoViewerShareCopied(copyTitle),
+                  );
                 },
               ),
               const Divider(color: Colors.white24),
@@ -1344,7 +1413,9 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
               _ShareOptionTile(
                 icon: Icons.file_present_outlined,
                 title: context.l10n.photoViewerShareFile,
-                subtitle: isLocalFile ? context.l10n.photoViewerShareFileSubtitleLocal : context.l10n.photoViewerShareFileSubtitleRemote,
+                subtitle: isLocalFile
+                    ? context.l10n.photoViewerShareFileSubtitleLocal
+                    : context.l10n.photoViewerShareFileSubtitleRemote,
                 onTap: () async {
                   Navigator.pop(sheetContext);
                   await _executeSmartShare(context, photo, url, fileSystem);
@@ -1378,7 +1449,11 @@ class _PhotoViewerPageState extends State<PhotoViewerPage>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+            const Icon(
+              Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
@@ -1559,72 +1634,59 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _NavButton extends StatelessWidget {
-  const _NavButton({
-    required this.icon,
-    required this.onTap,
-  });
+  const _NavButton({required this.icon, required this.onTap});
 
   final IconData icon;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) => Material(
-      color: Colors.black45,
+    color: Colors.black45,
+    borderRadius: BorderRadius.circular(30),
+    child: InkWell(
+      onTap: onTap,
       borderRadius: BorderRadius.circular(30),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          width: 50,
-          height: 50,
-          alignment: Alignment.center,
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 24,
-          ),
-        ),
+      child: Container(
+        width: 50,
+        height: 50,
+        alignment: Alignment.center,
+        child: Icon(icon, color: Colors.white, size: 24),
       ),
-    );
+    ),
+  );
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
+  const _InfoRow({required this.label, required this.value});
 
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 14,
-              ),
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 14,
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
-            ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
 }
 
 /// 分享选项瓦片（桌面端分享对话框使用）
@@ -1643,102 +1705,96 @@ class _ShareOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: Colors.white, size: 24),
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 13,
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: 13,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Icon(
-              Icons.chevron_right,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
-          ],
-        ),
+          ),
+          Icon(Icons.chevron_right, color: Colors.white.withValues(alpha: 0.5)),
+        ],
       ),
-    );
+    ),
+  );
 }
 
 /// Live Photo 徽章组件
 class _LivePhotoBadge extends StatelessWidget {
-  const _LivePhotoBadge({
-    required this.isPlaying,
-    required this.isPreparing,
-  });
+  const _LivePhotoBadge({required this.isPlaying, required this.isPreparing});
 
   final bool isPlaying;
   final bool isPreparing;
 
   @override
   Widget build(BuildContext context) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 0.5,
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: 0.6),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.3),
+        width: 0.5,
+      ),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 圆形指示器
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: isPreparing
+                ? Colors.yellow
+                : (isPlaying ? AppColors.error : Colors.white),
+            shape: BoxShape.circle,
+          ),
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 圆形指示器
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: isPreparing
-                  ? Colors.yellow
-                  : (isPlaying ? AppColors.error : Colors.white),
-              shape: BoxShape.circle,
-            ),
+        const SizedBox(width: 6),
+        // LIVE 文字
+        Text(
+          'LIVE',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.9),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
-          const SizedBox(width: 6),
-          // LIVE 文字
-          Text(
-            'LIVE',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-          ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
 }

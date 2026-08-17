@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/design_tokens.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_kbd.dart';
 import 'package:my_nas/shared/widgets/atoms/glass_panel.dart';
@@ -50,10 +51,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
 
   /// 合并：静态命令（matches query） + 已完成的异步内容搜索结果。
   List<CmdkCommand> _filtered() {
-    final commands = CmdkRegistry.instance.all
-        .where((c) => c.matches(_query))
-        .toList()
-      ..addAll(_contentResults);
+    final commands =
+        CmdkRegistry.instance.all.where((c) => c.matches(_query)).toList()
+          ..addAll(_contentResults);
     return List.unmodifiable(commands);
   }
 
@@ -73,7 +73,10 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
       _searching = true;
     });
     _searchDebounce = Timer(const Duration(milliseconds: 220), () {
-      unawaited(_loadContentResults(query, generation));
+      AppError.fireAndForget(
+        _loadContentResults(query, generation),
+        action: 'commandPalette.loadContentResults',
+      );
     });
   }
 
@@ -82,8 +85,9 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
     for (final searcher in CmdkRegistry.instance.searchers) {
       try {
         results.addAll(await Future.sync(() => searcher(ref, query)));
-      } on Exception {
+      } on Object catch (e, st) {
         // 单个数据源搜索失败不应让整个命令面板失效；其余域继续返回结果。
+        AppError.ignore(e, st, '命令面板单个内容搜索器失败，继续汇总其它搜索结果');
       }
     }
     if (!mounted || generation != _searchGeneration) return;
@@ -150,14 +154,15 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                           vertical: 16,
                         ),
                         decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: t.hairline),
-                          ),
+                          border: Border(bottom: BorderSide(color: t.hairline)),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.search_rounded,
-                                size: 20, color: t.text2),
+                            Icon(
+                              Icons.search_rounded,
+                              size: 20,
+                              color: t.text2,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: TextField(
@@ -172,14 +177,15 @@ class _CommandPaletteState extends ConsumerState<CommandPalette> {
                                 },
                                 decoration: InputDecoration(
                                   hintText: l.shellCmdkSearchPlaceholder,
-                                  hintStyle:
-                                      TextStyle(color: t.text3, fontSize: 16),
+                                  hintStyle: TextStyle(
+                                    color: t.text3,
+                                    fontSize: 16,
+                                  ),
                                   border: InputBorder.none,
                                   isDense: true,
                                   contentPadding: EdgeInsets.zero,
                                 ),
-                                style:
-                                    TextStyle(color: t.text0, fontSize: 16),
+                                style: TextStyle(color: t.text0, fontSize: 16),
                               ),
                             ),
                             const AppKbd('ESC'),
@@ -282,8 +288,11 @@ class _Item extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(cmd.icon,
-                    size: 18, color: selected ? t.accentBright : t.text2),
+                Icon(
+                  cmd.icon,
+                  size: 18,
+                  color: selected ? t.accentBright : t.text2,
+                ),
                 const SizedBox(width: 13),
                 Expanded(
                   child: Text(

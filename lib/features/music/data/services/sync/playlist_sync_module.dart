@@ -1,3 +1,4 @@
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/music/data/services/playlist_service.dart';
@@ -5,7 +6,7 @@ import 'package:my_nas/features/music/data/services/playlist_service.dart';
 /// 把 [PlaylistService] 暴露给 [CloudSyncService] 同步：
 /// - key: `music_playlists`
 /// - exportData: 全量序列化所有 playlist（含已软删除，便于跨设备同步回收站状态）
-/// - importData: 整体覆盖本地 box 的所有 playlist
+/// - importData: 按 playlist id 和更新时间逐条合并
 /// - localUpdatedAt: 取所有 playlist 最大 updatedAt
 class PlaylistSyncModule implements SyncableModule {
   PlaylistSyncModule();
@@ -19,8 +20,12 @@ class PlaylistSyncModule implements SyncableModule {
   String get displayName => appL10n.syncModuleMusicPlaylists;
 
   @override
+  SyncMergePolicy get mergePolicy => SyncMergePolicy.recordMerge;
+
+  @override
   Future<DateTime?> getLocalUpdatedAt() async {
-    final all = await _service.getAllPlaylists(includeDeleted: true);
+    final all = (await _service.getAllPlaylists(includeDeleted: true)).toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
     if (all.isEmpty) return null;
     var maxAt = all.first.updatedAt;
     for (final p in all) {
@@ -35,17 +40,21 @@ class PlaylistSyncModule implements SyncableModule {
   @override
   Future<Map<String, dynamic>> exportData() async {
     final all = await _service.getAllPlaylists(includeDeleted: true);
-    return {
-      'version': 1,
-      'playlists': all.map((p) => p.toMap()).toList(),
-    };
+    return {'version': 1, 'playlists': all.map((p) => p.toMap()).toList()};
   }
 
   @override
-  Future<void> importData(Map<String, dynamic> data) async {
-    final list = (data['playlists'] as List?) ?? const [];
+  Future<void> importData(
+    Map<String, dynamic> data, {
+    DateTime? remoteUpdatedAt,
+  }) async {
+    final list = data['playlists'];
+    if (list is! List) {
+      throw const FormatException('music_playlists.playlists 必须是数组');
+    }
     // 拉取远端时按 last-write-wins 合并：远端 entry 比本地新才覆盖
-    for (final raw in list.cast<Map<dynamic, dynamic>>()) {
+    for (final raw in list) {
+      if (raw is! Map) continue;
       try {
         final remote = PlaylistEntry.fromMap(raw);
         final local = await _service.getPlaylist(
@@ -56,16 +65,23 @@ class PlaylistSyncModule implements SyncableModule {
           await _service.upsertFromSync(remote);
           continue;
         }
-        if (remote.updatedAt.isAfter(local.updatedAt)) {
+        final remoteAt = _latestChangeAt(remote);
+        final localAt = _latestChangeAt(local);
+        if (remoteAt.isAfter(localAt)) {
           await _service.upsertFromSync(remote);
         }
-        // remote 标记了删除而 local 没有 → 应用软删除
-        if (remote.deletedAt != null && local.deletedAt == null) {
-          await _service.upsertFromSync(remote);
-        }
-      } on Exception catch (_) {
+      } on Object catch (e, st) {
+        AppError.ignore(e, st, '远端 music_playlists 单条记录解析失败，跳过该条');
         continue;
       }
     }
+  }
+
+  DateTime _latestChangeAt(PlaylistEntry entry) {
+    final deletedAt = entry.deletedAt;
+    if (deletedAt != null && deletedAt.isAfter(entry.updatedAt)) {
+      return deletedAt;
+    }
+    return entry.updatedAt;
   }
 }

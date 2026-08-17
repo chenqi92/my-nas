@@ -5,6 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 
 /// 旋转封面组件 - 播放时唱片旋转动画
 class RotatingCover extends StatefulWidget {
@@ -63,13 +64,13 @@ class _RotatingCoverState extends State<RotatingCover>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-      animation: _rotationController,
-      builder: (context, child) => Transform.rotate(
-          angle: _rotationController.value * 2 * math.pi,
-          child: child,
-        ),
-      child: _buildCoverStack(),
-    );
+    animation: _rotationController,
+    builder: (context, child) => Transform.rotate(
+      angle: _rotationController.value * 2 * math.pi,
+      child: child,
+    ),
+    child: _buildCoverStack(),
+  );
 
   Widget _buildCoverStack() {
     if (!widget.showVinyl) {
@@ -97,31 +98,29 @@ class _RotatingCoverState extends State<RotatingCover>
   }
 
   Widget _buildVinylDisc() => Container(
-      width: widget.size,
-      height: widget.size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            Colors.grey[900]!,
-            Colors.grey[850]!,
-            Colors.grey[800]!,
-            Colors.grey[900]!,
-          ],
-          stops: const [0.0, 0.3, 0.7, 1.0],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
+    width: widget.size,
+    height: widget.size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: RadialGradient(
+        colors: [
+          Colors.grey[900]!,
+          Colors.grey[850]!,
+          Colors.grey[800]!,
+          Colors.grey[900]!,
         ],
+        stops: const [0.0, 0.3, 0.7, 1.0],
       ),
-      child: CustomPaint(
-        painter: _VinylGroovesPainter(),
-      ),
-    );
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.3),
+          blurRadius: 15,
+          offset: const Offset(0, 5),
+        ),
+      ],
+    ),
+    child: CustomPaint(painter: _VinylGroovesPainter()),
+  );
 
   Widget _buildCoverImage() {
     Widget coverImage;
@@ -137,13 +136,15 @@ class _RotatingCoverState extends State<RotatingCover>
       );
     } else if (coverUrl != null && coverUrl.isNotEmpty) {
       if (coverUrl.startsWith('file://')) {
-        final filePath = coverUrl.substring(7);
-        coverImage = Image.file(
-          File(filePath),
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          errorBuilder: (_, _, _) => _buildDefaultCover(),
-        );
+        final filePath = localPathFromFileUri(coverUrl);
+        coverImage = filePath == null
+            ? _buildDefaultCover()
+            : Image.file(
+                File(filePath),
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) => _buildDefaultCover(),
+              );
       } else {
         coverImage = Image.network(
           coverUrl,
@@ -156,28 +157,19 @@ class _RotatingCoverState extends State<RotatingCover>
       coverImage = _buildDefaultCover();
     }
 
-    return ClipOval(
-      child: coverImage,
-    );
+    return ClipOval(child: coverImage);
   }
 
   Widget _buildDefaultCover() => DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary,
-            AppColors.secondary,
-          ],
-        ),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [AppColors.primary, AppColors.secondary],
       ),
-      child: const Icon(
-        Icons.music_note_rounded,
-        color: Colors.white,
-        size: 32,
-      ),
-    );
+    ),
+    child: const Icon(Icons.music_note_rounded, color: Colors.white, size: 32),
+  );
 }
 
 /// 黑胶唱片纹路绘制器
@@ -247,10 +239,7 @@ class _GlowingContainerState extends State<GlowingContainer>
       duration: widget.duration,
     );
     _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
     if (widget.isGlowing) {
       _pulseController.repeat(reverse: true);
@@ -285,9 +274,11 @@ class _GlowingContainerState extends State<GlowingContainer>
       animation: _pulseAnimation,
       builder: (context, child) {
         final pulseValue = _pulseAnimation.value;
-        final blurRadius = widget.minBlurRadius +
+        final blurRadius =
+            widget.minBlurRadius +
             (widget.maxBlurRadius - widget.minBlurRadius) * pulseValue;
-        final spreadRadius = widget.minSpreadRadius +
+        final spreadRadius =
+            widget.minSpreadRadius +
             (widget.maxSpreadRadius - widget.minSpreadRadius) * pulseValue;
         final opacity = 0.3 + 0.3 * pulseValue;
 
@@ -347,12 +338,10 @@ class _AnimatedPressableState extends State<AnimatedPressable>
       vsync: this,
       duration: widget.duration,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleDown).animate(
-      CurvedAnimation(
-        parent: _scaleController,
-        curve: widget.curve,
-      ),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: widget.scaleDown,
+    ).animate(CurvedAnimation(parent: _scaleController, curve: widget.curve));
   }
 
   @override
@@ -379,20 +368,18 @@ class _AnimatedPressableState extends State<AnimatedPressable>
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      onLongPress: widget.onLongPress,
-      onSecondaryTap: widget.onLongPress,
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) => Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          ),
-        child: widget.child,
-      ),
-    );
+    onTapDown: _handleTapDown,
+    onTapUp: _handleTapUp,
+    onTapCancel: _handleTapCancel,
+    onLongPress: widget.onLongPress,
+    onSecondaryTap: widget.onLongPress,
+    child: AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) =>
+          Transform.scale(scale: _scaleAnimation.value, child: child),
+      child: widget.child,
+    ),
+  );
 }
 
 /// 毛玻璃卡片组件
@@ -453,10 +440,7 @@ class GlassCard extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return AnimatedPressable(
-        onTap: onTap,
-        child: card,
-      );
+      return AnimatedPressable(onTap: onTap, child: card);
     }
 
     return card;
@@ -557,9 +541,8 @@ mixin ScrollParallaxMixin<T extends StatefulWidget> on State<T> {
   double get scrollOffset => _scrollOffset;
 
   /// 计算视差值 (0.0 ~ 1.0)
-  double getParallaxProgress({
-    double maxScroll = 100,
-  }) => (_scrollOffset / maxScroll).clamp(0.0, 1.0);
+  double getParallaxProgress({double maxScroll = 100}) =>
+      (_scrollOffset / maxScroll).clamp(0.0, 1.0);
 
   /// 根据滚动计算尺寸
   double lerpSize(double start, double end, {double maxScroll = 100}) {

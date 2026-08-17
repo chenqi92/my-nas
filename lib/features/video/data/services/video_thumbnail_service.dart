@@ -6,6 +6,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -30,16 +31,9 @@ class VideoPathUtils {
 
     // 处理 file:// URI
     if (videoUrl.startsWith('file://')) {
-      try {
-        final uri = Uri.parse(videoUrl);
-        // Uri.toFilePath() 会自动处理 URL 解码和平台路径格式
-        final localPath = uri.toFilePath(windows: Platform.isWindows);
-        logger.d('VideoPathUtils: file URI 转换为本地路径: $videoUrl -> $localPath');
-        return localPath;
-      } on Exception catch (e, st) {
-        AppError.handle(e, st, 'convertToLocalPath', {'videoUrl': videoUrl});
-        return null;
-      }
+      final localPath = localPathFromFileUri(videoUrl);
+      logger.d('VideoPathUtils: file URI 转换为本地路径: $videoUrl -> $localPath');
+      return localPath;
     }
 
     // HTTP/HTTPS URL - media_kit 可以直接处理
@@ -68,7 +62,8 @@ class VideoPathUtils {
   static bool isWebDavUri(String path) => path.startsWith('webdav://');
 
   /// 检查是否需要流式下载（SMB、WebDAV 等不支持直接 URL 访问的协议）
-  static bool needsStreamDownload(String path) => isSmbUri(path) || isWebDavUri(path);
+  static bool needsStreamDownload(String path) =>
+      isSmbUri(path) || isWebDavUri(path);
 
   /// 检查路径是否是本地文件（可直接访问）
   static bool isLocalFile(String path) {
@@ -93,7 +88,8 @@ class VideoPathUtils {
   }
 
   /// 检查路径是否是 HTTP/HTTPS URL
-  static bool isHttpUrl(String path) => path.startsWith('http://') || path.startsWith('https://');
+  static bool isHttpUrl(String path) =>
+      path.startsWith('http://') || path.startsWith('https://');
 }
 
 /// 视频缩略图服务
@@ -222,13 +218,21 @@ class VideoThumbnailService {
         logger.d('VideoThumbnailService: 使用流式下载处理 $protocol 视频');
 
         // 渐进式下载：从小到大尝试不同的下载大小
-        for (var sizeLevel = 0; sizeLevel < _downloadSizes.length; sizeLevel++) {
+        for (
+          var sizeLevel = 0;
+          sizeLevel < _downloadSizes.length;
+          sizeLevel++
+        ) {
           // 清理上一次的临时文件
           if (tempFilePath != null) {
             try {
               await File(tempFilePath).delete();
             } on Exception catch (e, st) {
-              AppError.ignore(e, st, appL10n.videoThumbnailServiceCleanupPreviousFileFailed);
+              AppError.ignore(
+                e,
+                st,
+                appL10n.videoThumbnailServiceCleanupPreviousFileFailed,
+              );
             }
           }
 
@@ -251,14 +255,16 @@ class VideoThumbnailService {
             final thumbnailPath = p.join(_cacheDir!.path, '$cacheKey.jpg');
             await File(thumbnailPath).writeAsBytes(result);
             logger.i(
-                'VideoThumbnailService: 缩略图生成成功 $thumbnailPath (下载 ${_downloadSizes[sizeLevel] ~/ 1024 ~/ 1024}MB)');
+              'VideoThumbnailService: 缩略图生成成功 $thumbnailPath (下载 ${_downloadSizes[sizeLevel] ~/ 1024 ~/ 1024}MB)',
+            );
             return thumbnailPath;
           }
 
           // 如果不是最后一次尝试，继续下载更大的片段
           if (sizeLevel < _downloadSizes.length - 1) {
             logger.d(
-                'VideoThumbnailService: 下载 ${_downloadSizes[sizeLevel] ~/ 1024 ~/ 1024}MB 不足以生成缩略图，尝试更大的片段');
+              'VideoThumbnailService: 下载 ${_downloadSizes[sizeLevel] ~/ 1024 ~/ 1024}MB 不足以生成缩略图，尝试更大的片段',
+            );
           }
         }
 
@@ -270,9 +276,12 @@ class VideoThumbnailService {
         if (effectivePath == null) {
           // 如果是需要流式下载的协议但没有提供 fileSystem，给出提示
           if (VideoPathUtils.needsStreamDownload(videoUrl)) {
-            final protocol = VideoPathUtils.isSmbUri(videoUrl) ? 'SMB' : 'WebDAV';
+            final protocol = VideoPathUtils.isSmbUri(videoUrl)
+                ? 'SMB'
+                : 'WebDAV';
             logger.w(
-                'VideoThumbnailService: $protocol 路径需要提供 fileSystem 参数: $videoUrl');
+              'VideoThumbnailService: $protocol 路径需要提供 fileSystem 参数: $videoUrl',
+            );
           } else {
             logger.w('VideoThumbnailService: 无法处理的视频路径: $videoUrl');
           }
@@ -312,7 +321,11 @@ class VideoThumbnailService {
             logger.d('VideoThumbnailService: 已清理临时文件 $tempFilePath');
           }
         } on Exception catch (e, st) {
-          AppError.ignore(e, st, appL10n.videoThumbnailServiceCleanupTempFileFailed);
+          AppError.ignore(
+            e,
+            st,
+            appL10n.videoThumbnailServiceCleanupTempFileFailed,
+          );
         }
       }
     }
@@ -329,7 +342,9 @@ class VideoThumbnailService {
     VideoController? controller;
 
     try {
-      logger.d('VideoThumbnailService: 使用 media_kit 提取帧: $videoPath @ ${timeMs}ms');
+      logger.d(
+        'VideoThumbnailService: 使用 media_kit 提取帧: $videoPath @ ${timeMs}ms',
+      );
 
       // 创建播放器实例
       player = Player(
@@ -343,9 +358,7 @@ class VideoThumbnailService {
 
       // 创建 VideoController 以确保视频帧被渲染
       // screenshot() 需要有渲染输出才能工作
-      controller = VideoController(
-        player,
-      );
+      controller = VideoController(player);
 
       // 打开视频但不播放
       await player.open(Media(videoPath), play: false);
@@ -403,10 +416,16 @@ class VideoThumbnailService {
       logger.d('VideoThumbnailService: 截图成功，大小: ${screenshot.length} bytes');
       return screenshot;
     } on TimeoutException catch (e, st) {
-      AppError.ignore(e, st, appL10n.videoThumbnailServiceFrameExtractionTimeout);
+      AppError.ignore(
+        e,
+        st,
+        appL10n.videoThumbnailServiceFrameExtractionTimeout,
+      );
       return null;
     } on Exception catch (e, st) {
-      AppError.handle(e, st, 'captureFrameWithMediaKit', {'videoPath': videoPath});
+      AppError.handle(e, st, 'captureFrameWithMediaKit', {
+        'videoPath': videoPath,
+      });
       return null;
     } finally {
       // 释放资源
@@ -444,7 +463,8 @@ class VideoThumbnailService {
 
     try {
       logger.d(
-          'VideoThumbnailService: 开始下载视频片段 $filePath (${downloadSize ~/ 1024 ~/ 1024}MB)');
+        'VideoThumbnailService: 开始下载视频片段 $filePath (${downloadSize ~/ 1024 ~/ 1024}MB)',
+      );
 
       // 获取文件扩展名
       final ext = p.extension(filePath).toLowerCase();
@@ -475,10 +495,13 @@ class VideoThumbnailService {
       await sink.close();
 
       logger.d(
-          'VideoThumbnailService: 视频片段下载完成, 大小: ${bytesWritten ~/ 1024}KB');
+        'VideoThumbnailService: 视频片段下载完成, 大小: ${bytesWritten ~/ 1024}KB',
+      );
       return tempPath;
     } on Exception catch (e, st) {
-      AppError.handle(e, st, 'downloadVideoForThumbnail', {'filePath': filePath});
+      AppError.handle(e, st, 'downloadVideoForThumbnail', {
+        'filePath': filePath,
+      });
       return null;
     }
   }
@@ -615,7 +638,11 @@ class VideoThumbnailService {
         await File(path).delete();
         logger.d('VideoThumbnailService: 进度截图已删除 $path');
       } on Exception catch (e, st) {
-        AppError.ignore(e, st, appL10n.videoThumbnailServiceDeleteProgressThumbnailFailed);
+        AppError.ignore(
+          e,
+          st,
+          appL10n.videoThumbnailServiceDeleteProgressThumbnailFailed,
+        );
       }
     }
   }

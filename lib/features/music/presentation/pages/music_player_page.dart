@@ -10,6 +10,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/theme/dynamic_accent_provider.dart';
 import 'package:my_nas/core/utils/debug_log.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/features/music/presentation/providers/music_favorites_provider.dart';
@@ -106,7 +107,8 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
       // iOS 不支持格式检测回调：当使用 just_audio 引擎播放 FLAC 等格式时
       // 显示切换引擎的提示对话框
       if (mounted) {
-        ref.read(musicPlayerControllerProvider.notifier)
+        ref
+            .read(musicPlayerControllerProvider.notifier)
             .setupUnsupportedFormatCallback(context);
       }
     });
@@ -122,7 +124,8 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     // 注意：在某些情况下（如快速导航），widget 可能在 unmount 过程中被销毁
     // 此时 ref 已不可用，需要捕获异常
     try {
-      ref.read(musicPlayerControllerProvider.notifier)
+      ref
+          .read(musicPlayerControllerProvider.notifier)
           .removeUnsupportedFormatCallback();
     } catch (_) {
       // 忽略 ref 不可用的情况，回调会在 notifier dispose 时自动清理
@@ -188,9 +191,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
           elevation: 0,
           title: Text(context.l10n.musicPlayerNowPlaying),
         ),
-        body: Center(
-          child: Text(context.l10n.musicPlayerNoMusicSelected),
-        ),
+        body: Center(child: Text(context.l10n.musicPlayerNoMusicSelected)),
       );
     }
 
@@ -228,15 +229,27 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                     ],
             ),
           ),
-        child: SafeArea(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            child: _showLyrics
-                ? _buildLyricMode(context, ref, currentMusic, playerState, isDark)
-                : _buildCoverMode(context, ref, currentMusic, playerState, isDark),
+          child: SafeArea(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              child: _showLyrics
+                  ? _buildLyricMode(
+                      context,
+                      ref,
+                      currentMusic,
+                      playerState,
+                      isDark,
+                    )
+                  : _buildCoverMode(
+                      context,
+                      ref,
+                      currentMusic,
+                      playerState,
+                      isDark,
+                    ),
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -246,64 +259,64 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     MusicPlayerNotifier notifier,
     MusicPlayerState state,
   ) => {
-      // 播放/暂停
-      CommonShortcuts.playPause: notifier.playOrPause,
-      CommonShortcuts.playPauseK: notifier.playOrPause,
+    // 播放/暂停
+    CommonShortcuts.playPause: notifier.playOrPause,
+    CommonShortcuts.playPauseK: notifier.playOrPause,
 
-      // 上一曲/下一曲
-      CommonShortcuts.previous: notifier.playPrevious,
-      CommonShortcuts.next: notifier.playNext,
+    // 上一曲/下一曲
+    CommonShortcuts.previous: notifier.playPrevious,
+    CommonShortcuts.next: notifier.playNext,
 
-      // 快退/快进 (10秒)
-      CommonShortcuts.seekBackward: () {
-        final newPosition = state.position - const Duration(seconds: 10);
-        notifier.seek(newPosition.isNegative ? Duration.zero : newPosition);
-      },
-      CommonShortcuts.seekForward: () {
-        final newPosition = state.position + const Duration(seconds: 10);
-        if (newPosition < state.duration) {
-          notifier.seek(newPosition);
-        }
-      },
+    // 快退/快进 (10秒)
+    CommonShortcuts.seekBackward: () {
+      final newPosition = state.position - const Duration(seconds: 10);
+      notifier.seek(newPosition.isNegative ? Duration.zero : newPosition);
+    },
+    CommonShortcuts.seekForward: () {
+      final newPosition = state.position + const Duration(seconds: 10);
+      if (newPosition < state.duration) {
+        notifier.seek(newPosition);
+      }
+    },
 
-      // 音量调整
-      CommonShortcuts.volumeUp: () {
-        final newVolume = (state.volume + 0.1).clamp(0.0, 1.0);
-        notifier.setVolume(newVolume);
-      },
-      CommonShortcuts.volumeDown: () {
-        final newVolume = (state.volume - 0.1).clamp(0.0, 1.0);
-        notifier.setVolume(newVolume);
-      },
-      CommonShortcuts.mute: () {
-        if (state.volume > 0) {
-          notifier.setVolume(0);
-        } else {
-          notifier.setVolume(1.0);
-        }
-      },
+    // 音量调整
+    CommonShortcuts.volumeUp: () {
+      final newVolume = (state.volume + 0.1).clamp(0.0, 1.0);
+      notifier.setVolume(newVolume);
+    },
+    CommonShortcuts.volumeDown: () {
+      final newVolume = (state.volume - 0.1).clamp(0.0, 1.0);
+      notifier.setVolume(newVolume);
+    },
+    CommonShortcuts.mute: () {
+      if (state.volume > 0) {
+        notifier.setVolume(0);
+      } else {
+        notifier.setVolume(1.0);
+      }
+    },
 
-      // 播放模式
-      CommonShortcuts.repeatMode: notifier.togglePlayMode,
-      CommonShortcuts.shuffle: () {
-        // 切换到随机模式
+    // 播放模式
+    CommonShortcuts.repeatMode: notifier.togglePlayMode,
+    CommonShortcuts.shuffle: () {
+      // 切换到随机模式
+      if (state.playMode != PlayMode.shuffle) {
+        notifier.togglePlayMode();
         if (state.playMode != PlayMode.shuffle) {
           notifier.togglePlayMode();
-          if (state.playMode != PlayMode.shuffle) {
-            notifier.togglePlayMode();
-          }
         }
-      },
+      }
+    },
 
-      // 歌词切换
-      CommonShortcuts.toggleControls: _toggleLyricView,
+    // 歌词切换
+    CommonShortcuts.toggleControls: _toggleLyricView,
 
-      // 退出
-      CommonShortcuts.escape: () => _handleBack(context),
+    // 退出
+    CommonShortcuts.escape: () => _handleBack(context),
 
-      // 帮助
-      CommonShortcuts.help: _showKeyboardHelp,
-    };
+    // 帮助
+    CommonShortcuts.help: _showKeyboardHelp,
+  };
 
   /// 显示键盘快捷键帮助
   void _showKeyboardHelp() {
@@ -311,7 +324,10 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
       context,
       title: context.l10n.musicPlayerKeyboardShortcutsTitle,
       shortcuts: [
-        (key: 'Space / K', description: context.l10n.musicPlayerShortcutPlayPause),
+        (
+          key: 'Space / K',
+          description: context.l10n.musicPlayerShortcutPlayPause,
+        ),
         (key: '←', description: context.l10n.musicPlayerShortcutPrevious),
         (key: '→', description: context.l10n.musicPlayerShortcutNext),
         (key: 'J', description: context.l10n.musicPlayerShortcutSeekBackward),
@@ -352,7 +368,12 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                 // 封面（点击切换到歌词）
                 GestureDetector(
                   onTap: _toggleLyricView,
-                  child: _buildCover(context, currentMusic, playerState, isDark),
+                  child: _buildCover(
+                    context,
+                    currentMusic,
+                    playerState,
+                    isDark,
+                  ),
                 ),
                 SizedBox(height: isCompact ? 12 : 20),
                 // 歌曲信息
@@ -368,7 +389,12 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
         Flexible(
           flex: 0, // 优先使用封面区域的空间
           child: Container(
-            padding: EdgeInsets.fromLTRB(16, isCompact ? 8 : 12, 16, isCompact ? 8 : 16),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              isCompact ? 8 : 12,
+              16,
+              isCompact ? 8 : 16,
+            ),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -415,14 +441,16 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
       children: [
         // 歌词视图
         Expanded(
-          child: LyricView(
-            onTap: _toggleLyricView,
-            showFullScreen: true,
-          ),
+          child: LyricView(onTap: _toggleLyricView, showFullScreen: true),
         ),
         // 底部控制区域 - 与封面模式保持一致的布局
         Container(
-          padding: EdgeInsets.fromLTRB(16, isCompact ? 8 : 12, 16, isCompact ? 8 : 16),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            isCompact ? 8 : 12,
+            16,
+            isCompact ? 8 : 16,
+          ),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -458,7 +486,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     MusicItem currentMusic,
     bool isDark,
   ) {
-    final isFavoriteAsync = ref.watch(isMusicFavoriteProvider(currentMusic.path));
+    final isFavoriteAsync = ref.watch(
+      isMusicFavoriteProvider(currentMusic.path),
+    );
 
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -477,7 +507,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
             context.l10n.musicPlayerPlayingNow,
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant,
             ),
           ),
           Text(
@@ -502,7 +534,11 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(result ? context.l10n.musicPlayerFavoriteAdded : context.l10n.musicPlayerFavoriteRemoved),
+                    content: Text(
+                      result
+                          ? context.l10n.musicPlayerFavoriteAdded
+                          : context.l10n.musicPlayerFavoriteRemoved,
+                    ),
                     behavior: SnackBarBehavior.floating,
                     duration: const Duration(seconds: 1),
                   ),
@@ -510,10 +546,16 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               }
             },
             icon: Icon(
-              isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              color: isFavorite ? AppColors.error : (isDark ? Colors.white : Colors.black87),
+              isFavorite
+                  ? Icons.favorite_rounded
+                  : Icons.favorite_border_rounded,
+              color: isFavorite
+                  ? AppColors.error
+                  : (isDark ? Colors.white : Colors.black87),
             ),
-            tooltip: isFavorite ? context.l10n.musicPlayerFavoriteButtonTooltipRemove : context.l10n.musicPlayerFavoriteButtonTooltip,
+            tooltip: isFavorite
+                ? context.l10n.musicPlayerFavoriteButtonTooltipRemove
+                : context.l10n.musicPlayerFavoriteButtonTooltip,
           ),
           loading: () => const SizedBox(
             width: 48,
@@ -529,7 +571,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
             onPressed: null,
             icon: Icon(
               Icons.favorite_border_rounded,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant,
             ),
           ),
         ),
@@ -565,15 +609,12 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     final connection = currentMusic.sourceId != null
         ? connections[currentMusic.sourceId]
         : null;
-    final fileSystem = (connection != null && connection.status == SourceStatus.connected)
+    final fileSystem =
+        (connection != null && connection.status == SourceStatus.connected)
         ? connection.adapter.fileSystem
         : null;
 
-    await AutoScrapeDialog.show(
-      context,
-      currentMusic,
-      fileSystem: fileSystem,
-    );
+    await AutoScrapeDialog.show(context, currentMusic, fileSystem: fileSystem);
   }
 
   Widget _buildCover(
@@ -607,9 +648,11 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               child: AnimatedBuilder(
                 animation: _rotationController,
                 builder: (context, child) => Transform.rotate(
-                    angle: playerState.isPlaying ? _rotationController.value * 2 * math.pi : 0,
-                    child: child,
-                  ),
+                  angle: playerState.isPlaying
+                      ? _rotationController.value * 2 * math.pi
+                      : 0,
+                  child: child,
+                ),
                 child: Container(
                   width: size,
                   height: size,
@@ -655,7 +698,11 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                           ],
                         ),
                         clipBehavior: Clip.antiAlias,
-                        child: _buildCoverImage(currentMusic, size * 0.38, isDark),
+                        child: _buildCoverImage(
+                          currentMusic,
+                          size * 0.38,
+                          isDark,
+                        ),
                       ),
                       Container(
                         width: size * 0.04,
@@ -663,7 +710,10 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.black,
-                          border: Border.all(color: Colors.grey[800]!, width: 1.5),
+                          border: Border.all(
+                            color: Colors.grey[800]!,
+                            width: 1.5,
+                          ),
                         ),
                       ),
                       Container(
@@ -707,24 +757,26 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
   }
 
   Widget _buildCoverPlaceholder(double size, bool isDark) => Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [Colors.grey[800]!, Colors.grey[900]!]
-              : [Colors.grey[200]!, Colors.grey[300]!],
-        ),
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark
+            ? [Colors.grey[800]!, Colors.grey[900]!]
+            : [Colors.grey[200]!, Colors.grey[300]!],
       ),
-      child: Icon(
-        Icons.music_note_rounded,
-        size: size * 0.4,
-        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-      ),
-    );
+    ),
+    child: Icon(
+      Icons.music_note_rounded,
+      size: size * 0.4,
+      color: isDark
+          ? AppColors.darkOnSurfaceVariant
+          : AppColors.lightOnSurfaceVariant,
+    ),
+  );
 
   /// 构建封面图片，优先使用嵌入的封面数据，其次是封面 URL
   Widget _buildCoverImage(MusicItem music, double size, bool isDark) {
@@ -744,7 +796,8 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     // 其次使用封面 URL（支持 file:// 和网络 URL）
     if (music.coverUrl != null && music.coverUrl!.isNotEmpty) {
       if (music.coverUrl!.startsWith('file://')) {
-        final filePath = music.coverUrl!.substring(7); // 移除 'file://' 前缀
+        final filePath = localPathFromFileUri(music.coverUrl!);
+        if (filePath == null) return _buildCoverPlaceholder(size, isDark);
         return Image.file(
           File(filePath),
           key: ValueKey('cover_file_${music.id}'),
@@ -770,35 +823,41 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     return _buildCoverPlaceholder(size, isDark);
   }
 
-  Widget _buildTrackInfo(BuildContext context, MusicItem currentMusic, bool isDark) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        children: [
-          Text(
-            currentMusic.displayTitle,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+  Widget _buildTrackInfo(
+    BuildContext context,
+    MusicItem currentMusic,
+    bool isDark,
+  ) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 32),
+    child: Column(
+      children: [
+        Text(
+          currentMusic.displayTitle,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
           ),
-          const SizedBox(height: 8),
-          Text(
-            currentMusic.displayArtist,
-            style: TextStyle(
-              fontSize: 16,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          currentMusic.displayArtist,
+          style: TextStyle(
+            fontSize: 16,
+            color: isDark
+                ? AppColors.darkOnSurfaceVariant
+                : AppColors.lightOnSurfaceVariant,
           ),
-        ],
-      ),
-    );
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    ),
+  );
 
   Widget _buildProgressBar(
     BuildContext context,
@@ -830,7 +889,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               _getPlayModeIcon(state.playMode),
               color: state.playMode != PlayMode.loop
                   ? AppColors.primary
-                  : (isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant),
+                  : (isDark
+                        ? AppColors.darkOnSurfaceVariant
+                        : AppColors.lightOnSurfaceVariant),
             ),
             tooltip: _getPlayModeTooltip(state.playMode),
           ),
@@ -873,7 +934,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
                       ),
                     )
                   : Icon(
-                      state.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      state.isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
                       size: 40,
                       color: Colors.white,
                     ),
@@ -894,7 +957,9 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
             iconSize: 28,
             icon: Icon(
               Icons.queue_music_rounded,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
+              color: isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant,
             ),
             tooltip: context.l10n.musicPlayerQueueTooltip,
           ),
@@ -908,48 +973,49 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
     MusicPlayerState state,
     bool isDark,
   ) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 48),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // 音量控制
-          _VolumeButton(
-            volume: state.volume,
-            isDark: isDark,
+    padding: const EdgeInsets.symmetric(horizontal: 48),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // 音量控制
+        _VolumeButton(volume: state.volume, isDark: isDark),
+        // 歌词按钮
+        IconButton(
+          onPressed: _toggleLyricView,
+          icon: Icon(
+            Icons.lyrics_rounded,
+            color: isDark
+                ? AppColors.darkOnSurfaceVariant
+                : AppColors.lightOnSurfaceVariant,
           ),
-          // 歌词按钮
-          IconButton(
-            onPressed: _toggleLyricView,
-            icon: Icon(
-              Icons.lyrics_rounded,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-            ),
-            tooltip: context.l10n.musicPlayerLyricsTooltip,
+          tooltip: context.l10n.musicPlayerLyricsTooltip,
+        ),
+        // 定时关闭
+        IconButton(
+          onPressed: () => _showSleepTimer(context),
+          icon: Icon(
+            Icons.timer_outlined,
+            color: isDark
+                ? AppColors.darkOnSurfaceVariant
+                : AppColors.lightOnSurfaceVariant,
           ),
-          // 定时关闭
-          IconButton(
-            onPressed: () => _showSleepTimer(context),
-            icon: Icon(
-              Icons.timer_outlined,
-              color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-            ),
-            tooltip: context.l10n.musicPlayerSleepTimerTooltip,
-          ),
-        ],
-      ),
-    );
+          tooltip: context.l10n.musicPlayerSleepTimerTooltip,
+        ),
+      ],
+    ),
+  );
 
   IconData _getPlayModeIcon(PlayMode mode) => switch (mode) {
-        PlayMode.loop => Icons.repeat_rounded,
-        PlayMode.repeatOne => Icons.repeat_one_rounded,
-        PlayMode.shuffle => Icons.shuffle_rounded,
-      };
+    PlayMode.loop => Icons.repeat_rounded,
+    PlayMode.repeatOne => Icons.repeat_one_rounded,
+    PlayMode.shuffle => Icons.shuffle_rounded,
+  };
 
   String _getPlayModeTooltip(PlayMode mode) => switch (mode) {
-        PlayMode.loop => context.l10n.musicPlayerPlayModeLoop,
-        PlayMode.repeatOne => context.l10n.musicPlayerPlayModeRepeatOne,
-        PlayMode.shuffle => context.l10n.musicPlayerPlayModeShuffle,
-      };
+    PlayMode.loop => context.l10n.musicPlayerPlayModeLoop,
+    PlayMode.repeatOne => context.l10n.musicPlayerPlayModeRepeatOne,
+    PlayMode.shuffle => context.l10n.musicPlayerPlayModeShuffle,
+  };
 
   void _showSleepTimer(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -973,21 +1039,27 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
               ),
             ),
             const SizedBox(height: 16),
-            ...[15, 30, 45, 60, 90].map((minutes) => ListTile(
+            ...[15, 30, 45, 60, 90].map(
+              (minutes) => ListTile(
                 title: Text(
                   context.l10n.musicPlayerSleepTimerAfterMinutes(minutes),
-                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                 ),
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(context.l10n.musicPlayerSleepTimerStopPlayback(minutes)),
+                      content: Text(
+                        context.l10n.musicPlayerSleepTimerStopPlayback(minutes),
+                      ),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
                 },
-              )),
+              ),
+            ),
             ListTile(
               title: Text(
                 context.l10n.musicPlayerSleepTimerAfterCurrentSong,
@@ -1004,10 +1076,7 @@ class _MusicPlayerPageState extends ConsumerState<MusicPlayerPage>
 }
 
 class _VolumeButton extends ConsumerStatefulWidget {
-  const _VolumeButton({
-    required this.volume,
-    required this.isDark,
-  });
+  const _VolumeButton({required this.volume, required this.isDark});
 
   final double volume;
   final bool isDark;
@@ -1021,42 +1090,48 @@ class _VolumeButtonState extends ConsumerState<_VolumeButton> {
 
   @override
   Widget build(BuildContext context) => Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          onPressed: () => setState(() => _showSlider = !_showSlider),
-          icon: Icon(
-            widget.volume == 0
-                ? Icons.volume_off_rounded
-                : widget.volume < 0.5
-                    ? Icons.volume_down_rounded
-                    : Icons.volume_up_rounded,
-            color: widget.isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-          ),
-          tooltip: context.l10n.musicPlayerVolumeTooltip,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      IconButton(
+        onPressed: () => setState(() => _showSlider = !_showSlider),
+        icon: Icon(
+          widget.volume == 0
+              ? Icons.volume_off_rounded
+              : widget.volume < 0.5
+              ? Icons.volume_down_rounded
+              : Icons.volume_up_rounded,
+          color: widget.isDark
+              ? AppColors.darkOnSurfaceVariant
+              : AppColors.lightOnSurfaceVariant,
         ),
-        if (_showSlider)
-          SizedBox(
-            width: 100,
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 3,
-                activeTrackColor: AppColors.primary,
-                inactiveTrackColor: widget.isDark ? Colors.grey[800] : Colors.grey[300],
-                thumbColor: AppColors.primary,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-              ),
-              child: Slider(
-                value: widget.volume,
-                onChanged: (value) {
-                  ref.read(musicPlayerControllerProvider.notifier).setVolume(value);
-                },
-              ),
+        tooltip: context.l10n.musicPlayerVolumeTooltip,
+      ),
+      if (_showSlider)
+        SizedBox(
+          width: 100,
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 3,
+              activeTrackColor: AppColors.primary,
+              inactiveTrackColor: widget.isDark
+                  ? Colors.grey[800]
+                  : Colors.grey[300],
+              thumbColor: AppColors.primary,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
+            ),
+            child: Slider(
+              value: widget.volume,
+              onChanged: (value) {
+                ref
+                    .read(musicPlayerControllerProvider.notifier)
+                    .setVolume(value);
+              },
             ),
           ),
-      ],
-    );
+        ),
+    ],
+  );
 }
 
 /// 黑胶唱片绘制器
@@ -1182,10 +1257,7 @@ class _TonearmWidgetState extends State<_TonearmWidget>
     _animation = Tween<double>(
       begin: -0.3, // 离开唱片的角度
       end: 0.0, // 放在唱片上的角度
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     if (widget.isPlaying) {
       _controller.forward();
@@ -1212,18 +1284,17 @@ class _TonearmWidgetState extends State<_TonearmWidget>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) => Transform(
-          alignment: Alignment.topRight,
-          transform: Matrix4.identity()
-            ..rotateZ(_animation.value),
-          child: child,
-        ),
-      child: CustomPaint(
-        size: Size(widget.length, widget.length * 1.2),
-        painter: _TonearmPainter(isDark: widget.isDark),
-      ),
-    );
+    animation: _animation,
+    builder: (context, child) => Transform(
+      alignment: Alignment.topRight,
+      transform: Matrix4.identity()..rotateZ(_animation.value),
+      child: child,
+    ),
+    child: CustomPaint(
+      size: Size(widget.length, widget.length * 1.2),
+      painter: _TonearmPainter(isDark: widget.isDark),
+    ),
+  );
 }
 
 /// 唱针臂绘制器
@@ -1241,19 +1312,16 @@ class _TonearmPainter extends CustomPainter {
 
     // 转轴基座
     final basePaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          Colors.grey[600]!,
-          Colors.grey[800]!,
-          Colors.grey[900]!,
-        ],
-        stops: const [0.0, 0.7, 1.0],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width - pivotRadius, pivotRadius),
-          radius: pivotRadius,
-        ),
-      );
+      ..shader =
+          RadialGradient(
+            colors: [Colors.grey[600]!, Colors.grey[800]!, Colors.grey[900]!],
+            stops: const [0.0, 0.7, 1.0],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width - pivotRadius, pivotRadius),
+              radius: pivotRadius,
+            ),
+          );
     canvas.drawCircle(
       Offset(size.width - pivotRadius, pivotRadius),
       pivotRadius,
@@ -1262,17 +1330,13 @@ class _TonearmPainter extends CustomPainter {
 
     // 转轴中心高光
     final baseCenterPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          Colors.grey[400]!,
-          Colors.grey[700]!,
-        ],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width - pivotRadius, pivotRadius),
-          radius: pivotRadius * 0.4,
-        ),
-      );
+      ..shader = RadialGradient(colors: [Colors.grey[400]!, Colors.grey[700]!])
+          .createShader(
+            Rect.fromCircle(
+              center: Offset(size.width - pivotRadius, pivotRadius),
+              radius: pivotRadius * 0.4,
+            ),
+          );
     canvas.drawCircle(
       Offset(size.width - pivotRadius, pivotRadius),
       pivotRadius * 0.4,
@@ -1291,45 +1355,27 @@ class _TonearmPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          Colors.grey[500]!,
-          Colors.grey[700]!,
-          Colors.grey[800]!,
-        ],
-      ).createShader(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-      )
+        colors: [Colors.grey[500]!, Colors.grey[700]!, Colors.grey[800]!],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..strokeWidth = armWidth
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    armPath..moveTo(armStartX, armStartY)
-    ..quadraticBezierTo(
-      armEndX + armWidth,
-      armEndY * 0.5,
-      armEndX,
-      armEndY,
-    );
+    armPath
+      ..moveTo(armStartX, armStartY)
+      ..quadraticBezierTo(armEndX + armWidth, armEndY * 0.5, armEndX, armEndY);
     canvas.drawPath(armPath, armPaint);
 
     // 唱针头
     final headRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        armEndX - headWidth / 2,
-        armEndY,
-        headWidth,
-        headHeight,
-      ),
+      Rect.fromLTWH(armEndX - headWidth / 2, armEndY, headWidth, headHeight),
       const Radius.circular(2),
     );
     final headPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          Colors.grey[600]!,
-          Colors.grey[800]!,
-        ],
+        colors: [Colors.grey[600]!, Colors.grey[800]!],
       ).createShader(headRect.outerRect);
     canvas.drawRRect(headRect, headPaint);
 
@@ -1365,7 +1411,8 @@ class _HorizontalTonearmWidget extends StatefulWidget {
   final bool isDark;
 
   @override
-  State<_HorizontalTonearmWidget> createState() => _HorizontalTonearmWidgetState();
+  State<_HorizontalTonearmWidget> createState() =>
+      _HorizontalTonearmWidgetState();
 }
 
 class _HorizontalTonearmWidgetState extends State<_HorizontalTonearmWidget>
@@ -1385,10 +1432,7 @@ class _HorizontalTonearmWidgetState extends State<_HorizontalTonearmWidget>
     _animation = Tween<double>(
       begin: -0.15, // 抬起角度
       end: 0.0, // 放下到唱片上
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     if (widget.isPlaying) {
       _controller.forward();
@@ -1415,17 +1459,17 @@ class _HorizontalTonearmWidgetState extends State<_HorizontalTonearmWidget>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) => Transform(
-          alignment: Alignment.topRight, // 以右上角为轴心旋转
-          transform: Matrix4.identity()..rotateZ(_animation.value),
-          child: child,
-        ),
-      child: CustomPaint(
-        size: Size(widget.width, widget.height),
-        painter: _HorizontalTonearmPainter(isDark: widget.isDark),
-      ),
-    );
+    animation: _animation,
+    builder: (context, child) => Transform(
+      alignment: Alignment.topRight, // 以右上角为轴心旋转
+      transform: Matrix4.identity()..rotateZ(_animation.value),
+      child: child,
+    ),
+    child: CustomPaint(
+      size: Size(widget.width, widget.height),
+      painter: _HorizontalTonearmPainter(isDark: widget.isDark),
+    ),
+  );
 }
 
 /// 水平唱针臂绘制器
@@ -1442,31 +1486,34 @@ class _HorizontalTonearmPainter extends CustomPainter {
     final headLength = size.height * 0.25;
 
     // 转轴基座（右上角）
-    final pivotCenter = Offset(size.width - pivotRadius * 0.8, pivotRadius * 0.8);
+    final pivotCenter = Offset(
+      size.width - pivotRadius * 0.8,
+      pivotRadius * 0.8,
+    );
     final basePaint = Paint()
       ..shader = RadialGradient(
-        colors: [
-          Colors.grey[500]!,
-          Colors.grey[700]!,
-          Colors.grey[800]!,
-        ],
+        colors: [Colors.grey[500]!, Colors.grey[700]!, Colors.grey[800]!],
         stops: const [0.0, 0.6, 1.0],
       ).createShader(Rect.fromCircle(center: pivotCenter, radius: pivotRadius));
     canvas.drawCircle(pivotCenter, pivotRadius, basePaint);
 
     // 转轴高光
     final highlightPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          Colors.white.withValues(alpha: 0.4),
-          Colors.white.withValues(alpha: 0.1),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.3, 1.0],
-      ).createShader(Rect.fromCircle(
-        center: pivotCenter + Offset(-pivotRadius * 0.2, -pivotRadius * 0.2),
-        radius: pivotRadius * 0.5,
-      ));
+      ..shader =
+          RadialGradient(
+            colors: [
+              Colors.white.withValues(alpha: 0.4),
+              Colors.white.withValues(alpha: 0.1),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.3, 1.0],
+          ).createShader(
+            Rect.fromCircle(
+              center:
+                  pivotCenter + Offset(-pivotRadius * 0.2, -pivotRadius * 0.2),
+              radius: pivotRadius * 0.5,
+            ),
+          );
     canvas.drawCircle(
       pivotCenter + Offset(-pivotRadius * 0.2, -pivotRadius * 0.2),
       pivotRadius * 0.4,
@@ -1481,23 +1528,23 @@ class _HorizontalTonearmPainter extends CustomPainter {
 
     final armPath = Path();
     final armPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: [
-          Colors.grey[600]!,
-          Colors.grey[500]!,
-          Colors.grey[700]!,
-        ],
-      ).createShader(Rect.fromPoints(
-        Offset(armStartX, armStartY),
-        Offset(armEndX, armEndY),
-      ))
+      ..shader =
+          LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [Colors.grey[600]!, Colors.grey[500]!, Colors.grey[700]!],
+          ).createShader(
+            Rect.fromPoints(
+              Offset(armStartX, armStartY),
+              Offset(armEndX, armEndY),
+            ),
+          )
       ..strokeWidth = armWidth
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    armPath..moveTo(armStartX, armStartY)
+    armPath
+      ..moveTo(armStartX, armStartY)
       ..quadraticBezierTo(
         armStartX * 0.5,
         (armStartY + armEndY) * 0.4,
@@ -1527,10 +1574,7 @@ class _HorizontalTonearmPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          Colors.grey[600]!,
-          Colors.grey[800]!,
-        ],
+        colors: [Colors.grey[600]!, Colors.grey[800]!],
       ).createShader(headRect.outerRect);
     canvas.drawRRect(headRect, headPaint);
 
@@ -1589,10 +1633,7 @@ class _NeteaseTonearmWidgetState extends State<_NeteaseTonearmWidget>
     _animation = Tween<double>(
       begin: -0.55, // 停止时抬起 ~-31度，针头在唱片外
       end: 0.0, // 播放时落到唱片上
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     if (widget.isPlaying) {
       _controller.forward();
@@ -1619,21 +1660,21 @@ class _NeteaseTonearmWidgetState extends State<_NeteaseTonearmWidget>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) => Transform(
-          alignment: Alignment.topRight,
-          transform: Matrix4.identity()..rotateZ(_animation.value),
-          child: child,
-        ),
-      child: CustomPaint(
-        size: Size(widget.armLength, widget.armLength),
-        painter: _NeteaseTonearmPainter(
-          pivotSize: widget.pivotSize,
-          recordRadius: widget.recordRadius,
-          isDark: widget.isDark,
-        ),
+    animation: _animation,
+    builder: (context, child) => Transform(
+      alignment: Alignment.topRight,
+      transform: Matrix4.identity()..rotateZ(_animation.value),
+      child: child,
+    ),
+    child: CustomPaint(
+      size: Size(widget.armLength, widget.armLength),
+      painter: _NeteaseTonearmPainter(
+        pivotSize: widget.pivotSize,
+        recordRadius: widget.recordRadius,
+        isDark: widget.isDark,
       ),
-    );
+    ),
+  );
 }
 
 /// 网易云风格唱针臂绘制器
@@ -1653,35 +1694,32 @@ class _NeteaseTonearmPainter extends CustomPainter {
     final pivotRadius = pivotSize / 2;
     // 转轴球在右上角
     final pivotCenter = Offset(size.width - pivotRadius, pivotRadius);
-    
+
     // 唱针臂弯折设计：
     // 第一段：从转轴向左下延伸（主臂）
     // 第二段：在中间弯折，向下延伸（短臂+唱针头）
-    
+
     final armStartX = pivotCenter.dx - pivotRadius * 0.5;
     final armStartY = pivotCenter.dy + pivotRadius * 0.3;
-    
+
     // 弯折点（臂的中间）
     final bendX = size.width * 0.35;
     final bendY = size.height * 0.55;
-    
+
     // 唱针头位置（弯折后向下）
     final armEndX = bendX - size.width * 0.08;
     final armEndY = size.height * 0.75;
 
     // 绘制主臂（从转轴到弯折点）
     final mainArmPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: [
-          Colors.grey[400]!,
-          Colors.grey[500]!,
-        ],
-      ).createShader(Rect.fromPoints(
-        Offset(armStartX, armStartY),
-        Offset(bendX, bendY),
-      ))
+      ..shader =
+          LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [Colors.grey[400]!, Colors.grey[500]!],
+          ).createShader(
+            Rect.fromPoints(Offset(armStartX, armStartY), Offset(bendX, bendY)),
+          )
       ..strokeWidth = size.width * 0.035
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -1693,17 +1731,14 @@ class _NeteaseTonearmPainter extends CustomPainter {
 
     // 绘制短臂（从弯折点到唱针头）
     final shortArmPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          Colors.grey[500]!,
-          Colors.grey[600]!,
-        ],
-      ).createShader(Rect.fromPoints(
-        Offset(bendX, bendY),
-        Offset(armEndX, armEndY),
-      ))
+      ..shader =
+          LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.grey[500]!, Colors.grey[600]!],
+          ).createShader(
+            Rect.fromPoints(Offset(bendX, bendY), Offset(armEndX, armEndY)),
+          )
       ..strokeWidth = size.width * 0.025
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -1723,26 +1758,20 @@ class _NeteaseTonearmPainter extends CustomPainter {
 
     // 弯折处关节（小圆点）
     final jointPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          Colors.grey[400]!,
-          Colors.grey[600]!,
-        ],
-      ).createShader(Rect.fromCircle(
-        center: Offset(bendX, bendY),
-        radius: size.width * 0.025,
-      ));
+      ..shader = RadialGradient(colors: [Colors.grey[400]!, Colors.grey[600]!])
+          .createShader(
+            Rect.fromCircle(
+              center: Offset(bendX, bendY),
+              radius: size.width * 0.025,
+            ),
+          );
     canvas.drawCircle(Offset(bendX, bendY), size.width * 0.02, jointPaint);
 
     // 转轴球 - 金属质感
     final pivotPaint = Paint()
       ..shader = RadialGradient(
         center: const Alignment(-0.3, -0.3),
-        colors: [
-          Colors.grey[300]!,
-          Colors.grey[500]!,
-          Colors.grey[700]!,
-        ],
+        colors: [Colors.grey[300]!, Colors.grey[500]!, Colors.grey[700]!],
         stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromCircle(center: pivotCenter, radius: pivotRadius));
     canvas.drawCircle(pivotCenter, pivotRadius, pivotPaint);
@@ -1751,10 +1780,7 @@ class _NeteaseTonearmPainter extends CustomPainter {
     final pivotHighlight = Paint()
       ..shader = RadialGradient(
         center: const Alignment(-0.5, -0.5),
-        colors: [
-          Colors.white.withValues(alpha: 0.5),
-          Colors.transparent,
-        ],
+        colors: [Colors.white.withValues(alpha: 0.5), Colors.transparent],
       ).createShader(Rect.fromCircle(center: pivotCenter, radius: pivotRadius));
     canvas.drawCircle(pivotCenter, pivotRadius * 0.6, pivotHighlight);
 
@@ -1825,14 +1851,17 @@ class _CenterTonearmWidgetState extends State<_CenterTonearmWidget>
 
     // 唱针臂角度动画：
     // 停止时向右上偏移（负角度，逆时针），播放时落到唱片上
-    _animation = Tween<double>(
-      begin: -0.30, // 停止时向右上偏移约17度
-      end: 0.0, // 播放时落到唱片上
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-      reverseCurve: Curves.easeIn,
-    ));
+    _animation =
+        Tween<double>(
+          begin: -0.30, // 停止时向右上偏移约17度
+          end: 0.0, // 播放时落到唱片上
+        ).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: Curves.easeOutBack,
+            reverseCurve: Curves.easeIn,
+          ),
+        );
 
     if (widget.isPlaying) {
       _controller.forward();
@@ -1859,28 +1888,25 @@ class _CenterTonearmWidgetState extends State<_CenterTonearmWidget>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) => Transform(
-          alignment: Alignment.topLeft, // 以左上角为轴心旋转（转轴位置）
-          transform: Matrix4.identity()..rotateZ(_animation.value),
-          child: child,
-        ),
-      child: CustomPaint(
-        size: Size(widget.armLength, widget.armLength),
-        painter: _CenterTonearmPainter(
-          pivotSize: widget.pivotSize,
-          isDark: widget.isDark,
-        ),
+    animation: _animation,
+    builder: (context, child) => Transform(
+      alignment: Alignment.topLeft, // 以左上角为轴心旋转（转轴位置）
+      transform: Matrix4.identity()..rotateZ(_animation.value),
+      child: child,
+    ),
+    child: CustomPaint(
+      size: Size(widget.armLength, widget.armLength),
+      painter: _CenterTonearmPainter(
+        pivotSize: widget.pivotSize,
+        isDark: widget.isDark,
       ),
-    );
+    ),
+  );
 }
 
 /// 弧形唱针臂绘制器 - 优美的弧线造型
 class _CenterTonearmPainter extends CustomPainter {
-  _CenterTonearmPainter({
-    required this.pivotSize,
-    required this.isDark,
-  });
+  _CenterTonearmPainter({required this.pivotSize, required this.isDark});
 
   final double pivotSize;
   final bool isDark;
@@ -1953,10 +1979,7 @@ class _CenterTonearmPainter extends CustomPainter {
     final pivotHighlight = Paint()
       ..shader = RadialGradient(
         center: const Alignment(-0.5, -0.5),
-        colors: [
-          Colors.white.withValues(alpha: 0.7),
-          Colors.transparent,
-        ],
+        colors: [Colors.white.withValues(alpha: 0.7), Colors.transparent],
       ).createShader(Rect.fromCircle(center: pivotCenter, radius: pivotRadius));
     canvas.drawCircle(pivotCenter, pivotRadius * 0.4, pivotHighlight);
 
@@ -2000,16 +2023,11 @@ class _CenterTonearmPainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
     canvas
-      ..drawLine(
-        Offset(0, headHeight),
-        Offset(0, headHeight + 3),
-        needlePaint,
-      )
+      ..drawLine(Offset(0, headHeight), Offset(0, headHeight + 3), needlePaint)
       ..restore();
   }
 
   @override
   bool shouldRepaint(covariant _CenterTonearmPainter oldDelegate) =>
-      pivotSize != oldDelegate.pivotSize ||
-      isDark != oldDelegate.isDark;
+      pivotSize != oldDelegate.pivotSize || isDark != oldDelegate.isDark;
 }

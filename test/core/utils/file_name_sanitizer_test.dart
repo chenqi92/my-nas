@@ -115,4 +115,53 @@ void main() {
       expect(sanitizeFileName('', fallback: 'x.bin'), 'x.bin');
     });
   });
+
+  group('碰撞安全命名', () {
+    test('序号插在扩展名前并遵守长度上限', () {
+      expect(appendFileNameSequence('movie.mkv', 1), 'movie.mkv');
+      expect(appendFileNameSequence('movie.mkv', 2), 'movie (2).mkv');
+      expect(
+        utf8.encode(appendFileNameSequence('${'中' * 100}.jpg', 12)).length,
+        lessThanOrEqualTo(200),
+      );
+    });
+
+    test('不同非法原名清洗碰撞时生成不同且稳定的路径', () {
+      final used = <String>{};
+      final first = reserveUniqueSanitizedRelativePath(
+        sanitizedPath: sanitizeFileName('a:b.jpg'),
+        originalPath: 'a:b.jpg',
+        usedPaths: used,
+      );
+      final second = reserveUniqueSanitizedRelativePath(
+        sanitizedPath: sanitizeFileName('a?b.jpg'),
+        originalPath: 'a?b.jpg',
+        usedPaths: used,
+      );
+
+      expect(first, 'a_b.jpg');
+      expect(second, matches(r'^a_b~[0-9a-f]{8}\.jpg$'));
+      expect(second, isNot(first));
+    });
+
+    test('大小写不同也按跨平台冲突处理', () {
+      final used = <String>{};
+      expect(
+        reserveUniqueSanitizedRelativePath(
+          sanitizedPath: 'Poster.jpg',
+          originalPath: 'Poster.jpg',
+          usedPaths: used,
+        ),
+        'Poster.jpg',
+      );
+      expect(
+        reserveUniqueSanitizedRelativePath(
+          sanitizedPath: 'poster.jpg',
+          originalPath: 'poster.jpg',
+          usedPaths: used,
+        ),
+        isNot('poster.jpg'),
+      );
+    });
+  });
 }

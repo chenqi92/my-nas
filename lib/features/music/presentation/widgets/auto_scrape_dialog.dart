@@ -12,6 +12,7 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/debug_log.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/nas_path.dart';
 import 'package:my_nas/features/music/data/services/fingerprint/fingerprint_service.dart';
 import 'package:my_nas/features/music/data/services/live_activity_service.dart';
@@ -105,7 +106,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
   String? get _localFilePath {
     final url = widget.music.url;
     if (url.startsWith('file://')) {
-      return Uri.parse(url).toFilePath();
+      return localPathFromFileUri(url);
     }
     // 桌面端可能直接使用本地路径
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -523,7 +524,7 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
       if (isCurrentlyPlaying) {
         final updatedMusic = currentMusic!.copyWith(
           coverData: coverData.toList(),
-          coverUrl: 'file://$localCoverPath',
+          coverUrl: localPathToFileUri(localCoverPath),
           // 补充缺失的元数据
           title: (currentMusic.title == null || currentMusic.title!.isEmpty)
               ? _detail?.title
@@ -557,11 +558,11 @@ class _AutoScrapeDialogState extends ConsumerState<AutoScrapeDialog> {
           .updateTrackCover(
             widget.music.id,
             coverData: coverData.toList(),
-            coverUrl: 'file://$localCoverPath',
+            coverUrl: localPathToFileUri(localCoverPath),
           );
 
       // 7. 更新收藏和播放历史中的封面
-      final newCoverUrl = 'file://$localCoverPath';
+      final newCoverUrl = localPathToFileUri(localCoverPath);
       await MusicFavoritesService().updateCoverUrl(
         widget.music.path,
         newCoverUrl,

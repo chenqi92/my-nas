@@ -16,13 +16,55 @@ import 'package:html/parser.dart' as html_parser;
 
 /// 残す要素。書籍本文の表現に必要なものだけ。
 const Set<String> _allowedTags = {
-  'p', 'br', 'hr', 'div', 'span', 'section', 'article',
-  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-  'strong', 'b', 'em', 'i', 'u', 's', 'sub', 'sup', 'small', 'mark',
-  'ul', 'ol', 'li', 'dl', 'dt', 'dd',
-  'blockquote', 'pre', 'code', 'q', 'cite',
-  'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'caption',
-  'img', 'figure', 'figcaption', 'ruby', 'rt', 'rp', 'a',
+  'p',
+  'br',
+  'hr',
+  'div',
+  'span',
+  'section',
+  'article',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'strong',
+  'b',
+  'em',
+  'i',
+  'u',
+  's',
+  'sub',
+  'sup',
+  'small',
+  'mark',
+  'ul',
+  'ol',
+  'li',
+  'dl',
+  'dt',
+  'dd',
+  'blockquote',
+  'pre',
+  'code',
+  'q',
+  'cite',
+  'table',
+  'thead',
+  'tbody',
+  'tfoot',
+  'tr',
+  'td',
+  'th',
+  'caption',
+  'img',
+  'figure',
+  'figcaption',
+  'ruby',
+  'rt',
+  'rp',
+  'a',
 };
 
 /// 要素ごとに残す属性。ここに無い属性は落とす。
@@ -38,17 +80,30 @@ const Map<String, Set<String>> _allowedAttributes = {
 /// 全要素に共通で残す属性。
 const Set<String> _globalAllowedAttributes = {'id', 'class', 'lang', 'dir'};
 
-/// URL 属性で許可するスキーム。`javascript:` / `vbscript:` を弾く。
-const Set<String> _allowedSchemes = {'http', 'https', 'data', 'file', 'mailto'};
-
 /// URL を持つ属性（スキーム検査の対象）。
 const Set<String> _urlAttributes = {'href', 'src'};
 
 /// 中身ごと捨てる要素。テキストを残すと本文に混ざるため。
 const Set<String> _droppedWithContent = {
-  'script', 'style', 'iframe', 'object', 'embed', 'applet',
-  'form', 'input', 'button', 'select', 'textarea', 'noscript',
-  'template', 'svg', 'math', 'link', 'meta', 'base', 'title',
+  'script',
+  'style',
+  'iframe',
+  'object',
+  'embed',
+  'applet',
+  'form',
+  'input',
+  'button',
+  'select',
+  'textarea',
+  'noscript',
+  'template',
+  'svg',
+  'math',
+  'link',
+  'meta',
+  'base',
+  'title',
 };
 
 /// [html] をパースし、許可リストに沿って組み直した HTML を返す。
@@ -107,17 +162,26 @@ void _writeAttributes(
     if (!perTag.contains(name) && !_globalAllowedAttributes.contains(name)) {
       return;
     }
-    if (_urlAttributes.contains(name) && !_isSafeUrl(value)) return;
+    if (_urlAttributes.contains(name) && !_isSafeUrl(tag, name, value)) return;
     out.write(' $name="${_escapeAttribute(value)}"');
   });
 }
 
-/// スキーム付き URL は許可リストのみ通す。相対 URL は許可。
-bool _isSafeUrl(String value) {
+/// 属性ごとに URL を検査する。リンクと画像では許可するスキームが異なる：
+/// - `a[href]`: http / https / mailto / 相対 URL / fragment
+/// - `img[src]`: http / https / 相対 URL / 限定 MIME の base64 画像
+///
+/// `file:` はローカルファイル探索、任意 `data:` は HTML/脚本実行につながるため拒否。
+bool _isSafeUrl(String tag, String attribute, String value) {
   // 制御文字を挟んで `java\nscript:` のように偽装されるのを防ぐ。
-  final normalized = value
-      .replaceAll(RegExp(r'[\x00-\x20]'), '')
-      .toLowerCase();
+  final normalized = value.replaceAll(RegExp(r'[\x00-\x20]'), '').toLowerCase();
+  if (tag == 'img' && attribute == 'src' && normalized.startsWith('data:')) {
+    return RegExp(
+      r'^data:image/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=]+$',
+      caseSensitive: false,
+    ).hasMatch(normalized);
+  }
+
   final colon = normalized.indexOf(':');
   if (colon < 0) return true; // 相対 URL
 
@@ -125,7 +189,31 @@ bool _isSafeUrl(String value) {
   final slash = normalized.indexOf('/');
   if (slash >= 0 && slash < colon) return true;
 
-  return _allowedSchemes.contains(normalized.substring(0, colon));
+  final scheme = normalized.substring(0, colon);
+  if (tag == 'a' && attribute == 'href') {
+    return scheme == 'http' || scheme == 'https' || scheme == 'mailto';
+  }
+  if (tag == 'img' && attribute == 'src') {
+    return scheme == 'http' || scheme == 'https';
+  }
+  return false;
+}
+
+/// WebView 导航的处理结果。正文链接永远不在内嵌 WebView 中直接加载外站。
+enum BookNavigationDecision { allowInternal, launchExternal, block }
+
+BookNavigationDecision classifyBookNavigation(String? value) {
+  if (value == null || value.isEmpty) return BookNavigationDecision.block;
+  final uri = Uri.tryParse(value);
+  if (uri == null) return BookNavigationDecision.block;
+  final scheme = uri.scheme.toLowerCase();
+  if (scheme == 'about' && uri.path == 'blank') {
+    return BookNavigationDecision.allowInternal;
+  }
+  if (scheme == 'http' || scheme == 'https' || scheme == 'mailto') {
+    return BookNavigationDecision.launchExternal;
+  }
+  return BookNavigationDecision.block;
 }
 
 bool _isVoid(String tag) => tag == 'br' || tag == 'hr' || tag == 'img';

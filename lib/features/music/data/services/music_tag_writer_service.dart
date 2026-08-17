@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
@@ -11,6 +10,7 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart'
         Picture,
         PictureType,
         updateMetadata;
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/utils/nas_path.dart';
@@ -21,6 +21,7 @@ import 'package:my_nas/features/music/domain/entities/music_scraper_result.dart'
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 /// 音乐标签写入结果
 class MusicTagWriteResult {
@@ -30,15 +31,11 @@ class MusicTagWriteResult {
     this.updatedFields = const [],
   });
 
-  factory MusicTagWriteResult.success(List<String> fields) => MusicTagWriteResult(
-        success: true,
-        updatedFields: fields,
-      );
+  factory MusicTagWriteResult.success(List<String> fields) =>
+      MusicTagWriteResult(success: true, updatedFields: fields);
 
-  factory MusicTagWriteResult.failure(String error) => MusicTagWriteResult(
-        success: false,
-        error: error,
-      );
+  factory MusicTagWriteResult.failure(String error) =>
+      MusicTagWriteResult(success: false, error: error);
 
   final bool success;
   final String? error;
@@ -184,7 +181,9 @@ class MusicTagWriterService {
 
     final format = getFormat(file.path);
     if (format == null) {
-      return MusicTagWriteResult.failure(appL10n.musicTagWriterUnsupportedFormat(p.extension(file.path)));
+      return MusicTagWriteResult.failure(
+        appL10n.musicTagWriterUnsupportedFormat(p.extension(file.path)),
+      );
     }
 
     if (tagData.isEmpty) {
@@ -194,7 +193,9 @@ class MusicTagWriterService {
     try {
       logger
         ..i('MusicTagWriterService: 开始写入标签到 ${file.path}')
-        ..d('MusicTagWriterService: 格式=${format.displayName}, 标签类型=${format.tagType}');
+        ..d(
+          'MusicTagWriterService: 格式=${format.displayName}, 标签类型=${format.tagType}',
+        );
 
       // FLAC 文件使用 FFmpeg 写入以保持 iOS AVFoundation 兼容性
       // audio_metadata_reader 写入的 FLAC 文件会导致 iOS 播放失败（-11800 错误）
@@ -343,8 +344,12 @@ class MusicTagWriterService {
       File? coverFile;
       final coverData = tagData.coverData;
       if (coverData != null && coverData.isNotEmpty) {
-        final coverExt = tagData.coverMimeType?.contains('png') ?? false ? 'png' : 'jpg';
-        coverFile = File(p.join(_tempDir.path, 'cover_${DateTime.now().millisecondsSinceEpoch}.$coverExt'));
+        final coverExt = tagData.coverMimeType?.contains('png') ?? false
+            ? 'png'
+            : 'jpg';
+        coverFile = File(
+          p.join(_tempDir.path, 'cover_${const Uuid().v4()}.$coverExt'),
+        );
         await coverFile.writeAsBytes(coverData);
       }
 
@@ -362,7 +367,9 @@ class MusicTagWriterService {
       }
     } on Exception catch (e, st) {
       logger.e('MusicTagWriterService: FFmpeg FLAC 写入失败', e, st);
-      return MusicTagWriteResult.failure(appL10n.musicTagWriterFlacWriteFailed(e));
+      return MusicTagWriteResult.failure(
+        appL10n.musicTagWriterFlacWriteFailed(e),
+      );
     }
   }
 
@@ -382,7 +389,9 @@ class MusicTagWriterService {
 
     final format = getFormat(remotePath);
     if (format == null) {
-      return MusicTagWriteResult.failure(appL10n.musicTagWriterUnsupportedFormat(nasPathExtension(remotePath)));
+      return MusicTagWriteResult.failure(
+        appL10n.musicTagWriterUnsupportedFormat(nasPathExtension(remotePath)),
+      );
     }
 
     if (tagData.isEmpty) {
@@ -391,7 +400,13 @@ class MusicTagWriterService {
 
     // NCM 文件需要特殊处理
     if (format == SupportedAudioFormat.ncm) {
-      return _writeToNcmFile(fileSystem, remotePath, tagData, onConverted, sourceId);
+      return _writeToNcmFile(
+        fileSystem,
+        remotePath,
+        tagData,
+        onConverted,
+        sourceId,
+      );
     }
 
     File? tempFile;
@@ -400,18 +415,23 @@ class MusicTagWriterService {
 
       // 1. 下载整个文件到本地临时目录
       final ext = nasPathExtension(remotePath).toLowerCase();
-      final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(999999)}';
+      final uniqueId = const Uuid().v4();
       tempFile = File(p.join(_tempDir.path, 'tag_edit_$uniqueId$ext'));
 
       logger.d('MusicTagWriterService: 下载文件到临时目录...');
       final stream = await fileSystem.getFileStream(remotePath);
       final sink = tempFile.openWrite();
-      await for (final chunk in stream) {
-        sink.add(chunk);
+      try {
+        await for (final chunk in stream) {
+          sink.add(chunk);
+        }
+      } finally {
+        await sink.close();
       }
-      await sink.close();
 
-      logger.d('MusicTagWriterService: 文件下载完成, 大小=${await tempFile.length()} bytes');
+      logger.d(
+        'MusicTagWriterService: 文件下载完成, 大小=${await tempFile.length()} bytes',
+      );
 
       // 2. 写入标签
       final result = await writeToLocalFile(tempFile, tagData);
@@ -430,15 +450,17 @@ class MusicTagWriterService {
         try {
           await MusicAudioCacheService().deleteCache(sourceId, remotePath);
           logger.i('MusicTagWriterService: 已删除音频缓存 (文件已修改)');
-        } on Exception catch (e) {
-          logger.w('MusicTagWriterService: 删除音频缓存失败: $e');
+        } on Exception catch (e, st) {
+          AppError.ignore(e, st, '音乐标签写入成功后删除旧音频缓存失败');
         }
       }
 
       logger.i('MusicTagWriterService: NAS 文件标签写入成功');
       return result;
     } on Exception catch (e, st) {
-      logger.e('MusicTagWriterService: NAS 文件标签写入失败', e, st);
+      AppError.handle(e, st, 'musicTagWriter.writeToNasFile', {
+        'remotePath': remotePath,
+      });
       return MusicTagWriteResult.failure(appL10n.musicTagWriterWriteFailed(e));
     } finally {
       // 清理临时文件
@@ -447,8 +469,8 @@ class MusicTagWriterService {
           if (await tempFile.exists()) {
             await tempFile.delete();
           }
-        } on Exception catch (_) {
-          // 忽略删除失败
+        } on Exception catch (e, st) {
+          AppError.ignore(e, st, '音乐标签写入结束后清理临时文件失败');
         }
       }
     }
@@ -470,16 +492,19 @@ class MusicTagWriterService {
       logger.i('MusicTagWriterService: 开始处理 NCM 文件 $remotePath');
 
       // 1. 下载 NCM 文件
-      final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(999999)}';
+      final uniqueId = const Uuid().v4();
       tempNcmFile = File(p.join(_tempDir.path, 'ncm_$uniqueId.ncm'));
 
       logger.d('MusicTagWriterService: 下载 NCM 文件...');
       final stream = await fileSystem.getFileStream(remotePath);
       final sink = tempNcmFile.openWrite();
-      await for (final chunk in stream) {
-        sink.add(chunk);
+      try {
+        await for (final chunk in stream) {
+          sink.add(chunk);
+        }
+      } finally {
+        await sink.close();
       }
-      await sink.close();
 
       // 2. 解密 NCM 文件
       logger.d('MusicTagWriterService: 解密 NCM 文件...');
@@ -488,7 +513,9 @@ class MusicTagWriterService {
       final decryptResult = ncmService.decrypt(ncmData);
 
       if (decryptResult == null) {
-        return MusicTagWriteResult.failure(appL10n.musicTagWriterNcmDecryptFailed);
+        return MusicTagWriteResult.failure(
+          appL10n.musicTagWriterNcmDecryptFailed,
+        );
       }
 
       // 确定输出格式
@@ -526,8 +553,8 @@ class MusicTagWriterService {
           await MusicAudioCacheService().deleteCache(sourceId, remotePath);
           await MusicAudioCacheService().deleteCache(sourceId, newPath);
           logger.i('MusicTagWriterService: 已删除 NCM 相关音频缓存');
-        } on Exception catch (e) {
-          logger.w('MusicTagWriterService: 删除音频缓存失败: $e');
+        } on Exception catch (e, st) {
+          AppError.ignore(e, st, 'NCM 转换成功后删除旧音频缓存失败');
         }
       }
 
@@ -538,13 +565,20 @@ class MusicTagWriterService {
 
       final updatedFields = List<String>.from(writeResult.updatedFields);
       if (!updatedFields.contains('转换')) {
-        updatedFields.insert(0, appL10n.musicTagWriterConvertedFormat(outputFormat.toUpperCase()));
+        updatedFields.insert(
+          0,
+          appL10n.musicTagWriterConvertedFormat(outputFormat.toUpperCase()),
+        );
       }
 
       return MusicTagWriteResult.success(updatedFields);
     } on Exception catch (e, st) {
-      logger.e('MusicTagWriterService: NCM 文件处理失败', e, st);
-      return MusicTagWriteResult.failure(appL10n.musicTagWriterNcmProcessFailed(e));
+      AppError.handle(e, st, 'musicTagWriter.writeNcmFile', {
+        'remotePath': remotePath,
+      });
+      return MusicTagWriteResult.failure(
+        appL10n.musicTagWriterNcmProcessFailed(e),
+      );
     } finally {
       // 清理临时文件
       for (final file in [tempNcmFile, tempAudioFile]) {
@@ -553,8 +587,8 @@ class MusicTagWriterService {
             if (await file.exists()) {
               await file.delete();
             }
-          } on Exception catch (_) {
-            // 忽略
+          } on Exception catch (e, st) {
+            AppError.ignore(e, st, 'NCM 标签写入结束后清理临时文件失败');
           }
         }
       }
@@ -563,7 +597,10 @@ class MusicTagWriterService {
 
   /// 合并 NCM 内置元数据和刮削数据
   /// 刮削数据优先，NCM 内置数据作为补充
-  MusicTagData _mergeNcmMetadata(MusicTagData tagData, NcmDecryptResult ncmResult) {
+  MusicTagData _mergeNcmMetadata(
+    MusicTagData tagData,
+    NcmDecryptResult ncmResult,
+  ) {
     final ncmMeta = ncmResult.metadata;
 
     return MusicTagData(
@@ -578,7 +615,9 @@ class MusicTagWriterService {
       lyrics: tagData.lyrics,
       // 封面优先使用刮削的，其次使用 NCM 内置的
       coverData: tagData.coverData ?? ncmResult.coverData,
-      coverMimeType: tagData.coverMimeType ?? (ncmResult.coverData != null ? 'image/jpeg' : null),
+      coverMimeType:
+          tagData.coverMimeType ??
+          (ncmResult.coverData != null ? 'image/jpeg' : null),
     );
   }
 
@@ -595,9 +634,16 @@ class MusicTagWriterService {
       final path = entry.key;
       final tagData = entry.value;
 
-      logger.d('MusicTagWriterService: 批量写入 ${files.keys.toList().indexOf(path) + 1}/${files.length}: $path');
+      logger.d(
+        'MusicTagWriterService: 批量写入 ${files.keys.toList().indexOf(path) + 1}/${files.length}: $path',
+      );
 
-      results[path] = await writeToNasFile(fileSystem, path, tagData, sourceId: sourceId);
+      results[path] = await writeToNasFile(
+        fileSystem,
+        path,
+        tagData,
+        sourceId: sourceId,
+      );
 
       // 添加小延迟避免过快
       await Future<void>.delayed(const Duration(milliseconds: 100));

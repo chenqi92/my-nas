@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart' as archive_lib;
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
@@ -28,6 +29,9 @@ class RemoteArchiveExtractService {
   final Directory? workingRoot;
 
   static const int maxArchiveBytes = 256 * 1024 * 1024;
+  static const int maxExtractedBytes = 1024 * 1024 * 1024;
+  static const int maxEntryBytes = 512 * 1024 * 1024;
+  static const int maxEntries = 10000;
 
   Future<RemoteArchiveExtractResult> extract({
     required NasFileSystem fileSystem,
@@ -46,14 +50,11 @@ class RemoteArchiveExtractService {
     }
 
     final base = workingRoot ?? await getTemporaryDirectory();
-    final work = await Directory(
-      p.join(
-        base.path,
-        'mynas_extract_${DateTime.now().microsecondsSinceEpoch}',
-      ),
-    ).create(recursive: true);
+    final work = await base.createTemp('mynas_extract_');
     try {
-      final localArchive = File(p.join(work.path, archive.name));
+      final localArchive = File(
+        p.join(work.path, sanitizeFileName(archive.name)),
+      );
       final sink = localArchive.openWrite();
       try {
         final stream = await fileSystem.getFileStream(archive.path);
@@ -69,22 +70,47 @@ class RemoteArchiveExtractService {
         p.join(work.path, 'extracted'),
       ).create(recursive: true);
       final decoded = _decode(await localArchive.readAsBytes(), kind);
+      if (decoded.files.length > maxEntries) {
+        throw StateError('Archive contains too many entries.');
+      }
       var fileCount = 0;
+      var extractedBytes = 0;
       final localDirectories = <String>{};
+      final usedRelativePaths = <String>{};
       for (final entry in decoded.files) {
-        final relative = safeArchiveRelativePath(entry.name);
-        if (relative == null) continue;
-        final localPath = p.joinAll([extracted.path, ...relative.split('/')]);
-        if (!entry.isFile) {
-          await Directory(localPath).create(recursive: true);
-          localDirectories.add(relative);
-          continue;
+        // 目录由文件的父路径派生；符号链接和其他特殊条目一律不落地。
+        if (!entry.isFile || entry.isSymbolicLink) continue;
+        if (entry.size < 0 || entry.size > maxEntryBytes) {
+          throw StateError('Archive entry is too large: ${entry.name}');
         }
+        extractedBytes += entry.size;
+        if (extractedBytes > maxExtractedBytes) {
+          throw StateError('Archive expands beyond the 1 GB safety limit.');
+        }
+
+        final sanitized = safeArchiveRelativePath(entry.name);
+        if (sanitized == null) continue;
+        final relative = reserveUniqueSanitizedRelativePath(
+          sanitizedPath: sanitized,
+          originalPath: entry.name,
+          usedPaths: usedRelativePaths,
+        );
+        final localPath = p.joinAll([extracted.path, ...relative.split('/')]);
         final output = File(localPath);
         await output.parent.create(recursive: true);
-        final content = entry.content as List<int>?;
-        if (content == null) continue;
-        await output.writeAsBytes(content, flush: true);
+        final outputStream = archive_lib.OutputFileStream(localPath);
+        try {
+          entry.writeContent(outputStream);
+        } finally {
+          await outputStream.close();
+        }
+        final actualSize = await output.length();
+        if (actualSize != entry.size) {
+          throw StateError(
+            'Archive entry size mismatch for ${entry.name}: '
+            '$actualSize/${entry.size}',
+          );
+        }
         fileCount++;
         var parent = p.posix.dirname(relative);
         while (parent != '.' && parent.isNotEmpty) {
@@ -99,7 +125,7 @@ class RemoteArchiveExtractService {
       final destinationName = await _availableDestinationName(
         fileSystem,
         destinationDirectory,
-        archiveBaseName(archive.name),
+        sanitizeFileName(archiveBaseName(archive.name)),
       );
       final destinationPath = remotePathJoin(
         destinationDirectory,
@@ -137,8 +163,9 @@ class RemoteArchiveExtractService {
     } finally {
       try {
         await work.delete(recursive: true);
-      } on Exception {
+      } on Exception catch (e, st) {
         // 临时目录清理失败不改变已经成功写入 NAS 的结果。
+        AppError.ignore(e, st, '远端压缩包解压完成后清理临时目录失败');
       }
     }
   }
@@ -162,12 +189,14 @@ class RemoteArchiveExtractService {
       used.addAll(
         (await fileSystem.listDirectory(directory)).map((e) => e.name),
       );
-    } on Exception {
+    } on Exception catch (e, st) {
       // 某些适配器不允许重复列目录；直接使用首选名称并让创建操作给出真实错误。
+      AppError.ignore(e, st, '远端适配器不支持列出解压目标目录，回退到首选名称');
     }
-    if (!used.contains(preferred)) return preferred;
+    final normalizedUsed = used.map((name) => name.toLowerCase()).toSet();
+    if (!normalizedUsed.contains(preferred.toLowerCase())) return preferred;
     var suffix = 2;
-    while (used.contains('$preferred ($suffix)')) {
+    while (normalizedUsed.contains('$preferred ($suffix)'.toLowerCase())) {
       suffix++;
     }
     return '$preferred ($suffix)';

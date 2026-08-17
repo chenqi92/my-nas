@@ -8,6 +8,7 @@ import 'package:my_nas/app/theme/app_spacing.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/features/note/data/services/markdown_parser.dart';
 import 'package:my_nas/features/note/data/services/note_state_service.dart';
 import 'package:my_nas/features/note/domain/entities/note_item.dart';
@@ -70,11 +71,12 @@ class NoteEditorNotifier extends StateNotifier<NoteEditorState> {
     try {
       String content;
       final uri = Uri.parse(note.url);
+      final localPath = localPathFromFileUri(note.url);
 
       // 检查是否为本地文件 (file:// 协议)
-      if (uri.scheme == 'file') {
+      if (localPath != null) {
         // 本地文件直接读取
-        final file = File(uri.toFilePath());
+        final file = File(localPath);
         if (!await file.exists()) {
           throw Exception(appL10n.noteEditorFileNotFound);
         }

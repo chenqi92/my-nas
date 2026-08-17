@@ -6,7 +6,9 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:charset_converter/charset_converter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_huffcdic.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_to_epub.dart';
@@ -26,29 +28,24 @@ class MobiParseResult {
     this.error,
   });
 
-  factory MobiParseResult.failure(String error) => MobiParseResult(
-        success: false,
-        error: error,
-      );
+  factory MobiParseResult.failure(String error) =>
+      MobiParseResult(success: false, error: error);
 
   factory MobiParseResult.fromContent({
     required String content,
     String? htmlContent,
     String? title,
     String? author,
-  }) =>
-      MobiParseResult(
-        success: true,
-        content: content,
-        htmlContent: htmlContent,
-        title: title,
-        author: author,
-      );
+  }) => MobiParseResult(
+    success: true,
+    content: content,
+    htmlContent: htmlContent,
+    title: title,
+    author: author,
+  );
 
-  factory MobiParseResult.fromEpub(String epubPath) => MobiParseResult(
-        success: true,
-        epubPath: epubPath,
-      );
+  factory MobiParseResult.fromEpub(String epubPath) =>
+      MobiParseResult(success: true, epubPath: epubPath);
 
   final bool success;
   final String? title;
@@ -124,9 +121,11 @@ class MobiParserService {
         return MobiParseResult.fromEpub(result.epubPath!);
       }
 
-      return MobiParseResult.failure(result.error ?? appL10n.bookMobiConversionFailed);
+      return MobiParseResult.failure(
+        result.error ?? appL10n.bookMobiConversionFailed,
+      );
     } on Exception catch (e, st) {
-      logger.e('新解析器异常', e, st);
+      AppError.handle(e, st, 'mobiParser.parseWithNewParser');
       return MobiParseResult.failure(appL10n.bookMobiParseFailed(e));
     }
   }
@@ -144,34 +143,33 @@ class MobiParserService {
 
     // 创建临时目录
     final tempDir = await getTemporaryDirectory();
-    final workDir = Directory(
-      path.join(
-        tempDir.path,
-        'mobi_parse_${DateTime.now().millisecondsSinceEpoch}',
-      ),
-    );
-    await workDir.create(recursive: true);
+    final workDir = await tempDir.createTemp('mobi_parse_');
 
     try {
       // 写入临时文件
-      final inputFile = File(path.join(workDir.path, fileName));
+      final safeFileName = sanitizeFileName(fileName);
+      final inputFile = File(path.join(workDir.path, safeFileName));
       await inputFile.writeAsBytes(bytes);
 
       // 转换为 EPUB（而不是 TXT，保留格式和图片）
       final outputFile = File(
-        path.join(workDir.path, '${path.basenameWithoutExtension(fileName)}.epub'),
+        path.join(
+          workDir.path,
+          '${path.basenameWithoutExtension(safeFileName)}.epub',
+        ),
       );
 
       logger.i('Calibre 转换: $fileName -> EPUB');
-      final result = await Process.run(
-        convertCmd,
-        [inputFile.path, outputFile.path],
-      );
+      final result = await Process.run(convertCmd, [
+        inputFile.path,
+        outputFile.path,
+      ]);
 
       if (result.exitCode != 0) {
         logger.e('Calibre 转换失败: ${result.stderr}');
         return MobiParseResult.failure(
-            appL10n.bookMobiConversionFailedWithStderr('${result.stderr}'));
+          appL10n.bookMobiConversionFailedWithStderr('${result.stderr}'),
+        );
       }
 
       // 返回 EPUB 文件路径，让调用方使用 EPUB 阅读器打开
@@ -182,7 +180,10 @@ class MobiParserService {
           await cacheDir.create(recursive: true);
         }
         final cachedEpub = File(
-          path.join(cacheDir.path, '${path.basenameWithoutExtension(fileName)}.epub'),
+          path.join(
+            cacheDir.path,
+            '${path.basenameWithoutExtension(fileName)}.epub',
+          ),
         );
         await outputFile.copy(cachedEpub.path);
 
@@ -195,8 +196,8 @@ class MobiParserService {
       // 清理临时目录
       try {
         await workDir.delete(recursive: true);
-      } on Exception catch (e) {
-        logger.w('清理临时目录失败', e);
+      } on Exception catch (e, st) {
+        AppError.ignore(e, st, 'Calibre MOBI 转换结束后清理临时目录失败');
       }
     }
   }
@@ -240,7 +241,8 @@ class MobiParserService {
       final whichCmd = Platform.isWindows ? 'where' : 'which';
       final result = await Process.run(whichCmd, [command]);
       return result.exitCode == 0;
-    } on Exception catch (_) {
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, '探测 Calibre 命令失败，按未安装处理');
       return false;
     }
   }
@@ -258,8 +260,8 @@ class MobiParserService {
     }
 
     try {
-      final title = parseResult.title ??
-          path.basenameWithoutExtension(fileName);
+      final title =
+          parseResult.title ?? path.basenameWithoutExtension(fileName);
       final author = parseResult.author ?? appL10n.bookMobiUnknownAuthor;
       final htmlContent = parseResult.htmlContent!;
 
@@ -274,7 +276,7 @@ class MobiParserService {
       }
 
       // 生成唯一的 EPUB 文件名
-      final epubFileName = '${title.hashCode.abs()}_${DateTime.now().millisecondsSinceEpoch}.epub';
+      final epubFileName = '${title.hashCode.abs()}_${const Uuid().v4()}.epub';
       final epubPath = path.join(cacheDir.path, epubFileName);
 
       // 创建 EPUB 内容
@@ -288,7 +290,7 @@ class MobiParserService {
       logger.i('MOBI 打包 EPUB 成功: $epubPath');
       return MobiParseResult.fromEpub(epubPath);
     } on Exception catch (e, st) {
-      logger.e('MOBI 打包 EPUB 失败', e, st);
+      AppError.handle(e, st, 'mobiParser.packageAsEpub');
       // 失败时返回原始结果，让调用方使用备用渲染
       return parseResult;
     }
@@ -316,7 +318,7 @@ class MobiParserService {
       '',
     );
     cleaned = cleaned.replaceAll(
-      RegExp('<meta[^>]*/?>',caseSensitive: false),
+      RegExp('<meta[^>]*/?>', caseSensitive: false),
       '',
     );
     cleaned = cleaned.replaceAll(
@@ -333,8 +335,10 @@ class MobiParserService {
 
     // 自闭合标签需要加斜杠（XHTML 规范）
     cleaned = cleaned.replaceAllMapped(
-      RegExp('<(br|hr|img|input|meta|link)([^/>]*)(?<!/)>',
-          caseSensitive: false),
+      RegExp(
+        '<(br|hr|img|input|meta|link)([^/>]*)(?<!/)>',
+        caseSensitive: false,
+      ),
       (match) => '<${match.group(1)}${match.group(2) ?? ''}/>',
     );
 
@@ -353,11 +357,13 @@ class MobiParserService {
     final timestamp = DateTime.now().toUtc().toIso8601String();
 
     // 1. mimetype 文件（必须是第一个，且不压缩）
-    archive.addFile(ArchiveFile(
-      'mimetype',
-      utf8.encode('application/epub+zip').length,
-      utf8.encode('application/epub+zip'),
-    ));
+    archive.addFile(
+      ArchiveFile(
+        'mimetype',
+        utf8.encode('application/epub+zip').length,
+        utf8.encode('application/epub+zip'),
+      ),
+    );
 
     // 2. META-INF/container.xml
     const containerXml = '''
@@ -367,14 +373,17 @@ class MobiParserService {
     <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
   </rootfiles>
 </container>''';
-    archive.addFile(ArchiveFile(
-      'META-INF/container.xml',
-      utf8.encode(containerXml).length,
-      utf8.encode(containerXml),
-    ));
+    archive.addFile(
+      ArchiveFile(
+        'META-INF/container.xml',
+        utf8.encode(containerXml).length,
+        utf8.encode(containerXml),
+      ),
+    );
 
     // 3. OEBPS/content.opf
-    final contentOpf = '''
+    final contentOpf =
+        '''
     <?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -393,14 +402,17 @@ class MobiParserService {
   </spine>
 </package>
 ''';
-    archive.addFile(ArchiveFile(
-      'OEBPS/content.opf',
-      utf8.encode(contentOpf).length,
-      utf8.encode(contentOpf),
-    ));
+    archive.addFile(
+      ArchiveFile(
+        'OEBPS/content.opf',
+        utf8.encode(contentOpf).length,
+        utf8.encode(contentOpf),
+      ),
+    );
 
     // 4. OEBPS/chapter1.xhtml（主要内容）
-    final chapterXhtml = '''
+    final chapterXhtml =
+        '''
     <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="zh-CN">
@@ -428,14 +440,17 @@ $htmlContent
 </body>
 </html>
 ''';
-    archive.addFile(ArchiveFile(
-      'OEBPS/chapter1.xhtml',
-      utf8.encode(chapterXhtml).length,
-      utf8.encode(chapterXhtml),
-    ));
+    archive.addFile(
+      ArchiveFile(
+        'OEBPS/chapter1.xhtml',
+        utf8.encode(chapterXhtml).length,
+        utf8.encode(chapterXhtml),
+      ),
+    );
 
     // 5. OEBPS/nav.xhtml（导航文件）
-    final navXhtml = '''
+    final navXhtml =
+        '''
     <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="zh-CN">
@@ -453,11 +468,13 @@ $htmlContent
 </body>
 </html>
 ''';
-    archive.addFile(ArchiveFile(
-      'OEBPS/nav.xhtml',
-      utf8.encode(navXhtml).length,
-      utf8.encode(navXhtml),
-    ));
+    archive.addFile(
+      ArchiveFile(
+        'OEBPS/nav.xhtml',
+        utf8.encode(navXhtml).length,
+        utf8.encode(navXhtml),
+      ),
+    );
 
     // 编码为 ZIP 并写入文件
     final zipData = ZipEncoder().encode(archive);
@@ -531,8 +548,9 @@ $htmlContent
 
       // 读取第一个记录（PalmDOC 头部）
       final record0Start = recordOffsets[0];
-      final record0End =
-          recordOffsets.length > 1 ? recordOffsets[1] : bytes.length;
+      final record0End = recordOffsets.length > 1
+          ? recordOffsets[1]
+          : bytes.length;
       final record0 = bytes.sublist(record0Start, record0End);
 
       // 解析 PalmDOC 头部
@@ -592,8 +610,9 @@ $htmlContent
         if (i >= recordOffsets.length) break;
 
         final recordStart = recordOffsets[i];
-        final recordEnd =
-            i + 1 < recordOffsets.length ? recordOffsets[i + 1] : bytes.length;
+        final recordEnd = i + 1 < recordOffsets.length
+            ? recordOffsets[i + 1]
+            : bytes.length;
         final recordData = bytes.sublist(recordStart, recordEnd);
 
         String text;
@@ -610,9 +629,9 @@ $htmlContent
           Uint8List decompressed;
           try {
             decompressed = huffReader.unpack(trimmed);
-          } on Object catch (e) {
+          } on Object catch (e, st) {
             // 单条记录解码失败：跳过该记录，避免破坏整体解析
-            logger.w('HUFF/CDIC 记录解压失败，跳过', e);
+            AppError.ignore(e, st, '单条 HUFF/CDIC MOBI 记录损坏，跳过该记录');
             continue;
           }
           text = await _decodeText(decompressed, textEncoding);
@@ -640,8 +659,8 @@ $htmlContent
         title: title.isNotEmpty ? title : null,
         author: author,
       );
-    } on Exception catch (e) {
-      logger.e('MOBI 解析失败', e);
+    } on Exception catch (e, st) {
+      AppError.handle(e, st, 'mobiParser.parseInternal');
       return MobiParseResult.failure(appL10n.bookMobiParseException(e));
     }
   }
@@ -669,12 +688,15 @@ $htmlContent
       try {
         // 移动平台使用 charset_converter
         if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-          return await CharsetConverter.decode('gbk', Uint8List.fromList(bytes));
+          return await CharsetConverter.decode(
+            'gbk',
+            Uint8List.fromList(bytes),
+          );
         }
         // 桌面平台尝试使用系统编码或 fallback
         return _decodeGbkFallback(bytes);
-      } on Exception catch (e) {
-        logger.w('GBK 解码失败，尝试其他编码', e);
+      } on Exception catch (e, st) {
+        AppError.ignore(e, st, 'MOBI GBK 解码失败，回退到 latin1');
       }
     }
 
@@ -834,8 +856,9 @@ $htmlContent
 
       Uint8List recordAt(int idx) {
         final start = recordOffsets[idx];
-        final end =
-            idx + 1 < recordOffsets.length ? recordOffsets[idx + 1] : bytes.length;
+        final end = idx + 1 < recordOffsets.length
+            ? recordOffsets[idx + 1]
+            : bytes.length;
         return bytes.sublist(start, end);
       }
 
@@ -851,8 +874,8 @@ $htmlContent
         return null;
       }
       return reader;
-    } on Object catch (e) {
-      logger.w('HUFF/CDIC 解码器构建失败', e);
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'mobiParser.buildHuffCdicReader');
       return null;
     }
   }
@@ -902,8 +925,9 @@ $htmlContent
   /// 解析 EXTH 头部中的作者信息
   String? _parseExthAuthor(List<int> record, int exthStart) {
     try {
-      final exthId =
-          String.fromCharCodes(record.sublist(exthStart, exthStart + 4));
+      final exthId = String.fromCharCodes(
+        record.sublist(exthStart, exthStart + 4),
+      );
       if (exthId != 'EXTH') return null;
 
       final recordCount = _readUint32(record, exthStart + 8);
@@ -923,8 +947,8 @@ $htmlContent
 
         offset += recordLength;
       }
-    } on Exception catch (_) {
-      // 忽略解析错误
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, 'MOBI EXTH 作者字段损坏，按缺失处理');
     }
     return null;
   }
@@ -976,27 +1000,21 @@ $htmlContent
         .replaceAll('&hellip;', '…');
 
     // 解码数字实体
-    text = text.replaceAllMapped(
-      RegExp(r'&#(\d+);'),
-      (match) {
-        final code = int.tryParse(match.group(1) ?? '');
-        if (code != null && code > 0 && code < 0x10FFFF) {
-          return String.fromCharCode(code);
-        }
-        return match.group(0) ?? '';
-      },
-    );
+    text = text.replaceAllMapped(RegExp(r'&#(\d+);'), (match) {
+      final code = int.tryParse(match.group(1) ?? '');
+      if (code != null && code > 0 && code < 0x10FFFF) {
+        return String.fromCharCode(code);
+      }
+      return match.group(0) ?? '';
+    });
 
-    text = text.replaceAllMapped(
-      RegExp('&#x([0-9a-fA-F]+);'),
-      (match) {
-        final code = int.tryParse(match.group(1) ?? '', radix: 16);
-        if (code != null && code > 0 && code < 0x10FFFF) {
-          return String.fromCharCode(code);
-        }
-        return match.group(0) ?? '';
-      },
-    );
+    text = text.replaceAllMapped(RegExp('&#x([0-9a-fA-F]+);'), (match) {
+      final code = int.tryParse(match.group(1) ?? '', radix: 16);
+      if (code != null && code > 0 && code < 0x10FFFF) {
+        return String.fromCharCode(code);
+      }
+      return match.group(0) ?? '';
+    });
 
     // 清理多余的空白，但保留段落换行
     text = text
@@ -1068,8 +1086,9 @@ $htmlContent
 
       // 读取第一个记录（包含 MOBI 头部）
       final record0Start = recordOffsets[0];
-      final record0End =
-          recordOffsets.length > 1 ? recordOffsets[1] : bytes.length;
+      final record0End = recordOffsets.length > 1
+          ? recordOffsets[1]
+          : bytes.length;
       // 确保 record0End 不超出文件边界
       final safeRecord0End = record0End.clamp(record0Start, bytes.length);
       if (safeRecord0End <= record0Start) {
@@ -1141,8 +1160,8 @@ $htmlContent
       }
 
       return null;
-    } on Exception catch (e) {
-      logger.w('MOBI 封面提取失败', e);
+    } on Exception catch (e, st) {
+      AppError.handle(e, st, 'mobiParser.extractCover');
       return null;
     }
   }
@@ -1150,8 +1169,9 @@ $htmlContent
   /// 解析 EXTH 头部中的封面偏移量
   int? _parseExthCoverOffset(List<int> record, int exthStart) {
     try {
-      final exthId =
-          String.fromCharCodes(record.sublist(exthStart, exthStart + 4));
+      final exthId = String.fromCharCodes(
+        record.sublist(exthStart, exthStart + 4),
+      );
       if (exthId != 'EXTH') return null;
 
       final recordCount = _readUint32(record, exthStart + 8);
@@ -1172,8 +1192,8 @@ $htmlContent
 
         offset += recordLength;
       }
-    } on Exception catch (_) {
-      // 忽略解析错误
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, 'MOBI EXTH 封面偏移字段损坏，按缺失处理');
     }
     return null;
   }

@@ -17,6 +17,7 @@ import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/note/data/services/markdown_parser.dart';
 import 'package:my_nas/features/note/data/services/note_write_guard.dart';
@@ -505,9 +506,10 @@ class NotePageNotifier extends StateNotifier<NotePageState> {
     }
 
     final uri = Uri.parse(url);
+    final localPath = localPathFromFileUri(url);
 
-    if (uri.scheme == 'file') {
-      final file = File(uri.toFilePath());
+    if (localPath != null) {
+      final file = File(localPath);
       if (!await file.exists()) {
         throw Exception(appL10n.noteListFileNotFound);
       }

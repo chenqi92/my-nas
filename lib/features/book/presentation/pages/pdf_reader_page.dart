@@ -9,6 +9,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
@@ -34,7 +35,7 @@ sealed class PdfReaderState {}
 
 class PdfReaderLoading extends PdfReaderState {
   PdfReaderLoading({String? message, this.progress = 0.0})
-      : message = message ?? appL10n.pdfReaderLoadingMessage;
+    : message = message ?? appL10n.pdfReaderLoadingMessage;
   final String message;
   final double progress; // 0.0 - 1.0
 }
@@ -69,13 +70,13 @@ class PdfReaderLoaded extends PdfReaderState {
     bool? isDarkMode,
     bool? isStreaming,
   }) => PdfReaderLoaded(
-      documentRef: documentRef ?? this.documentRef,
-      filePath: filePath ?? this.filePath,
-      currentPage: currentPage ?? this.currentPage,
-      totalPages: totalPages ?? this.totalPages,
-      isDarkMode: isDarkMode ?? this.isDarkMode,
-      isStreaming: isStreaming ?? this.isStreaming,
-    );
+    documentRef: documentRef ?? this.documentRef,
+    filePath: filePath ?? this.filePath,
+    currentPage: currentPage ?? this.currentPage,
+    totalPages: totalPages ?? this.totalPages,
+    isDarkMode: isDarkMode ?? this.isDarkMode,
+    isStreaming: isStreaming ?? this.isStreaming,
+  );
 }
 
 class PdfReaderError extends PdfReaderState {
@@ -103,7 +104,6 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
     }
     return connection.adapter.fileSystem;
   }
-
 
   Future<void> _loadPdf() async {
     try {
@@ -141,8 +141,9 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
 
       // 本地文件
       final uri = Uri.parse(book.url);
-      if (uri.scheme == 'file') {
-        final localFile = File(uri.toFilePath());
+      final localPath = localPathFromFileUri(book.url);
+      if (localPath != null) {
+        final localFile = File(localPath);
         if (!await localFile.exists()) {
           state = PdfReaderError(appL10n.pdfReaderFileNotFound);
           return;
@@ -210,7 +211,9 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
         totalBytes += chunk.length;
 
         final sizeMB = (totalBytes / 1024 / 1024).toStringAsFixed(1);
-        state = PdfReaderLoading(message: appL10n.pdfReaderLoadingSizeMb(sizeMB));
+        state = PdfReaderLoading(
+          message: appL10n.pdfReaderLoadingSizeMb(sizeMB),
+        );
 
         // 当收集到至少 500KB 数据时，尝试早期解析（PDF 头部通常足够显示第一页）
         if (!hasTriedEarlyLoad && totalBytes > 512 * 1024) {
@@ -242,7 +245,9 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
       }
 
       stopwatch.stop();
-      logger.i('PDF 下载完成: $totalBytes 字节, 耗时 ${stopwatch.elapsedMilliseconds}ms');
+      logger.i(
+        'PDF 下载完成: $totalBytes 字节, 耗时 ${stopwatch.elapsedMilliseconds}ms',
+      );
 
       // 合并所有数据块
       final bytes = _mergeChunks(chunks, totalBytes);
@@ -301,10 +306,7 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
     state = PdfReaderLoading(message: appL10n.pdfReaderStreamingMessage);
 
     try {
-      final documentRef = PdfDocumentRefUri(
-        uri,
-        preferRangeAccess: true,
-      );
+      final documentRef = PdfDocumentRefUri(uri, preferRangeAccess: true);
 
       final document = await _waitForDocument(documentRef);
 
@@ -357,7 +359,6 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
     throw StateError(appL10n.pdfReaderLoadErrorUnknown);
   }
 
-
   void setPage(int page) {
     final current = state;
     if (current is PdfReaderLoaded) {
@@ -376,13 +377,15 @@ class PdfReaderNotifier extends StateNotifier<PdfReaderState> {
 
   Future<void> _saveProgress(int page, int total) async {
     final itemId = _progressService.generateItemId(book.id, book.path);
-    await _progressService.saveProgress(ReadingProgress(
-      itemId: itemId,
-      itemType: 'pdf',
-      position: page.toDouble(),
-      totalPositions: total,
-      lastReadAt: DateTime.now(),
-    ));
+    await _progressService.saveProgress(
+      ReadingProgress(
+        itemId: itemId,
+        itemType: 'pdf',
+        position: page.toDouble(),
+        totalPositions: total,
+        lastReadAt: DateTime.now(),
+      ),
+    );
   }
 
   @override
@@ -432,66 +435,70 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
   }
 
   /// 构建键盘快捷键映射
-  Map<ShortcutKey, VoidCallback> _buildKeyboardShortcuts(PdfReaderLoaded state) => {
-        // 导航
-        CommonShortcuts.previous: () {
-          if (state.currentPage > 1) {
-            final newPage = state.currentPage - 1;
-            _controller.goToPage(pageNumber: newPage);
-            ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
-          }
-        },
-        CommonShortcuts.next: () {
-          if (state.currentPage < state.totalPages) {
-            final newPage = state.currentPage + 1;
-            _controller.goToPage(pageNumber: newPage);
-            ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
-          }
-        },
-        CommonShortcuts.previousPage: () {
-          if (state.currentPage > 1) {
-            final newPage = state.currentPage - 1;
-            _controller.goToPage(pageNumber: newPage);
-            ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
-          }
-        },
-        CommonShortcuts.nextPage: () {
-          if (state.currentPage < state.totalPages) {
-            final newPage = state.currentPage + 1;
-            _controller.goToPage(pageNumber: newPage);
-            ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
-          }
-        },
-        CommonShortcuts.first: () {
-          _controller.goToPage(pageNumber: 1);
-          ref.read(pdfReaderProvider(widget.book).notifier).setPage(1);
-        },
-        CommonShortcuts.last: () {
-          _controller.goToPage(pageNumber: state.totalPages);
-          ref.read(pdfReaderProvider(widget.book).notifier).setPage(state.totalPages);
-        },
+  Map<ShortcutKey, VoidCallback> _buildKeyboardShortcuts(
+    PdfReaderLoaded state,
+  ) => {
+    // 导航
+    CommonShortcuts.previous: () {
+      if (state.currentPage > 1) {
+        final newPage = state.currentPage - 1;
+        _controller.goToPage(pageNumber: newPage);
+        ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
+      }
+    },
+    CommonShortcuts.next: () {
+      if (state.currentPage < state.totalPages) {
+        final newPage = state.currentPage + 1;
+        _controller.goToPage(pageNumber: newPage);
+        ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
+      }
+    },
+    CommonShortcuts.previousPage: () {
+      if (state.currentPage > 1) {
+        final newPage = state.currentPage - 1;
+        _controller.goToPage(pageNumber: newPage);
+        ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
+      }
+    },
+    CommonShortcuts.nextPage: () {
+      if (state.currentPage < state.totalPages) {
+        final newPage = state.currentPage + 1;
+        _controller.goToPage(pageNumber: newPage);
+        ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
+      }
+    },
+    CommonShortcuts.first: () {
+      _controller.goToPage(pageNumber: 1);
+      ref.read(pdfReaderProvider(widget.book).notifier).setPage(1);
+    },
+    CommonShortcuts.last: () {
+      _controller.goToPage(pageNumber: state.totalPages);
+      ref
+          .read(pdfReaderProvider(widget.book).notifier)
+          .setPage(state.totalPages);
+    },
 
-        // 控制栏切换
-        CommonShortcuts.playPause: () => setState(() {
-              _showControls = !_showControls;
-              _showThumbnails = false;
-            }),
+    // 控制栏切换
+    CommonShortcuts.playPause: () => setState(() {
+      _showControls = !_showControls;
+      _showThumbnails = false;
+    }),
 
-        // 夜间模式
-        CommonShortcuts.mute: () {
-          ref.read(pdfReaderProvider(widget.book).notifier).toggleDarkMode();
-        },
+    // 夜间模式
+    CommonShortcuts.mute: () {
+      ref.read(pdfReaderProvider(widget.book).notifier).toggleDarkMode();
+    },
 
-        // 缩放
-        CommonShortcuts.zoomIn: _controller.zoomUp,
-        CommonShortcuts.zoomOut: _controller.zoomDown,
-        CommonShortcuts.zoomInCtrl: _controller.zoomUp,
-        CommonShortcuts.zoomOutCtrl: _controller.zoomDown,
+    // 缩放
+    CommonShortcuts.zoomIn: _controller.zoomUp,
+    CommonShortcuts.zoomOut: _controller.zoomDown,
+    CommonShortcuts.zoomInCtrl: _controller.zoomUp,
+    CommonShortcuts.zoomOutCtrl: _controller.zoomDown,
 
-        // 退出
-        CommonShortcuts.escape: () => Navigator.pop(context),
-        CommonShortcuts.back: () => Navigator.pop(context),
-      };
+    // 退出
+    CommonShortcuts.escape: () => Navigator.pop(context),
+    CommonShortcuts.back: () => Navigator.pop(context),
+  };
 
   /// 显示快捷键帮助
   void _showKeyboardHelp() {
@@ -501,11 +508,17 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
       shortcuts: [
         (key: '←', description: context.l10n.pdfReaderKeyboardPreviousPage),
         (key: '→', description: context.l10n.pdfReaderKeyboardNextPage),
-        (key: 'Page Up', description: context.l10n.pdfReaderKeyboardPreviousPage),
+        (
+          key: 'Page Up',
+          description: context.l10n.pdfReaderKeyboardPreviousPage,
+        ),
         (key: 'Page Down', description: context.l10n.pdfReaderKeyboardNextPage),
         (key: 'Home', description: context.l10n.pdfReaderKeyboardFirstPage),
         (key: 'End', description: context.l10n.pdfReaderKeyboardLastPage),
-        (key: 'Space', description: context.l10n.pdfReaderKeyboardToggleControls),
+        (
+          key: 'Space',
+          description: context.l10n.pdfReaderKeyboardToggleControls,
+        ),
         (key: 'M', description: context.l10n.pdfReaderKeyboardToggleDarkMode),
         (key: '+/=', description: context.l10n.pdfReaderKeyboardZoomIn),
         (key: '-', description: context.l10n.pdfReaderKeyboardZoomOut),
@@ -536,7 +549,9 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade900,
       body: switch (state) {
-        PdfReaderLoading(:final message) => LottieLoading.book(message: localizeFormText(context, message)),
+        PdfReaderLoading(:final message) => LottieLoading.book(
+          message: localizeFormText(context, message),
+        ),
         PdfReaderError(:final message) => _buildError(message),
         PdfReaderLoaded() => _buildReader(context, state),
       },
@@ -544,131 +559,137 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
   }
 
   Widget _buildError(String message) => Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: Colors.white),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_rounded),
-              label: Text(context.l10n.pdfReaderBackButton),
-            ),
-          ],
-        ),
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 16, color: Colors.white),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_rounded),
+            label: Text(context.l10n.pdfReaderBackButton),
+          ),
+        ],
       ),
-    );
+    ),
+  );
 
   Widget _buildReader(BuildContext context, PdfReaderLoaded state) => Stack(
-      children: [
-        // PDF 内容（带固定顶栏）
-        Column(
-          children: [
-            // 固定顶栏 - 避免摄像头遮挡内容
-            _buildFixedHeader(state),
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() {
-                  _showControls = !_showControls;
-                  _showThumbnails = false;
-                }),
-                child: PdfViewer(
-                  state.documentRef,
-                  controller: _controller,
-                  params: PdfViewerParams(
-                    backgroundColor: state.isDarkMode ? Colors.black : Colors.grey.shade200,
-                    pageDropShadow: BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(2, 2),
-                    ),
-                    // 性能优化参数
-                    maxImageBytesCachedOnMemory: 150 * 1024 * 1024, // 150MB 缓存
-                    horizontalCacheExtent: 2, // 预加载左右各2页
-                    verticalCacheExtent: 2, // 预加载上下各2页
-                    // 限制渲染分辨率以提高性能
-                    getPageRenderingScale: (context, page, controller, estimatedScale) {
-                      // 限制最大渲染尺寸为 4000 像素
-                      final width = page.width * estimatedScale;
-                      final height = page.height * estimatedScale;
-                      if (width > 4000 || height > 4000) {
-                        return min(4000 / page.width, 4000 / page.height);
-                      }
-                      return estimatedScale;
-                    },
-                    onPageChanged: (pageNumber) {
-                      if (pageNumber != null) {
-                        ref.read(pdfReaderProvider(widget.book).notifier).setPage(pageNumber);
-                      }
-                    },
-                    // 初始页码
-                    calculateInitialPageNumber: (_, controller) => state.currentPage,
+    children: [
+      // PDF 内容（带固定顶栏）
+      Column(
+        children: [
+          // 固定顶栏 - 避免摄像头遮挡内容
+          _buildFixedHeader(state),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() {
+                _showControls = !_showControls;
+                _showThumbnails = false;
+              }),
+              child: PdfViewer(
+                state.documentRef,
+                controller: _controller,
+                params: PdfViewerParams(
+                  backgroundColor: state.isDarkMode
+                      ? Colors.black
+                      : Colors.grey.shade200,
+                  pageDropShadow: BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(2, 2),
                   ),
+                  // 性能优化参数
+                  maxImageBytesCachedOnMemory: 150 * 1024 * 1024, // 150MB 缓存
+                  horizontalCacheExtent: 2, // 预加载左右各2页
+                  verticalCacheExtent: 2, // 预加载上下各2页
+                  // 限制渲染分辨率以提高性能
+                  getPageRenderingScale:
+                      (context, page, controller, estimatedScale) {
+                        // 限制最大渲染尺寸为 4000 像素
+                        final width = page.width * estimatedScale;
+                        final height = page.height * estimatedScale;
+                        if (width > 4000 || height > 4000) {
+                          return min(4000 / page.width, 4000 / page.height);
+                        }
+                        return estimatedScale;
+                      },
+                  onPageChanged: (pageNumber) {
+                    if (pageNumber != null) {
+                      ref
+                          .read(pdfReaderProvider(widget.book).notifier)
+                          .setPage(pageNumber);
+                    }
+                  },
+                  // 初始页码
+                  calculateInitialPageNumber: (_, controller) =>
+                      state.currentPage,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
 
-        // 流式加载指示器
-        if (state.isStreaming)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 40, // 调整位置避开顶栏
-            right: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.cloud_download_rounded,
-                    size: 14,
-                    color: Colors.white70,
-                  ),
-                  SizedBox(width: 6),
-                  Text(
-                    context.l10n.pdfReaderStreaming,
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ],
-              ),
+      // 流式加载指示器
+      if (state.isStreaming)
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 40, // 调整位置避开顶栏
+          right: 8,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_download_rounded,
+                  size: 14,
+                  color: Colors.white70,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  context.l10n.pdfReaderStreaming,
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ],
             ),
           ),
+        ),
 
-        // 顶部控制栏
-        if (_showControls)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _buildTopBar(context, state),
-          ),
+      // 顶部控制栏
+      if (_showControls)
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: _buildTopBar(context, state),
+        ),
 
-        // 底部控制栏
-        if (_showControls)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildBottomBar(context, state),
-          ),
+      // 底部控制栏
+      if (_showControls)
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: _buildBottomBar(context, state),
+        ),
 
-        // 缩略图面板
-        if (_showThumbnails) _buildThumbnailPanel(context, state),
-      ],
-    );
+      // 缩略图面板
+      if (_showThumbnails) _buildThumbnailPanel(context, state),
+    ],
+  );
 
   /// 构建固定顶栏，显示书名和页码
   Widget _buildFixedHeader(PdfReaderLoaded state) {
@@ -706,10 +727,7 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
             const SizedBox(width: 8),
             Text(
               '${state.currentPage}/${state.totalPages}',
-              style: TextStyle(
-                color: textColor,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: textColor, fontSize: 12),
             ),
           ],
         ),
@@ -717,282 +735,322 @@ class _PdfReaderPageState extends ConsumerState<PdfReaderPage> {
     );
   }
 
-  Widget _buildTopBar(BuildContext context, PdfReaderLoaded state) => DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.transparent,
+  Widget _buildTopBar(
+    BuildContext context,
+    PdfReaderLoaded state,
+  ) => DecoratedBox(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
+      ),
+    ),
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                widget.book.displayName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                ref
+                    .read(pdfReaderProvider(widget.book).notifier)
+                    .toggleDarkMode();
+              },
+              icon: Icon(
+                state.isDarkMode
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_rounded,
+                color: Colors.white,
+              ),
+              tooltip: state.isDarkMode
+                  ? context.l10n.pdfReaderLightMode
+                  : context.l10n.pdfReaderDarkMode,
+            ),
+            IconButton(
+              onPressed: () =>
+                  setState(() => _showThumbnails = !_showThumbnails),
+              icon: const Icon(Icons.grid_view_rounded, color: Colors.white),
+              tooltip: context.l10n.pdfReaderPageThumbnails,
+            ),
           ],
         ),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  widget.book.displayName,
+    ),
+  );
+
+  Widget _buildBottomBar(
+    BuildContext context,
+    PdfReaderLoaded state,
+  ) => DecoratedBox(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
+      ),
+    ),
+    child: SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 页码指示器
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '${state.currentPage} / ${state.totalPages}',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              IconButton(
-                onPressed: () {
-                  ref.read(pdfReaderProvider(widget.book).notifier).toggleDarkMode();
-                },
-                icon: Icon(
-                  state.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                  color: Colors.white,
+                const SizedBox(width: 16),
+                Text(
+                  '${((state.currentPage / state.totalPages) * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 14,
+                  ),
                 ),
-                tooltip: state.isDarkMode ? context.l10n.pdfReaderLightMode : context.l10n.pdfReaderDarkMode,
-              ),
-              IconButton(
-                onPressed: () => setState(() => _showThumbnails = !_showThumbnails),
-                icon: const Icon(Icons.grid_view_rounded, color: Colors.white),
-                tooltip: context.l10n.pdfReaderPageThumbnails,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-  Widget _buildBottomBar(BuildContext context, PdfReaderLoaded state) => DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.transparent,
+              ],
+            ),
+            const SizedBox(height: 8),
+            // 页码滑块
+            Row(
+              children: [
+                IconButton(
+                  onPressed: state.currentPage > 1
+                      ? () {
+                          final newPage = state.currentPage - 1;
+                          _controller.goToPage(pageNumber: newPage);
+                          ref
+                              .read(pdfReaderProvider(widget.book).notifier)
+                              .setPage(newPage);
+                        }
+                      : null,
+                  icon: Icon(
+                    Icons.chevron_left_rounded,
+                    color: state.currentPage > 1
+                        ? Colors.white
+                        : Colors.white38,
+                  ),
+                ),
+                Expanded(
+                  child: Slider(
+                    value: state.currentPage.toDouble(),
+                    min: 1,
+                    max: state.totalPages.toDouble(),
+                    divisions: state.totalPages > 1
+                        ? state.totalPages - 1
+                        : null,
+                    onChanged: (value) {
+                      final page = value.toInt();
+                      _controller.goToPage(pageNumber: page);
+                      ref
+                          .read(pdfReaderProvider(widget.book).notifier)
+                          .setPage(page);
+                    },
+                  ),
+                ),
+                IconButton(
+                  onPressed: state.currentPage < state.totalPages
+                      ? () {
+                          final newPage = state.currentPage + 1;
+                          _controller.goToPage(pageNumber: newPage);
+                          ref
+                              .read(pdfReaderProvider(widget.book).notifier)
+                              .setPage(newPage);
+                        }
+                      : null,
+                  icon: Icon(
+                    Icons.chevron_right_rounded,
+                    color: state.currentPage < state.totalPages
+                        ? Colors.white
+                        : Colors.white38,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // 功能按钮
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildBottomButton(
+                  icon: Icons.first_page_rounded,
+                  label: context.l10n.pdfReaderFirstPage,
+                  onTap: () {
+                    _controller.goToPage(pageNumber: 1);
+                    ref
+                        .read(pdfReaderProvider(widget.book).notifier)
+                        .setPage(1);
+                  },
+                ),
+                _buildBottomButton(
+                  icon: Icons.zoom_out_rounded,
+                  label: context.l10n.pdfReaderKeyboardZoomOut,
+                  onTap: _controller.zoomDown,
+                ),
+                _buildBottomButton(
+                  icon: Icons.zoom_in_rounded,
+                  label: context.l10n.pdfReaderKeyboardZoomIn,
+                  onTap: _controller.zoomUp,
+                ),
+                _buildBottomButton(
+                  icon: Icons.last_page_rounded,
+                  label: context.l10n.pdfReaderLastPage,
+                  onTap: () {
+                    _controller.goToPage(pageNumber: state.totalPages);
+                    ref
+                        .read(pdfReaderProvider(widget.book).notifier)
+                        .setPage(state.totalPages);
+                  },
+                ),
+              ],
+            ),
           ],
         ),
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 页码指示器
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    '${state.currentPage} / ${state.totalPages}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    '${((state.currentPage / state.totalPages) * 100).toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // 页码滑块
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: state.currentPage > 1
-                        ? () {
-                            final newPage = state.currentPage - 1;
-                            _controller.goToPage(pageNumber: newPage);
-                            ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
-                          }
-                        : null,
-                    icon: Icon(
-                      Icons.chevron_left_rounded,
-                      color: state.currentPage > 1 ? Colors.white : Colors.white38,
-                    ),
-                  ),
-                  Expanded(
-                    child: Slider(
-                      value: state.currentPage.toDouble(),
-                      min: 1,
-                      max: state.totalPages.toDouble(),
-                      divisions: state.totalPages > 1 ? state.totalPages - 1 : null,
-                      onChanged: (value) {
-                        final page = value.toInt();
-                        _controller.goToPage(pageNumber: page);
-                        ref.read(pdfReaderProvider(widget.book).notifier).setPage(page);
-                      },
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: state.currentPage < state.totalPages
-                        ? () {
-                            final newPage = state.currentPage + 1;
-                            _controller.goToPage(pageNumber: newPage);
-                            ref.read(pdfReaderProvider(widget.book).notifier).setPage(newPage);
-                          }
-                        : null,
-                    icon: Icon(
-                      Icons.chevron_right_rounded,
-                      color: state.currentPage < state.totalPages ? Colors.white : Colors.white38,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // 功能按钮
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildBottomButton(
-                    icon: Icons.first_page_rounded,
-                    label: context.l10n.pdfReaderFirstPage,
-                    onTap: () {
-                      _controller.goToPage(pageNumber: 1);
-                      ref.read(pdfReaderProvider(widget.book).notifier).setPage(1);
-                    },
-                  ),
-                  _buildBottomButton(
-                    icon: Icons.zoom_out_rounded,
-                    label: context.l10n.pdfReaderKeyboardZoomOut,
-                    onTap: _controller.zoomDown,
-                  ),
-                  _buildBottomButton(
-                    icon: Icons.zoom_in_rounded,
-                    label: context.l10n.pdfReaderKeyboardZoomIn,
-                    onTap: _controller.zoomUp,
-                  ),
-                  _buildBottomButton(
-                    icon: Icons.last_page_rounded,
-                    label: context.l10n.pdfReaderLastPage,
-                    onTap: () {
-                      _controller.goToPage(pageNumber: state.totalPages);
-                      ref.read(pdfReaderProvider(widget.book).notifier).setPage(state.totalPages);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    ),
+  );
 
   Widget _buildBottomButton({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
   }) => GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 24),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
-        ],
-      ),
-    );
+    onTap: onTap,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: Colors.white, size: 24),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+      ],
+    ),
+  );
 
-  Widget _buildThumbnailPanel(BuildContext context, PdfReaderLoaded state) => Positioned(
-      top: 0,
-      bottom: 0,
-      right: 0,
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.25,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade900,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 10,
-              offset: const Offset(-2, 0),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Text(
-                      context.l10n.pdfReaderPagesPanel,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => setState(() => _showThumbnails = false),
-                      icon: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  itemCount: state.totalPages,
-                  itemBuilder: (context, index) {
-                    final pageNumber = index + 1;
-                    final isActive = pageNumber == state.currentPage;
-                    return GestureDetector(
-                      onTap: () {
-                        _controller.goToPage(pageNumber: pageNumber);
-                        ref.read(pdfReaderProvider(widget.book).notifier).setPage(pageNumber);
-                        setState(() => _showThumbnails = false);
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: isActive ? AppColors.primary : Colors.grey.shade800,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isActive ? AppColors.primary : Colors.grey.shade700,
-                            width: isActive ? 2 : 1,
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            context.l10n.pdfReaderPageNumber(pageNumber),
-                            style: TextStyle(
-                              color: isActive ? Colors.white : Colors.grey.shade400,
-                              fontSize: 14,
-                              fontWeight: isActive ? FontWeight.bold : null,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+  Widget _buildThumbnailPanel(BuildContext context, PdfReaderLoaded state) =>
+      Positioned(
+        top: 0,
+        bottom: 0,
+        right: 0,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.25,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade900,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 10,
+                offset: const Offset(-2, 0),
               ),
             ],
           ),
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Text(
+                        context.l10n.pdfReaderPagesPanel,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () =>
+                            setState(() => _showThumbnails = false),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    itemCount: state.totalPages,
+                    itemBuilder: (context, index) {
+                      final pageNumber = index + 1;
+                      final isActive = pageNumber == state.currentPage;
+                      return GestureDetector(
+                        onTap: () {
+                          _controller.goToPage(pageNumber: pageNumber);
+                          ref
+                              .read(pdfReaderProvider(widget.book).notifier)
+                              .setPage(pageNumber);
+                          setState(() => _showThumbnails = false);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? AppColors.primary
+                                : Colors.grey.shade800,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isActive
+                                  ? AppColors.primary
+                                  : Colors.grey.shade700,
+                              width: isActive ? 2 : 1,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              context.l10n.pdfReaderPageNumber(pageNumber),
+                              style: TextStyle(
+                                color: isActive
+                                    ? Colors.white
+                                    : Colors.grey.shade400,
+                                fontSize: 14,
+                                fontWeight: isActive ? FontWeight.bold : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-    );
+      );
 }

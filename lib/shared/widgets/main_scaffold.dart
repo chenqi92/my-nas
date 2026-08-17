@@ -107,7 +107,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     await updateService.checkForUpdates(silent: true);
 
     // 如果有更新，显示更新对话框
-    if (updateService.hasUpdate && updateService.updateInfo != null && mounted) {
+    if (updateService.hasUpdate &&
+        updateService.updateInfo != null &&
+        mounted) {
       // 检查是否是桌面平台或移动平台（iOS 除外，因为需要通过 App Store 更新）
       if (!Platform.isIOS) {
         await showUpdateDialog(context, updateService.updateInfo!);
@@ -180,14 +182,15 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   }
 
   /// 获取本地化的导航标签
-  String _getLocalizedLabel(BuildContext context, String labelKey) => switch (labelKey) {
-      'mainNavTabFilms' => context.l10n.mainNavTabFilms,
-      'mainNavTabMusic' => context.l10n.mainNavTabMusic,
-      'mainNavTabPhotos' => context.l10n.mainNavTabPhotos,
-      'mainNavTabReading' => context.l10n.mainNavTabReading,
-      'mainNavTabMe' => context.l10n.mainNavTabMe,
-      _ => '',
-    };
+  String _getLocalizedLabel(BuildContext context, String labelKey) =>
+      switch (labelKey) {
+        'mainNavTabFilms' => context.l10n.mainNavTabFilms,
+        'mainNavTabMusic' => context.l10n.mainNavTabMusic,
+        'mainNavTabPhotos' => context.l10n.mainNavTabPhotos,
+        'mainNavTabReading' => context.l10n.mainNavTabReading,
+        'mainNavTabMe' => context.l10n.mainNavTabMe,
+        _ => '',
+      };
 
   /// `index` 是 _destinations 列表的索引（0..4）。
   /// 通过 destination.branchIndex 映射到全局 branch index。
@@ -215,7 +218,10 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final uiStyle = ref.watch(uiStyleProvider);
     final glassStyle = GlassTheme.getNavBarStyle(uiStyle, isDark: isDark);
-    final optimizedStyle = PlatformGlassConfig.getOptimizedStyle(glassStyle, isDark: isDark);
+    final optimizedStyle = PlatformGlassConfig.getOptimizedStyle(
+      glassStyle,
+      isDark: isDark,
+    );
     final enableGlass = PlatformGlassConfig.shouldEnableGlass(uiStyle);
     final useNativeTabBar = _shouldUseNativeTabBar(uiStyle);
 
@@ -227,7 +233,12 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     final isMainTabRoute = _isMainTabRoute(context);
 
     // 处理 UI 风格变化时的原生 Tab Bar 订阅
-    _handleUiStyleChange(uiStyle, useNativeTabBar, currentIndex, bottomNavVisible);
+    _handleUiStyleChange(
+      uiStyle,
+      useNativeTabBar,
+      currentIndex,
+      bottomNavVisible,
+    );
 
     // Shell 布局判断：TV 模式优先；其次桌面平台走 Rail；移动平台走底栏；Web 按宽度。
     // 与 context.isDesktop（屏宽≥1200）解耦，避免桌面端缩窗口时退化为手机布局。
@@ -249,34 +260,32 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       // 各 page 自行响应 isDesktopLayout）。
       final desktopTheme = Theme.of(context).copyWith(
         appBarTheme: Theme.of(context).appBarTheme.copyWith(
-              toolbarHeight: 48,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              titleTextStyle: context.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isDark
-                    ? AppColors.darkOnSurface
-                    : context.colorScheme.onSurface,
-              ),
-              shape: Border(
-                bottom: BorderSide(
-                  color: isDark
-                      ? AppColors.darkOutline.withValues(alpha: 0.3)
-                      : context.colorScheme.outlineVariant,
-                ),
-              ),
+          toolbarHeight: 48,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          titleTextStyle: context.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: isDark
+                ? AppColors.darkOnSurface
+                : context.colorScheme.onSurface,
+          ),
+          shape: Border(
+            bottom: BorderSide(
+              color: isDark
+                  ? AppColors.darkOutline.withValues(alpha: 0.3)
+                  : context.colorScheme.outlineVariant,
             ),
+          ),
+        ),
         // 桌面下 ListTile 默认 dense，整体信息密度提升一档。
         listTileTheme: Theme.of(context).listTileTheme.copyWith(
-              dense: true,
-              minVerticalPadding: 6,
-              visualDensity: VisualDensity.compact,
-            ),
+          dense: true,
+          minVerticalPadding: 6,
+          visualDensity: VisualDensity.compact,
+        ),
         // 桌面下 IconButton 视觉密度紧凑。
         iconButtonTheme: IconButtonThemeData(
-          style: IconButton.styleFrom(
-            visualDensity: VisualDensity.compact,
-          ),
+          style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
         ),
         // 桌面下 OutlinedButton / FilledButton 默认 padding 紧凑。
         outlinedButtonTheme: OutlinedButtonThemeData(
@@ -296,19 +305,17 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         visualDensity: VisualDensity.compact,
         // 桌面 SnackBar：floating + 圆角 + 限宽，避免在大屏全宽铺满。
         snackBarTheme: Theme.of(context).snackBarTheme.copyWith(
-              behavior: SnackBarBehavior.floating,
-              width: 480,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
+          behavior: SnackBarBehavior.floating,
+          width: 480,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
         // 桌面 Dialog：稍紧凑的圆角 + 默认 elevation 减小。
         dialogTheme: Theme.of(context).dialogTheme.copyWith(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 12,
-            ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 12,
+        ),
       );
       // 桌面端走重设计的 DesktopScaffold（sidebar + topbar + mini dock +
       // cmdk + activity drawer + ambient），原 _buildDesktopNav 已下线。
@@ -374,10 +381,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         // Esc 优先 pop 当前 branch navigator（覆盖 push 的详情/工具页），
         // 没有可 pop 的再尝试 root navigator（处理顶层模态）。
         final idx = widget.navigationShell.currentIndex;
-        final branchKey =
-            idx >= 0 && idx < branchNavigatorKeys.length
-                ? branchNavigatorKeys[idx]
-                : null;
+        final branchKey = idx >= 0 && idx < branchNavigatorKeys.length
+            ? branchNavigatorKeys[idx]
+            : null;
         final branchNav = branchKey?.currentState;
         if (branchNav != null && branchNav.canPop()) {
           branchNav.maybePop();
@@ -432,10 +438,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       case TvBackAction.exitApp:
         // 交还系统：Android 上即退出应用。SystemNavigator.pop 在这里等价于
         // 让这次 BACK「未被消费」，不能用 Navigator.pop（栈底无可 pop 项）。
-        AppError.fireAndForget(
-          SystemNavigator.pop(),
-          action: 'tvBack.exitApp',
-        );
+        AppError.fireAndForget(SystemNavigator.pop(), action: 'tvBack.exitApp');
     }
   }
 
@@ -448,15 +451,16 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   ) {
     // 首次调用或风格变化时
     if (_cachedUiStyle != uiStyle) {
-      final wasUsingNative = _cachedUiStyle != null && _shouldUseNativeTabBar(_cachedUiStyle!);
+      final wasUsingNative =
+          _cachedUiStyle != null && _shouldUseNativeTabBar(_cachedUiStyle!);
       _cachedUiStyle = uiStyle;
 
       if (useNativeTabBar && !wasUsingNative) {
         // 切换到玻璃风格：启用原生 Tab Bar，订阅原生事件
         NativeTabBarService.instance.setNativeTabBarEnabled(true);
         _tabSelectedSubscription?.cancel();
-        _tabSelectedSubscription =
-            NativeTabBarService.instance.onTabSelected.listen(_handleNativeTabSelected);
+        _tabSelectedSubscription = NativeTabBarService.instance.onTabSelected
+            .listen(_handleNativeTabSelected);
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
@@ -510,15 +514,13 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     final borderColor = enableGlass
         ? GlassTheme.getBorderColor(glassStyle, isDark: isDark)
         : (isDark
-            ? AppColors.darkOutline.withValues(alpha: 0.3)
-            : context.colorScheme.outlineVariant);
+              ? AppColors.darkOutline.withValues(alpha: 0.3)
+              : context.colorScheme.outlineVariant);
 
     Widget navContent = DecoratedBox(
       decoration: BoxDecoration(
         color: bgColor,
-        border: Border(
-          top: BorderSide(color: borderColor),
-        ),
+        border: Border(top: BorderSide(color: borderColor)),
       ),
       child: SafeArea(
         top: false,
@@ -548,7 +550,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1)
+                                ? AppColors.primary.withValues(
+                                    alpha: isDark ? 0.2 : 0.1,
+                                  )
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -557,8 +561,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
                             color: isSelected
                                 ? AppColors.primary
                                 : isDark
-                                    ? AppColors.darkOnSurfaceVariant
-                                    : context.colorScheme.onSurfaceVariant,
+                                ? AppColors.darkOnSurfaceVariant
+                                : context.colorScheme.onSurfaceVariant,
                             size: 22,
                           ),
                         ),
@@ -570,10 +574,11 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
                             color: isSelected
                                 ? AppColors.primary
                                 : isDark
-                                    ? AppColors.darkOnSurfaceVariant
-                                    : context.colorScheme.onSurfaceVariant,
-                            fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.normal,
+                                ? AppColors.darkOnSurfaceVariant
+                                : context.colorScheme.onSurfaceVariant,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                         ),
                       ],
@@ -633,10 +638,7 @@ class _Destination {
 /// 56+SafeArea.bottom 的布局高度，从而把 body 的 MediaQuery
 /// bottom padding 顶大，导致页面底部出现一块空白。
 class _AnimatedBottomNav extends StatefulWidget {
-  const _AnimatedBottomNav({
-    required this.visible,
-    required this.child,
-  });
+  const _AnimatedBottomNav({required this.visible, required this.child});
 
   final bool visible;
   final Widget child;
@@ -653,8 +655,10 @@ class _AnimatedBottomNavState extends State<_AnimatedBottomNav>
     value: widget.visible ? 1.0 : 0.0,
   );
 
-  late final CurvedAnimation _curve =
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  late final CurvedAnimation _curve = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeInOut,
+  );
 
   late final Animation<Offset> _slide = Tween<Offset>(
     begin: const Offset(0, 1),
@@ -682,14 +686,11 @@ class _AnimatedBottomNavState extends State<_AnimatedBottomNav>
 
   @override
   Widget build(BuildContext context) => SizeTransition(
-        sizeFactor: _curve,
-        axisAlignment: -1.0,
-        child: SlideTransition(
-          position: _slide,
-          child: FadeTransition(
-            opacity: _curve,
-            child: widget.child,
-          ),
-        ),
-      );
+    sizeFactor: _curve,
+    axisAlignment: -1,
+    child: SlideTransition(
+      position: _slide,
+      child: FadeTransition(opacity: _curve, child: widget.child),
+    ),
+  );
 }

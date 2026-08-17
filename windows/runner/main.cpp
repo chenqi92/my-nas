@@ -14,8 +14,9 @@ namespace {
 // 从命令行 argv 里取第一个 mynas:// 形式的参数（用于转发给已运行的 primary）。
 std::wstring ExtractDeepLinkArg() {
   int argc = 0;
-  LPWSTR* argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
-  if (argv == nullptr) return std::wstring();
+  LPWSTR *argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+  if (argv == nullptr)
+    return std::wstring();
   std::wstring out;
   for (int i = 1; i < argc; ++i) {
     std::wstring arg = argv[i];
@@ -31,11 +32,12 @@ std::wstring ExtractDeepLinkArg() {
 std::wstring GetExeFullPath() {
   wchar_t buf[MAX_PATH];
   DWORD len = ::GetModuleFileNameW(nullptr, buf, MAX_PATH);
-  if (len == 0 || len == MAX_PATH) return std::wstring();
+  if (len == 0 || len == MAX_PATH)
+    return std::wstring();
   return std::wstring(buf, len);
 }
 
-}  // namespace
+} // namespace
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
@@ -59,7 +61,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // desktop_multi_window 子窗口走单独入口：argv[1] == "multi_window"。
   // 这种情况下不做单实例判定（每个 multi_window 子进程都该独立运行）。
   int argc = 0;
-  LPWSTR* argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+  LPWSTR *argv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
   bool is_multi_window = false;
   if (argv != nullptr) {
     if (argc >= 2 && std::wstring(argv[1]) == L"multi_window") {
@@ -71,8 +73,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   HANDLE single_instance_mutex = nullptr;
   if (!is_multi_window) {
     std::wstring deep_link = ExtractDeepLinkArg();
-    bool secondary = SingleInstanceTryForwardOrAcquire(
-        deep_link, &single_instance_mutex);
+    bool secondary =
+        SingleInstanceTryForwardOrAcquire(deep_link, &single_instance_mutex);
     if (secondary) {
       ::CoUninitialize();
       return EXIT_SUCCESS;
@@ -85,8 +87,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   flutter::DartProject project(L"data");
 
-  std::vector<std::string> command_line_arguments =
-      GetCommandLineArguments();
+  std::vector<std::string> command_line_arguments = GetCommandLineArguments();
 
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
@@ -94,7 +95,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1400, 900);
   if (!window.Create(L"my_nas", origin, size)) {
-    if (single_instance_mutex) ::CloseHandle(single_instance_mutex);
+    if (!is_multi_window)
+      SingleInstanceShutdown();
+    if (single_instance_mutex)
+      ::CloseHandle(single_instance_mutex);
+    ::CoUninitialize();
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
@@ -109,7 +114,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
-  if (single_instance_mutex) ::CloseHandle(single_instance_mutex);
+  if (!is_multi_window)
+    SingleInstanceShutdown();
+  if (single_instance_mutex)
+    ::CloseHandle(single_instance_mutex);
   ::CoUninitialize();
   return EXIT_SUCCESS;
 }

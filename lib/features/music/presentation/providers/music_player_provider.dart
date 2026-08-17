@@ -10,6 +10,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/media_proxy_server.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/android_dynamic_island_service.dart';
 import 'package:my_nas/features/music/data/services/ffmpeg_audio_tag_service.dart';
@@ -1888,12 +1889,12 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       ncmData = Uint8List.fromList(chunks);
     } else {
       // 本地文件
-      final uri = Uri.tryParse(music.url);
-      if (uri == null || uri.scheme != 'file') {
+      final filePath = localPathFromFileUri(music.url);
+      if (filePath == null) {
         logger.e('MusicPlayer: 无效的本地 NCM 文件路径: ${music.url}');
         return null;
       }
-      final file = File(uri.toFilePath());
+      final file = File(filePath);
       if (!await file.exists()) {
         logger.e('MusicPlayer: NCM 文件不存在: ${file.path}');
         return null;
@@ -2006,13 +2007,14 @@ class MusicPlayerNotifier extends StateNotifier<MusicPlayerState> {
       // 优先根据 URL scheme 判断文件类型
       final uri = Uri.tryParse(music.url);
       logger.d('MusicPlayer: 解析URL - uri=$uri, scheme=${uri?.scheme}');
+      final localPath = localPathFromFileUri(music.url);
 
-      if (uri != null && uri.scheme == 'file') {
+      if (localPath != null) {
         // 本地文件：直接从文件路径提取（无论是否有 sourceId）
-        logger.d('MusicPlayer: 检测到本地文件 (file:// scheme)');
-        final filePath = uri.toFilePath();
-        logger.d('MusicPlayer: 文件路径 = $filePath');
-        final file = File(filePath);
+        logger
+          ..d('MusicPlayer: 检测到本地文件 (file:// scheme)')
+          ..d('MusicPlayer: 文件路径 = $localPath');
+        final file = File(localPath);
         final exists = await file.exists();
         logger.d('MusicPlayer: 文件存在 = $exists');
 

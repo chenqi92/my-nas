@@ -8,6 +8,7 @@ import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/debug_log.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
@@ -37,7 +38,7 @@ sealed class NativeEbookReaderState {}
 
 class NativeEbookLoading extends NativeEbookReaderState {
   NativeEbookLoading({String? message})
-      : message = message ?? appL10n.nativeEbookLoadingDefault;
+    : message = message ?? appL10n.nativeEbookLoadingDefault;
 
   final String message;
 }
@@ -63,12 +64,15 @@ class NativeEbookError extends NativeEbookReaderState {
 
 /// 原生电子书阅读器 Provider
 final nativeEbookReaderProvider =
-    StateNotifierProvider.family<NativeEbookReaderNotifier, NativeEbookReaderState, BookItem>(
-  (ref, book) => NativeEbookReaderNotifier(book, ref),
-);
+    StateNotifierProvider.family<
+      NativeEbookReaderNotifier,
+      NativeEbookReaderState,
+      BookItem
+    >((ref, book) => NativeEbookReaderNotifier(book, ref));
 
 class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
-  NativeEbookReaderNotifier(this.book, this._ref) : super(NativeEbookLoading()) {
+  NativeEbookReaderNotifier(this.book, this._ref)
+    : super(NativeEbookLoading()) {
     _loadBook();
   }
 
@@ -82,7 +86,9 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
     try {
       await _cacheService.init();
 
-      state = NativeEbookLoading(message: appL10n.nativeEbookLoadingGettingFile);
+      state = NativeEbookLoading(
+        message: appL10n.nativeEbookLoadingGettingFile,
+      );
 
       // 获取或下载文件
       var epubFile = await _getOrDownloadFile();
@@ -93,7 +99,9 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
 
       // 如果是 MOBI/AZW3，需要先转换为 EPUB
       if (book.format == BookFormat.mobi || book.format == BookFormat.azw3) {
-        state = NativeEbookLoading(message: appL10n.nativeEbookLoadingConvertingFormat);
+        state = NativeEbookLoading(
+          message: appL10n.nativeEbookLoadingConvertingFormat,
+        );
         final bytes = await epubFile.readAsBytes();
         final result = await MobiParserService().parse(bytes, book.name);
         if (result.epubPath != null) {
@@ -105,12 +113,16 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
       }
 
       // 解析 EPUB
-      state = NativeEbookLoading(message: appL10n.nativeEbookLoadingParsingContent);
+      state = NativeEbookLoading(
+        message: appL10n.nativeEbookLoadingParsingContent,
+      );
       final parsedBook = await _parser.parse(epubFile);
 
       // 分页
       state = NativeEbookLoading(message: appL10n.nativeEbookLoadingPaginating);
-      final htmlContents = parsedBook.chapters.map((c) => c.htmlContent).toList();
+      final htmlContents = parsedBook.chapters
+          .map((c) => c.htmlContent)
+          .toList();
 
       // 使用默认视口大小进行分页（实际大小会在 build 时调整）
       const defaultViewport = Size(375, 667);
@@ -129,7 +141,9 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
         chapterPageRanges: result.chapterPageRanges,
       );
 
-      logger.i('NativeEbookReader: 加载完成 ${parsedBook.title}, ${result.totalPages} 页');
+      logger.i(
+        'NativeEbookReader: 加载完成 ${parsedBook.title}, ${result.totalPages} 页',
+      );
     } on Exception catch (e, st) {
       logger.e('NativeEbookReader: 加载失败', e, st);
       state = NativeEbookError(appL10n.nativeEbookErrorLoadFailed(e));
@@ -138,15 +152,18 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
 
   Future<File?> _getOrDownloadFile() async {
     // 检查缓存
-    final cachedFile = await _cacheService.getCachedFile(book.sourceId, book.path);
+    final cachedFile = await _cacheService.getCachedFile(
+      book.sourceId,
+      book.path,
+    );
     if (cachedFile != null && await cachedFile.exists()) {
       return cachedFile;
     }
 
     // 本地文件
-    final uri = Uri.parse(book.url);
-    if (uri.scheme == 'file') {
-      final localFile = File(uri.toFilePath());
+    final localPath = localPathFromFileUri(book.url);
+    if (localPath != null) {
+      final localFile = File(localPath);
       if (await localFile.exists()) {
         return localFile;
       }
@@ -156,7 +173,9 @@ class NativeEbookReaderNotifier extends StateNotifier<NativeEbookReaderState> {
     // 从 NAS 下载
     final fileSystem = _getFileSystem();
     if (fileSystem != null) {
-      state = NativeEbookLoading(message: appL10n.nativeEbookLoadingDownloading);
+      state = NativeEbookLoading(
+        message: appL10n.nativeEbookLoadingDownloading,
+      );
       final savedFile = await _cacheService.saveToCacheFromStream(
         book.sourceId,
         book.path,
@@ -189,7 +208,8 @@ class NativeEbookReaderPage extends ConsumerStatefulWidget {
   final BookItem book;
 
   @override
-  ConsumerState<NativeEbookReaderPage> createState() => _NativeEbookReaderPageState();
+  ConsumerState<NativeEbookReaderPage> createState() =>
+      _NativeEbookReaderPageState();
 }
 
 class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
@@ -236,8 +256,10 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
       final state = ref.read(nativeEbookReaderProvider(widget.book));
       if (state is NativeEbookLoaded) {
         // position 存的是绝对页码（与其它阅读器一致），直接还原
-        final pageIndex =
-            progress.position.toInt().clamp(0, state.pages.length - 1);
+        final pageIndex = progress.position.toInt().clamp(
+          0,
+          state.pages.length - 1,
+        );
         setState(() => _currentPage = pageIndex);
         _pageController.jumpToPage(pageIndex);
       }
@@ -277,7 +299,9 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     await _saveProgressImmediatelyWithState(state);
   }
 
-  Future<void> _saveProgressImmediatelyWithState(NativeEbookLoaded? state) async {
+  Future<void> _saveProgressImmediatelyWithState(
+    NativeEbookLoaded? state,
+  ) async {
     if (state == null) return;
 
     final itemId = _progressService.generateItemId(
@@ -346,7 +370,9 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         // 朗读完成，检查是否自动播放下一页
         final settings = ref.read(ttsProvider).settings;
         // 如果用户已手动关闭，不自动播放下一页
-        if (!_userClosedTTS && settings.autoPlayNextChapter && _currentPage < state.pages.length - 1) {
+        if (!_userClosedTTS &&
+            settings.autoPlayNextChapter &&
+            _currentPage < state.pages.length - 1) {
           _goToPage(_currentPage + 1);
           Future.delayed(const Duration(milliseconds: 300), _startTTS);
         }
@@ -388,7 +414,9 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
       child: Scaffold(
         backgroundColor: settings.theme.backgroundColor,
         body: switch (state) {
-          NativeEbookLoading(:final message) => LottieLoading.book(message: localizeFormText(context, message)),
+          NativeEbookLoading(:final message) => LottieLoading.book(
+            message: localizeFormText(context, message),
+          ),
           NativeEbookError(:final message) => _buildError(message),
           NativeEbookLoaded() => _buildReader(state, settings),
         },
@@ -396,40 +424,43 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     );
   }
 
-  Map<ShortcutKey, VoidCallback> _buildKeyboardShortcuts(BookReaderSettings settings) => {
-      CommonShortcuts.previous: () => _goToPage(_currentPage - 1),
-      CommonShortcuts.next: () => _goToPage(_currentPage + 1),
-      CommonShortcuts.previousPage: () => _goToPage(_currentPage - 1),
-      CommonShortcuts.nextPage: () => _goToPage(_currentPage + 1),
-      CommonShortcuts.first: () => _goToPage(0),
-      CommonShortcuts.playPause: _toggleControls,
-      CommonShortcuts.toggleControls: _toggleControls,
-      CommonShortcuts.escape: () => Navigator.pop(context),
-      CommonShortcuts.back: () => Navigator.pop(context),
-    };
+  Map<ShortcutKey, VoidCallback> _buildKeyboardShortcuts(
+    BookReaderSettings settings,
+  ) => {
+    CommonShortcuts.previous: () => _goToPage(_currentPage - 1),
+    CommonShortcuts.next: () => _goToPage(_currentPage + 1),
+    CommonShortcuts.previousPage: () => _goToPage(_currentPage - 1),
+    CommonShortcuts.nextPage: () => _goToPage(_currentPage + 1),
+    CommonShortcuts.first: () => _goToPage(0),
+    CommonShortcuts.playPause: _toggleControls,
+    CommonShortcuts.toggleControls: _toggleControls,
+    CommonShortcuts.escape: () => Navigator.pop(context),
+    CommonShortcuts.back: () => Navigator.pop(context),
+  };
 
   Widget _buildError(String message) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: TextStyle(color: AppColors.error),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.l10n.bookReaderButtonBack),
-            ),
-          ],
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
+        const SizedBox(height: 16),
+        Text(
+          message,
+          style: TextStyle(color: AppColors.error),
+          textAlign: TextAlign.center,
         ),
-      );
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.l10n.bookReaderButtonBack),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildReader(NativeEbookLoaded state, BookReaderSettings settings) {
-    final useFlutterFlip = settings.pageTurnMode == BookPageTurnMode.simulation ||
+    final useFlutterFlip =
+        settings.pageTurnMode == BookPageTurnMode.simulation ||
         settings.pageTurnMode == BookPageTurnMode.cover;
 
     // 构建 PageView 内容
@@ -450,10 +481,7 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
 
     // 如果不使用 Flutter 翻页效果，用 GestureDetector 处理点击
     if (!useFlutterFlip) {
-      pageView = GestureDetector(
-        onTap: _toggleControls,
-        child: pageView,
-      );
+      pageView = GestureDetector(onTap: _toggleControls, child: pageView);
     }
 
     Widget readerContent = ColoredBox(
@@ -527,28 +555,33 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     );
   }
 
-  Widget _buildPageContent(EbookPage page, BookReaderSettings settings) => Padding(
-      padding: EdgeInsets.symmetric(horizontal: settings.horizontalPadding),
-      child: HtmlContentWidget(
-        html: page.htmlContent,
-        textStyle: TextStyle(
-          fontSize: settings.fontSize,
-          height: settings.lineHeight,
-          color: settings.theme.textColor,
-          fontFamily: settings.fontFamily,
+  Widget _buildPageContent(EbookPage page, BookReaderSettings settings) =>
+      Padding(
+        padding: EdgeInsets.symmetric(horizontal: settings.horizontalPadding),
+        child: HtmlContentWidget(
+          html: page.htmlContent,
+          textStyle: TextStyle(
+            fontSize: settings.fontSize,
+            height: settings.lineHeight,
+            color: settings.theme.textColor,
+            fontFamily: settings.fontFamily,
+          ),
+          imageProvider: (url) {
+            final imageData = NativeEpubParser.instance.getImage(url);
+            if (imageData != null) {
+              return MemoryImage(imageData);
+            }
+            return null;
+          },
         ),
-        imageProvider: (url) {
-          final imageData = NativeEpubParser.instance.getImage(url);
-          if (imageData != null) {
-            return MemoryImage(imageData);
-          }
-          return null;
-        },
-      ),
-    );
+      );
 
-  Widget _buildFixedHeader(NativeEbookLoaded state, BookReaderSettings settings) {
-    final isDark = settings.theme == BookReaderTheme.dark ||
+  Widget _buildFixedHeader(
+    NativeEbookLoaded state,
+    BookReaderSettings settings,
+  ) {
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
     final textColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
 
@@ -578,8 +611,12 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     );
   }
 
-  Widget _buildFixedFooter(NativeEbookLoaded state, BookReaderSettings settings) {
-    final isDark = settings.theme == BookReaderTheme.dark ||
+  Widget _buildFixedFooter(
+    NativeEbookLoaded state,
+    BookReaderSettings settings,
+  ) {
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
     final textColor = isDark ? Colors.grey.shade400 : Colors.grey.shade600;
     final progress = state.pages.isNotEmpty
@@ -595,67 +632,63 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
             context.l10n.bookReaderCurrentPageIndicator(_currentPage + 1),
             style: TextStyle(color: textColor, fontSize: 11),
           ),
-          Text(
-            '$progress%',
-            style: TextStyle(color: textColor, fontSize: 11),
-          ),
+          Text('$progress%', style: TextStyle(color: textColor, fontSize: 11)),
         ],
       ),
     );
   }
 
-  Widget _buildTopBar(NativeEbookLoaded state, BookReaderSettings settings) => DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.transparent,
-          ],
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  state.book.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+  Widget _buildTopBar(NativeEbookLoaded state, BookReaderSettings settings) =>
+      DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
           ),
         ),
-      ),
-    );
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    state.book.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
 
   Widget _buildBottomBar(NativeEbookLoaded state, BookReaderSettings settings) {
-    final isDark = settings.theme == BookReaderTheme.dark ||
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
-          colors: [
-            Colors.black.withValues(alpha: 0.7),
-            Colors.transparent,
-          ],
+          colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
         ),
       ),
       child: SafeArea(
@@ -673,12 +706,17 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
                   thumbColor: Colors.white,
                   overlayColor: Colors.white24,
                   trackHeight: 3,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 6,
+                  ),
                 ),
                 child: Slider(
                   value: _currentPage.toDouble(),
                   min: 0,
-                  max: (state.pages.length - 1).toDouble().clamp(0, double.infinity),
+                  max: (state.pages.length - 1).toDouble().clamp(
+                    0,
+                    double.infinity,
+                  ),
                   onChanged: (value) => _goToPage(value.round()),
                 ),
               ),
@@ -706,10 +744,14 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
                   ),
                   _BottomBarButton(
                     icon: isDark ? Icons.light_mode : Icons.dark_mode,
-                    label: isDark ? context.l10n.bookReaderThemeDayLabel : context.l10n.bookReaderThemeNightLabel,
+                    label: isDark
+                        ? context.l10n.bookReaderThemeDayLabel
+                        : context.l10n.bookReaderThemeNightLabel,
                     isDark: isDark,
                     onPressed: () {
-                      final notifier = ref.read(bookReaderSettingsProvider.notifier);
+                      final notifier = ref.read(
+                        bookReaderSettingsProvider.notifier,
+                      );
                       final newTheme = isDark
                           ? BookReaderTheme.light
                           : BookReaderTheme.dark;
@@ -731,86 +773,89 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
     );
   }
 
-  Widget _buildTocDrawer(NativeEbookLoaded state, BookReaderSettings settings) => Positioned.fill(
-      child: GestureDetector(
-        onTap: () => setState(() => _showToc = false),
-        child: ColoredBox(
-          color: Colors.black54,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: GestureDetector(
-              onTap: () {}, // 阻止点击传递
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.75,
-                height: double.infinity,
-                color: settings.theme.backgroundColor,
-                child: SafeArea(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 标题
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.menu_book_rounded,
+  Widget _buildTocDrawer(
+    NativeEbookLoaded state,
+    BookReaderSettings settings,
+  ) => Positioned.fill(
+    child: GestureDetector(
+      onTap: () => setState(() => _showToc = false),
+      child: ColoredBox(
+        color: Colors.black54,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: GestureDetector(
+            onTap: () {}, // 阻止点击传递
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.75,
+              height: double.infinity,
+              color: settings.theme.backgroundColor,
+              child: SafeArea(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 标题
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.menu_book_rounded,
+                            color: settings.theme.textColor,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            context.l10n.bookReaderTocTitle,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                               color: settings.theme.textColor,
                             ),
-                            const SizedBox(width: 12),
-                            Text(
-                              context.l10n.bookReaderTocTitle,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: settings.theme.textColor,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      Divider(color: settings.theme.textColor.withValues(alpha: 0.2)),
-                      // 目录列表
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          itemCount: state.toc.length,
-                          itemBuilder: (context, index) {
-                            final item = state.toc[index];
-                            return _buildTocItem(item, index, settings);
-                          },
-                        ),
+                    ),
+                    Divider(
+                      color: settings.theme.textColor.withValues(alpha: 0.2),
+                    ),
+                    // 目录列表
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        itemCount: state.toc.length,
+                        itemBuilder: (context, index) {
+                          final item = state.toc[index];
+                          return _buildTocItem(item, index, settings);
+                        },
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
       ),
-    );
+    ),
+  );
 
-  Widget _buildTocItem(TocItem item, int index, BookReaderSettings settings) => InkWell(
-      onTap: () => _goToChapter(index),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 16.0 + item.depth * 16.0,
-          right: 16,
-          top: 12,
-          bottom: 12,
-        ),
-        child: Text(
-          item.title,
-          style: TextStyle(
-            fontSize: 14,
-            color: settings.theme.textColor,
+  Widget _buildTocItem(TocItem item, int index, BookReaderSettings settings) =>
+      InkWell(
+        onTap: () => _goToChapter(index),
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 16.0 + item.depth * 16.0,
+            right: 16,
+            top: 12,
+            bottom: 12,
           ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+          child: Text(
+            item.title,
+            style: TextStyle(fontSize: 14, color: settings.theme.textColor),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
-      ),
-    );
+      );
 
   void _showSettingsSheet() {
     showReaderSettingsSheet(
@@ -889,7 +934,9 @@ class _NativeEbookReaderPageState extends ConsumerState<NativeEbookReaderPage> {
         const SizedBox(height: 24),
 
         // 其他设置
-        SettingSectionTitle(title: context.l10n.bookReaderOtherSettingsSectionTitle),
+        SettingSectionTitle(
+          title: context.l10n.bookReaderOtherSettingsSectionTitle,
+        ),
         SettingSwitchRow(
           title: context.l10n.bookReaderKeepScreenOnLabel,
           value: settings.keepScreenOn,
@@ -998,10 +1045,7 @@ class _BottomBarButton extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(color: color, fontSize: 11),
-            ),
+            Text(label, style: TextStyle(color: color, fontSize: 11)),
           ],
         ),
       ),

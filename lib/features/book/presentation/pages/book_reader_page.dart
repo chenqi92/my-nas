@@ -14,6 +14,7 @@ import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/http_client.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_content_processor.dart';
@@ -182,8 +183,10 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
         scrollPosition: progress?.position ?? 0.0,
       );
 
-      logger.i('图书加载完成: ${book.name}, 内容长度: ${content.length}, '
-          'HTML: ${htmlContent?.length ?? 0}');
+      logger.i(
+        '图书加载完成: ${book.name}, 内容长度: ${content.length}, '
+        'HTML: ${htmlContent?.length ?? 0}',
+      );
     } on Exception catch (e, st) {
       logger.e('加载图书失败', e, st);
       // 检查是否是内存相关错误
@@ -191,7 +194,11 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
       if (errorMsg.contains('memory') || errorMsg.contains('heap')) {
         state = TxtReaderError(appL10n.bookReaderErrorMemoryInsufficient);
       } else {
-        state = TxtReaderError(appL10n.bookReaderErrorLoadFailed(e.toString().replaceAll('Exception: ', '')));
+        state = TxtReaderError(
+          appL10n.bookReaderErrorLoadFailed(
+            e.toString().replaceAll('Exception: ', ''),
+          ),
+        );
       }
     }
   }
@@ -214,6 +221,7 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
 
   Future<String> _loadTxtBook() async {
     final uri = Uri.parse(book.url);
+    final localPath = localPathFromFileUri(book.url);
     List<int> bytes;
 
     // 优先使用流式加载（支持 SMB/WebDAV 等协议）
@@ -222,9 +230,9 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
       state = TxtReaderLoading(message: appL10n.bookReaderLoadingStreaming);
       final stream = await fileSystem.getFileStream(book.path);
       bytes = await _readStreamBytes(stream);
-    } else if (uri.scheme == 'file') {
+    } else if (localPath != null) {
       // 本地文件
-      final localFile = File(uri.toFilePath());
+      final localFile = File(localPath);
       if (!await localFile.exists()) {
         throw Exception(appL10n.bookReaderErrorFileNotFound);
       }
@@ -271,14 +279,15 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
     } else {
       // 需要下载文件
       final uri = Uri.parse(book.url);
+      final localPath = localPathFromFileUri(book.url);
 
       final fileSystem = _getFileSystem();
       if (fileSystem != null) {
         state = TxtReaderLoading(message: appL10n.bookReaderLoadingFile);
         final stream = await fileSystem.getFileStream(book.path);
         bytes = await _readStreamBytes(stream);
-      } else if (uri.scheme == 'file') {
-        final localFile = File(uri.toFilePath());
+      } else if (localPath != null) {
+        final localFile = File(localPath);
         if (!await localFile.exists()) {
           throw Exception(appL10n.bookReaderErrorFileNotFound);
         }
@@ -287,7 +296,9 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
         state = TxtReaderLoading(message: appL10n.bookReaderLoadingDownload);
         final response = await InsecureHttpClient.get(uri);
         if (response.statusCode != 200) {
-          throw Exception(appL10n.bookReaderErrorLoadFailed(response.statusCode));
+          throw Exception(
+            appL10n.bookReaderErrorLoadFailed(response.statusCode),
+          );
         }
         bytes = response.bodyBytes;
       } else {
@@ -306,7 +317,10 @@ class TxtReaderNotifier extends StateNotifier<TxtReaderState> {
     final result = await parser.parse(bytes, fileName);
 
     if (!result.success) {
-      throw Exception(result.error ?? appL10n.bookReaderErrorParseFailed(result.error ?? 'unknown'));
+      throw Exception(
+        result.error ??
+            appL10n.bookReaderErrorParseFailed(result.error ?? 'unknown'),
+      );
     }
 
     return result;
@@ -559,16 +573,16 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
       // 在 Isolate 中处理内容，添加超时
       final result = await BookContentProcessor.processContent(htmlContent)
           .timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          logger.w('内容处理超时，使用简化模式');
-          // 超时时返回简化结果
-          return ContentProcessResult(
-            cleanedHtml: htmlContent,
-            chapters: _extractChaptersSimple(htmlContent, maxChapters: 50),
+            const Duration(seconds: 10),
+            onTimeout: () {
+              logger.w('内容处理超时，使用简化模式');
+              // 超时时返回简化结果
+              return ContentProcessResult(
+                cleanedHtml: htmlContent,
+                chapters: _extractChaptersSimple(htmlContent, maxChapters: 50),
+              );
+            },
           );
-        },
-      );
 
       if (!mounted) return;
 
@@ -598,9 +612,15 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
   }
 
   /// 简化的章节提取（用于大文件）
-  List<BookChapter> _extractChaptersSimple(String content, {int maxChapters = 100}) {
+  List<BookChapter> _extractChaptersSimple(
+    String content, {
+    int maxChapters = 100,
+  }) {
     final chapters = <BookChapter>[];
-    final pattern = RegExp(r'<h([1-3])[^>]*>([^<]{1,100})</h\1>', caseSensitive: false);
+    final pattern = RegExp(
+      r'<h([1-3])[^>]*>([^<]{1,100})</h\1>',
+      caseSensitive: false,
+    );
 
     for (final match in pattern.allMatches(content)) {
       if (chapters.length >= maxChapters) break;
@@ -612,11 +632,9 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
       title = title.replaceAll(RegExp('<[^>]*>'), '').trim();
 
       if (title.isNotEmpty && title.length < 80) {
-        chapters.add(BookChapter(
-          title: title,
-          offset: match.start,
-          level: level,
-        ));
+        chapters.add(
+          BookChapter(title: title, offset: match.start, level: level),
+        );
       }
     }
 
@@ -654,7 +672,8 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
     final currentTheme = settings.theme;
 
     // 在浅色和深色主题之间切换
-    final newTheme = currentTheme == BookReaderTheme.light ||
+    final newTheme =
+        currentTheme == BookReaderTheme.light ||
             currentTheme == BookReaderTheme.sepia ||
             currentTheme == BookReaderTheme.green
         ? BookReaderTheme.dark
@@ -678,7 +697,8 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
         settings.pageTurnMode != BookPageTurnMode.slide;
 
     // 判断是否使用 WebView 渲染器
-    final useWebView = _useWebViewRenderer &&
+    final useWebView =
+        _useWebViewRenderer &&
         state is TxtReaderLoaded &&
         state.hasHtml &&
         usePageMode;
@@ -687,7 +707,10 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
       // WebView 分页模式：根据章节偏移量计算目标页码
       final totalLength = state.htmlContent!.length.toDouble();
       final progress = chapter.offset / totalLength;
-      final targetPage = (progress * (_totalPages - 1)).round().clamp(0, _totalPages - 1);
+      final targetPage = (progress * (_totalPages - 1)).round().clamp(
+        0,
+        _totalPages - 1,
+      );
 
       _webViewReaderKey.currentState?.goToPage(targetPage);
 
@@ -739,7 +762,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
   /// 获取当前章节索引
   int _getCurrentChapterIndex() {
     if (_chapters.isEmpty) return 0;
-    
+
     // 根据当前章节标题查找索引
     if (_currentChapterTitle.isNotEmpty) {
       for (var i = 0; i < _chapters.length; i++) {
@@ -748,42 +771,45 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
         }
       }
     }
-    
+
     // 如果没有匹配的章节标题，根据当前页面位置估算
     final state = ref.read(txtReaderProvider(widget.book));
     final settings = ref.read(bookReaderSettingsProvider);
-    
-    final usePageMode = state is TxtReaderLoaded &&
+
+    final usePageMode =
+        state is TxtReaderLoaded &&
         state.hasHtml &&
         settings.pageTurnMode != BookPageTurnMode.slide;
-    final useWebView = _useWebViewRenderer &&
+    final useWebView =
+        _useWebViewRenderer &&
         state is TxtReaderLoaded &&
         state.hasHtml &&
         usePageMode;
-    
+
     double progress = 0;
     if (useWebView && _totalPages > 0) {
       progress = _currentPage / _totalPages;
     } else if (usePageMode && _pages.isNotEmpty) {
       progress = _currentPage / _pages.length;
-    } else if (_scrollController.hasClients && 
-               _scrollController.position.maxScrollExtent > 0) {
-      progress = _scrollController.position.pixels / 
-                 _scrollController.position.maxScrollExtent;
+    } else if (_scrollController.hasClients &&
+        _scrollController.position.maxScrollExtent > 0) {
+      progress =
+          _scrollController.position.pixels /
+          _scrollController.position.maxScrollExtent;
     }
-    
+
     // 根据进度找到对应的章节
     if (state is TxtReaderLoaded && state.hasHtml) {
       final totalLength = state.htmlContent!.length.toDouble();
       final currentOffset = progress * totalLength;
-      
+
       for (var i = _chapters.length - 1; i >= 0; i--) {
         if (_chapters[i].offset <= currentOffset) {
           return i;
         }
       }
     }
-    
+
     return 0;
   }
 
@@ -806,7 +832,9 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
   double _currentReadPosition() {
     if (_pageController != null && _pageController!.hasClients) {
       final page = _pageController!.page ?? _currentPage.toDouble();
-      final total = _pages.isNotEmpty ? _pages.length : (_totalPages > 0 ? _totalPages : 1);
+      final total = _pages.isNotEmpty
+          ? _pages.length
+          : (_totalPages > 0 ? _totalPages : 1);
       return total > 0 ? (page / total).clamp(0.0, 1.0) : 0.0;
     }
     if (_scrollController.hasClients) {
@@ -819,8 +847,13 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
 
   /// 跳转到书签位置
   Future<void> _jumpToBookmarkPosition(double position) async {
-    if (_pageController != null && _pageController!.hasClients && _pages.isNotEmpty) {
-      final target = (position * _pages.length).round().clamp(0, _pages.length - 1);
+    if (_pageController != null &&
+        _pageController!.hasClients &&
+        _pages.isNotEmpty) {
+      final target = (position * _pages.length).round().clamp(
+        0,
+        _pages.length - 1,
+      );
       await _pageController!.animateToPage(
         target,
         duration: const Duration(milliseconds: 250),
@@ -856,8 +889,11 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheetState) {
           final bookmarks = ReadingProgressService().getBookmarks(itemId)
-            ..sort((a, b) => (b.createdAt ?? DateTime(0))
-                .compareTo(a.createdAt ?? DateTime(0)));
+            ..sort(
+              (a, b) => (b.createdAt ?? DateTime(0)).compareTo(
+                a.createdAt ?? DateTime(0),
+              ),
+            );
 
           return DraggableScrollableSheet(
             expand: false,
@@ -874,7 +910,10 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.bookReaderBookmarks,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const Spacer(),
                       TextButton.icon(
@@ -884,16 +923,21 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                           final position = _currentReadPosition();
                           final title = _currentChapterTitle.isNotEmpty
                               ? _currentChapterTitle
-                              : context.l10n.bookReaderBookmarkLocationLabel((position * 100).toStringAsFixed(1));
+                              : context.l10n.bookReaderBookmarkLocationLabel(
+                                  (position * 100).toStringAsFixed(1),
+                                );
                           final bookmark = Bookmark(
-                            id: DateTime.now().microsecondsSinceEpoch.toString(),
+                            id: DateTime.now().microsecondsSinceEpoch
+                                .toString(),
                             itemId: itemId,
                             title: title,
                             position: position,
                             createdAt: DateTime.now(),
                           );
                           try {
-                            await ReadingProgressService().addBookmark(bookmark);
+                            await ReadingProgressService().addBookmark(
+                              bookmark,
+                            );
                             setSheetState(() {});
                             if (sheetContext.mounted) {
                               final l = AppLocalizations.of(sheetContext);
@@ -936,16 +980,27 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                               background: Container(
                                 color: Colors.redAccent,
                                 alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.symmetric(horizontal: 24),
-                                child: const Icon(Icons.delete_rounded, color: Colors.white),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                ),
+                                child: const Icon(
+                                  Icons.delete_rounded,
+                                  color: Colors.white,
+                                ),
                               ),
                               onDismissed: (_) async {
                                 try {
-                                  await ReadingProgressService()
-                                      .deleteBookmark(itemId, bm.id);
+                                  await ReadingProgressService().deleteBookmark(
+                                    itemId,
+                                    bm.id,
+                                  );
                                   setSheetState(() {});
                                 } catch (e, st) {
-                                  AppError.handle(e, st, 'bookReader.deleteBookmark');
+                                  AppError.handle(
+                                    e,
+                                    st,
+                                    'bookReader.deleteBookmark',
+                                  );
                                 }
                               },
                               child: ListTile(
@@ -988,22 +1043,14 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
 
     return {
       // 导航
-      CommonShortcuts.previous: () => _handlePreviousPage(
-            usePageMode: usePageMode,
-            useWebView: useWebView,
-          ),
-      CommonShortcuts.next: () => _handleNextPage(
-            usePageMode: usePageMode,
-            useWebView: useWebView,
-          ),
-      CommonShortcuts.previousPage: () => _handlePreviousPage(
-            usePageMode: usePageMode,
-            useWebView: useWebView,
-          ),
-      CommonShortcuts.nextPage: () => _handleNextPage(
-            usePageMode: usePageMode,
-            useWebView: useWebView,
-          ),
+      CommonShortcuts.previous: () =>
+          _handlePreviousPage(usePageMode: usePageMode, useWebView: useWebView),
+      CommonShortcuts.next: () =>
+          _handleNextPage(usePageMode: usePageMode, useWebView: useWebView),
+      CommonShortcuts.previousPage: () =>
+          _handlePreviousPage(usePageMode: usePageMode, useWebView: useWebView),
+      CommonShortcuts.nextPage: () =>
+          _handleNextPage(usePageMode: usePageMode, useWebView: useWebView),
       CommonShortcuts.first: () {
         if (_scrollController.hasClients) {
           _scrollController.jumpTo(0);
@@ -1039,11 +1086,20 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
       shortcuts: [
         (key: '←', description: context.l10n.bookReaderKeyboardPreviousPage),
         (key: '→', description: context.l10n.bookReaderKeyboardNextPage),
-        (key: 'Page Up', description: context.l10n.bookReaderKeyboardPreviousPage),
-        (key: 'Page Down', description: context.l10n.bookReaderKeyboardNextPage),
+        (
+          key: 'Page Up',
+          description: context.l10n.bookReaderKeyboardPreviousPage,
+        ),
+        (
+          key: 'Page Down',
+          description: context.l10n.bookReaderKeyboardNextPage,
+        ),
         (key: 'Home', description: context.l10n.bookReaderKeyboardHome),
         (key: 'End', description: context.l10n.bookReaderKeyboardEnd),
-        (key: 'Space', description: context.l10n.bookReaderKeyboardToggleControls),
+        (
+          key: 'Space',
+          description: context.l10n.bookReaderKeyboardToggleControls,
+        ),
         (key: 'M', description: context.l10n.bookReaderKeyboardToggleNightMode),
         (key: ',', description: context.l10n.bookReaderKeyboardOpenSettings),
         (key: 'Esc', description: context.l10n.bookReaderKeyboardBack),
@@ -1065,13 +1121,17 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
       child: Scaffold(
         backgroundColor: settings.theme.backgroundColor,
         body: switch (state) {
-          TxtReaderLoading(:final message) => LottieLoading.book(message: localizeFormText(context, message)),
+          TxtReaderLoading(:final message) => LottieLoading.book(
+            message: localizeFormText(context, message),
+          ),
           TxtReaderError(:final message) => AppErrorWidget(
-              message: message,
-              onRetry: () =>
-                  ref.read(txtReaderProvider(widget.book).notifier).loadBook(),
-            ),
-          TxtReaderRedirectToEpub(:final epubPath) => _buildEpubRedirect(epubPath),
+            message: message,
+            onRetry: () =>
+                ref.read(txtReaderProvider(widget.book).notifier).loadBook(),
+          ),
+          TxtReaderRedirectToEpub(:final epubPath) => _buildEpubRedirect(
+            epubPath,
+          ),
           TxtReaderLoaded() => _buildReader(context, state, settings),
         },
       ),
@@ -1094,9 +1154,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
       );
     });
 
-    return LottieLoading.book(
-      message: appL10n.bookReaderOpeningEbookReader,
-    );
+    return LottieLoading.book(message: appL10n.bookReaderOpeningEbookReader);
   }
 
   Widget _buildReader(
@@ -1146,12 +1204,17 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                   child: useWebView
                       ? _buildWebViewContent(state, settings)
                       : (usePageMode
-                          ? _buildPagedContent(state, settings)
-                          : _buildScrollContent(state, settings)),
+                            ? _buildPagedContent(state, settings)
+                            : _buildScrollContent(state, settings)),
                 ),
                 // 底部状态栏（进度、电池、时间）
                 if (settings.showProgress)
-                  _buildBottomStatusBar(theme, settings, usePageMode || useWebView, state),
+                  _buildBottomStatusBar(
+                    theme,
+                    settings,
+                    usePageMode || useWebView,
+                    state,
+                  ),
               ],
             ),
           ),
@@ -1226,7 +1289,6 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
       final htmlLength = state.htmlContent?.length ?? 0;
       logger.d('WebView 内容: $htmlLength 字符');
     }
-
 
     // 计算顶部和底部栏的高度
     const topBarHeight = 40.0; // _buildFixedHeader 的大致高度
@@ -1322,9 +1384,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
   ) {
     // 如果分页尚未完成，显示加载中
     if (!_isPaginationReady || _pages.isEmpty) {
-      return LottieLoading.book(
-        message: context.l10n.bookReaderPaginating,
-      );
+      return LottieLoading.book(message: context.l10n.bookReaderPaginating);
     }
 
     _pageController ??= PageController(initialPage: _currentPage);
@@ -1434,7 +1494,8 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
 
         // 已在首页/末页且继续往外翻：没有目标页，直接回弹，
         // 否则 shader 会拿到两张相同的图，看起来像卡住。
-        final atEdge = (_curlDirection > 0 && _currentPage >= _pages.length - 1) ||
+        final atEdge =
+            (_curlDirection > 0 && _currentPage >= _pages.length - 1) ||
             (_curlDirection < 0 && _currentPage <= 0);
 
         // 根据进度和速度决定是否翻页
@@ -1445,9 +1506,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
         if (shouldTurn) {
           _isCurlAnimating = true;
           _curlController.value = _curlProgress;
-          _curlController
-              .animateTo(1, curve: Curves.easeOutCubic)
-              .then((_) {
+          _curlController.animateTo(1, curve: Curves.easeOutCubic).then((_) {
             if (!mounted) return;
             final targetPage = _curlDirection > 0
                 ? _currentPage + 1
@@ -1468,9 +1527,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
           // 回弹
           _isCurlAnimating = true;
           _curlController.value = _curlProgress;
-          _curlController
-              .animateTo(0, curve: Curves.easeOutCubic)
-              .then((_) {
+          _curlController.animateTo(0, curve: Curves.easeOutCubic).then((_) {
             if (!mounted) return;
             setState(() {
               _curlProgress = 0;
@@ -1492,16 +1549,16 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
 
   /// 构建页面内容项
   Widget _buildPageItem(int index, BookReaderSettings settings) => Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: settings.horizontalPadding,
-          vertical: settings.verticalPadding,
-        ),
-        // 使用 SingleChildScrollView 确保内容超出时可以滚动
-        child: SingleChildScrollView(
-          physics: const ClampingScrollPhysics(),
-          child: _buildPageContent(_pages[index], settings),
-        ),
-      );
+    padding: EdgeInsets.symmetric(
+      horizontal: settings.horizontalPadding,
+      vertical: settings.verticalPadding,
+    ),
+    // 使用 SingleChildScrollView 确保内容超出时可以滚动
+    child: SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: _buildPageContent(_pages[index], settings),
+    ),
+  );
 
   /// 构建带动画的页面
   Widget _buildAnimatedPage({
@@ -1522,7 +1579,9 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
         // 仿真翻页 - 模拟翻书效果（通过透视变换）
         final rotateY = pageOffset.clamp(-1.0, 1.0) * 0.5;
         return Transform(
-          alignment: pageOffset >= 0 ? Alignment.centerLeft : Alignment.centerRight,
+          alignment: pageOffset >= 0
+              ? Alignment.centerLeft
+              : Alignment.centerRight,
           transform: Matrix4.identity()
             ..setEntry(3, 2, 0.001) // 透视效果
             ..rotateY(rotateY),
@@ -1534,18 +1593,12 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
         if (pageOffset <= 0) {
           // 当前页或下一页
           return Transform.translate(
-            offset: Offset(
-              pageOffset * MediaQuery.of(context).size.width,
-              0,
-            ),
+            offset: Offset(pageOffset * MediaQuery.of(context).size.width, 0),
             child: pageWidget,
           );
         } else {
           // 上一页 - 保持不动，被覆盖
-          return ColoredBox(
-            color: theme.backgroundColor,
-            child: pageWidget,
-          );
+          return ColoredBox(color: theme.backgroundColor, child: pageWidget);
         }
 
       case BookPageTurnMode.slide:
@@ -1600,7 +1653,6 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
       });
 
       logger.i('快速分页完成: ${quickResult.pages.length} 页');
-
     } on Exception catch (e, st) {
       logger.e('分页失败', e, st);
       // 失败时使用整个内容作为单页
@@ -1912,8 +1964,10 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
     final theme = settings.theme;
 
     // 调试: 输出当前字体设置
-    logger.d('Rendering HTML content - font: ${settings.fontFamily ?? "system default"}, '
-        'size: ${settings.fontSize}, line height: ${settings.lineHeight}');
+    logger.d(
+      'Rendering HTML content - font: ${settings.fontFamily ?? "system default"}, '
+      'size: ${settings.fontSize}, line height: ${settings.lineHeight}',
+    );
 
     // 额外的颜色值清理（防止 flutter_html 解析崩溃）
     final cleanedHtml = _sanitizeHtmlColors(htmlContent);
@@ -2050,7 +2104,10 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
     // 移除不完整或无效的颜色声明
     result = result.replaceAllMapped(
       // ignore: unnecessary_raw_strings - 保持正则表达式清晰易读
-      RegExp(r'''color\s*[:=]\s*["']?[^#\w][^;"'>]*["']?''', caseSensitive: false),
+      RegExp(
+        r'''color\s*[:=]\s*["']?[^#\w][^;"'>]*["']?''',
+        caseSensitive: false,
+      ),
       (match) => '',
     );
 
@@ -2063,7 +2120,9 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
     BookReaderTheme theme,
   ) {
     // 调试: 确保分页模式下也正确应用字体
-    logger.d('Building HTML styles - font: ${settings.fontFamily ?? "system default"}');
+    logger.d(
+      'Building HTML styles - font: ${settings.fontFamily ?? "system default"}',
+    );
 
     return {
       'body': Style(
@@ -2074,76 +2133,76 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
         margin: Margins.zero,
         padding: HtmlPaddings.zero,
       ),
-    'p': Style(
-      margin: Margins.only(bottom: settings.paragraphSpacing * 16),
-      textAlign: TextAlign.justify,
-    ),
-    'h1': Style(
-      fontSize: FontSize(settings.fontSize * 1.5),
-      fontWeight: FontWeight.bold,
-      margin: Margins.only(top: 24, bottom: 16),
-    ),
-    'h2': Style(
-      fontSize: FontSize(settings.fontSize * 1.3),
-      fontWeight: FontWeight.bold,
-      margin: Margins.only(top: 20, bottom: 12),
-    ),
-    'h3': Style(
-      fontSize: FontSize(settings.fontSize * 1.15),
-      fontWeight: FontWeight.bold,
-      margin: Margins.only(top: 16, bottom: 8),
-    ),
-    'h4': Style(
-      fontSize: FontSize(settings.fontSize * 1.05),
-      fontWeight: FontWeight.bold,
-      margin: Margins.only(top: 12, bottom: 6),
-    ),
-    'h5': Style(
-      fontSize: FontSize(settings.fontSize),
-      fontWeight: FontWeight.bold,
-      margin: Margins.only(top: 8, bottom: 4),
-    ),
-    'h6': Style(
-      fontSize: FontSize(settings.fontSize * 0.9),
-      fontWeight: FontWeight.bold,
-      margin: Margins.only(top: 8, bottom: 4),
-    ),
-    'blockquote': Style(
-      margin: Margins.symmetric(vertical: 12, horizontal: 16),
-      padding: HtmlPaddings.only(left: 12),
-      border: Border(
-        left: BorderSide(
-          color: theme.textColor.withValues(alpha: 0.3),
-          width: 3,
-        ),
+      'p': Style(
+        margin: Margins.only(bottom: settings.paragraphSpacing * 16),
+        textAlign: TextAlign.justify,
       ),
-      fontStyle: FontStyle.italic,
-    ),
-    'a': Style(color: Colors.blue, textDecoration: TextDecoration.underline),
-    'img': Style(
-      display: Display.none, // 隐藏图片，避免加载问题
-    ),
-    'ul': Style(
-      margin: Margins.only(bottom: 12),
-      padding: HtmlPaddings.only(left: 20),
-    ),
-    'ol': Style(
-      margin: Margins.only(bottom: 12),
-      padding: HtmlPaddings.only(left: 20),
-    ),
-    'li': Style(margin: Margins.only(bottom: 4)),
-    'pre': Style(
-      backgroundColor: theme.textColor.withValues(alpha: 0.05),
-      padding: HtmlPaddings.all(12),
-      margin: Margins.symmetric(vertical: 8),
-    ),
-    'code': Style(
-      backgroundColor: theme.textColor.withValues(alpha: 0.05),
-      fontFamily: 'monospace',
-      fontSize: FontSize(settings.fontSize * 0.9),
-    ),
-  };
-}
+      'h1': Style(
+        fontSize: FontSize(settings.fontSize * 1.5),
+        fontWeight: FontWeight.bold,
+        margin: Margins.only(top: 24, bottom: 16),
+      ),
+      'h2': Style(
+        fontSize: FontSize(settings.fontSize * 1.3),
+        fontWeight: FontWeight.bold,
+        margin: Margins.only(top: 20, bottom: 12),
+      ),
+      'h3': Style(
+        fontSize: FontSize(settings.fontSize * 1.15),
+        fontWeight: FontWeight.bold,
+        margin: Margins.only(top: 16, bottom: 8),
+      ),
+      'h4': Style(
+        fontSize: FontSize(settings.fontSize * 1.05),
+        fontWeight: FontWeight.bold,
+        margin: Margins.only(top: 12, bottom: 6),
+      ),
+      'h5': Style(
+        fontSize: FontSize(settings.fontSize),
+        fontWeight: FontWeight.bold,
+        margin: Margins.only(top: 8, bottom: 4),
+      ),
+      'h6': Style(
+        fontSize: FontSize(settings.fontSize * 0.9),
+        fontWeight: FontWeight.bold,
+        margin: Margins.only(top: 8, bottom: 4),
+      ),
+      'blockquote': Style(
+        margin: Margins.symmetric(vertical: 12, horizontal: 16),
+        padding: HtmlPaddings.only(left: 12),
+        border: Border(
+          left: BorderSide(
+            color: theme.textColor.withValues(alpha: 0.3),
+            width: 3,
+          ),
+        ),
+        fontStyle: FontStyle.italic,
+      ),
+      'a': Style(color: Colors.blue, textDecoration: TextDecoration.underline),
+      'img': Style(
+        display: Display.none, // 隐藏图片，避免加载问题
+      ),
+      'ul': Style(
+        margin: Margins.only(bottom: 12),
+        padding: HtmlPaddings.only(left: 20),
+      ),
+      'ol': Style(
+        margin: Margins.only(bottom: 12),
+        padding: HtmlPaddings.only(left: 20),
+      ),
+      'li': Style(margin: Margins.only(bottom: 4)),
+      'pre': Style(
+        backgroundColor: theme.textColor.withValues(alpha: 0.05),
+        padding: HtmlPaddings.all(12),
+        margin: Margins.symmetric(vertical: 8),
+      ),
+      'code': Style(
+        backgroundColor: theme.textColor.withValues(alpha: 0.05),
+        fontFamily: 'monospace',
+        fontSize: FontSize(settings.fontSize * 0.9),
+      ),
+    };
+  }
 
   /// 使用纯文本渲染
   Widget _buildTextContent(String content, BookReaderSettings settings) {
@@ -2273,40 +2332,42 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
   }
 
   Widget _buildTapZones(BookReaderSettings settings) => Positioned.fill(
-      // 三区域交互:
-      // - 左侧 25%: 上一页
-      // - 中间 50%: 切换控制栏
-      // - 右侧 25%: 下一页
-      child: GestureDetector(
-        onTapUp: (details) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final tapX = details.localPosition.dx;
-          final ratio = tapX / screenWidth;
+    // 三区域交互:
+    // - 左侧 25%: 上一页
+    // - 中间 50%: 切换控制栏
+    // - 右侧 25%: 下一页
+    child: GestureDetector(
+      onTapUp: (details) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final tapX = details.localPosition.dx;
+        final ratio = tapX / screenWidth;
 
-          final state = ref.read(txtReaderProvider(widget.book));
-          final usePageMode = state is TxtReaderLoaded &&
-              state.hasHtml &&
-              settings.pageTurnMode != BookPageTurnMode.slide;
-          final useWebView = _useWebViewRenderer &&
-              state is TxtReaderLoaded &&
-              state.hasHtml &&
-              usePageMode;
+        final state = ref.read(txtReaderProvider(widget.book));
+        final usePageMode =
+            state is TxtReaderLoaded &&
+            state.hasHtml &&
+            settings.pageTurnMode != BookPageTurnMode.slide;
+        final useWebView =
+            _useWebViewRenderer &&
+            state is TxtReaderLoaded &&
+            state.hasHtml &&
+            usePageMode;
 
-          if (ratio < 0.25) {
-            // 左侧区域 - 上一页
-            _handlePreviousPage(usePageMode: usePageMode, useWebView: useWebView);
-          } else if (ratio > 0.75) {
-            // 右侧区域 - 下一页
-            _handleNextPage(usePageMode: usePageMode, useWebView: useWebView);
-          } else {
-            // 中间区域 - 切换控制栏
-            _toggleControls();
-          }
-        },
-        behavior: HitTestBehavior.translucent,
-        child: Container(),
-      ),
-    );
+        if (ratio < 0.25) {
+          // 左侧区域 - 上一页
+          _handlePreviousPage(usePageMode: usePageMode, useWebView: useWebView);
+        } else if (ratio > 0.75) {
+          // 右侧区域 - 下一页
+          _handleNextPage(usePageMode: usePageMode, useWebView: useWebView);
+        } else {
+          // 中间区域 - 切换控制栏
+          _toggleControls();
+        }
+      },
+      behavior: HitTestBehavior.translucent,
+      child: Container(),
+    ),
+  );
 
   /// 处理上一页操作
   void _handlePreviousPage({
@@ -2341,10 +2402,7 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
   }
 
   /// 处理下一页操作
-  void _handleNextPage({
-    required bool usePageMode,
-    required bool useWebView,
-  }) {
+  void _handleNextPage({required bool usePageMode, required bool useWebView}) {
     if (useWebView) {
       // WebView 分页模式
       _webViewReaderKey.currentState?.nextPage();
@@ -2463,14 +2521,18 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
         state is TxtReaderLoaded &&
         state.hasHtml &&
         settings.pageTurnMode != BookPageTurnMode.slide;
-    final useWebView = _useWebViewRenderer &&
+    final useWebView =
+        _useWebViewRenderer &&
         state is TxtReaderLoaded &&
         state.hasHtml &&
         usePageMode;
 
     // 获取当前模式的总页数
     final effectiveTotalPages = useWebView ? _totalPages : _pages.length;
-    final maxPageIndex = (effectiveTotalPages - 1).clamp(0, double.maxFinite.toInt());
+    final maxPageIndex = (effectiveTotalPages - 1).clamp(
+      0,
+      double.maxFinite.toInt(),
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -2497,8 +2559,13 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                 children: [
                   // 上一章按钮
                   IconButton(
-                    icon: const Icon(Icons.skip_previous_rounded, color: Colors.white),
-                    onPressed: _chapters.isNotEmpty ? () => _jumpToChapter(_getCurrentChapterIndex() - 1) : null,
+                    icon: const Icon(
+                      Icons.skip_previous_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: _chapters.isNotEmpty
+                        ? () => _jumpToChapter(_getCurrentChapterIndex() - 1)
+                        : null,
                     tooltip: context.l10n.bookReaderTooltipPreviousChapter,
                     iconSize: 28,
                   ),
@@ -2513,12 +2580,17 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                           enabledThumbRadius: 8,
                           elevation: 2,
                         ),
-                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 16,
+                        ),
                         trackShape: const RoundedRectSliderTrackShape(),
                       ),
                       child: Slider(
                         value: (usePageMode || useWebView)
-                            ? _currentPage.toDouble().clamp(0, maxPageIndex.toDouble())
+                            ? _currentPage.toDouble().clamp(
+                                0,
+                                maxPageIndex.toDouble(),
+                              )
                             : (_scrollController.hasClients
                                   ? (_scrollController.position.pixels /
                                             _scrollController
@@ -2537,7 +2609,10 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                             setState(() => _currentPage = page);
                           } else if (usePageMode && _pages.isNotEmpty) {
                             // 传统分页模式
-                            final page = value.round().clamp(0, _pages.length - 1);
+                            final page = value.round().clamp(
+                              0,
+                              _pages.length - 1,
+                            );
                             _pageController?.jumpToPage(page);
                             setState(() => _currentPage = page);
                           } else if (_scrollController.hasClients) {
@@ -2553,8 +2628,13 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                   ),
                   // 下一章按钮
                   IconButton(
-                    icon: const Icon(Icons.skip_next_rounded, color: Colors.white),
-                    onPressed: _chapters.isNotEmpty ? () => _jumpToChapter(_getCurrentChapterIndex() + 1) : null,
+                    icon: const Icon(
+                      Icons.skip_next_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: _chapters.isNotEmpty
+                        ? () => _jumpToChapter(_getCurrentChapterIndex() + 1)
+                        : null,
                     tooltip: context.l10n.bookReaderTooltipNextChapter,
                     iconSize: 28,
                   ),
@@ -2571,18 +2651,20 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                     enabled: _chapters.isNotEmpty,
                     onPressed: _chapters.isNotEmpty
                         ? () => setState(() {
-                              _showToc = !_showToc;
-                              _showMoreMenu = false;
-                            })
+                            _showToc = !_showToc;
+                            _showMoreMenu = false;
+                          })
                         : null,
                   ),
                   // 夜间模式切换
                   _buildBottomActionButton(
-                    icon: settings.theme == BookReaderTheme.dark ||
+                    icon:
+                        settings.theme == BookReaderTheme.dark ||
                             settings.theme == BookReaderTheme.black
                         ? Icons.light_mode_rounded
                         : Icons.dark_mode_rounded,
-                    label: settings.theme == BookReaderTheme.dark ||
+                    label:
+                        settings.theme == BookReaderTheme.dark ||
                             settings.theme == BookReaderTheme.black
                         ? context.l10n.bookReaderButtonLightMode
                         : context.l10n.bookReaderButtonDarkMode,
@@ -2623,11 +2705,26 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
 
     // 翻页方式选项
     final pageTurnModes = [
-      (icon: Icons.swap_vert_rounded, label: context.l10n.bookReaderPageTurnModeScroll),
-      (icon: Icons.swipe_rounded, label: context.l10n.bookReaderPageTurnModeSlide),
-      (icon: Icons.auto_stories_rounded, label: context.l10n.bookReaderPageTurnModeSimulation),
-      (icon: Icons.layers_rounded, label: context.l10n.bookReaderPageTurnModeCover),
-      (icon: Icons.article_rounded, label: context.l10n.bookReaderPageTurnModeNone),
+      (
+        icon: Icons.swap_vert_rounded,
+        label: context.l10n.bookReaderPageTurnModeScroll,
+      ),
+      (
+        icon: Icons.swipe_rounded,
+        label: context.l10n.bookReaderPageTurnModeSlide,
+      ),
+      (
+        icon: Icons.auto_stories_rounded,
+        label: context.l10n.bookReaderPageTurnModeSimulation,
+      ),
+      (
+        icon: Icons.layers_rounded,
+        label: context.l10n.bookReaderPageTurnModeCover,
+      ),
+      (
+        icon: Icons.article_rounded,
+        label: context.l10n.bookReaderPageTurnModeNone,
+      ),
     ];
 
     return Column(
@@ -2659,7 +2756,10 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
         // 字体选择 - 横向滑动
         SettingSectionTitle(
           title: context.l10n.bookReaderSettingFont,
-          trailing: localizeFormText(context, AvailableFonts.getDisplayName(settings.fontFamily)),
+          trailing: localizeFormText(
+            context,
+            AvailableFonts.getDisplayName(settings.fontFamily),
+          ),
         ),
         SettingFontPicker(
           selectedFont: settings.fontFamily,
@@ -2816,15 +2916,21 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
   }
 
   /// 构建更多菜单面板
-  Widget _buildMoreMenuPanel(BuildContext context, BookReaderSettings settings) {
-    final isDark = settings.theme == BookReaderTheme.dark ||
+  Widget _buildMoreMenuPanel(
+    BuildContext context,
+    BookReaderSettings settings,
+  ) {
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
 
     final state = ref.read(txtReaderProvider(widget.book));
-    final usePageMode = state is TxtReaderLoaded &&
+    final usePageMode =
+        state is TxtReaderLoaded &&
         state.hasHtml &&
         settings.pageTurnMode != BookPageTurnMode.slide;
-    final useWebView = _useWebViewRenderer &&
+    final useWebView =
+        _useWebViewRenderer &&
         state is TxtReaderLoaded &&
         state.hasHtml &&
         usePageMode;
@@ -2912,7 +3018,9 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                     _currentPage = _totalPages - 1;
                     _showMoreMenu = false;
                   });
-                } else if (usePageMode && _pageController != null && _pages.isNotEmpty) {
+                } else if (usePageMode &&
+                    _pageController != null &&
+                    _pages.isNotEmpty) {
                   // 传统分页模式
                   _pageController!.jumpToPage(_pages.length - 1);
                   setState(() {
@@ -2966,35 +3074,32 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
     required bool isDark,
     required VoidCallback onTap,
   }) => InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isDark ? Colors.white70 : Colors.black54,
-              size: 22,
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(8),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: isDark ? Colors.white70 : Colors.black54, size: 22),
+          const SizedBox(width: 16),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 15,
+              color: isDark ? Colors.white : Colors.black87,
             ),
-            const SizedBox(width: 16),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ),
+  );
 
   /// 显示图书信息
   void _showBookInfo() {
     final state = ref.read(txtReaderProvider(widget.book));
     final settings = ref.read(bookReaderSettingsProvider);
-    final isDark = settings.theme == BookReaderTheme.dark ||
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
 
     showDialog<void>(
@@ -3003,15 +3108,17 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
           context.l10n.bookReaderBookInfoTitle,
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-          ),
+          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoRow(context.l10n.bookReaderInfoBookName, widget.book.displayName, isDark),
+            _buildInfoRow(
+              context.l10n.bookReaderInfoBookName,
+              widget.book.displayName,
+              isDark,
+            ),
             _buildInfoRow(
               context.l10n.bookReaderInfoFormat,
               widget.book.path.split('.').last.toUpperCase(),
@@ -3029,12 +3136,24 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
                 isDark,
               ),
             if (_chapters.isNotEmpty)
-              _buildInfoRow(context.l10n.bookReaderInfoChapterCount, '${_chapters.length}', isDark),
+              _buildInfoRow(
+                context.l10n.bookReaderInfoChapterCount,
+                '${_chapters.length}',
+                isDark,
+              ),
             // 显示总页数 - 支持 WebView 和传统分页模式
             if (_webViewPaginationReady && _totalPages > 0)
-              _buildInfoRow(context.l10n.bookReaderInfoTotalPages, '$_totalPages', isDark)
+              _buildInfoRow(
+                context.l10n.bookReaderInfoTotalPages,
+                '$_totalPages',
+                isDark,
+              )
             else if (_pages.isNotEmpty)
-              _buildInfoRow(context.l10n.bookReaderInfoTotalPages, '${_pages.length}', isDark),
+              _buildInfoRow(
+                context.l10n.bookReaderInfoTotalPages,
+                '${_pages.length}',
+                isDark,
+              ),
           ],
         ),
         actions: [
@@ -3052,31 +3171,31 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage>
 
   /// 构建信息行
   Widget _buildInfoRow(String label, String value, bool isDark) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 70,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                color: isDark ? Colors.white70 : Colors.black54,
-                fontSize: 14,
-              ),
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 70,
+          child: Text(
+            '$label:',
+            style: TextStyle(
+              color: isDark ? Colors.white70 : Colors.black54,
+              fontSize: 14,
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black87,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
 }

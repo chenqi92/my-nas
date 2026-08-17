@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart'
@@ -16,6 +15,7 @@ import 'package:my_nas/features/music/domain/entities/music_item.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 /// 音乐元数据服务
 /// 用于从音频文件中提取 ID3 标签等元数据
@@ -191,7 +191,9 @@ class MusicMetadataService {
 
       // 边界条件：空文件或极小文件
       if (fileSize < _minValidFileSize) {
-        logger.w('MusicMetadataService: 文件过小，可能无效: ${file.path} ($fileSize bytes)');
+        logger.w(
+          'MusicMetadataService: 文件过小，可能无效: ${file.path} ($fileSize bytes)',
+        );
         return _parseMetadataFromFilename(file.path);
       }
 
@@ -207,7 +209,9 @@ class MusicMetadataService {
       final result = _convertRawMetadata(rawMetadata, file.path);
       _metadataCache[cacheKey] = result;
 
-      logger.i('MusicMetadataService: 提取完成 - hasCover=${result.hasCover}, hasLyrics=${result.hasLyrics}');
+      logger.i(
+        'MusicMetadataService: 提取完成 - hasCover=${result.hasCover}, hasLyrics=${result.hasLyrics}',
+      );
       return result;
     } catch (e, stackTrace) {
       logger.e('MusicMetadataService: 提取元数据失败: ${file.path}', e, stackTrace);
@@ -328,7 +332,9 @@ class MusicMetadataService {
           sizes.add(config.maxRead); // 格式建议的最大值
         }
         // 如果还没成功，尝试读取整个文件（但不超过绝对上限）
-        final fullRead = fileSize < _absoluteMaxReadSize ? fileSize : _absoluteMaxReadSize;
+        final fullRead = fileSize < _absoluteMaxReadSize
+            ? fileSize
+            : _absoluteMaxReadSize;
         if (!sizes.contains(fullRead)) {
           sizes.add(fullRead);
         }
@@ -400,7 +406,7 @@ class MusicMetadataService {
 
       // 保存到临时文件（使用唯一文件名避免并发冲突）
       final ext = p.extension(path).toLowerCase();
-      final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(999999)}';
+      final uniqueId = const Uuid().v4();
       tempFile = File(p.join(_cacheDir.path, 'temp_metadata_$uniqueId$ext'));
 
       // Windows 特殊处理：使用 RandomAccessFile 确保数据完全写入
@@ -503,7 +509,9 @@ class MusicMetadataService {
       }
 
       if (fileInfo.size > _maxNcmSize) {
-        logger.w('MusicMetadataService: NCM 文件过大，跳过: $path (${fileInfo.size} bytes)');
+        logger.w(
+          'MusicMetadataService: NCM 文件过大，跳过: $path (${fileInfo.size} bytes)',
+        );
         return _parseMetadataFromFilename(path);
       }
 
@@ -541,7 +549,9 @@ class MusicMetadataService {
         title: result['title'] as String?,
         artist: result['artist'] as String?,
         album: result['album'] as String?,
-        duration: result['duration'] != null ? Duration(milliseconds: result['duration'] as int) : null,
+        duration: result['duration'] != null
+            ? Duration(milliseconds: result['duration'] as int)
+            : null,
         coverData: result['coverData'] as List<int>?,
       );
 
@@ -580,7 +590,9 @@ class MusicMetadataService {
         } else {
           // 最后一次失败，记录并添加到待清理列表
           // 文件会在下次服务初始化时被清理
-          logger.d('MusicMetadataService: 临时文件删除失败，将在下次启动时清理: ${tempFile.path}');
+          logger.d(
+            'MusicMetadataService: 临时文件删除失败，将在下次启动时清理: ${tempFile.path}',
+          );
         }
       }
     }
@@ -592,18 +604,17 @@ class MusicMetadataService {
     String filePath, {
     bool skipLyrics = false,
     bool skipDuration = false,
-  }) =>
-      MusicMetadata(
-        title: _fixEncoding(raw['title'] as String?),
-        artist: _fixEncoding(raw['artist'] as String?),
-        album: _fixEncoding(raw['album'] as String?),
-        trackNumber: raw['trackNumber'] as int?,
-        year: raw['year'] as int?,
-        genre: _fixEncoding(raw['genre'] as String?),
-        lyrics: skipLyrics ? null : _fixEncoding(raw['lyrics'] as String?),
-        coverData: raw['coverData'] as List<int>?,
-        duration: skipDuration ? null : (raw['duration'] as Duration?),
-      );
+  }) => MusicMetadata(
+    title: _fixEncoding(raw['title'] as String?),
+    artist: _fixEncoding(raw['artist'] as String?),
+    album: _fixEncoding(raw['album'] as String?),
+    trackNumber: raw['trackNumber'] as int?,
+    year: raw['year'] as int?,
+    genre: _fixEncoding(raw['genre'] as String?),
+    lyrics: skipLyrics ? null : _fixEncoding(raw['lyrics'] as String?),
+    coverData: raw['coverData'] as List<int>?,
+    duration: skipDuration ? null : (raw['duration'] as Duration?),
+  );
 
   /// 修复可能被错误解码的字符串编码
   ///
@@ -689,16 +700,23 @@ class MusicMetadataService {
 
   /// 将元数据应用到 MusicItem
   /// 只更新缺失的字段，不覆盖已有的有效数据
-  MusicItem applyMetadataToItem(MusicItem item, MusicMetadata metadata) => item.copyWith(
-        artist: (item.artist?.isNotEmpty ?? false) ? item.artist : metadata.artist,
-        album: (item.album?.isNotEmpty ?? false) ? item.album : metadata.album,
-        trackNumber: item.trackNumber ?? metadata.trackNumber,
-        year: item.year ?? metadata.year,
-        genre: (item.genre?.isNotEmpty ?? false) ? item.genre : metadata.genre,
-        lyrics: (item.lyrics?.isNotEmpty ?? false) ? item.lyrics : metadata.lyrics,
-        coverData: (item.coverData?.isNotEmpty ?? false) ? item.coverData : metadata.coverData,
-        duration: (item.duration != null && item.duration! > Duration.zero) ? item.duration : metadata.duration,
-      );
+  MusicItem applyMetadataToItem(
+    MusicItem item,
+    MusicMetadata metadata,
+  ) => item.copyWith(
+    artist: (item.artist?.isNotEmpty ?? false) ? item.artist : metadata.artist,
+    album: (item.album?.isNotEmpty ?? false) ? item.album : metadata.album,
+    trackNumber: item.trackNumber ?? metadata.trackNumber,
+    year: item.year ?? metadata.year,
+    genre: (item.genre?.isNotEmpty ?? false) ? item.genre : metadata.genre,
+    lyrics: (item.lyrics?.isNotEmpty ?? false) ? item.lyrics : metadata.lyrics,
+    coverData: (item.coverData?.isNotEmpty ?? false)
+        ? item.coverData
+        : metadata.coverData,
+    duration: (item.duration != null && item.duration! > Duration.zero)
+        ? item.duration
+        : metadata.duration,
+  );
 
   /// 从文件名解析元数据（用于无 ID3 标签的文件回退）
   /// 支持的格式:
@@ -745,10 +763,7 @@ class MusicMetadataService {
 
     logger.d('MusicMetadataService: 从文件名解析 - title=$title, artist=$artist');
 
-    return MusicMetadata(
-      title: title,
-      artist: artist,
-    );
+    return MusicMetadata(title: title, artist: artist);
   }
 
   /// 清除缓存
@@ -788,7 +803,9 @@ class MusicMetadataService {
       } else {
         // 对于 MP3 等格式，尝试读取更多数据
         // 但不超过 8MB 和文件大小
-        bytesToRead = fileSize < _absoluteMaxReadSize ? fileSize : _absoluteMaxReadSize;
+        bytesToRead = fileSize < _absoluteMaxReadSize
+            ? fileSize
+            : _absoluteMaxReadSize;
       }
 
       // 读取文件数据
@@ -803,26 +820,30 @@ class MusicMetadataService {
       }
 
       // 保存到临时文件
-      final uniqueId = '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(999999)}';
-      final tempFile = File(p.join(_cacheDir.path, 'temp_duration_$uniqueId$ext'));
+      final uniqueId = const Uuid().v4();
+      final tempFile = File(
+        p.join(_cacheDir.path, 'temp_duration_$uniqueId$ext'),
+      );
 
       try {
         // Windows 特殊处理
         if (Platform.isWindows) {
           final raf = await tempFile.open(mode: FileMode.writeOnly);
-          await raf.writeFrom(bytesBuilder.toBytes());
-          await raf.flush();
-          await raf.close();
+          try {
+            await raf.writeFrom(bytesBuilder.toBytes());
+            await raf.flush();
+          } finally {
+            await raf.close();
+          }
           await Future<void>.delayed(const Duration(milliseconds: 50));
         } else {
           await tempFile.writeAsBytes(bytesBuilder.toBytes(), flush: true);
         }
 
         // 使用 Isolate 隔离提取
-        final rawMetadata = await _readMetadataIsolated(tempFile.path).timeout(
-          _extractionTimeout,
-          onTimeout: () => null,
-        );
+        final rawMetadata = await _readMetadataIsolated(
+          tempFile.path,
+        ).timeout(_extractionTimeout, onTimeout: () => null);
 
         if (rawMetadata == null) {
           logger.w('MusicMetadataService: 无法获取时长');
@@ -832,10 +853,14 @@ class MusicMetadataService {
         final duration = rawMetadata['duration'] as Duration?;
 
         if (duration != null && duration > Duration.zero) {
-          logger.i('MusicMetadataService: 获取到时长: $duration (读取了 $bytesToRead 字节)');
+          logger.i(
+            'MusicMetadataService: 获取到时长: $duration (读取了 $bytesToRead 字节)',
+          );
 
           // 对于部分读取的非头部时长格式，根据实际文件大小调整时长估算
-          if (!config.durationInHeader && bytesToRead < fileSize && duration.inSeconds > 0) {
+          if (!config.durationInHeader &&
+              bytesToRead < fileSize &&
+              duration.inSeconds > 0) {
             // 基于比特率估算完整文件时长
             final bytesPerSecond = bytesToRead / duration.inSeconds;
             final estimatedDuration = Duration(
@@ -961,7 +986,9 @@ Map<String, dynamic>? _decryptNcmInIsolate(Uint8List ncmData) {
       'title': ncmMeta?.musicName,
       'artist': ncmMeta?.artist,
       'album': ncmMeta?.album,
-      'duration': ncmMeta != null && ncmMeta.duration > 0 ? ncmMeta.duration : null,
+      'duration': ncmMeta != null && ncmMeta.duration > 0
+          ? ncmMeta.duration
+          : null,
       'coverData': result.coverData?.toList(),
     };
   } catch (e) {

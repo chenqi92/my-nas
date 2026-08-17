@@ -10,6 +10,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/mobi/mobi_header.dart';
@@ -31,24 +32,21 @@ class EpubConversionResult {
     this.error,
   });
 
-  factory EpubConversionResult.failure(String error) => EpubConversionResult(
-        success: false,
-        error: error,
-      );
+  factory EpubConversionResult.failure(String error) =>
+      EpubConversionResult(success: false, error: error);
 
   factory EpubConversionResult.success({
     required String epubPath,
     String? title,
     String? author,
     int chapterCount = 0,
-  }) =>
-      EpubConversionResult(
-        success: true,
-        epubPath: epubPath,
-        title: title,
-        author: author,
-        chapterCount: chapterCount,
-      );
+  }) => EpubConversionResult(
+    success: true,
+    epubPath: epubPath,
+    title: title,
+    author: author,
+    chapterCount: chapterCount,
+  );
 
   final bool success;
   final String? epubPath;
@@ -69,18 +67,25 @@ class MobiToEpubConverter {
       // 1. 解析 MOBI 头部
       final header = MobiHeaderParser.parse(bytes);
       if (header == null) {
-        return EpubConversionResult.failure(appL10n.mobiConversionFailedParsing);
+        return EpubConversionResult.failure(
+          appL10n.mobiConversionFailedParsing,
+        );
       }
 
-      logger..i('MOBI 解析成功: ${header.title}')
-      ..d('压缩: ${header.compression.label}, '
+      logger
+        ..i('MOBI 解析成功: ${header.title}')
+        ..d(
+          '压缩: ${header.compression.label}, '
           '编码: ${header.encoding.label}, '
-          'NCX: ${header.hasNcx}');
+          'NCX: ${header.hasNcx}',
+        );
 
       // 2. 提取文本内容
       final htmlContent = await MobiTextExtractor.extractText(header);
       if (htmlContent.isEmpty) {
-        return EpubConversionResult.failure(appL10n.mobiConversionFailedExtractText);
+        return EpubConversionResult.failure(
+          appL10n.mobiConversionFailedExtractText,
+        );
       }
 
       logger.d('提取文本: ${htmlContent.length} 字符');
@@ -114,7 +119,7 @@ class MobiToEpubConverter {
         chapterCount: chapters.length,
       );
     } on Exception catch (e, st) {
-      logger.e('MOBI 转换失败', e, st);
+      AppError.handle(e, st, 'mobiToEpub.convert');
       return EpubConversionResult.failure(appL10n.mobiConversionFailed(e));
     }
   }
@@ -209,8 +214,8 @@ class MobiToEpubConverter {
       final mediaType = imageName.endsWith('.png')
           ? 'image/png'
           : imageName.endsWith('.gif')
-              ? 'image/gif'
-              : 'image/jpeg';
+          ? 'image/gif'
+          : 'image/jpeg';
       manifestItems.writeln(
         '    <item id="$imageName" href="images/$imageName" '
         'media-type="$mediaType"/>',
@@ -270,10 +275,7 @@ $navItems    </ol>
           : _escapeXml(appL10n.mobiChapterTitle(i + 1));
       final chapterContent = chapterFiles[i];
 
-      _addFileToArchive(
-        archive,
-        'OEBPS/chapter_${i + 1}.xhtml',
-        '''
+      _addFileToArchive(archive, 'OEBPS/chapter_${i + 1}.xhtml', '''
         <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="zh-CN">
@@ -289,17 +291,18 @@ $navItems    </ol>
 <body>
 $chapterContent
 </body>
-</html>''',
-      );
+</html>''');
     }
 
     // 8. 添加图片
     for (final entry in images.entries) {
-      archive.addFile(ArchiveFile(
-        'OEBPS/images/${entry.key}',
-        entry.value.length,
-        entry.value,
-      ));
+      archive.addFile(
+        ArchiveFile(
+          'OEBPS/images/${entry.key}',
+          entry.value.length,
+          entry.value,
+        ),
+      );
     }
 
     // 9. 写入文件
@@ -309,8 +312,7 @@ $chapterContent
       await cacheDir.create(recursive: true);
     }
 
-    final epubFileName =
-        '${title.hashCode.abs()}_${DateTime.now().millisecondsSinceEpoch}.epub';
+    final epubFileName = '${title.hashCode.abs()}_${const Uuid().v4()}.epub';
     final epubPath = path.join(cacheDir.path, epubFileName);
 
     final zipData = ZipEncoder().encode(archive);
@@ -390,7 +392,7 @@ $chapterContent
       '',
     );
     cleaned = cleaned.replaceAll(
-      RegExp('<meta[^>]*/?>',caseSensitive: false),
+      RegExp('<meta[^>]*/?>', caseSensitive: false),
       '',
     );
     cleaned = cleaned.replaceAll(
@@ -406,14 +408,16 @@ $chapterContent
 
     // 自闭合标签需要加斜杠
     cleaned = cleaned.replaceAllMapped(
-      RegExp('<(br|hr|img|input|meta|link)([^/>]*)(?<!/)>',
-          caseSensitive: false),
+      RegExp(
+        '<(br|hr|img|input|meta|link)([^/>]*)(?<!/)>',
+        caseSensitive: false,
+      ),
       (match) => '<${match.group(1)}${match.group(2) ?? ''}/>',
     );
 
     // 替换 MOBI 特殊标签
     cleaned = cleaned.replaceAll(
-      RegExp(r'<mbp:pagebreak\s*/?>',caseSensitive: false),
+      RegExp(r'<mbp:pagebreak\s*/?>', caseSensitive: false),
       '<hr/>',
     );
 

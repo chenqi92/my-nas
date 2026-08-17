@@ -6,11 +6,16 @@ actor FakeBackend: CloudSyncBackend {
     var manifest: SyncManifest
     var modules: [String: Data]
     var healthy: Bool
+    private var manifestExists: Bool
+    private var manifestRevision: Int
+    private var moduleRevisions: [String: Int]
     /// 记录 writeManifest 被调用时写进去的内容，用于断言其它模块条目没丢
     private(set) var writtenManifests: [SyncManifest] = []
     private(set) var writtenModules: [String: Data] = [:]
     /// 置 true 时 readModule 返回 nil，模拟「manifest 说有、文件没了」
     var moduleFileMissing = false
+    /// 在下一次模块条件写前注入并发版本，验证 ETag 冲突后会重新合并。
+    private var moduleToInjectBeforeWrite: (key: String, data: Data)?
 
     init(
         manifest: SyncManifest = SyncManifest(),
@@ -20,24 +25,70 @@ actor FakeBackend: CloudSyncBackend {
         self.manifest = manifest
         self.modules = modules
         self.healthy = healthy
+        manifestExists = !manifest.raw.isEmpty
+        manifestRevision = manifestExists ? 1 : 0
+        moduleRevisions = Dictionary(uniqueKeysWithValues: modules.keys.map { ($0, 1) })
     }
 
     func healthCheck() async -> Bool { healthy }
 
-    func readManifest() async throws -> SyncManifest { manifest }
+    func readManifestDocument() async throws -> CloudSyncDocument? {
+        guard manifestExists else { return nil }
+        return CloudSyncDocument(
+            data: try encode(manifest),
+            revision: "manifest-\(manifestRevision)"
+        )
+    }
 
-    func writeManifest(_ manifest: SyncManifest) async throws {
+    func writeManifestIfUnchanged(
+        _ manifest: SyncManifest,
+        expected: CloudSyncDocument?
+    ) async throws -> Bool {
+        let currentRevision = manifestExists ? "manifest-\(manifestRevision)" : nil
+        guard expected?.revision == currentRevision else { return false }
         self.manifest = manifest
+        manifestExists = true
+        manifestRevision += 1
         writtenManifests.append(manifest)
+        return true
     }
 
-    func readModule(_ key: String) async throws -> Data? {
-        moduleFileMissing ? nil : modules[key]
+    func readModuleDocument(_ key: String) async throws -> CloudSyncDocument? {
+        guard !moduleFileMissing, let data = modules[key] else { return nil }
+        return CloudSyncDocument(
+            data: data,
+            revision: "\(key)-\(moduleRevisions[key] ?? 0)"
+        )
     }
 
-    func writeModule(_ key: String, data: Data) async throws {
+    func writeModuleIfUnchanged(
+        _ key: String,
+        data: Data,
+        expected: CloudSyncDocument?
+    ) async throws -> Bool {
+        if let injected = moduleToInjectBeforeWrite, injected.key == key {
+            modules[key] = injected.data
+            moduleRevisions[key] = (moduleRevisions[key] ?? 0) + 1
+            moduleToInjectBeforeWrite = nil
+        }
+        let currentRevision = modules[key].map { _ in
+            "\(key)-\(moduleRevisions[key] ?? 0)"
+        }
+        guard expected?.revision == currentRevision else { return false }
         modules[key] = data
+        moduleRevisions[key] = (moduleRevisions[key] ?? 0) + 1
         writtenModules[key] = data
+        return true
+    }
+
+    func injectModuleBeforeNextWrite(_ key: String, data: Data) {
+        moduleToInjectBeforeWrite = (key, data)
+    }
+
+    private func encode(_ manifest: SyncManifest) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(manifest)
     }
 }
 
@@ -93,11 +144,74 @@ final class CloudSyncCoordinatorTests: XCTestCase {
 
         let report = await CloudSyncCoordinator(backend: backend, store: store).sync()
 
-        XCTAssertEqual(report.outcome, .pulled)
+        // 拉取后形成的并集必须写回，否则下一台设备仍看不到本地独有记录。
+        XCTAssertEqual(report.outcome, .pushed)
         let merged = try store.load()
         XCTAssertEqual(merged.progress["/remote"]?.positionMs, 500)
         // 本地条目不能被拉取覆盖掉
         XCTAssertEqual(merged.progress["/local"]?.positionMs, 1)
+        let uploaded = try XCTUnwrap(await backend.writtenModules["video_progress"])
+        let payload = try JSONDecoder().decode(VideoProgressPayload.self, from: uploaded)
+        XCTAssertEqual(Set(payload.items.map(\.videoPath)), ["/local", "/remote"])
+    }
+
+    func testLocalNewerStillMergesRemoteUniqueRecordBeforePush() async throws {
+        var manifest = SyncManifest()
+        manifest.setUpdatedAt(t0, forModule: "video_progress")
+        var remoteState = VideoProgressState()
+        remoteState.progress["/remote"] = .init(positionMs: 5, durationMs: 10, updatedAt: t0)
+        let backend = FakeBackend(
+            manifest: manifest,
+            modules: ["video_progress": try encode(remoteState.exportPayload())]
+        )
+
+        var localState = VideoProgressState()
+        localState.progress["/local"] = .init(positionMs: 10, durationMs: 20, updatedAt: t1)
+        let store = InMemoryVideoProgressStore(state: localState)
+
+        let report = await CloudSyncCoordinator(backend: backend, store: store).sync()
+
+        XCTAssertEqual(report.outcome, .pushed)
+        let uploaded = try XCTUnwrap(await backend.writtenModules["video_progress"])
+        let payload = try JSONDecoder().decode(VideoProgressPayload.self, from: uploaded)
+        XCTAssertEqual(Set(payload.items.map(\.videoPath)), ["/local", "/remote"])
+    }
+
+    func testConditionalWriteConflictReloadsAndMergesConcurrentRecord() async throws {
+        var manifest = SyncManifest()
+        manifest.setUpdatedAt(t0, forModule: "video_progress")
+
+        var remoteState = VideoProgressState()
+        remoteState.progress["/remote"] = .init(positionMs: 5, durationMs: 10, updatedAt: t0)
+        let backend = FakeBackend(
+            manifest: manifest,
+            modules: ["video_progress": try encode(remoteState.exportPayload())]
+        )
+
+        var concurrentState = remoteState
+        concurrentState.progress["/concurrent"] = .init(
+            positionMs: 7,
+            durationMs: 10,
+            updatedAt: t1
+        )
+        await backend.injectModuleBeforeNextWrite(
+            "video_progress",
+            data: try encode(concurrentState.exportPayload())
+        )
+
+        var localState = VideoProgressState()
+        localState.progress["/local"] = .init(positionMs: 10, durationMs: 20, updatedAt: t1)
+        let store = InMemoryVideoProgressStore(state: localState)
+
+        let report = await CloudSyncCoordinator(backend: backend, store: store).sync()
+
+        XCTAssertEqual(report.outcome, .pushed)
+        let uploaded = try XCTUnwrap(await backend.writtenModules["video_progress"])
+        let payload = try JSONDecoder().decode(VideoProgressPayload.self, from: uploaded)
+        XCTAssertEqual(
+            Set(payload.items.map(\.videoPath)),
+            ["/local", "/remote", "/concurrent"]
+        )
     }
 
     func testWriteManifestPreservesOtherModules() async throws {
@@ -110,7 +224,10 @@ final class CloudSyncCoordinatorTests: XCTestCase {
             "book_progress": .object(["updatedAt": .int(1_700_000_002_000)]),
         ])
         manifest.setUpdatedAt(t0, forModule: "video_progress")
-        let backend = FakeBackend(manifest: manifest)
+        let backend = FakeBackend(
+            manifest: manifest,
+            modules: ["video_progress": try encode(VideoProgressPayload(items: []))]
+        )
 
         var state = VideoProgressState()
         state.progress["/a"] = .init(positionMs: 1, durationMs: 2, updatedAt: t1)
@@ -128,10 +245,12 @@ final class CloudSyncCoordinatorTests: XCTestCase {
     func testEqualTimestampsAreSkipped() async throws {
         var manifest = SyncManifest()
         manifest.setUpdatedAt(t1, forModule: "video_progress")
-        let backend = FakeBackend(manifest: manifest, modules: ["video_progress": Data("{}".utf8)])
-
         var state = VideoProgressState()
         state.progress["/a"] = .init(positionMs: 1, durationMs: 2, updatedAt: t1)
+        let backend = FakeBackend(
+            manifest: manifest,
+            modules: ["video_progress": try encode(state.exportPayload())]
+        )
         let store = InMemoryVideoProgressStore(state: state)
 
         let report = await CloudSyncCoordinator(backend: backend, store: store).sync()
@@ -141,9 +260,9 @@ final class CloudSyncCoordinatorTests: XCTestCase {
         XCTAssertTrue(written.isEmpty)
     }
 
-    func testMissingRemoteFileFallsThroughToPush() async throws {
-        // manifest 说远端更新，但文件读不到（被删 / 半个写入）。
-        // Dart 在这里是 fall-through，不 return，继续判推送。
+    func testMissingRemoteFileFailsWithoutOverwriting() async throws {
+        // manifest 说远端存在但模块文件缺失，属于不完整远端状态，不能把它
+        // 当成首次同步后用本地旧数据覆盖。
         var manifest = SyncManifest()
         manifest.setUpdatedAt(t1, forModule: "video_progress")
         let backend = FakeBackend(manifest: manifest)
@@ -155,8 +274,7 @@ final class CloudSyncCoordinatorTests: XCTestCase {
 
         let report = await CloudSyncCoordinator(backend: backend, store: store).sync()
 
-        // 本地时间比 manifest 旧，推送条件也不成立 → skipped，且不写模块文件
-        XCTAssertEqual(report.outcome, .skipped)
+        XCTAssertEqual(report.outcome, .failed)
         let written = await backend.writtenModules
         XCTAssertTrue(written.isEmpty)
     }
@@ -188,6 +306,12 @@ final class CloudSyncCoordinatorTests: XCTestCase {
         ])
         let stamp = manifest.updatedAt(forModule: "video_progress")
         XCTAssertEqual(stamp?.timeIntervalSince1970 ?? 0, 1_772_359_200, accuracy: 0.001)
+    }
+
+    private func encode(_ payload: VideoProgressPayload) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(payload)
     }
 }
 

@@ -1,12 +1,13 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/comic/data/services/archive_extract_service.dart';
@@ -128,7 +129,10 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
       } else {
         await _loadFolderPages();
       }
-    } on Exception catch (e) {
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'comicReader.loadPages', {
+        'path': _comic.folderPath,
+      });
       logger.e('加载漫画页面失败', e);
       state = state.copyWith(
         isLoading: false,
@@ -185,17 +189,13 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
     final archiveType = _getArchiveType(_comic.type);
     final fileName = path.basename(_comic.folderPath);
     final tempDir = await getTemporaryDirectory();
-    final workDir = Directory(
-      path.join(
-        tempDir.path,
-        'comic_archive_${DateTime.now().microsecondsSinceEpoch}',
-      ),
-    );
+    final workDir = await tempDir.createTemp('comic_archive_');
     final extractDir = Directory(path.join(workDir.path, 'pages'));
-    await workDir.create(recursive: true);
     _archiveWorkDir = workDir;
 
-    final archiveFile = File(path.join(workDir.path, fileName));
+    final archiveFile = File(
+      path.join(workDir.path, sanitizeFileName(fileName)),
+    );
     final sink = archiveFile.openWrite();
     try {
       final stream = await fs.getFileStream(_comic.folderPath);
@@ -224,6 +224,7 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
         await archiveFile.delete();
       }
     } on Exception catch (e, st) {
+      AppError.ignore(e, st, '漫画解压成功后清理临时压缩包失败');
       logger.w('删除漫画临时压缩包失败', e, st);
     }
 
@@ -326,13 +327,17 @@ class ComicReaderNotifier extends StateNotifier<ComicReaderState> {
         await dir.delete(recursive: true);
       }
     } on Exception catch (e, st) {
+      AppError.ignore(e, st, '清理漫画阅读器临时目录失败');
       logger.w('清理漫画临时目录失败', e, st);
     }
   }
 
   @override
   void dispose() {
-    unawaited(_deleteArchiveWorkDir());
+    AppError.fireAndForget(
+      _deleteArchiveWorkDir(),
+      action: 'comicReader.disposeTemporaryArchive',
+    );
     super.dispose();
   }
 }

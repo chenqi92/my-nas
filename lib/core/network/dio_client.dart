@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:my_nas/core/constants/app_constants.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/errors/exceptions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/network/resolved_http_client.dart';
@@ -120,7 +121,7 @@ class DioClient {
 
 class _TlsTrustInterceptor extends Interceptor {
   _TlsTrustInterceptor(this._dio, {required bool allowSelfSigned})
-      : _allowSelfSigned = allowSelfSigned;
+    : _allowSelfSigned = allowSelfSigned;
 
   static const _retryKey = 'mynas.tlsTrustRetried';
 
@@ -134,7 +135,10 @@ class _TlsTrustInterceptor extends Interceptor {
       handler.next(err);
       return;
     }
-    unawaited(_requestTrustAndRetry(err, handler));
+    AppError.fireAndForget(
+      _requestTrustAndRetry(err, handler),
+      action: 'dioClient.requestTlsTrustAndRetry',
+    );
   }
 
   bool _shouldInspectCertificate(DioException err) {
@@ -157,31 +161,31 @@ class _TlsTrustInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    final decision = await TlsTrustStore.requestTrustForEndpoint(
-      err.requestOptions.uri,
-    );
-    if (decision == TlsTrustDecision.declined) {
-      handler.reject(
-        DioException(
-          requestOptions: err.requestOptions,
-          response: err.response,
-          type: err.type,
-          stackTrace: err.stackTrace,
-          message: appL10n.tlsCertificateTrustDeclined,
-          error: TlsCertificateTrustDeclinedException(
-            message: appL10n.tlsCertificateTrustDeclined,
-            stackTrace: err.stackTrace,
-          ),
-        ),
-      );
-      return;
-    }
-    if (decision != TlsTrustDecision.trusted) {
-      handler.next(err);
-      return;
-    }
-
     try {
+      final decision = await TlsTrustStore.requestTrustForEndpoint(
+        err.requestOptions.uri,
+      );
+      if (decision == TlsTrustDecision.declined) {
+        handler.reject(
+          DioException(
+            requestOptions: err.requestOptions,
+            response: err.response,
+            type: err.type,
+            stackTrace: err.stackTrace,
+            message: appL10n.tlsCertificateTrustDeclined,
+            error: TlsCertificateTrustDeclinedException(
+              message: appL10n.tlsCertificateTrustDeclined,
+              stackTrace: err.stackTrace,
+            ),
+          ),
+        );
+        return;
+      }
+      if (decision != TlsTrustDecision.trusted) {
+        handler.next(err);
+        return;
+      }
+
       err.requestOptions.extra[_retryKey] = true;
       // Dart's HttpClient can retain the failed TLS connection/session. A new
       // adapter guarantees the retry performs a fresh handshake that consults
@@ -192,9 +196,13 @@ class _TlsTrustInterceptor extends Interceptor {
       );
       final response = await _dio.fetch<dynamic>(err.requestOptions);
       handler.resolve(response);
-    } on DioException catch (retryError) {
+    } on DioException catch (retryError, st) {
+      AppError.ignore(retryError, st, 'TLS 信任后重试仍失败，交回 Dio 错误链处理');
       handler.next(retryError);
-    } on Exception {
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'dioClient.requestTlsTrustAndRetry', {
+        'uri': err.requestOptions.uri.toString(),
+      });
       handler.next(err);
     }
   }
@@ -235,35 +243,35 @@ class _ErrorInterceptor extends Interceptor {
     final exception = err.error is TlsCertificateTrustDeclinedException
         ? err.error! as TlsCertificateTrustDeclinedException
         : TlsTrustStore.isCertificateValidationError(err.error)
-            ? TlsCertificateException(
-                message: appL10n.tlsCertificateValidationFailed,
-                stackTrace: err.stackTrace,
-              )
-            : switch (err.type) {
-                DioExceptionType.connectionTimeout ||
-                DioExceptionType.sendTimeout ||
-                DioExceptionType.receiveTimeout =>
-                  NetworkException(
-                    message: appL10n.dioErrorConnectionTimeout,
-                    stackTrace: err.stackTrace,
-                  ),
-                DioExceptionType.connectionError => NetworkException(
-                    message: appL10n.dioErrorNetworkFailed,
-                    stackTrace: err.stackTrace,
-                  ),
-                DioExceptionType.badResponse => _handleBadResponse(err),
-                DioExceptionType.cancel => NetworkException(
-                    message: appL10n.dioErrorCancelled,
-                    stackTrace: err.stackTrace,
-                  ),
-                _ => ServerException(
-                    message: err.message ??
-                        err.error?.toString() ??
-                        appL10n.dioErrorUnknown,
-                    stackTrace: err.stackTrace,
-                    statusCode: err.response?.statusCode,
-                  ),
-              };
+        ? TlsCertificateException(
+            message: appL10n.tlsCertificateValidationFailed,
+            stackTrace: err.stackTrace,
+          )
+        : switch (err.type) {
+            DioExceptionType.connectionTimeout ||
+            DioExceptionType.sendTimeout ||
+            DioExceptionType.receiveTimeout => NetworkException(
+              message: appL10n.dioErrorConnectionTimeout,
+              stackTrace: err.stackTrace,
+            ),
+            DioExceptionType.connectionError => NetworkException(
+              message: appL10n.dioErrorNetworkFailed,
+              stackTrace: err.stackTrace,
+            ),
+            DioExceptionType.badResponse => _handleBadResponse(err),
+            DioExceptionType.cancel => NetworkException(
+              message: appL10n.dioErrorCancelled,
+              stackTrace: err.stackTrace,
+            ),
+            _ => ServerException(
+              message:
+                  err.message ??
+                  err.error?.toString() ??
+                  appL10n.dioErrorUnknown,
+              stackTrace: err.stackTrace,
+              statusCode: err.response?.statusCode,
+            ),
+          };
 
     handler.reject(
       DioException(
@@ -281,28 +289,28 @@ class _ErrorInterceptor extends Interceptor {
     final statusCode = err.response?.statusCode;
     return switch (statusCode) {
       401 => AuthException(
-          message: appL10n.dioErrorAuthFailed,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorAuthFailed,
+        stackTrace: err.stackTrace,
+      ),
       403 => AuthException(
-          message: appL10n.dioErrorForbidden,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorForbidden,
+        stackTrace: err.stackTrace,
+      ),
       404 => ServerException(
-          message: appL10n.dioErrorNotFound,
-          statusCode: statusCode,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorNotFound,
+        statusCode: statusCode,
+        stackTrace: err.stackTrace,
+      ),
       final code when code != null && code >= 500 => ServerException(
-          message: appL10n.dioErrorServer,
-          statusCode: code,
-          stackTrace: err.stackTrace,
-        ),
+        message: appL10n.dioErrorServer,
+        statusCode: code,
+        stackTrace: err.stackTrace,
+      ),
       _ => ServerException(
-          message: err.message ?? appL10n.dioErrorRequestFailed,
-          statusCode: statusCode,
-          stackTrace: err.stackTrace,
-        ),
+        message: err.message ?? appL10n.dioErrorRequestFailed,
+        statusCode: statusCode,
+        stackTrace: err.stackTrace,
+      ),
     };
   }
 }

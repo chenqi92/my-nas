@@ -10,6 +10,7 @@ import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/network/dio_client.dart';
 import 'package:my_nas/core/utils/debug_log.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/nas_path.dart';
 import 'package:my_nas/features/music/data/services/live_activity_service.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
@@ -174,12 +175,15 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
 
       // 打印排序后前10个结果的来源和时长差
       if (allItems.isNotEmpty) {
-        final first10 = allItems.take(10).map((e) {
-          final diff = e.durationMs != null
-              ? (e.durationMs! - _musicDurationMs).abs()
-              : 999999999;
-          return '${e.source.displayName}:${e.durationMs ?? 0}ms(diff=$diff)';
-        }).join(', ');
+        final first10 = allItems
+            .take(10)
+            .map((e) {
+              final diff = e.durationMs != null
+                  ? (e.durationMs! - _musicDurationMs).abs()
+                  : 999999999;
+              return '${e.source.displayName}:${e.durationMs ?? 0}ms(diff=$diff)';
+            })
+            .join(', ');
         debugLog('[ManualScraper] 排序后前10: $first10');
       }
 
@@ -480,16 +484,18 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
         if (Platform.isIOS) {
           final updatedMusic = currentMusic!.copyWith(
             coverData: coverData.toList(),
-            coverUrl: 'file://$localCoverPath',
+            coverUrl: localPathToFileUri(localCoverPath),
           );
           await LiveActivityService().updateCoverImage(updatedMusic, coverData);
         }
 
         // 更新播放队列中的封面
-        ref.read(playQueueProvider.notifier).updateTrackCover(
+        ref
+            .read(playQueueProvider.notifier)
+            .updateTrackCover(
               widget.music.id,
               coverData: coverData,
-              coverUrl: 'file://$localCoverPath',
+              coverUrl: localPathToFileUri(localCoverPath),
             );
       }
     } on Exception catch (e, st) {
@@ -516,13 +522,16 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
       genre: (currentMusic.genre == null || currentMusic.genre!.isEmpty)
           ? _selectedDetail?.genres?.join(', ')
           : currentMusic.genre,
-      lyrics: _selectedLyrics?.lrcContent ??
+      lyrics:
+          _selectedLyrics?.lrcContent ??
           _selectedLyrics?.plainText ??
           currentMusic.lyrics,
       coverData: coverData?.toList() ?? currentMusic.coverData,
     );
 
-    ref.read(playQueueProvider.notifier).updateTrackMetadata(
+    ref
+        .read(playQueueProvider.notifier)
+        .updateTrackMetadata(
           widget.music.id,
           title: _selectedDetail?.title,
           artist: _selectedDetail?.artist,
@@ -596,7 +605,7 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
           final uniqueKey = '${sourceId}_${widget.music.path}';
           final localPath = await coverCache.getCoverPath(uniqueKey);
           if (localPath != null) {
-            coverUrl = 'file://$localPath';
+            coverUrl = localPathToFileUri(localPath);
           }
         }
       }
@@ -780,174 +789,172 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
   }
 
   Widget _buildCompactFileInfo(ThemeData theme, bool isDark) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.darkSurface
-              : theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.3),
-          border: Border(
-            bottom: BorderSide(
-              color: isDark ? AppColors.darkOutline : theme.dividerColor,
-              width: 0.5,
-            ),
-          ),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      color: isDark
+          ? AppColors.darkSurface
+          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      border: Border(
+        bottom: BorderSide(
+          color: isDark ? AppColors.darkOutline : theme.dividerColor,
+          width: 0.5,
         ),
-        child: Row(
-          children: [
-            // 封面
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                color: AppColors.fileAudio.withValues(alpha: 0.1),
+      ),
+    ),
+    child: Row(
+      children: [
+        // 封面
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            color: AppColors.fileAudio.withValues(alpha: 0.1),
+          ),
+          child: widget.music.coverUrl != null || widget.music.coverData != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: widget.music.coverData != null
+                      ? Image.memory(
+                          Uint8List.fromList(widget.music.coverData!),
+                          fit: BoxFit.cover,
+                        )
+                      : AdaptiveImage(
+                          imageUrl: widget.music.coverUrl!,
+                          fit: BoxFit.cover,
+                        ),
+                )
+              : Icon(
+                  Icons.music_note_rounded,
+                  color: AppColors.fileAudio,
+                  size: 22,
+                ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.music.displayTitle,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              child: widget.music.coverUrl != null ||
-                      widget.music.coverData != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: widget.music.coverData != null
-                          ? Image.memory(
-                              Uint8List.fromList(widget.music.coverData!),
-                              fit: BoxFit.cover,
-                            )
-                          : AdaptiveImage(
-                              imageUrl: widget.music.coverUrl!,
-                              fit: BoxFit.cover,
-                            ),
-                    )
-                  : Icon(
-                      Icons.music_note_rounded,
-                      color: AppColors.fileAudio,
-                      size: 22,
-                    ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 2),
+              Row(
                 children: [
-                  Text(
-                    widget.music.displayTitle,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  if (widget.music.displayArtist.isNotEmpty) ...[
+                    Flexible(
+                      child: Text(
+                        widget.music.displayArtist,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isDark
+                              ? AppColors.darkOnSurfaceVariant
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      if (widget.music.displayArtist.isNotEmpty) ...[
-                        Flexible(
-                          child: Text(
-                            widget.music.displayArtist,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: isDark
-                                  ? AppColors.darkOnSurfaceVariant
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                    const SizedBox(width: 8),
+                  ],
+                  if (_musicDurationMs > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        _formatDuration(_musicDurationMs),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(width: 8),
-                      ],
-                      if (_musicDurationMs > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            _formatDuration(_musicDurationMs),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                      ),
+                    ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      );
+      ],
+    ),
+  );
 
   Widget _buildSearchBar(ThemeData theme, bool isDark) => Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // 标题搜索框
-            Expanded(
-              flex: 3,
-              child: TextField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  hintText: context.l10n.musicManualScraperSongHint,
-                  prefixIcon: const Icon(Icons.music_note_outlined, size: 20),
-                  border: const OutlineInputBorder(),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  isDense: true,
-                ),
-                onSubmitted: (_) => _search(),
+    padding: const EdgeInsets.all(12),
+    child: Row(
+      children: [
+        // 标题搜索框
+        Expanded(
+          flex: 3,
+          child: TextField(
+            controller: _titleController,
+            decoration: InputDecoration(
+              hintText: context.l10n.musicManualScraperSongHint,
+              prefixIcon: const Icon(Icons.music_note_outlined, size: 20),
+              border: const OutlineInputBorder(),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
               ),
+              isDense: true,
             ),
-            const SizedBox(width: 8),
-            // 艺术家过滤
-            Expanded(
-              flex: 2,
-              child: TextField(
-                controller: _artistController,
-                decoration: InputDecoration(
-                  hintText: context.l10n.musicManualScraperArtistHint,
-                  prefixIcon: Icon(Icons.person_outline, size: 20),
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  isDense: true,
-                ),
-                onSubmitted: (_) => _search(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // 搜索按钮
-            SizedBox(
-              height: 42,
-              child: FilledButton(
-                onPressed: _isSearching ? null : _search,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                ),
-                child: _isSearching
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.search_rounded, size: 20),
-              ),
-            ),
-          ],
+            onSubmitted: (_) => _search(),
+          ),
         ),
-      );
+        const SizedBox(width: 8),
+        // 艺术家过滤
+        Expanded(
+          flex: 2,
+          child: TextField(
+            controller: _artistController,
+            decoration: InputDecoration(
+              hintText: context.l10n.musicManualScraperArtistHint,
+              prefixIcon: Icon(Icons.person_outline, size: 20),
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              isDense: true,
+            ),
+            onSubmitted: (_) => _search(),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // 搜索按钮
+        SizedBox(
+          height: 42,
+          child: FilledButton(
+            onPressed: _isSearching ? null : _search,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            child: _isSearching
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.search_rounded, size: 20),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildSearchResults(ThemeData theme, bool isDark) {
     if (_isSearching) {
@@ -1042,8 +1049,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
       elevation: isSelected ? 4 : 1,
       color: isSelected
           ? (isDark
-              ? AppColors.primary.withValues(alpha: 0.15)
-              : AppColors.primary.withValues(alpha: 0.08))
+                ? AppColors.primary.withValues(alpha: 0.15)
+                : AppColors.primary.withValues(alpha: 0.08))
           : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
@@ -1172,8 +1179,9 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                             item.durationText,
                             style: TextStyle(
                               fontSize: 10,
-                              color:
-                                  isDark ? Colors.grey[500] : Colors.grey[600],
+                              color: isDark
+                                  ? Colors.grey[500]
+                                  : Colors.grey[600],
                             ),
                           ),
                         // 歌词支持
@@ -1205,8 +1213,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                         color: hasHighMatch
                             ? AppColors.success.withValues(alpha: 0.15)
                             : (matchPercent >= 50
-                                ? Colors.orange.withValues(alpha: 0.15)
-                                : Colors.grey.withValues(alpha: 0.15)),
+                                  ? Colors.orange.withValues(alpha: 0.15)
+                                  : Colors.grey.withValues(alpha: 0.15)),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Column(
@@ -1219,8 +1227,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                               color: hasHighMatch
                                   ? AppColors.success
                                   : (matchPercent >= 50
-                                      ? Colors.orange
-                                      : Colors.grey),
+                                        ? Colors.orange
+                                        : Colors.grey),
                             ),
                           ),
                           if (durationDiff.isNotEmpty)
@@ -1231,8 +1239,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                                 color: hasHighMatch
                                     ? AppColors.success
                                     : (matchPercent >= 50
-                                        ? Colors.orange
-                                        : Colors.grey),
+                                          ? Colors.orange
+                                          : Colors.grey),
                               ),
                             ),
                         ],
@@ -1262,7 +1270,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
   }
 
   Widget _buildSelectionPanel(ThemeData theme, bool isDark) {
-    final hasContent = _selectedDetail != null ||
+    final hasContent =
+        _selectedDetail != null ||
         _selectedCover != null ||
         _selectedLyrics != null;
 
@@ -1364,7 +1373,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                                     _buildFeatureChip(
                                       Icons.image_rounded,
                                       context
-                                          .l10n.musicManualScraperCoverFeature,
+                                          .l10n
+                                          .musicManualScraperCoverFeature,
                                       isDark,
                                     ),
                                   if (_selectedLyrics?.hasLyrics ?? false) ...[
@@ -1372,7 +1382,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
                                     _buildFeatureChip(
                                       Icons.lyrics_rounded,
                                       context
-                                          .l10n.musicManualScraperLyricsFeature,
+                                          .l10n
+                                          .musicManualScraperLyricsFeature,
                                       isDark,
                                     ),
                                   ],
@@ -1561,8 +1572,8 @@ class _ManualMusicScraperPageState extends ConsumerState<ManualMusicScraperPage>
               size: 16,
               color: isEnabled
                   ? (value
-                      ? AppColors.primary
-                      : (isDark ? Colors.grey[500] : Colors.grey[600]))
+                        ? AppColors.primary
+                        : (isDark ? Colors.grey[500] : Colors.grey[600]))
                   : Colors.grey[400],
             ),
             const SizedBox(width: 4),

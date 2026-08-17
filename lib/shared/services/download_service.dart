@@ -8,6 +8,7 @@ import 'package:my_nas/core/utils/file_name_sanitizer.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 /// 下载任务状态
 enum DownloadStatus {
@@ -59,6 +60,10 @@ class DownloadTask {
   final String url;
   final String fileName;
   final String savePath;
+
+  /// 下载中的私有临时文件。最终文件只在完整校验后发布，取消/重试不会误删
+  /// 同名的既有成品。
+  String get partialPath => '$savePath.part.$id';
   int totalBytes;
   int downloadedBytes;
   DownloadStatus status;
@@ -117,6 +122,7 @@ class DownloadService {
   final Map<String, CancelToken> _cancelTokens = {};
   final Map<String, Completer<void>> _downloadCompletions = {};
   final Map<String, int> _taskEpochs = {};
+  final Set<String> _pendingSavePaths = {};
 
   final _tasksController = StreamController<List<DownloadTask>>.broadcast();
 
@@ -151,30 +157,77 @@ class DownloadService {
     required String fileName,
     String? customPath,
   }) async {
-    final id = DateTime.now().millisecondsSinceEpoch.toString();
-    // 远端文件名可能含 Windows 非法字符或超长，需清洗后再拼本地落地路径。
-    // customPath 由调用方给出，视为已确定的完整路径，不做清洗。
-    final savePath =
-        customPath ??
-        path.join(await downloadDirectory, sanitizeFileName(fileName));
-
-    final task = DownloadTask(
-      id: id,
-      url: url,
+    final id = const Uuid().v4();
+    final reservation = await _reserveSavePath(
       fileName: fileName,
-      savePath: savePath,
+      customPath: customPath,
     );
+    try {
+      final task = DownloadTask(
+        id: id,
+        url: url,
+        fileName: fileName,
+        savePath: reservation.savePath,
+      );
 
-    _tasks[id] = task;
-    _notifyListeners();
-
-    return task;
+      _tasks[id] = task;
+      _notifyListeners();
+      return task;
+    } finally {
+      _pendingSavePaths.remove(reservation.key);
+    }
   }
+
+  Future<({String savePath, String key})> _reserveSavePath({
+    required String fileName,
+    required String? customPath,
+  }) async {
+    if (customPath != null) {
+      final key = _localPathKey(customPath);
+      if (await _isSavePathTaken(customPath, key)) {
+        throw StateError('目标文件已存在或已被其他下载任务占用: $customPath');
+      }
+      // 再检查一次内存占用，封住 File.exists await 期间的并发 addTask。
+      if (_isSavePathReserved(key)) {
+        throw StateError('目标文件已被其他下载任务占用: $customPath');
+      }
+      _pendingSavePaths.add(key);
+      return (savePath: customPath, key: key);
+    }
+
+    final directory = await downloadDirectory;
+    for (var sequence = 1; ; sequence++) {
+      final candidate = path.join(
+        directory,
+        appendFileNameSequence(fileName, sequence),
+      );
+      final key = _localPathKey(candidate);
+      if (await _isSavePathTaken(candidate, key)) continue;
+      if (_isSavePathReserved(key)) continue;
+      _pendingSavePaths.add(key);
+      return (savePath: candidate, key: key);
+    }
+  }
+
+  Future<bool> _isSavePathTaken(String candidate, String key) async {
+    if (_isSavePathReserved(key)) return true;
+    if (await File(candidate).exists()) return true;
+    return Directory(candidate).exists();
+  }
+
+  bool _isSavePathReserved(String key) =>
+      _pendingSavePaths.contains(key) ||
+      _tasks.values.any((task) => _localPathKey(task.savePath) == key);
+
+  String _localPathKey(String value) =>
+      path.canonicalize(value).replaceAll(r'\', '/').toLowerCase();
 
   /// 开始下载
   Future<void> startDownload(String taskId) async {
     final task = _tasks[taskId];
     if (task == null ||
+        task.status == DownloadStatus.completed ||
+        task.status == DownloadStatus.cancelled ||
         task.status == DownloadStatus.downloading ||
         _cancelTokens.containsKey(taskId)) {
       return;
@@ -192,10 +245,40 @@ class DownloadService {
     try {
       // 检查是否支持断点续传
       var startBytes = 0;
-      final file = File(task.savePath);
+      final file = File(task.partialPath);
+      final finalFile = File(task.savePath);
+      if (await finalFile.exists() || await Directory(task.savePath).exists()) {
+        throw StateError('目标文件已存在，下载不会覆盖: ${task.savePath}');
+      }
       await file.parent.create(recursive: true);
       if (await file.exists()) {
         startBytes = await file.length();
+      }
+
+      if (task.totalBytes > 0 && startBytes > task.totalBytes) {
+        // 本地残片不可能属于当前版本，避免发送越界 Range 后陷入 416。
+        await file.delete();
+        startBytes = 0;
+      } else if (startBytes > 0 && startBytes == task.totalBytes) {
+        // 暂停可能发生在完整下载后的发布阶段。恢复时直接重新发布残片，
+        // 不发送 bytes=<EOF>-（多数服务器会返回 416）。
+        await _publishCompletedFile(
+          partialFile: file,
+          finalFile: finalFile,
+          expectedLength: startBytes,
+          isActive: () => _isActiveDownload(taskId, cancelToken, epoch),
+        );
+        if (!_isActiveDownload(taskId, cancelToken, epoch)) {
+          await _deletePublishedAfterCancellation(finalFile);
+          return;
+        }
+        _updateTask(
+          taskId,
+          status: DownloadStatus.completed,
+          downloadedBytes: startBytes,
+          totalBytes: startBytes,
+        );
+        return;
       }
 
       final response = await _dio.get<ResponseBody>(
@@ -300,6 +383,17 @@ class DownloadService {
         );
       }
 
+      await _publishCompletedFile(
+        partialFile: file,
+        finalFile: finalFile,
+        expectedLength: finalLength,
+        isActive: () => _isActiveDownload(taskId, cancelToken, epoch),
+      );
+      if (!_isActiveDownload(taskId, cancelToken, epoch)) {
+        await _deletePublishedAfterCancellation(finalFile);
+        return;
+      }
+
       _updateTask(
         taskId,
         status: DownloadStatus.completed,
@@ -322,7 +416,7 @@ class DownloadService {
         status: DownloadStatus.failed,
         errorMessage: appL10n.downloadServiceDownloadFailedGeneric,
       );
-    } on Exception catch (e, st) {
+    } on Object catch (e, st) {
       if (!_isActiveDownload(taskId, cancelToken, epoch)) return;
       AppError.handle(e, st, 'startDownload', {
         'taskId': taskId,
@@ -341,6 +435,64 @@ class DownloadService {
         _downloadCompletions.remove(taskId);
       }
       if (!completion.isCompleted) completion.complete();
+    }
+  }
+
+  Future<void> _publishCompletedFile({
+    required File partialFile,
+    required File finalFile,
+    required int expectedLength,
+    required bool Function() isActive,
+  }) async {
+    var createdFinal = false;
+    RandomAccessFile? output;
+    try {
+      // exclusive: true 保证即使外部程序在下载期间创建了同名文件，也绝不覆盖。
+      await finalFile.create(exclusive: true);
+      createdFinal = true;
+      output = await finalFile.open(mode: FileMode.writeOnly);
+      await for (final chunk in partialFile.openRead()) {
+        if (!isActive()) throw const _DownloadPublishCancelled();
+        await output.writeFrom(chunk);
+      }
+      if (!isActive()) throw const _DownloadPublishCancelled();
+      await output.flush();
+      await output.close();
+      output = null;
+      final publishedLength = await finalFile.length();
+      if (publishedLength != expectedLength) {
+        throw StateError(
+          'Published download length mismatch: '
+          '$publishedLength/$expectedLength bytes',
+        );
+      }
+      if (!isActive()) throw const _DownloadPublishCancelled();
+      await partialFile.delete();
+    } on Object catch (e, st) {
+      if (e is _DownloadPublishCancelled) {
+        AppError.ignore(e, st, '下载在发布成品期间被用户暂停或取消');
+      } else {
+        AppError.handle(e, st, 'downloadService.publishCompletedFile', {
+          'savePath': finalFile.path,
+        });
+      }
+      if (createdFinal) {
+        try {
+          await output?.close();
+          if (await finalFile.exists()) await finalFile.delete();
+        } on Object catch (cleanupError, cleanupStack) {
+          AppError.ignore(cleanupError, cleanupStack, '发布下载失败后清理不完整成品失败');
+        }
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _deletePublishedAfterCancellation(File finalFile) async {
+    try {
+      if (await finalFile.exists()) await finalFile.delete();
+    } on Object catch (e, st) {
+      AppError.ignore(e, st, '下载取消后清理刚发布的成品失败');
     }
   }
 
@@ -409,7 +561,7 @@ class DownloadService {
   /// 取消下载
   void cancelDownload(String taskId) {
     final task = _tasks[taskId];
-    if (task == null) return;
+    if (task == null || task.status == DownloadStatus.completed) return;
 
     final cancelToken = _cancelTokens[taskId];
     final completion = _downloadCompletions[taskId]?.future;
@@ -424,7 +576,7 @@ class DownloadService {
     AppError.fireAndForget(
       _deleteCancelledFile(
         taskId: taskId,
-        savePath: task.savePath,
+        partialPath: task.partialPath,
         cancelEpoch: cancelEpoch,
         activeDownload: completion,
       ),
@@ -434,22 +586,13 @@ class DownloadService {
 
   Future<void> _deleteCancelledFile({
     required String taskId,
-    required String savePath,
+    required String partialPath,
     required int cancelEpoch,
     Future<void>? activeDownload,
   }) async {
     if (activeDownload != null) await activeDownload;
     if (_taskEpochs[taskId] != cancelEpoch) return;
-    if (_tasks.entries.any(
-      (entry) =>
-          entry.key != taskId &&
-          entry.value.savePath == savePath &&
-          entry.value.status == DownloadStatus.downloading,
-    )) {
-      return;
-    }
-
-    final file = File(savePath);
+    final file = File(partialPath);
     try {
       if (await file.exists()) await file.delete();
     } on Exception catch (e, st) {
@@ -459,7 +602,9 @@ class DownloadService {
 
   /// 删除任务
   void removeTask(String taskId) {
-    cancelDownload(taskId);
+    if (_tasks[taskId]?.status != DownloadStatus.completed) {
+      cancelDownload(taskId);
+    }
     _tasks.remove(taskId);
     _notifyListeners();
   }
@@ -471,8 +616,8 @@ class DownloadService {
 
     await _downloadCompletions[taskId]?.future;
 
-    // 删除失败的文件
-    final file = File(task.savePath);
+    // 只删除该任务自己的临时文件，绝不触碰同名既有成品。
+    final file = File(task.partialPath);
     try {
       if (await file.exists()) {
         await file.delete();
@@ -481,6 +626,12 @@ class DownloadService {
       AppError.ignore(e, st, 'Error deleting failed download file');
     }
 
+    _updateTask(
+      taskId,
+      status: DownloadStatus.pending,
+      downloadedBytes: 0,
+      totalBytes: 0,
+    );
     await startDownload(taskId);
   }
 
@@ -583,7 +734,7 @@ class DownloadService {
   }
 
   void _notifyListeners() {
-    _tasksController.add(tasks);
+    if (!_tasksController.isClosed) _tasksController.add(tasks);
   }
 
   void dispose() {
@@ -598,3 +749,7 @@ class DownloadService {
 
 /// 全局下载服务实例
 final downloadService = DownloadService();
+
+class _DownloadPublishCancelled implements Exception {
+  const _DownloadPublishCancelled();
+}

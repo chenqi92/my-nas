@@ -13,6 +13,7 @@ import 'package:my_nas/features/music/data/services/music_metadata_writer.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 /// 统一的音乐元数据写入服务
 ///
@@ -192,17 +193,24 @@ class UnifiedMetadataWriter implements MusicMetadataWriter {
 
       // 大文件警告
       if (fileSize > _veryLargeFileThreshold) {
-        logger.w('UnifiedMetadataWriter: 超大文件 (${fileSize ~/ 1024 ~/ 1024}MB)，处理可能需要较长时间');
+        logger.w(
+          'UnifiedMetadataWriter: 超大文件 (${fileSize ~/ 1024 ~/ 1024}MB)，处理可能需要较长时间',
+        );
       }
 
       // 创建临时文件
-      final uniqueId = DateTime.now().millisecondsSinceEpoch;
+      final uniqueId = const Uuid().v4();
       tempFile = File(p.join(_tempDir.path, 'metadata_edit_$uniqueId$ext'));
 
       // 下载文件
       onProgress?.call(0.1, appL10n.musicWriterStageDownloadFile);
-      await _downloadFile(fileSystem, remotePath, tempFile, fileSize, (progress) {
-        onProgress?.call(0.1 + progress * 0.4, appL10n.musicWriterStageDownloadFile);
+      await _downloadFile(fileSystem, remotePath, tempFile, fileSize, (
+        progress,
+      ) {
+        onProgress?.call(
+          0.1 + progress * 0.4,
+          appL10n.musicWriterStageDownloadFile,
+        );
       });
 
       // 写入元数据
@@ -219,7 +227,10 @@ class UnifiedMetadataWriter implements MusicMetadataWriter {
       // 上传文件
       onProgress?.call(0.6, appL10n.musicWriterStageUploadFile);
       await _uploadFile(fileSystem, tempFile, remotePath, (progress) {
-        onProgress?.call(0.6 + progress * 0.35, appL10n.musicWriterStageUploadFile);
+        onProgress?.call(
+          0.6 + progress * 0.35,
+          appL10n.musicWriterStageUploadFile,
+        );
       });
 
       onProgress?.call(1.0, appL10n.musicWriterStageComplete);
@@ -230,10 +241,7 @@ class UnifiedMetadataWriter implements MusicMetadataWriter {
       );
     } catch (e, st) {
       logger.e('UnifiedMetadataWriter: NAS 文件写入失败', e, st);
-      return NasMetadataWriteResult(
-        success: false,
-        error: e.toString(),
-      );
+      return NasMetadataWriteResult(success: false, error: e.toString());
     } finally {
       // 清理临时文件
       if (tempFile != null) {
@@ -365,10 +373,7 @@ class NasMetadataWriteResult {
 
 /// NAS 批量写入项
 class NasBatchWriteItem {
-  const NasBatchWriteItem({
-    required this.remotePath,
-    required this.metadata,
-  });
+  const NasBatchWriteItem({required this.remotePath, required this.metadata});
 
   final String remotePath;
   final WritableMetadata metadata;

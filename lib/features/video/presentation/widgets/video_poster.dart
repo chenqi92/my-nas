@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:my_nas/core/services/nas_file_system_registry.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -18,6 +17,7 @@ class VideoPoster extends StatelessWidget {
     this.sourceId,
     this.fileSystem,
     this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
     this.width,
     this.height,
     this.placeholder,
@@ -36,6 +36,9 @@ class VideoPoster extends StatelessWidget {
 
   /// 填充方式
   final BoxFit fit;
+
+  /// 图片在裁剪区域内的对齐方式。
+  final Alignment alignment;
 
   /// 宽度
   final double? width;
@@ -79,14 +82,15 @@ class VideoPoster extends StatelessWidget {
     final fs = _effectiveFileSystem;
 
     if (isNetworkUrl(posterUrl)) {
-      // 网络 URL - 使用 CachedNetworkImage
-      imageWidget = CachedNetworkImage(
+      // 网络图片也统一走 AdaptiveImage，以父布局宽度限制解码尺寸。
+      imageWidget = AdaptiveImage(
         imageUrl: posterUrl!,
         fit: fit,
+        alignment: alignment,
         width: width,
         height: height,
-        placeholder: (context, url) => _buildPlaceholder(context),
-        errorWidget: (context, url, error) => _buildError(context),
+        placeholder: (_) => _buildPlaceholder(context),
+        errorWidget: (_, _) => _buildError(context),
       );
     } else if (isNasPath(posterUrl) && fs != null) {
       // NAS 路径 - 使用 StreamImage 流式加载
@@ -95,6 +99,7 @@ class VideoPoster extends StatelessWidget {
         path: posterUrl,
         fileSystem: fs,
         fit: fit,
+        alignment: alignment,
         width: width,
         height: height,
         placeholder: _buildPlaceholder(context),
@@ -106,6 +111,7 @@ class VideoPoster extends StatelessWidget {
       imageWidget = AdaptiveImage(
         imageUrl: posterUrl!,
         fit: fit,
+        alignment: alignment,
         width: width,
         height: height,
         placeholder: (_) => _buildPlaceholder(context),
@@ -114,40 +120,35 @@ class VideoPoster extends StatelessWidget {
     }
 
     if (borderRadius != null) {
-      return ClipRRect(
-        borderRadius: borderRadius!,
-        child: imageWidget,
-      );
+      return ClipRRect(borderRadius: borderRadius!, child: imageWidget);
     }
 
     return imageWidget;
   }
 
-  Widget _buildPlaceholder(BuildContext context) => placeholder ??
-        Container(
-          width: width,
-          height: height,
-          color: Colors.grey[800],
-          child: const Center(
-            child: Icon(
-              Icons.movie_outlined,
-              color: Colors.grey,
-              size: 40,
-            ),
-          ),
-        );
+  Widget _buildPlaceholder(BuildContext context) =>
+      placeholder ??
+      Container(
+        width: width,
+        height: height,
+        color: Colors.grey[800],
+        child: const Center(
+          child: Icon(Icons.movie_outlined, color: Colors.grey, size: 40),
+        ),
+      );
 
-  Widget _buildError(BuildContext context) => errorWidget ??
-        Container(
-          width: width,
-          height: height,
-          color: Colors.grey[900],
-          child: const Center(
-            child: Icon(
-              Icons.broken_image_outlined,
-              color: Colors.grey,
-              size: 40,
-            ),
+  Widget _buildError(BuildContext context) =>
+      errorWidget ??
+      Container(
+        width: width,
+        height: height,
+        color: Colors.grey[900],
+        child: const Center(
+          child: Icon(
+            Icons.broken_image_outlined,
+            color: Colors.grey,
+            size: 40,
           ),
-        );
+        ),
+      );
 }

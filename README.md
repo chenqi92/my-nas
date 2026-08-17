@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.x-blue?logo=flutter" alt="Flutter">
+  <img src="https://img.shields.io/badge/Flutter-3.44.9%2B-blue?logo=flutter" alt="Flutter 3.44.9+">
   <img src="https://img.shields.io/badge/Dart-3.x-blue?logo=dart" alt="Dart">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
 </p>
@@ -31,6 +31,8 @@
 ## 简介
 
 MyNAS 是一款跨平台的家用 NAS 媒体管理工具，把你常用的多种数据源（NAS 协议 / 媒体服务器 / 下载器 / PT 站 / 字幕站 / 媒体追踪服务）整合到一个客户端，让你能在 macOS、Windows、iOS、Android、Linux 上以统一、现代化的体验访问家里的所有媒体资源。
+
+tvOS 原生客户端的可构建工程以 [`tvos/KKNasTV`](tvos/KKNasTV) 为唯一应用入口；[`apple_tv`](apple_tv) 仅保留跨端云同步协议的 Swift Package 与实验性参考源码，不是第二套可发布 App。
 
 不绑定特定 NAS 品牌，**用户自带数据源**——你可以同时连接群晖 + Plex + qBittorrent + 任意 PT 站，并在视频详情页一键串联（找资源 → 下载 → 入库 → 播放）。
 
@@ -172,7 +174,7 @@ MyNAS 是一款跨平台的家用 NAS 媒体管理工具，把你常用的多种
 | Xcode | **15.0 及以上**（Live Activity 部分要 16+，对应 iOS 16.1+ SDK） | App Store |
 | Xcode Command Line Tools | 跟随 Xcode | `xcode-select --install` |
 | CocoaPods | 1.14+ | `sudo gem install cocoapods` 或 `brew install cocoapods` |
-| Flutter SDK | ≥ 3.16.0 | [flutter.dev](https://docs.flutter.dev/get-started/install/macos) |
+| Flutter SDK | ≥ 3.44.9 | [flutter.dev](https://docs.flutter.dev/get-started/install/macos) |
 | Apple ID | 个人或付费开发者账号 | [appleid.apple.com](https://appleid.apple.com) |
 
 执行一次自检：
@@ -460,7 +462,7 @@ flutter run -d <真机ID>
 
 ### 环境要求
 
-- Flutter SDK >= 3.16.0
+- Flutter SDK >= 3.44.9
 - Dart SDK >= 3.2.0
 - Xcode >= 15.0（macOS / iOS 构建）
 - Android Studio >= 2023.1（Android 构建）

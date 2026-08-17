@@ -8,14 +8,10 @@ import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_tag_writer_service.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 /// 写入任务状态
-enum WriteTaskStatus {
-  pending,
-  processing,
-  completed,
-  failed,
-}
+enum WriteTaskStatus { pending, processing, completed, failed }
 
 /// 写入任务
 class WriteTask {
@@ -51,19 +47,18 @@ class WriteTask {
     WriteTaskStatus? status,
     int? retryCount,
     String? errorMessage,
-  }) =>
-      WriteTask(
-        id: id,
-        musicPath: musicPath,
-        sourceId: sourceId,
-        tagData: tagData,
-        coverData: coverData,
-        coverMimeType: coverMimeType,
-        status: status ?? this.status,
-        retryCount: retryCount ?? this.retryCount,
-        errorMessage: errorMessage ?? this.errorMessage,
-        createdAt: createdAt,
-      );
+  }) => WriteTask(
+    id: id,
+    musicPath: musicPath,
+    sourceId: sourceId,
+    tagData: tagData,
+    coverData: coverData,
+    coverMimeType: coverMimeType,
+    status: status ?? this.status,
+    retryCount: retryCount ?? this.retryCount,
+    errorMessage: errorMessage ?? this.errorMessage,
+    createdAt: createdAt,
+  );
 }
 
 /// 队列状态更新
@@ -91,9 +86,8 @@ class QueueStatusUpdate {
 /// 将文件写入任务加入队列，后台异步执行，
 /// 避免阻塞 UI 和会话超时问题
 class MusicTagWriteQueueService {
-  MusicTagWriteQueueService({
-    required MusicTagWriterService tagWriter,
-  }) : _tagWriter = tagWriter;
+  MusicTagWriteQueueService({required MusicTagWriterService tagWriter})
+    : _tagWriter = tagWriter;
 
   final MusicTagWriterService _tagWriter;
 
@@ -148,7 +142,7 @@ class MusicTagWriteQueueService {
     Uint8List? coverData,
     String? coverMimeType,
   }) {
-    final taskId = '${DateTime.now().millisecondsSinceEpoch}_${musicPath.hashCode}';
+    final taskId = const Uuid().v4();
 
     final task = WriteTask(
       id: taskId,
@@ -177,10 +171,14 @@ class MusicTagWriteQueueService {
 
   /// 获取队列状态
   QueueStatusUpdate getStatus() => QueueStatusUpdate(
-      pendingCount: _queue.where((t) => t.status == WriteTaskStatus.pending).length,
-      processingCount: _queue.where((t) => t.status == WriteTaskStatus.processing).length,
-      failedCount: _queue.where((t) => t.status == WriteTaskStatus.failed).length,
-    );
+    pendingCount: _queue
+        .where((t) => t.status == WriteTaskStatus.pending)
+        .length,
+    processingCount: _queue
+        .where((t) => t.status == WriteTaskStatus.processing)
+        .length,
+    failedCount: _queue.where((t) => t.status == WriteTaskStatus.failed).length,
+  );
 
   /// 重试所有失败的任务
   void retryFailedTasks() {
@@ -209,7 +207,9 @@ class MusicTagWriteQueueService {
     try {
       while (true) {
         // 找到下一个待处理的任务
-        final task = _queue.where((t) => t.status == WriteTaskStatus.pending).firstOrNull;
+        final task = _queue
+            .where((t) => t.status == WriteTaskStatus.pending)
+            .firstOrNull;
 
         if (task == null) break;
 
@@ -230,7 +230,9 @@ class MusicTagWriteQueueService {
       // 获取文件系统
       final fileSystem = _fileSystemProvider?.call(task.sourceId);
       if (fileSystem == null) {
-        throw Exception(appL10n.musicTagWriteQueueFileSystemNotAvailable(task.sourceId ?? ''));
+        throw Exception(
+          appL10n.musicTagWriteQueueFileSystemNotAvailable(task.sourceId ?? ''),
+        );
       }
 
       // 构建标签数据（包含封面）
@@ -261,8 +263,9 @@ class MusicTagWriteQueueService {
       }
 
       // 成功
-      task..status = WriteTaskStatus.completed
-      ..errorMessage = null;
+      task
+        ..status = WriteTaskStatus.completed
+        ..errorMessage = null;
       await _persistTask(task);
       _notifyStatus(lastCompletedTaskId: task.id);
 
@@ -276,14 +279,18 @@ class MusicTagWriteQueueService {
       if (task.canRetry) {
         // 可以重试，标记为待处理
         task.status = WriteTaskStatus.pending;
-        logger.w('MusicTagWriteQueueService: 写入失败，将重试 (${task.retryCount}/${WriteTask.maxRetries}) - ${task.musicPath}');
+        logger.w(
+          'MusicTagWriteQueueService: 写入失败，将重试 (${task.retryCount}/${WriteTask.maxRetries}) - ${task.musicPath}',
+        );
 
         // 延迟一段时间后重试（指数退避）
         await Future<void>.delayed(Duration(seconds: task.retryCount * 2));
       } else {
         // 无法重试，标记为失败
         task.status = WriteTaskStatus.failed;
-        logger.e('MusicTagWriteQueueService: 写入失败，已达最大重试次数 - ${task.musicPath}');
+        logger.e(
+          'MusicTagWriteQueueService: 写入失败，已达最大重试次数 - ${task.musicPath}',
+        );
       }
 
       await _persistTask(task);
@@ -294,9 +301,15 @@ class MusicTagWriteQueueService {
   /// 通知状态更新
   void _notifyStatus({String? lastCompletedTaskId, String? lastError}) {
     final status = QueueStatusUpdate(
-      pendingCount: _queue.where((t) => t.status == WriteTaskStatus.pending).length,
-      processingCount: _queue.where((t) => t.status == WriteTaskStatus.processing).length,
-      failedCount: _queue.where((t) => t.status == WriteTaskStatus.failed).length,
+      pendingCount: _queue
+          .where((t) => t.status == WriteTaskStatus.pending)
+          .length,
+      processingCount: _queue
+          .where((t) => t.status == WriteTaskStatus.processing)
+          .length,
+      failedCount: _queue
+          .where((t) => t.status == WriteTaskStatus.failed)
+          .length,
       lastCompletedTaskId: lastCompletedTaskId,
       lastError: lastError,
     );
@@ -340,7 +353,9 @@ class MusicTagWriteQueueService {
       if (data != null) {
         final status = WriteTaskStatus.values[data['status'] as int? ?? 0];
         if (status != WriteTaskStatus.completed) {
-          logger.w('MusicTagWriteQueueService: 清除未完成的任务 - ${data['musicPath']}');
+          logger.w(
+            'MusicTagWriteQueueService: 清除未完成的任务 - ${data['musicPath']}',
+          );
           keysToDelete.add(key);
         }
       }

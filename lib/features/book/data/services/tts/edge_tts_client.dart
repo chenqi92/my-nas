@@ -5,8 +5,11 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:just_audio/just_audio.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/book/data/services/tts/edge_tts_voices.dart';
+import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -115,7 +118,7 @@ class EdgeTTSClient {
       // 发送配置
       await _sendConfig();
     } catch (e, st) {
-      logger.e('EdgeTTS: 连接失败', e, st);
+      AppError.handle(e, st, 'edgeTts.connect');
       if (connectionGeneration == _connectionGeneration) {
         _disconnect();
       }
@@ -201,7 +204,7 @@ $ssml''';
       // 等待完成
       await completer.future;
     } catch (e, st) {
-      logger.e('EdgeTTS: 朗读失败', e, st);
+      AppError.handle(e, st, 'edgeTts.speak');
       if (_activeRequestId == requestId) {
         _failSpeak(e, st);
       }
@@ -255,7 +258,7 @@ $ssml''';
     try {
       onStart?.call();
     } catch (e, st) {
-      logger.w('EdgeTTS: onStart 回调失败', e, st);
+      AppError.ignore(e, st, 'Edge TTS onStart 回调由调用方抛错');
     }
   }
 
@@ -263,7 +266,7 @@ $ssml''';
     try {
       onComplete?.call();
     } catch (e, st) {
-      logger.w('EdgeTTS: onComplete 回调失败', e, st);
+      AppError.ignore(e, st, 'Edge TTS onComplete 回调由调用方抛错');
     }
   }
 
@@ -271,7 +274,7 @@ $ssml''';
     try {
       onError?.call(error);
     } catch (e, st) {
-      logger.w('EdgeTTS: onError 回调失败', e, st);
+      AppError.ignore(e, st, 'Edge TTS onError 回调由调用方抛错');
     }
   }
 
@@ -311,7 +314,10 @@ $ssml''';
         logger.d('EdgeTTS: 合成完成');
         final requestId = messageRequestId ?? _activeRequestId;
         if (requestId != null) {
-          unawaited(_onAudioComplete(requestId));
+          AppError.fireAndForget(
+            _onAudioComplete(requestId),
+            action: 'edgeTts.completeAudioRequest',
+          );
         }
       }
     } else if (message is List<int>) {
@@ -374,7 +380,7 @@ $ssml''';
         // 将当前请求的音频快照保存到临时文件，避免后续请求修改缓冲区。
         final tempDir = Directory.systemTemp;
         tempFile = File(
-          '${tempDir.path}/edge_tts_${DateTime.now().microsecondsSinceEpoch}.mp3',
+          p.join(tempDir.path, 'edge_tts_${const Uuid().v4()}.mp3'),
         );
         await tempFile.writeAsBytes(audioData);
         if (!_matchesActiveRequest(requestId)) return;
@@ -413,7 +419,7 @@ $ssml''';
         if (!_matchesActiveRequest(requestId)) return;
       }
     } catch (e, st) {
-      logger.e('EdgeTTS: 播放失败', e, st);
+      AppError.handle(e, st, 'edgeTts.playSynthesizedAudio');
       if (_matchesActiveRequest(requestId)) {
         _failSpeak(e, st);
         _notifyError(e.toString());
@@ -428,8 +434,8 @@ $ssml''';
           if (await tempFile.exists()) {
             await tempFile.delete();
           }
-        } on Exception catch (e) {
-          logger.w('EdgeTTS: 清理临时音频失败: $e');
+        } on Exception catch (e, st) {
+          AppError.ignore(e, st, 'Edge TTS 播放结束后清理临时音频失败');
         }
       }
     }

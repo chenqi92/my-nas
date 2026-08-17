@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 
 /// 自适应图片组件
 ///
@@ -12,8 +12,10 @@ import 'package:my_nas/core/extensions/context_extensions.dart';
 /// - http/https 协议：使用 CachedNetworkImage 加载网络图片
 class AdaptiveImage extends StatefulWidget {
   const AdaptiveImage({
-    required this.imageUrl, super.key,
+    required this.imageUrl,
+    super.key,
     this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
     this.width,
     this.height,
     this.placeholder,
@@ -26,6 +28,9 @@ class AdaptiveImage extends StatefulWidget {
 
   /// 图片填充方式
   final BoxFit fit;
+
+  /// 图片在裁剪区域内的对齐方式。
+  final Alignment alignment;
 
   /// 宽度
   final double? width;
@@ -46,21 +51,17 @@ class AdaptiveImage extends StatefulWidget {
   static bool isLocalFile(String url) => url.startsWith('file://');
 
   /// 检查是否是网络 URL
-  static bool isNetworkUrl(String url) => url.startsWith('http://') || url.startsWith('https://');
+  static bool isNetworkUrl(String url) =>
+      url.startsWith('http://') || url.startsWith('https://');
 
   /// 检查 URL 是否可以直接加载（支持的协议）
-  static bool isSupportedUrl(String url) => isLocalFile(url) || isNetworkUrl(url) || !url.contains('://');
+  static bool isSupportedUrl(String url) =>
+      isLocalFile(url) || isNetworkUrl(url) || !url.contains('://');
 
   /// 将 file:// URL 转换为本地文件路径
   static String? toLocalPath(String url) {
     if (!isLocalFile(url)) return null;
-    try {
-      final uri = Uri.parse(url);
-      return uri.toFilePath(windows: Platform.isWindows);
-    } on Exception catch (e, st) {
-      AppError.handle(e, st, 'toLocalPath');
-      return null;
-    }
+    return localPathFromFileUri(url);
   }
 
   @override
@@ -83,36 +84,48 @@ class _AdaptiveImageState extends State<AdaptiveImage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // 检查是否是不支持的协议（如 smb://）
-    if (!AdaptiveImage.isSupportedUrl(widget.imageUrl)) {
-      return widget.errorWidget?.call(context, 'Unsupported URL scheme') ??
-          _buildDefaultError(context);
-    }
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final cacheWidth = _decodeCacheWidth(context, constraints);
+      // 检查是否是不支持的协议（如 smb://）
+      if (!AdaptiveImage.isSupportedUrl(widget.imageUrl)) {
+        return widget.errorWidget?.call(context, 'Unsupported URL scheme') ??
+            _buildDefaultError(context);
+      }
 
-    if (AdaptiveImage.isLocalFile(widget.imageUrl)) {
-      return _buildLocalImage(context);
-    } else if (AdaptiveImage.isNetworkUrl(widget.imageUrl)) {
-      return _buildNetworkImage(context);
-    } else {
+      if (AdaptiveImage.isLocalFile(widget.imageUrl)) {
+        return _buildLocalImage(context, cacheWidth);
+      }
+      if (AdaptiveImage.isNetworkUrl(widget.imageUrl)) {
+        return _buildNetworkImage(context, cacheWidth);
+      }
       // 假设是本地路径
-      return _buildLocalPathImage(context, widget.imageUrl);
-    }
-  }
+      return _buildLocalPathImage(context, widget.imageUrl, cacheWidth);
+    },
+  );
 
-  Widget _buildLocalImage(BuildContext context) {
+  Widget _buildLocalImage(BuildContext context, int? cacheWidth) {
     final localPath = AdaptiveImage.toLocalPath(widget.imageUrl);
     if (localPath == null) {
       return widget.errorWidget?.call(context, 'Invalid file URL') ??
           _buildDefaultError(context);
     }
-    return _buildLocalPathImage(context, localPath);
+    return _buildLocalPathImage(context, localPath, cacheWidth);
   }
 
-  Widget _buildLocalPathImage(BuildContext context, String path) {
+  Widget _buildLocalPathImage(
+    BuildContext context,
+    String path,
+    int? cacheWidth,
+  ) {
     // 如果已经缓存了这个路径的检查结果，直接使用
     if (_cachedPath == path && _fileExistsCache != null) {
-      return _buildLocalPathImageContent(context, path, _fileExistsCache!);
+      return _buildLocalPathImageContent(
+        context,
+        path,
+        _fileExistsCache!,
+        cacheWidth,
+      );
     }
 
     final file = File(path);
@@ -122,7 +135,8 @@ class _AdaptiveImageState extends State<AdaptiveImage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // 第一次加载时显示占位符
-          return widget.placeholder?.call(context) ?? _buildDefaultPlaceholder();
+          return widget.placeholder?.call(context) ??
+              _buildDefaultPlaceholder();
         }
 
         final exists = snapshot.data ?? false;
@@ -130,12 +144,17 @@ class _AdaptiveImageState extends State<AdaptiveImage> {
         _fileExistsCache = exists;
         _cachedPath = path;
 
-        return _buildLocalPathImageContent(context, path, exists);
+        return _buildLocalPathImageContent(context, path, exists, cacheWidth);
       },
     );
   }
 
-  Widget _buildLocalPathImageContent(BuildContext context, String path, bool exists) {
+  Widget _buildLocalPathImageContent(
+    BuildContext context,
+    String path,
+    bool exists,
+    int? cacheWidth,
+  ) {
     if (!exists) {
       return widget.errorWidget?.call(context, 'File not found') ??
           _buildDefaultError(context);
@@ -145,9 +164,10 @@ class _AdaptiveImageState extends State<AdaptiveImage> {
       File(path),
       key: ValueKey(path),
       fit: widget.fit,
+      alignment: widget.alignment,
       width: widget.width,
       height: widget.height,
-      cacheWidth: _decodeCacheWidth(context),
+      cacheWidth: cacheWidth,
       // 使用 frameBuilder 实现平滑加载，避免闪烁
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
         if (wasSynchronouslyLoaded || frame != null) {
@@ -156,55 +176,61 @@ class _AdaptiveImageState extends State<AdaptiveImage> {
         return widget.placeholder?.call(context) ?? _buildDefaultPlaceholder();
       },
       errorBuilder: (context, error, stackTrace) =>
-          widget.errorWidget?.call(context, error) ?? _buildDefaultError(context),
+          widget.errorWidget?.call(context, error) ??
+          _buildDefaultError(context),
     );
   }
 
-  Widget _buildNetworkImage(BuildContext context) => CachedNetworkImage(
-      imageUrl: widget.imageUrl,
-      fit: widget.fit,
-      width: widget.width,
-      height: widget.height,
-      fadeInDuration: widget.fadeInDuration,
-      // 海报墙里的原图常为 1000×1500+，一屏几十张即数百 MB 解码峰值。
-      // 按控件逻辑宽 × 像素密度限制解码尺寸，避免移动端 OOM。
-      memCacheWidth: _decodeCacheWidth(context),
-      placeholder: (context, _) =>
-          widget.placeholder?.call(context) ?? _buildDefaultPlaceholder(),
-      errorWidget: (context, _, error) =>
-          widget.errorWidget?.call(context, error) ?? _buildDefaultError(context),
-    );
+  Widget _buildNetworkImage(BuildContext context, int? cacheWidth) =>
+      CachedNetworkImage(
+        imageUrl: widget.imageUrl,
+        fit: widget.fit,
+        alignment: widget.alignment,
+        width: widget.width,
+        height: widget.height,
+        fadeInDuration: widget.fadeInDuration,
+        // 海报墙里的原图常为 1000×1500+，一屏几十张即数百 MB 解码峰值。
+        // 按控件逻辑宽 × 像素密度限制解码尺寸，避免移动端 OOM。
+        memCacheWidth: cacheWidth,
+        placeholder: (context, _) =>
+            widget.placeholder?.call(context) ?? _buildDefaultPlaceholder(),
+        errorWidget: (context, _, error) =>
+            widget.errorWidget?.call(context, error) ??
+            _buildDefaultError(context),
+      );
 
   /// 按控件宽度 × 设备像素比推导解码宽度上限。
   ///
-  /// 未显式指定宽度（`width == null`，如铺满父容器）时返回 null，
-  /// 交给原始尺寸解码 —— 此时无法预知实际布局宽，强行截断会糊。
-  int? _decodeCacheWidth(BuildContext context) {
-    final width = widget.width;
-    if (width == null || !width.isFinite || width <= 0) return null;
+  /// 未显式指定宽度时使用父布局的有限约束；只有两者都未知时才返回 null。
+  int? _decodeCacheWidth(BuildContext context, BoxConstraints constraints) {
+    final explicitWidth = widget.width;
+    final width = explicitWidth != null && explicitWidth.isFinite
+        ? explicitWidth
+        : constraints.hasBoundedWidth
+        ? constraints.maxWidth
+        : null;
+    if (width == null || width <= 0) return null;
     final dpr = MediaQuery.devicePixelRatioOf(context);
     return (width * dpr).round();
   }
 
   Widget _buildDefaultPlaceholder() => Builder(
-      builder: (ctx) => Container(
-        width: widget.width,
-        height: widget.height,
-        color: ctx.placeholderColor,
-        child: const Center(
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      ),
-    );
-
-  Widget _buildDefaultError(BuildContext context) => Container(
+    builder: (ctx) => Container(
       width: widget.width,
       height: widget.height,
-      color: context.placeholderHighlightColor,
-      child: Icon(
-        Icons.broken_image_outlined,
-        color: context.colorScheme.onSurfaceVariant,
-        size: 48,
-      ),
-    );
+      color: ctx.placeholderColor,
+      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+    ),
+  );
+
+  Widget _buildDefaultError(BuildContext context) => Container(
+    width: widget.width,
+    height: widget.height,
+    color: context.placeholderHighlightColor,
+    child: Icon(
+      Icons.broken_image_outlined,
+      color: context.colorScheme.onSurfaceVariant,
+      size: 48,
+    ),
+  );
 }

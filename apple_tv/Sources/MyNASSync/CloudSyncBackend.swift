@@ -3,21 +3,51 @@ import Foundation
 /// 对应 Dart CloudSyncBackend（lib/core/sync/cloud_sync_backend.dart）。
 ///
 /// 协议化是为了测试能塞内存实现，不需要真的 WebDAV 服务器。
+public struct CloudSyncDocument: Equatable, Sendable {
+    public let data: Data
+    public let revision: String?
+
+    public init(data: Data, revision: String?) {
+        self.data = data
+        self.revision = revision
+    }
+}
+
 public protocol CloudSyncBackend: Sendable {
     /// 可读返回 true。false = 凭证错或网络不通。
     func healthCheck() async -> Bool
 
-    /// 读 manifest.json。不存在 / 读不到视为首次同步，返回空 manifest。
-    func readManifest() async throws -> SyncManifest
+    /// 读 manifest.json 及同一 GET 响应里的 ETag。不存在返回 nil。
+    func readManifestDocument() async throws -> CloudSyncDocument?
 
-    /// 覆盖 manifest.json
-    func writeManifest(_ manifest: SyncManifest) async throws
+    /// ETag 未变化时才写入；412/409 冲突返回 false，绝不覆盖新版本。
+    func writeManifestIfUnchanged(
+        _ manifest: SyncManifest,
+        expected: CloudSyncDocument?
+    ) async throws -> Bool
 
-    /// 读模块数据。不存在返回 nil。
-    func readModule(_ key: String) async throws -> Data?
+    /// 读模块数据及同一 GET 响应里的 ETag。不存在返回 nil。
+    func readModuleDocument(_ key: String) async throws -> CloudSyncDocument?
 
-    /// 覆盖模块数据
-    func writeModule(_ key: String, data: Data) async throws
+    /// ETag 未变化时才写入；412/409 冲突返回 false，绝不覆盖新版本。
+    func writeModuleIfUnchanged(
+        _ key: String,
+        data: Data,
+        expected: CloudSyncDocument?
+    ) async throws -> Bool
+}
+
+public extension CloudSyncBackend {
+    func readManifest() async throws -> SyncManifest {
+        guard let document = try await readManifestDocument() else {
+            return SyncManifest()
+        }
+        return try JSONDecoder().decode(SyncManifest.self, from: document.data)
+    }
+
+    func readModule(_ key: String) async throws -> Data? {
+        (try await readModuleDocument(key))?.data
+    }
 }
 
 /// WebDAV 实现。文件结构与 Flutter 端完全一致：
@@ -69,56 +99,88 @@ public actor WebDavCloudSyncBackend: CloudSyncBackend {
         }
     }
 
-    public func readManifest() async throws -> SyncManifest {
-        guard let data = try await read(name: "manifest.json") else { return SyncManifest() }
-        // 坏 manifest 视为空：等价于首次同步，会重新推一次，不会丢本地数据。
-        // 直接抛的话整轮同步停在这里，反而更糟。
-        return (try? JSONDecoder().decode(SyncManifest.self, from: data)) ?? SyncManifest()
+    public func readManifestDocument() async throws -> CloudSyncDocument? {
+        try await read(name: "manifest.json")
     }
 
-    public func writeManifest(_ manifest: SyncManifest) async throws {
+    public func writeManifestIfUnchanged(
+        _ manifest: SyncManifest,
+        expected: CloudSyncDocument?
+    ) async throws -> Bool {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        try await write(name: "manifest.json", data: try encoder.encode(manifest))
+        return try await write(
+            name: "manifest.json",
+            data: try encoder.encode(manifest),
+            expected: expected
+        )
     }
 
-    public func readModule(_ key: String) async throws -> Data? {
+    public func readModuleDocument(_ key: String) async throws -> CloudSyncDocument? {
         try await read(name: "\(key).json")
     }
 
-    public func writeModule(_ key: String, data: Data) async throws {
-        try await write(name: "\(key).json", data: data)
+    public func writeModuleIfUnchanged(
+        _ key: String,
+        data: Data,
+        expected: CloudSyncDocument?
+    ) async throws -> Bool {
+        try await write(name: "\(key).json", data: data, expected: expected)
     }
 
     // MARK: - HTTP
 
-    private func read(name: String) async throws -> Data? {
+    private func read(name: String) async throws -> CloudSyncDocument? {
         let request = try makeRequest(path: path(for: name), method: "GET")
         let (data, response) = try await session.data(for: request)
-        let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard let response = response as? HTTPURLResponse else {
+            throw CloudSyncError.invalidResponse(path: name)
+        }
+        let code = response.statusCode
         if code == 404 || code == 410 { return nil }
         guard (200..<300).contains(code) else {
             throw CloudSyncError.httpStatus(code: code, path: name)
         }
-        return data.isEmpty ? nil : data
+        return CloudSyncDocument(
+            data: data,
+            revision: response.value(forHTTPHeaderField: "ETag")
+        )
     }
 
-    private func write(name: String, data: Data) async throws {
-        // 目录可能还不存在。先建（已存在会返回 405，忽略），再 PUT。
-        try? await makeCollection()
+    private func write(
+        name: String,
+        data: Data,
+        expected: CloudSyncDocument?
+    ) async throws -> Bool {
+        // 目录可能还不存在。先建；已存在的 301 / 405 在 makeCollection 内处理。
+        try await makeCollection()
 
         var request = try makeRequest(path: path(for: name), method: "PUT")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let expected {
+            guard let revision = expected.revision, !revision.isEmpty else {
+                throw CloudSyncError.missingEntityTag(path: name)
+            }
+            request.setValue(revision, forHTTPHeaderField: "If-Match")
+        } else {
+            request.setValue("*", forHTTPHeaderField: "If-None-Match")
+        }
         let (_, response) = try await session.upload(for: request, from: data)
         let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+        if code == 409 || code == 412 { return false }
         guard (200..<300).contains(code) else {
             throw CloudSyncError.httpStatus(code: code, path: name)
         }
+        return true
     }
 
     private func makeCollection() async throws {
         let request = try makeRequest(path: rootPath, method: "MKCOL")
-        _ = try await session.data(for: request)
+        let (_, response) = try await session.data(for: request)
+        let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(code) || code == 301 || code == 405 else {
+            throw CloudSyncError.httpStatus(code: code, path: rootPath)
+        }
     }
 
     private func path(for name: String) -> String {
@@ -149,5 +211,9 @@ public actor WebDavCloudSyncBackend: CloudSyncBackend {
 
 public enum CloudSyncError: Error, Equatable {
     case invalidEndpoint
+    case invalidResponse(path: String)
+    case missingEntityTag(path: String)
     case httpStatus(code: Int, path: String)
+    case remoteModuleMissing(key: String)
+    case concurrentRemoteChange(key: String)
 }

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -422,8 +420,9 @@ class _DesktopScaffoldState extends ConsumerState<DesktopScaffold> {
               final target = result.file.isDirectory
                   ? result.file.path
                   : parentDirectoryOf(result.file.path);
-              unawaited(
+              AppError.fireAndForget(
                 ref.read(fileListProvider.notifier).loadDirectory(target),
+                action: 'desktopScaffold.commandPalette.loadDirectory',
               );
               _go('/files');
             },

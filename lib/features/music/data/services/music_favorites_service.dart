@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:hive_ce/hive.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_cover_cache_service.dart';
 import 'package:my_nas/features/music/domain/entities/music_item.dart';
@@ -35,16 +36,16 @@ class MusicFavoriteItem {
       );
 
   factory MusicFavoriteItem.fromMusicItem(MusicItem item) => MusicFavoriteItem(
-        musicPath: item.path,
-        musicName: item.name,
-        musicUrl: item.url,
-        sourceId: item.sourceId,
-        artist: item.artist,
-        album: item.album,
-        coverUrl: item.coverUrl,
-        duration: item.duration,
-        addedAt: DateTime.now(),
-      );
+    musicPath: item.path,
+    musicName: item.name,
+    musicUrl: item.url,
+    sourceId: item.sourceId,
+    artist: item.artist,
+    album: item.album,
+    coverUrl: item.coverUrl,
+    duration: item.duration,
+    addedAt: DateTime.now(),
+  );
 
   final String musicPath;
   final String musicName;
@@ -57,36 +58,36 @@ class MusicFavoriteItem {
   final DateTime addedAt;
 
   Map<String, dynamic> toMap() => {
-        'musicPath': musicPath,
-        'musicName': musicName,
-        'musicUrl': musicUrl,
-        'sourceId': sourceId,
-        'artist': artist,
-        'album': album,
-        'coverUrl': coverUrl,
-        'duration': duration?.inMilliseconds,
-        'addedAt': addedAt.millisecondsSinceEpoch,
-      };
+    'musicPath': musicPath,
+    'musicName': musicName,
+    'musicUrl': musicUrl,
+    'sourceId': sourceId,
+    'artist': artist,
+    'album': album,
+    'coverUrl': coverUrl,
+    'duration': duration?.inMilliseconds,
+    'addedAt': addedAt.millisecondsSinceEpoch,
+  };
 
   MusicItem toMusicItem() => MusicItem(
-        id: musicPath,
-        name: musicName,
-        path: musicPath,
-        url: musicUrl,
-        sourceId: sourceId,
-        artist: artist,
-        album: album,
-        coverUrl: _resolveEffectiveCoverUrl(),
-        duration: duration,
-      );
+    id: musicPath,
+    name: musicName,
+    path: musicPath,
+    url: musicUrl,
+    sourceId: sourceId,
+    artist: artist,
+    album: album,
+    coverUrl: _resolveEffectiveCoverUrl(),
+    duration: duration,
+  );
 
   /// 动态解析有效的封面 URL
   String? _resolveEffectiveCoverUrl() {
     // 1. 如果有存储的 coverUrl 且文件存在，使用它
     if (coverUrl != null && coverUrl!.isNotEmpty) {
       if (coverUrl!.startsWith('file://')) {
-        final path = coverUrl!.replaceFirst('file://', '');
-        if (File(path).existsSync()) {
+        final path = localPathFromFileUri(coverUrl!);
+        if (path != null && File(path).existsSync()) {
           return coverUrl;
         }
       } else {
@@ -116,17 +117,17 @@ class MusicHistoryItem {
   });
 
   factory MusicHistoryItem.fromMusicItem(MusicItem item) => MusicHistoryItem(
-        musicPath: item.path,
-        musicName: item.name,
-        musicUrl: item.url,
-        sourceId: item.sourceId,
-        artist: item.artist,
-        album: item.album,
-        coverUrl: item.coverUrl,
-        duration: item.duration,
-        playedAt: DateTime.now(),
-        lastPosition: item.lastPosition,
-      );
+    musicPath: item.path,
+    musicName: item.name,
+    musicUrl: item.url,
+    sourceId: item.sourceId,
+    artist: item.artist,
+    album: item.album,
+    coverUrl: item.coverUrl,
+    duration: item.duration,
+    playedAt: DateTime.now(),
+    lastPosition: item.lastPosition,
+  );
 
   factory MusicHistoryItem.fromMap(Map<dynamic, dynamic> map) =>
       MusicHistoryItem(
@@ -158,38 +159,38 @@ class MusicHistoryItem {
   final Duration? lastPosition;
 
   Map<String, dynamic> toMap() => {
-        'musicPath': musicPath,
-        'musicName': musicName,
-        'musicUrl': musicUrl,
-        'sourceId': sourceId,
-        'artist': artist,
-        'album': album,
-        'coverUrl': coverUrl,
-        'duration': duration?.inMilliseconds,
-        'playedAt': playedAt.millisecondsSinceEpoch,
-        'lastPosition': lastPosition?.inMilliseconds,
-      };
+    'musicPath': musicPath,
+    'musicName': musicName,
+    'musicUrl': musicUrl,
+    'sourceId': sourceId,
+    'artist': artist,
+    'album': album,
+    'coverUrl': coverUrl,
+    'duration': duration?.inMilliseconds,
+    'playedAt': playedAt.millisecondsSinceEpoch,
+    'lastPosition': lastPosition?.inMilliseconds,
+  };
 
   MusicItem toMusicItem() => MusicItem(
-        id: musicPath,
-        name: musicName,
-        path: musicPath,
-        url: musicUrl,
-        sourceId: sourceId,
-        artist: artist,
-        album: album,
-        coverUrl: _resolveEffectiveCoverUrl(),
-        duration: duration,
-        lastPosition: lastPosition ?? Duration.zero,
-      );
+    id: musicPath,
+    name: musicName,
+    path: musicPath,
+    url: musicUrl,
+    sourceId: sourceId,
+    artist: artist,
+    album: album,
+    coverUrl: _resolveEffectiveCoverUrl(),
+    duration: duration,
+    lastPosition: lastPosition ?? Duration.zero,
+  );
 
   /// 动态解析有效的封面 URL
   String? _resolveEffectiveCoverUrl() {
     // 1. 如果有存储的 coverUrl 且文件存在，使用它
     if (coverUrl != null && coverUrl!.isNotEmpty) {
       if (coverUrl!.startsWith('file://')) {
-        final path = coverUrl!.replaceFirst('file://', '');
-        if (File(path).existsSync()) {
+        final path = localPathFromFileUri(coverUrl!);
+        if (path != null && File(path).existsSync()) {
           return coverUrl;
         }
       } else {
@@ -225,9 +226,13 @@ class MusicFavoritesService {
     if (_initialized) return;
 
     try {
-      _favoritesBox = await Hive.openBox<Map<dynamic, dynamic>>(_favoritesBoxName);
+      _favoritesBox = await Hive.openBox<Map<dynamic, dynamic>>(
+        _favoritesBoxName,
+      );
       _historyBox = await Hive.openBox<Map<dynamic, dynamic>>(_historyBoxName);
-      _lastPlayedBox = await Hive.openBox<Map<dynamic, dynamic>>(_lastPlayedBoxName);
+      _lastPlayedBox = await Hive.openBox<Map<dynamic, dynamic>>(
+        _lastPlayedBoxName,
+      );
       _initialized = true;
       logger.i('MusicFavoritesService: 初始化完成');
     } on Exception catch (e) {
@@ -420,12 +425,16 @@ class MusicFavoritesService {
       'music': MusicHistoryItem.fromMusicItem(music).toMap(),
       'position': position.inMilliseconds,
       'queueIndex': queueIndex,
-      'queue': queue.map((m) => MusicHistoryItem.fromMusicItem(m).toMap()).toList(),
+      'queue': queue
+          .map((m) => MusicHistoryItem.fromMusicItem(m).toMap())
+          .toList(),
       'savedAt': DateTime.now().millisecondsSinceEpoch,
     };
 
     await _lastPlayedBox!.put('state', state);
-    logger.d('MusicFavoritesService: 保存播放状态 ${music.name} @ ${position.inSeconds}s');
+    logger.d(
+      'MusicFavoritesService: 保存播放状态 ${music.name} @ ${position.inSeconds}s',
+    );
   }
 
   /// 获取最后播放状态
@@ -446,7 +455,11 @@ class MusicFavoritesService {
 
       final queueData = data['queue'] as List<dynamic>? ?? [];
       final queue = queueData
-          .map((m) => MusicHistoryItem.fromMap(m as Map<dynamic, dynamic>).toMusicItem())
+          .map(
+            (m) => MusicHistoryItem.fromMap(
+              m as Map<dynamic, dynamic>,
+            ).toMusicItem(),
+          )
           .toList();
 
       return LastPlayedState(

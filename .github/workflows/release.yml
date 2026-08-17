@@ -104,20 +104,51 @@ jobs:
             echo "Version not changed in pubspec.yaml, skipping release"
           fi
 
+  # 发布前质量门禁。Release 工作流不能绕过 CI，否则静态分析或测试失败的
+  # 提交仍会创建 tag 并发布多平台产物。
+  quality-gate:
+    needs: check-release
+    if: needs.check-release.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.9'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze code
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run tests
+        run: flutter test
+
   # 创建 Tag
   create-tag:
-    needs: check-release
-    if: needs.check-release.outputs.should_release == 'true' && needs.check-release.outputs.is_tag == 'false'
+    needs: [check-release, quality-gate]
+    # 该 job 在 tag / 分支 / 手动触发下都必须成功，不能在 tag 场景被 skipped；
+    # 下游依赖它，确保 tag 创建失败时不会继续构建并意外发布默认分支。
+    if: needs.check-release.outputs.should_release == 'true' && needs.quality-gate.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     outputs:
-      tag_name: ${{ steps.create_tag.outputs.tag_name }}
+      tag_name: ${{ steps.create_tag.outputs.tag_name || steps.validate_tag.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Create and push tag
         id: create_tag
+        if: needs.check-release.outputs.is_tag == 'false'
         run: |
           TAG_NAME="v${{ needs.check-release.outputs.full_version }}"
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
@@ -136,15 +167,24 @@ jobs:
 
           echo "Created tag: $TAG_NAME"
 
+      - name: Validate triggering tag
+        id: validate_tag
+        if: needs.check-release.outputs.is_tag == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED="v${{ needs.check-release.outputs.full_version }}"
+          if [ "${{ github.ref_name }}" != "$EXPECTED" ]; then
+            echo "::error::Trigger tag ${{ github.ref_name }} does not match pubspec version $EXPECTED"
+            exit 1
+          fi
+          echo "tag_name=$EXPECTED" >> "$GITHUB_OUTPUT"
+
   # 提取版本信息（用于后续构建）
-  # 注意：故意只依赖 check-release，不依赖 create-tag。
-  # 之前依赖 create-tag 时，tag 触发场景下 create-tag 被跳过，extract-version
-  # 必须用 if: always() 才能跑；这会让 GH Actions 把"链路含 skipped"传播到所有
-  # 下游 build job，导致它们被无声跳过（即使 build job 自己写了显式 if 也救不回来）。
-  # extract-version 本身只是算个 tag_name 字符串，不需要等 create-tag 完成。
+  # 等 tag job 成功后再启动所有构建；create-tag 自身不会因 tag 触发而跳过。
   extract-version:
-    needs: check-release
-    if: needs.check-release.outputs.should_release == 'true'
+    needs: [check-release, quality-gate, create-tag]
+    if: needs.check-release.outputs.should_release == 'true' && needs.quality-gate.result == 'success' && needs.create-tag.result == 'success'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ needs.check-release.outputs.version }}
@@ -164,8 +204,6 @@ jobs:
   # 构建 Android APK（多架构）
   build-android:
     needs: extract-version
-    # 显式 if: 必需 —— extract-version 用了 if: always()，下游不写 if 会被 GH Actions
-    # 当作"链路含 skipped"自动跳过。
     if: needs.extract-version.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -252,7 +290,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.44.9'
           cache: true
 
       # 预下载 Gradle，避免构建时网络问题
@@ -386,7 +424,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.44.9'
           cache: true
 
       - name: Install iOS distribution signing material
@@ -658,7 +696,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.44.9'
           cache: true
 
       - name: Enable macOS desktop
@@ -938,7 +976,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.44.9'
           cache: true
 
       # 检查是否有 Windows 支持
@@ -1139,7 +1177,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.44.9'
           cache: true
 
       - name: Enable Linux desktop
@@ -1197,7 +1235,7 @@ jobs:
       # 手动安装 Flutter (flutter-action 不支持 ARM64 Linux)
       - name: Install Flutter manually
         run: |
-          git clone https://github.com/flutter/flutter.git -b stable --depth 1 ~/flutter
+          git clone https://github.com/flutter/flutter.git -b 3.44.9 --depth 1 ~/flutter
           echo "$HOME/flutter/bin" >> $GITHUB_PATH
 
       - name: Setup Flutter

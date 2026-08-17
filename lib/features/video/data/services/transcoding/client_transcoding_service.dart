@@ -6,6 +6,7 @@ import 'package:ffmpeg_kit_flutter_new/ffmpeg_session.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/data/services/transcoding/android_mediacodec_transcoding.dart';
 import 'package:my_nas/features/video/data/services/transcoding/nas_transcoding_service.dart';
@@ -45,14 +46,16 @@ class ClientTranscodingService implements NasTranscodingService {
   final Map<String, _TranscodingTask> _tasks = {};
 
   /// 转码进度控制器
-  final Map<String, StreamController<TranscodingProgress>> _progressControllers = {};
+  final Map<String, StreamController<TranscodingProgress>>
+  _progressControllers = {};
 
   @override
   bool get isAvailable => _isAvailable;
 
   @override
-  TranscodingCapability get capability =>
-      _isAvailable ? TranscodingCapability.clientSide : TranscodingCapability.none;
+  TranscodingCapability get capability => _isAvailable
+      ? TranscodingCapability.clientSide
+      : TranscodingCapability.none;
 
   /// 初始化服务
   Future<void> init() async {
@@ -265,7 +268,7 @@ class ClientTranscodingService implements NasTranscodingService {
         // 验证输出文件存在
         final outputFile = File(outputPath);
         if (await outputFile.exists()) {
-          return 'file://$outputPath';
+          return localPathToFileUri(outputPath);
         } else {
           logger.e('ClientTranscoding: 输出文件不存在 $outputPath');
           return null;
@@ -325,7 +328,8 @@ class ClientTranscodingService implements NasTranscodingService {
       final sessionId = const Uuid().v4();
 
       // 创建进度控制器
-      _progressControllers[sessionId] = StreamController<TranscodingProgress>.broadcast();
+      _progressControllers[sessionId] =
+          StreamController<TranscodingProgress>.broadcast();
 
       logger.i('ClientTranscoding: 会话已创建 $sessionId');
 
@@ -396,12 +400,16 @@ class ClientTranscodingService implements NasTranscodingService {
   /// 启动转码任务
   ///
   /// [waitForComplete] 如果为 true，等待转码完成；否则等待输出文件有数据就返回
-  Future<void> _startTranscoding(_TranscodingTask task, {bool waitForComplete = false}) async {
+  Future<void> _startTranscoding(
+    _TranscodingTask task, {
+    bool waitForComplete = false,
+  }) async {
     task.isRunning = true;
 
     try {
       // 如果输入是 HTTP URL，先验证可访问性
-      if (task.inputPath.startsWith('http://') || task.inputPath.startsWith('https://')) {
+      if (task.inputPath.startsWith('http://') ||
+          task.inputPath.startsWith('https://')) {
         final isAccessible = await _checkUrlAccessible(task.inputPath);
         if (!isAccessible) {
           task
@@ -427,7 +435,11 @@ class ClientTranscodingService implements NasTranscodingService {
         final args = _buildFfmpegArgs(task);
         final command = args.join(' ');
         logger.d('ClientTranscoding: FFmpeg 命令 => $command');
-        await _runDesktopTranscoding(task, args, waitForComplete: waitForComplete);
+        await _runDesktopTranscoding(
+          task,
+          args,
+          waitForComplete: waitForComplete,
+        );
       }
     } catch (e, st) {
       task
@@ -471,7 +483,9 @@ class ClientTranscodingService implements NasTranscodingService {
         if (progress.status == TranscodeStatus.transcoding) {
           // 每隔一段时间输出日志
           if ((progress.progress * 100).toInt() % 10 == 0) {
-            logger.d('ClientTranscoding: MediaCodec 进度 ${(progress.progress * 100).toStringAsFixed(1)}%');
+            logger.d(
+              'ClientTranscoding: MediaCodec 进度 ${(progress.progress * 100).toStringAsFixed(1)}%',
+            );
           }
         }
       });
@@ -517,7 +531,9 @@ class ClientTranscodingService implements NasTranscodingService {
       final statusCode = response.statusCode;
       final contentLength = response.contentLength;
 
-      logger.d('ClientTranscoding: URL 检查 - 状态码=$statusCode, 内容长度=$contentLength');
+      logger.d(
+        'ClientTranscoding: URL 检查 - 状态码=$statusCode, 内容长度=$contentLength',
+      );
 
       client.close();
 
@@ -536,7 +552,10 @@ class ClientTranscodingService implements NasTranscodingService {
   /// 使用 FFmpegKit 转码（iOS/Android/macOS）
   ///
   /// 采用流式转码：等待输出文件有足够数据就返回，转码在后台继续
-  Future<void> _runFFmpegKitTranscoding(_TranscodingTask task, String command) async {
+  Future<void> _runFFmpegKitTranscoding(
+    _TranscodingTask task,
+    String command,
+  ) async {
     final readyCompleter = Completer<void>();
     var lastLogTime = DateTime.now();
     var hasError = false;
@@ -607,12 +626,15 @@ class ClientTranscodingService implements NasTranscodingService {
           if (timeInMs > 0) {
             task.currentTime = Duration(milliseconds: timeInMs.round());
             // 如果知道总时长，计算进度
-            if (task.totalDuration != null && task.totalDuration! > Duration.zero) {
+            if (task.totalDuration != null &&
+                task.totalDuration! > Duration.zero) {
               task.progress = timeInMs / task.totalDuration!.inMilliseconds;
             }
             // 每10秒输出一次进度日志
             if (timeInMs.round() % 10000 < 500) {
-              logger.d('ClientTranscoding: 进度 ${(timeInMs / 1000).toStringAsFixed(1)}s, 速度=${statistics.getSpeed().toStringAsFixed(1)}x');
+              logger.d(
+                'ClientTranscoding: 进度 ${(timeInMs / 1000).toStringAsFixed(1)}s, 速度=${statistics.getSpeed().toStringAsFixed(1)}x',
+              );
             }
           }
           task.speed = '${statistics.getSpeed().toStringAsFixed(1)}x';
@@ -805,7 +827,9 @@ class ClientTranscodingService implements NasTranscodingService {
             ..error = appL10n.transcodingWaitOutputTimeout;
           logger
             ..e('ClientTranscoding: 等待转码输出超时')
-            ..e('ClientTranscoding: FFmpeg 输出:\n${stderrBuffer.toString().length > 1000 ? stderrBuffer.toString().substring(stderrBuffer.toString().length - 1000) : stderrBuffer.toString()}');
+            ..e(
+              'ClientTranscoding: FFmpeg 输出:\n${stderrBuffer.toString().length > 1000 ? stderrBuffer.toString().substring(stderrBuffer.toString().length - 1000) : stderrBuffer.toString()}',
+            );
           process.kill();
         }
       }
@@ -818,7 +842,11 @@ class ClientTranscodingService implements NasTranscodingService {
   }
 
   /// 处理 FFmpeg 退出码
-  void _handleExitCode(_TranscodingTask task, int exitCode, StringBuffer stderrBuffer) {
+  void _handleExitCode(
+    _TranscodingTask task,
+    int exitCode,
+    StringBuffer stderrBuffer,
+  ) {
     if (exitCode == 0) {
       task
         ..isRunning = false
@@ -1035,12 +1063,15 @@ class ClientTranscodingService implements NasTranscodingService {
     args.addAll(['-pix_fmt', 'yuv420p']);
 
     // 是否需要烧录字幕
-    final burnSubtitle = task.subtitleStreamIndex != null && task.subtitleStreamIndex! >= 0;
+    final burnSubtitle =
+        task.subtitleStreamIndex != null && task.subtitleStreamIndex! >= 0;
 
     // 视频滤镜链（缩放 + 字幕烧录）合并到单个 -vf
     // 注意：FFmpeg 只允许一个 -vf，若同时有缩放和字幕必须合并为逗号分隔的滤镜链
     final videoFilters = <String>[];
-    if (!task.quality.isOriginal && task.quality.maxWidth != null && task.quality.maxHeight != null) {
+    if (!task.quality.isOriginal &&
+        task.quality.maxWidth != null &&
+        task.quality.maxHeight != null) {
       videoFilters.add(
         'scale=${task.quality.maxWidth}:${task.quality.maxHeight}:force_original_aspect_ratio=decrease',
       );
@@ -1111,7 +1142,7 @@ class ClientTranscodingService implements NasTranscodingService {
     // 去掉 file:// 前缀，subtitles 滤镜需要的是本地文件系统路径
     var path = input;
     if (lower.startsWith('file://')) {
-      path = Uri.parse(input).toFilePath();
+      path = localPathFromFileUri(input) ?? input;
     }
 
     final escaped = _escapeSubtitlesFilterPath(path);
@@ -1141,7 +1172,9 @@ class ClientTranscodingService implements NasTranscodingService {
       final currentSeconds = hours * 3600 + minutes * 60 + seconds;
       // 这里需要知道总时长才能计算进度
       // 暂时只更新当前时间
-      task.currentTime = Duration(milliseconds: (currentSeconds * 1000).round());
+      task.currentTime = Duration(
+        milliseconds: (currentSeconds * 1000).round(),
+      );
     }
 
     // 解析速度: speed=1.5x

@@ -41,16 +41,15 @@ void main() {
         sanitizeBookHtml('<img src="images/p1.jpg">'),
         contains('images/p1.jpg'),
       );
-      expect(
-        sanitizeBookHtml('<a href="/a:b/c">x</a>'),
-        contains('/a:b/c'),
-      );
+      expect(sanitizeBookHtml('<a href="/a:b/c">x</a>'), contains('/a:b/c'));
     });
 
     test('unwraps document structure without nesting a second document', () {
       // テスト用に結合したマークアップ文字列（missing_whitespace_between_adjacent_strings 回避）
-      final markup = '<!DOCTYPE html><html><head><title>t</title>'
-          '<meta charset="utf-8"></head><body><p>text</p></body></html>';
+      final markup = [
+        '<!DOCTYPE html><html><head><title>t</title>',
+        '<meta charset="utf-8"></head><body><p>text</p></body></html>',
+      ].join();
       final result = sanitizeBookHtml(markup);
       expect(result, '<p>text</p>');
     });
@@ -79,6 +78,53 @@ void main() {
       final result = sanitizeBookHtml('<p>1 &lt; 2 &amp; 3</p>');
       expect(result, contains('&lt;'));
       expect(result, contains('&amp;'));
+    });
+  });
+
+  group('URL policy', () {
+    test('拒绝 file 链接与任意 data 链接', () {
+      expect(
+        sanitizeBookHtml('<a href="file:///etc/passwd">x</a>'),
+        '<a>x</a>',
+      );
+      expect(
+        sanitizeBookHtml('<a href="data:text/html;base64,PHNjcmlwdD4=">x</a>'),
+        '<a>x</a>',
+      );
+    });
+
+    test('仅允许限定 MIME 的 base64 图片', () {
+      expect(
+        sanitizeBookHtml('<img src="data:image/png;base64,iVBORw0KGgo=">'),
+        '<img src="data:image/png;base64,iVBORw0KGgo=">',
+      );
+      expect(
+        sanitizeBookHtml('<img src="data:text/html;base64,PHNjcmlwdD4=">'),
+        '<img>',
+      );
+      expect(
+        sanitizeBookHtml('<img src="data:image/svg+xml;base64,PHN2Zz4=">'),
+        '<img>',
+      );
+    });
+
+    test('WebView 只内放 about:blank，外链交给系统，危险协议阻断', () {
+      expect(
+        classifyBookNavigation('about:blank#chapter-2'),
+        BookNavigationDecision.allowInternal,
+      );
+      expect(
+        classifyBookNavigation('https://example.com'),
+        BookNavigationDecision.launchExternal,
+      );
+      expect(
+        classifyBookNavigation('file:///etc/passwd'),
+        BookNavigationDecision.block,
+      );
+      expect(
+        classifyBookNavigation('data:text/html,<script>alert(1)</script>'),
+        BookNavigationDecision.block,
+      );
     });
   });
 }

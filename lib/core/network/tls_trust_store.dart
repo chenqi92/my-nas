@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/errors/exceptions.dart';
 import 'package:my_nas/core/network/hosts_resolver_service.dart';
 import 'package:my_nas/core/utils/hive_utils.dart';
@@ -82,8 +83,8 @@ class TlsTrustStore {
           ..clear()
           ..addAll(raw.map((key, value) => MapEntry('$key', '$value')));
       }
-    } on Exception catch (e) {
-      logger.w('TlsTrustStore: 加载证书指纹失败', e);
+    } on Exception catch (e, st) {
+      AppError.handle(e, st, 'tlsTrustStore.loadPins');
     } finally {
       _loaded = true;
     }
@@ -133,12 +134,11 @@ class TlsTrustStore {
     final key = endpointKey(host, port);
     if (!_inFlightSyncPrompts.add(key)) return;
 
-    unawaited(
-      requestTrustForEndpoint(Uri(scheme: 'https', host: host, port: port))
-          .catchError((Object e, StackTrace st) {
-        logger.w('TlsTrustStore: 请求确认 $key 的证书失败', e, st);
-        return TlsTrustDecision.notRequired;
-      }).whenComplete(() => _inFlightSyncPrompts.remove(key)),
+    AppError.fireAndForget(
+      requestTrustForEndpoint(
+        Uri(scheme: 'https', host: host, port: port),
+      ).whenComplete(() => _inFlightSyncPrompts.remove(key)),
+      action: 'tlsTrustStore.requestTrustFromSyncCallback',
     );
   }
 
@@ -180,11 +180,27 @@ class TlsTrustStore {
     if (index < 0) return;
 
     final pending = _requestQueue[index];
+    var resolvedApproval = approved;
     if (approved) {
       final certificate = request.certificate;
+      final previousPin = _pins[certificate.endpoint];
       _pins[certificate.endpoint] = certificate.fingerprint;
-      await _persist();
-      logger.i('TlsTrustStore: 用户已信任并固定 HTTPS 证书 ${certificate.endpoint}');
+      try {
+        await _persist();
+        logger.i('TlsTrustStore: 用户已信任并固定 HTTPS 证书 ${certificate.endpoint}');
+      } on Object catch (e, st) {
+        // 持久化失败不能悄悄退化为仅本次进程信任；回滚内存 pin，并让
+        // 等待中的请求按“未批准”结束，避免 UI 显示已保存但重启即失效。
+        if (previousPin == null) {
+          _pins.remove(certificate.endpoint);
+        } else {
+          _pins[certificate.endpoint] = previousPin;
+        }
+        resolvedApproval = false;
+        AppError.handle(e, st, 'tlsTrustStore.persistApprovedPin', {
+          'endpoint': certificate.endpoint,
+        });
+      }
     } else {
       logger.i(
         'TlsTrustStore: 用户拒绝信任 HTTPS 证书 ${request.certificate.endpoint}',
@@ -193,20 +209,20 @@ class TlsTrustStore {
 
     _requestQueue.removeAt(index);
     for (final waiter in pending.waiters) {
-      if (!waiter.isCompleted) waiter.complete(approved);
+      if (!waiter.isCompleted) waiter.complete(resolvedApproval);
     }
     pendingRequest.value = _requestQueue.firstOrNull?.request;
   }
 
   static Future<bool> _enqueueTrustRequest(TlsTrustRequest request) {
     final existing = _requestQueue.cast<_PendingTlsTrustRequest?>().firstWhere(
-          (pending) =>
-              pending?.request.certificate.endpoint ==
-                  request.certificate.endpoint &&
-              pending?.request.certificate.fingerprint ==
-                  request.certificate.fingerprint,
-          orElse: () => null,
-        );
+      (pending) =>
+          pending?.request.certificate.endpoint ==
+              request.certificate.endpoint &&
+          pending?.request.certificate.fingerprint ==
+              request.certificate.fingerprint,
+      orElse: () => null,
+    );
     final pending = existing ?? _PendingTlsTrustRequest(request);
     final completer = Completer<bool>();
     pending.waiters.add(completer);
@@ -264,11 +280,10 @@ class TlsTrustStore {
         endValidity: certificate.endValidity,
       );
     } on Exception catch (e, st) {
-      logger.w(
-        'TlsTrustStore: 无法读取 ${endpoint.host}:${endpoint.port} 的证书',
-        e,
-        st,
-      );
+      AppError.handle(e, st, 'tlsTrustStore.inspectInvalidCertificate', {
+        'host': endpoint.host,
+        'port': endpoint.port,
+      });
       return null;
     } finally {
       socket?.destroy();
@@ -314,17 +329,20 @@ class TlsTrustStore {
 
   static Future<void> removePin(String host, int port) async {
     await load();
-    _pins.remove(endpointKey(host, port));
-    await _persist();
+    final key = endpointKey(host, port);
+    final previous = _pins.remove(key);
+    try {
+      await _persist();
+    } on Object catch (e, st) {
+      if (previous != null) _pins[key] = previous;
+      AppError.handle(e, st, 'tlsTrustStore.removePin', {'endpoint': key});
+      rethrow;
+    }
   }
 
   static Future<void> _persist() async {
-    try {
-      final box = await HiveUtils.getSettingsBox();
-      await box.put(_storageKey, Map<String, String>.from(_pins));
-      await box.flush();
-    } on Exception catch (e) {
-      logger.w('TlsTrustStore: 保存证书指纹失败', e);
-    }
+    final box = await HiveUtils.getSettingsBox();
+    await box.put(_storageKey, Map<String, String>.from(_pins));
+    await box.flush();
   }
 }

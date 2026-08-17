@@ -64,7 +64,10 @@ class NativeAVPlayerBackend implements VideoPlayerBackend {
     _channel.initialize();
     final playerId = await _channel.create();
     if (_isDisposed) {
-      unawaited(_channel.disposePlayer(playerId));
+      AppError.fireAndForget(
+        _channel.disposePlayer(playerId),
+        action: 'nativeAvPlayer.disposeLateCreatedPlayer',
+      );
       return;
     }
     _playerId = playerId;

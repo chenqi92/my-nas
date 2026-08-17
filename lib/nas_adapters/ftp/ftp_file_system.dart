@@ -11,6 +11,7 @@ import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:uuid/uuid.dart';
 
 /// FTP 文件系统实现
 ///
@@ -57,7 +58,6 @@ class FtpFileSystem implements NasFileSystem {
   bool get supportsDirectFileUrl => false;
 
   /// 临时下载文件计数（避免命名冲突）
-  int _tempCounter = 0;
 
   /// 关闭可能残留的临时文件
   final List<File> _pendingTempFiles = [];
@@ -138,12 +138,8 @@ class FtpFileSystem implements NasFileSystem {
     FileRange? range,
   ) async {
     final tempDir = await getTemporaryDirectory();
-    _tempCounter++;
     final tempFile = File(
-      p.join(
-        tempDir.path,
-        'ftp_stream_${DateTime.now().millisecondsSinceEpoch}_$_tempCounter',
-      ),
+      p.join(tempDir.path, 'ftp_stream_${const Uuid().v4()}'),
     );
     _pendingTempFiles.add(tempFile);
 
@@ -372,10 +368,7 @@ class FtpFileSystem implements NasFileSystem {
       _withLock('writeFile', () async {
         final tempDir = await getTemporaryDirectory();
         final tempFile = File(
-          p.join(
-            tempDir.path,
-            'ftp_write_${DateTime.now().millisecondsSinceEpoch}',
-          ),
+          p.join(tempDir.path, 'ftp_write_${const Uuid().v4()}'),
         );
         await tempFile.writeAsBytes(data);
         try {

@@ -12,33 +12,39 @@ import 'package:my_nas/features/video/presentation/widgets/video_gesture_control
 void main() {
   const state = VideoPlayerState(duration: Duration(minutes: 10));
 
-  Widget host({required bool enableGestures, required VoidCallback onTap, ValueChanged<Duration>? onSeek}) =>
-      MaterialApp(
-        home: Scaffold(
-          body: VideoGestureController(
-            playerState: state,
-            enableGestures: enableGestures,
-            onTap: onTap,
-            onDoubleTap: (_) {},
-            onVolumeChange: (_) {},
-            onSeek: onSeek ?? (_) {},
-            child: const SizedBox.expand(),
-          ),
-        ),
-      );
+  Finder gestureSurface() => find
+      .descendant(
+        of: find.byType(VideoGestureController),
+        matching: find.byType(GestureDetector),
+      )
+      .first;
+
+  Widget host({
+    required bool enableGestures,
+    required VoidCallback onTap,
+    ValueChanged<Duration>? onSeek,
+  }) => MaterialApp(
+    home: Scaffold(
+      body: VideoGestureController(
+        playerState: state,
+        enableGestures: enableGestures,
+        onTap: onTap,
+        onDoubleTap: (_) {},
+        onVolumeChange: (_) {},
+        onSeek: onSeek ?? (_) {},
+        child: const SizedBox.expand(),
+      ),
+    ),
+  );
 
   testWidgets('enableGestures=false 时横向拖动不触发 seek', (tester) async {
     final seeks = <Duration>[];
     await tester.pumpWidget(
-      host(
-        enableGestures: false,
-        onTap: () {},
-        onSeek: seeks.add,
-      ),
+      host(enableGestures: false, onTap: () {}, onSeek: seeks.add),
     );
 
     // 从屏幕中心向右拖 200px：开启手势时这会产生 seek。
-    await tester.drag(find.byType(SizedBox).first, const Offset(200, 0));
+    await tester.drag(gestureSurface(), const Offset(200, 0));
     await tester.pumpAndSettle();
 
     expect(seeks, isEmpty, reason: 'TV 模式下拖动不应改变播放位置');
@@ -47,7 +53,7 @@ void main() {
   testWidgets('enableGestures=false 时纵向拖动不显示音量 / 亮度覆盖层', (tester) async {
     await tester.pumpWidget(host(enableGestures: false, onTap: () {}));
 
-    await tester.drag(find.byType(SizedBox).first, const Offset(0, -200));
+    await tester.drag(gestureSurface(), const Offset(0, -200));
     await tester.pumpAndSettle();
 
     // 覆盖层只在手势进行中出现；关掉手势后不应有任何进度指示。
@@ -56,11 +62,9 @@ void main() {
 
   testWidgets('enableGestures=false 时 tap 仍然可用（显示 / 隐藏控制栏）', (tester) async {
     var taps = 0;
-    await tester.pumpWidget(
-      host(enableGestures: false, onTap: () => taps++),
-    );
+    await tester.pumpWidget(host(enableGestures: false, onTap: () => taps++));
 
-    await tester.tap(find.byType(SizedBox).first);
+    await tester.tap(gestureSurface());
     await tester.pump();
 
     expect(taps, 1, reason: '遥控器 SELECT 会走 tap，必须保留');
@@ -69,14 +73,10 @@ void main() {
   testWidgets('enableGestures=true 时横向拖动触发 seek（对照组）', (tester) async {
     final seeks = <Duration>[];
     await tester.pumpWidget(
-      host(
-        enableGestures: true,
-        onTap: () {},
-        onSeek: seeks.add,
-      ),
+      host(enableGestures: true, onTap: () {}, onSeek: seeks.add),
     );
 
-    await tester.drag(find.byType(SizedBox).first, const Offset(200, 0));
+    await tester.drag(gestureSurface(), const Offset(200, 0));
     await tester.pumpAndSettle();
 
     // 对照组证明上面的「不触发」来自 enableGestures，而不是测试没戳到手势。

@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/widgets/keyboard_shortcuts.dart';
 import 'package:my_nas/features/book/data/services/book_file_cache_service.dart';
@@ -52,9 +53,11 @@ class EbookReaderError extends EbookReaderState {
 
 /// 电子书阅读器 Provider（支持 EPUB、MOBI、AZW3 等格式）
 final ebookReaderProvider =
-    StateNotifierProvider.family<EbookReaderNotifier, EbookReaderState, BookItem>(
-      (ref, book) => EbookReaderNotifier(book, ref),
-    );
+    StateNotifierProvider.family<
+      EbookReaderNotifier,
+      EbookReaderState,
+      BookItem
+    >((ref, book) => EbookReaderNotifier(book, ref));
 
 class EbookReaderNotifier extends StateNotifier<EbookReaderState> {
   EbookReaderNotifier(this.book, this._ref) : super(EbookReaderLoading()) {
@@ -81,11 +84,10 @@ class EbookReaderNotifier extends StateNotifier<EbookReaderState> {
       }
 
       // 从网络或本地加载
-      final uri = Uri.parse(book.url);
+      final localPath = localPathFromFileUri(book.url);
 
-      if (uri.scheme == 'file') {
+      if (localPath != null) {
         // 本地文件
-        final localPath = uri.toFilePath();
         if (await File(localPath).exists()) {
           state = EbookReaderLoaded(filePath: localPath);
           return;
@@ -137,6 +139,7 @@ class EbookReaderPage extends ConsumerStatefulWidget {
   });
 
   final BookItem book;
+
   /// 强制使用漫画阅读器（EPUB 转换后跳转到 EpubComicReaderPage）
   final bool forceComicReader;
 
@@ -172,6 +175,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         }
       }
     }
+
     flatten(_tocItems, 0);
     return result;
   }
@@ -221,16 +225,16 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
       if (mounted) {
         setState(() {
           _batteryLevel = level;
-          _isCharging = state == BatteryState.charging ||
-              state == BatteryState.full;
+          _isCharging =
+              state == BatteryState.charging || state == BatteryState.full;
         });
       }
       // 监听电池状态变化
       battery.onBatteryStateChanged.listen((state) {
         if (mounted) {
           setState(() {
-            _isCharging = state == BatteryState.charging ||
-                state == BatteryState.full;
+            _isCharging =
+                state == BatteryState.charging || state == BatteryState.full;
           });
           // 状态变化时也更新电量（使用 try-catch 防止类型错误）
           AppError.fireAndForget(
@@ -375,18 +379,19 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   }
 
   /// 从 BookReaderSettings 创建 FoliateStyle
-  FoliateStyle _createStyle(BookReaderSettings settings) => FoliateStyle.fromReaderSettings(
-      fontSize: settings.fontSize,
-      lineHeight: settings.lineHeight,
-      paragraphSpacing: settings.paragraphSpacing,
-      horizontalPadding: settings.horizontalPadding,
-      // 不需要内部垂直边距，因为已有固定顶栏(28px)和底栏(20px)
-      verticalPadding: 0,
-      backgroundColor: settings.theme.backgroundColor,
-      textColor: settings.theme.textColor,
-      fontFamily: settings.fontFamily,
-      pageTurnStyle: _mapPageTurnMode(settings.pageTurnMode),
-    );
+  FoliateStyle _createStyle(BookReaderSettings settings) =>
+      FoliateStyle.fromReaderSettings(
+        fontSize: settings.fontSize,
+        lineHeight: settings.lineHeight,
+        paragraphSpacing: settings.paragraphSpacing,
+        horizontalPadding: settings.horizontalPadding,
+        // 不需要内部垂直边距，因为已有固定顶栏(28px)和底栏(20px)
+        verticalPadding: 0,
+        backgroundColor: settings.theme.backgroundColor,
+        textColor: settings.theme.textColor,
+        fontFamily: settings.fontFamily,
+        pageTurnStyle: _mapPageTurnMode(settings.pageTurnMode),
+      );
 
   /// 应用设置变化
   Future<void> _applySettings(BookReaderSettings settings) async {
@@ -401,11 +406,11 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
       title: context.l10n.ebookReaderSettingsTitle,
       icon: Icons.settings_rounded,
       contentBuilder: (context) => Consumer(
-          builder: (context, ref, _) {
-            final settings = ref.watch(bookReaderSettingsProvider);
-            return _buildSettingsContent(settings, context);
-          },
-        ),
+        builder: (context, ref, _) {
+          final settings = ref.watch(bookReaderSettingsProvider);
+          return _buildSettingsContent(settings, context);
+        },
+      ),
     );
   }
 
@@ -415,7 +420,8 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   /// - simulation: 仿真翻页（JS 层实现，带阴影卷曲效果）
   /// - cover: 覆盖翻页（JS 层实现，新页面滑入覆盖）
   /// - none: 无动画，点击翻页
-  FoliatePageTurnStyle _mapPageTurnMode(BookPageTurnMode mode) => switch (mode) {
+  FoliatePageTurnStyle _mapPageTurnMode(BookPageTurnMode mode) =>
+      switch (mode) {
         BookPageTurnMode.scroll => FoliatePageTurnStyle.slide, // 水平翻页
         BookPageTurnMode.slide => FoliatePageTurnStyle.scroll, // 连续滚动
         // 仿真和覆盖由 foliate-js 的 paginator.js 处理
@@ -426,46 +432,78 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
 
   // 翻页模式配置（标签已移至本地化）
   static const _pageTurnModeConfigs = [
-    (icon: Icons.swap_horiz_rounded, localizationKey: 'ebookReaderPageTurnModeHorizontal', mode: BookPageTurnMode.scroll),
-    (icon: Icons.swap_vert_rounded, localizationKey: 'ebookReaderPageTurnModeScroll', mode: BookPageTurnMode.slide),
-    (icon: Icons.auto_stories_rounded, localizationKey: 'ebookReaderPageTurnModeSimulation', mode: BookPageTurnMode.simulation),
-    (icon: Icons.flip_rounded, localizationKey: 'ebookReaderPageTurnModeCover', mode: BookPageTurnMode.cover),
-    (icon: Icons.article_rounded, localizationKey: 'ebookReaderPageTurnModeNone', mode: BookPageTurnMode.none),
+    (
+      icon: Icons.swap_horiz_rounded,
+      localizationKey: 'ebookReaderPageTurnModeHorizontal',
+      mode: BookPageTurnMode.scroll,
+    ),
+    (
+      icon: Icons.swap_vert_rounded,
+      localizationKey: 'ebookReaderPageTurnModeScroll',
+      mode: BookPageTurnMode.slide,
+    ),
+    (
+      icon: Icons.auto_stories_rounded,
+      localizationKey: 'ebookReaderPageTurnModeSimulation',
+      mode: BookPageTurnMode.simulation,
+    ),
+    (
+      icon: Icons.flip_rounded,
+      localizationKey: 'ebookReaderPageTurnModeCover',
+      mode: BookPageTurnMode.cover,
+    ),
+    (
+      icon: Icons.article_rounded,
+      localizationKey: 'ebookReaderPageTurnModeNone',
+      mode: BookPageTurnMode.none,
+    ),
   ];
 
   /// 获取本地化后的翻页模式列表
-  List<({IconData icon, String label, BookPageTurnMode mode})> _getLocalizedPageTurnModes(BuildContext context) => _pageTurnModeConfigs
-        .map((config) => (
+  List<({IconData icon, String label, BookPageTurnMode mode})>
+  _getLocalizedPageTurnModes(BuildContext context) => _pageTurnModeConfigs
+      .map(
+        (config) => (
           icon: config.icon,
           label: _getPageTurnModeLabel(context, config.localizationKey),
           mode: config.mode,
-        ))
-        .toList();
+        ),
+      )
+      .toList();
 
   /// 根据 localization key 获取翻页模式标签
-  String _getPageTurnModeLabel(BuildContext context, String key) => switch (key) {
-    'ebookReaderPageTurnModeHorizontal' => context.l10n.ebookReaderPageTurnModeHorizontal,
-    'ebookReaderPageTurnModeScroll' => context.l10n.ebookReaderPageTurnModeScroll,
-    'ebookReaderPageTurnModeSimulation' => context.l10n.ebookReaderPageTurnModeSimulation,
+  String _getPageTurnModeLabel(
+    BuildContext context,
+    String key,
+  ) => switch (key) {
+    'ebookReaderPageTurnModeHorizontal' =>
+      context.l10n.ebookReaderPageTurnModeHorizontal,
+    'ebookReaderPageTurnModeScroll' =>
+      context.l10n.ebookReaderPageTurnModeScroll,
+    'ebookReaderPageTurnModeSimulation' =>
+      context.l10n.ebookReaderPageTurnModeSimulation,
     'ebookReaderPageTurnModeCover' => context.l10n.ebookReaderPageTurnModeCover,
     'ebookReaderPageTurnModeNone' => context.l10n.ebookReaderPageTurnModeNone,
     _ => key,
   };
 
   int _getPageTurnModeIndex(BookPageTurnMode mode) => switch (mode) {
-        BookPageTurnMode.scroll => 0,
-        BookPageTurnMode.slide => 1,
-        BookPageTurnMode.simulation => 2,
-        BookPageTurnMode.cover => 3,
-        BookPageTurnMode.none => 4,
-      };
+    BookPageTurnMode.scroll => 0,
+    BookPageTurnMode.slide => 1,
+    BookPageTurnMode.simulation => 2,
+    BookPageTurnMode.cover => 3,
+    BookPageTurnMode.none => 4,
+  };
 
   /// 判断是否使用 Flutter 层面的翻页效果
   /// 现在 simulation 和 cover 由 foliate-js 的 paginator.js 处理，所以返回 false
   // ignore: unused_element
   bool _useFlutterPageFlip(BookPageTurnMode mode) => false;
 
-  Widget _buildSettingsContent(BookReaderSettings settings, BuildContext context) {
+  Widget _buildSettingsContent(
+    BookReaderSettings settings,
+    BuildContext context,
+  ) {
     final settingsNotifier = ref.read(bookReaderSettingsProvider.notifier);
 
     return Column(
@@ -474,9 +512,9 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         // 翻页方式
         SettingSectionTitle(title: context.l10n.ebookReaderSettingPageTurnMode),
         SettingPageTurnModePicker(
-          modes: _getLocalizedPageTurnModes(context)
-              .map((m) => (icon: m.icon, label: m.label))
-              .toList(),
+          modes: _getLocalizedPageTurnModes(
+            context,
+          ).map((m) => (icon: m.icon, label: m.label)).toList(),
           selectedIndex: _getPageTurnModeIndex(settings.pageTurnMode),
           onSelect: (index) {
             final mode = _pageTurnModeConfigs[index].mode;
@@ -490,7 +528,10 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         // 字体选择（注意：Foliate 仅支持系统字体）
         SettingSectionTitle(
           title: context.l10n.ebookReaderSettingFont,
-          trailing: localizeFormText(context, AvailableFonts.getDisplayName(settings.fontFamily)),
+          trailing: localizeFormText(
+            context,
+            AvailableFonts.getDisplayName(settings.fontFamily),
+          ),
         ),
         SettingFontPicker(
           selectedFont: settings.fontFamily,
@@ -603,7 +644,6 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
           value: settings.showProgress,
           onChanged: (value) => settingsNotifier.setShowProgress(value: value),
         ),
-
       ],
     );
   }
@@ -668,8 +708,11 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   }
 
   /// 构建键盘快捷键映射
-  Map<ShortcutKey, VoidCallback> _buildKeyboardShortcuts(BookReaderSettings settings) {
-    final isDark = settings.theme == BookReaderTheme.dark ||
+  Map<ShortcutKey, VoidCallback> _buildKeyboardShortcuts(
+    BookReaderSettings settings,
+  ) {
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
 
     return {
@@ -711,10 +754,16 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         (key: '←', description: context.l10n.ebookReaderKeyboardPrevPage),
         (key: '→', description: context.l10n.ebookReaderKeyboardNextPage),
         (key: 'Page Up', description: context.l10n.ebookReaderKeyboardPrevPage),
-        (key: 'Page Down', description: context.l10n.ebookReaderKeyboardNextPage),
+        (
+          key: 'Page Down',
+          description: context.l10n.ebookReaderKeyboardNextPage,
+        ),
         (key: 'Home', description: context.l10n.ebookReaderKeyboardHome),
         (key: 'End', description: context.l10n.ebookReaderKeyboardEnd),
-        (key: 'Space', description: context.l10n.ebookReaderKeyboardToggleControls),
+        (
+          key: 'Space',
+          description: context.l10n.ebookReaderKeyboardToggleControls,
+        ),
         (key: 'M', description: context.l10n.ebookReaderKeyboardToggleDarkMode),
         (key: ',', description: context.l10n.ebookReaderKeyboardOpenSettings),
         (key: 'Esc', description: context.l10n.ebookReaderKeyboardExit),
@@ -764,35 +813,39 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
             message: message,
           ),
           EbookReaderError(:final message) => _buildError(message),
-          EbookReaderLoaded(:final filePath) => _buildReader(filePath, settings),
+          EbookReaderLoaded(:final filePath) => _buildReader(
+            filePath,
+            settings,
+          ),
         },
       ),
     );
   }
 
   Widget _buildError(String message) => Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(color: AppColors.error),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.ebookReaderErrorButtonReturn),
-          ),
-        ],
-      ),
-    );
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.error_outline_rounded, size: 64, color: AppColors.error),
+        const SizedBox(height: 16),
+        Text(
+          message,
+          style: TextStyle(color: AppColors.error),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.l10n.ebookReaderErrorButtonReturn),
+        ),
+      ],
+    ),
+  );
 
   Widget _buildReader(String filePath, BookReaderSettings settings) {
     final style = _createStyle(settings);
-    final isDark = settings.theme == BookReaderTheme.dark ||
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
     final useFlutterFlip = _useFlutterPageFlip(settings.pageTurnMode);
 
@@ -835,9 +888,9 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                   _saveProgressDebounced(location);
                 },
                 onError: (error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(error)),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(error)));
                 },
                 onFootnoteOpen: () {
                   // 脚注打开时隐藏控制栏
@@ -885,10 +938,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
         readerContent,
 
         // 透明点击层 - 仅在非 Flutter 翻页模式时使用
-        if (!useFlutterFlip)
-          Positioned.fill(
-            child: _buildTapZones(settings),
-          ),
+        if (!useFlutterFlip) Positioned.fill(child: _buildTapZones(settings)),
 
         // 顶部控制栏（可隐藏）
         if (_showControls) _buildTopBar(settings),
@@ -905,7 +955,10 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   /// 处理 Flutter 翻页模式下的点击事件
   /// 注意：PageFlipEffect 内部已处理左侧25%和右侧25%的点击翻页
   /// 这里只需要处理中间区域的切换控制栏
-  void _handleTapForFlipMode(TapUpDetails details, BookReaderSettings settings) {
+  void _handleTapForFlipMode(
+    TapUpDetails details,
+    BookReaderSettings settings,
+  ) {
     // PageFlipEffect 只在中间 50% 区域触发 onTap 回调
     // 左侧 25% 和右侧 25% 的点击由 PageFlipEffect 内部处理翻页
     _toggleControls();
@@ -915,29 +968,31 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   String? get _currentChapterTitle => _currentLocation?.chapterTitle;
 
   /// 固定顶栏 - 显示当前章节标题
-  Widget _buildFixedHeader(BookReaderSettings settings, bool isDark) => SizedBox(
-      height: 28,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                // 优先显示当前章节标题，否则显示书名
-                _currentChapterTitle ?? _bookInfo?.title ?? widget.book.name,
-                style: TextStyle(
-                  color: (isDark ? Colors.white : Colors.black87)
-                      .withValues(alpha: 0.5),
-                  fontSize: 12,
+  Widget _buildFixedHeader(BookReaderSettings settings, bool isDark) =>
+      SizedBox(
+        height: 28,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  // 优先显示当前章节标题，否则显示书名
+                  _currentChapterTitle ?? _bookInfo?.title ?? widget.book.name,
+                  style: TextStyle(
+                    color: (isDark ? Colors.white : Colors.black87).withValues(
+                      alpha: 0.5,
+                    ),
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
 
   /// 固定底栏 - 显示进度信息、时间和电池
   Widget _buildFixedFooter(BookReaderSettings settings, bool isDark) {
@@ -945,7 +1000,9 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
     final chapterCurrentPage = _currentLocation?.chapterCurrentPage ?? 0;
     final chapterTotalPages = _currentLocation?.chapterTotalPages ?? 0;
 
-    final textColor = (isDark ? Colors.white : Colors.black87).withValues(alpha: 0.5);
+    final textColor = (isDark ? Colors.white : Colors.black87).withValues(
+      alpha: 0.5,
+    );
     const textStyle = TextStyle(fontSize: 11);
 
     // 格式化时间 HH:mm
@@ -972,10 +1029,7 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
             ),
             const Spacer(),
             // 右侧：时间和电池
-            Text(
-              timeString,
-              style: textStyle.copyWith(color: textColor),
-            ),
+            Text(timeString, style: textStyle.copyWith(color: textColor)),
             const SizedBox(width: 6),
             _buildBatteryIcon(isDark, textColor),
           ],
@@ -989,18 +1043,13 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
     final batteryColor = _isCharging
         ? AppColors.success
         : _batteryLevel <= 20
-            ? AppColors.error
-            : textColor;
+        ? AppColors.error
+        : textColor;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (_isCharging)
-          Icon(
-            Icons.bolt,
-            size: 10,
-            color: AppColors.success,
-          ),
+        if (_isCharging) Icon(Icons.bolt, size: 10, color: AppColors.success),
         Container(
           width: 22,
           height: 10,
@@ -1028,7 +1077,9 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
           margin: const EdgeInsets.only(left: 1),
           decoration: BoxDecoration(
             color: textColor,
-            borderRadius: const BorderRadius.horizontal(right: Radius.circular(1)),
+            borderRadius: const BorderRadius.horizontal(
+              right: Radius.circular(1),
+            ),
           ),
         ),
         const SizedBox(width: 3),
@@ -1049,54 +1100,55 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   /// 三区域点击处理
   /// 使用 Listener 只监听点击，不拦截滑动手势，让 WebView 正常处理滑动翻页
   Widget _buildTapZones(BookReaderSettings settings) => Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (event) {
-        _tapDownPosition = event.localPosition;
-        _tapDownTime = DateTime.now();
-      },
-      onPointerUp: (event) {
-        if (_tapDownPosition == null || _tapDownTime == null) return;
+    behavior: HitTestBehavior.translucent,
+    onPointerDown: (event) {
+      _tapDownPosition = event.localPosition;
+      _tapDownTime = DateTime.now();
+    },
+    onPointerUp: (event) {
+      if (_tapDownPosition == null || _tapDownTime == null) return;
 
-        final distance = (event.localPosition - _tapDownPosition!).distance;
-        final duration = DateTime.now().difference(_tapDownTime!);
+      final distance = (event.localPosition - _tapDownPosition!).distance;
+      final duration = DateTime.now().difference(_tapDownTime!);
 
-        // 快速点击且移动距离小，才视为点击（不是滑动）
-        if (distance < 15 && duration.inMilliseconds < 300) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final tapX = _tapDownPosition!.dx;
-          final ratio = tapX / screenWidth;
+      // 快速点击且移动距离小，才视为点击（不是滑动）
+      if (distance < 15 && duration.inMilliseconds < 300) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        final tapX = _tapDownPosition!.dx;
+        final ratio = tapX / screenWidth;
 
-          // 是否需要点击翻页（滑动/滚动模式由 WebView 处理翻页）
-          final needsTapTurn = _needsTapToTurn(settings.pageTurnMode);
+        // 是否需要点击翻页（滑动/滚动模式由 WebView 处理翻页）
+        final needsTapTurn = _needsTapToTurn(settings.pageTurnMode);
 
-          if (needsTapTurn && ratio < 0.25) {
-            // 左侧 25%: 上一页（仅在无动画模式）
-            _controller.prevPage();
-          } else if (needsTapTurn && ratio > 0.75) {
-            // 右侧 25%: 下一页（仅在无动画模式）
-            _controller.nextPage();
-          } else if (ratio >= 0.25 && ratio <= 0.75) {
-            // 中间 50%: 切换控制栏
-            _toggleControls();
-          }
+        if (needsTapTurn && ratio < 0.25) {
+          // 左侧 25%: 上一页（仅在无动画模式）
+          _controller.prevPage();
+        } else if (needsTapTurn && ratio > 0.75) {
+          // 右侧 25%: 下一页（仅在无动画模式）
+          _controller.nextPage();
+        } else if (ratio >= 0.25 && ratio <= 0.75) {
+          // 中间 50%: 切换控制栏
+          _toggleControls();
         }
-        _tapDownPosition = null;
-        _tapDownTime = null;
-      },
-      onPointerCancel: (event) {
-        _tapDownPosition = null;
-        _tapDownTime = null;
-      },
-      // 使用 IgnorePointer 确保不阻止手势传递给下层 WebView
-      child: const IgnorePointer(child: SizedBox.expand()),
-    );
+      }
+      _tapDownPosition = null;
+      _tapDownTime = null;
+    },
+    onPointerCancel: (event) {
+      _tapDownPosition = null;
+      _tapDownTime = null;
+    },
+    // 使用 IgnorePointer 确保不阻止手势传递给下层 WebView
+    child: const IgnorePointer(child: SizedBox.expand()),
+  );
 
   // 点击检测相关变量
   Offset? _tapDownPosition;
   DateTime? _tapDownTime;
 
   Widget _buildTopBar(BookReaderSettings settings) {
-    final isDark = settings.theme == BookReaderTheme.dark ||
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
 
     return Positioned(
@@ -1149,7 +1201,8 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
 
   Widget _buildBottomBar(BookReaderSettings settings) {
     final progress = _currentLocation?.fraction ?? 0.0;
-    final isDark = settings.theme == BookReaderTheme.dark ||
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
 
     return Positioned(
@@ -1184,9 +1237,13 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () async {
-                          final success = await _controller.goToPreviousSection();
+                          final success = await _controller
+                              .goToPreviousSection();
                           if (success) {
-                            AppError.fireAndForget(HapticFeedback.lightImpact(), action: 'ebookReader.haptic');
+                            AppError.fireAndForget(
+                              HapticFeedback.lightImpact(),
+                              action: 'ebookReader.haptic',
+                            );
                           }
                         },
                         borderRadius: BorderRadius.circular(8),
@@ -1220,16 +1277,22 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                           SliderTheme(
                             data: SliderThemeData(
                               trackHeight: 6,
-                              activeTrackColor: isDark ? Colors.white : Colors.black87,
+                              activeTrackColor: isDark
+                                  ? Colors.white
+                                  : Colors.black87,
                               inactiveTrackColor: isDark
                                   ? Colors.white.withValues(alpha: 0.3)
                                   : Colors.black.withValues(alpha: 0.15),
-                              thumbColor: isDark ? Colors.white : Colors.black87,
+                              thumbColor: isDark
+                                  ? Colors.white
+                                  : Colors.black87,
                               thumbShape: const RoundSliderThumbShape(
                                 enabledThumbRadius: 8,
                                 elevation: 2,
                               ),
-                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 16,
+                              ),
                               trackShape: const RoundedRectSliderTrackShape(),
                             ),
                             child: Slider(
@@ -1247,7 +1310,10 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                         onTap: () async {
                           final success = await _controller.goToNextSection();
                           if (success) {
-                            AppError.fireAndForget(HapticFeedback.lightImpact(), action: 'ebookReader.haptic');
+                            AppError.fireAndForget(
+                              HapticFeedback.lightImpact(),
+                              action: 'ebookReader.haptic',
+                            );
                           }
                         },
                         borderRadius: BorderRadius.circular(8),
@@ -1301,10 +1367,14 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
                     ),
                     _BottomBarButton(
                       icon: isDark ? Icons.light_mode : Icons.dark_mode,
-                      label: isDark ? context.l10n.ebookReaderButtonDayMode : context.l10n.ebookReaderButtonNightMode,
+                      label: isDark
+                          ? context.l10n.ebookReaderButtonDayMode
+                          : context.l10n.ebookReaderButtonNightMode,
                       isDark: isDark,
                       onPressed: () {
-                        final notifier = ref.read(bookReaderSettingsProvider.notifier);
+                        final notifier = ref.read(
+                          bookReaderSettingsProvider.notifier,
+                        );
                         final newTheme = isDark
                             ? BookReaderTheme.light
                             : BookReaderTheme.dark;
@@ -1329,7 +1399,8 @@ class _EbookReaderPageState extends ConsumerState<EbookReaderPage> {
   }
 
   Widget _buildTocDrawer(BookReaderSettings settings) {
-    final isDark = settings.theme == BookReaderTheme.dark ||
+    final isDark =
+        settings.theme == BookReaderTheme.dark ||
         settings.theme == BookReaderTheme.black;
 
     return Positioned(
@@ -1457,10 +1528,7 @@ class _BottomBarButton extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(color: color, fontSize: 11),
-            ),
+            Text(label, style: TextStyle(color: color, fontSize: 11)),
           ],
         ),
       ),

@@ -8,6 +8,7 @@ import 'package:image/image.dart' as img;
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/utils/file_name_sanitizer.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/core/utils/tv_capabilities.dart';
@@ -29,10 +30,12 @@ class PhotoSaveService {
 
   static PhotoSaveService? _instance;
 
-  final Dio _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(minutes: 5),
-  ));
+  final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(minutes: 5),
+    ),
+  );
 
   /// 判断是否为桌面平台
   bool get isDesktop => PlatformCapabilities.isDesktop;
@@ -44,10 +47,12 @@ class PhotoSaveService {
   bool get canSaveToGallery => PlatformCapabilities.canSaveToGallery;
 
   /// 是否支持系统分享（TV 模式不支持）
-  bool get canShare => PlatformCapabilities.canShare && !TvCapabilities.isTvMode;
+  bool get canShare =>
+      PlatformCapabilities.canShare && !TvCapabilities.isTvMode;
 
   /// 是否支持完整的系统分享（TV 模式不支持）
-  bool get canShareNatively => PlatformCapabilities.canShareNatively && !TvCapabilities.isTvMode;
+  bool get canShareNatively =>
+      PlatformCapabilities.canShareNatively && !TvCapabilities.isTvMode;
 
   /// 下载照片（通过 HTTP URL）
   /// - 桌面端：弹出文件选择对话框，用户选择保存位置
@@ -62,17 +67,16 @@ class PhotoSaveService {
     File? tempFile;
 
     try {
-      logger..i('PhotoSaveService: 开始下载照片: $fileName, URL: $url')
-      ..i('PhotoSaveService: 平台信息 - isDesktop=$isDesktop, isMobile=$isMobile, canSaveToGallery=$canSaveToGallery');
+      logger
+        ..i('PhotoSaveService: 开始下载照片: $fileName, URL: $url')
+        ..i(
+          'PhotoSaveService: 平台信息 - isDesktop=$isDesktop, isMobile=$isMobile, canSaveToGallery=$canSaveToGallery',
+        );
 
       // 1. 下载文件到临时目录
       // 远端文件名可能含 Windows 非法字符或超长，需清洗后再拼本地路径。
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(
-        tempDir.path,
-        'photo_download_${sanitizeFileName(fileName)}',
-      );
-      tempFile = File(tempPath);
+      tempFile = await _createUniqueTempFile('download', fileName);
+      final tempPath = tempFile.path;
       logger.i('PhotoSaveService: 临时文件路径: $tempPath');
 
       final response = await _dio.download(
@@ -89,7 +93,10 @@ class PhotoSaveService {
       logger.i('PhotoSaveService: 下载完成, HTTP状态码: ${response.statusCode}');
 
       if (response.statusCode != 200) {
-        return SaveResult.failure(appL10n.photoSaveHttpStatusCodeError(response.statusCode ?? 0));
+        await _cleanupTempFile(tempFile);
+        return SaveResult.failure(
+          appL10n.photoSaveHttpStatusCodeError(response.statusCode ?? 0),
+        );
       }
 
       final fileExists = await tempFile.exists();
@@ -97,6 +104,7 @@ class PhotoSaveService {
       logger.i('PhotoSaveService: 临时文件检查 - 存在=$fileExists, 大小=$fileSize bytes');
 
       if (!fileExists) {
+        await _cleanupTempFile(tempFile);
         return SaveResult.failure(appL10n.photoSaveDownloadedFileNotFound);
       }
 
@@ -112,24 +120,37 @@ class PhotoSaveService {
       } else {
         return _saveToGallery(tempFile, fileName);
       }
-    } on DioException catch (e) {
+    } on DioException catch (e, st) {
       // 清理临时文件
       await _cleanupTempFile(tempFile);
 
       if (e.type == DioExceptionType.cancel) {
+        AppError.ignore(e, st, '用户取消照片下载');
         logger.i('PhotoSaveService: 下载已取消');
         return SaveResult.cancelled();
       }
 
-      logger..e('PhotoSaveService: 下载失败 (DioException)', e)
-      ..e('PhotoSaveService: DioException type=${e.type}, message=${e.message}');
-      return SaveResult.failure('${appL10n.photoSaveDownloadFailed(appL10n.photoSaveResultFailed)}: ${_getDioErrorMessage(e)}');
-    } on Exception catch (e, stackTrace) {
+      AppError.handle(e, st, 'PhotoSaveService.downloadPhoto', {'url': url});
+
+      logger
+        ..e('PhotoSaveService: 下载失败 (DioException)', e)
+        ..e(
+          'PhotoSaveService: DioException type=${e.type}, message=${e.message}',
+        );
+      return SaveResult.failure(
+        '${appL10n.photoSaveDownloadFailed(appL10n.photoSaveResultFailed)}: ${_getDioErrorMessage(e)}',
+      );
+    } on Object catch (e, stackTrace) {
       // 清理临时文件
       await _cleanupTempFile(tempFile);
 
-      logger..e('PhotoSaveService: 保存失败 (Exception)', e)
-      ..e('PhotoSaveService: StackTrace: $stackTrace');
+      AppError.handle(e, stackTrace, 'PhotoSaveService.downloadPhoto', {
+        'url': url,
+      });
+
+      logger
+        ..e('PhotoSaveService: 保存失败 (Exception)', e)
+        ..e('PhotoSaveService: StackTrace: $stackTrace');
       return SaveResult.failure(appL10n.photoSaveFailed(e.toString()));
     }
   }
@@ -146,8 +167,9 @@ class PhotoSaveService {
     File? tempFile;
 
     try {
-      logger..i('PhotoSaveService: 开始从流下载照片: $fileName, path=$path')
-      ..i('PhotoSaveService: 文件系统类型: ${fileSystem.runtimeType}');
+      logger
+        ..i('PhotoSaveService: 开始从流下载照片: $fileName, path=$path')
+        ..i('PhotoSaveService: 文件系统类型: ${fileSystem.runtimeType}');
 
       // 1. 获取文件信息（用于计算进度）
       int? totalSize;
@@ -155,34 +177,34 @@ class PhotoSaveService {
         final fileInfo = await fileSystem.getFileInfo(path);
         totalSize = fileInfo.size;
         logger.i('PhotoSaveService: 文件大小: $totalSize bytes');
-      } on Exception catch (e) {
+      } on Object catch (e, st) {
+        AppError.ignore(e, st, '远端照片无法获取文件大小，继续使用无进度模式');
         logger.w('PhotoSaveService: 获取文件信息失败: $e');
         // 获取文件信息失败，继续下载但不显示进度
       }
 
       // 2. 获取文件流并写入临时文件
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(
-        tempDir.path,
-        'photo_download_${sanitizeFileName(fileName)}',
-      );
-      tempFile = File(tempPath);
-      logger..i('PhotoSaveService: 临时文件路径: $tempPath')
-
-      ..i('PhotoSaveService: 开始获取文件流...');
+      tempFile = await _createUniqueTempFile('download', fileName);
+      final tempPath = tempFile.path;
+      logger
+        ..i('PhotoSaveService: 临时文件路径: $tempPath')
+        ..i('PhotoSaveService: 开始获取文件流...');
       final stream = await fileSystem.getFileStream(path);
       final sink = tempFile.openWrite();
       var receivedBytes = 0;
 
-      await for (final chunk in stream) {
-        sink.add(chunk);
-        receivedBytes += chunk.length;
-        if (totalSize != null && totalSize > 0) {
-          onProgress?.call(receivedBytes / totalSize);
+      try {
+        await for (final chunk in stream) {
+          sink.add(chunk);
+          receivedBytes += chunk.length;
+          if (totalSize != null && totalSize > 0) {
+            onProgress?.call(receivedBytes / totalSize);
+          }
         }
+      } finally {
+        // Windows 上未关闭的 sink 会阻止 catch 分支删除临时文件。
+        await sink.close();
       }
-
-      await sink.close();
       logger.i('PhotoSaveService: 流式下载完成, 接收字节数: $receivedBytes');
 
       final fileExists = await tempFile.exists();
@@ -205,12 +227,20 @@ class PhotoSaveService {
       } else {
         return _saveToGallery(tempFile, fileName);
       }
-    } on Exception catch (e, stackTrace) {
+    } on Object catch (e, stackTrace) {
       // 清理临时文件
       await _cleanupTempFile(tempFile);
 
-      logger..e('PhotoSaveService: 从流下载失败', e)
-      ..e('PhotoSaveService: StackTrace: $stackTrace');
+      AppError.handle(
+        e,
+        stackTrace,
+        'PhotoSaveService.downloadPhotoFromStream',
+        {'path': path},
+      );
+
+      logger
+        ..e('PhotoSaveService: 从流下载失败', e)
+        ..e('PhotoSaveService: StackTrace: $stackTrace');
       return SaveResult.failure(appL10n.photoSaveFailed(e.toString()));
     }
   }
@@ -236,7 +266,10 @@ class PhotoSaveService {
       } else {
         return _saveToGallery(sourceFile, fileName, deleteAfter: false);
       }
-    } on Exception catch (e) {
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'PhotoSaveService.saveLocalPhoto', {
+        'localPath': localPath,
+      });
       logger.e('PhotoSaveService: 保存本地照片失败', e);
       return SaveResult.failure(appL10n.photoSaveFailed(e.toString()));
     }
@@ -270,7 +303,13 @@ class PhotoSaveService {
 
     // file:// URL - 直接保存本地文件
     if (url.startsWith('file://')) {
-      final localPath = Uri.parse(url).toFilePath();
+      final localPath = localPathFromFileUri(url);
+      if (localPath == null) {
+        // 调用方（photo_viewer_page）只判断返回的 SaveResult，不 catch 异常：
+        // 抛出会跳过关闭进度对话框的代码，让用户卡在无提示的模态框上。
+        logger.w('PhotoSaveService: 无法解析本地照片 file URI: $url');
+        return SaveResult.failure(appL10n.photoSaveUnsupportedUrlType);
+      }
       return saveLocalPhoto(localPath: localPath, fileName: fileName);
     }
 
@@ -319,7 +358,8 @@ class PhotoSaveService {
 
       logger.i('PhotoSaveService: 照片已保存到: $result');
       return SaveResult.success(result);
-    } on Exception catch (e) {
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'PhotoSaveService.saveToDesktop');
       logger.e('PhotoSaveService: 桌面端保存失败', e);
       if (deleteAfter) await _cleanupTempFile(sourceFile);
       return SaveResult.failure(appL10n.photoSaveFailed(e.toString()));
@@ -332,47 +372,66 @@ class PhotoSaveService {
     String fileName, {
     bool deleteAfter = true,
   }) async {
+    var workingFile = sourceFile;
+    var cleanupFile = deleteAfter ? sourceFile : null;
     try {
       // 检查源文件是否存在和大小
       final fileExists = await sourceFile.exists();
       final fileSize = fileExists ? await sourceFile.length() : 0;
-      logger.i('PhotoSaveService: 准备保存到相册, 文件存在=$fileExists, 大小=$fileSize bytes, 路径=${sourceFile.path}');
+      logger.i(
+        'PhotoSaveService: 准备保存到相册, 文件存在=$fileExists, 大小=$fileSize bytes, 路径=${sourceFile.path}',
+      );
 
       if (!fileExists) {
+        await _cleanupTempFile(cleanupFile);
         return SaveResult.failure(appL10n.photoSaveTempFileNotFound);
       }
 
       if (fileSize == 0) {
-        if (deleteAfter) await _cleanupTempFile(sourceFile);
+        await _cleanupTempFile(cleanupFile);
         return SaveResult.failure(appL10n.photoSaveDownloadedFileEmpty);
       }
 
+      // 本地文件属于用户，不能为了相册排序直接改写其 EXIF。先复制到任务独占
+      // 的临时目录，再只修改副本；下载得到的临时文件则可原地处理。
+      if (!deleteAfter) {
+        workingFile = await _createUniqueTempFile('gallery', fileName);
+        cleanupFile = workingFile;
+        await sourceFile.copy(workingFile.path);
+      }
+
       // 更新 EXIF 时间戳为当前时间，使照片在相册中按下载时间排序
-      final processedFile = await _updateExifTimestamp(sourceFile, fileName);
+      final processedFile = await _updateExifTimestamp(workingFile, fileName);
 
       // 使用 gal 库保存到相册
       logger.i('PhotoSaveService: 调用 Gal.putImage...');
       await Gal.putImage(processedFile.path, album: 'MyNAS');
 
       // 删除临时文件
-      if (deleteAfter) await _cleanupTempFile(sourceFile);
+      await _cleanupTempFile(cleanupFile);
 
       logger.i('PhotoSaveService: 照片已成功保存到相册');
       return SaveResult.success(null, isGallery: true);
-    } on GalException catch (e) {
-      logger..e('PhotoSaveService: 保存到相册失败 (GalException)', e)
-      ..e('PhotoSaveService: GalException type=${e.type}, platformException=${e.platformException}');
-      if (deleteAfter) await _cleanupTempFile(sourceFile);
+    } on GalException catch (e, st) {
+      AppError.handle(e, st, 'PhotoSaveService.saveToGallery');
+      logger
+        ..e('PhotoSaveService: 保存到相册失败 (GalException)', e)
+        ..e(
+          'PhotoSaveService: GalException type=${e.type}, platformException=${e.platformException}',
+        );
+      await _cleanupTempFile(cleanupFile);
 
       // 处理权限问题
       if (e.type == GalExceptionType.accessDenied) {
         return SaveResult.failure(appL10n.photoSaveGalleryPermissionDenied);
       }
       return SaveResult.failure(appL10n.photoSaveToGalleryFailed(e.type.name));
-    } on Exception catch (e, stackTrace) {
-      logger..e('PhotoSaveService: 保存到相册失败 (Exception)', e)
-      ..e('PhotoSaveService: StackTrace: $stackTrace');
-      if (deleteAfter) await _cleanupTempFile(sourceFile);
+    } on Object catch (e, stackTrace) {
+      AppError.handle(e, stackTrace, 'PhotoSaveService.saveToGallery');
+      logger
+        ..e('PhotoSaveService: 保存到相册失败 (Exception)', e)
+        ..e('PhotoSaveService: StackTrace: $stackTrace');
+      await _cleanupTempFile(cleanupFile);
       return SaveResult.failure(appL10n.photoSaveToGalleryFailed(e.toString()));
     }
   }
@@ -397,12 +456,8 @@ class PhotoSaveService {
       logger.i('PhotoSaveService: 开始分享照片: $fileName');
 
       // 1. 下载文件到临时目录
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(
-        tempDir.path,
-        'share_${sanitizeFileName(fileName)}',
-      );
-      tempFile = File(tempPath);
+      tempFile = await _createUniqueTempFile('share', fileName);
+      final tempPath = tempFile.path;
 
       final response = await _dio.download(
         url,
@@ -416,10 +471,14 @@ class PhotoSaveService {
       );
 
       if (response.statusCode != 200) {
-        return ShareResult.failure(appL10n.photoSaveHttpStatusCodeError(response.statusCode ?? 0));
+        _scheduleCleanup(tempFile);
+        return ShareResult.failure(
+          appL10n.photoSaveHttpStatusCodeError(response.statusCode ?? 0),
+        );
       }
 
       if (!await tempFile.exists()) {
+        _scheduleCleanup(tempFile);
         return ShareResult.failure(appL10n.photoSaveFileNotFound);
       }
 
@@ -440,22 +499,31 @@ class PhotoSaveService {
       return switch (result.status) {
         ShareResultStatus.success => ShareResult.success(),
         ShareResultStatus.dismissed => ShareResult.cancelled(),
-        ShareResultStatus.unavailable =>
-          ShareResult.failure(appL10n.photoSaveShareFeatureUnavailable),
+        ShareResultStatus.unavailable => ShareResult.failure(
+          appL10n.photoSaveShareFeatureUnavailable,
+        ),
       };
-    } on DioException catch (e) {
+    } on DioException catch (e, st) {
       _scheduleCleanup(tempFile);
 
       if (e.type == DioExceptionType.cancel) {
+        AppError.ignore(e, st, '用户取消分享照片前的下载');
         logger.i('PhotoSaveService: 分享下载已取消');
         return ShareResult.cancelled();
       }
 
+      AppError.handle(e, st, 'PhotoSaveService.sharePhotoDownload', {
+        'url': url,
+      });
+
       logger.e('PhotoSaveService: 分享失败 - 下载错误', e);
-      return ShareResult.failure(appL10n.photoShareDownloadFailed(_getDioErrorMessage(e)));
-    } on Exception catch (e) {
+      return ShareResult.failure(
+        appL10n.photoShareDownloadFailed(_getDioErrorMessage(e)),
+      );
+    } on Object catch (e, st) {
       _scheduleCleanup(tempFile);
 
+      AppError.handle(e, st, 'PhotoSaveService.sharePhoto');
       logger.e('PhotoSaveService: 分享失败', e);
       return ShareResult.failure(appL10n.photoShareFailed(e.toString()));
     }
@@ -475,12 +543,8 @@ class PhotoSaveService {
 
     try {
       // 保存到临时文件
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(
-        tempDir.path,
-        'share_${sanitizeFileName(fileName)}',
-      );
-      tempFile = File(tempPath);
+      tempFile = await _createUniqueTempFile('share', fileName);
+      final tempPath = tempFile.path;
       await tempFile.writeAsBytes(bytes);
 
       // 分享
@@ -497,12 +561,14 @@ class PhotoSaveService {
       return switch (result.status) {
         ShareResultStatus.success => ShareResult.success(),
         ShareResultStatus.dismissed => ShareResult.cancelled(),
-        ShareResultStatus.unavailable =>
-          ShareResult.failure(appL10n.photoSaveShareFeatureUnavailable),
+        ShareResultStatus.unavailable => ShareResult.failure(
+          appL10n.photoSaveShareFeatureUnavailable,
+        ),
       };
-    } on Exception catch (e) {
+    } on Object catch (e, st) {
       _scheduleCleanup(tempFile);
 
+      AppError.handle(e, st, 'PhotoSaveService.sharePhotoFromBytes');
       logger.e('PhotoSaveService: 分享失败', e);
       return ShareResult.failure(appL10n.photoShareFailed(e.toString()));
     }
@@ -537,10 +603,14 @@ class PhotoSaveService {
       return switch (result.status) {
         ShareResultStatus.success => ShareResult.success(),
         ShareResultStatus.dismissed => ShareResult.cancelled(),
-        ShareResultStatus.unavailable =>
-          ShareResult.failure(appL10n.photoSaveShareFeatureUnavailable),
+        ShareResultStatus.unavailable => ShareResult.failure(
+          appL10n.photoSaveShareFeatureUnavailable,
+        ),
       };
-    } on Exception catch (e) {
+    } on Object catch (e, st) {
+      AppError.handle(e, st, 'PhotoSaveService.shareLocalPhoto', {
+        'localPath': localPath,
+      });
       logger.e('PhotoSaveService: 分享本地文件失败', e);
       return ShareResult.failure(appL10n.photoShareFailed(e.toString()));
     }
@@ -568,33 +638,33 @@ class PhotoSaveService {
       try {
         final fileInfo = await fileSystem.getFileInfo(path);
         totalSize = fileInfo.size;
-      } on Exception catch (_) {
+      } on Object catch (e, st) {
         // 获取文件信息失败，继续但不显示进度
+        AppError.ignore(e, st, '分享远端照片时无法获取大小，继续使用无进度模式');
       }
 
       // 2. 获取文件流并写入临时文件
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = p.join(
-        tempDir.path,
-        'share_${sanitizeFileName(fileName)}',
-      );
-      tempFile = File(tempPath);
+      tempFile = await _createUniqueTempFile('share', fileName);
+      final tempPath = tempFile.path;
 
       final stream = await fileSystem.getFileStream(path);
       final sink = tempFile.openWrite();
       var receivedBytes = 0;
 
-      await for (final chunk in stream) {
-        sink.add(chunk);
-        receivedBytes += chunk.length;
-        if (totalSize != null && totalSize > 0) {
-          onProgress?.call(receivedBytes / totalSize);
+      try {
+        await for (final chunk in stream) {
+          sink.add(chunk);
+          receivedBytes += chunk.length;
+          if (totalSize != null && totalSize > 0) {
+            onProgress?.call(receivedBytes / totalSize);
+          }
         }
+      } finally {
+        await sink.close();
       }
 
-      await sink.close();
-
       if (!await tempFile.exists()) {
+        _scheduleCleanup(tempFile);
         return ShareResult.failure(appL10n.photoSharePrepareFileFailed);
       }
 
@@ -614,12 +684,16 @@ class PhotoSaveService {
       return switch (result.status) {
         ShareResultStatus.success => ShareResult.success(),
         ShareResultStatus.dismissed => ShareResult.cancelled(),
-        ShareResultStatus.unavailable =>
-          ShareResult.failure(appL10n.photoSaveShareFeatureUnavailable),
+        ShareResultStatus.unavailable => ShareResult.failure(
+          appL10n.photoSaveShareFeatureUnavailable,
+        ),
       };
-    } on Exception catch (e) {
+    } on Object catch (e, st) {
       _scheduleCleanup(tempFile);
 
+      AppError.handle(e, st, 'PhotoSaveService.sharePhotoFromStream', {
+        'path': path,
+      });
       logger.e('PhotoSaveService: 从流分享失败', e);
       return ShareResult.failure(appL10n.photoShareFailed(e.toString()));
     }
@@ -655,7 +729,12 @@ class PhotoSaveService {
 
     // file:// URL - 直接分享本地文件
     if (url.startsWith('file://')) {
-      final localPath = Uri.parse(url).toFilePath();
+      final localPath = localPathFromFileUri(url);
+      if (localPath == null) {
+        // 同 smartDownloadPhoto：调用方不 catch，必须走返回值报错。
+        logger.w('PhotoSaveService: 无法解析本地照片 file URI: $url');
+        return ShareResult.failure(appL10n.photoSaveUnsupportedUrlType);
+      }
       return shareLocalPhoto(
         localPath: localPath,
         fileName: fileName,
@@ -721,7 +800,8 @@ class PhotoSaveService {
 
       // 格式化当前时间为 EXIF 日期格式: "YYYY:MM:DD HH:MM:SS"
       final now = DateTime.now();
-      final exifDateStr = '${now.year}:${now.month.toString().padLeft(2, '0')}:${now.day.toString().padLeft(2, '0')} '
+      final exifDateStr =
+          '${now.year}:${now.month.toString().padLeft(2, '0')}:${now.day.toString().padLeft(2, '0')} '
           '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
 
       // 更新 EXIF 时间相关字段
@@ -738,8 +818,9 @@ class PhotoSaveService {
 
       logger.i('PhotoSaveService: EXIF 时间戳已更新为 $exifDateStr');
       return sourceFile;
-    } on Exception catch (e) {
+    } on Object catch (e, st) {
       // 如果更新失败，仍然使用原文件
+      AppError.ignore(e, st, '更新照片 EXIF 时间失败，保留原始文件继续保存');
       logger.w('PhotoSaveService: 更新 EXIF 时间戳失败: $e，使用原文件');
       return sourceFile;
     }
@@ -752,6 +833,11 @@ class PhotoSaveService {
       if (await file.exists()) {
         await file.delete();
       }
+      final parent = file.parent;
+      if (p.basename(parent.path).startsWith('mynas_photo_') &&
+          await parent.exists()) {
+        await parent.delete();
+      }
     } on Exception catch (e, st) {
       AppError.ignore(e, st, '清理临时照片文件失败');
     }
@@ -760,22 +846,34 @@ class PhotoSaveService {
   /// 延迟清理临时文件
   void _scheduleCleanup(File? file) {
     if (file == null) return;
-    Future.delayed(const Duration(seconds: 5), () async {
-      await _cleanupTempFile(file);
-    });
+    AppError.fireAndForget(
+      Future<void>.delayed(
+        const Duration(minutes: 5),
+      ).then((_) => _cleanupTempFile(file)),
+      action: 'photoSave.cleanupTemporaryShareFile',
+    );
+  }
+
+  Future<File> _createUniqueTempFile(String purpose, String fileName) async {
+    final root = await getTemporaryDirectory();
+    final work = await root.createTemp('mynas_photo_${purpose}_');
+    return File(p.join(work.path, sanitizeFileName(fileName)));
   }
 
   /// 获取 Dio 错误消息
   String _getDioErrorMessage(DioException e) => switch (e.type) {
-      DioExceptionType.connectionTimeout => appL10n.photoDioErrorConnectionTimeout,
-      DioExceptionType.sendTimeout => appL10n.photoDioErrorSendTimeout,
-      DioExceptionType.receiveTimeout => appL10n.photoDioErrorReceiveTimeout,
-      DioExceptionType.badResponse => appL10n.photoDioErrorBadResponse(e.response?.statusCode ?? 0),
-      DioExceptionType.cancel => appL10n.photoDioErrorCancelled,
-      DioExceptionType.connectionError => appL10n.photoDioErrorConnectionFailed,
-      DioExceptionType.unknown => e.message ?? appL10n.photoDioErrorUnknown,
-      _ => e.message ?? appL10n.photoDioErrorNetwork,
-    };
+    DioExceptionType.connectionTimeout =>
+      appL10n.photoDioErrorConnectionTimeout,
+    DioExceptionType.sendTimeout => appL10n.photoDioErrorSendTimeout,
+    DioExceptionType.receiveTimeout => appL10n.photoDioErrorReceiveTimeout,
+    DioExceptionType.badResponse => appL10n.photoDioErrorBadResponse(
+      e.response?.statusCode ?? 0,
+    ),
+    DioExceptionType.cancel => appL10n.photoDioErrorCancelled,
+    DioExceptionType.connectionError => appL10n.photoDioErrorConnectionFailed,
+    DioExceptionType.unknown => e.message ?? appL10n.photoDioErrorUnknown,
+    _ => e.message ?? appL10n.photoDioErrorNetwork,
+  };
 }
 
 /// 保存结果
@@ -788,7 +886,11 @@ class SaveResult {
   });
 
   factory SaveResult.success(String? path, {bool isGallery = false}) =>
-      SaveResult._(status: SaveStatus.success, path: path, isGallery: isGallery);
+      SaveResult._(
+        status: SaveStatus.success,
+        path: path,
+        isGallery: isGallery,
+      );
 
   factory SaveResult.failure(String error) =>
       SaveResult._(status: SaveStatus.failure, error: error);
@@ -806,21 +908,18 @@ class SaveResult {
   bool get isFailure => status == SaveStatus.failure;
 
   String get message => switch (status) {
-      SaveStatus.success when isGallery => appL10n.photoSaveResultSavedToGallery,
-      SaveStatus.success => appL10n.photoSaveResultSavedTo(path ?? ''),
-      SaveStatus.cancelled => appL10n.photoSaveResultCancelled,
-      SaveStatus.failure => error ?? appL10n.photoSaveResultFailed,
-    };
+    SaveStatus.success when isGallery => appL10n.photoSaveResultSavedToGallery,
+    SaveStatus.success => appL10n.photoSaveResultSavedTo(path ?? ''),
+    SaveStatus.cancelled => appL10n.photoSaveResultCancelled,
+    SaveStatus.failure => error ?? appL10n.photoSaveResultFailed,
+  };
 }
 
 enum SaveStatus { success, failure, cancelled }
 
 /// 分享结果
 class ShareResult {
-  const ShareResult._({
-    required this.status,
-    this.error,
-  });
+  const ShareResult._({required this.status, this.error});
 
   factory ShareResult.success() =>
       const ShareResult._(status: ShareStatus.success);

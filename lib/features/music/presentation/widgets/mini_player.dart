@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/features/music/presentation/pages/music_player_page.dart';
 import 'package:my_nas/features/music/presentation/providers/music_player_provider.dart';
 
@@ -25,7 +26,8 @@ class MiniPlayer extends ConsumerWidget {
       onTap: () => MusicPlayerPage.open(context),
       onVerticalDragEnd: (details) {
         // 向上滑动打开全屏播放器
-        if (details.primaryVelocity != null && details.primaryVelocity! < -200) {
+        if (details.primaryVelocity != null &&
+            details.primaryVelocity! < -200) {
           MusicPlayerPage.open(context);
         }
       },
@@ -64,7 +66,11 @@ class MiniPlayer extends ConsumerWidget {
                     child: Row(
                       children: [
                         // 封面
-                        _buildCover(currentMusic.coverData, currentMusic.coverUrl, isDark),
+                        _buildCover(
+                          currentMusic.coverData,
+                          currentMusic.coverUrl,
+                          isDark,
+                        ),
                         const SizedBox(width: 12),
                         // 歌曲信息
                         Expanded(
@@ -93,7 +99,12 @@ class MiniPlayer extends ConsumerWidget {
                           ),
                         ),
                         // 控制按钮
-                        _buildControlButtons(ref, playerState, playerNotifier, isDark),
+                        _buildControlButtons(
+                          ref,
+                          playerState,
+                          playerNotifier,
+                          isDark,
+                        ),
                       ],
                     ),
                   ),
@@ -119,13 +130,15 @@ class MiniPlayer extends ConsumerWidget {
     } else if (coverUrl != null && coverUrl.isNotEmpty) {
       // 支持 file:// URL 和网络 URL
       if (coverUrl.startsWith('file://')) {
-        final filePath = coverUrl.substring(7); // 移除 'file://' 前缀
-        coverImage = Image.file(
-          File(filePath),
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          errorBuilder: (_, _, _) => _buildCoverPlaceholder(isDark),
-        );
+        final filePath = localPathFromFileUri(coverUrl);
+        coverImage = filePath == null
+            ? _buildCoverPlaceholder(isDark)
+            : Image.file(
+                File(filePath),
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) => _buildCoverPlaceholder(isDark),
+              );
       } else {
         coverImage = Image.network(
           coverUrl,
@@ -159,13 +172,17 @@ class MiniPlayer extends ConsumerWidget {
   }
 
   Widget _buildCoverPlaceholder(bool isDark) => ColoredBox(
-      color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
-      child: Icon(
-        Icons.music_note_rounded,
-        color: isDark ? AppColors.darkOnSurfaceVariant : AppColors.lightOnSurfaceVariant,
-        size: 24,
-      ),
-    );
+    color: isDark
+        ? AppColors.darkSurfaceVariant
+        : AppColors.lightSurfaceVariant,
+    child: Icon(
+      Icons.music_note_rounded,
+      color: isDark
+          ? AppColors.darkOnSurfaceVariant
+          : AppColors.lightOnSurfaceVariant,
+      size: 24,
+    ),
+  );
 
   Widget _buildControlButtons(
     WidgetRef ref,
@@ -173,28 +190,28 @@ class MiniPlayer extends ConsumerWidget {
     MusicPlayerNotifier playerNotifier,
     bool isDark,
   ) => Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 上一曲
-        _buildControlButton(
-          onPressed: playerNotifier.playPrevious,
-          icon: Icons.skip_previous_rounded,
-          size: 24,
-          isDark: isDark,
-        ),
-        const SizedBox(width: 4),
-        // 播放/暂停
-        _buildPlayPauseButton(playerState, playerNotifier),
-        const SizedBox(width: 4),
-        // 下一曲
-        _buildControlButton(
-          onPressed: playerNotifier.playNext,
-          icon: Icons.skip_next_rounded,
-          size: 24,
-          isDark: isDark,
-        ),
-      ],
-    );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // 上一曲
+      _buildControlButton(
+        onPressed: playerNotifier.playPrevious,
+        icon: Icons.skip_previous_rounded,
+        size: 24,
+        isDark: isDark,
+      ),
+      const SizedBox(width: 4),
+      // 播放/暂停
+      _buildPlayPauseButton(playerState, playerNotifier),
+      const SizedBox(width: 4),
+      // 下一曲
+      _buildControlButton(
+        onPressed: playerNotifier.playNext,
+        icon: Icons.skip_next_rounded,
+        size: 24,
+        isDark: isDark,
+      ),
+    ],
+  );
 
   Widget _buildControlButton({
     required VoidCallback onPressed,
@@ -202,62 +219,62 @@ class MiniPlayer extends ConsumerWidget {
     required double size,
     required bool isDark,
   }) => Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Icon(
-            icon,
-            size: size,
-            color: isDark ? Colors.white70 : Colors.black54,
-          ),
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Icon(
+          icon,
+          size: size,
+          color: isDark ? Colors.white70 : Colors.black54,
         ),
       ),
-    );
+    ),
+  );
 
   Widget _buildPlayPauseButton(
     MusicPlayerState playerState,
     MusicPlayerNotifier playerNotifier,
   ) => GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: playerNotifier.playOrPause,
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.primary, AppColors.secondary],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.35),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
+    behavior: HitTestBehavior.opaque,
+    onTap: playerNotifier.playOrPause,
+    child: Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.secondary],
         ),
-        child: playerState.isBuffering
-            ? const Padding(
-                padding: EdgeInsets.all(11),
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : Icon(
-                playerState.isPlaying
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
-                size: 24,
-                color: Colors.white,
-              ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-    );
+      child: playerState.isBuffering
+          ? const Padding(
+              padding: EdgeInsets.all(11),
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+          : Icon(
+              playerState.isPlaying
+                  ? Icons.pause_rounded
+                  : Icons.play_arrow_rounded,
+              size: 24,
+              color: Colors.white,
+            ),
+    ),
+  );
 }
 
 /// 动态进度条 - 带有流动动画效果
@@ -335,26 +352,22 @@ class _AnimatedProgressBarState extends State<_AnimatedProgressBar>
                 AnimatedBuilder(
                   animation: _shimmerController,
                   builder: (context, child) => FractionallySizedBox(
-                      widthFactor: clampedProgress,
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(2),
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.primary,
-                              AppColors.secondary,
-                              AppColors.primary,
-                            ],
-                            stops: [
-                              0.0,
-                              _shimmerController.value,
-                              1.0,
-                            ],
-                          ),
+                    widthFactor: clampedProgress,
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.secondary,
+                            AppColors.primary,
+                          ],
+                          stops: [0.0, _shimmerController.value, 1.0],
                         ),
                       ),
                     ),
+                  ),
                 ),
                 // 进度点
                 if (clampedProgress > 0)

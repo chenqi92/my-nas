@@ -88,6 +88,12 @@ class ArchiveExtractService {
     '.bmp',
   ];
 
+  static const int _maxArchiveBytes = 512 * 1024 * 1024;
+  static const int _maxExtractedImageBytes = 1024 * 1024 * 1024;
+  static const int _maxImageBytes = 256 * 1024 * 1024;
+  static const int _maxImageCount = 20000;
+  static const int _maxEntryCount = 50000;
+
   /// 从文件名获取压缩类型
   static ArchiveType getArchiveType(String fileName) {
     final ext = fileName.toLowerCase();
@@ -148,23 +154,31 @@ class ArchiveExtractService {
   /// 解压 ZIP 文件
   Future<ExtractResult> _extractZip(Uint8List bytes) async {
     try {
+      if (bytes.length > _maxArchiveBytes) {
+        throw StateError('Archive exceeds the 512 MB safety limit.');
+      }
       final archive = archive_lib.ZipDecoder().decodeBytes(bytes);
+      if (archive.files.length > _maxEntryCount) {
+        throw StateError('Archive contains too many entries.');
+      }
       final files = <ExtractedFile>[];
+      final usedPaths = <String>{};
+      var extractedBytes = 0;
 
       for (final file in archive.files) {
-        if (file.isFile && _isImageFile(file.name)) {
-          final content = file.content as List<int>?;
-          if (content != null) {
-            files.add(
-              ExtractedFile(
-                name: file.name,
-                bytes: content is Uint8List
-                    ? content
-                    : Uint8List.fromList(content),
-              ),
-            );
-          }
+        if (!file.isFile || file.isSymbolicLink || !_isImageFile(file.name)) {
+          continue;
         }
+        final safeName = _safeArchiveRelativeName(file.name, usedPaths);
+        if (safeName == null) continue;
+        _validateImageEntry(file, files.length, extractedBytes);
+        extractedBytes += file.size;
+        final content = file.readBytes();
+        if (content == null) continue;
+        if (content.length != file.size) {
+          throw StateError('Archive entry size mismatch: ${file.name}');
+        }
+        files.add(ExtractedFile(name: safeName, bytes: content));
       }
 
       files.sort((a, b) => a.name.compareTo(b.name));
@@ -184,14 +198,27 @@ class ArchiveExtractService {
     try {
       await outputDir.create(recursive: true);
 
+      if (await archiveFile.length() > _maxArchiveBytes) {
+        throw StateError('Archive exceeds the 512 MB safety limit.');
+      }
+
       input = archive_lib.InputFileStream(archiveFile.path);
       archive = archive_lib.ZipDecoder().decodeStream(input);
+      if (archive.files.length > _maxEntryCount) {
+        throw StateError('Archive contains too many entries.');
+      }
 
       final files = <ExtractedImageFile>[];
+      final usedPaths = <String>{};
+      var extractedBytes = 0;
       for (final file in archive.files) {
-        if (!file.isFile || !_isImageFile(file.name)) continue;
+        if (!file.isFile || file.isSymbolicLink || !_isImageFile(file.name)) {
+          continue;
+        }
+        _validateImageEntry(file, files.length, extractedBytes);
+        extractedBytes += file.size;
 
-        final filePath = _safeOutputPath(outputDir.path, file.name);
+        final filePath = _safeOutputPath(outputDir.path, file.name, usedPaths);
         if (filePath == null) continue;
 
         await Directory(path.dirname(filePath)).create(recursive: true);
@@ -201,8 +228,18 @@ class ArchiveExtractService {
         } finally {
           await output.close();
         }
+        if (await File(filePath).length() != file.size) {
+          throw StateError('Archive entry size mismatch: ${file.name}');
+        }
 
-        files.add(ExtractedImageFile(name: file.name, path: filePath));
+        files.add(
+          ExtractedImageFile(
+            name: path
+                .relative(filePath, from: outputDir.path)
+                .replaceAll(r'\', '/'),
+            path: filePath,
+          ),
+        );
       }
 
       files.sort((a, b) => a.name.compareTo(b.name));
@@ -322,18 +359,17 @@ class ArchiveExtractService {
     }
 
     // 创建临时目录
+    if (bytes.length > _maxArchiveBytes) {
+      return ExtractResult.failure('Archive exceeds the 512 MB safety limit.');
+    }
     final tempDir = await getTemporaryDirectory();
-    final workDir = Directory(
-      path.join(
-        tempDir.path,
-        'comic_extract_${DateTime.now().millisecondsSinceEpoch}',
-      ),
-    );
-    await workDir.create(recursive: true);
+    final workDir = await tempDir.createTemp('comic_extract_');
 
     try {
       // 写入临时文件
-      final archiveFile = File(path.join(workDir.path, fileName));
+      final archiveFile = File(
+        path.join(workDir.path, sanitizeFileName(fileName)),
+      );
       await archiveFile.writeAsBytes(bytes);
 
       // 创建解压目录
@@ -444,28 +480,15 @@ class ArchiveExtractService {
     }
   }
 
-  String? _safeOutputPath(String outputDir, String entryName) {
-    final normalizedName = path.normalize(entryName.replaceAll(r'\', '/'));
-    if (normalizedName == '.' ||
-        normalizedName == '..' ||
-        path.isAbsolute(normalizedName) ||
-        normalizedName.startsWith('../')) {
-      return null;
-    }
-
+  String? _safeOutputPath(
+    String outputDir,
+    String entryName,
+    Set<String> usedPaths,
+  ) {
+    final uniqueRelative = _safeArchiveRelativeName(entryName, usedPaths);
+    if (uniqueRelative == null) return null;
     final outputPath = path.normalize(
-      // file.name 来自压缩包条目，可能含 `:` 等 Windows 非法字符，
-      // 直接 `p.join` 在 Windows 上落地会抛异常。
-      path.join(
-        outputDir,
-        normalizedName
-            .split('/')
-            .map((seg) => sanitizeFileName(
-              seg,
-              fallback: 'unnamed_entry',
-            ))
-            .join('/'),
-      ),
+      path.joinAll([outputDir, ...uniqueRelative.split('/')]),
     );
     if (!path.isWithin(
       path.canonicalize(outputDir),
@@ -476,13 +499,56 @@ class ArchiveExtractService {
     return outputPath;
   }
 
+  String? _safeArchiveRelativeName(String entryName, Set<String> usedPaths) {
+    // 压缩包路径固定按 POSIX 语义解析，不能用宿主平台的 path.normalize：
+    // Windows 会把 `../evil.jpg` 变成 `..\evil.jpg`，继而绕过 `/` 检查。
+    final normalized = entryName.replaceAll(r'\', '/');
+    if (normalized.startsWith('/') ||
+        RegExp('^[A-Za-z]:').hasMatch(normalized)) {
+      return null;
+    }
+    final parts = normalized
+        .split('/')
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.isEmpty || parts.any((part) => part == '..')) return null;
+
+    final sanitized = parts
+        .where((part) => part != '.')
+        .map((part) => sanitizeFileName(part, fallback: 'unnamed_entry'))
+        .join('/');
+    if (sanitized.isEmpty) return null;
+    return reserveUniqueSanitizedRelativePath(
+      sanitizedPath: sanitized,
+      originalPath: entryName,
+      usedPaths: usedPaths,
+    );
+  }
+
+  void _validateImageEntry(
+    archive_lib.ArchiveFile file,
+    int extractedCount,
+    int extractedBytes,
+  ) {
+    if (extractedCount >= _maxImageCount) {
+      throw StateError('Archive contains too many images.');
+    }
+    if (file.size < 0 || file.size > _maxImageBytes) {
+      throw StateError('Archive image is too large: ${file.name}');
+    }
+    if (extractedBytes + file.size > _maxExtractedImageBytes) {
+      throw StateError('Archive expands beyond the 1 GB safety limit.');
+    }
+  }
+
   /// 检查命令是否可用
   Future<bool> _isCommandAvailable(String command) async {
     try {
       final whichCmd = Platform.isWindows ? 'where' : 'which';
       final result = await Process.run(whichCmd, [command]);
       return result.exitCode == 0;
-    } on Exception catch (_) {
+    } on Exception catch (e, st) {
+      AppError.ignore(e, st, '系统解压工具探测失败，按不可用处理');
       return false;
     }
   }

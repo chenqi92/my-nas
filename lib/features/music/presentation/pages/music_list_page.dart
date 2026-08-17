@@ -21,6 +21,7 @@ import 'package:my_nas/core/services/media_scan_progress_service.dart';
 import 'package:my_nas/core/utils/background_task_pool.dart';
 import 'package:my_nas/core/utils/debug_log.dart';
 import 'package:my_nas/core/utils/grid_helper.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/core/utils/platform_capabilities.dart';
 import 'package:my_nas/features/music/data/services/music_audio_cache_service.dart';
@@ -175,7 +176,7 @@ class MusicFileWithSource {
   /// 返回 file:// 格式的 URL，供播放器组件使用
   String? get coverFileUrl {
     if (coverPath == null || coverPath!.isEmpty) return null;
-    return 'file://$coverPath';
+    return localPathToFileUri(coverPath!);
   }
 
   /// 格式化时长
@@ -198,7 +199,7 @@ class MusicFileWithSource {
     // 获取封面 URL（如果有磁盘缓存路径）
     String? coverUrl;
     if (coverPath != null && coverPath!.isNotEmpty) {
-      coverUrl = 'file://$coverPath';
+      coverUrl = localPathToFileUri(coverPath!);
     }
 
     return MusicItem(
@@ -221,22 +222,22 @@ class MusicFileWithSource {
   }
 
   MusicLibraryCacheEntry toCacheEntry() => MusicLibraryCacheEntry(
-        sourceId: sourceId,
-        filePath: path,
-        fileName: name,
-        thumbnailUrl: thumbnailUrl,
-        size: size,
-        modifiedTime: modifiedTime,
-        title: title,
-        artist: artist,
-        album: album,
-        duration: duration,
-        trackNumber: trackNumber,
-        year: year,
-        genre: genre,
-        coverBase64: coverBase64,
-        metadataExtracted: metadataExtracted,
-      );
+    sourceId: sourceId,
+    filePath: path,
+    fileName: name,
+    thumbnailUrl: thumbnailUrl,
+    size: size,
+    modifiedTime: modifiedTime,
+    title: title,
+    artist: artist,
+    album: album,
+    duration: duration,
+    trackNumber: trackNumber,
+    year: year,
+    genre: genre,
+    coverBase64: coverBase64,
+    metadataExtracted: metadataExtracted,
+  );
 
   /// 复制并更新元数据
   MusicFileWithSource copyWithMetadata({
@@ -251,29 +252,28 @@ class MusicFileWithSource {
     String? coverPath,
     String? coverUrl,
     bool? metadataExtracted,
-  }) =>
-      MusicFileWithSource(
-        file: file,
-        sourceId: sourceId,
-        title: title ?? this.title,
-        artist: artist ?? this.artist,
-        album: album ?? this.album,
-        duration: duration ?? this.duration,
-        trackNumber: trackNumber ?? this.trackNumber,
-        year: year ?? this.year,
-        genre: genre ?? this.genre,
-        coverBase64: coverBase64 ?? this.coverBase64,
-        coverPath: coverPath ?? this.coverPath,
-        coverUrl: coverUrl ?? this.coverUrl,
-        metadataExtracted: metadataExtracted ?? this.metadataExtracted,
-      );
+  }) => MusicFileWithSource(
+    file: file,
+    sourceId: sourceId,
+    title: title ?? this.title,
+    artist: artist ?? this.artist,
+    album: album ?? this.album,
+    duration: duration ?? this.duration,
+    trackNumber: trackNumber ?? this.trackNumber,
+    year: year ?? this.year,
+    genre: genre ?? this.genre,
+    coverBase64: coverBase64 ?? this.coverBase64,
+    coverPath: coverPath ?? this.coverPath,
+    coverUrl: coverUrl ?? this.coverUrl,
+    metadataExtracted: metadataExtracted ?? this.metadataExtracted,
+  );
 }
 
 /// 音乐列表状态
 final musicListProvider =
     StateNotifierProvider<MusicListNotifier, MusicListState>(
-  MusicListNotifier.new,
-);
+      MusicListNotifier.new,
+    );
 
 /// 音乐来源筛选
 enum MusicSourceFilter {
@@ -339,12 +339,12 @@ enum MusicSortOption {
   final IconData icon;
 
   String localizedLabel(BuildContext context) => switch (this) {
-        MusicSortOption.name => context.l10n.musicSortOptionName,
-        MusicSortOption.artist => context.l10n.musicSortOptionArtist,
-        MusicSortOption.album => context.l10n.musicSortOptionAlbum,
-        MusicSortOption.dateAdded => context.l10n.musicSortOptionDateAdded,
-        MusicSortOption.duration => context.l10n.musicSortOptionDuration,
-      };
+    MusicSortOption.name => context.l10n.musicSortOptionName,
+    MusicSortOption.artist => context.l10n.musicSortOptionArtist,
+    MusicSortOption.album => context.l10n.musicSortOptionAlbum,
+    MusicSortOption.dateAdded => context.l10n.musicSortOptionDateAdded,
+    MusicSortOption.duration => context.l10n.musicSortOptionDuration,
+  };
 }
 
 /// 排序方向
@@ -362,11 +362,10 @@ class MusicSortState {
   MusicSortState copyWith({
     MusicSortOption? option,
     SortDirection? direction,
-  }) =>
-      MusicSortState(
-        option: option ?? this.option,
-        direction: direction ?? this.direction,
-      );
+  }) => MusicSortState(
+    option: option ?? this.option,
+    direction: direction ?? this.direction,
+  );
 }
 
 /// 音乐排序 Provider
@@ -585,32 +584,31 @@ class MusicListLoaded extends MusicListState {
     Map<String, MusicTrackEntity>? trackByFilePath,
     bool? hasMoreTracks,
     bool? isLoadingMore,
-  }) =>
-      MusicListLoaded(
-        totalCount: totalCount ?? this.totalCount,
-        totalDurationMs: totalDurationMs ?? this.totalDurationMs,
-        artistCount: artistCount ?? this.artistCount,
-        albumCount: albumCount ?? this.albumCount,
-        genreCount: genreCount ?? this.genreCount,
-        yearCount: yearCount ?? this.yearCount,
-        folderCount: folderCount ?? this.folderCount,
-        searchQuery: searchQuery ?? this.searchQuery,
-        isLoadingMetadata: isLoadingMetadata ?? this.isLoadingMetadata,
-        metadataProcessed: metadataProcessed ?? this.metadataProcessed,
-        metadataTotal: metadataTotal ?? this.metadataTotal,
-        fromCache: fromCache ?? this.fromCache,
-        sourceFilter: sourceFilter ?? this.sourceFilter,
-        isSelectMode: isSelectMode ?? this.isSelectMode,
-        selectedPaths: selectedPaths ?? this.selectedPaths,
-        sourceTypeCache: sourceTypeCache ?? this.sourceTypeCache,
-        recentTracks: recentTracks ?? this.recentTracks,
-        allTracks: allTracks ?? this.allTracks,
-        searchResults: searchResults ?? this.searchResults,
-        trackByPath: trackByPath ?? this.trackByPath,
-        trackByFilePath: trackByFilePath ?? this.trackByFilePath,
-        hasMoreTracks: hasMoreTracks ?? this.hasMoreTracks,
-        isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      );
+  }) => MusicListLoaded(
+    totalCount: totalCount ?? this.totalCount,
+    totalDurationMs: totalDurationMs ?? this.totalDurationMs,
+    artistCount: artistCount ?? this.artistCount,
+    albumCount: albumCount ?? this.albumCount,
+    genreCount: genreCount ?? this.genreCount,
+    yearCount: yearCount ?? this.yearCount,
+    folderCount: folderCount ?? this.folderCount,
+    searchQuery: searchQuery ?? this.searchQuery,
+    isLoadingMetadata: isLoadingMetadata ?? this.isLoadingMetadata,
+    metadataProcessed: metadataProcessed ?? this.metadataProcessed,
+    metadataTotal: metadataTotal ?? this.metadataTotal,
+    fromCache: fromCache ?? this.fromCache,
+    sourceFilter: sourceFilter ?? this.sourceFilter,
+    isSelectMode: isSelectMode ?? this.isSelectMode,
+    selectedPaths: selectedPaths ?? this.selectedPaths,
+    sourceTypeCache: sourceTypeCache ?? this.sourceTypeCache,
+    recentTracks: recentTracks ?? this.recentTracks,
+    allTracks: allTracks ?? this.allTracks,
+    searchResults: searchResults ?? this.searchResults,
+    trackByPath: trackByPath ?? this.trackByPath,
+    trackByFilePath: trackByFilePath ?? this.trackByFilePath,
+    hasMoreTracks: hasMoreTracks ?? this.hasMoreTracks,
+    isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+  );
 }
 
 class MusicListError extends MusicListState {
@@ -693,7 +691,8 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
           previous,
           next,
         ) {
-          final prevConnected = previous?.values
+          final prevConnected =
+              previous?.values
                   .where((c) => c.status == SourceStatus.connected)
                   .length ??
               0;
@@ -712,15 +711,17 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
         ) {
           final prevPaths =
               previous?.valueOrNull?.getEnabledPathsForType(MediaType.music) ??
-                  [];
+              [];
           final nextPaths =
               next.valueOrNull?.getEnabledPathsForType(MediaType.music) ?? [];
 
           // 比较路径是否变化
-          final prevKeys =
-              prevPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
-          final nextKeys =
-              nextPaths.map((p) => '${p.sourceId}|${p.path}').toSet();
+          final prevKeys = prevPaths
+              .map((p) => '${p.sourceId}|${p.path}')
+              .toSet();
+          final nextKeys = nextPaths
+              .map((p) => '${p.sourceId}|${p.path}')
+              .toSet();
 
           if (prevKeys.length != nextKeys.length ||
               !prevKeys.containsAll(nextKeys)) {
@@ -1086,11 +1087,10 @@ class MusicListNotifier extends StateNotifier<MusicListState> {
     final totalFolders = connectedPaths.length;
     var lastSaveCount = 0;
     final pendingSaves = <Future<void>>[];
-    final completedSnapshots = <({
-      String sourceId,
-      String pathPrefix,
-      Set<String> encounteredPaths
-    })>[];
+    final completedSnapshots =
+        <
+          ({String sourceId, String pathPrefix, Set<String> encounteredPaths})
+        >[];
 
     for (final mediaPath in connectedPaths) {
       final connection = connections[mediaPath.sourceId];
@@ -1968,14 +1968,14 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                         isDark,
                       ),
                     MusicListNotConnected() => const MediaSetupWidget(
-                        mediaType: MediaType.music,
-                        icon: Icons.library_music_outlined,
-                      ),
+                      mediaType: MediaType.music,
+                      icon: Icons.library_music_outlined,
+                    ),
                     MusicListError(:final message) => AppErrorWidget(
-                        message: message,
-                        onRetry: () =>
-                            ref.read(musicListProvider.notifier).loadMusic(),
-                      ),
+                      message: message,
+                      onRetry: () =>
+                          ref.read(musicListProvider.notifier).loadMusic(),
+                    ),
                     MusicListLoaded(:final filteredTracks)
                         when filteredTracks.isEmpty =>
                       _buildEmptyState(context, ref, isDark),
@@ -1990,10 +1990,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                   },
                 ),
                 // MiniPlayer 在 glass 模式下也需要显示（搜索模式或非 loaded 状态）
-                if (state
-                    case MusicListLoaded(
-                      :final searchQuery,
-                    ) when searchQuery.isNotEmpty)
+                if (state case MusicListLoaded(
+                  :final searchQuery,
+                ) when searchQuery.isNotEmpty)
                   const MiniPlayer()
                 else if (state is! MusicListLoaded)
                   const MiniPlayer(),
@@ -2014,8 +2013,8 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
               right: 16,
               bottom: _showSearch
                   ? (keyboardInset > 0
-                      ? keyboardInset + 16
-                      : bottomPadding + 16)
+                        ? keyboardInset + 16
+                        : bottomPadding + 16)
                   : null,
               child: _showSearch
                   ? _buildFloatingSearchBar(context, ref, isDark)
@@ -2051,31 +2050,29 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
                   isDark,
                 ),
               MusicListNotConnected() => const MediaSetupWidget(
-                  mediaType: MediaType.music,
-                  icon: Icons.library_music_outlined,
-                ),
+                mediaType: MediaType.music,
+                icon: Icons.library_music_outlined,
+              ),
               MusicListError(:final message) => AppErrorWidget(
-                  message: message,
-                  onRetry: () =>
-                      ref.read(musicListProvider.notifier).loadMusic(),
-                ),
+                message: message,
+                onRetry: () => ref.read(musicListProvider.notifier).loadMusic(),
+              ),
               MusicListLoaded(:final filteredTracks)
                   when filteredTracks.isEmpty =>
                 _buildEmptyState(context, ref, isDark),
               final MusicListLoaded loaded => _buildHomeContent(
-                  context,
-                  ref,
-                  loaded,
-                  isDark,
-                ),
+                context,
+                ref,
+                loaded,
+                isDark,
+              ),
             },
           ),
           // 首页有 HeroPlayerCard，不显示底部迷你播放器
           // 只在非首页状态（加载中、未连接、错误、空状态）或搜索模式下显示迷你播放器
-          if (state
-              case MusicListLoaded(
-                :final searchQuery,
-              ) when searchQuery.isNotEmpty)
+          if (state case MusicListLoaded(
+            :final searchQuery,
+          ) when searchQuery.isNotEmpty)
             const MiniPlayer()
           else if (state is! MusicListLoaded)
             const MiniPlayer(),
@@ -2096,8 +2093,8 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     // 玻璃模式下的染色
     final tintColor = uiStyle.isGlass
         ? (isDark
-            ? Colors.deepOrange.withValues(alpha: 0.15)
-            : Colors.deepOrange.withValues(alpha: 0.08))
+              ? Colors.deepOrange.withValues(alpha: 0.15)
+              : Colors.deepOrange.withValues(alpha: 0.08))
         : null;
 
     final isDesktop = context.isDesktopLayout;
@@ -2106,8 +2103,8 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
       backgroundColor: uiStyle.isGlass
           ? tintColor
           : (isDark
-              ? const Color(0xFF2E1A1A) // 深红棕色调
-              : Colors.deepOrange.withValues(alpha: 0.08)),
+                ? const Color(0xFF2E1A1A) // 深红棕色调
+                : Colors.deepOrange.withValues(alpha: 0.08)),
       child: Padding(
         padding: isDesktop
             ? const EdgeInsets.fromLTRB(16, 6, 16, 6)
@@ -2134,8 +2131,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     final trackCount = state is MusicListLoaded ? state.totalCount : 0;
     final isLoadingMetadata =
         state is MusicListLoaded && state.isLoadingMetadata;
-    final metadataProcessed =
-        state is MusicListLoaded ? state.metadataProcessed : 0;
+    final metadataProcessed = state is MusicListLoaded
+        ? state.metadataProcessed
+        : 0;
     final metadataTotal = state is MusicListLoaded ? state.metadataTotal : 0;
     final isDesktop = context.isDesktopLayout;
 
@@ -2149,13 +2147,16 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
             children: [
               Text(
                 _getGreeting(context),
-                style: (isDesktop
-                        ? context.textTheme.titleMedium
-                        : context.textTheme.headlineSmall)
-                    ?.copyWith(
-                  fontWeight: isDesktop ? FontWeight.w600 : FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
+                style:
+                    (isDesktop
+                            ? context.textTheme.titleMedium
+                            : context.textTheme.headlineSmall)
+                        ?.copyWith(
+                          fontWeight: isDesktop
+                              ? FontWeight.w600
+                              : FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -2318,58 +2319,57 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     WidgetRef ref,
     bool isDark,
     MusicListState state,
-  ) =>
-      GlassButtonGroup(
-        children: [
-          GlassGroupIconButton(
-            icon: Icons.search_rounded,
-            onPressed: () => setState(() => _showSearch = true),
-            tooltip: context.l10n.musicSearchActionTooltip,
+  ) => GlassButtonGroup(
+    children: [
+      GlassGroupIconButton(
+        icon: Icons.search_rounded,
+        onPressed: () => setState(() => _showSearch = true),
+        tooltip: context.l10n.musicSearchActionTooltip,
+      ),
+      GlassGroupIconButton(
+        icon: Icons.queue_music_rounded,
+        onPressed: () => showMusicQueueSheet(context),
+        tooltip: context.l10n.musicQueueActionTooltip,
+      ),
+      GlassGroupPopupMenuButton<String>(
+        icon: Icons.more_vert_rounded,
+        tooltip: context.l10n.musicMoreActionTooltip,
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'layout',
+            child: Row(
+              children: [
+                Icon(Icons.dashboard_customize_rounded, size: 20),
+                SizedBox(width: 12),
+                Text(context.l10n.musicMenuItemHomeLayout),
+              ],
+            ),
           ),
-          GlassGroupIconButton(
-            icon: Icons.queue_music_rounded,
-            onPressed: () => showMusicQueueSheet(context),
-            tooltip: context.l10n.musicQueueActionTooltip,
+          PopupMenuItem(
+            value: 'library',
+            child: Row(
+              children: [
+                Icon(Icons.settings_rounded, size: 20),
+                SizedBox(width: 12),
+                Text(context.l10n.musicMenuItemMediaLibrarySettings),
+              ],
+            ),
           ),
-          GlassGroupPopupMenuButton<String>(
-            icon: Icons.more_vert_rounded,
-            tooltip: context.l10n.musicMoreActionTooltip,
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'layout',
-                child: Row(
-                  children: [
-                    Icon(Icons.dashboard_customize_rounded, size: 20),
-                    SizedBox(width: 12),
-                    Text(context.l10n.musicMenuItemHomeLayout),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'library',
-                child: Row(
-                  children: [
-                    Icon(Icons.settings_rounded, size: 20),
-                    SizedBox(width: 12),
-                    Text(context.l10n.musicMenuItemMediaLibrarySettings),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'sources',
-                child: Row(
-                  children: [
-                    Icon(Icons.cloud_rounded, size: 20),
-                    SizedBox(width: 12),
-                    Text(context.l10n.musicMenuItemConnectionManager),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: _handleMusicMenuSelection,
+          PopupMenuItem(
+            value: 'sources',
+            child: Row(
+              children: [
+                Icon(Icons.cloud_rounded, size: 20),
+                SizedBox(width: 12),
+                Text(context.l10n.musicMenuItemConnectionManager),
+              ],
+            ),
           ),
         ],
-      );
+        onSelected: _handleMusicMenuSelection,
+      ),
+    ],
+  );
 
   /// 音乐菜单选择处理
   void _handleMusicMenuSelection(String value) {
@@ -2440,66 +2440,68 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     final favoriteTracks = favoritesState.favorites
         .where((fav) => state.trackByFilePath.containsKey(fav.musicPath))
         .map((fav) {
-      final m = state.trackByFilePath[fav.musicPath]!;
-      return MusicFileWithSource(
-        file: FileItem(
-          name: m.fileName,
-          path: m.filePath,
-          size: m.size ?? 0,
-          isDirectory: false,
-          modifiedTime: m.modifiedTime,
-        ),
-        sourceId: m.sourceId,
-        title: m.title,
-        artist: m.artist,
-        album: m.album,
-        duration: m.duration,
-        year: m.year,
-        genre: m.genre,
-        coverPath: m.coverPath,
-        metadataExtracted: true,
-      );
-    }).toList();
+          final m = state.trackByFilePath[fav.musicPath]!;
+          return MusicFileWithSource(
+            file: FileItem(
+              name: m.fileName,
+              path: m.filePath,
+              size: m.size ?? 0,
+              isDirectory: false,
+              modifiedTime: m.modifiedTime,
+            ),
+            sourceId: m.sourceId,
+            title: m.title,
+            artist: m.artist,
+            album: m.album,
+            duration: m.duration,
+            year: m.year,
+            genre: m.genre,
+            coverPath: m.coverPath,
+            metadataExtracted: true,
+          );
+        })
+        .toList();
 
     // 转换历史为 MusicFileWithSource
     final recentTracks = historyState.history
         .take(20)
         .where((h) => state.trackByFilePath.containsKey(h.musicPath))
         .map((h) {
-      final m = state.trackByFilePath[h.musicPath]!;
-      var effectiveCoverPath = m.coverPath;
-      String? effectiveCoverUrl;
+          final m = state.trackByFilePath[h.musicPath]!;
+          var effectiveCoverPath = m.coverPath;
+          String? effectiveCoverUrl;
 
-      if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
-        if (h.coverUrl != null && h.coverUrl!.isNotEmpty) {
-          if (h.coverUrl!.startsWith('file://')) {
-            effectiveCoverPath = h.coverUrl!.replaceFirst('file://', '');
-          } else {
-            effectiveCoverUrl = h.coverUrl;
+          if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
+            if (h.coverUrl != null && h.coverUrl!.isNotEmpty) {
+              if (h.coverUrl!.startsWith('file://')) {
+                effectiveCoverPath = localPathFromFileUri(h.coverUrl!);
+              } else {
+                effectiveCoverUrl = h.coverUrl;
+              }
+            }
           }
-        }
-      }
 
-      return MusicFileWithSource(
-        file: FileItem(
-          name: m.fileName,
-          path: m.filePath,
-          size: m.size ?? 0,
-          isDirectory: false,
-          modifiedTime: m.modifiedTime,
-        ),
-        sourceId: m.sourceId,
-        title: m.title,
-        artist: m.artist,
-        album: m.album,
-        duration: m.duration,
-        year: m.year,
-        genre: m.genre,
-        coverPath: effectiveCoverPath,
-        coverUrl: effectiveCoverUrl,
-        metadataExtracted: true,
-      );
-    }).toList();
+          return MusicFileWithSource(
+            file: FileItem(
+              name: m.fileName,
+              path: m.filePath,
+              size: m.size ?? 0,
+              isDirectory: false,
+              modifiedTime: m.modifiedTime,
+            ),
+            sourceId: m.sourceId,
+            title: m.title,
+            artist: m.artist,
+            album: m.album,
+            duration: m.duration,
+            year: m.year,
+            genre: m.genre,
+            coverPath: effectiveCoverPath,
+            coverUrl: effectiveCoverUrl,
+            metadataExtracted: true,
+          );
+        })
+        .toList();
 
     // 获取歌单数量
     final playlistState = ref.watch(playlistProvider);
@@ -2631,41 +2633,39 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     required String label,
     required bool isDark,
     bool isLoading = false,
-  }) =>
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.5,
-                  color: isDark ? Colors.deepOrange[300] : Colors.deepOrange,
-                ),
-              )
-            else
-              Icon(icon,
-                  size: 14, color: isDark ? Colors.white60 : Colors.black54),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white70 : Colors.black54,
-              ),
+  }) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.05),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isLoading)
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: isDark ? Colors.deepOrange[300] : Colors.deepOrange,
             ),
-          ],
+          )
+        else
+          Icon(icon, size: 14, color: isDark ? Colors.white60 : Colors.black54),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? Colors.white70 : Colors.black54,
+          ),
         ),
-      );
+      ],
+    ),
+  );
 
   /// 构建首页内容（现代化设计）
   Widget _buildHomeContent(
@@ -2688,26 +2688,27 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
     final favoriteTracks = favoritesState.favorites
         .where((fav) => state.trackByFilePath.containsKey(fav.musicPath))
         .map((fav) {
-      final m = state.trackByFilePath[fav.musicPath]!;
-      return MusicFileWithSource(
-        file: FileItem(
-          name: m.fileName,
-          path: m.filePath,
-          size: m.size ?? 0,
-          isDirectory: false,
-          modifiedTime: m.modifiedTime,
-        ),
-        sourceId: m.sourceId,
-        title: m.title,
-        artist: m.artist,
-        album: m.album,
-        duration: m.duration,
-        year: m.year,
-        genre: m.genre,
-        coverPath: m.coverPath,
-        metadataExtracted: true,
-      );
-    }).toList();
+          final m = state.trackByFilePath[fav.musicPath]!;
+          return MusicFileWithSource(
+            file: FileItem(
+              name: m.fileName,
+              path: m.filePath,
+              size: m.size ?? 0,
+              isDirectory: false,
+              modifiedTime: m.modifiedTime,
+            ),
+            sourceId: m.sourceId,
+            title: m.title,
+            artist: m.artist,
+            album: m.album,
+            duration: m.duration,
+            year: m.year,
+            genre: m.genre,
+            coverPath: m.coverPath,
+            metadataExtracted: true,
+          );
+        })
+        .toList();
 
     // 转换历史为 MusicFileWithSource
     // 注意：历史存储的是 musicPath (filePath)，需要使用 trackByFilePath 查找
@@ -2715,44 +2716,45 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
         .take(20)
         .where((h) => state.trackByFilePath.containsKey(h.musicPath))
         .map((h) {
-      final m = state.trackByFilePath[h.musicPath]!;
+          final m = state.trackByFilePath[h.musicPath]!;
 
-      // 优先使用数据库中的 coverPath，如果没有则尝试从历史的 coverUrl 获取
-      var effectiveCoverPath = m.coverPath;
-      String? effectiveCoverUrl;
+          // 优先使用数据库中的 coverPath，如果没有则尝试从历史的 coverUrl 获取
+          var effectiveCoverPath = m.coverPath;
+          String? effectiveCoverUrl;
 
-      if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
-        if (h.coverUrl != null && h.coverUrl!.isNotEmpty) {
-          // 如果历史记录有 file:// 格式的封面 URL，提取路径
-          if (h.coverUrl!.startsWith('file://')) {
-            effectiveCoverPath = h.coverUrl!.replaceFirst('file://', '');
-          } else {
-            // 远程 URL
-            effectiveCoverUrl = h.coverUrl;
+          if (effectiveCoverPath == null || effectiveCoverPath.isEmpty) {
+            if (h.coverUrl != null && h.coverUrl!.isNotEmpty) {
+              // 如果历史记录有 file:// 格式的封面 URL，提取路径
+              if (h.coverUrl!.startsWith('file://')) {
+                effectiveCoverPath = localPathFromFileUri(h.coverUrl!);
+              } else {
+                // 远程 URL
+                effectiveCoverUrl = h.coverUrl;
+              }
+            }
           }
-        }
-      }
 
-      return MusicFileWithSource(
-        file: FileItem(
-          name: m.fileName,
-          path: m.filePath,
-          size: m.size ?? 0,
-          isDirectory: false,
-          modifiedTime: m.modifiedTime,
-        ),
-        sourceId: m.sourceId,
-        title: m.title,
-        artist: m.artist,
-        album: m.album,
-        duration: m.duration,
-        year: m.year,
-        genre: m.genre,
-        coverPath: effectiveCoverPath,
-        coverUrl: effectiveCoverUrl,
-        metadataExtracted: true,
-      );
-    }).toList();
+          return MusicFileWithSource(
+            file: FileItem(
+              name: m.fileName,
+              path: m.filePath,
+              size: m.size ?? 0,
+              isDirectory: false,
+              modifiedTime: m.modifiedTime,
+            ),
+            sourceId: m.sourceId,
+            title: m.title,
+            artist: m.artist,
+            album: m.album,
+            duration: m.duration,
+            year: m.year,
+            genre: m.genre,
+            coverPath: effectiveCoverPath,
+            coverUrl: effectiveCoverUrl,
+            metadataExtracted: true,
+          );
+        })
+        .toList();
 
     // 获取歌单数量
     final playlistState = ref.watch(playlistProvider);
@@ -3090,8 +3092,9 @@ class _MusicListPageState extends ConsumerState<MusicListPage> {
               color: isDark ? AppColors.darkBackground : AppColors.lightSurface,
               border: Border(
                 bottom: BorderSide(
-                  color:
-                      isDark ? AppColors.darkOutline : AppColors.lightOutline,
+                  color: isDark
+                      ? AppColors.darkOutline
+                      : AppColors.lightOutline,
                 ),
               ),
             ),
@@ -3388,9 +3391,9 @@ class _MusicCategoryPage extends ConsumerWidget {
       switch (category) {
         // 这些分类视图现在直接从数据库获取全量数据
         MusicCategory.all => _AllSongsContent(
-            tracks: const [],
-            isDark: isDark,
-          ), // 使用 provider 数据
+          tracks: const [],
+          isDark: isDark,
+        ), // 使用 provider 数据
         MusicCategory.artists => _ArtistsView(isDark: isDark),
         MusicCategory.albums => _AlbumsView(isDark: isDark),
         MusicCategory.folders => _FoldersView(isDark: isDark),
@@ -3453,8 +3456,9 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
     final tracks = musicState is MusicListLoaded
         ? musicState.tracks
         : (widget.tracks ?? []);
-    final totalCount =
-        musicState is MusicListLoaded ? musicState.totalCount : tracks.length;
+    final totalCount = musicState is MusicListLoaded
+        ? musicState.totalCount
+        : tracks.length;
     final hasMore = musicState is MusicListLoaded && musicState.hasMoreTracks;
     final isLoadingMore =
         musicState is MusicListLoaded && musicState.isLoadingMore;
@@ -3474,30 +3478,29 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
             child: tracks.isEmpty
                 ? _buildEmptyState(isDark)
                 : _isTableView && PlatformCapabilities.isDesktop
-                    ? _buildTableView(
-                        context,
-                        sortedTracks,
-                        isDark,
-                        hasMore,
-                        isLoadingMore,
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.only(bottom: 16),
-                        itemCount: sortedTracks.length + (hasMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index >= sortedTracks.length) {
-                            return _buildLoadMoreIndicator(
-                                isDark, isLoadingMore);
-                          }
-                          return _ModernMusicTile(
-                            track: sortedTracks[index],
-                            index: index,
-                            isDark: isDark,
-                            allTracks: sortedTracks,
-                          );
-                        },
-                      ),
+                ? _buildTableView(
+                    context,
+                    sortedTracks,
+                    isDark,
+                    hasMore,
+                    isLoadingMore,
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.only(bottom: 16),
+                    itemCount: sortedTracks.length + (hasMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index >= sortedTracks.length) {
+                        return _buildLoadMoreIndicator(isDark, isLoadingMore);
+                      }
+                      return _ModernMusicTile(
+                        track: sortedTracks[index],
+                        index: index,
+                        isDark: isDark,
+                        allTracks: sortedTracks,
+                      );
+                    },
+                  ),
           ),
           const MiniPlayer(),
         ],
@@ -3506,22 +3509,22 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
   }
 
   Widget _buildLoadMoreIndicator(bool isDark, bool isLoading) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        alignment: Alignment.center,
-        child: isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(
-                context.l10n.musicLoadMoreAction,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? Colors.grey[500] : Colors.grey[600],
-                ),
-              ),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    alignment: Alignment.center,
+    child: isLoading
+        ? const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : Text(
+            context.l10n.musicLoadMoreAction,
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? Colors.grey[500] : Colors.grey[600],
+            ),
+          ),
+  );
 
   Widget _buildAppBar(
     BuildContext context,
@@ -3535,8 +3538,8 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
       height: 56,
       backgroundColor: uiStyle.isGlass
           ? (isDark
-              ? Colors.deepOrange.withValues(alpha: 0.1)
-              : Colors.deepOrange.withValues(alpha: 0.05))
+                ? Colors.deepOrange.withValues(alpha: 0.1)
+                : Colors.deepOrange.withValues(alpha: 0.05))
           : (isDark ? AppColors.darkSurface : Colors.white),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
@@ -3661,49 +3664,49 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
   }
 
   Widget _buildEmptyState(bool isDark) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.primary.withValues(alpha: 0.2),
-                    AppColors.secondary.withValues(alpha: 0.2),
-                  ],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.music_off_rounded,
-                size: 40,
-                color: AppColors.primary,
-              ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary.withValues(alpha: 0.2),
+                AppColors.secondary.withValues(alpha: 0.2),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              context.l10n.musicNoSongsEmpty,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: isDark
-                    ? AppColors.darkOnSurfaceVariant
-                    : AppColors.lightOnSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.l10n.musicEmptyScanHint,
-              style: TextStyle(
-                fontSize: 13,
-                color: isDark ? Colors.grey[600] : Colors.grey[500],
-              ),
-            ),
-          ],
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.music_off_rounded,
+            size: 40,
+            color: AppColors.primary,
+          ),
         ),
-      );
+        const SizedBox(height: 16),
+        Text(
+          context.l10n.musicNoSongsEmpty,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: isDark
+                ? AppColors.darkOnSurfaceVariant
+                : AppColors.lightOnSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          context.l10n.musicEmptyScanHint,
+          style: TextStyle(
+            fontSize: 13,
+            color: isDark ? Colors.grey[600] : Colors.grey[500],
+          ),
+        ),
+      ],
+    ),
+  );
 
   /// 桌面端表格视图
   Widget _buildTableView(
@@ -3794,16 +3797,16 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
         switch (sortState.option) {
           case MusicSortOption.name:
             result = a.displayTitle.toLowerCase().compareTo(
-                  b.displayTitle.toLowerCase(),
-                );
+              b.displayTitle.toLowerCase(),
+            );
           case MusicSortOption.artist:
             result = a.displayArtist.toLowerCase().compareTo(
-                  b.displayArtist.toLowerCase(),
-                );
+              b.displayArtist.toLowerCase(),
+            );
           case MusicSortOption.album:
             result = a.displayAlbum.toLowerCase().compareTo(
-                  b.displayAlbum.toLowerCase(),
-                );
+              b.displayAlbum.toLowerCase(),
+            );
           case MusicSortOption.dateAdded:
             final aTime = a.modifiedTime ?? DateTime(1970);
             final bTime = b.modifiedTime ?? DateTime(1970);
@@ -3862,10 +3865,10 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
                     onTap: () {
                       final newDirection =
                           currentSort.direction == SortDirection.ascending
-                              ? SortDirection.descending
-                              : SortDirection.ascending;
-                      ref.read(musicSortProvider.notifier).state =
-                          currentSort.copyWith(direction: newDirection);
+                          ? SortDirection.descending
+                          : SortDirection.ascending;
+                      ref.read(musicSortProvider.notifier).state = currentSort
+                          .copyWith(direction: newDirection);
                       Navigator.pop(context);
                     },
                   ),
@@ -3880,8 +3883,8 @@ class _AllSongsPageState extends ConsumerState<AllSongsPage>
                 isSelected: currentSort.option == option,
                 isDark: isDark,
                 onTap: () {
-                  ref.read(musicSortProvider.notifier).state =
-                      currentSort.copyWith(option: option);
+                  ref.read(musicSortProvider.notifier).state = currentSort
+                      .copyWith(option: option);
                   Navigator.pop(context);
                 },
               ),
@@ -4063,50 +4066,50 @@ class _SortButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  sortState.direction == SortDirection.ascending
-                      ? Icons.arrow_upward_rounded
-                      : Icons.arrow_downward_rounded,
-                  size: 16,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  sortState.option.localizedLabel(context),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.expand_more_rounded,
-                  size: 18,
-                  color: isDark
-                      ? AppColors.darkOnSurfaceVariant
-                      : AppColors.lightOnSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
         ),
-      );
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              sortState.direction == SortDirection.ascending
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+              size: 16,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              sortState.option.localizedLabel(context),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.expand_more_rounded,
+              size: 18,
+              color: isDark
+                  ? AppColors.darkOnSurfaceVariant
+                  : AppColors.lightOnSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 /// 全部歌曲内容（用于嵌入到通用分类页面中）
@@ -4148,8 +4151,9 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
   @override
   Widget build(BuildContext context) {
     final musicState = ref.watch(musicListProvider);
-    final totalCount =
-        musicState is MusicListLoaded ? musicState.totalCount : 0;
+    final totalCount = musicState is MusicListLoaded
+        ? musicState.totalCount
+        : 0;
     final hasMore = musicState is MusicListLoaded && musicState.hasMoreTracks;
     final isLoadingMore =
         musicState is MusicListLoaded && musicState.isLoadingMore;
@@ -4236,22 +4240,22 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
   }
 
   Widget _buildLoadMoreIndicator(bool isLoading) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        alignment: Alignment.center,
-        child: isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(
-                context.l10n.musicLoadMoreAction,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: widget.isDark ? Colors.grey[500] : Colors.grey[600],
-                ),
-              ),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 16),
+    alignment: Alignment.center,
+    child: isLoading
+        ? const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : Text(
+            context.l10n.musicLoadMoreAction,
+            style: TextStyle(
+              fontSize: 13,
+              color: widget.isDark ? Colors.grey[500] : Colors.grey[600],
+            ),
+          ),
+  );
 
   List<MusicFileWithSource> _applySorting(
     List<MusicFileWithSource> tracks,
@@ -4263,16 +4267,16 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
         switch (sortState.option) {
           case MusicSortOption.name:
             result = a.displayTitle.toLowerCase().compareTo(
-                  b.displayTitle.toLowerCase(),
-                );
+              b.displayTitle.toLowerCase(),
+            );
           case MusicSortOption.artist:
             result = a.displayArtist.toLowerCase().compareTo(
-                  b.displayArtist.toLowerCase(),
-                );
+              b.displayArtist.toLowerCase(),
+            );
           case MusicSortOption.album:
             result = a.displayAlbum.toLowerCase().compareTo(
-                  b.displayAlbum.toLowerCase(),
-                );
+              b.displayAlbum.toLowerCase(),
+            );
           case MusicSortOption.dateAdded:
             final aTime = a.modifiedTime ?? DateTime(1970);
             final bTime = b.modifiedTime ?? DateTime(1970);
@@ -4293,61 +4297,60 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
     WidgetRef ref,
     MusicSortState sortState,
     int totalCount,
-  ) =>
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+  ) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 顶部信息行：歌曲数量 + 排序按钮
+        Row(
           children: [
-            // 顶部信息行：歌曲数量 + 排序按钮
-            Row(
-              children: [
-                // 歌曲数量 - 使用数据库总数而不是当前加载的数量
-                Text(
-                  context.l10n.musicTotalSongCountLabel(totalCount),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: widget.isDark ? Colors.white60 : Colors.black54,
-                  ),
-                ),
-                const Spacer(),
-                // 排序按钮
-                _SpotifyIconButton(
-                  icon: Icons.swap_vert_rounded,
-                  label: sortState.option.localizedLabel(context),
-                  isDark: widget.isDark,
-                  onTap: () => _showSortOptions(context, ref, sortState),
-                ),
-              ],
+            // 歌曲数量 - 使用数据库总数而不是当前加载的数量
+            Text(
+              context.l10n.musicTotalSongCountLabel(totalCount),
+              style: TextStyle(
+                fontSize: 13,
+                color: widget.isDark ? Colors.white60 : Colors.black54,
+              ),
             ),
-            const SizedBox(height: 12),
-            // 播放按钮行
-            Row(
-              children: [
-                // 播放全部按钮
-                Expanded(
-                  child: _SpotifyPlayButton(
-                    onPressed: () => _playAll(context, ref),
-                    icon: Icons.play_arrow_rounded,
-                    label: context.l10n.musicPlayAll,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // 随机播放按钮
-                Expanded(
-                  child: _SpotifyPlayButton(
-                    onPressed: () => _shufflePlay(context, ref),
-                    icon: Icons.shuffle_rounded,
-                    label: context.l10n.musicShufflePlay,
-                    isPrimary: false,
-                    isDark: widget.isDark,
-                  ),
-                ),
-              ],
+            const Spacer(),
+            // 排序按钮
+            _SpotifyIconButton(
+              icon: Icons.swap_vert_rounded,
+              label: sortState.option.localizedLabel(context),
+              isDark: widget.isDark,
+              onTap: () => _showSortOptions(context, ref, sortState),
             ),
           ],
         ),
-      );
+        const SizedBox(height: 12),
+        // 播放按钮行
+        Row(
+          children: [
+            // 播放全部按钮
+            Expanded(
+              child: _SpotifyPlayButton(
+                onPressed: () => _playAll(context, ref),
+                icon: Icons.play_arrow_rounded,
+                label: context.l10n.musicPlayAll,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // 随机播放按钮
+            Expanded(
+              child: _SpotifyPlayButton(
+                onPressed: () => _shufflePlay(context, ref),
+                icon: Icons.shuffle_rounded,
+                label: context.l10n.musicShufflePlay,
+                isPrimary: false,
+                isDark: widget.isDark,
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 
   void _showSortOptions(
     BuildContext context,
@@ -4392,10 +4395,10 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
                     onTap: () {
                       final newDirection =
                           currentSort.direction == SortDirection.ascending
-                              ? SortDirection.descending
-                              : SortDirection.ascending;
-                      ref.read(musicSortProvider.notifier).state =
-                          currentSort.copyWith(direction: newDirection);
+                          ? SortDirection.descending
+                          : SortDirection.ascending;
+                      ref.read(musicSortProvider.notifier).state = currentSort
+                          .copyWith(direction: newDirection);
                       Navigator.pop(context);
                     },
                   ),
@@ -4410,8 +4413,8 @@ class _AllSongsContentState extends ConsumerState<_AllSongsContent> {
                 isSelected: currentSort.option == option,
                 isDark: widget.isDark,
                 onTap: () {
-                  ref.read(musicSortProvider.notifier).state =
-                      currentSort.copyWith(option: option);
+                  ref.read(musicSortProvider.notifier).state = currentSort
+                      .copyWith(option: option);
                   Navigator.pop(context);
                 },
               ),
@@ -4605,17 +4608,17 @@ class _MusicListTile extends ConsumerWidget {
         color: isPlaying
             ? AppColors.fileAudio.withValues(alpha: isDark ? 0.15 : 0.1)
             : (isDark
-                ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
-                : context.colorScheme.surface),
+                  ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
+                  : context.colorScheme.surface),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isPlaying
               ? AppColors.fileAudio.withValues(alpha: 0.3)
               : (isDark
-                  ? AppColors.darkOutline.withValues(alpha: 0.15)
-                  : context.colorScheme.outlineVariant.withValues(
-                      alpha: 0.3,
-                    )),
+                    ? AppColors.darkOutline.withValues(alpha: 0.15)
+                    : context.colorScheme.outlineVariant.withValues(
+                        alpha: 0.3,
+                      )),
         ),
       ),
       child: Material(
@@ -4670,8 +4673,9 @@ class _MusicListTile extends ConsumerWidget {
                           color: isPlaying
                               ? AppColors.fileAudio
                               : (isDark ? AppColors.darkOnSurface : null),
-                          fontWeight:
-                              isPlaying ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: isPlaying
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -4721,10 +4725,11 @@ class _MusicListTile extends ConsumerWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: (isDark
-                              ? AppColors.darkSurfaceElevated
-                              : context.colorScheme.surfaceContainerHighest)
-                          .withValues(alpha: 0.7),
+                      color:
+                          (isDark
+                                  ? AppColors.darkSurfaceElevated
+                                  : context.colorScheme.surfaceContainerHighest)
+                              .withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -4929,27 +4934,27 @@ class _MusicListTile extends ConsumerWidget {
                   _buildFallbackCover(title),
             )
           : coverData != null
-              ? Image.memory(
-                  Uint8List.fromList(coverData),
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                  errorBuilder: (context, error, stackTrace) =>
-                      _buildFallbackCover(title),
-                )
-              : _buildFallbackCover(title),
+          ? Image.memory(
+              Uint8List.fromList(coverData),
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              errorBuilder: (context, error, stackTrace) =>
+                  _buildFallbackCover(title),
+            )
+          : _buildFallbackCover(title),
     );
   }
 
   Widget _buildFallbackCover(String title) => Center(
-        child: Text(
-          title.isNotEmpty ? title[0].toUpperCase() : '♪',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
+    child: Text(
+      title.isNotEmpty ? title[0].toUpperCase() : '♪',
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 
   Future<void> _playTrack(BuildContext context, WidgetRef ref) async {
     final connections = ref.read(activeConnectionsProvider);
@@ -5072,12 +5077,13 @@ class _MusicListTile extends ConsumerWidget {
             isDestructive: false,
           );
           if (confirmed && context.mounted) {
-            final success =
-                await ref.read(musicListProvider.notifier).removeFromLibrary(
-                      track.sourceId,
-                      track.path,
-                      track.displayTitle,
-                    );
+            final success = await ref
+                .read(musicListProvider.notifier)
+                .removeFromLibrary(
+                  track.sourceId,
+                  track.path,
+                  track.displayTitle,
+                );
             if (context.mounted) {
               context.showSuccessToast(
                 success
@@ -5098,12 +5104,13 @@ class _MusicListTile extends ConsumerWidget {
             ),
           );
           if (confirmed && context.mounted) {
-            final success =
-                await ref.read(musicListProvider.notifier).deleteFromSource(
-                      track.sourceId,
-                      track.path,
-                      track.displayTitle,
-                    );
+            final success = await ref
+                .read(musicListProvider.notifier)
+                .deleteFromSource(
+                  track.sourceId,
+                  track.path,
+                  track.displayTitle,
+                );
             if (context.mounted) {
               context.showSuccessToast(
                 success
@@ -5179,7 +5186,9 @@ class _MusicListTile extends ConsumerWidget {
             // 已有歌单列表
             if (playlistState.playlists.isNotEmpty) ...[
               const Divider(),
-              ...playlistState.playlists.take(5).map(
+              ...playlistState.playlists
+                  .take(5)
+                  .map(
                     (playlist) => ListTile(
                       leading: Container(
                         width: 40,
@@ -5514,104 +5523,103 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
       );
 
   Widget _buildHeader(BuildContext context, bool isDark) => DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              widget.color.withValues(alpha: isDark ? 0.3 : 0.15),
-              if (isDark) AppColors.darkBackground else Colors.grey[50]!,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(4, 8, 16, 16),
-            child: Column(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          widget.color.withValues(alpha: isDark ? 0.3 : 0.15),
+          if (isDark) AppColors.darkBackground else Colors.grey[50]!,
+        ],
+      ),
+    ),
+    child: SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(4, 8, 16, 16),
+        child: Column(
+          children: [
+            // 返回按钮行
+            Row(
               children: [
-                // 返回按钮行
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.arrow_back_rounded,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                    ),
-                    const Spacer(),
-                  ],
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.arrow_back_rounded,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                // 信息卡片
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Row(
-                    children: [
-                      // 图标/封面
-                      widget.coverWidget ??
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  widget.color,
-                                  widget.color.withValues(alpha: 0.6),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: widget.color.withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Icon(widget.icon,
-                                color: Colors.white, size: 36),
+                const Spacer(),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // 信息卡片
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  // 图标/封面
+                  widget.coverWidget ??
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              widget.color,
+                              widget.color.withValues(alpha: 0.6),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                      const SizedBox(width: 16),
-                      // 标题信息
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.title,
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.subtitle,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isDark
-                                    ? AppColors.darkOnSurfaceVariant
-                                    : AppColors.lightOnSurfaceVariant,
-                              ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: widget.color.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
+                        child: Icon(widget.icon, color: Colors.white, size: 36),
                       ),
-                    ],
+                  const SizedBox(width: 16),
+                  // 标题信息
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.subtitle,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark
+                                ? AppColors.darkOnSurfaceVariant
+                                : AppColors.lightOnSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 
   Widget _buildPlayControls(BuildContext context, bool isDark) {
     if (widget.tracks.isEmpty) return const SizedBox.shrink();
@@ -5643,25 +5651,25 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage>
   }
 
   Widget _buildEmptyState(bool isDark) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              widget.icon,
-              size: 64,
-              color: isDark ? Colors.grey[700] : Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              context.l10n.musicNoSongsEmpty,
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark ? Colors.grey[500] : Colors.grey[600],
-              ),
-            ),
-          ],
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          widget.icon,
+          size: 64,
+          color: isDark ? Colors.grey[700] : Colors.grey[400],
         ),
-      );
+        const SizedBox(height: 16),
+        Text(
+          context.l10n.musicNoSongsEmpty,
+          style: TextStyle(
+            fontSize: 16,
+            color: isDark ? Colors.grey[500] : Colors.grey[600],
+          ),
+        ),
+      ],
+    ),
+  );
 
   Future<void> _playAll(BuildContext context) async {
     if (widget.tracks.isEmpty) return;
@@ -5803,7 +5811,8 @@ class _ArtistsView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = MusicDatabaseService();
     final config = ref.watch(mediaLibraryConfigProvider).valueOrNull;
-    final enabledPaths = config
+    final enabledPaths =
+        config
             ?.getEnabledPathsForType(MediaType.music)
             .map((p) => (sourceId: p.sourceId, path: p.path))
             .toList() ??
@@ -5999,8 +6008,8 @@ class _ArtistCard extends StatelessWidget {
   }
 
   Widget _buildDefaultCover() => const Center(
-        child: Icon(Icons.person_rounded, size: 40, color: Colors.white),
-      );
+    child: Icon(Icons.person_rounded, size: 40, color: Colors.white),
+  );
 }
 
 /// 艺术家卡片（数据库版）- 点击时从数据库加载该艺术家的歌曲
@@ -6017,99 +6026,99 @@ class _ArtistCardFromDb extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
-        onTap: () => _navigateToArtist(context),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    onTap: () => _navigateToArtist(context),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 封面区域 - 圆形头像
-              Expanded(
-                flex: 3,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary.withValues(alpha: 0.8),
-                          AppColors.secondary.withValues(alpha: 0.8),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.2),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: const Center(
-                      child: Icon(
-                        Icons.person_rounded,
-                        size: 40,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // 信息区域
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          artistName,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          context.l10n.musicSongCountLabel(count),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? AppColors.darkOnSurfaceVariant
-                                : AppColors.lightOnSurfaceVariant,
-                          ),
-                        ),
-                      ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 封面区域 - 圆形头像
+          Expanded(
+            flex: 3,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.8),
+                      AppColors.secondary.withValues(alpha: 0.8),
                     ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: const Center(
+                  child: Icon(
+                    Icons.person_rounded,
+                    size: 40,
+                    color: Colors.white,
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      );
+          // 信息区域
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      artistName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      context.l10n.musicSongCountLabel(count),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? AppColors.darkOnSurfaceVariant
+                            : AppColors.lightOnSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Future<void> _navigateToArtist(BuildContext context) async {
     final db = MusicDatabaseService();
@@ -6166,14 +6175,16 @@ class _AlbumsView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = MusicDatabaseService();
     final config = ref.watch(mediaLibraryConfigProvider).valueOrNull;
-    final enabledPaths = config
+    final enabledPaths =
+        config
             ?.getEnabledPathsForType(MediaType.music)
             .map((p) => (sourceId: p.sourceId, path: p.path))
             .toList() ??
         [];
 
     return FutureBuilder<
-        List<({String album, String? artist, int count, String? coverPath})>>(
+      List<({String album, String? artist, int count, String? coverPath})>
+    >(
       future: db.getAlbums(enabledPaths: enabledPaths),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -6234,81 +6245,80 @@ class _AlbumCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
-        onTap: () => _showAlbumTracks(context, ref),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    onTap: () => _showAlbumTracks(context, ref),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 3,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.fileAudio.withValues(alpha: 0.7),
-                        AppColors.secondary.withValues(alpha: 0.7),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.album_rounded,
-                        size: 48, color: Colors.white),
-                  ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 3,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.fileAudio.withValues(alpha: 0.7),
+                    AppColors.secondary.withValues(alpha: 0.7),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
                 ),
               ),
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          albumName,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        context.l10n.musicSongCountLabel(tracks.length),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark
-                              ? AppColors.darkOnSurfaceVariant
-                              : AppColors.lightOnSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              child: const Center(
+                child: Icon(Icons.album_rounded, size: 48, color: Colors.white),
               ),
-            ],
+            ),
           ),
-        ),
-      );
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      albumName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    context.l10n.musicSongCountLabel(tracks.length),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.darkOnSurfaceVariant
+                          : AppColors.lightOnSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   void _showAlbumTracks(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -6414,81 +6424,80 @@ class _AlbumCardFromDb extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
-        onTap: () => _showAlbumTracks(context),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    onTap: () => _showAlbumTracks(context),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 3,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.fileAudio.withValues(alpha: 0.7),
-                        AppColors.secondary.withValues(alpha: 0.7),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.album_rounded,
-                        size: 48, color: Colors.white),
-                  ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 3,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.fileAudio.withValues(alpha: 0.7),
+                    AppColors.secondary.withValues(alpha: 0.7),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
                 ),
               ),
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          albumName,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        context.l10n.musicSongCountLabel(count),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark
-                              ? AppColors.darkOnSurfaceVariant
-                              : AppColors.lightOnSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              child: const Center(
+                child: Icon(Icons.album_rounded, size: 48, color: Colors.white),
               ),
-            ],
+            ),
           ),
-        ),
-      );
+          Expanded(
+            flex: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      albumName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    context.l10n.musicSongCountLabel(count),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? AppColors.darkOnSurfaceVariant
+                          : AppColors.lightOnSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Future<void> _showAlbumTracks(BuildContext context) async {
     final db = MusicDatabaseService();
@@ -6622,7 +6631,8 @@ class _FoldersView extends ConsumerWidget {
     final db = MusicDatabaseService();
     // 获取媒体库配置中启用的路径
     final config = ref.watch(mediaLibraryConfigProvider).valueOrNull;
-    final enabledPaths = config
+    final enabledPaths =
+        config
             ?.getEnabledPathsForType(MediaType.music)
             .map((p) => (sourceId: p.sourceId, path: p.path))
             .toList() ??
@@ -6687,84 +6697,84 @@ class _FolderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: Material(
-          color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute<void>(
-                builder: (_) => CategoryDetailPage(
-                  title: folderName,
-                  subtitle: context.l10n.musicListSongCount(tracks.length),
-                  tracks: tracks,
-                  icon: Icons.folder_rounded,
-                  color: AppColors.fileAudio,
-                ),
-              ),
-            ),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  // 文件夹图标
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.fileAudio.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.folder_rounded,
-                      color: AppColors.fileAudio,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // 文件夹信息
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          folderName,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          context.l10n.musicArtistSongs(tracks.length),
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark
-                                ? AppColors.darkOnSurfaceVariant
-                                : AppColors.lightOnSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // 箭头
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: isDark
-                        ? AppColors.darkOnSurfaceVariant
-                        : AppColors.lightOnSurfaceVariant,
-                  ),
-                ],
-              ),
+    margin: const EdgeInsets.only(bottom: 8),
+    child: Material(
+      color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => CategoryDetailPage(
+              title: folderName,
+              subtitle: context.l10n.musicListSongCount(tracks.length),
+              tracks: tracks,
+              icon: Icons.folder_rounded,
+              color: AppColors.fileAudio,
             ),
           ),
         ),
-      );
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // 文件夹图标
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.fileAudio.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.folder_rounded,
+                  color: AppColors.fileAudio,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // 文件夹信息
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      folderName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.l10n.musicArtistSongs(tracks.length),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? AppColors.darkOnSurfaceVariant
+                            : AppColors.lightOnSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 箭头
+              Icon(
+                Icons.chevron_right_rounded,
+                color: isDark
+                    ? AppColors.darkOnSurfaceVariant
+                    : AppColors.lightOnSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// 文件夹卡片（数据库版）- 点击时从数据库加载歌曲
@@ -6783,73 +6793,73 @@ class _FolderCardFromDb extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        child: Material(
-          color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          child: InkWell(
-            onTap: () => _navigateToFolder(context),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  // 文件夹图标
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.fileAudio.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.folder_rounded,
-                      color: AppColors.fileAudio,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // 文件夹信息
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          folderName,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          context.l10n.musicSongCountLabel(count),
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark
-                                ? AppColors.darkOnSurfaceVariant
-                                : AppColors.lightOnSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // 箭头
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: isDark
-                        ? AppColors.darkOnSurfaceVariant
-                        : AppColors.lightOnSurfaceVariant,
-                  ),
-                ],
+    margin: const EdgeInsets.only(bottom: 8),
+    child: Material(
+      color: isDark ? AppColors.darkSurfaceVariant : Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => _navigateToFolder(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // 文件夹图标
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.fileAudio.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.folder_rounded,
+                  color: AppColors.fileAudio,
+                  size: 28,
+                ),
               ),
-            ),
+              const SizedBox(width: 16),
+              // 文件夹信息
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      folderName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.l10n.musicSongCountLabel(count),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? AppColors.darkOnSurfaceVariant
+                            : AppColors.lightOnSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // 箭头
+              Icon(
+                Icons.chevron_right_rounded,
+                color: isDark
+                    ? AppColors.darkOnSurfaceVariant
+                    : AppColors.lightOnSurfaceVariant,
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   Future<void> _navigateToFolder(BuildContext context) async {
     final db = MusicDatabaseService();
@@ -6907,7 +6917,8 @@ class _GenresView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = MusicDatabaseService();
     final config = ref.watch(mediaLibraryConfigProvider).valueOrNull;
-    final enabledPaths = config
+    final enabledPaths =
+        config
             ?.getEnabledPathsForType(MediaType.music)
             .map((p) => (sourceId: p.sourceId, path: p.path))
             .toList() ??
@@ -6994,81 +7005,78 @@ class _GenreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute<void>(
-            builder: (_) => CategoryDetailPage(
-              title: genreName,
-              subtitle: context.l10n.musicListSongCount(tracks.length),
-              tracks: tracks,
-              icon: Icons.category_rounded,
-              color: color,
+    onTap: () => Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => CategoryDetailPage(
+          title: genreName,
+          subtitle: context.l10n.musicListSongCount(tracks.length),
+          tracks: tracks,
+          icon: Icons.category_rounded,
+          color: color,
+        ),
+      ),
+    ),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // 装饰性图标
+          Positioned(
+            right: -10,
+            bottom: -10,
+            child: Icon(
+              Icons.category_rounded,
+              size: 60,
+              color: Colors.white.withValues(alpha: 0.15),
             ),
           ),
-        ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                color.withValues(alpha: 0.9),
-                color.withValues(alpha: 0.6)
+          // 内容
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  genreName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.musicSongCountLabel(tracks.length),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
               ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
-          child: Stack(
-            children: [
-              // 装饰性图标
-              Positioned(
-                right: -10,
-                bottom: -10,
-                child: Icon(
-                  Icons.category_rounded,
-                  size: 60,
-                  color: Colors.white.withValues(alpha: 0.15),
-                ),
-              ),
-              // 内容
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      genreName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.l10n.musicSongCountLabel(tracks.length),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
 
 /// 流派卡片（数据库版）- 点击时从数据库加载歌曲
@@ -7087,70 +7095,67 @@ class _GenreCardFromDb extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => GestureDetector(
-        onTap: () => _navigateToGenre(context),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                color.withValues(alpha: 0.9),
-                color.withValues(alpha: 0.6)
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              // 装饰性图标
-              Positioned(
-                right: -10,
-                bottom: -10,
-                child: Icon(
-                  Icons.category_rounded,
-                  size: 60,
-                  color: Colors.white.withValues(alpha: 0.15),
-                ),
-              ),
-              // 内容
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      genreName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.l10n.musicSongCountLabel(count),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+    onTap: () => _navigateToGenre(context),
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-      );
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // 装饰性图标
+          Positioned(
+            right: -10,
+            bottom: -10,
+            child: Icon(
+              Icons.category_rounded,
+              size: 60,
+              color: Colors.white.withValues(alpha: 0.15),
+            ),
+          ),
+          // 内容
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  genreName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.musicSongCountLabel(count),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   Future<void> _navigateToGenre(BuildContext context) async {
     final db = MusicDatabaseService();
@@ -7207,7 +7212,8 @@ class _YearsView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final db = MusicDatabaseService();
     final config = ref.watch(mediaLibraryConfigProvider).valueOrNull;
-    final enabledPaths = config
+    final enabledPaths =
+        config
             ?.getEnabledPathsForType(MediaType.music)
             .map((p) => (sourceId: p.sourceId, path: p.path))
             .toList() ??
@@ -7314,8 +7320,9 @@ class _YearCard extends StatelessWidget {
     final displayTitle = yearLabel == unknownYear
         ? yearLabel
         : context.l10n.musicYearLabel(yearLabel);
-    final displayYear =
-        yearLabel == '未知年代' ? '?' : yearLabel.replaceAll('s', '');
+    final displayYear = yearLabel == '未知年代'
+        ? '?'
+        : yearLabel.replaceAll('s', '');
 
     return GestureDetector(
       onTap: () => Navigator.push(
@@ -7604,15 +7611,15 @@ class _FavoriteTrackTile extends ConsumerWidget {
         color: isPlaying
             ? AppColors.fileAudio.withValues(alpha: isDark ? 0.15 : 0.1)
             : (isDark
-                ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
-                : Colors.white),
+                  ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
+                  : Colors.white),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isPlaying
               ? AppColors.fileAudio.withValues(alpha: 0.3)
               : (isDark
-                  ? AppColors.darkOutline.withValues(alpha: 0.2)
-                  : Colors.grey.withValues(alpha: 0.2)),
+                    ? AppColors.darkOutline.withValues(alpha: 0.2)
+                    : Colors.grey.withValues(alpha: 0.2)),
         ),
       ),
       child: ListTile(
@@ -7693,13 +7700,15 @@ class _FavoriteTrackTile extends ConsumerWidget {
 
       // 支持 file:// URL 和网络 URL
       if (coverUrl.startsWith('file://')) {
-        final filePath = coverUrl.substring(7); // 移除 'file://' 前缀
-        coverImage = Image.file(
-          File(filePath),
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          errorBuilder: (_, _, _) => _buildPlaceholder(isPlaying),
-        );
+        final filePath = localPathFromFileUri(coverUrl);
+        coverImage = filePath == null
+            ? _buildPlaceholder(isPlaying)
+            : Image.file(
+                File(filePath),
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) => _buildPlaceholder(isPlaying),
+              );
       } else {
         coverImage = Image.network(
           coverUrl,
@@ -7715,10 +7724,10 @@ class _FavoriteTrackTile extends ConsumerWidget {
   }
 
   Widget _buildPlaceholder(bool isPlaying) => Icon(
-        isPlaying ? Icons.equalizer_rounded : Icons.music_note_rounded,
-        color: Colors.white.withValues(alpha: 0.8),
-        size: 24,
-      );
+    isPlaying ? Icons.equalizer_rounded : Icons.music_note_rounded,
+    color: Colors.white.withValues(alpha: 0.8),
+    size: 24,
+  );
 }
 
 /// 最近播放视图
@@ -7767,15 +7776,15 @@ class _RecentTrackTile extends ConsumerWidget {
         color: isPlaying
             ? AppColors.fileAudio.withValues(alpha: isDark ? 0.15 : 0.1)
             : (isDark
-                ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
-                : Colors.white),
+                  ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
+                  : Colors.white),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isPlaying
               ? AppColors.fileAudio.withValues(alpha: 0.3)
               : (isDark
-                  ? AppColors.darkOutline.withValues(alpha: 0.2)
-                  : Colors.grey.withValues(alpha: 0.2)),
+                    ? AppColors.darkOutline.withValues(alpha: 0.2)
+                    : Colors.grey.withValues(alpha: 0.2)),
         ),
       ),
       child: ListTile(
@@ -7860,13 +7869,15 @@ class _RecentTrackTile extends ConsumerWidget {
 
       // 支持 file:// URL 和网络 URL
       if (coverUrl.startsWith('file://')) {
-        final filePath = coverUrl.substring(7); // 移除 'file://' 前缀
-        coverImage = Image.file(
-          File(filePath),
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          errorBuilder: (_, _, _) => _buildPlaceholder(isPlaying),
-        );
+        final filePath = localPathFromFileUri(coverUrl);
+        coverImage = filePath == null
+            ? _buildPlaceholder(isPlaying)
+            : Image.file(
+                File(filePath),
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) => _buildPlaceholder(isPlaying),
+              );
       } else {
         coverImage = Image.network(
           coverUrl,
@@ -7887,19 +7898,19 @@ class _RecentTrackTile extends ConsumerWidget {
   }
 
   Widget _buildPlaceholder(bool isPlaying) => Center(
-        child: Icon(
-          isPlaying ? Icons.equalizer_rounded : Icons.music_note_rounded,
-          color: Colors.white,
-          size: 24,
-        ),
-      );
+    child: Icon(
+      isPlaying ? Icons.equalizer_rounded : Icons.music_note_rounded,
+      color: Colors.white,
+      size: 24,
+    ),
+  );
 
   Widget _buildPlayingOverlay() => ColoredBox(
-        color: Colors.black.withValues(alpha: 0.3),
-        child: const Center(
-          child: Icon(Icons.equalizer_rounded, color: Colors.white, size: 24),
-        ),
-      );
+    color: Colors.black.withValues(alpha: 0.3),
+    child: const Center(
+      child: Icon(Icons.equalizer_rounded, color: Colors.white, size: 24),
+    ),
+  );
 }
 
 /// 歌单列表视图
@@ -7960,45 +7971,45 @@ class _ImportPlaylistButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _import(context, ref),
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: () => _import(context, ref),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : Colors.black.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.12)
-                    : Colors.black.withValues(alpha: 0.08),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.file_upload_rounded,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  context.l10n.musicPlaylistImportAction,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white70 : Colors.black87,
-                  ),
-                ),
-              ],
-            ),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.08),
           ),
         ),
-      );
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.file_upload_rounded,
+              color: isDark ? Colors.white70 : Colors.black87,
+              size: 22,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.musicPlaylistImportAction,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white70 : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   Future<void> _import(BuildContext context, WidgetRef ref) async {
     final result = await fp.FilePicker.platform.pickFiles(
@@ -8039,36 +8050,35 @@ class _CreatePlaylistButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showCreatePlaylistDialog(context, ref),
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: () => _showCreatePlaylistDialog(context, ref),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border:
-                  Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add_rounded, color: AppColors.primary, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  context.l10n.musicPlaylistCreateNewButton,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
-      );
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_rounded, color: AppColors.primary, size: 22),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.musicPlaylistCreateNewButton,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   void _showCreatePlaylistDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
@@ -8119,95 +8129,94 @@ class _PlaylistTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    decoration: BoxDecoration(
+      color: isDark
+          ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
+          : Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: isDark
+            ? AppColors.darkOutline.withValues(alpha: 0.2)
+            : Colors.grey.withValues(alpha: 0.2),
+      ),
+    ),
+    child: ListTile(
+      onTap: () => _openPlaylistDetail(context, ref),
+      leading: Container(
+        width: 48,
+        height: 48,
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.darkSurfaceVariant.withValues(alpha: 0.3)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDark
-                ? AppColors.darkOutline.withValues(alpha: 0.2)
-                : Colors.grey.withValues(alpha: 0.2),
-          ),
-        ),
-        child: ListTile(
-          onTap: () => _openPlaylistDetail(context, ref),
-          leading: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF9C27B0).withValues(alpha: 0.8),
-                  const Color(0xFFE91E63).withValues(alpha: 0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.playlist_play_rounded,
-              color: Colors.white,
-              size: 26,
-            ),
-          ),
-          title: Text(
-            playlist.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          subtitle: Text(
-            context.l10n.musicSongCountLabel(playlist.trackCount),
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark
-                  ? AppColors.darkOnSurfaceVariant
-                  : AppColors.lightOnSurfaceVariant,
-            ),
-          ),
-          trailing: PopupMenuButton<String>(
-            icon: Icon(
-              Icons.more_vert_rounded,
-              color: isDark
-                  ? AppColors.darkOnSurfaceVariant
-                  : AppColors.lightOnSurfaceVariant,
-            ),
-            onSelected: (value) => _handleMenuAction(context, ref, value),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'rename',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit_rounded, size: 20),
-                    SizedBox(width: 12),
-                    Text(context.l10n.musicPlaylistContextMenuRename),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_rounded,
-                        size: 20, color: AppColors.error),
-                    SizedBox(width: 12),
-                    Text(
-                      context.l10n.musicPlaylistContextMenuDelete,
-                      style: TextStyle(color: AppColors.error),
-                    ),
-                  ],
-                ),
-              ),
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF9C27B0).withValues(alpha: 0.8),
+              const Color(0xFFE91E63).withValues(alpha: 0.8),
             ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          borderRadius: BorderRadius.circular(12),
         ),
-      );
+        child: const Icon(
+          Icons.playlist_play_rounded,
+          color: Colors.white,
+          size: 26,
+        ),
+      ),
+      title: Text(
+        playlist.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+      ),
+      subtitle: Text(
+        context.l10n.musicSongCountLabel(playlist.trackCount),
+        style: TextStyle(
+          fontSize: 12,
+          color: isDark
+              ? AppColors.darkOnSurfaceVariant
+              : AppColors.lightOnSurfaceVariant,
+        ),
+      ),
+      trailing: PopupMenuButton<String>(
+        icon: Icon(
+          Icons.more_vert_rounded,
+          color: isDark
+              ? AppColors.darkOnSurfaceVariant
+              : AppColors.lightOnSurfaceVariant,
+        ),
+        onSelected: (value) => _handleMenuAction(context, ref, value),
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'rename',
+            child: Row(
+              children: [
+                Icon(Icons.edit_rounded, size: 20),
+                SizedBox(width: 12),
+                Text(context.l10n.musicPlaylistContextMenuRename),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                Icon(Icons.delete_rounded, size: 20, color: AppColors.error),
+                SizedBox(width: 12),
+                Text(
+                  context.l10n.musicPlaylistContextMenuDelete,
+                  style: TextStyle(color: AppColors.error),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 
   void _openPlaylistDetail(BuildContext context, WidgetRef ref) {
     PlaylistDetailPage.open(context, playlist);
@@ -8304,43 +8313,43 @@ class _SortDirectionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
+              : Colors.grey[100],
           borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceVariant.withValues(alpha: 0.5)
-                  : Colors.grey[100],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  direction == SortDirection.ascending
-                      ? Icons.arrow_upward_rounded
-                      : Icons.arrow_downward_rounded,
-                  size: 16,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  direction == SortDirection.ascending
-                      ? context.l10n.musicSortDirectionAscending
-                      : context.l10n.musicSortDirectionDescending,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? Colors.white70 : Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
-      );
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              direction == SortDirection.ascending
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+              size: 16,
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              direction == SortDirection.ascending
+                  ? context.l10n.musicSortDirectionAscending
+                  : context.l10n.musicSortDirectionDescending,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.white70 : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 /// 排序选项列表项
@@ -8359,38 +8368,38 @@ class _SortOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary.withValues(alpha: 0.15)
-                : (isDark ? Colors.grey[800] : Colors.grey[100]),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            option.icon,
-            color: isSelected
-                ? AppColors.primary
-                : (isDark ? Colors.white70 : Colors.black54),
-            size: 20,
-          ),
-        ),
-        title: Text(
-          option.localizedLabel(context),
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected
-                ? AppColors.primary
-                : (isDark ? Colors.white : Colors.black87),
-          ),
-        ),
-        trailing: isSelected
-            ? Icon(Icons.check_rounded, color: AppColors.primary, size: 22)
-            : null,
-        onTap: onTap,
-      );
+    leading: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.15)
+            : (isDark ? Colors.grey[800] : Colors.grey[100]),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(
+        option.icon,
+        color: isSelected
+            ? AppColors.primary
+            : (isDark ? Colors.white70 : Colors.black54),
+        size: 20,
+      ),
+    ),
+    title: Text(
+      option.localizedLabel(context),
+      style: TextStyle(
+        fontSize: 15,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        color: isSelected
+            ? AppColors.primary
+            : (isDark ? Colors.white : Colors.black87),
+      ),
+    ),
+    trailing: isSelected
+        ? Icon(Icons.check_rounded, color: AppColors.primary, size: 22)
+        : null,
+    onTap: onTap,
+  );
 }
 
 /// Spotify 风格播放按钮
@@ -8411,55 +8420,55 @@ class _SpotifyPlayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(24),
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: isPrimary
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.secondary],
+                )
+              : null,
+          color: isPrimary
+              ? null
+              : (isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.grey[200]),
           borderRadius: BorderRadius.circular(24),
-          child: Ink(
-            decoration: BoxDecoration(
-              gradient: isPrimary
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.primary, AppColors.secondary],
-                    )
-                  : null,
-              color: isPrimary
-                  ? null
-                  : (isDark
-                      ? Colors.white.withValues(alpha: 0.1)
-                      : Colors.grey[200]),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    icon,
-                    color: isPrimary
-                        ? Colors.white
-                        : (isDark ? Colors.white : Colors.black87),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: isPrimary
-                          ? Colors.white
-                          : (isDark ? Colors.white : Colors.black87),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: isPrimary
+                    ? Colors.white
+                    : (isDark ? Colors.white : Colors.black87),
+                size: 20,
               ),
-            ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isPrimary
+                      ? Colors.white
+                      : (isDark ? Colors.white : Colors.black87),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// Spotify 风格图标按钮（带文字）
@@ -8478,39 +8487,39 @@ class _SpotifyIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 18,
-                  color: isDark ? Colors.white60 : Colors.black54,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? Colors.white60 : Colors.black54,
-                  ),
-                ),
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.arrow_drop_down_rounded,
-                  size: 18,
-                  color: isDark ? Colors.white60 : Colors.black54,
-                ),
-              ],
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isDark ? Colors.white60 : Colors.black54,
             ),
-          ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.white60 : Colors.black54,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 18,
+              color: isDark ? Colors.white60 : Colors.black54,
+            ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 }
 
 /// 表格头部
@@ -8574,10 +8583,10 @@ class _MusicTableRow extends ConsumerWidget {
             color: isPlaying
                 ? colorScheme.primary.withValues(alpha: 0.1)
                 : isEven
-                    ? (isDark
-                        ? Colors.white.withValues(alpha: 0.02)
-                        : Colors.black.withValues(alpha: 0.02))
-                    : Colors.transparent,
+                ? (isDark
+                      ? Colors.white.withValues(alpha: 0.02)
+                      : Colors.black.withValues(alpha: 0.02))
+                : Colors.transparent,
           ),
           child: Row(
             children: [
@@ -8836,15 +8845,14 @@ class _ModernMusicTile extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 15,
-                          fontWeight:
-                              isPlaying ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: isPlaying
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                           color: isPlaying
                               ? AppColors.primary
                               : isConnected
-                                  ? (isDark ? Colors.white : Colors.black87)
-                                  : (isDark
-                                      ? Colors.grey[600]
-                                      : Colors.grey[500]),
+                              ? (isDark ? Colors.white : Colors.black87)
+                              : (isDark ? Colors.grey[600] : Colors.grey[500]),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -8966,14 +8974,14 @@ class _ModernMusicTile extends ConsumerWidget {
                   _buildFallbackCover(title, isConnected),
             )
           : coverData != null
-              ? Image.memory(
-                  Uint8List.fromList(coverData),
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                  errorBuilder: (_, _, _) =>
-                      _buildFallbackCover(title, isConnected),
-                )
-              : _buildFallbackCover(title, isConnected),
+          ? Image.memory(
+              Uint8List.fromList(coverData),
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              errorBuilder: (_, _, _) =>
+                  _buildFallbackCover(title, isConnected),
+            )
+          : _buildFallbackCover(title, isConnected),
     );
   }
 
@@ -9114,22 +9122,22 @@ class _ModernMusicTile extends ConsumerWidget {
                               ),
                             )
                           : track.coverData != null
-                              ? Image.memory(
-                                  Uint8List.fromList(track.coverData!),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => Icon(
-                                    Icons.music_note_rounded,
-                                    color: isDark
-                                        ? AppColors.darkOnSurfaceVariant
-                                        : AppColors.lightOnSurfaceVariant,
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.music_note_rounded,
-                                  color: isDark
-                                      ? AppColors.darkOnSurfaceVariant
-                                      : AppColors.lightOnSurfaceVariant,
-                                ),
+                          ? Image.memory(
+                              Uint8List.fromList(track.coverData!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => Icon(
+                                Icons.music_note_rounded,
+                                color: isDark
+                                    ? AppColors.darkOnSurfaceVariant
+                                    : AppColors.lightOnSurfaceVariant,
+                              ),
+                            )
+                          : Icon(
+                              Icons.music_note_rounded,
+                              color: isDark
+                                  ? AppColors.darkOnSurfaceVariant
+                                  : AppColors.lightOnSurfaceVariant,
+                            ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -9187,7 +9195,10 @@ class _ModernMusicTile extends ConsumerWidget {
                 isDark: isDark,
                 onTap: () {
                   Navigator.pop(context);
-                  unawaited(_openManualScraper(pageContext, ref));
+                  AppError.fireAndForget(
+                    _openManualScraper(pageContext, ref),
+                    action: 'musicList.openManualScraper',
+                  );
                 },
               ),
               const Divider(height: 1),
@@ -9525,24 +9536,24 @@ class _PlayingIndicatorState extends State<_PlayingIndicator>
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) => Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(3, (index) {
-            final delay = index * 0.2;
-            final animValue = (_controller.value + delay) % 1.0;
-            return Container(
-              width: 3,
-              height: 8 + (animValue * 8),
-              margin: const EdgeInsets.symmetric(horizontal: 1),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            );
-          }),
-        ),
-      );
+    animation: _controller,
+    builder: (context, child) => Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(3, (index) {
+        final delay = index * 0.2;
+        final animValue = (_controller.value + delay) % 1.0;
+        return Container(
+          width: 3,
+          height: 8 + (animValue * 8),
+          margin: const EdgeInsets.symmetric(horizontal: 1),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        );
+      }),
+    ),
+  );
 }
 
 /// 底部弹窗选项
@@ -9561,13 +9572,13 @@ class _BottomSheetOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        leading: Icon(icon, color: isDark ? Colors.white70 : Colors.black87),
-        title: Text(
-          label,
-          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-        ),
-        onTap: onTap,
-      );
+    leading: Icon(icon, color: isDark ? Colors.white70 : Colors.black87),
+    title: Text(
+      label,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+    ),
+    onTap: onTap,
+  );
 }
 
 /// 紧凑型音乐列表项
@@ -9600,14 +9611,14 @@ class _CompactMusicTile extends ConsumerWidget {
         connection != null && connection.status == SourceStatus.connected;
 
     Widget buildFallbackIcon() => Icon(
-          Icons.music_note_rounded,
-          size: 20,
-          color: isConnected
-              ? (isDark
-                  ? AppColors.darkOnSurfaceVariant
-                  : AppColors.lightOnSurfaceVariant)
-              : (isDark ? Colors.grey[700] : Colors.grey[350]),
-        );
+      Icons.music_note_rounded,
+      size: 20,
+      color: isConnected
+          ? (isDark
+                ? AppColors.darkOnSurfaceVariant
+                : AppColors.lightOnSurfaceVariant)
+          : (isDark ? Colors.grey[700] : Colors.grey[350]),
+    );
 
     return ListTile(
       onTap: () => _playTrack(context, ref),
@@ -9634,15 +9645,15 @@ class _CompactMusicTile extends ConsumerWidget {
                         buildFallbackIcon(),
                   )
                 : coverData != null
-                    ? Image.memory(
-                        Uint8List.fromList(coverData),
-                        fit: BoxFit.cover,
-                        width: 40,
-                        height: 40,
-                        errorBuilder: (context, error, stackTrace) =>
-                            buildFallbackIcon(),
-                      )
-                    : buildFallbackIcon(),
+                ? Image.memory(
+                    Uint8List.fromList(coverData),
+                    fit: BoxFit.cover,
+                    width: 40,
+                    height: 40,
+                    errorBuilder: (context, error, stackTrace) =>
+                        buildFallbackIcon(),
+                  )
+                : buildFallbackIcon(),
           ),
           if (!isConnected)
             Positioned(
@@ -9998,7 +10009,9 @@ class _CompactMusicTile extends ConsumerWidget {
             ),
             if (playlistState.playlists.isNotEmpty) ...[
               const Divider(),
-              ...playlistState.playlists.take(5).map(
+              ...playlistState.playlists
+                  .take(5)
+                  .map(
                     (playlist) => ListTile(
                       leading: Container(
                         width: 40,
@@ -10120,17 +10133,16 @@ class _PlayAllButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => ElevatedButton.icon(
-        onPressed: () => _playAll(context, ref),
-        icon: const Icon(Icons.play_arrow_rounded, size: 20),
-        label: Text(context.l10n.musicPlayAllButtonLabel),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        ),
-      );
+    onPressed: () => _playAll(context, ref),
+    icon: const Icon(Icons.play_arrow_rounded, size: 20),
+    label: Text(context.l10n.musicPlayAllButtonLabel),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    ),
+  );
 
   Future<void> _playAll(BuildContext context, WidgetRef ref) async {
     if (tracks.isEmpty) return;
@@ -10177,31 +10189,31 @@ class _PlayAllButton extends ConsumerWidget {
 
 /// 空状态视图
 Widget _buildEmptyView(String message, IconData icon, bool isDark) => Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 40, color: AppColors.primary),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 16,
-              color: isDark
-                  ? AppColors.darkOnSurfaceVariant
-                  : AppColors.lightOnSurfaceVariant,
-            ),
-          ),
-        ],
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 40, color: AppColors.primary),
       ),
-    );
+      const SizedBox(height: 16),
+      Text(
+        message,
+        style: TextStyle(
+          fontSize: 16,
+          color: isDark
+              ? AppColors.darkOnSurfaceVariant
+              : AppColors.lightOnSurfaceVariant,
+        ),
+      ),
+    ],
+  ),
+);
 
 /// 音乐封面占位渐变色板（多处复用，色值固定）
 const List<List<Color>> _kMusicCoverGradients = [

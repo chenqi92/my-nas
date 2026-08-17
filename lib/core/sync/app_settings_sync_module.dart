@@ -22,14 +22,14 @@ class AppSettingsSyncModule implements SyncableModule {
   @override
   String get displayName => appL10n.syncModuleGlobalTheme;
 
+  @override
+  SyncMergePolicy get mergePolicy => SyncMergePolicy.lastWriteWins;
+
   Future<Map<String, dynamic>> _readSnapshot() async {
     final box = await HiveUtils.getSettingsBox();
     final theme = box.get(_kThemeMode) as String?;
     final color = box.get(_kColorScheme) as String?;
-    return {
-      _kThemeMode: ?theme,
-      _kColorScheme: ?color,
-    };
+    return {_kThemeMode: ?theme, _kColorScheme: ?color};
   }
 
   @override
@@ -42,14 +42,14 @@ class AppSettingsSyncModule implements SyncableModule {
   @override
   Future<Map<String, dynamic>> exportData() async {
     final snap = await _readSnapshot();
-    return {
-      'version': 1,
-      'settings': snap,
-    };
+    return {'version': 1, 'settings': snap};
   }
 
   @override
-  Future<void> importData(Map<String, dynamic> data) async {
+  Future<void> importData(
+    Map<String, dynamic> data, {
+    DateTime? remoteUpdatedAt,
+  }) async {
     final settings = (data['settings'] as Map?) ?? const {};
     final box = await HiveUtils.getSettingsBox();
     final theme = settings[_kThemeMode];
@@ -60,7 +60,7 @@ class AppSettingsSyncModule implements SyncableModule {
     // 让追踪器与刚导入的快照对齐，避免下次本地推送
     await _tracker.recordImported(
       await _readSnapshot(),
-      DateTime.now(),
+      remoteUpdatedAt ?? DateTime.now(),
     );
   }
 }

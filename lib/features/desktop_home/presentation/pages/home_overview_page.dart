@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +11,7 @@ import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
 import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
     show VideoListLoaded, videoListProvider;
 import 'package:my_nas/features/video/presentation/providers/video_history_provider.dart';
+import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/atoms/app_card.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
@@ -258,7 +258,11 @@ class _SpotlightCard extends ConsumerWidget {
             // 顶部继续观看条目的缩略图作为底图（有则铺）。
             if (top?.thumbnailUrl != null && top!.thumbnailUrl!.isNotEmpty)
               Positioned.fill(
-                child: _Poster(url: top.thumbnailUrl, fallback: t.insetBg),
+                child: _Poster(
+                  url: top.thumbnailUrl,
+                  sourceId: top.sourceId,
+                  fallback: t.insetBg,
+                ),
               ),
             Container(
               decoration: BoxDecoration(
@@ -661,7 +665,11 @@ class _ContinueCard extends StatelessWidget {
               child: SizedBox(
                 width: 92,
                 height: 60,
-                child: _Poster(url: item.thumbnailUrl, fallback: t.insetBg),
+                child: _Poster(
+                  url: item.thumbnailUrl,
+                  sourceId: item.sourceId,
+                  fallback: t.insetBg,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -844,14 +852,18 @@ class _RecentlyAdded extends ConsumerWidget {
       itemCount: recents.length,
       itemBuilder: (_, i) {
         final m = recents[i];
-        final poster = m.localPosterUrl ?? m.posterUrl;
+        final poster = m.displayPosterUrl;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: _Poster(url: poster, fallback: t.insetBg),
+                child: _Poster(
+                  url: poster,
+                  sourceId: m.sourceId,
+                  fallback: t.insetBg,
+                ),
               ),
             ),
             const SizedBox(height: 6),
@@ -882,8 +894,9 @@ class _RecentlyAdded extends ConsumerWidget {
 }
 
 class _Poster extends StatelessWidget {
-  const _Poster({required this.url, required this.fallback});
+  const _Poster({required this.url, required this.fallback, this.sourceId});
   final String? url;
+  final String? sourceId;
   final Color fallback;
 
   @override
@@ -894,18 +907,12 @@ class _Poster extends StatelessWidget {
         child: Icon(Icons.movie_outlined, size: 22, color: Colors.white24),
       ),
     );
-    if (url == null || url!.isEmpty) return fb;
-    if (url!.startsWith('file://')) {
-      return Image.file(
-        File(url!.substring(7)),
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => fb,
-      );
-    }
-    return Image.network(
-      url!,
+    return VideoPoster(
+      posterUrl: url,
+      sourceId: sourceId,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => fb,
+      placeholder: fb,
+      errorWidget: fb,
     );
   }
 }

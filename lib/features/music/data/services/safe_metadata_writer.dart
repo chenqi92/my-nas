@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/music/data/services/music_metadata_writer.dart';
 import 'package:my_nas/features/music/data/services/unified_metadata_writer.dart';
@@ -228,8 +229,10 @@ class SafeMetadataWriter {
     // 检查 URL 是否匹配
     final url = currentMusic.url;
     if (url.startsWith('file://')) {
-      final playingPath = Uri.parse(url).toFilePath();
-      return _pathsEqual(playingPath, filePath);
+      final playingPath = localPathFromFileUri(url);
+      // 解析失败时不能直接判定「不是当前文件」：那会放行对正在播放文件的
+      // 写入，Windows 上会因文件被占用而失败。退回按原始路径比较。
+      if (playingPath != null) return _pathsEqual(playingPath, filePath);
     }
 
     // 检查路径是否匹配
@@ -332,11 +335,9 @@ class SafeWriteResult {
 
 /// 批量写入项
 class BatchWriteItem {
-  const BatchWriteItem.local({
-    required this.path,
-    required this.metadata,
-  })  : isLocal = true,
-        fileSystem = null;
+  const BatchWriteItem.local({required this.path, required this.metadata})
+    : isLocal = true,
+      fileSystem = null;
 
   const BatchWriteItem.nas({
     required this.path,
@@ -351,5 +352,6 @@ class BatchWriteItem {
 }
 
 /// Provider
-final safeMetadataWriterProvider =
-    Provider<SafeMetadataWriter>(SafeMetadataWriter.new);
+final safeMetadataWriterProvider = Provider<SafeMetadataWriter>(
+  SafeMetadataWriter.new,
+);

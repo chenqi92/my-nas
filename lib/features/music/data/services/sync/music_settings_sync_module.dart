@@ -23,6 +23,9 @@ class MusicSettingsSyncModule implements SyncableModule {
   @override
   String get displayName => appL10n.syncModuleMusicSettings;
 
+  @override
+  SyncMergePolicy get mergePolicy => SyncMergePolicy.lastWriteWins;
+
   Future<Box<Map<dynamic, dynamic>>> _open() async {
     if (Hive.isBoxOpen(_boxName)) {
       return Hive.box<Map<dynamic, dynamic>>(_boxName);
@@ -46,14 +49,14 @@ class MusicSettingsSyncModule implements SyncableModule {
   @override
   Future<Map<String, dynamic>> exportData() async {
     final snap = await _readSnapshot() ?? const <String, dynamic>{};
-    return {
-      'version': 1,
-      'settings': snap,
-    };
+    return {'version': 1, 'settings': snap};
   }
 
   @override
-  Future<void> importData(Map<String, dynamic> data) async {
+  Future<void> importData(
+    Map<String, dynamic> data, {
+    DateTime? remoteUpdatedAt,
+  }) async {
     final raw = data['settings'];
     if (raw is! Map) return;
     final box = await _open();
@@ -61,6 +64,6 @@ class MusicSettingsSyncModule implements SyncableModule {
     await box.put(_settingsKey, merged);
 
     final snap = Map<String, dynamic>.from(merged);
-    await _tracker.recordImported(snap, DateTime.now());
+    await _tracker.recordImported(snap, remoteUpdatedAt ?? DateTime.now());
   }
 }

@@ -48,13 +48,12 @@ class SourceConnection {
     NasAdapter? adapter,
     SourceStatus? status,
     String? errorMessage,
-  }) =>
-      SourceConnection(
-        source: source ?? this.source,
-        adapter: adapter ?? this.adapter,
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
+  }) => SourceConnection(
+    source: source ?? this.source,
+    adapter: adapter ?? this.adapter,
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+  );
 }
 
 /// 凭证信息
@@ -95,13 +94,13 @@ class SourceCredential {
       extraSecrets.isNotEmpty;
 
   SourceCredential merge(SourceCredential newer) => SourceCredential(
-        password: newer.password.isNotEmpty ? newer.password : password,
-        deviceId: newer.deviceId ?? deviceId,
-        accessToken: newer.accessToken ?? accessToken,
-        refreshToken: newer.refreshToken ?? refreshToken,
-        apiKey: newer.apiKey ?? apiKey,
-        extraSecrets: {...extraSecrets, ...newer.extraSecrets},
-      );
+    password: newer.password.isNotEmpty ? newer.password : password,
+    deviceId: newer.deviceId ?? deviceId,
+    accessToken: newer.accessToken ?? accessToken,
+    refreshToken: newer.refreshToken ?? refreshToken,
+    apiKey: newer.apiKey ?? apiKey,
+    extraSecrets: {...extraSecrets, ...newer.extraSecrets},
+  );
 
   SourceCredential copyWith({String? deviceId, bool clearDeviceId = false}) =>
       SourceCredential(
@@ -114,13 +113,13 @@ class SourceCredential {
       );
 
   Map<String, dynamic> toJson() => {
-        'password': password,
-        if (deviceId != null) 'deviceId': deviceId,
-        if (accessToken != null) 'accessToken': accessToken,
-        if (refreshToken != null) 'refreshToken': refreshToken,
-        if (apiKey != null) 'apiKey': apiKey,
-        if (extraSecrets.isNotEmpty) 'extraSecrets': extraSecrets,
-      };
+    'password': password,
+    if (deviceId != null) 'deviceId': deviceId,
+    if (accessToken != null) 'accessToken': accessToken,
+    if (refreshToken != null) 'refreshToken': refreshToken,
+    if (apiKey != null) 'apiKey': apiKey,
+    if (extraSecrets.isNotEmpty) 'extraSecrets': extraSecrets,
+  };
 }
 
 /// 媒体服务器连接信息
@@ -142,13 +141,12 @@ class MediaServerConnection {
     MediaServerAdapter? adapter,
     SourceStatus? status,
     String? errorMessage,
-  }) =>
-      MediaServerConnection(
-        source: source ?? this.source,
-        adapter: adapter ?? this.adapter,
-        status: status ?? this.status,
-        errorMessage: errorMessage,
-      );
+  }) => MediaServerConnection(
+    source: source ?? this.source,
+    adapter: adapter ?? this.adapter,
+    status: status ?? this.status,
+    errorMessage: errorMessage,
+  );
 }
 
 /// 源管理服务
@@ -181,7 +179,7 @@ class SourceManagerService {
   final Map<String, MediaServerConnection> _mediaServerConnections = {};
 
   final Map<String, Future<MediaServerConnection>>
-      _mediaServerConnectionAttempts = {};
+  _mediaServerConnectionAttempts = {};
 
   /// 安全存储是否可用
   bool _secureStorageAvailable = true;
@@ -624,7 +622,7 @@ class SourceManagerService {
       return await future;
     } finally {
       if (identical(_connectionAttempts[source.id], future)) {
-        unawaited(_connectionAttempts.remove(source.id));
+        _connectionAttempts.removeWhere((id, _) => id == source.id);
       }
     }
   }
@@ -737,8 +735,8 @@ class SourceManagerService {
     } on Exception catch (e) {
       final trustDecision = allowTlsTrustRetry
           ? TlsTrustStore.isTrustDeclinedError(e)
-              ? TlsTrustDecision.declined
-              : await _requestTlsTrust(source)
+                ? TlsTrustDecision.declined
+                : await _requestTlsTrust(source)
           : TlsTrustDecision.notRequired;
       if (trustDecision == TlsTrustDecision.trusted) {
         logger.i('SourceManagerService: 已保存 HTTPS 证书，自动重试 ${source.name}');
@@ -892,9 +890,9 @@ class SourceManagerService {
 
   /// 检查源类型是否为媒体服务器
   bool isMediaServerType(SourceType type) => switch (type) {
-        SourceType.jellyfin || SourceType.emby || SourceType.plex => true,
-        _ => false,
-      };
+    SourceType.jellyfin || SourceType.emby || SourceType.plex => true,
+    _ => false,
+  };
 
   /// 获取媒体服务器连接
   MediaServerConnection? getMediaServerConnection(String sourceId) =>
@@ -928,7 +926,7 @@ class SourceManagerService {
       return await future;
     } finally {
       if (identical(_mediaServerConnectionAttempts[source.id], future)) {
-        unawaited(_mediaServerConnectionAttempts.remove(source.id));
+        _mediaServerConnectionAttempts.removeWhere((id, _) => id == source.id);
       }
     }
   }
@@ -1044,8 +1042,8 @@ class SourceManagerService {
     } on Exception catch (e) {
       final trustDecision = allowTlsTrustRetry
           ? TlsTrustStore.isTrustDeclinedError(e)
-              ? TlsTrustDecision.declined
-              : await _requestTlsTrust(source)
+                ? TlsTrustDecision.declined
+                : await _requestTlsTrust(source)
           : TlsTrustDecision.notRequired;
       if (trustDecision == TlsTrustDecision.trusted) {
         logger.i('SourceManagerService: 已保存 HTTPS 证书，自动重试 ${source.name}');
@@ -1091,8 +1089,8 @@ class SourceManagerService {
         SourceType.emby => EmbyAdapter(),
         SourceType.plex => PlexAdapter(),
         _ => throw UnsupportedError(
-            appL10n.sourceManagerErrorNotMediaServerType(type.displayName),
-          ),
+          appL10n.sourceManagerErrorNotMediaServerType(type.displayName),
+        ),
       };
 
   /// 检查连接健康状态
@@ -1155,21 +1153,22 @@ class SourceManagerService {
 
     // 重新连接
     try {
-      final connection = await connect(
-        source,
-        password: pwd,
-        saveCredential: false, // 凭证已保存，不需要再次保存
-      ).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          logger.w('SourceManagerService: 重连超时 $sourceId');
-          // 注意：这里不创建新适配器，返回 null 表示超时
-          // 由调用方处理超时情况
-          throw TimeoutException(
-            appL10n.sourceManagerErrorReconnectTimeout,
+      final connection =
+          await connect(
+            source,
+            password: pwd,
+            saveCredential: false, // 凭证已保存，不需要再次保存
+          ).timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              logger.w('SourceManagerService: 重连超时 $sourceId');
+              // 注意：这里不创建新适配器，返回 null 表示超时
+              // 由调用方处理超时情况
+              throw TimeoutException(
+                appL10n.sourceManagerErrorReconnectTimeout,
+              );
+            },
           );
-        },
-      );
 
       if (connection.status == SourceStatus.connected) {
         logger.i('SourceManagerService: 重连成功 $sourceId');
@@ -1364,73 +1363,70 @@ class SourceManagerService {
   }
 
   NasAdapter _createAdapter(SourceType type) => switch (type) {
-        SourceType.synology => SynologyAdapter(),
-        SourceType.ugreen => UGreenAdapter(),
-        SourceType.fnos => FnOSAdapter(),
-        SourceType.qnap => QnapAdapter(),
-        SourceType.webdav => WebDavAdapter(),
-        SourceType.smb => SmbAdapter(),
-        SourceType.ftp => FtpAdapter(),
-        SourceType.sftp => SftpAdapter(),
-        SourceType.s3 => S3Adapter(),
-        SourceType.upnp => UpnpAdapter(),
-        SourceType.local => LocalAdapter(),
-        // 尚未接入的通用协议
-        SourceType.nfs => throw UnsupportedError(
-            appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName),
-          ),
-        // 服务类源不使用 NasAdapter，需要使用各自的 ServiceAdapter
-        SourceType.qbittorrent ||
-        SourceType.transmission ||
-        SourceType.aria2 ||
-        SourceType.trakt ||
-        SourceType.nastool ||
-        SourceType.moviepilot ||
-        SourceType.jellyfin ||
-        SourceType.emby ||
-        SourceType.plex ||
-        SourceType.ptSite ||
-        SourceType.opensubtitles =>
-          throw UnsupportedError(
-            appL10n
-                .sourceManagerErrorServiceTypeNotSupportedNas(type.displayName),
-          ),
-      };
+    SourceType.synology => SynologyAdapter(),
+    SourceType.ugreen => UGreenAdapter(),
+    SourceType.fnos => FnOSAdapter(),
+    SourceType.qnap => QnapAdapter(),
+    SourceType.webdav => WebDavAdapter(),
+    SourceType.smb => SmbAdapter(),
+    SourceType.ftp => FtpAdapter(),
+    SourceType.sftp => SftpAdapter(),
+    SourceType.s3 => S3Adapter(),
+    SourceType.upnp => UpnpAdapter(),
+    SourceType.local => LocalAdapter(),
+    // 尚未接入的通用协议
+    SourceType.nfs => throw UnsupportedError(
+      appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName),
+    ),
+    // 服务类源不使用 NasAdapter，需要使用各自的 ServiceAdapter
+    SourceType.qbittorrent ||
+    SourceType.transmission ||
+    SourceType.aria2 ||
+    SourceType.trakt ||
+    SourceType.nastool ||
+    SourceType.moviepilot ||
+    SourceType.jellyfin ||
+    SourceType.emby ||
+    SourceType.plex ||
+    SourceType.ptSite ||
+    SourceType.opensubtitles => throw UnsupportedError(
+      appL10n.sourceManagerErrorServiceTypeNotSupportedNas(type.displayName),
+    ),
+  };
 
   NasAdapterType _getAdapterType(SourceType type) => switch (type) {
-        SourceType.synology => NasAdapterType.synology,
-        SourceType.ugreen => NasAdapterType.ugreen,
-        SourceType.fnos => NasAdapterType.fnos,
-        SourceType.qnap => NasAdapterType.qnap,
-        SourceType.webdav => NasAdapterType.webdav,
-        SourceType.smb => NasAdapterType.smb,
-        SourceType.ftp => NasAdapterType.ftp,
-        SourceType.sftp => NasAdapterType.sftp,
-        SourceType.s3 => NasAdapterType.s3,
-        SourceType.upnp => NasAdapterType.upnp,
-        SourceType.local => NasAdapterType.local,
-        // 尚未接入的通用协议
-        SourceType.nfs => throw UnsupportedError(
-            appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName),
-          ),
-        // 服务类源不使用 NasAdapterType
-        SourceType.qbittorrent ||
-        SourceType.transmission ||
-        SourceType.aria2 ||
-        SourceType.trakt ||
-        SourceType.nastool ||
-        SourceType.moviepilot ||
-        SourceType.jellyfin ||
-        SourceType.emby ||
-        SourceType.plex ||
-        SourceType.ptSite ||
-        SourceType.opensubtitles =>
-          throw UnsupportedError(
-            appL10n.sourceManagerErrorServiceTypeNotSupportedNasType(
-              type.displayName,
-            ),
-          ),
-      };
+    SourceType.synology => NasAdapterType.synology,
+    SourceType.ugreen => NasAdapterType.ugreen,
+    SourceType.fnos => NasAdapterType.fnos,
+    SourceType.qnap => NasAdapterType.qnap,
+    SourceType.webdav => NasAdapterType.webdav,
+    SourceType.smb => NasAdapterType.smb,
+    SourceType.ftp => NasAdapterType.ftp,
+    SourceType.sftp => NasAdapterType.sftp,
+    SourceType.s3 => NasAdapterType.s3,
+    SourceType.upnp => NasAdapterType.upnp,
+    SourceType.local => NasAdapterType.local,
+    // 尚未接入的通用协议
+    SourceType.nfs => throw UnsupportedError(
+      appL10n.sourceManagerErrorProtocolNotImplemented(type.displayName),
+    ),
+    // 服务类源不使用 NasAdapterType
+    SourceType.qbittorrent ||
+    SourceType.transmission ||
+    SourceType.aria2 ||
+    SourceType.trakt ||
+    SourceType.nastool ||
+    SourceType.moviepilot ||
+    SourceType.jellyfin ||
+    SourceType.emby ||
+    SourceType.plex ||
+    SourceType.ptSite ||
+    SourceType.opensubtitles => throw UnsupportedError(
+      appL10n.sourceManagerErrorServiceTypeNotSupportedNasType(
+        type.displayName,
+      ),
+    ),
+  };
 
   // ============ 媒体库配置 ============
 

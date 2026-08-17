@@ -38,14 +38,19 @@ import 'package:my_nas/shared/providers/video_backend_provider.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// 当前播放的视频（autoDispose: 离开播放器页面后自动清理）
-final currentVideoProvider = StateProvider.autoDispose<VideoItem?>((ref) => null);
+final currentVideoProvider = StateProvider.autoDispose<VideoItem?>(
+  (ref) => null,
+);
 
 /// 视频播放器控制器（autoDispose: 离开播放器页面后自动清理资源）
 final videoPlayerControllerProvider =
-    StateNotifierProvider.autoDispose<VideoPlayerNotifier, VideoPlayerState>(VideoPlayerNotifier.new);
+    StateNotifierProvider.autoDispose<VideoPlayerNotifier, VideoPlayerState>(
+      VideoPlayerNotifier.new,
+    );
 
 /// 可用字幕列表（autoDispose）
-final availableSubtitlesProvider = StateProvider.autoDispose<List<SubtitleItem>>((ref) => []);
+final availableSubtitlesProvider =
+    StateProvider.autoDispose<List<SubtitleItem>>((ref) => []);
 
 /// 当前选中的字幕（需要持久化，不使用 autoDispose）
 final currentSubtitleProvider = StateProvider<SubtitleItem?>((ref) => null);
@@ -56,11 +61,14 @@ final currentEmbeddedSubtitleIdProvider = StateProvider<String?>((ref) => null);
 
 /// 当前正在显示的"翻译字幕"标识：null 表示未启用翻译字幕。
 /// 字符串内容形如 "translated:zh-CN:`<sessionId>`"，仅供 UI 高亮选中项。
-final currentTranslatedSubtitleIdProvider = StateProvider<String?>((ref) => null);
+final currentTranslatedSubtitleIdProvider = StateProvider<String?>(
+  (ref) => null,
+);
 
 /// 字幕翻译进度（0~1）。null 表示当前没有进行中的翻译会话。
-final subtitleTranslationProgressProvider =
-    StateProvider<double?>((ref) => null);
+final subtitleTranslationProgressProvider = StateProvider<double?>(
+  (ref) => null,
+);
 
 /// 播放器状态
 class VideoPlayerState {
@@ -82,8 +90,10 @@ class VideoPlayerState {
 
   final bool isPlaying;
   final bool isBuffering;
+
   /// 播放器报告的原始位置（转码流从 0 开始）
   final Duration position;
+
   /// 转码流的时长（转码后的文件长度）
   final Duration duration;
   final double volume;
@@ -92,28 +102,32 @@ class VideoPlayerState {
   final bool isPictureInPicture;
   final bool subtitleEnabled;
   final String? errorMessage;
+
   /// 位置偏移量（转码起始位置）
   final Duration positionOffset;
+
   /// 原始视频总时长（用于进度条显示）
   final Duration originalDuration;
+
   /// 当前使用的播放器后端类型
   final PlayerBackendType backendType;
 
   /// 是否使用原生 AVPlayer（杜比视界）
-  bool get isUsingNativePlayer => backendType == PlayerBackendType.nativeAVPlayer;
+  bool get isUsingNativePlayer =>
+      backendType == PlayerBackendType.nativeAVPlayer;
 
   /// 实际播放位置（播放器位置 + 偏移量）
   Duration get actualPosition => position + positionOffset;
 
   /// 显示用的总时长（如果有原始时长则使用原始时长）
-  Duration get displayDuration =>
-      originalDuration > Duration.zero ? originalDuration : duration + positionOffset;
+  Duration get displayDuration => originalDuration > Duration.zero
+      ? originalDuration
+      : duration + positionOffset;
 
   /// 实际进度（基于原始视频时长）
-  double get progress =>
-      displayDuration.inMilliseconds > 0
-          ? actualPosition.inMilliseconds / displayDuration.inMilliseconds
-          : 0;
+  double get progress => displayDuration.inMilliseconds > 0
+      ? actualPosition.inMilliseconds / displayDuration.inMilliseconds
+      : 0;
 
   String get positionText => _formatDuration(actualPosition);
   String get durationText => _formatDuration(displayDuration);
@@ -143,22 +157,21 @@ class VideoPlayerState {
     Duration? positionOffset,
     Duration? originalDuration,
     PlayerBackendType? backendType,
-  }) =>
-      VideoPlayerState(
-        isPlaying: isPlaying ?? this.isPlaying,
-        isBuffering: isBuffering ?? this.isBuffering,
-        position: position ?? this.position,
-        duration: duration ?? this.duration,
-        volume: volume ?? this.volume,
-        speed: speed ?? this.speed,
-        isFullscreen: isFullscreen ?? this.isFullscreen,
-        isPictureInPicture: isPictureInPicture ?? this.isPictureInPicture,
-        subtitleEnabled: subtitleEnabled ?? this.subtitleEnabled,
-        errorMessage: errorMessage,
-        positionOffset: positionOffset ?? this.positionOffset,
-        originalDuration: originalDuration ?? this.originalDuration,
-        backendType: backendType ?? this.backendType,
-      );
+  }) => VideoPlayerState(
+    isPlaying: isPlaying ?? this.isPlaying,
+    isBuffering: isBuffering ?? this.isBuffering,
+    position: position ?? this.position,
+    duration: duration ?? this.duration,
+    volume: volume ?? this.volume,
+    speed: speed ?? this.speed,
+    isFullscreen: isFullscreen ?? this.isFullscreen,
+    isPictureInPicture: isPictureInPicture ?? this.isPictureInPicture,
+    subtitleEnabled: subtitleEnabled ?? this.subtitleEnabled,
+    errorMessage: errorMessage,
+    positionOffset: positionOffset ?? this.positionOffset,
+    originalDuration: originalDuration ?? this.originalDuration,
+    backendType: backendType ?? this.backendType,
+  );
 }
 
 /// 视频播放器管理
@@ -174,7 +187,8 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   final VideoThumbnailService _thumbnailService = VideoThumbnailService();
   final AudioTrackService _audioTrackService = AudioTrackService();
   final PipService _pipService = PipService();
-  final PlaybackCapabilityService _capabilityService = PlaybackCapabilityService();
+  final PlaybackCapabilityService _capabilityService =
+      PlaybackCapabilityService();
 
   /// 原生 AVPlayer 后端（用于 iOS/macOS 杜比视界）
   NativeAVPlayerBackend? _nativeBackend;
@@ -211,7 +225,8 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   /// 是否正在使用原生 AVPlayer
   bool get isUsingNativePlayer =>
-      state.backendType == PlayerBackendType.nativeAVPlayer && _nativeBackend != null;
+      state.backendType == PlayerBackendType.nativeAVPlayer &&
+      _nativeBackend != null;
 
   /// 获取视频显示组件
   ///
@@ -247,44 +262,56 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     if (_nativeBackend == null) return;
 
     _nativeSubscriptions
-      ..add(_nativeBackend!.playingStream.listen((playing) {
-        if (_isDisposed) return;
-        state = state.copyWith(isPlaying: playing);
-        if (playing) {
-          _startProgressSaveTimer();
-        } else {
-          _stopProgressSaveTimer();
-          _saveCurrentProgress();
-        }
-      }))
-      ..add(_nativeBackend!.bufferingStream.listen((buffering) {
-        if (_isDisposed) return;
-        state = state.copyWith(isBuffering: buffering);
-      }))
-      ..add(_nativeBackend!.positionStream.listen((position) {
-        if (_isDisposed) return;
-        state = state.copyWith(position: position);
-      }))
-      ..add(_nativeBackend!.durationStream.listen((duration) {
-        if (_isDisposed) return;
-        state = state.copyWith(duration: duration);
-      }))
-      ..add(_nativeBackend!.errorStream.listen((error) {
-        if (_isDisposed) return;
-        if (error != null && error.isNotEmpty) {
-          state = state.copyWith(errorMessage: error);
-        }
-      }))
-      ..add(_nativeBackend!.completedStream.listen((completed) {
-        if (_isDisposed) return;
-        if (completed && _currentVideo != null) {
-          _historyService.clearProgress(_currentVideo!.path);
-          logger.d('VideoPlayerNotifier: 播放完成，清除进度');
-          // 上报 Trakt Scrobble（播放完成 = 100% 进度）
-          _reportTraktComplete();
-          _playNextFromPlaylist();
-        }
-      }));
+      ..add(
+        _nativeBackend!.playingStream.listen((playing) {
+          if (_isDisposed) return;
+          state = state.copyWith(isPlaying: playing);
+          if (playing) {
+            _startProgressSaveTimer();
+          } else {
+            _stopProgressSaveTimer();
+            _saveCurrentProgress();
+          }
+        }),
+      )
+      ..add(
+        _nativeBackend!.bufferingStream.listen((buffering) {
+          if (_isDisposed) return;
+          state = state.copyWith(isBuffering: buffering);
+        }),
+      )
+      ..add(
+        _nativeBackend!.positionStream.listen((position) {
+          if (_isDisposed) return;
+          state = state.copyWith(position: position);
+        }),
+      )
+      ..add(
+        _nativeBackend!.durationStream.listen((duration) {
+          if (_isDisposed) return;
+          state = state.copyWith(duration: duration);
+        }),
+      )
+      ..add(
+        _nativeBackend!.errorStream.listen((error) {
+          if (_isDisposed) return;
+          if (error != null && error.isNotEmpty) {
+            state = state.copyWith(errorMessage: error);
+          }
+        }),
+      )
+      ..add(
+        _nativeBackend!.completedStream.listen((completed) {
+          if (_isDisposed) return;
+          if (completed && _currentVideo != null) {
+            _historyService.clearProgress(_currentVideo!.path);
+            logger.d('VideoPlayerNotifier: 播放完成，清除进度');
+            // 上报 Trakt Scrobble（播放完成 = 100% 进度）
+            _reportTraktComplete();
+            _playNextFromPlaylist();
+          }
+        }),
+      );
 
     logger.d('VideoPlayerNotifier: 已订阅原生播放器事件');
   }
@@ -301,83 +328,94 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     _applySettings();
 
     // 监听播放状态
-    _subscriptions..add(_player.stream.playing.listen((playing) {
-      if (_isDisposed) return;
-      state = state.copyWith(isPlaying: playing);
+    _subscriptions
+      ..add(
+        _player.stream.playing.listen((playing) {
+          if (_isDisposed) return;
+          state = state.copyWith(isPlaying: playing);
 
-      // 开始播放时启动进度保存定时器
-      if (playing) {
-        _startProgressSaveTimer();
-      } else {
-        _stopProgressSaveTimer();
-        // 暂停时保存一次进度
-        _saveCurrentProgress();
-      }
-    }))
+          // 开始播放时启动进度保存定时器
+          if (playing) {
+            _startProgressSaveTimer();
+          } else {
+            _stopProgressSaveTimer();
+            // 暂停时保存一次进度
+            _saveCurrentProgress();
+          }
+        }),
+      )
+      // 监听缓冲状态
+      ..add(
+        _player.stream.buffering.listen((buffering) {
+          if (_isDisposed) return;
+          state = state.copyWith(isBuffering: buffering);
+        }),
+      )
+      // 监听播放位置
+      ..add(
+        _player.stream.position.listen((position) {
+          if (_isDisposed) return;
+          state = state.copyWith(position: position);
+          // 同步给字幕翻译服务，让它优先翻译当前位置附近的段
+          SubtitleTranslationService.instance.updateAnchor(position);
+        }),
+      )
+      // 监听总时长
+      ..add(
+        _player.stream.duration.listen((duration) {
+          if (_isDisposed) return;
+          state = state.copyWith(duration: duration);
+        }),
+      )
+      // 监听音量
+      ..add(
+        _player.stream.volume.listen((volume) {
+          if (_isDisposed) return;
+          state = state.copyWith(volume: volume / 100);
+        }),
+      )
+      // 监听倍速
+      ..add(
+        _player.stream.rate.listen((rate) {
+          if (_isDisposed) return;
+          state = state.copyWith(speed: rate);
+        }),
+      )
+      // 监听错误
+      ..add(
+        _player.stream.error.listen((error) {
+          if (_isDisposed) return;
+          if (error.isNotEmpty) {
+            state = state.copyWith(errorMessage: error);
+          }
+        }),
+      )
+      // 监听播放完成
+      ..add(
+        _player.stream.completed.listen((completed) {
+          if (_isDisposed) return;
+          if (completed && _currentVideo != null) {
+            // 播放完成，清除进度
+            _historyService.clearProgress(_currentVideo!.path);
+            logger.d('VideoPlayerNotifier: 播放完成，清除进度');
 
-    // 监听缓冲状态
-    ..add(_player.stream.buffering.listen((buffering) {
-      if (_isDisposed) return;
-      state = state.copyWith(isBuffering: buffering);
-    }))
+            // 上报 Trakt Scrobble（播放完成 = 100% 进度）
+            _reportTraktComplete();
 
-    // 监听播放位置
-    ..add(_player.stream.position.listen((position) {
-      if (_isDisposed) return;
-      state = state.copyWith(position: position);
-      // 同步给字幕翻译服务，让它优先翻译当前位置附近的段
-      SubtitleTranslationService.instance.updateAnchor(position);
-    }))
-
-    // 监听总时长
-    ..add(_player.stream.duration.listen((duration) {
-      if (_isDisposed) return;
-      state = state.copyWith(duration: duration);
-    }))
-
-    // 监听音量
-    ..add(_player.stream.volume.listen((volume) {
-      if (_isDisposed) return;
-      state = state.copyWith(volume: volume / 100);
-    }))
-
-    // 监听倍速
-    ..add(_player.stream.rate.listen((rate) {
-      if (_isDisposed) return;
-      state = state.copyWith(speed: rate);
-    }))
-
-    // 监听错误
-    ..add(_player.stream.error.listen((error) {
-      if (_isDisposed) return;
-      if (error.isNotEmpty) {
-        state = state.copyWith(errorMessage: error);
-      }
-    }))
-
-    // 监听播放完成
-    ..add(_player.stream.completed.listen((completed) {
-      if (_isDisposed) return;
-      if (completed && _currentVideo != null) {
-        // 播放完成，清除进度
-        _historyService.clearProgress(_currentVideo!.path);
-        logger.d('VideoPlayerNotifier: 播放完成，清除进度');
-
-        // 上报 Trakt Scrobble（播放完成 = 100% 进度）
-        _reportTraktComplete();
-
-        // 尝试播放下一个
-        _playNextFromPlaylist();
-      }
-    }))
-
-    // 监听音轨列表变化，自动选择最佳音轨
-    ..add(_player.stream.tracks.listen((tracks) {
-      if (_isDisposed) return;
-      if (!_hasAutoSelectedAudioTrack && tracks.audio.length > 1) {
-        _autoSelectAudioTrack(tracks.audio);
-      }
-    }));
+            // 尝试播放下一个
+            _playNextFromPlaylist();
+          }
+        }),
+      )
+      // 监听音轨列表变化，自动选择最佳音轨
+      ..add(
+        _player.stream.tracks.listen((tracks) {
+          if (_isDisposed) return;
+          if (!_hasAutoSelectedAudioTrack && tracks.audio.length > 1) {
+            _autoSelectAudioTrack(tracks.audio);
+          }
+        }),
+      );
   }
 
   /// 自动选择最佳音轨
@@ -391,7 +429,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       final currentTrack = _player.state.track.audio;
       if (currentTrack.id != bestTrack.id) {
         await setAudioTrack(bestTrack);
-        logger.i('VideoPlayerNotifier: 自动选择音轨 ${bestTrack.title ?? bestTrack.id}');
+        logger.i(
+          'VideoPlayerNotifier: 自动选择音轨 ${bestTrack.title ?? bestTrack.id}',
+        );
       }
     }
   }
@@ -406,9 +446,11 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       final userSettings = settingsState.settings;
 
       // 获取设备能力（使用缓存）
-      final hdrCapability = settingsState.hdrCapability ??
+      final hdrCapability =
+          settingsState.hdrCapability ??
           await _capabilityService.getHdrCapability();
-      final audioCapability = settingsState.audioCapability ??
+      final audioCapability =
+          settingsState.audioCapability ??
           await _capabilityService.getAudioCapability();
 
       // 生成播放配置
@@ -416,7 +458,8 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       // 因此使用默认的 VideoMediaInfo（假设可能是 HDR/高级音频）
       // 这样配置会在视频是 HDR 时启用直通，在视频是 SDR 时 MPV 会自动忽略相关设置
       final videoInfo = VideoMediaInfo(
-        isHdr: userSettings.hdrMode == HdrMode.auto ||
+        isHdr:
+            userSettings.hdrMode == HdrMode.auto ||
             userSettings.hdrMode == HdrMode.passthrough,
         hdrType: HdrType.hdr10, // 假设可能是 HDR10（最常见的格式）
         audioCodec: AudioCodec.eac3, // 假设可能是 EAC3（支持 Dolby Atmos）
@@ -446,7 +489,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     await _player.setVolume(settings.volume * 100);
     await _player.setRate(settings.speed);
     state = state.copyWith(volume: settings.volume, speed: settings.speed);
-    logger.i('VideoPlayerNotifier: 应用设置 volume=${settings.volume}, speed=${settings.speed}');
+    logger.i(
+      'VideoPlayerNotifier: 应用设置 volume=${settings.volume}, speed=${settings.speed}',
+    );
   }
 
   /// 重新初始化 stream listeners（在 stopSync 后再次播放时调用）
@@ -455,68 +500,78 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     for (final subscription in _subscriptions) {
       subscription.cancel();
     }
-    _subscriptions..clear()
-
-    // 重新添加所有 stream listeners
-    ..add(_player.stream.playing.listen((playing) {
-      if (_isDisposed) return;
-      state = state.copyWith(isPlaying: playing);
-      if (playing) {
-        _startProgressSaveTimer();
-      } else {
-        _stopProgressSaveTimer();
-        _saveCurrentProgress();
-      }
-    }))
-
-    ..add(_player.stream.buffering.listen((buffering) {
-      if (_isDisposed) return;
-      state = state.copyWith(isBuffering: buffering);
-    }))
-
-    ..add(_player.stream.position.listen((position) {
-      if (_isDisposed) return;
-      state = state.copyWith(position: position);
-      SubtitleTranslationService.instance.updateAnchor(position);
-    }))
-
-    ..add(_player.stream.duration.listen((duration) {
-      if (_isDisposed) return;
-      state = state.copyWith(duration: duration);
-    }))
-
-    ..add(_player.stream.volume.listen((volume) {
-      if (_isDisposed) return;
-      state = state.copyWith(volume: volume / 100);
-    }))
-
-    ..add(_player.stream.rate.listen((rate) {
-      if (_isDisposed) return;
-      state = state.copyWith(speed: rate);
-    }))
-
-    ..add(_player.stream.error.listen((error) {
-      if (_isDisposed) return;
-      if (error.isNotEmpty) {
-        state = state.copyWith(errorMessage: error);
-      }
-    }))
-
-    ..add(_player.stream.completed.listen((completed) {
-      if (_isDisposed) return;
-      if (completed && _currentVideo != null) {
-        _historyService.clearProgress(_currentVideo!.path);
-        logger.d('VideoPlayerNotifier: 播放完成，清除进度');
-        _playNextFromPlaylist();
-      }
-    }))
-
-    ..add(_player.stream.tracks.listen((tracks) {
-      if (_isDisposed) return;
-      if (!_hasAutoSelectedAudioTrack && tracks.audio.length > 1) {
-        _autoSelectAudioTrack(tracks.audio);
-      }
-    }));
+    _subscriptions
+      ..clear()
+      // 重新添加所有 stream listeners
+      ..add(
+        _player.stream.playing.listen((playing) {
+          if (_isDisposed) return;
+          state = state.copyWith(isPlaying: playing);
+          if (playing) {
+            _startProgressSaveTimer();
+          } else {
+            _stopProgressSaveTimer();
+            _saveCurrentProgress();
+          }
+        }),
+      )
+      ..add(
+        _player.stream.buffering.listen((buffering) {
+          if (_isDisposed) return;
+          state = state.copyWith(isBuffering: buffering);
+        }),
+      )
+      ..add(
+        _player.stream.position.listen((position) {
+          if (_isDisposed) return;
+          state = state.copyWith(position: position);
+          SubtitleTranslationService.instance.updateAnchor(position);
+        }),
+      )
+      ..add(
+        _player.stream.duration.listen((duration) {
+          if (_isDisposed) return;
+          state = state.copyWith(duration: duration);
+        }),
+      )
+      ..add(
+        _player.stream.volume.listen((volume) {
+          if (_isDisposed) return;
+          state = state.copyWith(volume: volume / 100);
+        }),
+      )
+      ..add(
+        _player.stream.rate.listen((rate) {
+          if (_isDisposed) return;
+          state = state.copyWith(speed: rate);
+        }),
+      )
+      ..add(
+        _player.stream.error.listen((error) {
+          if (_isDisposed) return;
+          if (error.isNotEmpty) {
+            state = state.copyWith(errorMessage: error);
+          }
+        }),
+      )
+      ..add(
+        _player.stream.completed.listen((completed) {
+          if (_isDisposed) return;
+          if (completed && _currentVideo != null) {
+            _historyService.clearProgress(_currentVideo!.path);
+            logger.d('VideoPlayerNotifier: 播放完成，清除进度');
+            _playNextFromPlaylist();
+          }
+        }),
+      )
+      ..add(
+        _player.stream.tracks.listen((tracks) {
+          if (_isDisposed) return;
+          if (!_hasAutoSelectedAudioTrack && tracks.audio.length > 1) {
+            _autoSelectAudioTrack(tracks.audio);
+          }
+        }),
+      );
 
     logger.d('VideoPlayerNotifier: 重新初始化 stream listeners');
   }
@@ -569,7 +624,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       return;
     }
 
-    logger.d('VideoPlayerNotifier: 保存进度 ${_currentVideo!.path} => ${actualPos.inSeconds}s / ${totalDuration.inSeconds}s');
+    logger.d(
+      'VideoPlayerNotifier: 保存进度 ${_currentVideo!.path} => ${actualPos.inSeconds}s / ${totalDuration.inSeconds}s',
+    );
     await _historyService.saveProgress(
       videoPath: _currentVideo!.path,
       position: actualPos,
@@ -630,9 +687,10 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       originalDuration: Duration.zero,
     );
 
-    logger..i('VideoPlayer: 开始播放 ${video.name}')
-    ..d('VideoPlayer: URL => ${video.url}')
-    ..d('VideoPlayer: size=${video.size}, path=${video.path}');
+    logger
+      ..i('VideoPlayer: 开始播放 ${video.name}')
+      ..d('VideoPlayer: URL => ${video.url}')
+      ..d('VideoPlayer: size=${video.size}, path=${video.path}');
 
     // 先检查是否有缓存文件（优先使用离线缓存）
     String? playUrl;
@@ -642,7 +700,10 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       try {
         final cacheService = _ref.read(mediaCacheServiceProvider);
         await cacheService.init();
-        final cachedPath = await cacheService.getCachedPath(video.sourceId!, video.path);
+        final cachedPath = await cacheService.getCachedPath(
+          video.sourceId!,
+          video.path,
+        );
         if (cachedPath != null) {
           playUrl = cachedPath;
           logger.i('VideoPlayer: 使用缓存文件 => $cachedPath');
@@ -658,7 +719,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       if (video.needsUrlResolution) {
         if (video.sourceId == null) {
           logger.e('VideoPlayer: 视频缺少 sourceId，无法获取 URL');
-          state = state.copyWith(errorMessage: appL10n.videoPlayerErrorMissingSource);
+          state = state.copyWith(
+            errorMessage: appL10n.videoPlayerErrorMissingSource,
+          );
           return;
         }
 
@@ -668,17 +731,24 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
           final nasConnection = nasConnections[video.sourceId];
 
           // 再检查媒体服务器连接
-          final mediaConnections = _ref.read(activeMediaServerConnectionsProvider);
+          final mediaConnections = _ref.read(
+            activeMediaServerConnectionsProvider,
+          );
           final mediaConnection = mediaConnections[video.sourceId];
 
           String? resolvedUrl;
 
-          if (nasConnection != null && nasConnection.status == SourceStatus.connected) {
+          if (nasConnection != null &&
+              nasConnection.status == SourceStatus.connected) {
             // 使用 NAS 连接获取 URL
-            resolvedUrl = await nasConnection.adapter.fileSystem.getFileUrl(video.path);
-          } else if (mediaConnection != null && mediaConnection.status == SourceStatus.connected) {
+            resolvedUrl = await nasConnection.adapter.fileSystem.getFileUrl(
+              video.path,
+            );
+          } else if (mediaConnection != null &&
+              mediaConnection.status == SourceStatus.connected) {
             // 使用媒体服务器连接获取 URL
-            resolvedUrl = await mediaConnection.adapter.virtualFileSystem.getFileUrl(video.path);
+            resolvedUrl = await mediaConnection.adapter.virtualFileSystem
+                .getFileUrl(video.path);
 
             // 上报媒体服务器播放开始
             if (video.serverItemId != null) {
@@ -691,7 +761,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
             }
           } else {
             logger.e('VideoPlayer: 数据源未连接');
-            state = state.copyWith(errorMessage: appL10n.videoPlayerErrorSourceNotConnected);
+            state = state.copyWith(
+              errorMessage: appL10n.videoPlayerErrorSourceNotConnected,
+            );
             return;
           }
 
@@ -703,8 +775,12 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
           logger.i('VideoPlayer: URL 已解析 => $resolvedUrl');
         } on Exception catch (e, st) {
-          AppError.handle(e, st, 'VideoPlayer.resolveUrl', {'path': video.path});
-          state = state.copyWith(errorMessage: appL10n.videoPlayerErrorNoVideoUrl);
+          AppError.handle(e, st, 'VideoPlayer.resolveUrl', {
+            'path': video.path,
+          });
+          state = state.copyWith(
+            errorMessage: appL10n.videoPlayerErrorNoVideoUrl,
+          );
           return;
         }
       }
@@ -714,7 +790,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       if (resolvedVideo.needsProxy) {
         if (resolvedVideo.sourceId == null) {
           logger.e('VideoPlayer: SMB 视频缺少 sourceId，无法使用代理');
-          state = state.copyWith(errorMessage: appL10n.videoPlayerErrorMissingSource);
+          state = state.copyWith(
+            errorMessage: appL10n.videoPlayerErrorMissingSource,
+          );
           return;
         }
         try {
@@ -727,7 +805,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
           logger.i('VideoPlayer: 使用代理 URL => $playUrl');
         } on Exception catch (e, st) {
           AppError.handle(e, st, 'VideoPlayer.startProxyServer');
-          state = state.copyWith(errorMessage: appL10n.videoPlayerErrorProxyStartFailed);
+          state = state.copyWith(
+            errorMessage: appL10n.videoPlayerErrorProxyStartFailed,
+          );
           return;
         }
       }
@@ -744,8 +824,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     final shouldUseNative = switch (backendPreference) {
       VideoBackendPreference.native => true,
       VideoBackendPreference.mediaKit => false,
-      VideoBackendPreference.auto =>
-        DolbyVisionDetector.shouldUseNativePlayer(video: resolvedVideo),
+      VideoBackendPreference.auto => DolbyVisionDetector.shouldUseNativePlayer(
+        video: resolvedVideo,
+      ),
     };
 
     // 标记当前使用的后端类型
@@ -773,7 +854,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
           subscription = _nativeBackend!.durationStream.listen((duration) {
             if (duration > Duration.zero && !completer.isCompleted) {
               _nativeBackend!.seek(resumePosition!).then((_) {
-                logger.i('VideoPlayerNotifier: 原生播放器跳转到 ${resumePosition!.inSeconds}s');
+                logger.i(
+                  'VideoPlayerNotifier: 原生播放器跳转到 ${resumePosition!.inSeconds}s',
+                );
               });
               subscription?.cancel();
               completer.complete();
@@ -819,7 +902,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
         logger.d('VideoPlayer: media_kit 视频源打开成功');
       } on Exception catch (e, st) {
         AppError.handle(e, st, 'VideoPlayer.openVideo', {'path': video.path});
-        state = state.copyWith(errorMessage: AppError.getUserFriendlyMessage(e));
+        state = state.copyWith(
+          errorMessage: AppError.getUserFriendlyMessage(e),
+        );
         return;
       }
 
@@ -833,7 +918,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
           if (duration > Duration.zero && !completer.isCompleted) {
             // 视频已准备好，执行 seek
             _player.seek(resumePosition!).then((_) {
-              logger.i('VideoPlayerNotifier: 跳转到 ${resumePosition!.inSeconds}s');
+              logger.i(
+                'VideoPlayerNotifier: 跳转到 ${resumePosition!.inSeconds}s',
+              );
             });
             subscription?.cancel();
             completer.complete();
@@ -890,10 +977,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     if (!settings.enabled) return;
 
     AppError.fireAndForget(
-      _ref.read(traktScrobbleServiceProvider).reportStart(
-            video: video,
-            progress: state.progress * 100,
-          ),
+      _ref
+          .read(traktScrobbleServiceProvider)
+          .reportStart(video: video, progress: state.progress * 100),
       action: 'traktScrobbleStart',
     );
   }
@@ -956,7 +1042,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     // 2. 尝试从本地历史恢复
     final savedProgress = await _historyService.getProgress(video.path);
     if (savedProgress != null && savedProgress.progressPercent < 0.95) {
-      logger.i('VideoPlayerNotifier: 从本地历史恢复 ${savedProgress.position.inSeconds}s');
+      logger.i(
+        'VideoPlayerNotifier: 从本地历史恢复 ${savedProgress.position.inSeconds}s',
+      );
       return savedProgress.position;
     }
 
@@ -993,7 +1081,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
           traktProgress.progress,
           localProgress.duration,
         );
-        logger.i('VideoPlayerNotifier: 从 Trakt 恢复 ${position.inSeconds}s (${traktProgress.progress.toStringAsFixed(1)}%)');
+        logger.i(
+          'VideoPlayerNotifier: 从 Trakt 恢复 ${position.inSeconds}s (${traktProgress.progress.toStringAsFixed(1)}%)',
+        );
         return position;
       }
 
@@ -1003,7 +1093,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
           traktProgress.progress,
           video.duration!,
         );
-        logger.i('VideoPlayerNotifier: 从 Trakt 恢复 ${position.inSeconds}s (${traktProgress.progress.toStringAsFixed(1)}%)');
+        logger.i(
+          'VideoPlayerNotifier: 从 Trakt 恢复 ${position.inSeconds}s (${traktProgress.progress.toStringAsFixed(1)}%)',
+        );
         return position;
       }
 
@@ -1017,7 +1109,10 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   /// 初始化清晰度控制器
   ///
   /// [playUrl] 可播放的 URL（可能是代理 URL 或本地文件路径），用于 FFmpeg 转码
-  Future<void> _initQualityController(VideoItem video, {String? playUrl}) async {
+  Future<void> _initQualityController(
+    VideoItem video, {
+    String? playUrl,
+  }) async {
     // 如果播放器已停止，跳过清晰度初始化
     if (_isDisposed) {
       logger.d('VideoPlayer: 播放器已停止，跳过清晰度初始化');
@@ -1061,7 +1156,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     final qualityState = _ref.read(qualityStateProvider);
     final positionOffset = qualityState.transcodingStartPosition;
 
-    logger.d('VideoPlayer: 切换前位置 ${state.actualPosition.inSeconds}s, 偏移量 ${positionOffset.inSeconds}s');
+    logger.d(
+      'VideoPlayer: 切换前位置 ${state.actualPosition.inSeconds}s, 偏移量 ${positionOffset.inSeconds}s',
+    );
 
     // 打开新的流
     try {
@@ -1096,10 +1193,14 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
         originalDuration: originalDuration,
       );
 
-      logger.i('VideoPlayer: 转码流切换成功，偏移量=${positionOffset.inSeconds}s，原始时长=${originalDuration.inSeconds}s');
+      logger.i(
+        'VideoPlayer: 转码流切换成功，偏移量=${positionOffset.inSeconds}s，原始时长=${originalDuration.inSeconds}s',
+      );
     } catch (e, st) {
       AppError.handle(e, st, 'switchToTranscodedStream');
-      state = state.copyWith(errorMessage: appL10n.videoPlayerErrorSwitchQualityFailed(e));
+      state = state.copyWith(
+        errorMessage: appL10n.videoPlayerErrorSwitchQualityFailed(e),
+      );
     }
   }
 
@@ -1136,7 +1237,10 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
   void pauseSync() {
     if (isUsingNativePlayer && _nativeBackend != null) {
       // 原生播放器没有同步方法，使用 fire-and-forget
-      AppError.fireAndForget(_nativeBackend!.pause(), action: 'nativePauseSync');
+      AppError.fireAndForget(
+        _nativeBackend!.pause(),
+        action: 'nativePauseSync',
+      );
     } else {
       _player.pause();
     }
@@ -1238,10 +1342,14 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     // 停止播放器
     if (isUsingNativePlayer && _nativeBackend != null) {
       // 异步清理原生后端
-      AppError.fireAndForget(_cleanupNativeBackend(), action: 'stopSyncNativeCleanup');
+      AppError.fireAndForget(
+        _cleanupNativeBackend(),
+        action: 'stopSyncNativeCleanup',
+      );
     } else {
-      _player..pause()
-      ..stop();
+      _player
+        ..pause()
+        ..stop();
     }
     _releaseCurrentProxy();
     _currentVideo = null;
@@ -1260,7 +1368,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     if (videoToSave != null &&
         positionToSave.inSeconds >= 5 &&
         durationToSave.inSeconds >= 10) {
-      logger.d('VideoPlayerNotifier: 异步保存进度 ${videoToSave.path} => ${positionToSave.inSeconds}s / ${durationToSave.inSeconds}s');
+      logger.d(
+        'VideoPlayerNotifier: 异步保存进度 ${videoToSave.path} => ${positionToSave.inSeconds}s / ${durationToSave.inSeconds}s',
+      );
       Future.microtask(() async {
         try {
           await _historyService.saveProgress(
@@ -1283,12 +1393,14 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     final duration = state.duration;
     _pendingSeek = duration > Duration.zero
         ? Duration(
-            milliseconds: position.inMilliseconds
-                .clamp(0, duration.inMilliseconds),
+            milliseconds: position.inMilliseconds.clamp(
+              0,
+              duration.inMilliseconds,
+            ),
           )
         : position < Duration.zero
-            ? Duration.zero
-            : position;
+        ? Duration.zero
+        : position;
 
     if (_isSeekInFlight) return;
     _isSeekInFlight = true;
@@ -1307,7 +1419,10 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       _isSeekInFlight = false;
       // finally 期间又到达的请求不能丢失。
       if (_pendingSeek != null && !_isDisposed) {
-        unawaited(seek(_pendingSeek!));
+        AppError.fireAndForget(
+          seek(_pendingSeek!),
+          action: 'videoPlayer.seekPendingRequest',
+        );
       }
     }
   }
@@ -1464,14 +1579,19 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
         }
         logger.i('VideoPlayerNotifier: 加载字幕 ${subtitle.name}');
       } on Exception catch (e, st) {
-        AppError.handle(e, st, 'VideoPlayer.loadSubtitle', {'name': subtitle.name});
+        AppError.handle(e, st, 'VideoPlayer.loadSubtitle', {
+          'name': subtitle.name,
+        });
       }
     }
   }
 
   /// 把"翻译字幕"以内联文本形式喂给 media_kit；title 仅作为字幕轨道显示名。
   /// 不修改 [currentSubtitleProvider]（它对应"外部字幕文件"）。
-  Future<void> setInlineSubtitleData(String data, {required String title}) async {
+  Future<void> setInlineSubtitleData(
+    String data, {
+    required String title,
+  }) async {
     try {
       if (isUsingNativePlayer && _nativeBackend != null) {
         // 原生 AVPlayer 不支持内联字幕数据，写入临时文件后按外部字幕加载。
@@ -1485,7 +1605,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
       }
       logger.i('VideoPlayerNotifier: 加载翻译字幕 $title (${data.length} 字节)');
     } on Exception catch (e, st) {
-      AppError.handle(e, st, 'VideoPlayer.loadInlineSubtitle', {'title': title});
+      AppError.handle(e, st, 'VideoPlayer.loadInlineSubtitle', {
+        'title': title,
+      });
     }
   }
 
@@ -1518,7 +1640,10 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
         final current = _ref.read(currentSubtitleProvider);
         if (current != null) {
           AppError.fireAndForget(
-            _nativeBackend!.loadExternalSubtitle(current.url, title: current.name),
+            _nativeBackend!.loadExternalSubtitle(
+              current.url,
+              title: current.name,
+            ),
             action: 'nativeToggleSubtitleOn',
           );
         }
@@ -1583,7 +1708,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
         await platform.setProperty('sub-delay', delay.toString());
         logger.i('VideoPlayerNotifier: 字幕延时已设置为 ${delay}s');
       } on Exception catch (e, st) {
-        AppError.handle(e, st, 'videoPlayer.setSubtitleDelay', {'delay': delay});
+        AppError.handle(e, st, 'videoPlayer.setSubtitleDelay', {
+          'delay': delay,
+        });
       }
     } else {
       logger.d('VideoPlayerNotifier: 当前平台不支持设置字幕延时 ($platform)');

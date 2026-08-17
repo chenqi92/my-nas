@@ -6,14 +6,28 @@ on:
     paths:
       - '.github/workflows/tvos-ci.yml'
       - 'tvos/**'
+      - 'apple_tv/**'
   pull_request:
     branches: [main, develop]
     paths:
       - '.github/workflows/tvos-ci.yml'
       - 'tvos/**'
+      - 'apple_tv/**'
 
 jobs:
-  test:
+  sync-contract-tests:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apple_tv
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test shared Flutter/tvOS sync contract
+        run: swift test
+
+  tvos-app-test:
     runs-on: macos-latest
     timeout-minutes: 30
     steps:

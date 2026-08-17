@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +11,7 @@ import 'package:my_nas/features/video/presentation/pages/video_player_page.dart'
 import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_history_provider.dart';
 import 'package:my_nas/features/video/presentation/widgets/cast/cast_device_sheet.dart';
+import 'package:my_nas/features/video/presentation/widgets/video_poster.dart';
 import 'package:my_nas/l10n/app_localizations.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
 import 'package:my_nas/shared/widgets/atoms/app_chip.dart';
@@ -137,13 +136,17 @@ class _Hero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final backdrop = meta.backdropUrl ?? meta.localPosterUrl ?? meta.posterUrl;
+    final backdrop = meta.displayBackdropUrl ?? meta.displayPosterUrl;
     return SizedBox(
       height: 220,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _FsImage(url: backdrop, fallbackColor: t.bgStrong),
+          _FsImage(
+            url: backdrop,
+            sourceId: meta.sourceId,
+            fallbackColor: t.bgStrong,
+          ),
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -702,26 +705,25 @@ class _EpisodeRow extends ConsumerWidget {
 }
 
 class _FsImage extends StatelessWidget {
-  const _FsImage({required this.url, required this.fallbackColor});
+  const _FsImage({
+    required this.url,
+    required this.fallbackColor,
+    required this.sourceId,
+  });
   final String? url;
+  final String sourceId;
   final Color fallbackColor;
 
   @override
   Widget build(BuildContext context) {
-    if (url == null || url!.isEmpty) {
-      return Container(color: fallbackColor);
-    }
-    if (url!.startsWith('file://')) {
-      return Image.file(
-        File(url!.substring(7)),
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => Container(color: fallbackColor),
-      );
-    }
-    return Image.network(
-      url!,
+    final fallback = ColoredBox(color: fallbackColor);
+    return VideoPoster(
+      posterUrl: url,
+      sourceId: sourceId,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => Container(color: fallbackColor),
+      alignment: Alignment.topCenter,
+      placeholder: fallback,
+      errorWidget: fallback,
     );
   }
 }

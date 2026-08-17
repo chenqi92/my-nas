@@ -130,6 +130,7 @@ class MediaCacheService {
       await _ensureQuota(mediaType);
     } catch (e, st) {
       AppError.handle(e, st, 'MediaCacheService.recordCache');
+      rethrow;
     }
   }
 
@@ -284,7 +285,9 @@ class MediaCacheService {
     try {
       if (mediaType != null) {
         // 清空指定类型
-        final items = await _dbService.getCachedItems(mediaType: mediaType.name);
+        final items = await _dbService.getCachedItems(
+          mediaType: mediaType.name,
+        );
         for (final item in items) {
           final file = File(item.cachePath);
           if (await file.exists()) {

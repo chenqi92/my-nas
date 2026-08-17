@@ -7,6 +7,7 @@ import 'package:my_nas/core/errors/app_error_handler.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/services/performance_mode_service.dart';
+import 'package:my_nas/core/utils/local_file_uri.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
 import 'package:my_nas/nas_adapters/smb/smb_pool_config.dart';
 import 'package:photo_view/photo_view.dart';
@@ -228,13 +229,7 @@ class _StreamImageState extends State<StreamImage> {
   String? get _localFilePath {
     final url = widget.url;
     if (url == null || !url.startsWith('file://')) return null;
-    try {
-      final uri = Uri.parse(url);
-      return uri.toFilePath();
-    } on Exception catch (e, st) {
-      AppError.ignore(e, st, '无效的 file:// URL: $url');
-      return null;
-    }
+    return localPathFromFileUri(url);
   }
 
   Future<void> _loadImage() async {
@@ -275,7 +270,8 @@ class _StreamImageState extends State<StreamImage> {
   /// 3. 最后通过 getFileStream 加载原文件（最慢）
   Future<void> _loadImageViaStream() async {
     // 检查内存缓存
-    if (_cacheKey.isNotEmpty && StreamImage._memoryCache.containsKey(_cacheKey)) {
+    if (_cacheKey.isNotEmpty &&
+        StreamImage._memoryCache.containsKey(_cacheKey)) {
       setState(() {
         _imageBytes = StreamImage._memoryCache[_cacheKey];
         _isLoading = false;
@@ -307,7 +303,9 @@ class _StreamImageState extends State<StreamImage> {
           // 1. 优先使用 getThumbnailData（本地相册缩略图，最快）
           if (widget.path != null) {
             try {
-              imageData = await widget.fileSystem!.getThumbnailData(widget.path!);
+              imageData = await widget.fileSystem!.getThumbnailData(
+                widget.path!,
+              );
             } on Exception {
               // ignore - 继续尝试其他方式
             }
@@ -460,8 +458,10 @@ class _StreamImageState extends State<StreamImage> {
         backgroundDecoration: BoxDecoration(
           color: widget.backgroundColor ?? Colors.black,
         ),
-        loadingBuilder: (context, event) => widget.placeholder ?? _buildPlaceholder(),
-        errorBuilder: (context, error, stackTrace) => widget.errorWidget ?? _buildError(),
+        loadingBuilder: (context, event) =>
+            widget.placeholder ?? _buildPlaceholder(),
+        errorBuilder: (context, error, stackTrace) =>
+            widget.errorWidget ?? _buildError(),
       );
     }
 
@@ -537,14 +537,14 @@ class StreamImageWithThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => StreamImage(
-      url: thumbnailUrl ?? fullUrl,
-      path: path,
-      fileSystem: fileSystem,
-      fit: fit,
-      placeholder: placeholder,
-      errorWidget: errorWidget,
-      width: width,
-      height: height,
-      cacheKey: path,
-    );
+    url: thumbnailUrl ?? fullUrl,
+    path: path,
+    fileSystem: fileSystem,
+    fit: fit,
+    placeholder: placeholder,
+    errorWidget: errorWidget,
+    width: width,
+    height: height,
+    cacheKey: path,
+  );
 }

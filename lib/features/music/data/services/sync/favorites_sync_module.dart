@@ -1,4 +1,5 @@
 import 'package:hive_ce/hive.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/i18n/app_l10n.dart';
 import 'package:my_nas/core/sync/syncable_module.dart';
 import 'package:my_nas/features/music/data/services/music_favorites_service.dart';
@@ -22,9 +23,13 @@ class FavoritesSyncModule implements SyncableModule {
   String get displayName => appL10n.syncModuleMusicFavorites;
 
   @override
+  SyncMergePolicy get mergePolicy => SyncMergePolicy.recordMerge;
+
+  @override
   Future<DateTime?> getLocalUpdatedAt() async {
     await _service.init();
-    final list = await _service.getAllFavorites();
+    final list = (await _service.getAllFavorites()).toList()
+      ..sort((a, b) => a.musicPath.compareTo(b.musicPath));
     if (list.isEmpty) return null;
     var maxAt = list.first.addedAt;
     for (final f in list) {
@@ -37,18 +42,22 @@ class FavoritesSyncModule implements SyncableModule {
   Future<Map<String, dynamic>> exportData() async {
     await _service.init();
     final list = await _service.getAllFavorites();
-    return {
-      'version': 1,
-      'favorites': list.map((f) => f.toMap()).toList(),
-    };
+    return {'version': 1, 'favorites': list.map((f) => f.toMap()).toList()};
   }
 
   @override
-  Future<void> importData(Map<String, dynamic> data) async {
+  Future<void> importData(
+    Map<String, dynamic> data, {
+    DateTime? remoteUpdatedAt,
+  }) async {
     await _service.init();
-    final list = (data['favorites'] as List?) ?? const [];
+    final list = data['favorites'];
+    if (list is! List) {
+      throw const FormatException('music_favorites.favorites 必须是数组');
+    }
     final box = await Hive.openBox<Map<dynamic, dynamic>>('music_favorites');
-    for (final raw in list.cast<Map<dynamic, dynamic>>()) {
+    for (final raw in list) {
+      if (raw is! Map) continue;
       try {
         final item = MusicFavoriteItem.fromMap(raw);
         final existing = box.get(item.musicPath);
@@ -58,7 +67,8 @@ class FavoritesSyncModule implements SyncableModule {
           if (existingAt >= item.addedAt.millisecondsSinceEpoch) continue;
         }
         await box.put(item.musicPath, item.toMap());
-      } on Exception catch (_) {
+      } on Object catch (e, st) {
+        AppError.ignore(e, st, '远端 music_favorites 单条记录解析失败，跳过该条');
         continue;
       }
     }

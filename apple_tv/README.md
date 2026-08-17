@@ -1,8 +1,12 @@
-# MyNASTV — tvOS 客户端
+# MyNASSync — tvOS 同步协议包与实验性参考源码
+
+> 仓库内唯一受 CI 编译、可发布的 tvOS App 是 `tvos/KKNasTV/`。本目录的
+> `Package.swift` 只定义 `MyNASSync` library + tests；`MyNASTV/` 是未接入
+> Xcode target 的实验性参考源码，不能当作第二套 tvOS App 发布。
 
 ## 概述
 
-v1 video-only，仅支持 HTTP 源（WebDAV/Jellyfin/Emby/Plex）。进度通过 WebDAV 同步到 `<webdav_root>/my-nas-sync/video_progress.json`，使用和 Flutter 端完全相同的 last-wins 合并规则。
+本包验证 Flutter 与 Swift 对 `video_progress` 的编码和逐记录合并规则。进度通过 WebDAV 同步到 `<webdav_root>/my-nas-sync/video_progress.json`；同步器总是读取双方快照后写回并集，不能用快照最大时间戳覆盖另一端的独有记录。
 
 SMB / FTP / SFTP / NFS 未实现，UI 不显示。
 
@@ -62,16 +66,11 @@ Jellyfin / Emby / Plex 跨客户端进度通过服务端 API 同步（`POST /Use
 
 AVPlayer 可以通过 `AVMediaSelectionGroup` 选音轨和字幕，但 v1 只拿第一轨播。后续可参考 Flutter 的 `SubtitleTrack` / `AudioTrack` 实现。
 
-## 环境约束
+## 构建状态
 
-这个 tvOS 模块在 **Windows 环境**写的。没有 `swift` 命令、没有 `xcodebuild`、没有 tvOS simulator，所以：
-
-- ✅ 代码语法和类型检查已在编辑器里做了（IDE autocomplete 和 linter）
-- ❌ 没编译过
-- ❌ 没跑过测试
-- ❌ 没在 tvOS 真机或模拟器运行过
-
-在 Mac 上首次构建会爆一堆小错（import 路径、`Sendable` 约束、typo 等），预计几十行改动就能过编译，但**不可能零改**。
+GitHub Actions 在 macOS 上执行本目录的 `swift test`，同时独立构建并测试
+`tvos/KKNasTV/KKNasTV.xcodeproj`。本目录 `MyNASTV/` 下的参考 App 源码不属于
+任何 target；产品功能修改应直接落到 `tvos/KKNasTV/`，避免两套实现继续漂移。
 
 ## 如何在 Mac 上构建
 
@@ -83,43 +82,17 @@ swift build          # 构建 MyNASSync library
 swift test           # 跑 30 个协议测试，应该全过（或者全过 + 几个 ISO8601 精度边界 case）
 ```
 
-### 2. 创建 Xcode 项目并添加 app target
+### 2. 构建 tvOS App
 
-**当前状态**：`apple_tv/` 下没有 `.xcodeproj` 文件，只有 Swift Package（`Package.swift`）定义了 `MyNASSync` library + tests。`MyNASTV/` 目录存放 SwiftUI app 源码，但未配置为 Xcode app target。
+不要在本目录创建第二个 Xcode 工程。使用仓库中的规范工程：
 
-**首次构建步骤**：
-
-1. 在 Xcode 中创建新项目：
-   - File → New → Project
-   - 平台选 tvOS → App
-   - Product Name: `MyNASTV`
-   - Interface: SwiftUI
-   - Language: Swift
-   - 保存到 `apple_tv/` 目录，与现有 `MyNASTV/` 文件夹同级
-
-2. 将现有源码添加到项目：
-   - 删除 Xcode 自动生成的 `MyNASTV/` 模板文件
-   - 在 Project Navigator 中右键 → Add Files to "MyNASTV"
-   - 选择现有的 `MyNASTV/` 目录（包含 `MyNASTVApp.swift` 等文件）
-   - 勾选 "Copy items if needed"（如果文件已在正确位置可不勾选）
-   - Target 选 `MyNASTV`
-
-3. 添加 `MyNASSync` library 依赖：
-   - Project Settings → `MyNASTV` target → General → Frameworks, Libraries, and Embedded Content
-   - 点 `+` → Add Other → Add Package Dependency
-   - 选择本地路径：`apple_tv/`（包含 `Package.swift` 的目录）
-   - 或者在 Project Settings → Package Dependencies 中添加本地 package
-
-4. 配置 Signing & Capabilities：
-   - 选择你的 Apple Developer Team
-   - Bundle Identifier 改为你自己的（如 `com.yourname.mynas.tv`）
-
-5. 运行：
-   - Target 选 `MyNASTV`
-   - 设备选 `Apple TV` 或 `Apple TV 4K (2nd generation)` simulator（tvOS 17.0+）
-   - Cmd+R 运行
-
-**注意**：初次编译可能遇到 import 路径、`Sendable` 约束、typo 等小错误（代码在 Windows 环境编写，未在 Mac 上验证过），预计几十行改动即可通过编译。
+```bash
+xcodebuild \
+  -project ../tvos/KKNasTV/KKNasTV.xcodeproj \
+  -scheme KKNasTV \
+  -destination 'platform=tvOS Simulator,name=Apple TV' \
+  CODE_SIGNING_ALLOWED=NO test
+```
 
 ### 3. 真机部署
 
@@ -147,7 +120,7 @@ apple_tv/
 │       ├── VideoProgressContractTests.swift
 │       ├── VideoProgressMergeTests.swift
 │       └── CloudSyncCoordinatorTests.swift
-├── MyNASTV/                     # SwiftUI app
+├── MyNASTV/                     # 未接入 target 的实验性参考源码
 │   ├── MyNASTVApp.swift
 │   ├── SourceListView.swift
 │   ├── LibraryListView.swift
