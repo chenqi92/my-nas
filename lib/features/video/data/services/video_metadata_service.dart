@@ -116,6 +116,35 @@ class VideoMetadataService {
     return _db.getMovieVersions(metadata);
   }
 
+  Future<VideoMetadata> changeCategory(
+    VideoMetadata metadata,
+    MediaCategory category,
+  ) async {
+    if (!_initialized) await init();
+    return _db.changeCategory(metadata, category);
+  }
+
+  Future<List<VideoMetadata>> getEpisodeVersions(
+    VideoMetadata metadata, {
+    int? tmdbId,
+  }) async {
+    if (!_initialized) await init();
+    return _db.getEpisodeVersions(metadata, tmdbId: tmdbId);
+  }
+
+  Future<List<VideoMetadata>> getShowFiles({
+    int? tmdbId,
+    String? showDirectory,
+    String? sourceId,
+  }) async {
+    if (!_initialized) await init();
+    return _db.getShowFiles(
+      tmdbId: tmdbId,
+      showDirectory: showDirectory,
+      sourceId: sourceId,
+    );
+  }
+
   /// 获取同一电影的版本数量
   Future<int> getMovieVersionCount(VideoMetadata metadata) async {
     if (!_initialized) await init();
@@ -129,9 +158,12 @@ class VideoMetadataService {
   }
 
   /// 根据 showDirectory 获取剧集映射（用于无 TMDB 的剧集）
-  Future<Map<int, Map<int, VideoMetadata>>> getEpisodesByShowDirectory(String showDirectory) async {
+  Future<Map<int, Map<int, VideoMetadata>>> getEpisodesByShowDirectory(
+    String showDirectory, {
+    String? sourceId,
+  }) async {
     if (!_initialized) await init();
-    return _db.getEpisodesByShowDirectory(showDirectory);
+    return _db.getEpisodesByShowDirectory(showDirectory, sourceId: sourceId);
   }
 
   /// 获取所有 TMDB ID 集合
@@ -258,7 +290,9 @@ class VideoMetadataService {
     var metadata = await getCachedAsync(sourceId, filePath);
 
     if (metadata != null && !forceRefresh) {
-      final needsUpdate = metadata.lastUpdated == null ||
+      if (metadata.scrapeStatus == ScrapeStatus.skipped) return metadata;
+      final needsUpdate =
+          metadata.lastUpdated == null ||
           DateTime.now().difference(metadata.lastUpdated!).inDays > 7;
 
       if (!needsUpdate && metadata.hasMetadata) {
@@ -436,25 +470,36 @@ class VideoMetadataService {
         videoFileName: metadata.fileName,
       );
 
-      if (nfoData != null && nfoData.hasData) {
-        metadata..category = nfoData.seasonNumber != null || nfoData.episodeNumber != null
-            ? MediaCategory.tvShow
-            : MediaCategory.movie
-        ..tmdbId = nfoData.tmdbId
-        ..title = nfoData.title
-        ..originalTitle = nfoData.originalTitle
-        ..year = nfoData.year
-        ..overview = nfoData.plot
-        ..rating = nfoData.rating
-        ..runtime = nfoData.runtime
-        ..genres = nfoData.genres?.join(' / ')
-        ..countries = nfoData.countries?.join(', ')
-        ..director = nfoData.director
-        ..cast = nfoData.actors?.take(5).join(', ')
-        ..seasonNumber = nfoData.seasonNumber
-        ..episodeNumber = nfoData.episodeNumber
-        ..episodeTitle = nfoData.episodeTitle
-        ..lastUpdated = DateTime.now();
+      if (nfoData == null) return false;
+      // Local artwork remains useful even when no NFO metadata exists.
+      metadata
+        ..localPosterUrl = nfoData.posterPath ?? metadata.localPosterUrl
+        ..localBackdropUrl = nfoData.fanartPath ?? metadata.localBackdropUrl;
+      if (nfoData.hasData) {
+        final parsed = VideoFileNameParser.parse(metadata.fileName);
+        final season =
+            nfoData.seasonNumber ?? metadata.seasonNumber ?? parsed.season;
+        final episode =
+            nfoData.episodeNumber ?? metadata.episodeNumber ?? parsed.episode;
+        metadata
+          ..category = season != null || episode != null
+              ? MediaCategory.tvShow
+              : MediaCategory.movie
+          ..tmdbId = nfoData.tmdbId
+          ..title = nfoData.title
+          ..originalTitle = nfoData.originalTitle
+          ..year = nfoData.year
+          ..overview = nfoData.plot
+          ..rating = nfoData.rating
+          ..runtime = nfoData.runtime
+          ..genres = nfoData.genres?.join(' / ')
+          ..countries = nfoData.countries?.join(', ')
+          ..director = nfoData.director
+          ..cast = nfoData.actors?.take(5).join(', ')
+          ..seasonNumber = season
+          ..episodeNumber = episode
+          ..episodeTitle = nfoData.episodeTitle
+          ..lastUpdated = DateTime.now();
 
         // 如果 NFO 包含 <set> 标签，使用其作为电影系列信息
         if (nfoData.setName != null) {

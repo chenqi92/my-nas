@@ -11,6 +11,7 @@ import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
 import 'package:my_nas/features/sources/presentation/providers/source_provider.dart';
 import 'package:my_nas/features/video/data/services/tmdb_service.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
+import 'package:my_nas/features/video/domain/utils/episode_catalog.dart';
 import 'package:my_nas/features/video/presentation/providers/video_detail_provider.dart';
 import 'package:my_nas/shared/widgets/adaptive_image.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
@@ -359,51 +360,52 @@ class _UnifiedEpisodeSelectorState extends ConsumerState<UnifiedEpisodeSelector>
     List<TmdbEpisode> tmdbEpisodes,
     Map<int, VideoMetadata> localEpisodes,
     bool isDark,
-  ) => SizedBox(
+  ) {
+    final remote = {
+      for (final episode in tmdbEpisodes) episode.episodeNumber: episode,
+    };
+    final numbers = mergedEpisodeNumbers(remote.keys, localEpisodes.keys);
+    return SizedBox(
       height: 130,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: tmdbEpisodes.length,
+        itemCount: numbers.length,
         itemBuilder: (context, index) {
-          final tmdbEpisode = tmdbEpisodes[index];
-          final localFile = localEpisodes[tmdbEpisode.episodeNumber];
-          final isAvailable = localFile != null;
-          final progress = localFile != null
-              ? widget.episodeProgress[localFile.filePath]
-              : null;
-
-          final onTapCallback = localFile != null
-              ? () => widget.onEpisodePlay(localFile, tmdbEpisode: tmdbEpisode)
-              : null;
-
-          // 缺失剧集点击回调
-          final onMissingTapCallback = localFile == null
-              ? () => _showMissingEpisodeActions(
-                    context,
-                    tmdbEpisode,
-                    _selectedSeason,
-                  )
-              : null;
-
+          final number = numbers[index];
+          final episode = remote[number];
+          final local = localEpisodes[number];
           return Padding(
-            padding: EdgeInsets.only(right: index < tmdbEpisodes.length - 1 ? 12 : 0),
+            padding: EdgeInsets.only(
+              right: index < numbers.length - 1 ? 12 : 0,
+            ),
             child: _UnifiedEpisodeCard(
-              episodeNumber: tmdbEpisode.episodeNumber,
-              title: tmdbEpisode.name,
-              imageUrl: tmdbEpisode.stillUrl,
-              runtime: tmdbEpisode.runtime,
-              airDate: tmdbEpisode.airDate,
-              rating: tmdbEpisode.voteAverage,
-              isAvailable: isAvailable,
-              watchProgress: progress,
-              onTap: onTapCallback,
-              onMissingTap: onMissingTapCallback,
+              episodeNumber: number,
+              title: episode?.name ?? local?.episodeTitle ?? local!.fileName,
+              imageUrl: episode?.stillUrl ?? local?.posterUrl,
+              runtime: episode?.runtime,
+              airDate: episode?.airDate,
+              rating: episode?.voteAverage,
+              isAvailable: local != null,
+              watchProgress: local != null
+                  ? widget.episodeProgress[local.filePath]
+                  : null,
+              onTap: local != null
+                  ? () => widget.onEpisodePlay(local, tmdbEpisode: episode)
+                  : null,
+              onMissingTap: local == null && episode != null
+                  ? () => _showMissingEpisodeActions(
+                      context,
+                      episode,
+                      _selectedSeason,
+                    )
+                  : null,
             ),
           );
         },
       ),
     );
+  }
 
   /// 显示缺失剧集的操作选项
   void _showMissingEpisodeActions(

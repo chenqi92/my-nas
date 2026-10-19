@@ -38,7 +38,7 @@ class PosterWall extends StatelessWidget {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: count,
         childAspectRatio: effectiveAspectRatio,
-        mainAxisSpacing: effectiveSpacing,
+        mainAxisSpacing: effectiveSpacing + 8,
         crossAxisSpacing: effectiveSpacing,
       ),
       itemCount: items.length,
@@ -85,7 +85,7 @@ class SliverPosterWall extends StatelessWidget {
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: count,
           childAspectRatio: effectiveAspectRatio,
-          mainAxisSpacing: effectiveSpacing,
+          mainAxisSpacing: effectiveSpacing + 8,
           crossAxisSpacing: effectiveSpacing,
         ),
         delegate: SliverChildBuilderDelegate(
@@ -153,6 +153,7 @@ class _PosterCardState extends State<PosterCard> with SingleTickerProviderStateM
     final posterContent = hasPoster
         ? VideoPoster(
             posterUrl: displayPoster,
+            fallbackUrls: widget.metadata.posterFallbackUrls,
             sourceId: widget.metadata.sourceId,
             placeholder: _buildPlaceholder(isDark),
             errorWidget: _buildPlaceholder(isDark),
@@ -472,10 +473,17 @@ class PosterRow extends StatelessWidget {
                               child: hasPoster
                                   ? VideoPoster(
                                       posterUrl: displayPoster,
+                                      fallbackUrls: metadata.posterFallbackUrls,
                                       sourceId: metadata.sourceId,
                                       width: itemWidth,
-                                      placeholder: _buildMiniPlaceholder(isDark, metadata),
-                                      errorWidget: _buildMiniPlaceholder(isDark, metadata),
+                                      placeholder: _buildMiniPlaceholder(
+                                        isDark,
+                                        metadata,
+                                      ),
+                                      errorWidget: _buildMiniPlaceholder(
+                                        isDark,
+                                        metadata,
+                                      ),
                                     )
                                   : _buildMiniPlaceholder(isDark, metadata),
                             ),

@@ -7,6 +7,7 @@ import 'package:my_nas/core/platform/spotlight/spotlight_hook.dart';
 import 'package:my_nas/core/platform/spotlight/spotlight_item.dart';
 import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
+import 'package:my_nas/features/video/domain/utils/episode_catalog.dart';
 import 'package:my_nas/features/video/domain/utils/genre_country_mapping.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -1432,128 +1433,106 @@ class VideoDatabaseService {
     return count ?? 1;
   }
 
-  /// 根据 TMDB ID 获取剧集映射（使用索引）
-  Future<Map<int, Map<int, VideoMetadata>>> getEpisodesByTmdbId(
-    int tmdbId,
+  Future<VideoMetadata> changeCategory(
+    VideoMetadata metadata,
+    MediaCategory category,
   ) async {
+    // Movie and TV identifiers belong to separate namespaces.
+    final updated =
+        metadata.copyWith(
+            category: category,
+            scrapeStatus: ScrapeStatus.skipped,
+          )
+          ..tmdbId = null
+          ..doubanId = null
+          ..collectionId = null
+          ..collectionName = null;
+    if (category == MediaCategory.tvShow) {
+      final parsed = VideoFileNameParser.parse(updated.fileName);
+      updated
+        ..seasonNumber = parsed.season ?? updated.seasonNumber ?? 1
+        ..episodeNumber = parsed.episode ?? updated.episodeNumber
+        ..showDirectory = extractShowDirectory(updated.filePath)
+        ..movieDirectory = null;
+    } else {
+      updated
+        ..seasonNumber = null
+        ..episodeNumber = null
+        ..episodeTitle = null
+        ..showDirectory = null
+        ..movieDirectory = category == MediaCategory.movie
+            ? extractMovieDirectory(updated.filePath)
+            : null;
+    }
+    await upsert(updated);
+    return updated;
+  }
+
+  Future<List<VideoMetadata>> getShowFiles({
+    int? tmdbId,
+    String? showDirectory,
+    String? sourceId,
+  }) async {
     if (!_initialized) await init();
-
-    logger.d(
-      'VideoDatabaseService: getEpisodesByTmdbId called, tmdbId=$tmdbId',
-    );
-
-    final results = await _db!.query(
+    if (tmdbId == null && (showDirectory == null || showDirectory.isEmpty)) {
+      return [];
+    }
+    final hasTmdbId = tmdbId != null && tmdbId > 0;
+    final rows = await _db!.query(
       _tableMetadata,
       where:
-          '$_colTmdbId = ? AND $_colSeasonNumber IS NOT NULL AND $_colEpisodeNumber IS NOT NULL',
-      whereArgs: [tmdbId],
-      orderBy: '$_colSeasonNumber, $_colEpisodeNumber',
+          '$_colCategory != ? AND '
+          '${hasTmdbId ? '''
+          (
+            $_colTmdbId = ? OR (
+              ($_colTmdbId IS NULL OR $_colTmdbId = 0) AND EXISTS (
+                SELECT 1 FROM $_tableMetadata known
+                WHERE known.$_colTmdbId = ?
+                  AND known.$_colCategory = 1
+                  AND known.$_colSourceId = $_tableMetadata.$_colSourceId
+                  AND known.$_colShowDirectory = $_tableMetadata.$_colShowDirectory
+                  AND known.$_colShowDirectory != ''
+              )
+            )
+          )''' : '$_colShowDirectory = ?'}'
+          '${sourceId != null ? ' AND $_colSourceId = ?' : ''}',
+      whereArgs: [
+        MediaCategory.movie.index,
+        if (hasTmdbId) ...[tmdbId, tmdbId] else showDirectory,
+        if (sourceId != null) sourceId,
+      ],
+      orderBy:
+          '$_colSeasonNumber, $_colEpisodeNumber, $_colFileName, $_colSourceId',
     );
-
-    logger.d(
-      'VideoDatabaseService: query returned ${results.length} rows for tmdbId=$tmdbId',
-    );
-
-    final episodeMap = <int, Map<int, VideoMetadata>>{};
-    for (final row in results) {
-      final metadata = _fromRow(row);
-      if (metadata.seasonNumber != null && metadata.episodeNumber != null) {
-        episodeMap.putIfAbsent(
-          metadata.seasonNumber!,
-          () => {},
-        )[metadata.episodeNumber!] = metadata;
-      }
-    }
-
-    logger.d(
-      'VideoDatabaseService: returning episodeMap with ${episodeMap.length} seasons for tmdbId=$tmdbId',
-    );
-    return episodeMap;
+    return rows.map(_fromRow).toList();
   }
 
-  /// 根据 showDirectory 获取剧集映射（用于无 TMDB 的剧集）
-  ///
-  /// 返回 `Map<seasonNumber, Map<episodeNumber, VideoMetadata>>`
-  /// - 对于有 seasonNumber/episodeNumber 的剧集，使用原有值
-  /// - 对于没有 seasonNumber/episodeNumber 的剧集，默认分配到第 1 季，按文件名排序生成集号
+  Future<List<VideoMetadata>> getEpisodeVersions(
+    VideoMetadata metadata, {
+    int? tmdbId,
+  }) async {
+    final files = await getShowFiles(
+      tmdbId: tmdbId ?? metadata.tmdbId,
+      showDirectory:
+          metadata.showDirectory ?? extractShowDirectory(metadata.filePath),
+    );
+    final parsed = VideoFileNameParser.parse(metadata.fileName);
+    final season = metadata.seasonNumber ?? parsed.season;
+    final episode = metadata.episodeNumber ?? parsed.episode;
+    final versions = groupEpisodeVersions(files)[season]?[episode] ?? [];
+    return versions.isEmpty ? [metadata] : versions;
+  }
+
+  Future<Map<int, Map<int, VideoMetadata>>> getEpisodesByTmdbId(
+    int tmdbId,
+  ) async => episodeRepresentatives(await getShowFiles(tmdbId: tmdbId));
+
   Future<Map<int, Map<int, VideoMetadata>>> getEpisodesByShowDirectory(
-    String showDirectory,
-  ) async {
-    if (!_initialized) await init();
-
-    logger.d(
-      'VideoDatabaseService: getEpisodesByShowDirectory called, showDirectory=$showDirectory',
-    );
-
-    // 获取该目录下所有视频（包括有和没有季集号的）
-    final results = await _db!.query(
-      _tableMetadata,
-      where: '$_colShowDirectory = ?',
-      whereArgs: [showDirectory],
-      orderBy: '$_colSeasonNumber, $_colEpisodeNumber, $_colFileName',
-    );
-
-    logger.d('VideoDatabaseService: query returned ${results.length} rows');
-
-    final episodeMap = <int, Map<int, VideoMetadata>>{};
-
-    // 先处理有季集号的剧集
-    final withSeasonEpisode = <VideoMetadata>[];
-    final withoutSeasonEpisode = <VideoMetadata>[];
-
-    for (final row in results) {
-      final metadata = _fromRow(row);
-      if (metadata.seasonNumber != null && metadata.episodeNumber != null) {
-        withSeasonEpisode.add(metadata);
-      } else {
-        withoutSeasonEpisode.add(metadata);
-      }
-    }
-
-    logger.d(
-      'VideoDatabaseService: withSeasonEpisode=${withSeasonEpisode.length}, withoutSeasonEpisode=${withoutSeasonEpisode.length}',
-    );
-
-    // 添加有季集号的剧集
-    for (final metadata in withSeasonEpisode) {
-      episodeMap.putIfAbsent(
-        metadata.seasonNumber!,
-        () => {},
-      )[metadata.episodeNumber!] = metadata;
-    }
-
-    // 如果有无季集号的剧集，将它们添加到第 1 季（或找一个不冲突的季号）
-    if (withoutSeasonEpisode.isNotEmpty) {
-      // 按文件名排序
-      withoutSeasonEpisode.sort((a, b) => a.fileName.compareTo(b.fileName));
-
-      // 找一个不会冲突的起始集号
-      final season1Episodes = episodeMap[1] ?? {};
-      var nextEpisodeNumber = season1Episodes.isEmpty
-          ? 1
-          : (season1Episodes.keys.reduce((a, b) => a > b ? a : b) + 1);
-
-      // 如果第 1 季已经有剧集，为没有季集号的剧集创建一个特殊季（-1 表示"未分类"）
-      // 但为了 UI 兼容性，还是使用正数季号
-      final targetSeason = season1Episodes.isEmpty ? 1 : 1;
-
-      for (final metadata in withoutSeasonEpisode) {
-        // 创建一个带有默认季集号的副本
-        final updatedMetadata = metadata.copyWith(
-          seasonNumber: targetSeason,
-          episodeNumber: nextEpisodeNumber,
-        );
-        episodeMap.putIfAbsent(targetSeason, () => {})[nextEpisodeNumber] =
-            updatedMetadata;
-        nextEpisodeNumber++;
-      }
-    }
-
-    logger.d(
-      'VideoDatabaseService: returning episodeMap with ${episodeMap.length} seasons',
-    );
-    return episodeMap;
-  }
+    String showDirectory, {
+    String? sourceId,
+  }) async => episodeRepresentatives(
+    await getShowFiles(showDirectory: showDirectory, sourceId: sourceId),
+  );
 
   /// 获取所有 TMDB ID 集合（使用索引）
   Future<Set<int>> getAllTmdbIds() async {
@@ -4738,7 +4717,12 @@ class VideoDatabaseService {
   /// 获取指定目录下的视频文件（用于增量同步）
   ///
   /// 只返回直接位于该目录下的文件（不递归）
-  Future<Map<String, ({int fileSize, DateTime? fileModifiedTime})>>
+  Future<
+    Map<
+      String,
+      ({int fileSize, DateTime? fileModifiedTime, String? localPosterUrl})
+    >
+  >
   getVideoFilesInDirectory(String sourceId, String dirPath) async {
     if (!_initialized) await init();
 
@@ -4748,7 +4732,7 @@ class VideoDatabaseService {
 
     final results = await _db!.rawQuery(
       '''
-      SELECT $_colFilePath, $_colFileSize, $_colFileModifiedTime
+      SELECT $_colFilePath, $_colFileSize, $_colFileModifiedTime, $_colLocalPosterUrl
       FROM $_tableMetadata
       WHERE $_colSourceId = ?
         AND $_colFilePath LIKE ?
@@ -4761,6 +4745,7 @@ class VideoDatabaseService {
       for (final row in results)
         row[_colFilePath]! as String: (
           fileSize: row[_colFileSize] as int? ?? 0,
+          localPosterUrl: row[_colLocalPosterUrl] as String?,
           fileModifiedTime: row[_colFileModifiedTime] != null
               ? DateTime.fromMillisecondsSinceEpoch(
                   row[_colFileModifiedTime]! as int,

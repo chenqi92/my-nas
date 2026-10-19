@@ -1,14 +1,18 @@
 // ignore_for_file: unused_element
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/utils/tv_capabilities.dart';
 import 'package:my_nas/features/video/data/services/opensubtitles_service.dart';
 import 'package:my_nas/features/video/presentation/providers/playback_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/video_player_provider.dart'
     hide availableSpeeds;
 import 'package:my_nas/features/video/presentation/widgets/aspect_ratio_selector.dart';
 import 'package:my_nas/features/video/presentation/widgets/audio_track_selector.dart';
+import 'package:my_nas/features/video/presentation/widgets/playback_orientation_menu.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_download_dialog.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_selector.dart';
 import 'package:my_nas/features/video/presentation/widgets/subtitle_style_sheet.dart';
@@ -175,6 +179,47 @@ class _InfuseSettingsPanelState extends ConsumerState<InfuseSettingsPanel>
                             child: ListView(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               children: [
+                                if ((Platform.isAndroid || Platform.isIOS) &&
+                                    !TvCapabilities.isTvMode) ...[
+                                  ListTile(
+                                    leading: const Icon(
+                                      Icons.screen_rotation_rounded,
+                                      color: Colors.white60,
+                                    ),
+                                    title: Text(
+                                      l.videoOrientation,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      playbackOrientationLabel(
+                                        context,
+                                        settings.orientation,
+                                      ),
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    trailing: const PlaybackOrientationMenu(
+                                      iconColor: Colors.white,
+                                    ),
+                                  ),
+                                  SwitchListTile(
+                                    title: Text(
+                                      l.videoHideSystemBars,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    value: settings.hideSystemBars,
+                                    onChanged: (hidden) => settingsNotifier
+                                        .setHideSystemBars(hidden: hidden),
+                                  ),
+                                  const _Divider(),
+                                ],
                                 // === 字幕 ===
                                 _SettingItem(
                                   icon: Icons.closed_caption_rounded,

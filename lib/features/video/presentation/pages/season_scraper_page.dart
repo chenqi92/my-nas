@@ -8,6 +8,7 @@ import 'package:my_nas/features/video/data/services/video_metadata_service.dart'
 import 'package:my_nas/features/video/domain/entities/scraper_result.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
+import 'package:my_nas/features/video/domain/utils/episode_catalog.dart';
 import 'package:my_nas/features/video/presentation/providers/scrape_defaults_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
 import 'package:my_nas/nas_adapters/base/nas_file_system.dart';
@@ -53,6 +54,7 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
 
   // 本地剧集
   Map<int, Map<int, VideoMetadata>> _localEpisodes = {};
+  Map<int, Map<int, List<VideoMetadata>>> _localVersions = {};
 
   // 搜索状态
   final TextEditingController _searchController = TextEditingController();
@@ -94,8 +96,14 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
 
   Future<void> _loadLocalEpisodes() async {
     await _metadataService.init();
-    final episodes = await _metadataService.getEpisodesByShowDirectory(widget.showDirectory);
+    final files = await _metadataService.getShowFiles(
+      showDirectory: widget.showDirectory,
+      sourceId: widget.sourceId,
+    );
+    if (!mounted) return;
+    final episodes = episodeRepresentatives(files);
     setState(() {
+      _localVersions = groupEpisodeVersions(files);
       _localEpisodes = episodes;
       // 默认选中所有季
       _selectedSeasons = episodes.keys.toSet();
@@ -297,15 +305,17 @@ class _SeasonScraperPageState extends ConsumerState<SeasonScraperPage>
     );
 
     // 使用后台刮削管理器启动刮削
-    final started = await ref.read(backgroundScrapingProvider.notifier).startTvShowScraping(
-      showDirectory: widget.showDirectory,
-      tvDetail: tvDetail,
-      selectedSeasons: _selectedSeasons,
-      localEpisodes: _localEpisodes,
-      seasonDetails: _seasonDetails,
-      fileSystem: widget.fileSystem,
-      options: options,
-    );
+    final started = await ref
+        .read(backgroundScrapingProvider.notifier)
+        .startTvShowScraping(
+          showDirectory: widget.showDirectory,
+          tvDetail: tvDetail,
+          selectedSeasons: _selectedSeasons,
+          localEpisodes: _localVersions,
+          seasonDetails: _seasonDetails,
+          fileSystem: widget.fileSystem,
+          options: options,
+        );
 
     if (started && mounted) {
       // 显示提示并返回详情页

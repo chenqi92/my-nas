@@ -159,31 +159,15 @@ class NfoScraperService {
         }
       }
 
-      if (nfoData == null || !nfoData.hasData) {
-        return null;
-      }
-
       // 2. 查找本地海报图片
-      final images = await _findLocalImages(
-        directoryItems,
-        videoBaseName,
-        fileSystem,
-        videoDir,
-      );
+      final images = findLocalImages(directoryItems, videoBaseName);
 
-      // 返回合并后的数据
-      return NfoMetadata(
-        title: nfoData.title,
-        originalTitle: nfoData.originalTitle,
-        year: nfoData.year,
-        rating: nfoData.rating,
-        tmdbId: nfoData.tmdbId,
-        genres: nfoData.genres,
-        seasonNumber: nfoData.seasonNumber,
-        episodeNumber: nfoData.episodeNumber,
-        posterPath: images['poster'],
-        fanartPath: images['fanart'],
-        thumbPath: images['thumb'],
+      final parsed = VideoFileNameParser.parse('$videoBaseName.mkv');
+      return _mergeNfoData(
+        episodeNfo: nfoData,
+        localImages: images,
+        fileSeason: parsed.season,
+        fileEpisode: parsed.episode,
       );
     } on Exception catch (e) {
       logger.w('NfoScraperService: 快速解析目录失败', e);
@@ -220,12 +204,7 @@ class NfoScraperService {
       episodeNfo ??= await _findMovieNfo(fileSystem, files);
 
       // 3. 查找本地图片（当前目录）
-      final localImages = await _findLocalImages(
-        files,
-        videoBaseName,
-        fileSystem,
-        videoDir,
-      );
+      final localImages = findLocalImages(files, videoBaseName);
 
       // 4. 向上查找 tvshow.nfo（获取剧集整体信息）
       NfoMetadata? showNfo;
@@ -246,7 +225,10 @@ class NfoScraperService {
       }
 
       // 5. 合并信息（单集信息 + 剧集整体信息）
+      final parsed = VideoFileNameParser.parse(videoFileName);
       return _mergeNfoData(
+        fileSeason: parsed.season,
+        fileEpisode: parsed.episode,
         episodeNfo: episodeNfo,
         showNfo: showNfo,
         localImages: localImages,
@@ -287,8 +269,15 @@ class NfoScraperService {
       if (file.name.toLowerCase() == 'episode.nfo') {
         try {
           final content = await _readFileAsString(fileSystem, file.path);
-          // logger.d('NfoScraperService: 找到 episode.nfo'); // 减少日志输出
-          return _parseNfoContent(content);
+          final nfo = _parseNfoContent(content);
+          final parsed = VideoFileNameParser.parse('$videoBaseName.mkv');
+          if (parsed.episode != null &&
+              (nfo.episodeNumber != parsed.episode ||
+                  (nfo.seasonNumber != null &&
+                      nfo.seasonNumber != parsed.season))) {
+            continue;
+          }
+          return nfo;
         } on Exception catch (e) {
           logger.w('NfoScraperService: 读取 episode.nfo 失败', e);
         }
@@ -356,12 +345,7 @@ class NfoScraperService {
               logger.i('NfoScraperService: 在父目录找到 tvshow.nfo: $currentDir');
 
               // 同时查找剧集级别的图片
-              final images = await _findLocalImages(
-                files,
-                '', // 不匹配特定视频名
-                fileSystem,
-                currentDir,
-              );
+              final images = findLocalImages(files, '');
 
               return (nfo, images);
             } on Exception catch (e) {
@@ -389,11 +373,16 @@ class NfoScraperService {
   NfoMetadata? _mergeNfoData({
     NfoMetadata? episodeNfo,
     NfoMetadata? showNfo,
+    int? fileSeason,
+    int? fileEpisode,
     Map<String, String?> localImages = const {},
     Map<String, String?>? showImages,
   }) {
     // 如果都没有数据，返回 null
-    if (episodeNfo == null && showNfo == null) {
+    if (episodeNfo == null &&
+        showNfo == null &&
+        !localImages.values.any((path) => path != null) &&
+        !(showImages?.values.any((path) => path != null) ?? false)) {
       // logger.d('NfoScraperService: 未找到任何 NFO 文件'); // 减少日志输出
       return null;
     }
@@ -409,8 +398,8 @@ class NfoScraperService {
 
     return NfoMetadata(
       // 单集专属信息
-      episodeNumber: ep?.episodeNumber,
-      seasonNumber: ep?.seasonNumber,
+      episodeNumber: ep?.episodeNumber ?? fileEpisode,
+      seasonNumber: ep?.seasonNumber ?? fileSeason,
       episodeTitle: ep?.episodeTitle ?? ep?.title,
       aired: ep?.aired,
 
@@ -740,74 +729,44 @@ class NfoScraperService {
     return int.tryParse(value);
   }
 
-  /// 查找本地图片
-  Future<Map<String, String?>> _findLocalImages(
+  /// Match sidecar artwork before shared folder artwork, without network reads.
+  static Map<String, String?> findLocalImages(
     List<FileItem> files,
     String videoBaseName,
-    NasFileSystem fileSystem,
-    String videoDir,
-  ) async {
-    String? posterPath;
-    String? fanartPath;
-    String? thumbPath;
-
-    for (final file in files) {
-      if (file.isDirectory) continue;
-
-      final fileName = file.name.toLowerCase();
-      final baseName = _getBaseName(fileName);
-
-      // 检查是否是图片文件
-      var isImage = false;
-      for (final ext in _imageExtensions) {
-        if (fileName.endsWith(ext)) {
-          isImage = true;
-          break;
+  ) {
+    final images = {
+      for (final file in files)
+        if (!file.isDirectory &&
+            _imageExtensions.any(
+              (ext) => file.name.toLowerCase().endsWith(ext),
+            ))
+          file.name.toLowerCase(): file.path,
+    };
+    final base = videoBaseName.toLowerCase();
+    String? find(List<String> patterns, {bool includeVideoName = false}) {
+      final names = [
+        if (base.isNotEmpty) ...[
+          for (final pattern in patterns) ...[
+            '$base-$pattern',
+            '$base.$pattern',
+          ],
+          if (includeVideoName) base,
+        ],
+        ...patterns,
+      ];
+      for (final name in names) {
+        for (final ext in _imageExtensions) {
+          final path = images['$name$ext'];
+          if (path != null) return path;
         }
       }
-      if (!isImage) continue;
-
-      // 检查是否是与视频同名的图片
-      if (baseName == videoBaseName.toLowerCase()) {
-        posterPath ??= file.path;
-        continue;
-      }
-
-      // 检查海报模式
-      if (posterPath == null) {
-        for (final pattern in _posterPatterns) {
-          if (baseName.contains(pattern) || baseName == pattern) {
-            posterPath = file.path;
-            break;
-          }
-        }
-      }
-
-      // 检查背景图模式
-      if (fanartPath == null) {
-        for (final pattern in _fanartPatterns) {
-          if (baseName.contains(pattern) || baseName == pattern) {
-            fanartPath = file.path;
-            break;
-          }
-        }
-      }
-
-      // 检查缩略图模式
-      if (thumbPath == null) {
-        for (final pattern in _thumbPatterns) {
-          if (baseName.contains(pattern) || baseName == pattern) {
-            thumbPath = file.path;
-            break;
-          }
-        }
-      }
+      return null;
     }
 
     return {
-      'poster': posterPath,
-      'fanart': fanartPath,
-      'thumb': thumbPath,
+      'poster': find(_posterPatterns, includeVideoName: true),
+      'fanart': find(_fanartPatterns),
+      'thumb': find(_thumbPatterns),
     };
   }
 

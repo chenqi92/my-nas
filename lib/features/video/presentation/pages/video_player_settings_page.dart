@@ -12,8 +12,10 @@ import 'package:my_nas/features/video/domain/entities/audio_capability.dart';
 import 'package:my_nas/features/video/domain/entities/hdr_capability.dart';
 import 'package:my_nas/features/video/domain/entities/video_quality.dart';
 import 'package:my_nas/features/video/presentation/providers/hdr_audio_settings_provider.dart';
+import 'package:my_nas/features/video/presentation/providers/playback_settings_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/quality_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/subtitle_translation_settings_provider.dart';
+import 'package:my_nas/features/video/presentation/widgets/playback_orientation_menu.dart';
 import 'package:my_nas/shared/mixins/tab_bar_visibility_mixin.dart';
 import 'package:my_nas/shared/utils/form_l10n.dart';
 import 'package:my_nas/shared/widgets/adaptive_sheet.dart';
@@ -28,6 +30,7 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final settings = ref.watch(qualitySettingsProvider);
+    final playback = ref.watch(playbackSettingsProvider);
     final hdrAudioSettings = ref.watch(hdrAudioSettingsProvider);
     final translation = ref.watch(subtitleTranslationSettingsProvider);
 
@@ -51,6 +54,27 @@ class VideoPlayerSettingsPage extends ConsumerWidget {
         body: ListView(
           padding: AppSpacing.paddingMd,
           children: [
+          if (!context.isDesktopLayout) ...[
+            _buildSettingsCard(
+              context,
+              isDark,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.screen_rotation_rounded),
+                  title: Text(context.l10n.videoOrientation),
+                  subtitle: Text(playbackOrientationLabel(context, playback.orientation)),
+                  trailing: const PlaybackOrientationMenu(),
+                ),
+                SwitchListTile(
+                  title: Text(context.l10n.videoHideSystemBars),
+                  value: playback.hideSystemBars,
+                  onChanged: (hidden) => ref.read(playbackSettingsProvider.notifier)
+                      .setHideSystemBars(hidden: hidden),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+          ],
           // 清晰度设置
           _buildSectionHeader(context, context.l10n.videoPlayerSettingsSectionQuality, Icons.high_quality_rounded, isDark),
           const SizedBox(height: AppSpacing.sm),

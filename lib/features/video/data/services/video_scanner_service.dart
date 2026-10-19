@@ -10,6 +10,7 @@ import 'package:my_nas/core/utils/logger.dart';
 import 'package:my_nas/features/sources/data/services/source_manager_service.dart';
 import 'package:my_nas/features/sources/domain/entities/media_library.dart';
 import 'package:my_nas/features/sources/domain/entities/source_entity.dart';
+import 'package:my_nas/features/video/data/services/nfo_scraper_service.dart';
 import 'package:my_nas/features/video/data/services/subtitle_service.dart';
 import 'package:my_nas/features/video/data/services/video_database_service.dart';
 import 'package:my_nas/features/video/data/services/video_library_cache_service.dart';
@@ -521,6 +522,10 @@ class VideoScannerService {
         // 检查是否已存在
         final existing = await _dbService.get(video.sourceId, video.file.path);
         if (existing != null) {
+          final poster = video.nfoBasicInfo?.posterPath;
+          if (existing.localPosterUrl == null && poster != null) {
+            metadataList.add(existing.copyWith(localPosterUrl: poster));
+          }
           // 已存在，但仍需更新 NFO 标志（可能目录内容有变化）
           if (video.hasNfoInDirectory) {
             nfoFlags.add((
@@ -1434,6 +1439,12 @@ VideoScannerService: 增量同步完成
           final video = _ScannedVideo(
             sourceId: sourceId,
             file: videoItem,
+            nfoBasicInfo: NfoBasicInfo(
+              posterPath: NfoScraperService.findLocalImages(
+                items,
+                _getBaseName(videoItem.name),
+              )['poster'],
+            ),
             hasNfoInDirectory: items.any(
               (f) => !f.isDirectory && f.name.toLowerCase().endsWith('.nfo'),
             ),
@@ -1448,11 +1459,24 @@ VideoScannerService: 增量同步完成
               videoItem.modifiedTime != null &&
               videoItem.modifiedTime!.isAfter(dbFile.fileModifiedTime!);
 
-          if (sizeChanged || timeChanged) {
+          final hasNewPoster =
+              dbFile.localPosterUrl == null &&
+              NfoScraperService.findLocalImages(
+                    items,
+                    _getBaseName(videoItem.name),
+                  )['poster'] !=
+                  null;
+          if (sizeChanged || timeChanged || hasNewPoster) {
             // 文件已变化，更新记录
             final video = _ScannedVideo(
               sourceId: sourceId,
               file: videoItem,
+              nfoBasicInfo: NfoBasicInfo(
+                posterPath: NfoScraperService.findLocalImages(
+                  items,
+                  _getBaseName(videoItem.name),
+                )['poster'],
+              ),
               hasNfoInDirectory: items.any(
                 (f) => !f.isDirectory && f.name.toLowerCase().endsWith('.nfo'),
               ),
@@ -1975,7 +1999,12 @@ VideoScannerService: 增量同步完成
             sourceId: sourceId,
             file: mainFile,
             hasNfoInDirectory: hasNfo,
-            nfoBasicInfo: null,
+            nfoBasicInfo: NfoBasicInfo(
+              posterPath: NfoScraperService.findLocalImages(
+                items,
+                _getBaseName(mainFile.name),
+              )['poster'],
+            ),
             isBdmv: true,
             bdmvTitle: bdmvTitle,
           ),
@@ -2023,8 +2052,12 @@ VideoScannerService: 增量同步完成
           sourceId: sourceId,
           file: videoItem,
           hasNfoInDirectory: hasNfo,
-          // 不在扫描阶段解析 NFO，加快扫描速度
-          nfoBasicInfo: null,
+          nfoBasicInfo: NfoBasicInfo(
+            posterPath: NfoScraperService.findLocalImages(
+              items,
+              _getBaseName(videoItem.name),
+            )['poster'],
+          ),
         ),
       );
 

@@ -34,6 +34,7 @@ class VideoControls extends ConsumerWidget {
     this.onPlayNext,
     this.onShowBookmarks,
     this.onTogglePip,
+    this.onRotateScreen,
     this.isPipSupported = false,
     this.tmdbId,
     this.isMovie = true,
@@ -61,6 +62,7 @@ class VideoControls extends ConsumerWidget {
   final VoidCallback? onPlayNext;
   final VoidCallback? onShowBookmarks;
   final VoidCallback? onTogglePip;
+  final VoidCallback? onRotateScreen;
   final bool isPipSupported;
   final int? tmdbId;
   final bool isMovie;
@@ -173,6 +175,12 @@ class VideoControls extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (onRotateScreen != null)
+              IconButton(
+                onPressed: onRotateScreen,
+                icon: const Icon(Icons.screen_rotation_rounded, color: Colors.white),
+                tooltip: context.l10n.videoRotateScreen,
+              ),
             // 书签按钮
             if (onShowBookmarks != null)
               IconButton(

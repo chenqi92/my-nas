@@ -83,7 +83,8 @@ class DetailHeroSection extends StatelessWidget {
     // 增加 Banner 高度：宽屏 600px，窄屏 550px
     final heroHeight = isWide ? 600.0 : 550.0;
 
-    final displayBackdrop = backdropUrl ?? metadata.backdropUrl;
+    final displayBackdrop =
+        metadata.localBackdropUrl ?? backdropUrl ?? metadata.backdropUrl;
     final displayPoster = metadata.displayPosterUrl;
     final hasBackdrop = displayBackdrop != null && displayBackdrop.isNotEmpty;
     final hasPoster = displayPoster != null && displayPoster.isNotEmpty;
@@ -102,7 +103,8 @@ class DetailHeroSection extends StatelessWidget {
             _buildSmartImage(
               displayBackdrop,
               placeholder: _buildBackdropPlaceholder(isDark),
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter,
             )
           else
             _buildBackdropPlaceholder(isDark),
@@ -808,9 +810,11 @@ class DetailHeroSection extends StatelessWidget {
     String imageUrl, {
     required Widget placeholder,
     BoxFit fit = BoxFit.cover,
+    Alignment alignment = Alignment.center,
   }) {
     // 检查是否是 NAS 路径（本地缓存的图片）
-    final isNasPath = imageUrl.startsWith('/') &&
+    final isNasPath =
+        imageUrl.startsWith('/') &&
         !imageUrl.startsWith('//') &&
         !imageUrl.contains('://');
 
@@ -823,6 +827,7 @@ class DetailHeroSection extends StatelessWidget {
         placeholder: placeholder,
         errorWidget: placeholder,
         fit: fit,
+        alignment: alignment,
       );
     }
 
@@ -830,6 +835,7 @@ class DetailHeroSection extends StatelessWidget {
     return AdaptiveImage(
       imageUrl: imageUrl,
       fit: fit,
+      alignment: alignment,
       placeholder: (_) => placeholder,
       errorWidget: (_, _) => placeholder,
     );

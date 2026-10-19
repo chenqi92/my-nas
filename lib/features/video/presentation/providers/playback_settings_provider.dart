@@ -1,6 +1,30 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:my_nas/core/utils/logger.dart';
+
+enum PlaybackOrientation {
+  auto,
+  video,
+  portrait,
+  reversePortrait,
+  landscape,
+  reverseLandscape;
+
+  List<DeviceOrientation> orientations({double? aspectRatio}) => switch (this) {
+    PlaybackOrientation.auto => [],
+    PlaybackOrientation.video =>
+      aspectRatio == null || aspectRatio <= 0
+          ? []
+          : aspectRatio < 1
+          ? [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]
+          : [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight],
+    PlaybackOrientation.portrait => [DeviceOrientation.portraitUp],
+    PlaybackOrientation.reversePortrait => [DeviceOrientation.portraitDown],
+    PlaybackOrientation.landscape => [DeviceOrientation.landscapeLeft],
+    PlaybackOrientation.reverseLandscape => [DeviceOrientation.landscapeRight],
+  };
+}
 
 /// 播放设置
 class PlaybackSettings {
@@ -10,6 +34,8 @@ class PlaybackSettings {
     this.autoPlayNext = true,
     this.rememberPosition = true,
     this.seekInterval = 10,
+    this.orientation = PlaybackOrientation.auto,
+    this.hideSystemBars = false,
   });
 
   factory PlaybackSettings.fromMap(Map<dynamic, dynamic> map) =>
@@ -19,8 +45,16 @@ class PlaybackSettings {
         autoPlayNext: map['autoPlayNext'] as bool? ?? true,
         rememberPosition: map['rememberPosition'] as bool? ?? true,
         seekInterval: map['seekInterval'] as int? ?? 10,
+        orientation:
+            PlaybackOrientation.values
+                .where((value) => value.name == map['orientation'])
+                .firstOrNull ??
+            PlaybackOrientation.auto,
+        hideSystemBars: map['hideSystemBars'] as bool? ?? false,
       );
 
+  final PlaybackOrientation orientation;
+  final bool hideSystemBars;
   final double volume;
   final double speed;
   final bool autoPlayNext;
@@ -33,22 +67,27 @@ class PlaybackSettings {
     bool? autoPlayNext,
     bool? rememberPosition,
     int? seekInterval,
-  }) =>
-      PlaybackSettings(
-        volume: volume ?? this.volume,
-        speed: speed ?? this.speed,
-        autoPlayNext: autoPlayNext ?? this.autoPlayNext,
-        rememberPosition: rememberPosition ?? this.rememberPosition,
-        seekInterval: seekInterval ?? this.seekInterval,
-      );
+    PlaybackOrientation? orientation,
+    bool? hideSystemBars,
+  }) => PlaybackSettings(
+    volume: volume ?? this.volume,
+    speed: speed ?? this.speed,
+    autoPlayNext: autoPlayNext ?? this.autoPlayNext,
+    rememberPosition: rememberPosition ?? this.rememberPosition,
+    seekInterval: seekInterval ?? this.seekInterval,
+    orientation: orientation ?? this.orientation,
+    hideSystemBars: hideSystemBars ?? this.hideSystemBars,
+  );
 
   Map<String, dynamic> toMap() => {
-        'volume': volume,
-        'speed': speed,
-        'autoPlayNext': autoPlayNext,
-        'rememberPosition': rememberPosition,
-        'seekInterval': seekInterval,
-      };
+    'volume': volume,
+    'speed': speed,
+    'autoPlayNext': autoPlayNext,
+    'rememberPosition': rememberPosition,
+    'seekInterval': seekInterval,
+    'orientation': orientation.name,
+    'hideSystemBars': hideSystemBars,
+  };
 }
 
 /// 视频播放位置记录
@@ -154,6 +193,16 @@ class PlaybackSettingsNotifier extends StateNotifier<PlaybackSettings> {
   /// 设置快进快退秒数
   Future<void> setSeekInterval(int seconds) async {
     state = state.copyWith(seekInterval: seconds.clamp(5, 30));
+    await _save();
+  }
+
+  Future<void> setOrientation(PlaybackOrientation orientation) async {
+    state = state.copyWith(orientation: orientation);
+    await _save();
+  }
+
+  Future<void> setHideSystemBars({required bool hidden}) async {
+    state = state.copyWith(hideSystemBars: hidden);
     await _save();
   }
 

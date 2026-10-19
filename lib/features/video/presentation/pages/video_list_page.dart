@@ -1364,8 +1364,8 @@ class VideoListNotifier extends StateNotifier<VideoListState> {
   }
 
   /// 重新加载数据（扫描完成后调用）
-  Future<void> reloadFromCache() async {
-    await _loadCategorizedData();
+  Future<void> reloadFromCache({bool forceSync = false}) async {
+    await _loadCategorizedData(forceSync: forceSync);
   }
 
   void setTab(VideoTab tab) {
@@ -4467,6 +4467,7 @@ class _PosterCardState extends ConsumerState<_PosterCard> {
                           if (hasPoster)
                             VideoPoster(
                               posterUrl: displayPoster,
+                              fallbackUrls: widget.metadata.posterFallbackUrls,
                               sourceId: widget.metadata.sourceId,
                               placeholder: _buildPlaceholder(),
                               errorWidget: _buildPlaceholder(),
@@ -5540,6 +5541,7 @@ class _VerticalPosterCardState extends ConsumerState<_VerticalPosterCard> {
                               ? VideoPoster(
                                   key: ValueKey(_posterUrl),
                                   posterUrl: _posterUrl,
+                                  fallbackUrls: widget.metadata.posterFallbackUrls,
                                   sourceId: widget.metadata.sourceId,
                                   placeholder: _buildPlaceholder(),
                                   errorWidget: _buildPlaceholder(),
@@ -5888,6 +5890,7 @@ class _HorizontalVideoCardState extends ConsumerState<_HorizontalVideoCard> {
                                 ? VideoPoster(
                                     key: ValueKey(_posterUrl),
                                     posterUrl: _posterUrl,
+                                    fallbackUrls: widget.metadata.posterFallbackUrls,
                                     sourceId: widget.metadata.sourceId,
                                     placeholder: _buildPlaceholder(),
                                     errorWidget: _buildPlaceholder(),
@@ -7014,6 +7017,7 @@ class _TvShowPosterCardState extends State<_TvShowPosterCard> {
                               ? VideoPoster(
                                   key: ValueKey(_posterUrl),
                                   posterUrl: _posterUrl,
+                                  fallbackUrls: widget.group.representative.posterFallbackUrls,
                                   sourceId:
                                       widget.group.representative.sourceId,
                                   placeholder: _buildPlaceholder(),
@@ -7728,7 +7732,7 @@ class _MoviesPaginatedPageState extends ConsumerState<_MoviesPaginatedPage>
                   maxCrossAxisExtent: maxExtent,
                   childAspectRatio: aspectRatio,
                   crossAxisSpacing: isMobile ? 10 : 12,
-                  mainAxisSpacing: isMobile ? 12 : 16,
+                  mainAxisSpacing: isMobile ? 20 : 24,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
@@ -8664,7 +8668,7 @@ class _TvShowsPaginatedPageState extends ConsumerState<_TvShowsPaginatedPage>
                   maxCrossAxisExtent: maxExtent,
                   childAspectRatio: aspectRatio,
                   crossAxisSpacing: isMobile ? 10 : 12,
-                  mainAxisSpacing: isMobile ? 12 : 16,
+                  mainAxisSpacing: isMobile ? 20 : 24,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
@@ -8960,7 +8964,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
                           crossAxisCount: crossAxisCount,
                           childAspectRatio: aspectRatio,
                           crossAxisSpacing: spacing,
-                          mainAxisSpacing: spacing,
+                          mainAxisSpacing: spacing + 8,
                         ),
                         itemCount: _videos.length + (_hasMore ? 1 : 0),
                         itemBuilder: (context, index) {
@@ -9054,7 +9058,7 @@ class _OthersPaginatedPageState extends ConsumerState<_OthersPaginatedPage>
                 crossAxisCount: crossAxisCount,
                 childAspectRatio: aspectRatio,
                 crossAxisSpacing: spacing,
-                mainAxisSpacing: spacing,
+                mainAxisSpacing: spacing + 8,
               ),
               itemCount: _videos.length + (_hasMore ? 1 : 0),
               itemBuilder: (context, index) {
@@ -10538,7 +10542,7 @@ class _FilteredVideosPaginatedPageState
             maxCrossAxisExtent: maxExtent,
             childAspectRatio: aspectRatio,
             crossAxisSpacing: isMobile ? 8 : 10,
-            mainAxisSpacing: isMobile ? 10 : 12,
+            mainAxisSpacing: isMobile ? 20 : 24,
           ),
           itemCount: _videos.length + (_hasMore ? 1 : 0),
           itemBuilder: (context, index) {
@@ -10607,7 +10611,7 @@ class _FilteredVideosPaginatedPageState
             maxCrossAxisExtent: maxExtent,
             childAspectRatio: aspectRatio,
             crossAxisSpacing: isMobile ? 8 : 10,
-            mainAxisSpacing: isMobile ? 10 : 12,
+            mainAxisSpacing: isMobile ? 20 : 24,
           ),
           itemCount: _videos.length + (_hasMore ? 1 : 0),
           itemBuilder: (context, index) {

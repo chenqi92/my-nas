@@ -393,7 +393,7 @@ abstract final class GridHelper {
       );
       return GridConfig(
         crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 16,
+        mainAxisSpacing: 24,
         crossAxisSpacing: 16,
         childAspectRatio: 0.67, // 电影海报比例 2:3
         padding: const EdgeInsets.all(16),
@@ -409,7 +409,7 @@ abstract final class GridHelper {
       }
       return GridConfig(
         crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 10,
+        mainAxisSpacing: 20,
         crossAxisSpacing: 10,
         childAspectRatio: 0.67,
         padding: const EdgeInsets.all(10),

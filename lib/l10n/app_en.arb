@@ -13314,5 +13314,16 @@
         "type": "Object"
       }
     }
-  }
+  },
+  "videoChooseVersion": "Choose playback version",
+  "videoChangeCategory": "Change category",
+  "videoOrientation": "Screen orientation",
+  "videoOrientationAuto": "Auto rotate",
+  "videoOrientationVideo": "Match video",
+  "videoOrientationPortrait": "Portrait",
+  "videoOrientationReversePortrait": "Reverse portrait",
+  "videoOrientationLandscape": "Landscape",
+  "videoOrientationReverseLandscape": "Reverse landscape",
+  "videoHideSystemBars": "Hide status and navigation bars",
+  "videoRotateScreen": "Rotate screen"
 }

@@ -272,9 +272,17 @@ class VideoMetadata {
     // 网络 URL 作为备选
     if (posterUrl != null && posterUrl!.isNotEmpty) return posterUrl;
     if (thumbnailUrl != null && thumbnailUrl!.isNotEmpty) return thumbnailUrl;
-    if (generatedThumbnailUrl != null && generatedThumbnailUrl!.isNotEmpty) return generatedThumbnailUrl;
+    if (generatedThumbnailUrl != null && generatedThumbnailUrl!.isNotEmpty) {
+      return generatedThumbnailUrl;
+    }
     return null;
   }
+
+  List<String> get posterFallbackUrls => {
+    posterUrl,
+    thumbnailUrl,
+    generatedThumbnailUrl,
+  }.whereType<String>().where((url) => url.isNotEmpty).toList();
 
   /// 是否有元数据（已成功刮削数据）
   bool get hasMetadata => tmdbId != null || doubanId != null;
@@ -963,7 +971,19 @@ class VideoFileNameParser {
     // 提取剧集信息
     int? season;
     int? episode;
-    final tvMatch = _tvShowPattern.firstMatch(name);
+    final matches = _tvShowPattern.allMatches(name).toList();
+    // RegExp alternation chooses the earliest position, not the strongest format.
+    final tvMatch =
+        matches
+            .where(
+              (match) =>
+                  match.group(1) != null ||
+                  match.group(3) != null ||
+                  match.group(5) != null ||
+                  match.group(7) != null,
+            )
+            .firstOrNull ??
+        matches.firstOrNull;
     if (tvMatch != null) {
       // === 高优先级：带季号的精确格式 ===
       if (tvMatch.group(1) != null && tvMatch.group(2) != null) {

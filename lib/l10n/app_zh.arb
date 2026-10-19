@@ -6718,5 +6718,16 @@
   "scraperCheckingMetadata": "正在检查元数据...",
   "scraperTmdbKeyMissing": "TMDB API Key 未配置",
   "scraperMovieItem": "电影: {title}",
-  "scraperTvItem": "剧集: {title}"
+  "scraperTvItem": "剧集: {title}",
+  "videoChooseVersion": "选择播放版本",
+  "videoChangeCategory": "更改分类",
+  "videoOrientation": "屏幕方向",
+  "videoOrientationAuto": "自由旋转",
+  "videoOrientationVideo": "跟随视频",
+  "videoOrientationPortrait": "竖屏",
+  "videoOrientationReversePortrait": "反向竖屏",
+  "videoOrientationLandscape": "横屏",
+  "videoOrientationReverseLandscape": "反向横屏",
+  "videoHideSystemBars": "隐藏状态栏和导航栏",
+  "videoRotateScreen": "切换横竖屏"
 }

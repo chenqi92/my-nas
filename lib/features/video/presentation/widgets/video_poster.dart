@@ -15,6 +15,7 @@ class VideoPoster extends StatelessWidget {
     required this.posterUrl,
     super.key,
     this.sourceId,
+    this.fallbackUrls = const [],
     this.fileSystem,
     this.fit = BoxFit.cover,
     this.alignment = Alignment.center,
@@ -27,6 +28,7 @@ class VideoPoster extends StatelessWidget {
 
   /// 海报 URL 或路径
   final String? posterUrl;
+  final List<String> fallbackUrls;
 
   /// 源 ID（用于从 Registry 获取 fileSystem）
   final String? sourceId;
@@ -78,46 +80,41 @@ class VideoPoster extends StatelessWidget {
       return _buildPlaceholder(context);
     }
 
-    Widget imageWidget;
+    final urls = {
+      posterUrl!,
+      ...fallbackUrls,
+    }.where((url) => url.isNotEmpty).toList();
     final fs = _effectiveFileSystem;
-
-    if (isNetworkUrl(posterUrl)) {
-      // 网络图片也统一走 AdaptiveImage，以父布局宽度限制解码尺寸。
-      imageWidget = AdaptiveImage(
-        imageUrl: posterUrl!,
+    Widget imageAt(int index) {
+      if (index >= urls.length) return _buildError(context);
+      final url = urls[index];
+      final fallback = Builder(builder: (_) => imageAt(index + 1));
+      if (isNasPath(url) && fs != null) {
+        return StreamImage(
+          key: ValueKey('${sourceId ?? ''}:$url'),
+          cacheKey: '${sourceId ?? identityHashCode(fs)}:$url',
+          path: url,
+          fileSystem: fs,
+          fit: fit,
+          alignment: alignment,
+          width: width,
+          height: height,
+          placeholder: _buildPlaceholder(context),
+          errorWidget: fallback,
+        );
+      }
+      return AdaptiveImage(
+        imageUrl: url,
         fit: fit,
         alignment: alignment,
         width: width,
         height: height,
         placeholder: (_) => _buildPlaceholder(context),
-        errorWidget: (_, _) => _buildError(context),
-      );
-    } else if (isNasPath(posterUrl) && fs != null) {
-      // NAS 路径 - 使用 StreamImage 流式加载
-      imageWidget = StreamImage(
-        key: ValueKey('${sourceId ?? ''}:${posterUrl!}'),
-        path: posterUrl,
-        fileSystem: fs,
-        fit: fit,
-        alignment: alignment,
-        width: width,
-        height: height,
-        placeholder: _buildPlaceholder(context),
-        errorWidget: _buildError(context),
-      );
-    } else {
-      // file://、本机绝对路径，或缺少 NAS fileSystem 时由 AdaptiveImage
-      // 判断是否为可读的本地文件。这样既兼容离线缓存，也不会把路径误当 URL。
-      imageWidget = AdaptiveImage(
-        imageUrl: posterUrl!,
-        fit: fit,
-        alignment: alignment,
-        width: width,
-        height: height,
-        placeholder: (_) => _buildPlaceholder(context),
-        errorWidget: (_, _) => _buildError(context),
+        errorWidget: (_, _) => fallback,
       );
     }
+
+    final imageWidget = imageAt(0);
 
     if (borderRadius != null) {
       return ClipRRect(borderRadius: borderRadius!, child: imageWidget);

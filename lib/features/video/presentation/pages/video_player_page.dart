@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
@@ -20,6 +19,7 @@ import 'package:my_nas/features/sources/presentation/providers/source_provider.d
 import 'package:my_nas/features/transfer/presentation/providers/transfer_provider.dart';
 import 'package:my_nas/features/transfer/presentation/widgets/transfer_sheet.dart';
 import 'package:my_nas/features/video/data/services/subtitle_service.dart';
+import 'package:my_nas/features/video/data/services/video_display_service.dart';
 import 'package:my_nas/features/video/data/services/video_metadata_service.dart';
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
 import 'package:my_nas/features/video/presentation/providers/playback_settings_provider.dart';
@@ -104,6 +104,8 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
 
   // 初始亮度，用于退出时恢复
   double? _initialBrightness;
+
+  String? _appliedDisplayKey;
 
   @override
   void initState() {
@@ -219,7 +221,9 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
       if (connections == null || connections.isEmpty) return;
 
       final connectedEntry = connections.entries.firstWhere(
-        (e) => e.value.status == SourceStatus.connected,
+        (e) =>
+            e.value.status == SourceStatus.connected &&
+            (widget.video.sourceId == null || e.key == widget.video.sourceId),
         orElse: () => throw Exception('No connected source'),
       );
       _sourceId = connectedEntry.key;
@@ -250,6 +254,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
 
     // 如果没有指定 sourceId 或连接不可用，使用第一个已连接的源
     if (connection == null || connection.status != SourceStatus.connected) {
+      if (sourceId != null) return;
       SourceConnection? connectedEntry;
       for (final c in connections.values) {
         if (c.status == SourceStatus.connected) {
@@ -270,7 +275,7 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
       final subtitles = await SubtitleService().getSubtitles(
         sourceId: effectiveSourceId,
         videoPath: widget.video.path,
-        videoName: widget.video.name,
+        videoName: widget.video.path.split('/').last,
         fileSystem: adapter.fileSystem,
       );
 
@@ -298,7 +303,10 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
           final currentTranslated = ref.read(
             currentTranslatedSubtitleIdProvider,
           );
-          if (currentSubtitle == null && currentTranslated == null) {
+          final embedded = ref.read(currentEmbeddedSubtitleIdProvider);
+          if (currentSubtitle == null &&
+              currentTranslated == null &&
+              embedded == null) {
             await _playerNotifier?.setSubtitle(subtitles.first);
             logger.i('VideoPlayerPage: 自动加载字幕 ${subtitles.first.name}');
           } else {
@@ -329,8 +337,10 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
     // 移动设备：恢复初始亮度
     _restoreBrightness();
     // 恢复系统 UI
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setPreferredOrientations([]);
+    AppError.fireAndForget(
+      VideoDisplayService.apply(orientations: [], hideSystemBars: false),
+      action: 'videoPlayer.restoreDisplay',
+    );
     // 恢复导航栏可见性（通过 Provider 引用计数，由 MainScaffold 决定实际状态）
     BottomNavVisibilityNotifier.instance?.show();
     super.dispose();
@@ -559,9 +569,16 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
       ),
     );
 
+    if (playerNotifier.rendersBitmapSubtitles) {
+      return mode.ratio == null
+          ? video
+          : AspectRatio(aspectRatio: mode.ratio!, child: video);
+    }
+
     // 构建自定义字幕覆盖层
     final subtitleOverlay = StreamBuilder<List<String>>(
       stream: controller.player.stream.subtitle,
+      initialData: controller.player.state.subtitle,
       builder: (context, snapshot) {
         final subtitleLines = snapshot.data ?? [];
         if (subtitleLines.isEmpty ||
@@ -666,17 +683,31 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
     final playerNotifier = ref.read(videoPlayerControllerProvider.notifier);
     final isFullscreen = playerState.isFullscreen;
 
-    // 全屏模式下隐藏系统 UI 并强制横屏
-    if (isFullscreen) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      // 非全屏时允许所有方向，默认竖屏显示
-      SystemChrome.setPreferredOrientations([]);
+    final settings = ref.watch(playbackSettingsProvider);
+    final width = playerNotifier.player.state.width;
+    final height = playerNotifier.player.state.height;
+    final aspectRatio = playerNotifier.isUsingNativePlayer
+        ? playerNotifier.nativeBackend?.aspectRatio
+        : width != null && height != null && height > 0
+        ? width / height
+        : null;
+    final hidden = settings.hideSystemBars || isFullscreen;
+    final displayKey =
+        '${settings.orientation.name}:$hidden:${aspectRatio == null ? 'unknown' : aspectRatio < 1}';
+    if (_appliedDisplayKey != displayKey) {
+      _appliedDisplayKey = displayKey;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _appliedDisplayKey != displayKey) return;
+        AppError.fireAndForget(
+          VideoDisplayService.apply(
+            orientations: settings.orientation.orientations(
+              aspectRatio: aspectRatio,
+            ),
+            hideSystemBars: hidden,
+          ),
+          action: 'videoPlayer.updateDisplay',
+        );
+      });
     }
 
     return PopScope(
@@ -849,6 +880,18 @@ class _VideoPlayerPageState extends ConsumerState<VideoPlayerPage>
                               _startHideControlsTimer();
                             },
                             onToggleFullscreen: playerNotifier.toggleFullscreen,
+                            onRotateScreen:
+                                (Platform.isAndroid || Platform.isIOS) &&
+                                    !TvCapabilities.isTvMode
+                                ? () => ref
+                                      .read(playbackSettingsProvider.notifier)
+                                      .setOrientation(
+                                        MediaQuery.orientationOf(context) ==
+                                                Orientation.portrait
+                                            ? PlaybackOrientation.landscape
+                                            : PlaybackOrientation.portrait,
+                                      )
+                                : null,
                             onBack: _handleBack,
                             onPlayPrevious: () {
                               playerNotifier.playPrevious();

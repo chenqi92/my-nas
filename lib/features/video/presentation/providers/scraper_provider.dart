@@ -459,7 +459,7 @@ class BackgroundScrapingNotifier extends StateNotifier<Map<String, ScrapingTaskS
     required String showDirectory,
     required ScraperTvDetail tvDetail,
     required Set<int> selectedSeasons,
-    required Map<int, Map<int, VideoMetadata>> localEpisodes,
+    required Map<int, Map<int, List<VideoMetadata>>> localEpisodes,
     required Map<int, ScraperSeasonDetail> seasonDetails,
     NasFileSystem? fileSystem,
     ScrapeOptions options = const ScrapeOptions(),
@@ -473,7 +473,7 @@ class BackgroundScrapingNotifier extends StateNotifier<Map<String, ScrapingTaskS
     // 计算总数
     var totalEpisodes = 0;
     for (final season in selectedSeasons) {
-      totalEpisodes += localEpisodes[season]?.length ?? 0;
+      totalEpisodes += localEpisodes[season]?.values.fold<int>(0, (sum, files) => sum + files.length) ?? 0;
     }
 
     if (totalEpisodes == 0) {
@@ -524,7 +524,7 @@ class BackgroundScrapingNotifier extends StateNotifier<Map<String, ScrapingTaskS
     required String showDirectory,
     required ScraperTvDetail tvDetail,
     required Set<int> selectedSeasons,
-    required Map<int, Map<int, VideoMetadata>> localEpisodes,
+    required Map<int, Map<int, List<VideoMetadata>>> localEpisodes,
     required Map<int, ScraperSeasonDetail> seasonDetails,
     NasFileSystem? fileSystem,
     ScrapeOptions options = const ScrapeOptions(),
@@ -553,44 +553,44 @@ class BackgroundScrapingNotifier extends StateNotifier<Map<String, ScrapingTaskS
 
         for (final entry in localSeasonEpisodes.entries) {
           final episodeNumber = entry.key;
-          final metadata = entry.value;
+          for (final metadata in entry.value) {
+            // 获取对应的刮削剧集
+            final scraperEpisode = seasonDetail?.getEpisode(episodeNumber);
 
-          // 获取对应的刮削剧集
-          final scraperEpisode = seasonDetail?.getEpisode(episodeNumber);
-
-          // 更新当前剧集
-          _updateTaskState(
-            showDirectory,
-            (task) => task.copyWith(
-              currentEpisode: '${metadata.displayTitle} (S${seasonNumber}E$episodeNumber)',
-            ),
-          );
-
-          try {
-            await _metadataService.scrapeAndSave(
-              metadata: metadata,
-              tvDetail: tvDetail,
-              seasonNumber: seasonNumber,
-              episodeNumber: episodeNumber,
-              episodeTitle: scraperEpisode?.name,
-              fileSystem: fileSystem,
-              options: options,
+            // 更新当前剧集
+            _updateTaskState(
+              showDirectory,
+              (task) => task.copyWith(
+                currentEpisode: '${metadata.displayTitle} (S${seasonNumber}E$episodeNumber)',
+              ),
             );
-            successCount++;
-          } on Exception catch (e, st) {
-            AppError.handle(e, st, 'BackgroundScrapingNotifier._runScrapingTask');
-            failCount++;
-          }
 
-          progress++;
-          _updateTaskState(
-            showDirectory,
-            (task) => task.copyWith(
-              progress: progress,
-              successCount: successCount,
-              failCount: failCount,
-            ),
-          );
+            try {
+              await _metadataService.scrapeAndSave(
+                metadata: metadata,
+                tvDetail: tvDetail,
+                seasonNumber: seasonNumber,
+                episodeNumber: episodeNumber,
+                episodeTitle: scraperEpisode?.name,
+                fileSystem: fileSystem,
+                options: options,
+              );
+              successCount++;
+            } on Exception catch (e, st) {
+              AppError.handle(e, st, 'BackgroundScrapingNotifier._runScrapingTask');
+              failCount++;
+            }
+
+            progress++;
+            _updateTaskState(
+              showDirectory,
+              (task) => task.copyWith(
+                progress: progress,
+                successCount: successCount,
+                failCount: failCount,
+              ),
+            );
+          }
         }
       }
 

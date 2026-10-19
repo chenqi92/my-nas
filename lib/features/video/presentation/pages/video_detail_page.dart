@@ -17,10 +17,13 @@ import 'package:my_nas/features/video/data/services/video_database_service.dart'
 import 'package:my_nas/features/video/data/services/video_favorites_service.dart';
 import 'package:my_nas/features/video/domain/entities/video_item.dart';
 import 'package:my_nas/features/video/domain/entities/video_metadata.dart';
+import 'package:my_nas/features/video/domain/utils/episode_catalog.dart';
 import 'package:my_nas/features/video/domain/utils/video_localization.dart';
 import 'package:my_nas/features/video/presentation/pages/manual_scraper_page.dart';
 import 'package:my_nas/features/video/presentation/pages/season_scraper_page.dart';
 import 'package:my_nas/features/video/presentation/pages/tmdb_preview_page.dart';
+import 'package:my_nas/features/video/presentation/pages/video_list_page.dart'
+    show videoListProvider;
 import 'package:my_nas/features/video/presentation/pages/video_player_page.dart';
 import 'package:my_nas/features/video/presentation/providers/playlist_provider.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart'
@@ -189,12 +192,14 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
       imdbRating: _selectedMetadata.imdbRating,
       traktRating: _selectedMetadata.traktRating,
       voteCount: extras.voteCount,
-      sourceId: widget.sourceId,
-      hideEpisodeInfo: _isTvShow && (_hasMetadata || _selectedMetadata.showDirectory != null),
+      sourceId: _selectedMetadata.sourceId,
+      hideEpisodeInfo:
+          _isTvShow &&
+          (_hasMetadata || _selectedMetadata.showDirectory != null),
       qualitySelector: _isTvShow ? null : _buildQualitySelector(isDark),
     );
 
-    final backdropUrl = extras.backdropUrl ?? widget.metadata.backdropUrl;
+    final backdropUrl = extras.backdropUrl ?? _selectedMetadata.backdropUrl;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -206,6 +211,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          _buildCategoryMenu(),
           _buildPtSearchAction(context),
           if (scrapingTask != null) ...[
             Padding(
@@ -258,11 +264,13 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
     String? overview;
     double? tmdbRating;
     int? voteCount;
-    var backdropUrl = widget.metadata.backdropUrl;
+    var backdropUrl = _selectedMetadata.backdropUrl;
 
     if (_hasTmdbId) {
       if (_isTvShow) {
-        ref.watch(tvDetailProvider(widget.metadata.tmdbId!)).whenData((detail) {
+        ref.watch(tvDetailProvider(_selectedMetadata.tmdbId!)).whenData((
+          detail,
+        ) {
           if (detail != null) {
             tagline = detail.tagline;
             overview = detail.overview;
@@ -272,7 +280,9 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
           }
         });
       } else {
-        ref.watch(movieDetailProvider(widget.metadata.tmdbId!)).whenData((detail) {
+        ref.watch(movieDetailProvider(_selectedMetadata.tmdbId!)).whenData((
+          detail,
+        ) {
           if (detail != null) {
             tagline = detail.tagline;
             overview = detail.overview;
@@ -284,7 +294,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
       }
     }
 
-    overview ??= widget.metadata.overview;
+    overview ??= _selectedMetadata.overview;
     if (overview == null || overview!.isEmpty) {
       final overviewGetter = ref.watch(videoOverviewGetterProvider);
       overview = overviewGetter(_selectedMetadata);
@@ -552,36 +562,36 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
     String? overview;
     double? tmdbRating;
     int? voteCount;
-    var backdropUrl = widget.metadata.backdropUrl;
+    var backdropUrl = _selectedMetadata.backdropUrl;
 
     if (_hasTmdbId) {
       if (_isTvShow) {
-        final _ = ref.watch(tvDetailProvider(widget.metadata.tmdbId!))
-        ..whenData((detail) {
-          if (detail != null) {
-            tagline = detail.tagline;
-            overview = detail.overview;
-            tmdbRating = detail.voteAverage;
-            voteCount = detail.voteCount;
-            backdropUrl ??= detail.backdropUrl;
-          }
-        });
+        final _ = ref.watch(tvDetailProvider(_selectedMetadata.tmdbId!))
+          ..whenData((detail) {
+            if (detail != null) {
+              tagline = detail.tagline;
+              overview = detail.overview;
+              tmdbRating = detail.voteAverage;
+              voteCount = detail.voteCount;
+              backdropUrl ??= detail.backdropUrl;
+            }
+          });
       } else {
-        final _ = ref.watch(movieDetailProvider(widget.metadata.tmdbId!))
-        ..whenData((detail) {
-          if (detail != null) {
-            tagline = detail.tagline;
-            overview = detail.overview;
-            tmdbRating = detail.voteAverage;
-            voteCount = detail.voteCount;
-            backdropUrl ??= detail.backdropUrl;
-          }
-        });
+        final _ = ref.watch(movieDetailProvider(_selectedMetadata.tmdbId!))
+          ..whenData((detail) {
+            if (detail != null) {
+              tagline = detail.tagline;
+              overview = detail.overview;
+              tmdbRating = detail.voteAverage;
+              voteCount = detail.voteCount;
+              backdropUrl ??= detail.backdropUrl;
+            }
+          });
       }
     }
 
     // 使用 metadata 的简介作为后备
-    overview ??= widget.metadata.overview;
+    overview ??= _selectedMetadata.overview;
 
     // 获取本地化标题
     final titleGetter = ref.watch(videoTitleGetterProvider);
@@ -626,10 +636,12 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
       imdbRating: _selectedMetadata.imdbRating,
       traktRating: _selectedMetadata.traktRating,
       voteCount: voteCount,
-      sourceId: widget.sourceId,
+      sourceId: _selectedMetadata.sourceId,
       // 电视剧详情页隐藏季集信息，因为这是剧的总览页，不是单集页
       // 只要有刮削数据（TMDB 或豆瓣）或 showDirectory，都隐藏单集标签
-      hideEpisodeInfo: _isTvShow && (_hasMetadata || _selectedMetadata.showDirectory != null),
+      hideEpisodeInfo:
+          _isTvShow &&
+          (_hasMetadata || _selectedMetadata.showDirectory != null),
       scrapingTask: scrapingTask,
       onScrapingDismiss: scrapingTask != null && showDirectory != null
           ? () => _onScrapingDismiss(showDirectory!, scrapingTask)
@@ -669,6 +681,10 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildCategoryMenu(),
+          ),
           // 剧集选择器 (电视剧) - 使用统一选择器
           if (_isTvShow) ...[
             _buildUnifiedEpisodeSection(),
@@ -733,29 +749,16 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
 
       final localEpisodes = localEpisodesAsync.valueOrNull ?? {};
 
-      return tvDetailAsync.when(
-        loading: () => const SizedBox(
-          height: 200,
-          child: Center(child: CircularProgressIndicator()),
-        ),
-        error: (_, _) => UnifiedEpisodeSelector(
-          localEpisodes: localEpisodes,
-          initialSeason: _selectedMetadata.seasonNumber,
-          episodeProgress: episodeProgress,
-          onEpisodePlay: _playUnifiedEpisode,
-          showName: _selectedMetadata.title,
-          year: _selectedMetadata.year?.toString(),
-        ),
-        data: (tvDetail) => UnifiedEpisodeSelector(
-          tmdbId: tmdbId,
-          tmdbSeasons: tvDetail?.seasons,
-          localEpisodes: localEpisodes,
-          initialSeason: _selectedMetadata.seasonNumber,
-          episodeProgress: episodeProgress,
-          onEpisodePlay: _playUnifiedEpisode,
-          showName: tvDetail?.name ?? _selectedMetadata.title,
-          year: tvDetail?.year?.toString() ?? _selectedMetadata.year?.toString(),
-        ),
+      final tvDetail = tvDetailAsync.valueOrNull;
+      return UnifiedEpisodeSelector(
+        tmdbId: tmdbId,
+        tmdbSeasons: tvDetail?.seasons,
+        localEpisodes: localEpisodes,
+        initialSeason: _selectedMetadata.seasonNumber,
+        episodeProgress: episodeProgress,
+        onEpisodePlay: _playUnifiedEpisode,
+        showName: tvDetail?.name ?? _selectedMetadata.title,
+        year: tvDetail?.year?.toString() ?? _selectedMetadata.year?.toString(),
       );
     } else {
       // 无 TMDB ID：使用 showDirectory 获取本地剧集
@@ -789,30 +792,40 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
   }
 
   /// 统一的剧集播放方法
-  Future<void> _playUnifiedEpisode(VideoMetadata localFile, {TmdbEpisode? tmdbEpisode}) async {
+  Future<void> _playUnifiedEpisode(
+    VideoMetadata localFile, {
+    TmdbEpisode? tmdbEpisode,
+  }) async {
+    if (_isPlaying) return;
     setState(() => _isPlaying = true);
 
     try {
-      final videoInfo = await _getVideoInfo(localFile.filePath);
+      final versions = await ref
+          .read(videoMetadataServiceProvider)
+          .getEpisodeVersions(localFile, tmdbId: _selectedMetadata.tmdbId);
+      if (!mounted) return;
+      final selected = await _chooseEpisodeVersion(versions, localFile);
+      if (selected == null || !mounted) return;
+      final videoInfo = await _getVideoInfo(selected);
       if (videoInfo == null) return;
 
       if (!mounted) return;
 
       // 优先使用 TMDB 剧集名，其次使用本地元数据
-      final episodeName = tmdbEpisode?.name ?? localFile.episodeTitle ?? localFile.displayTitle;
+      final episodeName =
+          tmdbEpisode?.name ?? selected.episodeTitle ?? selected.displayTitle;
 
       final videoItem = VideoItem(
         name: episodeName,
-        path: localFile.filePath,
+        path: selected.filePath,
         url: videoInfo.url,
-        sourceId: widget.sourceId,
+        sourceId: selected.sourceId,
         size: videoInfo.size,
-        thumbnailUrl: tmdbEpisode?.stillUrl ?? localFile.displayPosterUrl,
+        thumbnailUrl: tmdbEpisode?.stillUrl ?? selected.displayPosterUrl,
       );
 
-      // 构建当前季的剧集播放列表（不阻塞导航）
-      final seasonNumber = localFile.seasonNumber ?? 1;
-      _buildEpisodePlaylist(seasonNumber, localFile.episodeNumber ?? 1);
+      await _buildEpisodePlaylist(selected);
+      if (!mounted) return;
 
       await Navigator.of(context, rootNavigator: true).push(
         MaterialPageRoute<void>(
@@ -830,67 +843,118 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
     }
   }
 
-  /// 构建当前季的播放列表（同步方法，不阻塞播放）
-  void _buildEpisodePlaylist(int seasonNumber, int currentEpisodeNumber) {
-    // 获取本地剧集数据
-    var localEpisodes = <int, Map<int, VideoMetadata>>{};
+  Future<VideoMetadata?> _chooseEpisodeVersion(
+    List<VideoMetadata> versions,
+    VideoMetadata current,
+  ) async {
+    if (versions.length <= 1) return versions.firstOrNull ?? current;
+    final connections = ref.read(activeConnectionsProvider);
+    return showDialog<VideoMetadata>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(context.l10n.videoChooseVersion),
+        children: _sortByResolution(versions)
+            .map(
+              (version) => SimpleDialogOption(
+                onPressed: () => Navigator.pop(context, version),
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    '${version.resolution ?? context.l10n.videoResolutionOriginal} · '
+                    '${connections[version.sourceId]?.source.name ?? version.sourceId}',
+                  ),
+                  subtitle: Text(
+                    '${version.fileName}\n${version.fileSizeText}',
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
 
-    if (_hasTmdbId) {
-      final data = ref.read(localEpisodeFilesProvider(_selectedMetadata.tmdbId!));
-      localEpisodes = data.valueOrNull ?? {};
-    } else {
-      var showDirectory = _selectedMetadata.showDirectory;
-      if (showDirectory == null || showDirectory.isEmpty) {
-        showDirectory = VideoDatabaseService.extractShowDirectory(_selectedMetadata.filePath);
-      }
-      if (showDirectory != null && showDirectory.isNotEmpty) {
-        final data = ref.read(localEpisodesByShowDirProvider(showDirectory));
-        localEpisodes = data.valueOrNull ?? {};
-      }
-    }
-
-    // 获取当前季的剧集
-    final seasonEpisodes = localEpisodes[seasonNumber] ?? {};
-    if (seasonEpisodes.isEmpty) {
-      logger.d('VideoDetailPage: 无法构建播放列表，当前季无剧集');
-      return;
-    }
-
-    // 按集号排序并构建 VideoItem 列表
-    final episodeNumbers = seasonEpisodes.keys.toList()..sort();
-    final playlistItems = <VideoItem>[];
-    var startIndex = 0;
-
-    for (var i = 0; i < episodeNumbers.length; i++) {
-      final epNum = episodeNumbers[i];
-      final episode = seasonEpisodes[epNum]!;
-
-      // 使用空 URL 构建 VideoItem（播放时会自动解析）
-      playlistItems.add(VideoItem(
+  Future<void> _buildEpisodePlaylist(VideoMetadata selected) async {
+    final files = await ref
+        .read(videoMetadataServiceProvider)
+        .getShowFiles(
+          tmdbId: selected.tmdbId ?? _selectedMetadata.tmdbId,
+          showDirectory:
+              selected.showDirectory ??
+              VideoDatabaseService.extractShowDirectory(selected.filePath),
+        );
+    if (!mounted) return;
+    final episodes =
+        episodeRepresentatives(
+          files,
+          preferredSourceId: selected.sourceId,
+        )[selected.seasonNumber ?? 1] ??
+        {};
+    episodes[selected.episodeNumber ?? 1] = selected;
+    final numbers = episodes.keys.toList()..sort();
+    final items = numbers.map((number) {
+      final episode = episodes[number]!;
+      return VideoItem(
         name: episode.episodeTitle ?? episode.displayTitle,
         path: episode.filePath,
-        // URL 留空，播放时会自动获取
-        sourceId: widget.sourceId,
+        sourceId: episode.sourceId,
         size: episode.fileSize ?? 0,
         thumbnailUrl: episode.displayPosterUrl,
-      ));
+      );
+    }).toList();
+    ref
+        .read(playlistProvider.notifier)
+        .setPlaylist(
+          items,
+          startIndex: numbers.indexOf(selected.episodeNumber ?? 1),
+        );
+  }
 
-      // 记录当前播放集的索引
-      if (epNum == currentEpisodeNumber) {
-        startIndex = i;
-      }
-    }
+  Widget _buildCategoryMenu() => PopupMenuButton<MediaCategory>(
+    tooltip: context.l10n.videoChangeCategory,
+    onSelected: _changeCategory,
+    itemBuilder: (_) => MediaCategory.values
+        .map(
+          (category) => PopupMenuItem(
+            value: category,
+            child: Text(switch (category) {
+              MediaCategory.movie => context.l10n.videoPageTabMovies,
+              MediaCategory.tvShow => context.l10n.videoPageTabTvShows,
+              MediaCategory.unknown => context.l10n.videoPageTabOther,
+            }),
+          ),
+        )
+        .toList(),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.category_outlined, size: 20),
+          const SizedBox(width: 8),
+          Text(context.l10n.videoChangeCategory),
+          const Icon(Icons.arrow_drop_down),
+        ],
+      ),
+    ),
+  );
 
-    // 设置播放列表
-    if (playlistItems.isNotEmpty) {
-      ref.read(playlistProvider.notifier).setPlaylist(playlistItems, startIndex: startIndex);
-      logger.i('VideoDetailPage: 播放列表已设置，共 ${playlistItems.length} 集，从第 ${startIndex + 1} 集开始');
-    }
+  Future<void> _changeCategory(MediaCategory category) async {
+    if (category == _selectedMetadata.category) return;
+    final updated = await ref
+        .read(videoMetadataServiceProvider)
+        .changeCategory(_selectedMetadata, category);
+    if (!mounted) return;
+    setState(() => _selectedMetadata = updated);
+    ref.invalidate(videoStatsProvider);
+    await ref.read(videoListProvider.notifier).reloadFromCache(forceSync: true);
   }
 
   Widget _buildCastSection() {
     if (_isTvShow) {
-      final tvDetailAsync = ref.watch(tvDetailProvider(widget.metadata.tmdbId!));
+      final tvDetailAsync = ref.watch(
+        tvDetailProvider(_selectedMetadata.tmdbId!),
+      );
       return tvDetailAsync.when(
         loading: () => const SizedBox.shrink(),
         error: (_, _) => const SizedBox.shrink(),
@@ -905,7 +969,9 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         },
       );
     } else {
-      final movieDetailAsync = ref.watch(movieDetailProvider(widget.metadata.tmdbId!));
+      final movieDetailAsync = ref.watch(
+        movieDetailProvider(_selectedMetadata.tmdbId!),
+      );
       return movieDetailAsync.when(
         loading: () => const SizedBox.shrink(),
         error: (_, _) => const SizedBox.shrink(),
@@ -1005,7 +1071,9 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
 
   /// 电影系列/合集区域
   Widget _buildMovieCollectionSection(bool isDark) {
-    final movieDetailAsync = ref.watch(movieDetailProvider(widget.metadata.tmdbId!));
+    final movieDetailAsync = ref.watch(
+      movieDetailProvider(_selectedMetadata.tmdbId!),
+    );
 
     return movieDetailAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -1082,7 +1150,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                       TextButton.icon(
                         onPressed: () => _openMovieCollectionPage(
                           collection,
-                          widget.metadata.tmdbId!,
+                          _selectedMetadata.tmdbId!,
                           isDark,
                         ),
                         icon: Icon(
@@ -1109,7 +1177,8 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                       separatorBuilder: (_, _) => const SizedBox(width: 12),
                       itemBuilder: (context, index) {
                         final part = sortedParts[index];
-                        final isCurrentMovie = part.id == widget.metadata.tmdbId;
+                        final isCurrentMovie =
+                            part.id == _selectedMetadata.tmdbId;
 
                         return _buildCollectionMovieCard(
                           part,
@@ -1305,7 +1374,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         builder: (context) => MovieCollectionListPage(
           collection: collection,
           currentMovieId: currentMovieId,
-          sourceId: widget.sourceId,
+          sourceId: _selectedMetadata.sourceId,
         ),
       ),
     );
@@ -1343,10 +1412,10 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
     );
 
   Widget _buildRecommendationsSection() => CombinedRecommendationsSection(
-      tmdbId: widget.metadata.tmdbId!,
-      isMovie: !_isTvShow,
-      onItemTap: _onRecommendationTap,
-    );
+    tmdbId: _selectedMetadata.tmdbId!,
+    isMovie: !_isTvShow,
+    onItemTap: _onRecommendationTap,
+  );
 
   Widget _buildFileInfoSection(bool isDark) {
     // 电视剧：显示剧集统计信息
@@ -1403,11 +1472,27 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
             ],
           ),
           const SizedBox(height: 12),
-          _buildInfoRow(context.l10n.videoFileName, _selectedMetadata.fileName, isDark),
-          _buildInfoRow(context.l10n.videoFilePath, _selectedMetadata.filePath, isDark),
-          _buildInfoRow(context.l10n.videoSource, widget.sourceId, isDark),
+          _buildInfoRow(
+            context.l10n.videoFileName,
+            _selectedMetadata.fileName,
+            isDark,
+          ),
+          _buildInfoRow(
+            context.l10n.videoFilePath,
+            _selectedMetadata.filePath,
+            isDark,
+          ),
+          _buildInfoRow(
+            context.l10n.videoSource,
+            _selectedMetadata.sourceId,
+            isDark,
+          ),
           if (_selectedMetadata.resolution != null)
-            _buildInfoRow(context.l10n.videoResolution, _selectedMetadata.resolution!, isDark),
+            _buildInfoRow(
+              context.l10n.videoResolution,
+              _selectedMetadata.resolution!,
+              isDark,
+            ),
           if (_selectedMetadata.fileSizeText.isNotEmpty)
             _buildInfoRow(context.l10n.videoFileSize, _selectedMetadata.fileSizeText, isDark),
         ],
@@ -1486,10 +1571,22 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                           : context.l10n.videoSeasonRangeLabel(seasonNumbers.length, seasonNumbers.first, seasonNumbers.last),
                       isDark,
                     ),
-                  _buildInfoRow(context.l10n.videoTotalSize, totalSizeText, isDark),
+                  _buildInfoRow(
+                    context.l10n.videoTotalSize,
+                    totalSizeText,
+                    isDark,
+                  ),
                   if (showDirectory.isNotEmpty)
-                    _buildInfoRow(context.l10n.videoDirectory, showDirectory, isDark),
-                  _buildInfoRow(context.l10n.videoSource, widget.sourceId, isDark),
+                    _buildInfoRow(
+                      context.l10n.videoDirectory,
+                      showDirectory,
+                      isDark,
+                    ),
+                  _buildInfoRow(
+                    context.l10n.videoSource,
+                    _selectedMetadata.sourceId,
+                    isDark,
+                  ),
                 ],
               );
             },
@@ -1582,9 +1679,17 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
                           : context.l10n.videoSeasonRangeLabel(seasonNumbers.length, seasonNumbers.first, seasonNumbers.last),
                       isDark,
                     ),
-                  _buildInfoRow(context.l10n.videoTotalSize, totalSizeText, isDark),
+                  _buildInfoRow(
+                    context.l10n.videoTotalSize,
+                    totalSizeText,
+                    isDark,
+                  ),
                   _buildInfoRow(appL10n.videoDirectory, showDirectory!, isDark),
-                  _buildInfoRow(context.l10n.videoSource, widget.sourceId, isDark),
+                  _buildInfoRow(
+                    context.l10n.videoSource,
+                    _selectedMetadata.sourceId,
+                    isDark,
+                  ),
                 ],
               );
             },
@@ -1724,7 +1829,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
             ),
           ),
           itemBuilder: (context) => sortedVariants.map((v) {
-            final isSelected = v.filePath == _selectedMetadata.filePath;
+            final isSelected = v.uniqueKey == _selectedMetadata.uniqueKey;
             return PopupMenuItem<VideoMetadata>(
               value: v,
               child: Row(
@@ -1795,14 +1900,14 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
   }
 
   Future<void> _toggleWatched() async {
-    await toggleWatchedStatus(ref, widget.metadata.filePath);
+    await toggleWatchedStatus(ref, _selectedMetadata.filePath);
   }
 
   /// 打开刮削页面
   /// 电视剧使用整剧刮削页面，电影使用单个刮削页面
   Future<void> _openManualScraper() async {
     final connections = ref.read(activeConnectionsProvider);
-    final connection = connections[widget.sourceId];
+    final connection = connections[_selectedMetadata.sourceId];
     final fileSystem = connection?.status == SourceStatus.connected
         ? connection!.adapter.fileSystem
         : null;
@@ -1822,7 +1927,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         MaterialPageRoute(
           builder: (_) => SeasonScraperPage(
             showDirectory: showDirectory!,
-            sourceId: widget.sourceId,
+            sourceId: _selectedMetadata.sourceId,
             tmdbId: _selectedMetadata.tmdbId,
             fileSystem: fileSystem,
             initialSeasonNumber: _selectedMetadata.seasonNumber,
@@ -1847,7 +1952,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
       final metadataService = ref.read(videoMetadataServiceProvider);
       await metadataService.init();
       final updatedMetadata = await metadataService.getCachedAsync(
-        widget.sourceId,
+        _selectedMetadata.sourceId,
         _selectedMetadata.filePath,
       );
       if (updatedMetadata != null && mounted) {
@@ -1882,10 +1987,15 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
   }
 
   Future<void> _playVideo() async {
+    if (_isTvShow) {
+      await _playUnifiedEpisode(_selectedMetadata);
+      return;
+    }
+    if (_isPlaying) return;
     setState(() => _isPlaying = true);
 
     try {
-      final videoInfo = await _getVideoInfo(widget.metadata.filePath);
+      final videoInfo = await _getVideoInfo(_selectedMetadata);
       if (videoInfo == null) return;
 
       if (!mounted) return;
@@ -1894,7 +2004,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
         name: _selectedMetadata.displayTitle,
         path: _selectedMetadata.filePath,
         url: videoInfo.url,
-        sourceId: widget.sourceId,
+        sourceId: _selectedMetadata.sourceId,
         size: videoInfo.size,
         thumbnailUrl: _selectedMetadata.displayPosterUrl,
       );
@@ -1916,9 +2026,10 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage>
   }
 
   /// 获取视频信息（URL 和文件大小）
-  Future<_VideoPlayInfo?> _getVideoInfo(String filePath) async {
+  Future<_VideoPlayInfo?> _getVideoInfo(VideoMetadata metadata) async {
+    final filePath = metadata.filePath;
     final connections = ref.read(activeConnectionsProvider);
-    final connection = connections[widget.sourceId];
+    final connection = connections[metadata.sourceId];
 
     if (connection == null || connection.status != SourceStatus.connected) {
       if (mounted) {

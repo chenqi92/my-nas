@@ -21,6 +21,7 @@ import 'package:my_nas/features/video/data/services/pip_service.dart';
 import 'package:my_nas/features/video/data/services/player/dolby_vision_detector.dart';
 import 'package:my_nas/features/video/data/services/player/native_av_player_backend.dart';
 import 'package:my_nas/features/video/data/services/player/video_player_backend.dart';
+import 'package:my_nas/features/video/data/services/subtitle_file_loader.dart';
 import 'package:my_nas/features/video/data/services/subtitle_service.dart';
 import 'package:my_nas/features/video/data/services/subtitle_translation/subtitle_translation_service.dart';
 import 'package:my_nas/features/video/data/services/trakt_scrobble_service.dart';
@@ -198,6 +199,17 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   /// 是否已经自动选择过音轨（每个视频只选择一次）
   bool _hasAutoSelectedAudioTrack = false;
+  int _subtitleSelectionRevision = 0;
+  bool _rendersBitmapSubtitles = false;
+  bool get rendersBitmapSubtitles => _rendersBitmapSubtitles;
+
+  Future<void> _setBitmapSubtitleRendering(bool enabled) async {
+    final platform = _player.platform;
+    if (platform is NativePlayer) {
+      await platform.setProperty('sub-visibility', enabled ? 'yes' : 'no');
+    }
+    _rendersBitmapSubtitles = enabled;
+  }
 
   Timer? _progressSaveTimer;
   VideoItem? _currentVideo;
@@ -675,6 +687,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     _hasAutoSelectedAudioTrack = false;
 
     // 重置字幕状态（新视频需要重新加载字幕）
+    _subtitleSelectionRevision++;
+    await _setBitmapSubtitleRendering(false);
+    _ref.read(currentEmbeddedSubtitleIdProvider.notifier).state = null;
     _ref.read(currentSubtitleProvider.notifier).state = null;
     _ref.read(availableSubtitlesProvider.notifier).state = [];
 
@@ -1546,7 +1561,11 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   /// 设置字幕
   Future<void> setSubtitle(SubtitleItem? subtitle) async {
+    final revision = ++_subtitleSelectionRevision;
     _ref.read(currentSubtitleProvider.notifier).state = subtitle;
+    _ref.read(currentEmbeddedSubtitleIdProvider.notifier).state =
+        subtitle == null ? 'no' : null;
+    state = state.copyWith(subtitleEnabled: subtitle != null);
     // 切换到普通字幕时，结束正在进行的翻译会话
     SubtitleTranslationService.instance.cancelActive();
     _ref.read(currentTranslatedSubtitleIdProvider.notifier).state = null;
@@ -1567,14 +1586,27 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     } else {
       // 加载外部字幕
       try {
-        if (isUsingNativePlayer && _nativeBackend != null) {
-          await _nativeBackend!.loadExternalSubtitle(
-            subtitle.url,
-            title: subtitle.name,
+        var url = subtitle.url;
+        final sourceId = _currentVideo?.sourceId;
+        final connection = _ref.read(activeConnectionsProvider)[sourceId];
+        if (sourceId != null && connection?.status == SourceStatus.connected) {
+          url = await loadSubtitleFile(
+            subtitle,
+            sourceId: sourceId,
+            fileSystem: connection!.adapter.fileSystem,
           );
+        }
+        if (_isDisposed || revision != _subtitleSelectionRevision) return;
+        await _setBitmapSubtitleRendering(
+          subtitle.format.toLowerCase().replaceAll('.', '') == 'sup',
+        );
+        if (_isDisposed || revision != _subtitleSelectionRevision) return;
+        state = state.copyWith(subtitleEnabled: true);
+        if (isUsingNativePlayer && _nativeBackend != null) {
+          await _nativeBackend!.loadExternalSubtitle(url, title: subtitle.name);
         } else {
           await _player.setSubtitleTrack(
-            SubtitleTrack.uri(subtitle.url, title: subtitle.name),
+            SubtitleTrack.uri(url, title: subtitle.name),
           );
         }
         logger.i('VideoPlayerNotifier: 加载字幕 ${subtitle.name}');
@@ -1592,7 +1624,9 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
     String data, {
     required String title,
   }) async {
+    _subtitleSelectionRevision++;
     try {
+      await _setBitmapSubtitleRendering(false);
       if (isUsingNativePlayer && _nativeBackend != null) {
         // 原生 AVPlayer 不支持内联字幕数据，写入临时文件后按外部字幕加载。
         // 失败时降级为不显示翻译字幕，不影响视频播放。
@@ -1667,6 +1701,11 @@ class VideoPlayerNotifier extends StateNotifier<VideoPlayerState> {
 
   /// 设置内嵌字幕轨道
   Future<void> setEmbeddedSubtitleTrack(SubtitleTrack track) async {
+    _subtitleSelectionRevision++;
+    _ref.read(currentSubtitleProvider.notifier).state = null;
+    _ref.read(currentEmbeddedSubtitleIdProvider.notifier).state = track.id;
+    await _setBitmapSubtitleRendering(isBitmapSubtitleCodec(track.codec));
+    state = state.copyWith(subtitleEnabled: track.id != 'no');
     SubtitleTranslationService.instance.cancelActive();
     _ref.read(currentTranslatedSubtitleIdProvider.notifier).state = null;
     _ref.read(subtitleTranslationProgressProvider.notifier).state = null;
