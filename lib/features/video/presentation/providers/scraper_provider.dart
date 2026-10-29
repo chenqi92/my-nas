@@ -54,8 +54,21 @@ class ScraperSourcesNotifier extends StateNotifier<AsyncValue<List<ScraperSource
       await manager.migrateFromLegacyConfig();
 
       final sources = await manager.getSources();
-      state = AsyncValue.data(sources);
+      // 列表只持久化非敏感字段；配置状态和编辑表单需要补回安全存储中的凭证。
+      final configuredSources = await Future.wait(
+        sources.map((source) async {
+          final credential = await manager.getCredential(source.id);
+          return source.copyWith(
+            apiKey: credential?.apiKey,
+            cookie: credential?.cookie,
+          );
+        }),
+      );
+      if (!mounted) return;
+      state = AsyncValue.data(configuredSources);
     } on Exception catch (e, st) {
+      AppError.handle(e, st, 'ScraperSourcesNotifier.load');
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }

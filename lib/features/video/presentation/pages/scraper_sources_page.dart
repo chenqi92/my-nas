@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_nas/app/theme/app_colors.dart';
+import 'package:my_nas/core/errors/errors.dart';
 import 'package:my_nas/core/extensions/context_extensions.dart';
 import 'package:my_nas/features/video/domain/entities/scraper_source.dart';
 import 'package:my_nas/features/video/presentation/providers/scraper_provider.dart';
@@ -195,13 +196,13 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
 
     if (source != null) {
       if (enabled && !source.isConfigured && needsConfig) {
-        _showConfigSheet(type, source);
+        _showConfigSheet(type, source, enableAfterSave: true);
       } else {
         await ref.read(scraperSourcesProvider.notifier).toggleSource(source.id, enabled: enabled);
       }
     } else if (enabled) {
       if (needsConfig) {
-        _showConfigSheet(type, null);
+        _showConfigSheet(type, null, enableAfterSave: true);
       } else {
         await _createAndEnableSource(type);
       }
@@ -217,7 +218,11 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
     await ref.read(scraperSourcesProvider.notifier).addSource(newSource);
   }
 
-  void _showConfigSheet(ScraperType type, ScraperSourceEntity? source) {
+  void _showConfigSheet(
+    ScraperType type,
+    ScraperSourceEntity? source, {
+    bool enableAfterSave = false,
+  }) {
     showAdaptiveModalSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -226,7 +231,12 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
       builder: (context) => _VideoScraperConfigSheet(
         type: type,
         source: source,
-        onSave: (config) => _saveConfig(type, source, config),
+        onSave: (config) => _saveConfig(
+          type,
+          source,
+          config,
+          enableAfterSave: enableAfterSave,
+        ),
         onTest: source != null ? () => _testConnection(source) : null,
         isTesting: source != null && _testingSourceId == source.id,
       ),
@@ -236,8 +246,9 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
   Future<void> _saveConfig(
     ScraperType type,
     ScraperSourceEntity? existingSource,
-    _VideoScraperConfigData config,
-  ) async {
+    _VideoScraperConfigData config, {
+    required bool enableAfterSave,
+  }) async {
     String? apiUrl;
     Map<String, dynamic>? extraConfig;
 
@@ -260,6 +271,7 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
 
     if (existingSource != null) {
       final updated = existingSource.copyWith(
+        isEnabled: enableAfterSave || existingSource.isEnabled,
         apiKey: hasApiKey ? apiKey : null,
         apiUrl: apiUrl,
         cookie: hasCookie ? cookie : null,
@@ -277,11 +289,6 @@ class _ScraperSourcesPageState extends ConsumerState<ScraperSourcesPage>
         extraConfig: extraConfig,
       );
       await ref.read(scraperSourcesProvider.notifier).addSource(newSource);
-    }
-
-    if (mounted) {
-      Navigator.pop(context);
-      context.showSuccessToast(context.l10n.videoScraperConfigSaved(type.displayName));
     }
   }
 
@@ -501,7 +508,7 @@ class _VideoScraperConfigSheet extends StatefulWidget {
 
   final ScraperType type;
   final ScraperSourceEntity? source;
-  final void Function(_VideoScraperConfigData) onSave;
+  final Future<void> Function(_VideoScraperConfigData) onSave;
   final VoidCallback? onTest;
   final bool isTesting;
 
@@ -526,6 +533,8 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
   String _tmdbApiUrlSelection = 'https://api.themoviedb.org/3';
   bool _obscureApiKey = true;
   bool _obscureCookie = true;
+  bool _isSaving = false;
+  String? _saveError;
 
   @override
   void initState() {
@@ -708,6 +717,14 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                   ),
                 ),
                 // 底部按钮
+                if (_saveError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      _saveError!,
+                      style: const TextStyle(color: AppColors.error),
+                    ),
+                  ),
                 Container(
                   padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
                   decoration: BoxDecoration(
@@ -725,7 +742,7 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                       if (widget.onTest != null)
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: widget.isTesting ? null : widget.onTest,
+                            onPressed: widget.isTesting || _isSaving ? null : widget.onTest,
                             icon: widget.isTesting
                                 ? const SizedBox(
                                     width: 18,
@@ -739,8 +756,14 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
                       if (widget.onTest != null) const SizedBox(width: 12),
                       Expanded(
                         child: FilledButton.icon(
-                          onPressed: _handleSave,
-                          icon: const Icon(Icons.check_rounded, size: 18),
+                          onPressed: _isSaving ? null : _handleSave,
+                          icon: _isSaving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.check_rounded, size: 18),
                           label: Text(context.l10n.videoScraperSaveButton),
                           style: FilledButton.styleFrom(
                             backgroundColor: widget.type.themeColor,
@@ -758,24 +781,34 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
     );
   }
 
-  void _handleSave() {
+  Future<void> _handleSave() async {
+    if (_isSaving) return;
     // 验证必填项
     final l = AppLocalizations.of(context);
     if (widget.type.requiresApiKey && _apiKeyController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.videoScraperConfigValidateApiKeyEmpty), behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text(l.videoScraperConfigValidateApiKeyEmpty),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
     if (widget.type.requiresApiUrl && _apiUrlController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.videoScraperApiUrlRequired), behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text(context.l10n.videoScraperApiUrlRequired),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
     if (widget.type.requiresCookie && _cookieController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.videoScraperConfigValidateCookieEmpty), behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text(l.videoScraperConfigValidateCookieEmpty),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -785,17 +818,39 @@ class _VideoScraperConfigSheetState extends State<_VideoScraperConfigSheet> {
         _tmdbApiUrlSelection == _tmdbCustomSentinel &&
         _tmdbCustomUrlController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.videoScraperCustomApiUrlRequired), behavior: SnackBarBehavior.floating),
+        SnackBar(
+          content: Text(context.l10n.videoScraperCustomApiUrlRequired),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
 
-    widget.onSave(_VideoScraperConfigData()
-      ..apiKey = _apiKeyController.text.trim()
-      ..apiUrl = _apiUrlController.text.trim()
-      ..cookie = _cookieController.text.trim()
-      ..tmdbApiUrl = _effectiveTmdbApiUrl
-      ..imageProxy = _imageProxyController.text.trim());
+    setState(() {
+      _isSaving = true;
+      _saveError = null;
+    });
+    try {
+      await widget.onSave(
+        _VideoScraperConfigData()
+          ..apiKey = _apiKeyController.text.trim()
+          ..apiUrl = _apiUrlController.text.trim()
+          ..cookie = _cookieController.text.trim()
+          ..tmdbApiUrl = _effectiveTmdbApiUrl
+          ..imageProxy = _imageProxyController.text.trim(),
+      );
+      if (!mounted) return;
+      context.showSuccessToast(
+        context.l10n.videoScraperConfigSaved(widget.type.displayName),
+      );
+      Navigator.of(context).pop();
+    } on Exception catch (e, st) {
+      AppError.handle(e, st, 'VideoScraperConfigSheet.save');
+      if (!mounted) return;
+      setState(() => _saveError = AppError.getUserFriendlyMessage(e, context));
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   Widget _buildTmdbApiUrlDropdown(bool isDark) {

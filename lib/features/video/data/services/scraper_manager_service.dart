@@ -156,8 +156,6 @@ class ScraperManagerService {
     final newSource = source.copyWith(priority: sources.length);
     sources.add(newSource);
 
-    await _saveSources(sources);
-
     // 如果有凭证，保存到安全存储
     if (source.apiKey != null || source.cookie != null) {
       await saveCredential(
@@ -165,6 +163,9 @@ class ScraperManagerService {
         ScraperCredential(apiKey: source.apiKey, cookie: source.cookie),
       );
     }
+
+    // 凭证保存成功后再发布源，避免保存失败留下无法启用的半成品。
+    await _saveSources(sources);
 
     // 同步 TMDB 配置到 TmdbService（用于推荐内容等功能）
     if (source.type == ScraperType.tmdb && source.apiKey != null) {
@@ -194,8 +195,6 @@ class ScraperManagerService {
     }
 
     sources[index] = source;
-    await _saveSources(sources);
-
     // 更新凭证
     if (source.apiKey != null || source.cookie != null) {
       await saveCredential(
@@ -203,6 +202,8 @@ class ScraperManagerService {
         ScraperCredential(apiKey: source.apiKey, cookie: source.cookie),
       );
     }
+
+    await _saveSources(sources);
 
     // 同步 TMDB 配置到 TmdbService（用于推荐内容等功能）
     if (source.type == ScraperType.tmdb && source.apiKey != null) {
