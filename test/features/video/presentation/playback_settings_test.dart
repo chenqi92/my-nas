@@ -51,4 +51,11 @@ void main() {
       ]);
     },
   );
+  test('seekInterval survives persistence and defaults to 10 seconds', () {
+    expect(PlaybackSettings.fromMap({}).seekInterval, 10);
+    for (final seconds in [5, 10, 15, 30]) {
+      final settings = PlaybackSettings(seekInterval: seconds);
+      expect(PlaybackSettings.fromMap(settings.toMap()).seekInterval, seconds);
+    }
+  });
 }

@@ -338,9 +338,16 @@ class VideoControls extends ConsumerWidget {
                       overlayColor: Colors.white24,
                     ),
                     child: VideoSeekSlider(
+                      // progress 基于 actualPosition/displayDuration；滑块时长必须同一时间轴，
+                      // 否则转码偏移（positionOffset/originalDuration）下拖动映射会偏。
                       progress: state.progress,
-                      duration: state.duration,
-                      onSeek: onSeek,
+                      duration: state.displayDuration,
+                      onSeek: (absolute) => onSeek(
+                        playerRelativeSeekTarget(
+                          absoluteTarget: absolute,
+                          positionOffset: state.positionOffset,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -421,6 +428,19 @@ class VideoControls extends ConsumerWidget {
           ],
         ),
       );
+}
+
+
+/// 把时间轴绝对位置（与 [VideoPlayerState.actualPosition] 同轴）换成播放器后端相对位置。
+///
+/// 转码切流后播放器从 0 起跳，UI 进度仍按原始片长 + [positionOffset] 显示；
+/// 滑块松手给出的是绝对时间，必须减掉偏移再交给 [VideoPlayerNotifier.seek]。
+Duration playerRelativeSeekTarget({
+  required Duration absoluteTarget,
+  required Duration positionOffset,
+}) {
+  final relative = absoluteTarget - positionOffset;
+  return relative < Duration.zero ? Duration.zero : relative;
 }
 
 /// 拖动时仅更新本地预览，松手后只发出一次 seek。
