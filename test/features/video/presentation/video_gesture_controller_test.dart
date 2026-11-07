@@ -23,13 +23,14 @@ void main() {
     required bool enableGestures,
     required VoidCallback onTap,
     ValueChanged<Duration>? onSeek,
+    void Function(TapDownDetails)? onDoubleTap,
   }) => MaterialApp(
     home: Scaffold(
       body: VideoGestureController(
         playerState: state,
         enableGestures: enableGestures,
         onTap: onTap,
-        onDoubleTap: (_) {},
+        onDoubleTap: onDoubleTap ?? (_) {},
         onVolumeChange: (_) {},
         onSeek: onSeek ?? (_) {},
         child: const SizedBox.expand(),
@@ -84,5 +85,27 @@ void main() {
 
     // 对照组证明上面的「不触发」来自 enableGestures，而不是测试没戳到手势。
     expect(seeks, isNotEmpty, reason: '移动端拖动应产生 seek');
+  });
+
+  testWidgets('双击把 TapDownDetails 交给页面（左右 seek / 中间 playPause）', (
+    tester,
+  ) async {
+    TapDownDetails? received;
+    await tester.pumpWidget(
+      host(
+        enableGestures: true,
+        onTap: () {},
+        onDoubleTap: (d) => received = d,
+      ),
+    );
+
+    final center = tester.getCenter(gestureSurface());
+    await tester.tapAt(center);
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tapAt(center);
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(received, isNotNull, reason: '双击必须上交，页面才能按左右分区 seek/playPause');
+    expect(received!.localPosition.dx, closeTo(center.dx, 1));
   });
 }
